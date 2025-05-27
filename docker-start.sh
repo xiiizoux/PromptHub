@@ -38,13 +38,12 @@ fi
 # 优先使用编译后的代码，如果存在
 if [ -f "$PROJECT_DIR/mcp/dist/api/index.js" ]; then
   echo -e "${GREEN}使用编译后的代码启动MCP服务${NC}"
-  NODE_ENV=production node dist/api/index.js &
+  NODE_ENV=production npm run start:prod &
   MCP_PID=$!
 else
   # 如果编译后的代码不存在，使用开发脚本
-  echo -e "${YELLOW}未找到编译后的代码，使用开发脚本启动MCP服务${NC}"
-  # 使用npx执行以确保我们使用的是node_modules中的dotenv和tsx
-  NODE_ENV=production npx dotenv -e ../.env npx tsx src/index.ts &
+  echo -e "${YELLOW}未找到编译后的代码，使用start脚本启动MCP服务${NC}"
+  NODE_ENV=production npm run start &
   MCP_PID=$!
 fi
 

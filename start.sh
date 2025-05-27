@@ -95,7 +95,17 @@ start_services() {
     
     # 启动MCP服务（后台运行）
     echo -e "${YELLOW}   启动MCP服务 (端口: 9010)...${NC}"
-    cd mcp && NODE_ENV=production npm run dev > ../logs/mcp.log 2>&1 &
+    
+    # 检查关键依赖是否存在
+    cd "$PROJECT_DIR/mcp"
+    if [ ! -f "./node_modules/.bin/dotenv" ] || [ ! -f "./node_modules/.bin/tsx" ]; then
+        echo -e "${YELLOW}   检测到关键依赖缺失，尝试安装...${NC}"
+        npm install --save-dev dotenv-cli@latest tsx@latest
+        npm install --save dotenv@latest
+    fi
+    
+    # 使用npm run start命令启动MCP服务
+    npm run start > ../logs/mcp.log 2>&1 &
     cd "$PROJECT_DIR"
     
     # 启动Web服务（生产模式，后台运行）

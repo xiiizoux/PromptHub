@@ -6,8 +6,9 @@
   "type": "module",
   "scripts": {
     "build": "tsc",
-    "dev": "NODE_OPTIONS='-r dotenv/config' dotenv -e ../.env tsx src/index.ts",
-    "start": "node server.cjs",
+    "dev": "npx dotenv -e ../.env npx tsx src/index.ts",
+    "start": "NODE_ENV=production npx dotenv -e ../.env npx tsx src/index.ts",
+    "start:prod": "NODE_ENV=production node dist/api/index.js",
     "server": "node dist/api/index.js",
     "typecheck": "tsc --noEmit",
     "test": "node --experimental-vm-modules node_modules/.bin/jest",
