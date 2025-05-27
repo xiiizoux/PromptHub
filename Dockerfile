@@ -28,6 +28,10 @@ ENV FRONTEND_PORT=9011
 ENV TRANSPORT_TYPE=sse
 ENV API_KEY=default-api-key-for-build
 
+# 强制使用本地文件存储
+ENV STORAGE_TYPE=file
+ENV FORCE_LOCAL_STORAGE=true
+
 # 创建日志目录
 RUN mkdir -p /app/logs
 

@@ -16,7 +16,12 @@ fi
 
 # 启动MCP服务
 echo "正在启动MCP服务 (端口: $MCP_PORT)..."
-cd /app/mcp && node dist/mcp/api/index.js &
+
+# 确保数据目录存在
+mkdir -p /app/mcp/data
+
+# 使用本地文件存储启动MCP服务
+cd /app/mcp && STORAGE_TYPE=file FORCE_LOCAL_STORAGE=true node dist/mcp/api/index.js &
 MCP_PID=$!
 
 # 等待服务启动
