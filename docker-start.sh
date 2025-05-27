@@ -23,24 +23,24 @@ if [ -z "$SUPABASE_URL" ] || [ -z "$SUPABASE_ANON_KEY" ]; then
   export FORCE_LOCAL_STORAGE=true
 fi
 
-# 启动后端服务
-echo -e "${YELLOW}正在启动后端服务 (端口: $BACKEND_PORT)...${NC}"
-cd $PROJECT_DIR/backend && node dist/src/index.js &
+# 启动MCP服务
+echo -e "${YELLOW}正在启动MCP服务 (端口: $BACKEND_PORT)...${NC}"
+cd $PROJECT_DIR/mcp && node dist/api/index.js &
 BACKEND_PID=$!
 
 # 等待后端启动
 echo -e "${YELLOW}等待后端服务启动...${NC}"
 sleep 5
 
-# 检查后端是否成功启动
+# 检查MCP服务是否成功启动
 if ! kill -0 $BACKEND_PID 2>/dev/null; then
-  echo -e "${RED}后端服务启动失败!${NC}"
+  echo -e "${RED}MCP服务启动失败!${NC}"
   exit 1
 fi
 
-# 启动前端服务 - 使用静态文件服务
-echo -e "${YELLOW}正在启动前端服务 (端口: $FRONTEND_PORT)...${NC}"
-cd $PROJECT_DIR/frontend && npx serve -s dist -l $FRONTEND_PORT &
+# 启动Web服务 - 使用Next.js
+echo -e "${YELLOW}正在启动Web服务 (端口: $FRONTEND_PORT)...${NC}"
+cd $PROJECT_DIR/web && npm start &
 FRONTEND_PID=$!
 
 # 等待前端启动
@@ -54,8 +54,8 @@ if ! kill -0 $FRONTEND_PID 2>/dev/null; then
 fi
 
 echo -e "${GREEN}✓ 服务启动完成!${NC}"
-echo -e "${GREEN}✓ 后端服务运行于: http://localhost:$BACKEND_PORT${NC}"
-echo -e "${GREEN}✓ 前端服务运行于: http://localhost:$FRONTEND_PORT${NC}"
+echo -e "${GREEN}✓ MCP服务运行于: http://localhost:$BACKEND_PORT${NC}"
+echo -e "${GREEN}✓ Web服务运行于: http://localhost:$FRONTEND_PORT${NC}"
 
 # 保持脚本运行，这样容器不会退出
 # 同时监听进程状态，如果任一进程退出则退出容器

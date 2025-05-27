@@ -17,7 +17,7 @@ COPY . .
 # 构建前端和后端
 RUN cd mcp && npm run build && cd ../web && npm run build
 
-# 设置环境变量
+# 设置环境变量 - 严格按照端口规定
 ENV NODE_ENV=production
 ENV PORT=9010
 ENV FRONTEND_PORT=9011
@@ -26,7 +26,7 @@ ENV TRANSPORT_TYPE=sse
 # 创建日志目录
 RUN mkdir -p /app/logs
 
-# 暴露前端和后端端口
+# 暴露端口：MCP=9010, Web=9011
 EXPOSE 9010 9011
 
 # 添加Docker启动脚本

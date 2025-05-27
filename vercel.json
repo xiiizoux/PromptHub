@@ -25,7 +25,9 @@
     }
   ],
   "env": {
-    "NODE_ENV": "production"
+    "NODE_ENV": "production",
+    "PORT": "9010",
+    "FRONTEND_PORT": "9011"
   },
   "installCommand": "npm install && cd web && npm install && cd ../mcp && npm install",
   "buildCommand": "cd mcp && npm run build && cd ../web && npm run build"
