@@ -153,10 +153,5 @@
   "bugs": {
     "url": "https://github.com/your-username/prompt-hub/issues"
   },
-  "homepage": "https://github.com/your-username/prompt-hub#readme",
-  "workspaces": [
-    "mcp",
-    "web",
-    "supabase"
-  ]
+  "homepage": "https://github.com/your-username/prompt-hub#readme"
 }
