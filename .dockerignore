@@ -19,6 +19,7 @@ logs
 .env.test.local
 .env.production.local
 •cursorignore
+•cursorrules
 
 # 版本控制
 .git

@@ -18,8 +18,7 @@ const nextConfig = {
     return config;
   },
   env: {
-    // 默认连接到本地的MCP Prompt Server
-    API_URL: process.env.API_URL || 'http://localhost:9010',
+    // Vercel部署时不依赖外部MCP服务器
     API_KEY: process.env.API_KEY,
     // 支持Supabase认证
     NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL || '',

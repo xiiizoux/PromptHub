@@ -3,16 +3,16 @@ import { PromptInfo, PromptDetails, ApiResponse, PaginatedResponse, PromptFilter
 
 // 创建Axios实例
 const api = axios.create({
-  // 在构建时使用完整URL，运行时使用相对路径
-  baseURL: typeof window === 'undefined' ? 'http://localhost:9011/api' : '/api',
+  // Vercel部署时使用相对路径
+  baseURL: '/api',
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
-// 创建第二个Axios实例，用于直接调用MCP服务器
+// 创建MCP API实例，支持统一部署和分离部署
 const mcpApi = axios.create({
-  baseURL: 'http://localhost:9010/api',
+  baseURL: process.env.NEXT_PUBLIC_MCP_API_URL || '/api/mcp',
   headers: {
     'Content-Type': 'application/json',
   },
@@ -53,7 +53,7 @@ api.interceptors.response.use(
 // 获取所有分类
 export const getCategories = async (): Promise<string[]> => {
   try {
-    // 直接使用本地REST API
+    // 通过Next.js API Routes调用，符合项目架构
     const response = await api.get<{success: boolean; data: string[]}>('/categories');
     if (response.data.success) {
       return response.data.data || [];
@@ -61,14 +61,14 @@ export const getCategories = async (): Promise<string[]> => {
     return [];
   } catch (error) {
     console.error('获取分类失败:', error);
-      return [];
+    return [];
   }
 };
 
 // 获取所有标签
 export const getTags = async (): Promise<string[]> => {
   try {
-    // 直接使用本地REST API
+    // 通过Next.js API Routes调用，符合项目架构
     const response = await api.get<{success: boolean; data: string[]}>('/tags');
     if (response.data.success) {
       return response.data.data || [];
@@ -76,16 +76,15 @@ export const getTags = async (): Promise<string[]> => {
     return [];
   } catch (error) {
     console.error('获取标签失败:', error);
-      return [];
+    return [];
   }
 };
 
 // 获取所有提示词名称
 export const getPromptNames = async (): Promise<string[]> => {
   try {
-    const response = await mcpApi.post<any>('/mcp/tools/get_prompt_names/invoke', {});
-    const result = response.data?.content?.text ? JSON.parse(response.data.content.text) : { prompts: [] };
-    return result.prompts?.map((p: any) => p.name) || [];
+    const response = await mcpApi.get<any>('/prompts/names');
+    return response.data?.data?.names || [];
   } catch (error) {
     console.error('获取提示词名称失败:', error);
     return [];

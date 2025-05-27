@@ -1,0 +1,37 @@
+# 忽略特定文件或目录，防止 AI 访问
+ignore: node_modules/
+ignore: dist/
+ignore: **/*.log
+ignore: .env
+ignore: .env.local
+ignore: .env.production
+
+# 允许 AI 访问示例配置文件
+!ignore: .env.example
+
+# 限制代码生成范围，确保符合项目规范
+restrict: "生成代码时仅使用函数式编程"
+restrict: "避免使用全局变量"
+restrict: "代码需符合 ESLint 规则"
+
+# 自定义补全建议，提高代码一致性
+suggest: "优先使用箭头函数"
+suggest: "使用 async/await 替代 Promise.then"
+suggest: "网页类别调用数据库专门的类别表"
+
+# 项目架构规则 - 严格执行
+restrict: "前端应用(端口9011)只能通过Next.js API Routes调用后端，禁止直接调用MCP服务器"
+restrict: "Next.js API Routes作为中间层，处理REST风格的API请求，为前端提供统一的API接口"
+restrict: "MCP服务器(端口9010)专注于AI模型交互和工具调用，不直接与前端交互"
+restrict: "类别数据必须从数据库的专门类别表获取，不能从MCP服务器获取"
+
+# 设置安全规则，保护敏感文件不被修改
+protected: src/core/auth.js
+protected: **/database/migrations/*
+
+# 根据文件类型应用不同规则，实现更精细的控制
+[*.py]
+restrict: "使用类型注解（Type Hints）"
+
+[*.js]
+restrict: "遵循 Airbnb JavaScript 风格指南"

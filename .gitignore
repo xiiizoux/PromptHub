@@ -28,6 +28,7 @@ mcp/build/
 .env.test.local
 .env.production.local
 •cursorignore
+•cursorrules
 
 # 日志文件
 logs/

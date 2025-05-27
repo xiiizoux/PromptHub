@@ -1,19 +1,32 @@
 {
   "version": 2,
-  "name": "mcp-prompt-server",
+  "name": "prompt-hub-fullstack",
   "builds": [
     {
-      "src": "api/index.ts",
+      "src": "web/package.json",
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "web/.next"
+      }
+    },
+    {
+      "src": "mcp/src/api/index.ts",
       "use": "@vercel/node"
     }
   ],
   "routes": [
     {
+      "src": "/api/mcp/(.*)",
+      "dest": "/mcp/src/api/index.ts"
+    },
+    {
       "src": "/(.*)",
-      "dest": "/api/index.ts"
+      "dest": "/web/$1"
     }
   ],
   "env": {
     "NODE_ENV": "production"
-  }
+  },
+  "installCommand": "npm install && cd web && npm install && cd ../mcp && npm install",
+  "buildCommand": "cd mcp && npm run build && cd ../web && npm run build"
 }

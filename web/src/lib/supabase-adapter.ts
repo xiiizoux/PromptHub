@@ -69,12 +69,18 @@ export interface ApiKey {
 // Supabase客户端创建函数
 export function createSupabaseClient(useServiceKey: boolean = false): SupabaseClient {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseKey = useServiceKey 
+  let supabaseKey = useServiceKey 
     ? process.env.SUPABASE_SERVICE_ROLE_KEY
     : process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
     
+  // 如果请求服务密钥但不存在，回退到匿名密钥
+  if (useServiceKey && !supabaseKey) {
+    console.warn('SUPABASE_SERVICE_ROLE_KEY未设置，回退到匿名密钥');
+    supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  }
+    
   if (!supabaseUrl || !supabaseKey) {
-    throw new Error('Supabase配置缺失。请在.env文件中设置NEXT_PUBLIC_SUPABASE_URL和相应的密钥。');
+    throw new Error('Supabase配置缺失。请在.env文件中设置NEXT_PUBLIC_SUPABASE_URL和NEXT_PUBLIC_SUPABASE_ANON_KEY。');
   }
     
   return createClient(supabaseUrl, supabaseKey);

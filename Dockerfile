@@ -5,17 +5,17 @@ WORKDIR /app
 
 # 复制项目配置文件
 COPY package*.json ./
-COPY backend/package*.json ./backend/
-COPY frontend/package*.json ./frontend/
+COPY mcp/package*.json ./mcp/
+COPY web/package*.json ./web/
 
 # 安装所有依赖
-RUN npm run install:all
+RUN npm install && cd mcp && npm install && cd ../web && npm install
 
 # 复制应用程序代码
 COPY . .
 
 # 构建前端和后端
-RUN npm run build:all
+RUN cd mcp && npm run build && cd ../web && npm run build
 
 # 设置环境变量
 ENV NODE_ENV=production

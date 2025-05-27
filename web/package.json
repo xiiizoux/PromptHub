@@ -3,11 +3,12 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev -p ${FRONTEND_PORT:-9011}",
+    "dev": "next dev -p ${FRONTEND_PORT:-3000}",
     "build": "next build",
-    "start": "next start -p ${FRONTEND_PORT:-9011}",
+    "start": "next start -p ${PORT:-3000}",
     "lint": "next lint",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "vercel-build": "next build"
   },
   "keywords": [
     "ai",
