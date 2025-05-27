@@ -35,7 +35,7 @@ RUN mkdir -p /app/logs
 EXPOSE 9010 9011
 
 # 添加启动脚本
-COPY simple-docker-start.sh /app/start.sh
+COPY docker-start.sh /app/start.sh
 RUN chmod +x /app/start.sh
 
 # 安装需要的工具
