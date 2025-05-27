@@ -29,6 +29,7 @@ mcp/build/
 .env.production.local
 •cursorignore
 •cursorrules
+docker-compose.yml
 
 # 日志文件
 logs/

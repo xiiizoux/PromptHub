@@ -7,9 +7,10 @@ WORKDIR /app
 COPY package*.json ./
 COPY mcp/package*.json ./mcp/
 COPY web/package*.json ./web/
+COPY supabase/package*.json ./supabase/
 
 # 安装所有依赖
-RUN npm install && cd mcp && npm install && cd ../web && npm install
+RUN npm install && cd mcp && npm install && cd ../web && npm install && cd ../supabase && npm install
 
 # 复制应用程序代码
 COPY . .

@@ -27,6 +27,7 @@ restrict: "类别数据必须从数据库的专门类别表获取，不能从MCP
 restrict: "禁止在代码中泄露敏感信息，禁止在代码中使用密钥硬编码"
 restrict: "统一使用项目主文件夹.env文件，禁止使用其他.env文件"
 restrict: "项目主文件夹.env文件作为敏感文件，禁止修改，可以cat简单查看"
+restrict: "每当从外部包添加新的导入时，确保该包在 package.json 的依赖项中列出。使用depcheck实时监测依赖包"
 
 # 设置安全规则，保护敏感文件不被修改
 protected: src/core/auth.js

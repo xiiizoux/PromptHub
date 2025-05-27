@@ -1,0 +1,77 @@
+# 多阶段构建优化版本 (可选升级)
+FROM node:18-alpine AS dependencies
+
+# 安装依赖阶段
+WORKDIR /app
+COPY package*.json ./
+COPY mcp/package*.json ./mcp/
+COPY web/package*.json ./web/
+COPY supabase/package*.json ./supabase/
+
+# 安装所有依赖
+RUN npm ci --only=production && \
+    cd mcp && npm ci --only=production && \
+    cd ../web && npm ci --only=production && \
+    cd ../supabase && npm ci --only=production
+
+# 构建阶段
+FROM node:18-alpine AS builder
+
+WORKDIR /app
+COPY package*.json ./
+COPY mcp/package*.json ./mcp/
+COPY web/package*.json ./web/
+COPY supabase/package*.json ./supabase/
+
+# 安装开发依赖用于构建
+RUN npm ci && \
+    cd mcp && npm ci && \
+    cd ../web && npm ci && \
+    cd ../supabase && npm ci
+
+# 复制源代码
+COPY . .
+
+# 构建应用
+RUN cd mcp && npm run build && \
+    cd ../web && npm run build
+
+# 生产阶段
+FROM node:18-alpine AS production
+
+WORKDIR /app
+
+# 复制生产依赖
+COPY --from=dependencies /app/node_modules ./node_modules
+COPY --from=dependencies /app/mcp/node_modules ./mcp/node_modules
+COPY --from=dependencies /app/web/node_modules ./web/node_modules
+COPY --from=dependencies /app/supabase/node_modules ./supabase/node_modules
+
+# 复制构建结果
+COPY --from=builder /app/mcp/dist ./mcp/dist
+COPY --from=builder /app/web/.next ./web/.next
+COPY --from=builder /app/web/public ./web/public
+
+# 复制必要的配置文件
+COPY package*.json ./
+COPY mcp/package*.json ./mcp/
+COPY web/package*.json ./web/
+COPY supabase/ ./supabase/
+COPY docker-start.sh ./
+
+# 设置环境变量
+ENV NODE_ENV=production
+ENV PORT=9010
+ENV FRONTEND_PORT=9011
+ENV TRANSPORT_TYPE=sse
+
+# 创建日志目录
+RUN mkdir -p /app/logs && \
+    chmod +x /app/docker-start.sh && \
+    apk add --no-cache curl
+
+# 暴露端口
+EXPOSE 9010 9011
+
+# 启动应用
+CMD ["/app/docker-start.sh"] 
