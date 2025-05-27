@@ -484,6 +484,9 @@ export default function EditPromptPage({ prompt }: EditPromptPageProps) {
                         {...register('version', { 
                           required: '版本是必填的',
                           validate: (value) => {
+                            if (!value) {
+                              return '版本是必填的';
+                            }
                             if (!validateVersionFormat(value)) {
                               return '版本号格式错误，应为 X.Y 格式（如：1.0, 2.5）';
                             }

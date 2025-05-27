@@ -211,13 +211,20 @@ export const canManageCollaborators = (prompt: PromptDetails, user: User | null)
 export const canViewAuditLogs = (prompt: PromptDetails, user: User | null): boolean => {
   if (!user) return false;
   
+  // 1. 检查是否为创建者
+  const isOwner = prompt.created_by === user.id || 
+                  prompt.user_id === user.id ||
+                  prompt.author === user.username || 
+                  prompt.author === user.display_name;
+                  
+  // 2. 检查是否为管理员
+  const isAdmin = user.role === 'admin';
+  
+  // 3. 检查是否为协作者
+  const isCollaborator = prompt.collaborators && prompt.collaborators.includes(user.username || '');
+  
   // 创建者、管理员和协作者可以查看审计日志
-  return (prompt.created_by === user.id || 
-          prompt.user_id === user.id ||
-          prompt.author === user.username || 
-          prompt.author === user.display_name) ||
-         user.role === 'admin' ||
-         (prompt.collaborators && prompt.collaborators.includes(user.username || ''));
+  return isOwner || isAdmin || !!isCollaborator;
 };
 
 // 权限常量

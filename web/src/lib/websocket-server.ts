@@ -6,7 +6,7 @@
 import { Server as HTTPServer } from 'http';
 import { Server as SocketIOServer } from 'socket.io';
 import { logger } from './error-handler';
-import { extendedSupabaseAdapter } from '../../../supabase';
+import supabaseAdapter from './supabase-adapter';
 
 // 定义事件类型
 export enum WebSocketEvents {
@@ -82,13 +82,13 @@ class WebSocketServer {
         
         // 使用令牌认证
         if (data.token) {
-          user = await extendedSupabaseAdapter.verifyToken(data.token);
+          user = await supabaseAdapter.verifyToken(data.token);
         }
         // 使用API密钥认证
         else if (data.apiKey) {
-          user = await extendedSupabaseAdapter.verifyApiKey(data.apiKey);
-          if (user) {
-            await extendedSupabaseAdapter.updateApiKeyLastUsed(data.apiKey);
+                      user = await supabaseAdapter.verifyApiKey(data.apiKey);
+            if (user) {
+              await supabaseAdapter.updateApiKeyLastUsed(data.apiKey);
           }
         }
         

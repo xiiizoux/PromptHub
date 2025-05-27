@@ -365,6 +365,100 @@ export class SupabaseAdapter {
     }
   }
 
+  async verifyToken(token: string): Promise<User | null> {
+    try {
+      // 设置会话令牌
+      const { data: { user }, error } = await this.supabase.auth.getUser(token);
+      
+      if (error || !user) {
+        console.error('验证令牌失败:', error);
+        return null;
+      }
+      
+      // 获取用户详细信息
+      const { data: userData, error: userError } = await this.supabase
+        .from('users')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+        
+      if (userError || !userData) {
+        console.error('获取用户信息失败:', userError);
+        return null;
+      }
+      
+      return {
+        id: userData.id,
+        email: userData.email,
+        username: userData.display_name || userData.email.split('@')[0],
+        display_name: userData.display_name,
+        created_at: userData.created_at,
+        role: userData.role || 'user'
+      };
+    } catch (err) {
+      console.error('验证令牌时出错:', err);
+      return null;
+    }
+  }
+
+  async verifyApiKey(apiKey: string): Promise<User | null> {
+    try {
+      // 计算密钥哈希
+      const keyHash = crypto.createHash('sha256').update(apiKey).digest('hex');
+      
+      // 查询有效的API密钥
+      const { data, error } = await this.supabase
+        .from('api_keys')
+        .select('user_id')
+        .eq('key_hash', keyHash)
+        .or(`expires_at.is.null,expires_at.gt.${new Date().toISOString()}`)
+        .single();
+        
+      if (error || !data) {
+        return null;
+      }
+      
+      // 获取用户信息
+      const { data: userData, error: userError } = await this.supabase
+        .from('users')
+        .select('*')
+        .eq('id', data.user_id)
+        .single();
+        
+      if (userError || !userData) {
+        return null;
+      }
+      
+      return {
+        id: userData.id,
+        email: userData.email,
+        username: userData.display_name || userData.email.split('@')[0],
+        display_name: userData.display_name,
+        created_at: userData.created_at,
+        role: userData.role || 'user'
+      };
+    } catch (err) {
+      console.error('验证API密钥时出错:', err);
+      return null;
+    }
+  }
+
+  async updateApiKeyLastUsed(apiKey: string): Promise<boolean> {
+    try {
+      const keyHash = crypto.createHash('sha256').update(apiKey).digest('hex');
+      
+      const { error } = await this.supabase
+        .from('api_keys')
+        .update({ last_used_at: new Date().toISOString() })
+        .eq('key_hash', keyHash);
+        
+      return !error;
+    } catch (err) {
+      console.error('更新API密钥使用时间时出错:', err);
+      return false;
+    }
+  }
+
   async getCurrentUser(): Promise<User | null> {
     try {
       const { data, error } = await this.supabase.auth.getUser();

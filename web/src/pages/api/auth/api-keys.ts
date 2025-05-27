@@ -7,7 +7,7 @@
 
 import { NextApiRequest, NextApiResponse } from 'next';
 import { apiHandler, successResponse, errorResponse, ErrorCode } from '../../../lib/api-handler';
-import { extendedSupabaseAdapter as supabaseAdapter } from '../../../../../supabase';
+import supabaseAdapter from '../../../lib/supabase-adapter';
 
 export default apiHandler(async (req: NextApiRequest, res: NextApiResponse, userId?: string) => {
   // 确保用户已认证
@@ -18,7 +18,7 @@ export default apiHandler(async (req: NextApiRequest, res: NextApiResponse, user
   // 获取用户API密钥列表
   if (req.method === 'GET') {
     try {
-      const apiKeys = await supabaseAdapter.getUserApiKeys(userId);
+      const apiKeys = await supabaseAdapter.listApiKeys(userId);
       return successResponse(res, apiKeys);
     } catch (error: any) {
       console.error('获取API密钥失败:', error);
@@ -29,14 +29,14 @@ export default apiHandler(async (req: NextApiRequest, res: NextApiResponse, user
   // 创建新API密钥
   if (req.method === 'POST') {
     try {
-      const { name, expiresAt } = req.body;
+      const { name, expiresInDays } = req.body;
       
       if (!name) {
         return errorResponse(res, 'API密钥名称是必需的', ErrorCode.BAD_REQUEST);
       }
       
-      const apiKey = await supabaseAdapter.createApiKey(userId, name, expiresAt);
-      return successResponse(res, apiKey, '创建API密钥成功');
+      const apiKey = await supabaseAdapter.generateApiKey(userId, name, expiresInDays);
+      return successResponse(res, { apiKey, name }, '创建API密钥成功');
     } catch (error: any) {
       console.error('创建API密钥失败:', error);
       return errorResponse(res, `创建API密钥失败: ${error.message}`, ErrorCode.INTERNAL_SERVER_ERROR);

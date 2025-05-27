@@ -5,7 +5,7 @@
 
 import { NextApiRequest, NextApiResponse } from 'next';
 import { apiHandler, successResponse, errorResponse, ErrorCode } from '../../../lib/api-handler';
-import { extendedSupabaseAdapter as supabaseAdapter } from '../../../../../supabase';
+import supabaseAdapter from '../../../lib/supabase-adapter';
 import { UserApi } from '@/types/api';
 
 export default apiHandler(async (req: NextApiRequest, res: NextApiResponse) => {
