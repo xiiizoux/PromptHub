@@ -1,5 +1,5 @@
 #!/bin/bash
-# docker-start.sh - 用于Docker容器中启动PromptHub前后端服务
+# docker-start.sh - 用于Docker容器中启动PromptHub MCP服务和Web应用
 
 # 显示彩色输出
 GREEN='\033[0;32m'
@@ -10,8 +10,8 @@ NC='\033[0m' # No Color
 echo -e "${YELLOW}在Docker环境中启动PromptHub服务...${NC}"
 
 # 设置端口，使用环境变量或默认值
-BACKEND_PORT=${PORT:-9010}
-FRONTEND_PORT=${FRONTEND_PORT:-9011}
+MCP_PORT=${PORT:-9010}
+WEB_PORT=${FRONTEND_PORT:-9011}
 
 # 当前目录路径
 PROJECT_DIR=$(pwd)
@@ -24,42 +24,42 @@ if [ -z "$SUPABASE_URL" ] || [ -z "$SUPABASE_ANON_KEY" ]; then
 fi
 
 # 启动MCP服务
-echo -e "${YELLOW}正在启动MCP服务 (端口: $BACKEND_PORT)...${NC}"
+echo -e "${YELLOW}正在启动MCP服务 (端口: $MCP_PORT)...${NC}"
 cd $PROJECT_DIR/mcp && node dist/api/index.js &
-BACKEND_PID=$!
+MCP_PID=$!
 
-# 等待后端启动
-echo -e "${YELLOW}等待后端服务启动...${NC}"
+# 等待MCP服务启动
+echo -e "${YELLOW}等待MCP服务启动...${NC}"
 sleep 5
 
 # 检查MCP服务是否成功启动
-if ! kill -0 $BACKEND_PID 2>/dev/null; then
+if ! kill -0 $MCP_PID 2>/dev/null; then
   echo -e "${RED}MCP服务启动失败!${NC}"
   exit 1
 fi
 
 # 启动Web服务 - 使用Next.js
-echo -e "${YELLOW}正在启动Web服务 (端口: $FRONTEND_PORT)...${NC}"
+echo -e "${YELLOW}正在启动Web服务 (端口: $WEB_PORT)...${NC}"
 cd $PROJECT_DIR/web && npm start &
-FRONTEND_PID=$!
+WEB_PID=$!
 
-# 等待前端启动
+# 等待Web应用启动
 sleep 3
 
-# 检查前端是否成功启动
-if ! kill -0 $FRONTEND_PID 2>/dev/null; then
-  echo -e "${RED}前端服务启动失败!${NC}"
-  kill $BACKEND_PID
+# 检查Web应用是否成功启动
+if ! kill -0 $WEB_PID 2>/dev/null; then
+  echo -e "${RED}Web应用启动失败!${NC}"
+  kill $MCP_PID
   exit 1
 fi
 
 echo -e "${GREEN}✓ 服务启动完成!${NC}"
-echo -e "${GREEN}✓ MCP服务运行于: http://localhost:$BACKEND_PORT${NC}"
-echo -e "${GREEN}✓ Web服务运行于: http://localhost:$FRONTEND_PORT${NC}"
+echo -e "${GREEN}✓ MCP服务运行于: http://localhost:$MCP_PORT${NC}"
+echo -e "${GREEN}✓ Web服务运行于: http://localhost:$WEB_PORT${NC}"
 
 # 保持脚本运行，这样容器不会退出
 # 同时监听进程状态，如果任一进程退出则退出容器
-while kill -0 $BACKEND_PID 2>/dev/null && kill -0 $FRONTEND_PID 2>/dev/null; do
+while kill -0 $MCP_PID 2>/dev/null && kill -0 $WEB_PID 2>/dev/null; do
   sleep 10
 done
 

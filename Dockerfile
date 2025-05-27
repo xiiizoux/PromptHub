@@ -14,7 +14,7 @@ RUN npm install && cd mcp && npm install && cd ../web && npm install
 # 复制应用程序代码
 COPY . .
 
-# 构建前端和后端
+# 构建MCP服务和Web应用
 RUN cd mcp && npm run build && cd ../web && npm run build
 
 # 设置环境变量 - 严格按照端口规定
@@ -33,7 +33,7 @@ EXPOSE 9010 9011
 COPY docker-start.sh /app/docker-start.sh
 RUN chmod +x /app/docker-start.sh
 
-# 安装serve用于提供前端静态文件服务和curl用于健康检查
+# 安装serve用于提供Web应用静态文件服务和curl用于健康检查
 RUN npm install -g serve && apk add --no-cache curl
 
 # 启动应用

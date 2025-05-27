@@ -1,16 +1,16 @@
-# MCP Prompt Server 部署选项
+# 部署选项
 
-MCP Prompt Server 提供多种部署选项，满足不同的使用场景和需求。
+本文档介绍了MCP Prompt Server的各种部署选项，包括本地开发、Docker容器化部署等。
 
-## 本地部署
+## 本地开发
 
-### 基本本地部署
+### 快速开始
 
-最简单的部署方式，适合开发和测试环境：
-
-1. **准备环境**：
-   - 确保已安装Node.js (v14或更高版本)
-   - 克隆项目代码库
+1. **克隆仓库**：
+   ```bash
+   git clone https://github.com/your-username/mcp-prompt-server.git
+   cd mcp-prompt-server
+   ```
 
 2. **安装依赖**：
    ```bash
@@ -18,33 +18,27 @@ MCP Prompt Server 提供多种部署选项，满足不同的使用场景和需�
    ```
 
 3. **配置环境变量**：
-   - 创建`.env`文件，参考`.env.example`
-   - 至少配置以下必要变量：
-     ```
-     PORT=9010
-     API_KEY=your-secure-api-key
-     TRANSPORT_TYPE=stdio
-     SUPABASE_URL=your-supabase-url
-     SUPABASE_ANON_KEY=your-supabase-key
-     ```
-
-4. **编译代码**：
    ```bash
-   npm run build
+   cp .env.example .env
+   # 编辑 .env 文件，配置必要的环境变量
    ```
 
-5. **运行服务器**：
+4. **启动开发服务器**：
    ```bash
-   npm run server
+   npm run dev
    ```
 
-服务器将在指定端口上运行（默认9010），并提供所有API和MCP工具端点。
+5. **访问应用**：
+   - API服务器：http://localhost:9010
+   - Web界面：http://localhost:9011
 
-### 使用Docker部署
+## Docker部署
 
-使用Docker容器部署PromptHub前后端应用，提供更好的隔离和可移植性：
+Docker部署是推荐的生产环境部署方式，提供了完整的容器化解决方案。
 
-1. **构建Docker镜像**：
+### 基础Docker部署
+
+1. **构建镜像**：
    ```bash
    docker build -t prompthub:latest .
    ```
@@ -54,22 +48,18 @@ MCP Prompt Server 提供多种部署选项，满足不同的使用场景和需�
    docker run -p 9010:9010 -p 9011:9011 \
      -e API_KEY=your-secure-api-key \
      -e SUPABASE_URL=your-supabase-url \
-     -e SUPABASE_ANON_KEY=your-supabase-key \
+     -e SUPABASE_ANON_KEY=your-supabase-anon-key \
      -e JWT_SECRET=your-jwt-secret \
-     -e PORT=9010 \
-     -e FRONTEND_PORT=9011 \
-     -e TRANSPORT_TYPE=sse \
      prompthub:latest
    ```
 
-3. **使用映射卷**：
+3. **仅使用本地文件存储（无需Supabase）**：
    ```bash
    docker run -p 9010:9010 -p 9011:9011 \
-     -v /path/to/logs:/app/logs \
+     -v /path/to/data:/app/data \
      -e API_KEY=your-secure-api-key \
-     -e SUPABASE_URL=your-supabase-url \
-     -e SUPABASE_ANON_KEY=your-supabase-key \
-     -e JWT_SECRET=your-jwt-secret \
+     -e STORAGE_TYPE=file \
+     -e FORCE_LOCAL_STORAGE=true \
      prompthub:latest
    ```
 
@@ -93,256 +83,225 @@ MCP Prompt Server 提供多种部署选项，满足不同的使用场景和需�
    docker exec -it [container_id] /bin/sh
    ```
 
-## 云部署
+### Docker Compose部署
 
-### Vercel部署
+使用Docker Compose可以更方便地管理多个服务：
 
-将Prompt Hub完整的前后端应用部署到Vercel平台：
-
-#### 准备项目
-
-1. **代码仓库准备**：
-   - 确保项目已推送到GitHub、GitLab或Bitbucket仓库
-   - 确保所有依赖已正确安装，并且所有代码可以本地构建和运行
-
-2. **创建Vercel配置文件**：
-   - 在项目根目录创建`vercel.json`文件，配置如下：
-     ```json
-     {
-       "version": 2,
-       "buildCommand": "npm run build:all",
-       "outputDirectory": "frontend/dist",
-       "installCommand": "npm run install:all",
-       "rewrites": [
-         { "source": "/api/(.*)", "destination": "/api/index.js" },
-         { "source": "/sse", "destination": "/api/index.js" },
-         { "source": "/tools(.*)", "destination": "/api/index.js" }
-       ],
-       "functions": {
-         "api/index.js": {
-           "memory": 1024,
-           "maxDuration": 10
-         }
-       }
-     }
-     ```
-
-#### 配置应用
-
-1. **前端配置**：
-   - 在前端源代码中确保API地址配置可以使用环境变量，例如：
-     ```typescript
-     // 在前端的API客户端中
-     const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '/api';
-     
-     async function fetchPrompts() {
-       const response = await fetch(`${API_BASE_URL}/prompts/names`);
-       // ... 其余代码
-     }
-     ```
-   - 创建或更新`.env.production`文件指定生产环境变量：
-     ```
-     NEXT_PUBLIC_API_URL=/api
-     ```
-
-2. **创建后端适配器**：
-   - 在项目根目录创建`api`文件夹
-   - 在`api`文件夹中创建`index.js`文件作为Vercel的Serverless函数入口点：
-     ```javascript
-     // /api/index.js
-     const { createServer } = require('http');
-     const { parse } = require('url');
-     const app = require('../backend/dist/src/index.js');
-     
-     module.exports = (req, res) => {
-       // 确保环境变量可用
-       if (process.env.API_KEY) {
-         process.env.API_KEY = process.env.API_KEY;
-       }
-       if (process.env.SUPABASE_URL) {
-         process.env.SUPABASE_URL = process.env.SUPABASE_URL;
-       }
-       if (process.env.SUPABASE_ANON_KEY) {
-         process.env.SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY;
-       }
-       
-       // 启动Express应用
-       app.handle(req, res);
-     };
-     ```
-
-#### Vercel部署步骤
-
-1. **创建部署**：
-   - 注册或登录[Vercel控制面板](https://vercel.com/dashboard)
-   - 点击"New Project"按钮导入您的Git仓库
-   - 选择项目后，进入项目配置页面
-
-2. **配置项目设置**：
-   - 在Framework Preset选项中选择"Other"
-   - 在Build and Output Settings中选择"Override"并设置：
-     - Build Command: `npm run build:all`
-     - Output Directory: `frontend/dist`
-     - Install Command: `npm run install:all`
-     
-3. **配置环境变量**：
-   - 在部署设置页面中，找到"Environment Variables"部分
-   - 添加以下环境变量：
-     ```
-     API_KEY=your-secure-api-key
-     TRANSPORT_TYPE=sse
-     SUPABASE_URL=your-supabase-url
-     SUPABASE_ANON_KEY=your-supabase-anon-key
-     JWT_SECRET=your-jwt-secret
-     NODE_ENV=production
-     NEXT_PUBLIC_API_URL=/api
-     ```
-
-4. **执行部署**：
-   - 点击"Deploy"按钮开始部署过程
-   - 等待部署完成，这可能需要几分钟时间
-
-#### Supabase配置
-
-1. **创建Supabase项目**：
-   - 登录[Supabase控制面板](https://app.supabase.io/)
-   - 点击"New Project"创建新项目
-   - 完成项目创建过程并获取项目的URL和密钥
-
-2. **数据库初始化**：
-   - 在Supabase项目中打开SQL编辑器
-   - 将`supabase/schema.sql`文件中的内容复制到SQL编辑器中
-   - 执行脚本创建必要的表和触发器
-
-3. **配置CORS设置**：
-   - 在Supabase项目设置中，进入API设置页面
-   - 在“CORS”部分，添加您的Vercel部署URL到允许列表：
-     ```
-     https://your-project-name.vercel.app
-     ```
-
-4. **配置JWT密钥**：
-   - 在Supabase的“设置 > API”页面中，找到JWT密钥
-   - 确保Vercel环境变量中的JWT_SECRET与此密钥一致
-
-#### 验证与维护
-
-1. **验证部署**：
-   - 访问您的Vercel部署URL：`https://your-project-name.vercel.app`
-   - 测试前端功能：尝试注册、登录和管理提示词
-   - 测试API功能：如`https://your-project-name.vercel.app/api/health`
-   - 测试MCP功能：如`https://your-project-name.vercel.app/tools`
-
-2. **日志和监控**：
-   - 在Vercel控制面板中查看部署日志
-   - 如需要，集成外部日志服务，如Papertrail或Logtail
-
-3. **持续集成**：
-   - 在Vercel项目设置中启用“自动部署”
-   - 为拉取请求启用预览部署
-   - 在Git仓库中添加Vercel部署状态弹出窗口
-
-4. **定制域名**：
-   - 在Vercel的“域名”部分添加您自己的域名
-   - 配置DNS记录以指向Vercel服务
-   - 启用自动SSL证书管理
-
-### 其他云平台
-
-MCP Prompt Server也可以部署到其他云平台：
-
-1. **AWS Lambda**：
-   - 使用Serverless框架部署
-   - 为API端点配置API Gateway
-   - 使用DynamoDB或RDS替代Supabase
-
-2. **Google Cloud Run**：
-   - 构建并推送Docker镜像到Google Container Registry
-   - 使用Cloud Run部署容器
-   - 配置环境变量和服务设置
-
-3. **Azure Functions**：
-   - 使用Azure Function App部署
-   - 配置HTTP触发器映射到API端点
-   - 使用Azure Database作为存储后端
-
-## 数据库设置
-
-MCP Prompt Server使用Supabase作为数据库后端，提供高性能存储与分析功能：
-
-### Supabase配置
-
-1. **准备Supabase项目**：
-   - 在[Supabase控制面板](https://app.supabase.io/)创建新项目
-   - 获取项目URL和匿名密钥
-
-2. **配置数据库**：
-   - 在SQL编辑器中执行`supabase/schema.sql`脚本
-   - 创建必要的表和触发器
-
-3. **配置环境变量**：
-   ```
-   SUPABASE_URL=your-supabase-url
-   SUPABASE_ANON_KEY=your-supabase-key
-   JWT_SECRET=your-jwt-secret
-   ```
-
-### 数据库功能
-
-Supabase提供以下核心功能：
-
-1. **提示词管理**：
-   - 存储提示词定义、版本和元数据
-   - 支持复杂的分类和标签系统
-
-2. **性能分析**：
-   - 跟踪提示词使用情况和性能指标
-   - 存储用户反馈和评分
-   - 支持A/B测试
-
-## 身份验证
-
-MCP Prompt Server提供多种身份验证选项：
-
-1. **API密钥认证**：
-   - 在请求头中包含`Authorization: Bearer your-api-key`
-   - 或在查询参数中添加`?api_key=your-api-key`
-
-2. **Supabase认证**：
-   - 使用JWT令牌进行用户认证
-   - 支持登录、注册和注销功能
-
-## 高级配置
-
-### 自定义端口
-
-默认端口为9010，可通过以下方式修改：
-
-1. **环境变量**：
-   ```
-   PORT=8080
-   ```
-
-2. **启动命令**：
+1. **启动所有服务**：
    ```bash
-   PORT=8080 npm run server
+   docker-compose up -d
    ```
 
-### 日志级别
+2. **启动特定服务组合**：
+   ```bash
+   # 基础服务
+   docker-compose up -d prompthub
+   
+   # 包含数据库
+   docker-compose --profile local-db up -d
+   
+   # 包含缓存
+   docker-compose --profile cache up -d
+   
+   # 完整部署（包含Nginx代理）
+   docker-compose --profile local-db --profile cache --profile proxy up -d
+   ```
 
-控制日志输出详细程度：
+3. **查看服务状态**：
+   ```bash
+   docker-compose ps
+   ```
 
+4. **查看日志**：
+   ```bash
+   docker-compose logs -f prompthub
+   ```
+
+5. **停止服务**：
+   ```bash
+   docker-compose down
+   ```
+
+### 一键部署脚本
+
+项目提供了一键部署脚本，简化部署流程：
+
+```bash
+# 给脚本执行权限
+chmod +x deploy-docker.sh
+
+# 运行部署脚本
+./deploy-docker.sh
 ```
-LOG_LEVEL=debug  # 详细日志，用于开发
-LOG_LEVEL=info   # 标准日志，用于生产
-LOG_LEVEL=error  # 仅错误日志，最小化输出
+
+部署脚本会自动：
+- 检查Docker环境
+- 创建必要目录
+- 配置环境变量
+- 构建和启动服务
+- 提供可选服务选择
+
+## 生产环境部署
+
+### 高可用性配置
+
+对于生产环境，建议使用以下配置：
+
+1. **负载均衡**：
+   - 使用Nginx或HAProxy进行负载均衡
+   - 配置多个应用实例
+   - 实现健康检查和故障转移
+
+2. **数据库优化**：
+   - 使用PostgreSQL主从复制
+   - 配置连接池
+   - 定期备份数据
+
+3. **监控和日志**：
+   - 集成Prometheus和Grafana
+   - 配置日志聚合
+   - 设置告警机制
+
+### 安全配置
+
+1. **网络安全**：
+   - 配置防火墙规则
+   - 使用HTTPS/TLS加密
+   - 限制API访问频率
+
+2. **数据安全**：
+   - 定期备份数据
+   - 加密敏感信息
+   - 实施访问控制
+
+3. **系统安全**：
+   - 定期更新系统和依赖
+   - 监控安全漏洞
+   - 实施安全审计
+
+## 环境变量配置
+
+### 必需环境变量
+
+```bash
+# API配置
+API_KEY=your-secure-api-key-here
+PORT=9010
+FRONTEND_PORT=9011
+
+# 存储配置
+STORAGE_TYPE=file  # 或 supabase
+FORCE_LOCAL_STORAGE=true
+
+# 如果使用Supabase
+SUPABASE_URL=your-supabase-url
+SUPABASE_ANON_KEY=your-supabase-anon-key
+SUPABASE_SERVICE_ROLE_KEY=your-supabase-service-key
 ```
 
-### MCP传输类型
+### 可选环境变量
 
-根据部署环境选择适当的传输类型：
+```bash
+# 传输配置
+TRANSPORT_TYPE=sse
 
+# 日志配置
+LOG_LEVEL=info
+LOG_FILE=/app/logs/app.log
+
+# 安全配置
+JWT_SECRET=your-jwt-secret
+CORS_ORIGIN=http://localhost:9011
+
+# 性能配置
+MAX_CONCURRENT_REQUESTS=100
+REQUEST_TIMEOUT=30000
 ```
-TRANSPORT_TYPE=stdio  # 本地开发环境
-TRANSPORT_TYPE=sse    # 远程/云部署环境
-```
+
+## 故障排除
+
+### 常见问题
+
+1. **端口冲突**：
+   - 检查端口占用：`netstat -tlnp | grep :9010`
+   - 修改端口配置或停止冲突服务
+
+2. **权限问题**：
+   - 确保Docker有足够权限
+   - 检查文件和目录权限
+
+3. **内存不足**：
+   - 监控内存使用：`docker stats`
+   - 增加系统内存或优化配置
+
+4. **网络连接问题**：
+   - 检查防火墙设置
+   - 验证网络连接
+   - 检查DNS解析
+
+### 调试技巧
+
+1. **查看日志**：
+   ```bash
+   # Docker容器日志
+   docker logs [container_id]
+   
+   # Docker Compose日志
+   docker-compose logs -f
+   ```
+
+2. **进入容器调试**：
+   ```bash
+   docker exec -it [container_id] /bin/sh
+   ```
+
+3. **健康检查**：
+   ```bash
+   curl http://localhost:9010/api/health
+   curl http://localhost:9011
+   ```
+
+## 性能优化
+
+### 系统优化
+
+1. **资源配置**：
+   - 根据负载调整CPU和内存
+   - 优化磁盘I/O性能
+   - 配置适当的并发连接数
+
+2. **缓存策略**：
+   - 启用Redis缓存
+   - 配置静态文件缓存
+   - 实施API响应缓存
+
+3. **数据库优化**：
+   - 创建适当的索引
+   - 优化查询语句
+   - 配置连接池
+
+### 监控指标
+
+1. **系统指标**：
+   - CPU使用率
+   - 内存使用率
+   - 磁盘I/O
+   - 网络流量
+
+2. **应用指标**：
+   - 响应时间
+   - 错误率
+   - 并发用户数
+   - API调用频率
+
+3. **业务指标**：
+   - 用户活跃度
+   - 提示词使用情况
+   - 功能使用统计
+
+---
+
+更多详细信息，请参考：
+- [Docker部署指南](./docker-deployment.md)
+- [安全配置指南](./security-guide.md)
+- [性能优化指南](./performance-guide.md)

@@ -1,5 +1,5 @@
 #!/bin/bash
-# stop.sh - 一键关闭Prompt Hub前后端服务
+# stop.sh - 简化的Prompt Hub停止脚本
 
 # 显示彩色输出
 GREEN='\033[0;32m'
@@ -7,138 +7,99 @@ YELLOW='\033[1;33m'
 RED='\033[0;31m'
 NC='\033[0m' # No Color
 
-echo -e "${YELLOW}正在关闭Prompt Hub...${NC}"
+echo -e "${YELLOW}正在停止Prompt Hub...${NC}"
 
-# 关闭指定端口上的进程
-kill_by_port() {
+# 停止服务函数
+stop_service() {
+  local pid_file=$1
+  local service_name=$2
+  
+  if [ -f "$pid_file" ]; then
+    local pid=$(cat "$pid_file")
+    if kill -0 "$pid" 2>/dev/null; then
+      echo -e "${YELLOW}停止 $service_name (PID: $pid)...${NC}"
+      kill -TERM "$pid" 2>/dev/null
+      
+      # 等待进程优雅退出
+      local count=0
+      while kill -0 "$pid" 2>/dev/null && [ $count -lt 10 ]; do
+        sleep 1
+        count=$((count + 1))
+      done
+      
+      # 如果进程仍在运行，强制终止
+      if kill -0 "$pid" 2>/dev/null; then
+        echo -e "${YELLOW}强制停止 $service_name...${NC}"
+        kill -9 "$pid" 2>/dev/null
+      fi
+      
+      echo -e "${GREEN}✓ $service_name 已停止${NC}"
+    else
+      echo -e "${YELLOW}$service_name 进程不存在${NC}"
+    fi
+    rm -f "$pid_file"
+  else
+    echo -e "${YELLOW}未找到 $service_name PID文件${NC}"
+  fi
+}
+
+# 通过端口停止服务
+stop_by_port() {
   local port=$1
   local service_name=$2
   
-  echo -e "${YELLOW}正在关闭$service_name (端口: $port)...${NC}"
-  
-  # 查找监听指定端口的进程
   local pids=$(lsof -i :$port -t 2>/dev/null)
-  
   if [ ! -z "$pids" ]; then
+    echo -e "${YELLOW}停止端口 $port 上的 $service_name...${NC}"
     for pid in $pids; do
-      echo -e "  终止进程 $pid"
-      kill -TERM $pid 2>/dev/null || true
+      kill -TERM "$pid" 2>/dev/null
     done
     
-    # 等待2秒让进程优雅退出
+    # 等待进程退出
     sleep 2
     
-    # 检查是否还有进程在运行，如果有则强制杀死
+    # 检查是否还有进程，如果有则强制终止
     local remaining_pids=$(lsof -i :$port -t 2>/dev/null)
     if [ ! -z "$remaining_pids" ]; then
-      echo -e "  强制终止残留进程..."
       for pid in $remaining_pids; do
-        kill -9 $pid 2>/dev/null || true
+        kill -9 "$pid" 2>/dev/null
       done
     fi
     echo -e "${GREEN}✓ $service_name 已停止${NC}"
   else
-    echo -e "  端口 $port 上没有运行的服务"
+    echo -e "${YELLOW}端口 $port 上没有运行的服务${NC}"
   fi
 }
 
-# 通过进程名查找并终止进程
-kill_by_name() {
-  local pattern=$1
-  local service_name=$2
-  
-  echo -e "${YELLOW}正在查找并关闭 $service_name...${NC}"
-  
-  local pids=$(pgrep -f "$pattern" 2>/dev/null)
-  
-  if [ ! -z "$pids" ]; then
-    for pid in $pids; do
-      local process_name=$(ps -p $pid -o comm= 2>/dev/null)
-      echo -e "  终止进程 $pid ($process_name)"
-      kill -TERM $pid 2>/dev/null || true
-    done
-    
-    # 等待2秒让进程优雅退出
-    sleep 2
-    
-    # 检查是否还有进程在运行，如果有则强制杀死
-    local remaining_pids=$(pgrep -f "$pattern" 2>/dev/null)
-    if [ ! -z "$remaining_pids" ]; then
-      echo -e "  强制终止残留进程..."
-      for pid in $remaining_pids; do
-        kill -9 $pid 2>/dev/null || true
-      done
-    fi
-    echo -e "${GREEN}✓ $service_name 已停止${NC}"
-  else
-    echo -e "  没有找到匹配的进程"
-  fi
-}
+# 停止服务
+echo -e "${YELLOW}停止服务...${NC}"
 
-# 清理PID文件
-cleanup_pid_files() {
-  local project_dir=$(cd "$(dirname "$0")" && pwd)
-  
-  echo -e "${YELLOW}清理PID文件...${NC}"
-  
-  local cleaned=0
-  if [ -f "$project_dir/mcp.pid" ]; then
-    echo -e "  清理 MCP PID 文件"
-    rm "$project_dir/mcp.pid"
-    cleaned=1
-  fi
-  
-  if [ -f "$project_dir/web.pid" ]; then
-    echo -e "  清理 Web PID 文件"  
-    rm "$project_dir/web.pid"
-    cleaned=1
-  fi
-  
-  if [ $cleaned -eq 1 ]; then
-    echo -e "${GREEN}✓ PID文件已清理${NC}"
-  else
-    echo -e "  没有找到PID文件"
-  fi
-}
+# 首先尝试通过PID文件停止
+stop_service "mcp.pid" "MCP服务"
+stop_service "web.pid" "Web服务"
 
-echo ""
-echo -e "${YELLOW}第一步: 通过端口关闭服务...${NC}"
-kill_by_port 9010 "MCP服务"
-kill_by_port 9011 "Web服务"
+# 然后通过端口停止（以防PID文件丢失）
+stop_by_port 9010 "MCP服务"
+stop_by_port 9011 "Web服务"
 
-echo ""
-echo -e "${YELLOW}第二步: 通过进程名关闭相关进程...${NC}"
-kill_by_name "tsx.*src/index.ts" "MCP进程"
-kill_by_name "next dev.*9011" "Next.js开发服务器"
-kill_by_name "next-router-worker" "Next.js路由工作进程"
-
-echo ""
-echo -e "${YELLOW}第三步: 清理文件...${NC}"
-cleanup_pid_files
-
-echo ""
+# 验证服务状态
 echo -e "${YELLOW}验证服务状态...${NC}"
-remaining_9010=$(lsof -i :9010 -t 2>/dev/null)
-remaining_9011=$(lsof -i :9011 -t 2>/dev/null)
 
-if [ ! -z "$remaining_9010" ] || [ ! -z "$remaining_9011" ]; then
-  echo -e "${RED}✗ 警告: 仍有进程在运行指定端口${NC}"
-  if [ ! -z "$remaining_9010" ]; then
-    local process_name=$(ps -p $remaining_9010 -o comm= 2>/dev/null)
-    echo -e "  端口 9010: PID $remaining_9010 ($process_name)"
+if lsof -i :9010 >/dev/null 2>&1 || lsof -i :9011 >/dev/null 2>&1; then
+  echo -e "${RED}✗ 警告: 仍有服务在运行${NC}"
+  if lsof -i :9010 >/dev/null 2>&1; then
+    echo -e "  端口 9010 仍被占用"
   fi
-  if [ ! -z "$remaining_9011" ]; then
-    local process_name=$(ps -p $remaining_9011 -o comm= 2>/dev/null)
-    echo -e "  端口 9011: PID $remaining_9011 ($process_name)"
+  if lsof -i :9011 >/dev/null 2>&1; then
+    echo -e "  端口 9011 仍被占用"
   fi
 else
-  echo -e "${GREEN}✓ 所有端口已释放${NC}"
+  echo -e "${GREEN}✓ 所有服务已停止${NC}"
 fi
 
 echo ""
-echo -e "${GREEN}服务关闭完成!${NC}"
+echo -e "${GREEN}服务停止完成!${NC}"
 echo ""
 echo -e "${YELLOW}管理命令:${NC}"
 echo -e "  启动服务: ./start.sh"
-echo -e "  检查状态: ps aux | grep -E 'next|tsx'"
 echo -e "  检查端口: lsof -i :9010 -i :9011"

@@ -6,12 +6,6 @@ const nextConfig = {
   experimental: {
     externalDir: true,
   },
-  // 支持静态导出（GitHub Pages）
-  output: 'export',
-  trailingSlash: true,
-  images: {
-    unoptimized: true
-  },
   // 配置webpack来处理TypeScript文件
   webpack: (config, { buildId, dev, isServer, defaultLoaders, webpack }) => {
     // 配置模块解析规则
@@ -24,21 +18,20 @@ const nextConfig = {
     return config;
   },
   env: {
-    // Vercel部署时不依赖外部MCP服务器
+    // Docker部署环境变量
     API_KEY: process.env.API_KEY,
-    // 支持Supabase认证
     NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL || '',
     NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '',
   },
-  // 移除API代理配置，使用本地API路由
-  // async rewrites() {
-  //   return [
-  //     {
-  //       source: '/api/:path*',
-  //       destination: `${process.env.API_URL || 'http://localhost:9010'}/api/:path*`,
-  //     },
-  //   ];
-  // },
+  // Docker部署时的API代理配置
+  async rewrites() {
+    return [
+      {
+        source: '/api/mcp/:path*',
+        destination: `${process.env.MCP_URL || 'http://localhost:9010'}/api/:path*`,
+      },
+    ];
+  },
 };
 
 module.exports = nextConfig;

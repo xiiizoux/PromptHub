@@ -6,10 +6,8 @@
     "dev": "next dev -p ${FRONTEND_PORT:-9011}",
     "build": "next build",
     "start": "next start -p ${FRONTEND_PORT:-9011}",
-    "export": "next export",
     "lint": "next lint",
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "vercel-build": "next build"
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
     "ai",

@@ -319,40 +319,50 @@ ALTER TABLE prompt_usage ENABLE ROW LEVEL SECURITY;
 ALTER TABLE prompt_feedback ENABLE ROW LEVEL SECURITY;
 ALTER TABLE prompt_performance ENABLE ROW LEVEL SECURITY;
 ALTER TABLE prompt_ab_tests ENABLE ROW LEVEL SECURITY;
+ALTER TABLE prompt_collaborators ENABLE ROW LEVEL SECURITY;
+ALTER TABLE prompt_audit_logs ENABLE ROW LEVEL SECURITY;
 
 -- 为prompts表创建策略
+
+
 DO $$
 BEGIN
-  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'prompts' AND policyname = 'Users can view own prompts') THEN
-    CREATE POLICY "Users can view own prompts" ON prompts FOR SELECT USING (auth.uid() = user_id);
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'prompts' AND policyname = 'Public prompts are viewable by everyone') THEN
+    CREATE POLICY "Public prompts are viewable by everyone" ON prompts
+      FOR SELECT USING (is_public = true OR created_by = auth.uid() OR user_id = auth.uid());
   END IF;
 END $$;
 
 DO $$
 BEGIN
-  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'prompts' AND policyname = 'Everyone can view public prompts') THEN
-    CREATE POLICY "Everyone can view public prompts" ON prompts FOR SELECT USING (is_public = true);
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'prompts' AND policyname = 'Users can insert their own prompts') THEN
+    CREATE POLICY "Users can insert their own prompts" ON prompts
+      FOR INSERT WITH CHECK (created_by = auth.uid() OR user_id = auth.uid());
   END IF;
 END $$;
 
 DO $$
 BEGIN
-  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'prompts' AND policyname = 'Users can update own prompts') THEN
-    CREATE POLICY "Users can update own prompts" ON prompts FOR UPDATE USING (auth.uid() = user_id);
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'prompts' AND policyname = 'Users can update their own prompts or collaborate') THEN
+    CREATE POLICY "Users can update their own prompts or collaborate" ON prompts
+      FOR UPDATE USING (
+        created_by = auth.uid() OR 
+        user_id = auth.uid() OR
+        (is_public = true AND allow_collaboration = true) OR
+        EXISTS (
+          SELECT 1 FROM prompt_collaborators 
+          WHERE prompt_collaborators.prompt_id = prompts.id 
+          AND prompt_collaborators.user_id = auth.uid()
+        )
+      );
   END IF;
 END $$;
 
 DO $$
 BEGIN
-  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'prompts' AND policyname = 'Users can delete own prompts') THEN
-    CREATE POLICY "Users can delete own prompts" ON prompts FOR DELETE USING (auth.uid() = user_id);
-  END IF;
-END $$;
-
-DO $$
-BEGIN
-  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'prompts' AND policyname = 'Users can insert own prompts') THEN
-    CREATE POLICY "Users can insert own prompts" ON prompts FOR INSERT WITH CHECK (auth.uid() = user_id);
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'prompts' AND policyname = 'Users can delete their own prompts') THEN
+    CREATE POLICY "Users can delete their own prompts" ON prompts
+      FOR DELETE USING (created_by = auth.uid() OR user_id = auth.uid());
   END IF;
 END $$;
 
@@ -445,6 +455,45 @@ DO $$
 BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'prompt_ab_tests' AND policyname = 'Users can manage own AB tests') THEN
     CREATE POLICY "Users can manage own AB tests" ON prompt_ab_tests FOR ALL USING (created_by = auth.uid());
+  END IF;
+END $$;
+
+-- 协作者表的RLS策略
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'prompt_collaborators' AND policyname = 'Users can view their own collaborations') THEN
+    CREATE POLICY "Users can view their own collaborations" ON prompt_collaborators
+      FOR SELECT USING (user_id = auth.uid());
+  END IF;
+END $$;
+
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'prompt_collaborators' AND policyname = 'Prompt owners can manage collaborators') THEN
+    CREATE POLICY "Prompt owners can manage collaborators" ON prompt_collaborators
+      FOR ALL USING (
+        EXISTS (
+          SELECT 1 FROM prompts 
+          WHERE prompts.id = prompt_collaborators.prompt_id 
+          AND (prompts.created_by = auth.uid() OR prompts.user_id = auth.uid())
+        )
+      );
+  END IF;
+END $$;
+
+-- 审计日志的RLS策略
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'prompt_audit_logs' AND policyname = 'Users can view audit logs for their prompts') THEN
+    CREATE POLICY "Users can view audit logs for their prompts" ON prompt_audit_logs
+      FOR SELECT USING (
+        user_id = auth.uid() OR
+        EXISTS (
+          SELECT 1 FROM prompts 
+          WHERE prompts.id = prompt_audit_logs.prompt_id 
+          AND (prompts.created_by = auth.uid() OR prompts.user_id = auth.uid())
+        )
+      );
   END IF;
 END $$;
 
@@ -635,6 +684,11 @@ ON CONFLICT (name) DO UPDATE SET
   sort_order = EXCLUDED.sort_order,
   updated_at = NOW();
 
+-- 为现有数据设置created_by字段（使用user_id字段的值）
+UPDATE prompts 
+SET created_by = user_id 
+WHERE created_by IS NULL AND user_id IS NOT NULL;
+
 -- 更新现有提示词的category_id
 UPDATE prompts 
 SET category_id = c.id 
@@ -702,3 +756,16 @@ WHERE p.name IN ('general_assistant', 'code_assistant')
     SELECT 1 FROM prompt_versions pv 
     WHERE pv.prompt_id = p.id AND pv.version = 1
   );
+
+-- =============================================
+-- 表字段注释
+-- =============================================
+
+-- 添加注释
+COMMENT ON COLUMN prompts.allow_collaboration IS '是否允许协作编辑';
+COMMENT ON COLUMN prompts.edit_permission IS '编辑权限级别: owner_only, collaborators, public';
+COMMENT ON COLUMN prompts.created_by IS '创建者用户ID（新字段，与user_id字段功能类似）';
+COMMENT ON COLUMN prompts.last_modified_by IS '最后修改者用户ID';
+
+COMMENT ON TABLE prompt_collaborators IS '提示词协作者表';
+COMMENT ON TABLE prompt_audit_logs IS '提示词操作审计日志表';

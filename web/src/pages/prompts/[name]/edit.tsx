@@ -24,6 +24,13 @@ import {
   PERMISSION_LEVELS,
   PERMISSION_LEVEL_DESCRIPTIONS
 } from '@/lib/permissions';
+import { 
+  validateVersionFormat,
+  canIncrementVersion,
+  suggestNextVersion,
+  formatVersionFromInt,
+  getVersionValidationMessage
+} from '@/lib/version-utils';
 import { redirectToLogin } from '@/lib/redirect';
 
 // 预设模型选项
@@ -112,13 +119,18 @@ export default function EditPromptPage({ prompt }: EditPromptPageProps) {
     fetchTags();
   }, []);
   
+  // 格式化当前版本号
+  const currentVersionFormatted = typeof prompt.version === 'number' 
+    ? formatVersionFromInt(prompt.version) 
+    : prompt.version || '1.0';
+
   const { register, handleSubmit, control, formState: { errors }, setValue, watch, reset } = useForm<PromptFormData>({
     defaultValues: {
       name: prompt.name,
       description: prompt.description,
       content: prompt.content,
       category: prompt.category,
-      version: prompt.version || '1.0',
+      version: currentVersionFormatted,
       author: prompt.author || user?.display_name || user?.username || '',
       template_format: prompt.template_format || 'text',
       input_variables: prompt.input_variables || [],
@@ -463,16 +475,55 @@ export default function EditPromptPage({ prompt }: EditPromptPageProps) {
                     <label htmlFor="version" className="block text-sm font-medium text-gray-700 mb-1">
                       版本 *
                     </label>
-                    <input
-                      type="text"
-                      id="version"
-                      className="input"
-                      placeholder="例如：1.0"
-                      {...register('version', { required: '版本是必填的' })}
-                    />
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="text"
+                        id="version"
+                        className="input flex-1"
+                        placeholder="例如：1.0"
+                        {...register('version', { 
+                          required: '版本是必填的',
+                          validate: (value) => {
+                            if (!validateVersionFormat(value)) {
+                              return '版本号格式错误，应为 X.Y 格式（如：1.0, 2.5）';
+                            }
+                            if (!canIncrementVersion(currentVersionFormatted, value)) {
+                              return `新版本号必须大于当前版本 ${currentVersionFormatted}`;
+                            }
+                            return true;
+                          }
+                        })}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const currentVersion = watch('version') || currentVersionFormatted;
+                          const suggested = suggestNextVersion(currentVersion, 'minor');
+                          setValue('version', suggested);
+                        }}
+                        className="btn-secondary text-sm px-3 py-1"
+                        title="建议下一版本"
+                      >
+                        +0.1
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const suggested = suggestNextVersion(currentVersionFormatted, 'major');
+                          setValue('version', suggested);
+                        }}
+                        className="btn-secondary text-sm px-3 py-1"
+                        title="建议主版本"
+                      >
+                        +1.0
+                      </button>
+                    </div>
                     {errors.version && (
                       <p className="mt-1 text-sm text-red-600">{errors.version.message}</p>
                     )}
+                    <p className="mt-1 text-xs text-gray-500">
+                      当前版本：{currentVersionFormatted}，新版本必须递增且保留1位小数
+                    </p>
                   </div>
 
                   {/* 作者 */}

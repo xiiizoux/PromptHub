@@ -42,27 +42,27 @@ Prompt Hub是一个综合性的提示词服务平台，专为大型语言模型(
 
 2. 安装依赖（前后端）：
    ```bash
-   # 安装所有依赖（前端和后端）
+   # 安装所有依赖（MCP服务和Web应用）
    npm run install:all
    
    # 或者分别安装
-   npm run backend:install  # 安装后端依赖
-   npm run frontend:install # 安装前端依赖
+   npm run mcp:install  # 安装MCP服务依赖
+   npm run web:install  # 安装Web应用依赖
    ```
 
 ### 配置
 
 1. 创建 `.env` 文件（根据 `.env.example` 模板）：
    ```env
-   PORT=9010                       # 后端服务器端口
-   FRONTEND_PORT=9011             # 前端服务器端口
+   PORT=9010                       # MCP服务器端口
+   FRONTEND_PORT=9011             # Web应用端口
    API_KEY=your-secure-api-key
    TRANSPORT_TYPE=stdio
    SUPABASE_URL=your-supabase-url  # Supabase 项目 URL
    SUPABASE_ANON_KEY=your-supabase-anon-key  # Supabase 匿名密钥
    ```
    
-   注意：前端会自动使用环境变量中的 `SUPABASE_URL` 和 `SUPABASE_ANON_KEY` 进行认证。
+   注意：Web应用会自动使用环境变量中的 `SUPABASE_URL` 和 `SUPABASE_ANON_KEY` 进行认证。
 
 2. 设置数据库（如果使用 Supabase）：
    - 在 Supabase 控制台的 SQL 编辑器中执行 `supabase/schema.sql` 脚本
@@ -73,12 +73,12 @@ Prompt Hub是一个综合性的提示词服务平台，专为大型语言模型(
 
 1. 编译前后端项目：
    ```bash
-   # 编译所有项目（前端和后端）
+   # 编译所有项目（MCP服务和Web应用）
    npm run build:all
    
    # 或者分别编译
-   npm run backend:build  # 编译后端
-   npm run frontend:build # 编译前端
+   npm run mcp:build  # 编译MCP服务
+   npm run web:build  # 编译Web应用
    ```
 
 2. 使用一键启动脚本运行全部服务：
@@ -87,7 +87,7 @@ Prompt Hub是一个综合性的提示词服务平台，专为大型语言模型(
    # 或者直接运行脚本
    ./start.sh
    ```
-   脚本会自动处理端口冲突并启动前端和后端服务。
+   脚本会自动处理端口冲突并启动MCP服务和Web应用。
 
 3. 使用一键关闭脚本停止所有服务：
    ```bash
@@ -96,14 +96,26 @@ Prompt Hub是一个综合性的提示词服务平台，专为大型语言模型(
    ./stop.sh
    ```
 
-4. 访问服务：
-   - 前端应用： http://localhost:9011
-   - 后端健康检查： http://localhost:9010/api/health
-   - 后端API文档： http://localhost:9010/api/docs
+4. 分别运行开发服务：
+   ```bash
+   # 运行MCP服务（开发模式）
+   npm run mcp:dev
+   
+   # 运行Web应用（开发模式）
+   npm run web:dev
+   
+   # 运行MCP服务测试
+   npm run mcp:test
+   ```
+
+5. 访问服务：
+   - Web应用： http://localhost:9011
+   - MCP服务健康检查： http://localhost:9010/api/health
+   - MCP服务API文档： http://localhost:9010/api/docs
 
 #### Docker运行
 
-使用Docker容器部署完整的PromptHub前后端应用：
+使用Docker容器部署完整的PromptHub MCP服务和Web应用：
 
 1. **构建Docker镜像**：
    ```bash
@@ -132,104 +144,38 @@ Prompt Hub是一个综合性的提示词服务平台，专为大型语言模型(
 
 更多部署选项及高级配置，请参考[部署选项文档](./docs/deployment-options.md)
 
-### Vercel部署
+### 一键部署
 
-Prompt Hub支持完整的前后端应用通过Vercel进行快速部署，特别适合需要公开访问的场景：
+使用项目提供的部署脚本，可以快速在VPS上部署完整的PromptHub应用：
 
-1. **准备项目**：
-   - 将项目推送到GitHub、GitLab或Bitbucket仓库
-   - 在项目根目录创建`vercel.json`配置文件：
-     ```json
-     {
-       "version": 2,
-       "buildCommand": "npm run build:all",
-       "outputDirectory": "frontend/dist",
-       "installCommand": "npm run install:all",
-       "rewrites": [
-         { "source": "/api/(.*)", "destination": "/api/index.js" },
-         { "source": "/sse", "destination": "/api/index.js" },
-         { "source": "/tools(.*)", "destination": "/api/index.js" }
-       ],
-       "functions": {
-         "api/index.js": {
-           "memory": 1024,
-           "maxDuration": 10
-         }
-       }
-     }
-     ```
+```bash
+# 给脚本执行权限
+chmod +x deploy-docker.sh
 
-2. **前端配置**：
-   - 确保前端代码中的API请求URL配置为相对路径或环境变量：
-     ```js
-     // 前端环境变量配置示例
-     const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || '/api';
-     ```
-   - 更新前端的`.env.production`文件指向同一域名下的API端点
+# 运行一键部署
+./deploy-docker.sh
+```
 
-3. **后端适配**：
-   - 创建`/api/index.js`文件，该文件将作为Vercel的Serverless函数入口点：
-     ```js
-     // /api/index.js
-     const { createServer } = require('http');
-     const { parse } = require('url');
-     const next = require('next');
-     const app = require('../backend/dist/src/index.js');
-     
-     module.exports = (req, res) => {
-       // 启动Express应用
-       app.handle(req, res);
-     };
-     ```
+部署脚本会自动：
+- 检查Docker环境
+- 创建必要目录和配置
+- 构建和启动所有服务
+- 提供可选服务选择（数据库、缓存、代理等）
 
-4. **部署步骤**：
-   - 注册/登录[Vercel](https://vercel.com)
-   - 点击"New Project"导入您的Git仓库
-   - 配置以下环境变量：
-     ```
-     API_KEY=your-secure-api-key
-     TRANSPORT_TYPE=sse
-     SUPABASE_URL=your-supabase-url
-     SUPABASE_ANON_KEY=your-supabase-anon-key
-     JWT_SECRET=your-jwt-secret
-     NODE_ENV=production
-     NEXT_PUBLIC_API_URL=/api
-     ```
-   - 在项目设置中选择"Override":
-     - Build Command: `npm run build:all`
-     - Output Directory: `frontend/dist`
-     - Install Command: `npm run install:all`
-   - 点击"Deploy"按钮开始部署
-
-5. **Supabase设置**：
-   - 在[Supabase](https://app.supabase.io/)创建项目
-   - 在SQL编辑器中执行`supabase/schema.sql`脚本
-   - 在Supabase项目设置中的API设置页面中，添加Vercel部署URL到CORS允许列表
-   - 安全设置中配置JWT密钥，确保与Vercel环境变量中的JWT_SECRET一致
-
-6. **验证部署**：
-   - 访问您的Vercel部署URL：`https://your-project-name.vercel.app`
-   - 测试前端功能：注册、登录、提示词管理等
-   - 检查API健康状态：`https://your-project-name.vercel.app/api/health`
-   - 确认MCP工具端点：`https://your-project-name.vercel.app/tools`
-
-7. **持续集成**：
-   - 配置Git仓库的Webhook，实现代码提交后自动部署
-   - 在Vercel中设置预览部署，为每个拉取请求生成预览环境
-
-更多详细信息，请参考[部署选项文档](./docs/deployment-options.md)。
+更多详细信息，请参考[Docker部署指南](./docs/docker-deployment.md)。
 
 ## 详细文档
 
 详细信息请参考以下文档：
 
+- **[开发者指南](./docs/developer-guide.md)**: 完整的开发指南，包括项目架构、环境配置、安全最佳实践、缓存系统和重定向功能
 - **[基本功能](./docs/basic-features.md)**: 提示词管理、版本控制和AI辅助功能
 - **[性能分析](./docs/performance-analysis.md)**: 跟踪提示词使用、收集反馈和A/B测试
 - **[部署选项](./docs/deployment-options.md)**: 本地部署、Docker和云部署指南
 - **[数据库结构](./docs/database-structure.md)**: 详细的数据库表和关系
 - **[API参考](./docs/api-reference.md)**: 完整的API和MCP工具文档
 - **[测试指南](./docs/testing-guide.md)**: 测试最佳实践、性能跟踪和服务器测试
-- **[前端文档](./docs/frontend.md)**: 前端应用功能、结构和开发指南
+- **[Web应用文档](./docs/frontend.md)**: Web应用功能、结构和开发指南
 
 ## 快速参考
 
@@ -255,6 +201,23 @@ Prompt Hub支持完整的前后端应用通过Vercel进行快速部署，特别�
 - `GET /api/export` - 导出提示词
 - `POST /api/import` - 导入提示词
 
+### 项目管理命令
+
+#### 安装和构建
+- `npm run install:all` - 安装所有依赖（MCP服务和Web应用）
+- `npm run mcp:install` - 安装MCP服务依赖
+- `npm run web:install` - 安装Web应用依赖
+- `npm run build:all` - 构建所有项目
+- `npm run mcp:build` - 构建MCP服务
+- `npm run web:build` - 构建Web应用
+
+#### 开发和运行
+- `npm start` 或 `./start.sh` - 一键启动所有服务
+- `npm run stop` 或 `./stop.sh` - 一键停止所有服务
+- `npm run mcp:dev` - 运行MCP服务（开发模式）
+- `npm run web:dev` - 运行Web应用（开发模式）
+- `npm run mcp:test` - 运行MCP服务测试
+
 ### 性能分析工具
 
 - `track_prompt_usage` - 记录提示词使用数据
@@ -266,11 +229,11 @@ Prompt Hub支持完整的前后端应用通过Vercel进行快速部署，特别�
 ## 项目结构
 
 ```
-mcp-prompt-server/
-├─ backend/                   # 后端目录
+PromptHub/
+├─ mcp/                      # MCP服务目录
 │   ├─ api/                  # API服务器入口
 │   ├─ client/               # API客户端库
-│   ├─ src/                  # 后端源代码
+│   ├─ src/                  # MCP服务源代码
 │   │   ├─ api/              # API端点实现
 │   │   │   ├─ auth-middleware.ts  # 认证中间件
 │   │   │   ├─ api-keys-router.ts  # API密钥管理
@@ -281,13 +244,18 @@ mcp-prompt-server/
 │   │   ├─ utils/            # 工具函数
 │   │   │   └─ logger.ts     # 日志和审计系统
 │   │   ├─ prompts/          # 提示词定义目录
+│   │   ├─ tests/            # 单元测试
+│   │   │   └─ api-keys.test.ts  # API密钥单元测试
 │   │   └─ types.ts          # 类型定义
-│   ├─ tests/                # 测试目录
-│   │   └─ api-keys.test.ts  # API密钥单元测试
-│   ├─ package.json          # 后端依赖和脚本
+│   ├─ tests/                # 集成测试和性能测试
+│   │   ├─ mcp/              # MCP协议测试
+│   │   ├─ performance/      # 性能测试
+│   │   ├─ utils/            # 测试工具
+│   │   └─ setup.mjs         # 测试环境设置
+│   ├─ package.json          # MCP服务依赖和脚本
 │   └─ tsconfig.json         # TypeScript配置
-├─ frontend/                 # 前端应用目录
-│   ├─ src/                  # 前端源代码
+├─ web/                      # Web应用目录
+│   ├─ src/                  # Web应用源代码
 │   │   ├─ pages/            # 页面组件
 │   │   │   ├─ auth/         # 认证相关页面
 │   │   │   │   ├─ login.tsx # 登录页面
@@ -298,12 +266,20 @@ mcp-prompt-server/
 │   │   ├─ components/       # 通用组件
 │   │   └─ contexts/         # 上下文和状态管理
 │   │       └─ AuthContext.tsx # 认证上下文
+│   ├─ tests/                # Web应用测试页面
+│   │   ├─ test-redirect.tsx # 重定向功能测试
+│   │   ├─ test-categories-tags.tsx # 分类标签API测试
+│   │   ├─ api-test.tsx      # API端点测试
+│   │   └─ keys-test.tsx     # API密钥测试
+│   ├─ package.json          # Web应用依赖和脚本
+│   └─ next.config.js        # Next.js配置
 ├─ docs/                     # 详细文档
 ├─ supabase/                 # Supabase相关文件
+│   ├─ tests/                # 数据库测试脚本
+│   │   └─ validate_schema.sh # Schema验证脚本
 │   └─ schema.sql           # 数据库表结构和策略
 ├─ logs/                     # 日志文件目录
-├─ .env                      # 环境变量文件
-├─ .env.example              # 环境变量模板
+├─ .env                      # 环境变量文件（统一配置）
 ├─ package.json              # 项目根目录依赖和脚本
 ├─ start.sh                  # 项目一键启动脚本
 ├─ stop.sh                   # 项目一键停止脚本

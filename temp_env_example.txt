@@ -1,1 +1,0 @@
-echo "# PromptHub 环境变量配置示例" > .env.example

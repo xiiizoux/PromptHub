@@ -64,13 +64,13 @@ export function validateConfig(): void {
     console.warn('Warning: Using default API key in production environment');
   }
   
-  // Vercel部署特定验证
-  if (config.isVercel) {
-    console.log('Running in Vercel environment');
+  // Docker部署特定验证
+  if (process.env.NODE_ENV === 'production') {
+    console.log('Running in production environment');
     
-    // 添加Vercel相关的验证，如果需要
-    if (!process.env.VERCEL_URL) {
-      console.warn('VERCEL_URL environment variable not set');
+    // 生产环境验证
+    if (!process.env.API_KEY || config.apiKey === 'your-secure-api-key') {
+      console.warn('Warning: Using default or missing API key in production');
     }
   }
   

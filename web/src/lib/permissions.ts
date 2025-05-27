@@ -14,10 +14,11 @@ export const checkEditPermission = (prompt: PromptDetails, user: User | null): P
     };
   }
 
-  // 1. 用户是提示词的创建者
-  if (prompt.author === user.username || 
-      prompt.author === user.display_name || 
-      prompt.created_by === user.id) {
+  // 1. 用户是提示词的创建者（优先检查数据库字段）
+  if (prompt.created_by === user.id || 
+      prompt.user_id === user.id ||
+      prompt.author === user.username || 
+      prompt.author === user.display_name) {
     return {
       canEdit: true,
       reason: 'owner',
@@ -73,9 +74,10 @@ export const checkViewPermission = (prompt: PromptDetails, user: User | null): b
   }
 
   // 创建者可以查看自己的提示词
-  if (prompt.author === user.username || 
-      prompt.author === user.display_name || 
-      prompt.created_by === user.id) {
+  if (prompt.created_by === user.id || 
+      prompt.user_id === user.id ||
+      prompt.author === user.username || 
+      prompt.author === user.display_name) {
     return true;
   }
 
@@ -103,9 +105,10 @@ export const checkDeletePermission = (prompt: PromptDetails, user: User | null):
   }
 
   // 只有创建者和管理员可以删除
-  if (prompt.author === user.username || 
-      prompt.author === user.display_name || 
-      prompt.created_by === user.id) {
+  if (prompt.created_by === user.id || 
+      prompt.user_id === user.id ||
+      prompt.author === user.username || 
+      prompt.author === user.display_name) {
     return {
       canEdit: true,
       reason: 'owner',
@@ -139,8 +142,8 @@ export const checkFieldPermission = (
 
   switch (field) {
     case 'author':
-      // 只有创建者和管理员可以修改作者信息
-      return permissionCheck.reason === 'owner' || permissionCheck.reason === 'admin';
+      // 作者信息不允许修改（永久锁定）
+      return false;
     
     case 'is_public':
     case 'allow_collaboration':
@@ -197,9 +200,10 @@ export const canManageCollaborators = (prompt: PromptDetails, user: User | null)
   if (!user) return false;
   
   // 只有创建者和管理员可以管理协作者
-  return (prompt.author === user.username || 
-          prompt.author === user.display_name || 
-          prompt.created_by === user.id) ||
+  return (prompt.created_by === user.id || 
+          prompt.user_id === user.id ||
+          prompt.author === user.username || 
+          prompt.author === user.display_name) ||
          (user.role === 'admin');
 };
 
@@ -208,9 +212,10 @@ export const canViewAuditLogs = (prompt: PromptDetails, user: User | null): bool
   if (!user) return false;
   
   // 创建者、管理员和协作者可以查看审计日志
-  return (prompt.author === user.username || 
-          prompt.author === user.display_name || 
-          prompt.created_by === user.id) ||
+  return (prompt.created_by === user.id || 
+          prompt.user_id === user.id ||
+          prompt.author === user.username || 
+          prompt.author === user.display_name) ||
          user.role === 'admin' ||
          (prompt.collaborators && prompt.collaborators.includes(user.username || ''));
 };

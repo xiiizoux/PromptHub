@@ -7,15 +7,16 @@
   "scripts": {
     "start": "./start.sh",
     "stop": "./stop.sh",
-    "backend:install": "cd mcp && npm install",
-    "frontend:install": "cd web && npm install",
-    "install:all": "npm run backend:install && npm run frontend:install",
-    "backend:build": "cd mcp && npm run build",
-    "frontend:build": "cd web && npm run build",
-    "build:all": "npm run backend:build && npm run frontend:build",
+    "mcp:install": "cd mcp && npm install",
+    "web:install": "cd web && npm install",
+    "install:all": "npm run mcp:install && npm run web:install",
+    "mcp:build": "cd mcp && npm run build",
+    "web:build": "cd web && npm run build",
+    "build:all": "npm run mcp:build && npm run web:build",
     "start:production": "node production-server.js",
-    "test": "mocha --require tsx 'mcp/src/tests/**/*.test.ts'",
-    "test:api-keys": "mocha --require tsx 'mcp/src/tests/api-keys.test.ts'"
+    "mcp:dev": "cd mcp && npm run dev",
+    "web:dev": "cd web && npm run dev",
+    "mcp:test": "cd mcp && npm test"
   },
   "keywords": [
     "mcp",
@@ -42,7 +43,7 @@
     "@babel/preset-env": "^7.27.2",
     "@babel/preset-typescript": "^7.27.1",
     "@types/bcryptjs": "^2.4.6",
-    "@types/chai": "^5.2.2",
+
     "@types/cors": "^2.8.17",
     "@types/express": "^4.17.21",
     "@types/jest": "^29.5.14",

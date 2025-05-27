@@ -1,18 +1,17 @@
 import axios from 'axios';
 import { PromptInfo, PromptDetails, ApiResponse, PaginatedResponse, PromptFilters, PromptUsage, PromptFeedback, PromptPerformance } from '@/types';
 
-// 创建Axios实例
+// 创建Axios实例 - Docker部署配置
 const api = axios.create({
-  // Vercel部署时使用相对路径
   baseURL: '/api',
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
-// 创建MCP API实例，Vercel部署时使用内部代理
+// 创建MCP API实例 - Docker部署时通过代理访问
 const mcpApi = axios.create({
-  baseURL: '/api',
+  baseURL: '/api/mcp',
   headers: {
     'Content-Type': 'application/json',
   },
@@ -83,7 +82,7 @@ export const getTags = async (): Promise<string[]> => {
 // 获取所有提示词名称
 export const getPromptNames = async (): Promise<string[]> => {
   try {
-    const response = await mcpApi.get<any>('/mcp-proxy?action=get_prompt_names');
+    const response = await mcpApi.get<any>('/prompts');
     return response.data?.data?.names || [];
   } catch (error) {
     console.error('获取提示词名称失败:', error);
@@ -141,8 +140,16 @@ export const getPrompts = async (filters?: PromptFilters): Promise<PaginatedResp
 // 获取提示词详情
 export const getPromptDetails = async (name: string): Promise<PromptDetails> => {
   try {
-    // 使用本地API路由
-    const response = await api.get<any>(`/prompts/${name}`);
+    // 在服务端渲染时使用完整URL，在客户端使用相对路径
+    const baseUrl = typeof window === 'undefined' 
+      ? `http://localhost:${process.env.FRONTEND_PORT || 9011}` 
+      : '';
+    
+    const response = await axios.get<any>(`${baseUrl}/api/prompts/${name}`, {
+      headers: {
+        'Content-Type': 'application/json',
+      }
+    });
     
     if (!response.data.success) {
       throw new Error(response.data.message || '获取提示词详情失败');
@@ -158,7 +165,7 @@ export const getPromptDetails = async (name: string): Promise<PromptDetails> => 
 // 创建新提示词
 export const createPrompt = async (prompt: Partial<PromptDetails>): Promise<PromptDetails> => {
   try {
-    const response = await mcpApi.post<any>('/mcp/tools/create_prompt/invoke', prompt);
+    const response = await mcpApi.post<any>('/tools/create_prompt/invoke', prompt);
     const result = response.data?.content?.text ? JSON.parse(response.data.content.text) : {};
     return result as PromptDetails;
   } catch (error) {
@@ -170,7 +177,7 @@ export const createPrompt = async (prompt: Partial<PromptDetails>): Promise<Prom
 // 更新提示词
 export const updatePrompt = async (name: string, prompt: Partial<PromptDetails>): Promise<PromptDetails> => {
   try {
-    const response = await mcpApi.post<any>('/mcp/tools/update_prompt/invoke', { name, ...prompt });
+    const response = await mcpApi.post<any>('/tools/update_prompt/invoke', { name, ...prompt });
     const result = response.data?.content?.text ? JSON.parse(response.data.content.text) : {};
     return result as PromptDetails;
   } catch (error) {
@@ -182,7 +189,7 @@ export const updatePrompt = async (name: string, prompt: Partial<PromptDetails>)
 // 删除提示词
 export const deletePrompt = async (name: string): Promise<boolean> => {
   try {
-    const response = await mcpApi.post<any>('/mcp/tools/delete_prompt/invoke', { name });
+    const response = await mcpApi.post<any>('/tools/delete_prompt/invoke', { name });
     const result = response.data?.content?.text ? JSON.parse(response.data.content.text) : { success: false };
     return !!result.success;
   } catch (error) {
@@ -208,7 +215,7 @@ export const trackPromptUsage = async (data: Omit<PromptUsage, 'usage_id' | 'cre
       session_id: 'frontend-session' // 前端没有这个字段，设置一个默认值
     };
     
-    const response = await mcpApi.post<any>('/mcp/tools/track_prompt_usage/invoke', params);
+    const response = await mcpApi.post<any>('/tools/track_prompt_usage/invoke', params);
     const result = response.data;
     return { usage_id: result.data?.usageId || 'unknown' };
   } catch (error) {
@@ -227,7 +234,7 @@ export const submitPromptFeedback = async (feedback: Omit<PromptFeedback, 'creat
       categories: [] // 前端没有这个字段，设置空数组
     };
     
-    const response = await mcpApi.post<any>('/mcp/tools/submit_prompt_feedback/invoke', params);
+    const response = await mcpApi.post<any>('/tools/submit_prompt_feedback/invoke', params);
     return response.data.success === true;
   } catch (error) {
     console.error('提交提示词反馈失败:', error);
@@ -294,13 +301,13 @@ export const getPerformanceReport = async (promptId: string): Promise<any> => {
 
 // 调用MCP工具
 export const invokeMcpTool = async (toolName: string, params: any): Promise<any> => {
-  const response = await mcpApi.post<any>(`/mcp/tools/${toolName}/invoke`, { params });
+  const response = await mcpApi.post<any>(`/tools/${toolName}/invoke`, { params });
   return response.data;
 };
 
 // 获取可用工具列表
 export const getMcpTools = async (): Promise<any> => {
-  const response = await mcpApi.get<any>('/mcp/tools');
+  const response = await mcpApi.get<any>('/tools');
   return response.data;
 };
 
