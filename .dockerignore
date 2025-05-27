@@ -11,8 +11,7 @@ yarn-error.log
 *.log
 logs
 
-# 环境变量和密钥
-.env
+# 环境变量和密钥 (保留.env用于Docker)
 .env.local
 .env.development.local
 .env.test.local
@@ -100,9 +99,8 @@ web/out
 web/build
 web/dist
 
-# MCP构建输出
+# MCP构建输出 (保留dist用于Docker)
 mcp/build
-mcp/dist
 
 # 运行时数据
 *.pid
