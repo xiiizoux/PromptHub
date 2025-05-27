@@ -43,11 +43,13 @@ RUN mkdir -p /app/logs
 EXPOSE 9010 9011
 
 # 添加Docker启动脚本
-COPY docker-start.sh /app/docker-start.sh
-RUN chmod +x /app/docker-start.sh
+COPY docker-start.sh /app/
+RUN chmod +x /app/docker-start.sh && \
+    cat /app/docker-start.sh > /app/entrypoint.sh && \
+    chmod +x /app/entrypoint.sh
 
 # 安装serve用于提供Web应用静态文件服务和curl用于健康检查
 RUN npm install -g serve && apk add --no-cache curl
 
 # 启动应用
-CMD ["/app/docker-start.sh"]
+CMD ["/bin/bash", "/app/entrypoint.sh"]

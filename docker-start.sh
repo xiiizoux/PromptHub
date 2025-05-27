@@ -23,9 +23,6 @@ if [ -z "$SUPABASE_URL" ] || [ -z "$SUPABASE_ANON_KEY" ]; then
   export FORCE_LOCAL_STORAGE=true
 fi
 
-# 启动MCP服务
-echo -e "${YELLOW}正在启动MCP服务 (端口: $MCP_PORT)...${NC}"
-
 # 检查关键依赖是否存在
 cd $PROJECT_DIR/mcp
 if [ ! -f "./node_modules/.bin/dotenv" ] || [ ! -f "./node_modules/.bin/tsx" ]; then
