@@ -96,15 +96,11 @@ start_services() {
     # 启动MCP服务（后台运行）
     echo -e "${YELLOW}   启动MCP服务 (端口: 9010)...${NC}"
     cd mcp && NODE_ENV=production npm run dev > ../logs/mcp.log 2>&1 &
-    MCP_PID=$!
-    echo $MCP_PID > ../mcp.pid
     cd "$PROJECT_DIR"
     
     # 启动Web服务（生产模式，后台运行）
     echo -e "${YELLOW}   启动Web服务生产模式 (端口: 9011)...${NC}"
     cd web && NODE_ENV=production FRONTEND_PORT=9011 npm run start > ../logs/web.log 2>&1 &
-    WEB_PID=$!
-    echo $WEB_PID > ../web.pid
     cd "$PROJECT_DIR"
     
     # 等待服务启动

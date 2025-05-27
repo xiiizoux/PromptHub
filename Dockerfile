@@ -10,7 +10,16 @@ COPY web/package*.json ./web/
 COPY supabase/package*.json ./supabase/
 
 # 安装所有依赖
-RUN npm install && cd mcp && npm install && cd ../web && npm install && cd ../supabase && npm install
+RUN npm install && \
+    cd mcp && \
+    # 先安装关键依赖，确保它们可用
+    npm install --save-dev dotenv-cli@latest tsx@latest && \
+    npm install --save dotenv@latest && \
+    npm install && \
+    # 检查关键依赖是否安装成功
+    test -f ./node_modules/.bin/dotenv && \
+    test -f ./node_modules/.bin/tsx && \
+    cd ../web && npm install && cd ../supabase && npm install
 
 # 复制应用程序代码
 COPY . .

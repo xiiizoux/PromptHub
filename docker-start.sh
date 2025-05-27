@@ -25,8 +25,28 @@ fi
 
 # 启动MCP服务
 echo -e "${YELLOW}正在启动MCP服务 (端口: $MCP_PORT)...${NC}"
-cd $PROJECT_DIR/mcp && node dist/api/index.js &
-MCP_PID=$!
+
+# 检查关键依赖是否存在
+cd $PROJECT_DIR/mcp
+if [ ! -f "./node_modules/.bin/dotenv" ] || [ ! -f "./node_modules/.bin/tsx" ]; then
+  echo -e "${YELLOW}警告: 检测到关键依赖缺失，尝试安装...${NC}"
+  npm install --save-dev dotenv-cli@latest tsx@latest
+  npm install --save dotenv@latest
+  npm install
+fi
+
+# 优先使用编译后的代码，如果存在
+if [ -f "$PROJECT_DIR/mcp/dist/api/index.js" ]; then
+  echo -e "${GREEN}使用编译后的代码启动MCP服务${NC}"
+  NODE_ENV=production node dist/api/index.js &
+  MCP_PID=$!
+else
+  # 如果编译后的代码不存在，使用开发脚本
+  echo -e "${YELLOW}未找到编译后的代码，使用开发脚本启动MCP服务${NC}"
+  # 使用npx执行以确保我们使用的是node_modules中的dotenv和tsx
+  NODE_ENV=production npx dotenv -e ../.env npx tsx src/index.ts &
+  MCP_PID=$!
+fi
 
 # 等待MCP服务启动
 echo -e "${YELLOW}等待MCP服务启动...${NC}"

@@ -9,40 +9,6 @@ NC='\033[0m' # No Color
 
 echo -e "${YELLOW}正在停止Prompt Hub...${NC}"
 
-# 停止服务函数
-stop_service() {
-  local pid_file=$1
-  local service_name=$2
-  
-  if [ -f "$pid_file" ]; then
-    local pid=$(cat "$pid_file")
-    if kill -0 "$pid" 2>/dev/null; then
-      echo -e "${YELLOW}停止 $service_name (PID: $pid)...${NC}"
-      kill -TERM "$pid" 2>/dev/null
-      
-      # 等待进程优雅退出
-      local count=0
-      while kill -0 "$pid" 2>/dev/null && [ $count -lt 10 ]; do
-        sleep 1
-        count=$((count + 1))
-      done
-      
-      # 如果进程仍在运行，强制终止
-      if kill -0 "$pid" 2>/dev/null; then
-        echo -e "${YELLOW}强制停止 $service_name...${NC}"
-        kill -9 "$pid" 2>/dev/null
-      fi
-      
-      echo -e "${GREEN}✓ $service_name 已停止${NC}"
-    else
-      echo -e "${YELLOW}$service_name 进程不存在${NC}"
-    fi
-    rm -f "$pid_file"
-  else
-    echo -e "${YELLOW}未找到 $service_name PID文件${NC}"
-  fi
-}
-
 # 通过端口停止服务
 stop_by_port() {
   local port=$1
@@ -61,6 +27,7 @@ stop_by_port() {
     # 检查是否还有进程，如果有则强制终止
     local remaining_pids=$(lsof -i :$port -t 2>/dev/null)
     if [ ! -z "$remaining_pids" ]; then
+      echo -e "${YELLOW}强制停止 $service_name...${NC}"
       for pid in $remaining_pids; do
         kill -9 "$pid" 2>/dev/null
       done
@@ -74,11 +41,7 @@ stop_by_port() {
 # 停止服务
 echo -e "${YELLOW}停止服务...${NC}"
 
-# 首先尝试通过PID文件停止
-stop_service "mcp.pid" "MCP服务"
-stop_service "web.pid" "Web服务"
-
-# 然后通过端口停止（以防PID文件丢失）
+# 通过端口停止服务
 stop_by_port 9010 "MCP服务"
 stop_by_port 9011 "Web服务"
 
