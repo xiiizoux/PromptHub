@@ -1,0 +1,125 @@
+# 依赖目录
+node_modules/
+backend/node_modules/
+frontend/node_modules/
+web/node_modules/
+mcp/node_modules/
+
+# 构建输出
+dist/
+build/
+backend/dist/
+backend/build/
+frontend/.next/
+frontend/out/
+frontend/dist/
+frontend/build/
+web/.next/
+web/out/
+web/dist/
+web/build/
+mcp/dist/
+mcp/build/
+
+# 环境变量和密钥
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+•cursorignore
+
+# 日志文件
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# 运行时数据
+*.pid
+
+# 测试文件
+src/prompts/test_*.json
+
+# 编辑器和 IDE 文件
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# 缓存目录
+.cache/
+.npm/
+.eslintcache
+web/.cache/
+web/.next/cache/
+mcp/.cache/
+.turbo/
+.swc/
+node_modules/.cache/
+web/node_modules/.cache/
+mcp/node_modules/.cache/
+# Next.js
+.next/cache/
+# 我们的API缓存实现
+web/src/lib/cache-data/
+# TypeScript 构建信息
+*.tsbuildinfo
+tsconfig.tsbuildinfo
+web/tsconfig.tsbuildinfo
+mcp/tsconfig.tsbuildinfo
+# Webpack 缓存
+.webpack/
+# Babel 缓存
+.babel-cache/
+# ESLint 缓存
+.eslintcache
+# Prettier 缓存
+.prettiercache
+# Stylelint 缓存
+.stylelintcache
+# Jest 缓存
+.jest/
+# Cypress 缓存
+.cypress/
+# Storybook 缓存
+.storybook-cache/
+# Vite 缓存
+.vite/
+# Rollup 缓存
+.rollup.cache/
+# Parcel 缓存
+.parcel-cache/
+# Nuxt 缓存
+.nuxt/
+# SWC 缓存
+.swc/
+# Turbo 缓存
+.turbo/
+# 临时文件
+*.tmp
+*.temp
+.tmp/
+.temp/
+# 系统缓存文件
+.DS_Store?
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# 覆盖率报告
+coverage/
+
+# 本地数据库文件
+*.sqlite
+*.db
+
+# Vercel 相关文件
+.vercel
+.now
+.vercel/
+.now/

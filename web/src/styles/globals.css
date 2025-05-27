@@ -1,0 +1,79 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    @apply scroll-smooth;
+  }
+  
+  body {
+    @apply bg-gray-50 text-gray-900 antialiased;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-display;
+  }
+}
+
+@layer components {
+  .btn {
+    @apply inline-flex items-center justify-center px-4 py-2 rounded-md font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2;
+  }
+  
+  .btn-primary {
+    @apply btn bg-primary-600 text-white hover:bg-primary-700 focus:ring-primary-500;
+  }
+  
+  .btn-secondary {
+    @apply btn bg-secondary-100 text-secondary-700 hover:bg-secondary-200 focus:ring-secondary-500;
+  }
+  
+  .btn-outline {
+    @apply btn border border-gray-300 text-gray-700 hover:bg-gray-50 focus:ring-gray-500;
+  }
+  
+  .input {
+    @apply w-full rounded-md border border-gray-300 px-4 py-2 shadow-sm focus:border-primary-500 focus:ring-primary-500;
+  }
+  
+  .card {
+    @apply rounded-xl bg-white shadow-soft transition-shadow hover:shadow-md;
+  }
+  
+  .section-title {
+    @apply text-2xl font-bold text-gray-900 sm:text-3xl;
+  }
+  
+  .container-tight {
+    @apply px-4 sm:px-6 lg:px-8 mx-auto max-w-7xl;
+  }
+  
+  .prompt-card {
+    @apply card p-5 cursor-pointer;
+  }
+}
+
+/* 动画和过渡效果 */
+.fade-in {
+  @apply animate-fade-in;
+}
+
+.slide-up {
+  @apply animate-slide-up;
+}
+
+/* 渐变背景 */
+.gradient-bg {
+  @apply bg-gradient-to-br from-primary-500 to-secondary-600;
+}
+
+/* 提示词格式化样式 */
+.prompt-content {
+  @apply whitespace-pre-wrap bg-gray-50 border border-gray-200 rounded-md p-4 font-mono text-sm text-gray-800;
+}
+
+/* 卡片网格布局 */
+.card-grid {
+  @apply grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3;
+}

@@ -1,0 +1,531 @@
+/**
+ * Web服务专用的Supabase适配器
+ * 
+ * 这个文件为Next.js Web服务提供Supabase适配器功能，
+ * 避免了跨目录导入导致的模块解析问题
+ */
+
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import crypto from 'crypto';
+
+// 基础类型定义
+export interface User {
+  id: string;
+  email: string;
+  username: string;
+  display_name?: string;
+  created_at: string;
+  role?: 'user' | 'admin' | 'contributor';
+}
+
+export interface AuthResponse {
+  user: User | null;
+  token?: string;
+  error?: string;
+}
+
+export interface Prompt {
+  id: string;
+  name: string;
+  description: string;
+  category: string;
+  tags: string[];
+  messages: any[];
+  is_public: boolean;
+  user_id: string;
+  version?: number;
+  created_at: string;
+  updated_at?: string;
+}
+
+export interface PromptFilters {
+  category?: string;
+  tags?: string[];
+  search?: string;
+  isPublic?: boolean;
+  userId?: string;
+  page?: number;
+  pageSize?: number;
+  sortBy?: 'latest' | 'popular' | 'rating';
+}
+
+export interface PaginatedResponse<T> {
+  data: T[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+}
+
+export interface ApiKey {
+  id: string;
+  name: string;
+  user_id: string;
+  created_at: string;
+  last_used_at?: string;
+  expires_at?: string;
+}
+
+// Supabase客户端创建函数
+export function createSupabaseClient(useServiceKey: boolean = false): SupabaseClient {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseKey = useServiceKey 
+    ? process.env.SUPABASE_SERVICE_ROLE_KEY
+    : process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    
+  if (!supabaseUrl || !supabaseKey) {
+    throw new Error('Supabase配置缺失。请在.env文件中设置NEXT_PUBLIC_SUPABASE_URL和相应的密钥。');
+  }
+    
+  return createClient(supabaseUrl, supabaseKey);
+}
+
+// 管理员客户端
+export const adminSupabase = createSupabaseClient(true);
+
+/**
+ * Supabase适配器类
+ */
+export class SupabaseAdapter {
+  public supabase: SupabaseClient;
+  
+  constructor(useAdmin: boolean = false) {
+    this.supabase = useAdmin ? adminSupabase : createSupabaseClient(false);
+  }
+
+  getType(): string {
+    return 'supabase';
+  }
+
+  // 基本提示词管理
+  async getCategories(): Promise<string[]> {
+    try {
+      // 首先尝试从专用的categories表获取
+      const { data: categoriesData, error: categoriesError } = await this.supabase
+        .from('categories')
+        .select('name')
+        .eq('is_active', true)
+        .order('sort_order');
+
+      if (!categoriesError && categoriesData && categoriesData.length > 0) {
+        return categoriesData.map(item => item.name);
+      }
+
+      // 如果categories表没有数据，回退到从prompts表提取
+      const { data, error } = await this.supabase
+        .from('prompts')
+        .select('category')
+        .order('category');
+
+      if (error) {
+        console.error('获取分类失败:', error);
+        return [];
+      }
+
+      const categories = Array.from(new Set(data.map(item => item.category).filter(Boolean)));
+      return categories as string[];
+    } catch (err) {
+      console.error('获取分类时出错:', err);
+      return [];
+    }
+  }
+
+  async getTags(): Promise<string[]> {
+    try {
+      const { data, error } = await this.supabase
+        .from('prompts')
+        .select('tags');
+
+      if (error) {
+        console.error('获取标签失败:', error);
+        return [];
+      }
+
+      const allTags = data.flatMap(item => item.tags || []);
+      const uniqueTags = Array.from(new Set(allTags.filter(Boolean)));
+      return uniqueTags.sort() as string[];
+    } catch (err) {
+      console.error('获取标签时出错:', err);
+      return [];
+    }
+  }
+
+  async getPrompts(filters?: PromptFilters): Promise<PaginatedResponse<Prompt>> {
+    try {
+      const {
+        category,
+        tags,
+        search,
+        isPublic = true,
+        userId,
+        page = 1,
+        pageSize = 20,
+        sortBy = 'latest'
+      } = filters || {};
+
+      let query = this.supabase.from('prompts').select('*', { count: 'exact' });
+
+      if (category && category !== '全部') {
+        query = query.eq('category', category);
+      }
+
+      if (tags && tags.length > 0) {
+        query = query.overlaps('tags', tags);
+      }
+
+      if (search) {
+        query = query.or(`name.ilike.%${search}%,description.ilike.%${search}%`);
+      }
+
+      if (userId) {
+        if (isPublic) {
+          query = query.or(`user_id.eq.${userId},is_public.eq.true`);
+        } else {
+          query = query.eq('user_id', userId);
+        }
+      } else if (!isPublic) {
+        return {
+          data: [],
+          total: 0,
+          page,
+          pageSize,
+          totalPages: 0
+        };
+      } else {
+        query = query.eq('is_public', true);
+      }
+
+      if (sortBy === 'latest') {
+        query = query.order('created_at', { ascending: false });
+      }
+
+      const from = (page - 1) * pageSize;
+      const to = from + pageSize - 1;
+      query = query.range(from, to);
+
+      const { data, error, count } = await query;
+
+      if (error) {
+        console.error('获取提示词列表失败:', error);
+        return {
+          data: [],
+          total: 0,
+          page,
+          pageSize,
+          totalPages: 0
+        };
+      }
+
+      const totalPages = count ? Math.ceil(count / pageSize) : 0;
+
+      return {
+        data: data || [],
+        total: count || 0,
+        page,
+        pageSize,
+        totalPages
+      };
+    } catch (err) {
+      console.error('获取提示词列表时出错:', err);
+      return {
+        data: [],
+        total: 0,
+        page: filters?.page || 1,
+        pageSize: filters?.pageSize || 20,
+        totalPages: 0
+      };
+    }
+  }
+
+  async getPrompt(nameOrId: string, userId?: string): Promise<Prompt | null> {
+    try {
+      let query = this.supabase
+        .from('prompts')
+        .select('*');
+        
+      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(nameOrId);
+      
+      if (isUuid) {
+        query = query.eq('id', nameOrId);
+      } else {
+        query = query.eq('name', nameOrId);
+      }
+      
+      if (userId) {
+        query = query.or(`user_id.eq.${userId},is_public.eq.true`);
+      } else {
+        query = query.eq('is_public', true);
+      }
+      
+      const { data, error } = await query.maybeSingle();
+
+      if (error) {
+        console.error(`获取提示词 ${nameOrId} 失败:`, error);
+        return null;
+      }
+
+      return data || null;
+    } catch (err) {
+      console.error(`获取提示词 ${nameOrId} 时出错:`, err);
+      return null;
+    }
+  }
+
+  // 用户认证
+  async signUp(email: string, password: string, displayName?: string): Promise<AuthResponse> {
+    try {
+      const { data: authData, error: authError } = await this.supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            display_name: displayName || email.split('@')[0]
+          }
+        }
+      });
+      
+      if (authError) {
+        return { user: null, error: authError.message };
+      }
+      
+      if (!authData.user || !authData.user.id) {
+        return { user: null, error: '注册成功，但未能获取用户信息' };
+      }
+      
+      const { error: userError } = await this.supabase
+        .from('users')
+        .insert({
+          id: authData.user.id,
+          email: email,
+          display_name: displayName || email.split('@')[0]
+        });
+        
+      if (userError) {
+        console.error('创建用户记录失败:', userError);
+      }
+      
+      return {
+        user: {
+          id: authData.user.id,
+          email: email,
+          username: displayName || email.split('@')[0],
+          display_name: displayName || email.split('@')[0],
+          created_at: new Date().toISOString(),
+          role: 'user'
+        },
+        token: authData.session?.access_token
+      };
+    } catch (err: any) {
+      console.error('注册用户时出错:', err);
+      return { user: null, error: err.message || '注册失败' };
+    }
+  }
+
+  async signIn(email: string, password: string): Promise<AuthResponse> {
+    try {
+      const { data, error } = await this.supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+      
+      if (error) {
+        return { user: null, error: error.message };
+      }
+      
+      if (!data.user) {
+        return { user: null, error: '登录成功，但未能获取用户信息' };
+      }
+      
+      const { data: userData, error: userError } = await this.supabase
+        .from('users')
+        .select('*')
+        .eq('id', data.user.id)
+        .single();
+        
+      return {
+        user: {
+          id: data.user.id,
+          email: data.user.email || email,
+          username: userData?.display_name || email.split('@')[0],
+          display_name: userData?.display_name || email.split('@')[0],
+          created_at: data.user.created_at,
+          role: userData?.role || 'user'
+        },
+        token: data.session?.access_token
+      };
+    } catch (err: any) {
+      console.error('用户登录时出错:', err);
+      return { user: null, error: err.message || '登录失败' };
+    }
+  }
+
+  async getCurrentUser(): Promise<User | null> {
+    try {
+      const { data, error } = await this.supabase.auth.getUser();
+      
+      if (error || !data.user) {
+        return null;
+      }
+      
+      const { data: userData } = await this.supabase
+        .from('users')
+        .select('*')
+        .eq('id', data.user.id)
+        .single();
+        
+      return {
+        id: data.user.id,
+        email: data.user.email || '',
+        username: userData?.display_name || data.user.email?.split('@')[0] || '',
+        display_name: userData?.display_name || data.user.email?.split('@')[0] || '',
+        created_at: data.user.created_at,
+        role: userData?.role || 'user'
+      };
+    } catch (err) {
+      console.error('获取当前用户时出错:', err);
+      return null;
+    }
+  }
+
+  async updateUserProfile(userId: string, updateData: {
+    username?: string;
+    email?: string;
+    currentPassword?: string;
+    newPassword?: string;
+  }): Promise<User> {
+    try {
+      const { username, email, currentPassword, newPassword } = updateData;
+      
+      // 如果要更改密码，先验证当前密码
+      if (currentPassword && newPassword) {
+        const { error: passwordError } = await this.supabase.auth.updateUser({
+          password: newPassword
+        });
+        
+        if (passwordError) {
+          throw new Error(`密码更新失败: ${passwordError.message}`);
+        }
+      }
+      
+      // 更新用户表中的信息
+      const updateFields: any = {};
+      if (username) {
+        updateFields.display_name = username;
+      }
+      
+      if (Object.keys(updateFields).length > 0) {
+        const { error: updateError } = await this.supabase
+          .from('users')
+          .update(updateFields)
+          .eq('id', userId);
+          
+        if (updateError) {
+          throw new Error(`用户信息更新失败: ${updateError.message}`);
+        }
+      }
+      
+      // 获取更新后的用户信息
+      const { data: userData, error: fetchError } = await this.supabase
+        .from('users')
+        .select('*')
+        .eq('id', userId)
+        .single();
+        
+      if (fetchError || !userData) {
+        throw new Error('获取更新后的用户信息失败');
+      }
+      
+      return {
+        id: userData.id,
+        email: userData.email,
+        username: userData.display_name,
+        display_name: userData.display_name,
+        created_at: userData.created_at,
+        role: userData.role || 'user'
+      };
+    } catch (err: any) {
+      console.error('更新用户资料时出错:', err);
+      throw err;
+    }
+  }
+
+  // API密钥管理
+  async generateApiKey(userId: string, name: string, expiresInDays?: number): Promise<string> {
+    try {
+      const apiKey = crypto.randomBytes(32).toString('hex');
+      const keyHash = crypto.createHash('sha256').update(apiKey).digest('hex');
+      
+      let expiresAt: string | null = null;
+      if (expiresInDays && expiresInDays > 0) {
+        const date = new Date();
+        date.setDate(date.getDate() + expiresInDays);
+        expiresAt = date.toISOString();
+      }
+      
+      const { error } = await this.supabase
+        .from('api_keys')
+        .insert({
+          user_id: userId,
+          name,
+          key_hash: keyHash,
+          expires_at: expiresAt
+        });
+        
+      if (error) {
+        throw new Error(`创建API密钥失败: ${error.message}`);
+      }
+      
+      return apiKey;
+    } catch (err: any) {
+      console.error('生成API密钥时出错:', err);
+      throw err;
+    }
+  }
+
+  async listApiKeys(userId: string): Promise<ApiKey[]> {
+    try {
+      const { data, error } = await this.supabase
+        .from('api_keys')
+        .select('id, name, created_at, last_used_at, expires_at')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false });
+        
+      if (error) {
+        throw new Error(`获取API密钥列表失败: ${error.message}`);
+      }
+      
+      return (data || []).map(key => ({
+        ...key,
+        user_id: userId
+      }));
+    } catch (err: any) {
+      console.error('获取API密钥列表时出错:', err);
+      return [];
+    }
+  }
+
+  async deleteApiKey(userId: string, keyId: string): Promise<boolean> {
+    try {
+      const { error } = await this.supabase
+        .from('api_keys')
+        .delete()
+        .eq('id', keyId)
+        .eq('user_id', userId);
+        
+      return !error;
+    } catch (err) {
+      console.error('删除API密钥时出错:', err);
+      return false;
+    }
+  }
+}
+
+// 创建适配器实例
+const supabaseAdapter = new SupabaseAdapter();
+const adminSupabaseAdapter = new SupabaseAdapter(true);
+
+// 导出适配器实例
+export { supabaseAdapter, adminSupabaseAdapter };
+
+// 默认导出
+export default supabaseAdapter; 

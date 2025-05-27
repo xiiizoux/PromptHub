@@ -1,0 +1,40 @@
+FROM node:18-alpine AS base
+
+# 创建应用目录
+WORKDIR /app
+
+# 复制项目配置文件
+COPY package*.json ./
+COPY backend/package*.json ./backend/
+COPY frontend/package*.json ./frontend/
+
+# 安装所有依赖
+RUN npm run install:all
+
+# 复制应用程序代码
+COPY . .
+
+# 构建前端和后端
+RUN npm run build:all
+
+# 设置环境变量
+ENV NODE_ENV=production
+ENV PORT=9010
+ENV FRONTEND_PORT=9011
+ENV TRANSPORT_TYPE=sse
+
+# 创建日志目录
+RUN mkdir -p /app/logs
+
+# 暴露前端和后端端口
+EXPOSE 9010 9011
+
+# 添加Docker启动脚本
+COPY docker-start.sh /app/docker-start.sh
+RUN chmod +x /app/docker-start.sh
+
+# 安装serve用于提供前端静态文件服务
+RUN npm install -g serve
+
+# 启动应用
+CMD ["/app/docker-start.sh"]
