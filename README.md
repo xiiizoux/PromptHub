@@ -76,12 +76,15 @@ Prompt Hub是一个综合性的提示词服务平台，专为大型语言模型(
 
 1. 编译前后端项目：
    ```bash
-   # 编译所有项目（MCP服务和Web应用）
-   npm run build:all
+   # 一键编译所有项目
+   npm run build
+   # 或者直接运行脚本
+   ./build.sh
    
-   # 或者分别编译
-   npm run mcp:build  # 编译MCP服务
-   npm run web:build  # 编译Web应用
+   # 或者使用详细选项
+   npm run build:all       # 编译所有项目（MCP服务和Web应用）
+   npm run mcp:build       # 编译MCP服务
+   npm run web:build       # 编译Web应用
    ```
 
 2. 使用一键启动脚本运行全部服务：
@@ -98,7 +101,7 @@ Prompt Hub是一个综合性的提示词服务平台，专为大型语言模型(
 
 3. 使用一键关闭脚本停止所有服务：
    ```bash
-   npm run stop
+   npm stop
    # 或者直接运行脚本
    ./stop.sh
    ```
