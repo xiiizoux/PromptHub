@@ -1,0 +1,98 @@
+version: '3.8'
+
+services:
+  # PromptHub主应用 (Web + MCP)
+  prompthub:
+    build: .
+    container_name: prompthub-app
+    ports:
+      - "9010:9010"  # MCP服务端口
+      - "9011:9011"  # Web服务端口
+    environment:
+      - NODE_ENV=production
+      - PORT=9010
+      - FRONTEND_PORT=9011
+      - TRANSPORT_TYPE=sse
+      # Supabase配置 (可选)
+      - SUPABASE_URL=${SUPABASE_URL:-}
+      - SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY:-}
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY:-}
+      # 本地存储配置
+      - STORAGE_TYPE=${STORAGE_TYPE:-file}
+      - FORCE_LOCAL_STORAGE=${FORCE_LOCAL_STORAGE:-true}
+      # API密钥
+      - API_KEY=${API_KEY:-your-api-key-here}
+    volumes:
+      # 持久化数据存储
+      - ./data:/app/data
+      - ./logs:/app/logs
+      # 配置文件挂载
+      - ./.env:/app/.env:ro
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9010/api/health", "&&", "curl", "-f", "http://localhost:9011"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - prompthub-network
+
+  # 可选：PostgreSQL数据库 (如果不使用Supabase)
+  postgres:
+    image: postgres:15-alpine
+    container_name: prompthub-postgres
+    environment:
+      - POSTGRES_DB=prompthub
+      - POSTGRES_USER=prompthub
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-prompthub123}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./supabase/migrations:/docker-entrypoint-initdb.d:ro
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+    networks:
+      - prompthub-network
+    profiles:
+      - local-db  # 使用 --profile local-db 启动
+
+  # 可选：Redis缓存
+  redis:
+    image: redis:7-alpine
+    container_name: prompthub-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+    networks:
+      - prompthub-network
+    profiles:
+      - cache  # 使用 --profile cache 启动
+
+  # 可选：Nginx反向代理
+  nginx:
+    image: nginx:alpine
+    container_name: prompthub-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - prompthub
+    restart: unless-stopped
+    networks:
+      - prompthub-network
+    profiles:
+      - proxy  # 使用 --profile proxy 启动
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  prompthub-network:
+    driver: bridge 

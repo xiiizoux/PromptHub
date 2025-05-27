@@ -10,9 +10,9 @@ const api = axios.create({
   },
 });
 
-// 创建MCP API实例，支持统一部署和分离部署
+// 创建MCP API实例，Vercel部署时使用内部代理
 const mcpApi = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_MCP_API_URL || '/api/mcp',
+  baseURL: '/api',
   headers: {
     'Content-Type': 'application/json',
   },
@@ -83,7 +83,7 @@ export const getTags = async (): Promise<string[]> => {
 // 获取所有提示词名称
 export const getPromptNames = async (): Promise<string[]> => {
   try {
-    const response = await mcpApi.get<any>('/prompts/names');
+    const response = await mcpApi.get<any>('/mcp-proxy?action=get_prompt_names');
     return response.data?.data?.names || [];
   } catch (error) {
     console.error('获取提示词名称失败:', error);

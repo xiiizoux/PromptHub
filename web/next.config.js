@@ -6,6 +6,12 @@ const nextConfig = {
   experimental: {
     externalDir: true,
   },
+  // 支持静态导出（GitHub Pages）
+  output: 'export',
+  trailingSlash: true,
+  images: {
+    unoptimized: true
+  },
   // 配置webpack来处理TypeScript文件
   webpack: (config, { buildId, dev, isServer, defaultLoaders, webpack }) => {
     // 配置模块解析规则

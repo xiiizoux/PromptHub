@@ -33,8 +33,8 @@ EXPOSE 9010 9011
 COPY docker-start.sh /app/docker-start.sh
 RUN chmod +x /app/docker-start.sh
 
-# 安装serve用于提供前端静态文件服务
-RUN npm install -g serve
+# 安装serve用于提供前端静态文件服务和curl用于健康检查
+RUN npm install -g serve && apk add --no-cache curl
 
 # 启动应用
 CMD ["/app/docker-start.sh"]
