@@ -60,6 +60,16 @@ if [ ! -d "web/node_modules" ]; then
   echo -e "${GREEN}✓ Web依赖安装成功${NC}"
 fi
 
+# 检查Supabase共享模块依赖
+if [ ! -d "supabase/node_modules" ]; then
+  echo -e "${YELLOW}安装Supabase共享模块依赖...${NC}"
+  if ! (cd supabase && npm install); then
+    echo -e "${RED}✗ Supabase共享模块依赖安装失败${NC}"
+    exit 1
+  fi
+  echo -e "${GREEN}✓ Supabase共享模块依赖安装成功${NC}"
+fi
+
 # 构建MCP服务
 echo -e "${YELLOW}构建MCP服务...${NC}"
 if ! npm run mcp:build; then

@@ -42,12 +42,13 @@ Prompt Hub是一个综合性的提示词服务平台，专为大型语言模型(
 
 2. 安装依赖（前后端）：
    ```bash
-   # 安装所有依赖（MCP服务和Web应用）
+   # 安装所有依赖（MCP服务、Web应用和Supabase共享模块）
    npm run install:all
    
    # 或者分别安装
-   npm run mcp:install  # 安装MCP服务依赖
-   npm run web:install  # 安装Web应用依赖
+   npm run mcp:install      # 安装MCP服务依赖
+   npm run web:install      # 安装Web应用依赖
+   npm run supabase:install # 安装Supabase共享模块依赖
    ```
 
    **注意**: 在全新的机器上，启动脚本会自动检查并安装缺失的依赖，无需手动安装。
@@ -91,7 +92,7 @@ Prompt Hub是一个综合性的提示词服务平台，专为大型语言模型(
    ```
    脚本会自动：
    - 检查端口可用性
-   - 检查并安装缺失的依赖
+   - 检查并安装缺失的依赖（MCP、Web、Supabase共享模块）
    - 构建MCP服务和Web应用
    - 启动所有服务
 
@@ -186,6 +187,9 @@ npm run install:all
 
 # 解决方案3: 仅安装MCP服务依赖
 cd mcp && npm install
+
+# 解决方案4: 如果是Supabase相关错误，安装共享模块依赖
+cd supabase && npm install
 ```
 
 #### 端口占用错误
@@ -249,9 +253,10 @@ cd supabase/tests && ./validate_schema.sh
 ### 项目管理命令
 
 #### 安装和构建
-- `npm run install:all` - 安装所有依赖（MCP服务和Web应用）
+- `npm run install:all` - 安装所有依赖（MCP服务、Web应用和Supabase共享模块）
 - `npm run mcp:install` - 安装MCP服务依赖
 - `npm run web:install` - 安装Web应用依赖
+- `npm run supabase:install` - 安装Supabase共享模块依赖
 - `npm run build:all` - 构建所有项目
 - `npm run mcp:build` - 构建MCP服务
 - `npm run web:build` - 构建Web应用
