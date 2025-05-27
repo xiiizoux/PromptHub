@@ -28,6 +28,9 @@ export default function LoginPage() {
   
   // 检查用户是否已经登录，如果是则重定向到目标页面
   useEffect(() => {
+    // 只在客户端执行
+    if (typeof window === 'undefined') return;
+    
     const checkSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
@@ -56,8 +59,8 @@ export default function LoginPage() {
     }
   };
 
-  // 获取当前的重定向URL用于构建注册链接
-  const redirectUrl = getRedirectUrl(router);
+  // 获取当前的重定向URL用于构建注册链接  
+  const redirectUrl = typeof window !== 'undefined' ? getRedirectUrl(router) : null;
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
@@ -196,4 +199,11 @@ export default function LoginPage() {
       </div>
     </div>
   );
+}
+
+// 添加getServerSideProps防止静态生成
+export async function getServerSideProps() {
+  return {
+    props: {}, // 返回空props
+  };
 }

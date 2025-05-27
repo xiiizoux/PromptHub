@@ -15,7 +15,7 @@ import {
   CheckCircleIcon,
   ShieldExclamationIcon
 } from '@heroicons/react/24/outline';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth, withAuth } from '@/contexts/AuthContext';
 import { 
   checkEditPermission, 
   checkFieldPermission,
@@ -31,7 +31,6 @@ import {
   formatVersionFromInt,
   getVersionValidationMessage
 } from '@/lib/version-utils';
-import { redirectToLogin } from '@/lib/redirect';
 
 // 预设模型选项
 const MODEL_OPTIONS = ['GPT-4', 'GPT-3.5', 'Claude-2', 'Claude-Instant', 'Gemini-Pro', 'Llama-2', 'Mistral-7B'];
@@ -46,9 +45,9 @@ interface EditPromptPageProps {
 
 
 
-export default function EditPromptPage({ prompt }: EditPromptPageProps) {
+function EditPromptPage({ prompt }: EditPromptPageProps) {
   const router = useRouter();
-  const { user, isAuthenticated, loading: authLoading } = useAuth();
+  const { user } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [variables, setVariables] = useState<string[]>(prompt.input_variables || []);
   const [variableInput, setVariableInput] = useState('');
@@ -62,17 +61,10 @@ export default function EditPromptPage({ prompt }: EditPromptPageProps) {
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [permissionCheck, setPermissionCheck] = useState<PermissionCheck | null>(null);
-  
-  // 检查用户是否已登录，未登录则重定向到登录页面
-  useEffect(() => {
-    if (!authLoading && !isAuthenticated) {
-      redirectToLogin(router);
-    }
-  }, [authLoading, isAuthenticated, router]);
 
   // 权限检查
   useEffect(() => {
-    if (!authLoading && user) {
+    if (user) {
       const permission = checkEditPermission(prompt, user);
       setPermissionCheck(permission);
       
@@ -83,7 +75,7 @@ export default function EditPromptPage({ prompt }: EditPromptPageProps) {
         }, 3000);
       }
     }
-  }, [authLoading, user, prompt, router]);
+  }, [user, prompt, router]);
   
   // 获取分类数据
   useEffect(() => {
@@ -294,25 +286,7 @@ export default function EditPromptPage({ prompt }: EditPromptPageProps) {
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [hasUnsavedChanges]);
 
-  if (authLoading) {
-    return (
-      <div className="bg-gray-50 min-h-screen py-8">
-        <div className="container-tight">
-          <div className="bg-white shadow-sm rounded-lg p-6">
-            <div className="animate-pulse">
-              <div className="h-4 bg-gray-200 rounded w-1/4 mb-4"></div>
-              <div className="h-8 bg-gray-200 rounded w-1/2 mb-6"></div>
-              <div className="space-y-4">
-                <div className="h-4 bg-gray-200 rounded"></div>
-                <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-                <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
+
 
   // 权限检查失败时显示错误页面
   if (permissionCheck && !permissionCheck.canEdit) {
@@ -928,6 +902,9 @@ export default function EditPromptPage({ prompt }: EditPromptPageProps) {
     </div>
   );
 }
+
+// 使用withAuth包装组件，强制用户登录
+export default withAuth(EditPromptPage);
 
 export const getServerSideProps: GetServerSideProps = async (context) => {
   const { name } = context.params!;

@@ -5,17 +5,16 @@ import { createPrompt, getCategories, getTags } from '@/lib/api';
 import { PromptDetails } from '@/types';
 import Link from 'next/link';
 import { ChevronLeftIcon, XMarkIcon, PlusCircleIcon, LockClosedIcon, ArrowRightIcon } from '@heroicons/react/24/outline';
-import { useAuth } from '@/contexts/AuthContext';
-import { redirectToLogin } from '@/lib/redirect';
+import { useAuth, withAuth } from '@/contexts/AuthContext';
 
 // 预设模型选项
 const MODEL_OPTIONS = ['GPT-4', 'GPT-3.5', 'Claude-2', 'Claude-Instant', 'Gemini-Pro', 'Llama-2', 'Mistral-7B'];
 
 type PromptFormData = Omit<PromptDetails, 'created_at' | 'updated_at'>;
 
-export default function CreatePromptPage() {
+function CreatePromptPage() {
   const router = useRouter();
-  const { user, isAuthenticated, loading: authLoading } = useAuth();
+  const { user } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [variables, setVariables] = useState<string[]>([]);
   const [variableInput, setVariableInput] = useState('');
@@ -26,13 +25,6 @@ export default function CreatePromptPage() {
   const [categoriesLoading, setCategoriesLoading] = useState(true);
   const [suggestedTags, setSuggestedTags] = useState<string[]>([]);
   const [tagsLoading, setTagsLoading] = useState(true);
-  
-  // 检查用户是否已登录，未登录则重定向到登录页面
-  useEffect(() => {
-    if (!authLoading && !isAuthenticated) {
-      redirectToLogin(router);
-    }
-  }, [authLoading, isAuthenticated, router]);
   
   // 获取分类数据
   useEffect(() => {
@@ -480,3 +472,7 @@ export default function CreatePromptPage() {
     </div>
   );
 }
+
+// 使用withAuth包装组件，强制用户登录
+export default withAuth(CreatePromptPage);
+

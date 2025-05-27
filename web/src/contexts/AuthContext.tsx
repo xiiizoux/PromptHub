@@ -1,5 +1,4 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { useRouter } from 'next/router';
 import { supabase } from '@/lib/supabase';
 import { User } from '@/types';
 
@@ -26,12 +25,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const router = useRouter();
 
   // 初始化时检查认证状态
   useEffect(() => {
     const initAuth = async () => {
-      await checkAuth();
+      // 只在客户端执行认证检查
+      if (typeof window !== 'undefined') {
+        await checkAuth();
+      }
       setLoading(false);
     };
 
@@ -41,6 +42,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // 检查用户认证状态
   const checkAuth = async (): Promise<boolean> => {
     try {
+      // 确保只在客户端运行
+      if (typeof window === 'undefined') {
+        return false;
+      }
+      
       // 获取当前会话状态
       const { data: { session } } = await supabase.auth.getSession();
       
@@ -191,6 +197,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // 获取当前用户的访问令牌
   const getToken = async (): Promise<string | null> => {
     try {
+      // 确保只在客户端运行
+      if (typeof window === 'undefined') {
+        return null;
+      }
+      
       const { data: { session } } = await supabase.auth.getSession();
       return session?.access_token || null;
     } catch (err) {
@@ -228,17 +239,22 @@ export const useAuth = (): AuthContextType => {
 export const withAuth = <P extends object>(Component: React.ComponentType<P>): React.FC<P> => {
   const AuthComponent: React.FC<P> = (props) => {
     const { isAuthenticated, loading } = useAuth();
-    const router = useRouter();
+    const [mounted, setMounted] = useState(false);
 
     useEffect(() => {
-      // 如果认证状态已加载完成且用户未认证，则重定向到登录页面
-      if (!loading && !isAuthenticated) {
-        router.replace(`/auth/login?returnUrl=${encodeURIComponent(router.asPath)}`);
-      }
-    }, [isAuthenticated, loading, router]);
+      setMounted(true);
+    }, []);
 
-    // 在加载中或未认证时显示加载界面
-    if (loading || !isAuthenticated) {
+    useEffect(() => {
+      // 只在客户端挂载完成后执行路由重定向
+      if (mounted && !loading && !isAuthenticated) {
+        const currentUrl = window.location.pathname + window.location.search;
+        window.location.href = `/auth/login?returnUrl=${encodeURIComponent(currentUrl)}`;
+      }
+    }, [mounted, isAuthenticated, loading]);
+
+    // 在服务器端渲染或组件未挂载时，返回加载界面
+    if (!mounted || loading || !isAuthenticated) {
       return (
         <div className="min-h-screen flex items-center justify-center bg-gray-50">
           <div className="text-center">

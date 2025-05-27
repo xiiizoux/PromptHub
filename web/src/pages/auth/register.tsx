@@ -35,6 +35,9 @@ export default function RegisterPage() {
   
   // 检查用户是否已经登录
   useEffect(() => {
+    // 只在客户端执行
+    if (typeof window === 'undefined') return;
+    
     const checkSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
@@ -59,7 +62,7 @@ export default function RegisterPage() {
       
       // 等待3秒后重定向到登录页，保持原始重定向参数
       setTimeout(() => {
-        const redirectUrl = getRedirectUrl(router);
+        const redirectUrl = typeof window !== 'undefined' ? getRedirectUrl(router) : null;
         const loginUrl = buildUrlWithRedirect('/auth/login?registered=true', redirectUrl);
         router.push(loginUrl);
       }, 3000);
@@ -86,7 +89,7 @@ export default function RegisterPage() {
           <p className="mt-2 text-center text-sm text-gray-600">
             或{' '}
             <Link 
-              href={buildUrlWithRedirect('/auth/login', getRedirectUrl(router))}
+              href={buildUrlWithRedirect('/auth/login', typeof window !== 'undefined' ? getRedirectUrl(router) : null)}
               className="font-medium text-primary-600 hover:text-primary-500"
             >
               登录到已有账户
@@ -283,3 +286,11 @@ export default function RegisterPage() {
     </div>
   );
 }
+
+// 添加getServerSideProps防止静态生成
+export async function getServerSideProps() {
+  return {
+    props: {}, // 返回空props
+  };
+}
+

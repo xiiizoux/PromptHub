@@ -1,5 +1,5 @@
 import { config } from '../config.js';
-import { Request, Response, NextFunction } from 'express';
+import type { Request, Response, NextFunction } from 'express';
 import { StorageFactory } from '../storage/storage-factory.js';
 import { User } from '../types.js';
 

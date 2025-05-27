@@ -1,7 +1,7 @@
 import { performanceTracker } from './performance-tracker.js';
 import { PromptUsage, PromptFeedback, ABTestConfig } from './performance-tracker.js';
 import { PromptServerError, ErrorCode } from '../errors.js';
-import { Request } from 'express';
+import type { Request } from 'express';
 
 /**
  * 性能分析相关的MCP工具定义

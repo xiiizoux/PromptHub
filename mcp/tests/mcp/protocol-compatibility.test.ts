@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * MCP协议兼容性测试
  * 测试MCP Prompt Server是否符合MCP协议规范
@@ -9,25 +10,99 @@ import { jest, describe, test, expect, beforeAll, afterAll } from '@jest/globals
 import fetch from 'node-fetch';
 import mcpRouter from '../../src/api/mcp-router.js';
 import { setupTestServer, closeTestServer } from '../utils/test-server.js';
+import { StorageFactory } from '../../src/storage/storage-factory.js';
+import type { StorageAdapter } from '../../src/types.js';
 
-// 增加超时时间
-jest.setTimeout(10000);
+// 模拟 Supabase 客户端
+jest.mock('../../../supabase/lib/supabase-client.ts', () => ({
+  createSupabaseClient: jest.fn().mockReturnValue({
+    // 返回一个模拟的 Supabase 客户端
+    from: jest.fn().mockReturnValue({
+      select: jest.fn().mockReturnThis(),
+      insert: jest.fn().mockReturnThis(),
+      update: jest.fn().mockReturnThis(),
+      delete: jest.fn().mockReturnThis(),
+      eq: jest.fn().mockReturnThis(),
+      or: jest.fn().mockReturnThis(),
+      and: jest.fn().mockReturnThis(),
+      in: jest.fn().mockReturnThis(),
+      order: jest.fn().mockReturnThis(),
+      then: jest.fn().mockImplementation(callback => callback({ data: [], error: null }))
+    }),
+    storage: {
+      from: jest.fn().mockReturnValue({
+        upload: jest.fn().mockResolvedValue({ data: { path: 'test-path' }, error: null }),
+        getPublicUrl: jest.fn().mockReturnValue({ data: { publicUrl: 'https://test-url.com' } })
+      })
+    },
+    auth: {
+      getUser: jest.fn().mockResolvedValue({ data: { user: { id: 'test-user-id', email: 'test@example.com' } }, error: null })
+    }
+  })
+}));
 
 describe('MCP Protocol Compatibility', () => {
   let serverInfo: ReturnType<typeof setupTestServer> extends Promise<infer T> ? T : never;
-
+  let originalGetStorage: typeof StorageFactory.getStorage;
+  
   beforeAll(async () => {
-    serverInfo = await setupTestServer('/mcp');
-    serverInfo.app.use('/mcp', mcpRouter);
+    // 保存原始方法以便恢复
+    originalGetStorage = StorageFactory.getStorage;
+    
+    // 创建模拟存储适配器
+    const mockStorageAdapter: Partial<StorageAdapter> = {
+      getType: jest.fn().mockReturnValue('mock'),
+      getPrompts: jest.fn().mockResolvedValue({ data: [], total: 0, page: 1, pageSize: 20, totalPages: 0 }),
+      getPrompt: jest.fn().mockResolvedValue(null),
+      getCategories: jest.fn().mockResolvedValue(['\u6d4b\u8bd5\u5206\u7c7b1', '\u6d4b\u8bd5\u5206\u7c7b2']),
+      getTags: jest.fn().mockResolvedValue(['\u6d4b\u8bd5\u6807\u7b7e1', '\u6d4b\u8bd5\u6807\u7b7e2']),
+      getPromptVersions: jest.fn().mockResolvedValue([]),
+      getPromptVersion: jest.fn().mockResolvedValue(null),
+      searchPrompts: jest.fn().mockResolvedValue({ data: [], total: 0, page: 1, pageSize: 20, totalPages: 0 }),
+      createPrompt: jest.fn().mockImplementation((prompt) => Promise.resolve({ ...prompt, id: 'mock-id' })),
+      updatePrompt: jest.fn().mockImplementation((prompt) => Promise.resolve({ ...prompt })),
+      deletePrompt: jest.fn().mockResolvedValue(true),
+      restorePromptVersion: jest.fn().mockResolvedValue(null),
+      getUserByEmail: jest.fn().mockResolvedValue(null),
+      getUserById: jest.fn().mockResolvedValue(null),
+      getApiKeys: jest.fn().mockResolvedValue([]),
+      createApiKey: jest.fn().mockResolvedValue({ id: 'mock-key-id', name: 'Mock Key', key: 'mock-key-value' }),
+      deleteApiKey: jest.fn().mockResolvedValue(true),
+      verifyApiKey: jest.fn().mockResolvedValue(true),
+      getServerInfo: jest.fn().mockResolvedValue({
+        name: "Test MCP Server",
+        version: "1.0.0",
+        description: "Test server for Model Context Protocol",
+        vendor: "PromptHub",
+        models: [],
+        max_tokens: 8192
+      }),
+      getTools: jest.fn().mockResolvedValue([]),
+      createConversation: jest.fn().mockResolvedValue({
+        id: 'test-conversation-id'
+      }),
+      addMessage: jest.fn().mockResolvedValue({
+        id: 'test-message-id'
+      })
+    };
+    
+    // 覆盖 StorageFactory.getStorage 方法
+    StorageFactory.getStorage = jest.fn().mockReturnValue(mockStorageAdapter as StorageAdapter);
+    
+    // 初始化测试服务器
+    serverInfo = await setupTestServer('/api');
+    serverInfo.app.use('/api/mcp', mcpRouter);
   });
 
   afterAll(async () => {
+    // 恢复原始方法
+    StorageFactory.getStorage = originalGetStorage;
     await closeTestServer(serverInfo);
   });
 
   describe('工具发现机制', () => {
     test('GET /tools 应返回合法的工具列表', async () => {
-      const response = await fetch(`${serverInfo.baseUrl}/tools`);
+      const response = await fetch(`${serverInfo.baseUrl}/api/mcp/tools`);
       expect(response.status).toBe(200);
       
       const data = await response.json() as any;

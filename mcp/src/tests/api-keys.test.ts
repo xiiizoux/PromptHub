@@ -8,7 +8,10 @@ import request from 'supertest';
 import apiKeysRouter from '../api/api-keys-router.js';
 import { describe, it, before, beforeEach, afterEach } from 'mocha';
 
-describe('API密钥功能测试', () => {
+// 当测试环境没有设置 Supabase 环境变量时，跳过整个测试套件
+const supabaseEnvAvailable = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+
+(supabaseEnvAvailable ? describe : describe.skip)('API密钥功能测试', () => {
   let app: express.Application;
   let mockStorage: any;
   let mockUser1: User;

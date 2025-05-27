@@ -387,3 +387,4 @@ const ProfilePage = () => {
 
 // 使用身份验证高阶组件包装组件
 export default withAuth(ProfilePage);
+

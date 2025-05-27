@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/router';
 import { Bars3Icon, XMarkIcon, UserCircleIcon } from '@heroicons/react/24/outline';
 import { ChevronDownIcon } from '@heroicons/react/20/solid';
 import { useAuth } from '@/contexts/AuthContext';
@@ -16,15 +15,25 @@ const navigation = [
 const Navbar: React.FC = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
-  const router = useRouter();
+  const [mounted, setMounted] = useState(false);
   const { user, signOut } = useAuth();
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // 判断当前路径是否活跃
   const isActive = (path: string) => {
-    if (path === '/') {
-      return router.pathname === path;
+    // 在服务器端渲染时，无法判断路径
+    if (!mounted || typeof window === 'undefined') {
+      return false;
     }
-    return router.pathname.startsWith(path);
+    
+    const currentPath = window.location.pathname;
+    if (path === '/') {
+      return currentPath === path;
+    }
+    return currentPath.startsWith(path);
   };
 
   // 创建Ref来跟踪菜单元素
@@ -125,7 +134,9 @@ const Navbar: React.FC = () => {
                     onClick={() => {
                       signOut();
                       setUserMenuOpen(false);
-                      router.push('/');
+                      if (typeof window !== 'undefined') {
+                        window.location.href = '/';
+                      }
                     }}
                     className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
                   >
@@ -185,7 +196,9 @@ const Navbar: React.FC = () => {
                   onClick={() => {
                     signOut();
                     setMobileMenuOpen(false);
-                    router.push('/');
+                    if (typeof window !== 'undefined') {
+                      window.location.href = '/';
+                    }
                   }}
                   className="block w-full text-left rounded-md px-3 py-2 text-base font-medium text-red-600 hover:bg-gray-50"
                 >

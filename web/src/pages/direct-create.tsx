@@ -248,3 +248,10 @@ const DirectCreatePage: React.FC = () => {
 };
 
 export default DirectCreatePage;
+
+// 添加getServerSideProps防止静态生成
+export async function getServerSideProps() {
+  return {
+    props: {}, // 返回空props
+  };
+}

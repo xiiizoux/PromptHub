@@ -1,4 +1,5 @@
-import express, { Request, Response, NextFunction } from 'express';
+import express from 'express';
+import type { Request, Response, NextFunction } from 'express';
 import { StorageFactory } from '../storage/storage-factory.js';
 import { authenticateRequest } from './auth-middleware.js';
 import logger, { logApiKeyActivity } from '../utils/logger.js';
