@@ -37,10 +37,35 @@ if ! check_port 9011 "Web服务"; then
   exit 1
 fi
 
+# 检查并安装依赖
+echo -e "${YELLOW}检查依赖...${NC}"
+
+# 检查MCP依赖
+if [ ! -d "mcp/node_modules" ]; then
+  echo -e "${YELLOW}安装MCP服务依赖...${NC}"
+  if ! npm run mcp:install; then
+    echo -e "${RED}✗ MCP依赖安装失败${NC}"
+    exit 1
+  fi
+  echo -e "${GREEN}✓ MCP依赖安装成功${NC}"
+fi
+
+# 检查Web依赖
+if [ ! -d "web/node_modules" ]; then
+  echo -e "${YELLOW}安装Web应用依赖...${NC}"
+  if ! npm run web:install; then
+    echo -e "${RED}✗ Web依赖安装失败${NC}"
+    exit 1
+  fi
+  echo -e "${GREEN}✓ Web依赖安装成功${NC}"
+fi
+
 # 构建MCP服务
 echo -e "${YELLOW}构建MCP服务...${NC}"
 if ! npm run mcp:build; then
   echo -e "${RED}✗ MCP服务构建失败${NC}"
+  echo -e "${YELLOW}提示: 请检查TypeScript是否正确安装${NC}"
+  echo -e "${YELLOW}尝试手动安装: cd mcp && npm install${NC}"
   exit 1
 fi
 

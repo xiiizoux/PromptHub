@@ -50,6 +50,8 @@ Prompt Hub是一个综合性的提示词服务平台，专为大型语言模型(
    npm run web:install  # 安装Web应用依赖
    ```
 
+   **注意**: 在全新的机器上，启动脚本会自动检查并安装缺失的依赖，无需手动安装。
+
 ### 配置
 
 1. 创建 `.env` 文件（根据 `.env.example` 模板）：
@@ -87,7 +89,11 @@ Prompt Hub是一个综合性的提示词服务平台，专为大型语言模型(
    # 或者直接运行脚本
    ./start.sh
    ```
-   脚本会自动处理端口冲突并启动MCP服务和Web应用。
+   脚本会自动：
+   - 检查端口可用性
+   - 检查并安装缺失的依赖
+   - 构建MCP服务和Web应用
+   - 启动所有服务
 
 3. 使用一键关闭脚本停止所有服务：
    ```bash
@@ -163,6 +169,45 @@ chmod +x deploy-docker.sh
 - 提供可选服务选择（数据库、缓存、代理等）
 
 更多详细信息，请参考[Docker部署指南](./docs/docker-deployment.md)。
+
+## 故障排除
+
+### 常见问题
+
+#### TypeScript编译错误 (`tsc: not found`)
+如果在新机器上遇到TypeScript编译错误，通常是因为依赖未安装：
+
+```bash
+# 解决方案1: 使用启动脚本（推荐）
+./start.sh  # 脚本会自动检查并安装依赖
+
+# 解决方案2: 手动安装依赖
+npm run install:all
+
+# 解决方案3: 仅安装MCP服务依赖
+cd mcp && npm install
+```
+
+#### 端口占用错误
+如果端口被占用，请先停止现有服务：
+
+```bash
+./stop.sh  # 停止项目服务
+# 或手动查找并终止进程
+lsof -i :9010  # 查看9010端口占用
+lsof -i :9011  # 查看9011端口占用
+```
+
+#### 数据库连接错误
+检查Supabase配置：
+
+```bash
+# 验证环境变量
+cat .env | grep SUPABASE
+
+# 测试数据库连接
+cd supabase/tests && ./validate_schema.sh
+```
 
 ## 详细文档
 
