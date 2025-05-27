@@ -16,7 +16,7 @@ fi
 
 # 启动MCP服务
 echo "正在启动MCP服务 (端口: $MCP_PORT)..."
-cd /app/mcp && node dist/api/index.js &
+cd /app/mcp && node dist/mcp/api/index.js &
 MCP_PID=$!
 
 # 等待服务启动
