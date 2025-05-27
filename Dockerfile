@@ -52,4 +52,5 @@ RUN chmod +x /app/docker-start.sh && \
 RUN npm install -g serve && apk add --no-cache curl
 
 # 启动应用
-CMD ["/bin/bash", "/app/entrypoint.sh"]
+# 使用shell形式的CMD，而不是数组形式
+CMD /app/entrypoint.sh
