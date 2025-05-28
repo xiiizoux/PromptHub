@@ -9,9 +9,30 @@ const Footer: React.FC = () => {
           <div className="mb-6 md:mb-0">
             <Link href="/" className="flex items-center">
               <div className="h-8 w-8 rounded-full bg-gradient-to-br from-primary-500 to-secondary-600 flex items-center justify-center">
-                <span className="text-white font-bold text-xl">P</span>
+                <span className="text-white font-bold text-sm">P</span>
               </div>
-              <span className="ml-2 text-xl font-bold text-gray-900">Prompt Hub</span>
+              <div className="ml-2 flex items-baseline">
+                <span 
+                  className="text-xl font-bold bg-gradient-to-r from-primary-600 to-primary-700 bg-clip-text text-transparent"
+                  style={{ 
+                    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Helvetica Neue", "Arial", sans-serif',
+                    letterSpacing: '0.02em',
+                    fontWeight: '700'
+                  }}
+                >
+                  Prompt
+                </span>
+                <span 
+                  className="text-xl font-light text-gray-600 ml-0.5"
+                  style={{ 
+                    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Helvetica Neue", "Arial", sans-serif',
+                    letterSpacing: '0.03em',
+                    fontWeight: '300'
+                  }}
+                >
+                  Hub
+                </span>
+              </div>
             </Link>
             <p className="mt-3 text-gray-600 text-sm max-w-md">
               一个用于管理和分享AI提示词的现代化平台，帮助您充分发挥AI模型的潜力。
@@ -54,8 +75,13 @@ const Footer: React.FC = () => {
                   </Link>
                 </li>
                 <li>
-                  <Link href="/docs/examples" className="text-gray-600 hover:text-primary-600 text-sm">
-                    示例和模板
+                  <Link href="/docs/templates" className="text-gray-600 hover:text-primary-600 text-sm">
+                    提示词模板
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/docs/examples-library" className="text-gray-600 hover:text-primary-600 text-sm">
+                    应用示例
                   </Link>
                 </li>
               </ul>

@@ -68,10 +68,35 @@ const Navbar: React.FC = () => {
           <Link href="/" className="flex items-center -m-1.5 p-1.5">
             <span className="sr-only">Prompt Hub</span>
             <div className="flex items-center">
-              <div className="rounded-full overflow-hidden flex items-center justify-center" style={{ width: '64px', height: '64px' }}>
-                <img src="/logo.png" alt="Logo" className="h-16 w-16 object-cover" />
+              <div className="rounded-full overflow-hidden w-12 h-12 shadow-sm">
+                <img 
+                  src="/images/logo.png" 
+                  alt="PromptHub Logo" 
+                  className="w-full h-full object-cover" 
+                />
               </div>
-              <img src="/webname.png" alt="Prompt Hub" className="ml-3 h-12 w-auto" />
+              <div className="ml-2 flex items-baseline">
+                <span 
+                  className="text-4xl font-extrabold bg-gradient-to-r from-primary-600 to-primary-700 bg-clip-text text-transparent"
+                  style={{ 
+                    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Helvetica Neue", "Arial", sans-serif',
+                    letterSpacing: '0.02em',
+                    fontWeight: '800'
+                  }}
+                >
+                  Prompt
+                </span>
+                <span 
+                  className="text-4xl font-thin text-gray-600 ml-1"
+                  style={{ 
+                    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Helvetica Neue", "Arial", sans-serif',
+                    letterSpacing: '0.04em',
+                    fontWeight: '200'
+                  }}
+                >
+                  Hub
+                </span>
+              </div>
             </div>
           </Link>
         </div>

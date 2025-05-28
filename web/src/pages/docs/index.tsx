@@ -88,6 +88,12 @@ const DocsPage: React.FC = () => {
                 <Link href="/docs/best-practices/optimization" className="block text-primary-600 hover:text-primary-700">
                   ● 提示词优化技巧
                 </Link>
+                <Link href="/docs/templates" className="block text-primary-600 hover:text-primary-700">
+                  ● 提示词模板库
+                </Link>
+                <Link href="/docs/examples-library" className="block text-primary-600 hover:text-primary-700">
+                  ● 实际应用示例
+                </Link>
               </div>
             </div>
           </div>
