@@ -208,9 +208,9 @@ main() {
     fi
     
     # 询问是否需要安装依赖
-    echo -e "${YELLOW}是否需要安装/更新项目依赖？ [是/否] (默认否)${NC}"
+    echo -e "${YELLOW}是否需要安装/更新项目依赖？ [Y/N] (默认N)${NC}"
     read -t 5 need_install
-    if [[ "$need_install" =~ ^([yY][eE][sS]|[yY]|是|是的|是已|已是)$ ]]; then
+    if [[ "$need_install" =~ ^([yY])$ ]]; then
         if ! install_dependencies; then
             echo -e "${RED}✗ 依赖安装失败，终止构建流程${NC}"
             exit 1

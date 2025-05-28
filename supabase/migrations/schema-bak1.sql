@@ -1,7 +1,6 @@
 -- MCP Prompt Server 完整数据库结构
 -- 在 Supabase SQL 编辑器中执行此脚本以创建完整的数据库结构
 -- 此文件合并了基础表结构、性能分析表结构和多用户支持
--- 包含所有性能和安全优化修复
 
 -- 启用UUID扩展（如果尚未启用）
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
@@ -133,6 +132,10 @@ CREATE TABLE IF NOT EXISTS prompt_ab_tests (
 );
 
 -- =============================================
+-- 索引和触发器
+-- =============================================
+
+-- =============================================
 -- 权限管理表结构
 -- =============================================
 
@@ -179,57 +182,9 @@ CREATE INDEX IF NOT EXISTS idx_prompt_audit_logs_prompt_id ON prompt_audit_logs(
 CREATE INDEX IF NOT EXISTS idx_prompt_audit_logs_user_id ON prompt_audit_logs(user_id);
 CREATE INDEX IF NOT EXISTS idx_prompt_audit_logs_created_at ON prompt_audit_logs(created_at);
 
--- =============================================
--- 修复1: auth_rls_initplan - Auth RLS函数重复评估问题
--- 创建辅助函数来优化auth.uid()调用，减少RLS策略中的重复计算
--- =============================================
-
--- 创建辅助函数来优化auth.uid()调用
-CREATE OR REPLACE FUNCTION get_auth_uid()
-RETURNS uuid
-LANGUAGE sql STABLE
-SECURITY DEFINER
-SET search_path = public
-AS $$
-  SELECT auth.uid()
-$$;
-
--- 创建一个用于RLS策略的更高效的用户验证函数
-CREATE OR REPLACE FUNCTION user_owns_prompt(prompt_id uuid)
-RETURNS boolean
-LANGUAGE sql STABLE
-SECURITY DEFINER
-SET search_path = public
-AS $$
-  SELECT EXISTS (
-    SELECT 1 FROM prompts 
-    WHERE id = prompt_id 
-    AND (created_by = get_auth_uid() OR user_id = get_auth_uid())
-  );
-$$;
-
--- 创建检查提示词是否公开的函数
-CREATE OR REPLACE FUNCTION is_prompt_public(prompt_id uuid)
-RETURNS boolean
-LANGUAGE sql STABLE
-SECURITY DEFINER
-SET search_path = public
-AS $$
-  SELECT is_public FROM prompts WHERE id = prompt_id;
-$$;
-
--- =============================================
--- 修复4: function_search_path_mutable - 函数搜索路径可变问题
--- 为所有函数设置固定的search_path参数，提高安全性
--- =============================================
-
 -- 创建触发器函数，在添加新的使用记录时自动更新性能汇总
 CREATE OR REPLACE FUNCTION update_prompt_performance()
-RETURNS TRIGGER
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path = public
-AS $$
+RETURNS TRIGGER AS $$
 BEGIN
   -- 插入或更新性能汇总记录
   INSERT INTO prompt_performance (
@@ -262,7 +217,7 @@ BEGIN
     
   RETURN NEW;
 END;
-$$;
+$$ LANGUAGE plpgsql;
 
 -- 创建触发器
 CREATE TRIGGER after_prompt_usage_insert
@@ -272,11 +227,7 @@ EXECUTE FUNCTION update_prompt_performance();
 
 -- 创建触发器函数，在添加新的反馈时更新性能汇总
 CREATE OR REPLACE FUNCTION update_prompt_performance_rating()
-RETURNS TRIGGER
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path = public
-AS $$
+RETURNS TRIGGER AS $$
 DECLARE
   prompt_id_val UUID;
   prompt_version_val INT;
@@ -301,7 +252,7 @@ BEGIN
   
   RETURN NEW;
 END;
-$$;
+$$ LANGUAGE plpgsql;
 
 -- 创建触发器
 CREATE TRIGGER after_prompt_feedback_insert
@@ -311,11 +262,7 @@ EXECUTE FUNCTION update_prompt_performance_rating();
 
 -- 创建审计日志触发器函数
 CREATE OR REPLACE FUNCTION log_prompt_changes()
-RETURNS TRIGGER
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path = public
-AS $$
+RETURNS TRIGGER AS $$
 BEGIN
   IF TG_OP = 'UPDATE' THEN
     INSERT INTO prompt_audit_logs (prompt_id, user_id, action, changes)
@@ -353,13 +300,14 @@ BEGIN
   END IF;
   RETURN NULL;
 END;
-$$;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- 创建审计日志触发器
 CREATE TRIGGER prompt_audit_trigger
   AFTER INSERT OR UPDATE OR DELETE ON prompts
   FOR EACH ROW EXECUTE FUNCTION log_prompt_changes();
 
+-- =============================================
 -- =============================================
 -- 行级安全策略
 -- =============================================
@@ -374,37 +322,14 @@ ALTER TABLE prompt_ab_tests ENABLE ROW LEVEL SECURITY;
 ALTER TABLE prompt_collaborators ENABLE ROW LEVEL SECURITY;
 ALTER TABLE prompt_audit_logs ENABLE ROW LEVEL SECURITY;
 
--- =============================================
--- 修复3: rls_disabled_in_public - 公共表未启用RLS问题
--- 为users表启用行级安全并添加适当的策略
--- =============================================
-
--- 为users表启用行级安全
-ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
-
--- 为users表创建适当的策略
--- 1. 用户只能查看自己的数据
-CREATE POLICY "Users can view own user data" ON public.users
-  FOR SELECT USING (id = auth.uid());
-
--- 2. 用户只能更新自己的数据
-CREATE POLICY "Users can update own user data" ON public.users
-  FOR UPDATE USING (id = auth.uid());
-
--- 3. 不允许普通用户删除任何用户记录
-CREATE POLICY "Users cannot delete user data" ON public.users
-  FOR DELETE USING (false);
-
--- 4. 新用户注册时允许插入
-CREATE POLICY "Users can insert on signup" ON public.users
-  FOR INSERT WITH CHECK (id = auth.uid());
-
 -- 为prompts表创建策略
+
+
 DO $$
 BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'prompts' AND policyname = 'Public prompts are viewable by everyone') THEN
     CREATE POLICY "Public prompts are viewable by everyone" ON prompts
-      FOR SELECT USING (is_public = true OR created_by = get_auth_uid() OR user_id = get_auth_uid());
+      FOR SELECT USING (is_public = true OR created_by = auth.uid() OR user_id = auth.uid());
   END IF;
 END $$;
 
@@ -412,7 +337,7 @@ DO $$
 BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'prompts' AND policyname = 'Users can insert their own prompts') THEN
     CREATE POLICY "Users can insert their own prompts" ON prompts
-      FOR INSERT WITH CHECK (created_by = get_auth_uid() OR user_id = get_auth_uid());
+      FOR INSERT WITH CHECK (created_by = auth.uid() OR user_id = auth.uid());
   END IF;
 END $$;
 
@@ -421,13 +346,13 @@ BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'prompts' AND policyname = 'Users can update their own prompts or collaborate') THEN
     CREATE POLICY "Users can update their own prompts or collaborate" ON prompts
       FOR UPDATE USING (
-        created_by = get_auth_uid() OR 
-        user_id = get_auth_uid() OR
+        created_by = auth.uid() OR 
+        user_id = auth.uid() OR
         (is_public = true AND allow_collaboration = true) OR
         EXISTS (
           SELECT 1 FROM prompt_collaborators 
           WHERE prompt_collaborators.prompt_id = prompts.id 
-          AND prompt_collaborators.user_id = get_auth_uid()
+          AND prompt_collaborators.user_id = auth.uid()
         )
       );
   END IF;
@@ -437,41 +362,37 @@ DO $$
 BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'prompts' AND policyname = 'Users can delete their own prompts') THEN
     CREATE POLICY "Users can delete their own prompts" ON prompts
-      FOR DELETE USING (created_by = get_auth_uid() OR user_id = get_auth_uid());
+      FOR DELETE USING (created_by = auth.uid() OR user_id = auth.uid());
   END IF;
 END $$;
 
--- =============================================
--- 修复2: multiple_permissive_policies - 多个同类型权限策略问题
--- 合并同一表上同一角色和操作的多个permissive策略，提高查询性能
--- =============================================
-
 -- 为prompt_versions表创建策略
-DROP POLICY IF EXISTS "Users can view own prompt versions" ON prompt_versions;
-DROP POLICY IF EXISTS "Everyone can view public prompt versions" ON prompt_versions;
-DROP POLICY IF EXISTS "Users can manage own prompt versions" ON prompt_versions;
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'prompt_versions' AND policyname = 'Users can view own prompt versions') THEN
+    CREATE POLICY "Users can view own prompt versions" ON prompt_versions FOR SELECT USING (
+      auth.uid() IN (SELECT user_id FROM prompts WHERE id = prompt_id)
+    );
+  END IF;
+END $$;
 
--- 使用不同的名称为每个操作创建策略
-CREATE POLICY "Comprehensive prompt versions access" ON prompt_versions
-  FOR SELECT USING (
-    auth.uid() IN (SELECT user_id FROM prompts WHERE id = prompt_id)
-    OR prompt_id IN (SELECT id FROM prompts WHERE is_public = true)
-  );
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'prompt_versions' AND policyname = 'Everyone can view public prompt versions') THEN
+    CREATE POLICY "Everyone can view public prompt versions" ON prompt_versions FOR SELECT USING (
+      prompt_id IN (SELECT id FROM prompts WHERE is_public = true)
+    );
+  END IF;
+END $$;
 
-CREATE POLICY "Users can insert own prompt versions" ON prompt_versions
-  FOR INSERT WITH CHECK (
-    auth.uid() IN (SELECT user_id FROM prompts WHERE id = prompt_id)
-  );
-
-CREATE POLICY "Users can update own prompt versions" ON prompt_versions
-  FOR UPDATE USING (
-    auth.uid() IN (SELECT user_id FROM prompts WHERE id = prompt_id)
-  );
-
-CREATE POLICY "Users can delete own prompt versions" ON prompt_versions
-  FOR DELETE USING (
-    auth.uid() IN (SELECT user_id FROM prompts WHERE id = prompt_id)
-  );
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'prompt_versions' AND policyname = 'Users can manage own prompt versions') THEN
+    CREATE POLICY "Users can manage own prompt versions" ON prompt_versions FOR ALL USING (
+      auth.uid() IN (SELECT user_id FROM prompts WHERE id = prompt_id)
+    );
+  END IF;
+END $$;
 
 -- 为prompt_usage表创建策略
 DO $$
@@ -503,22 +424,39 @@ BEGIN
   END IF;
 END $$;
 
--- 合并prompt_performance表的重复策略
-DROP POLICY IF EXISTS "Users can view performance of own prompts" ON prompt_performance;
-DROP POLICY IF EXISTS "Everyone can view performance of public prompts" ON prompt_performance;
+-- 为prompt_performance表创建策略
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'prompt_performance' AND policyname = 'Users can view performance of own prompts') THEN
+    CREATE POLICY "Users can view performance of own prompts" ON prompt_performance FOR SELECT USING (
+      prompt_id IN (SELECT id FROM prompts WHERE user_id = auth.uid())
+    );
+  END IF;
+END $$;
 
-CREATE POLICY "Comprehensive performance view access" ON prompt_performance
-  FOR SELECT USING (
-    prompt_id IN (SELECT id FROM prompts WHERE user_id = auth.uid() OR is_public = true)
-  );
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'prompt_performance' AND policyname = 'Everyone can view performance of public prompts') THEN
+    CREATE POLICY "Everyone can view performance of public prompts" ON prompt_performance FOR SELECT USING (
+      prompt_id IN (SELECT id FROM prompts WHERE is_public = true)
+    );
+  END IF;
+END $$;
 
--- 合并prompt_ab_tests表的重复策略
-DROP POLICY IF EXISTS "Users can view own AB tests" ON prompt_ab_tests;
-DROP POLICY IF EXISTS "Users can manage own AB tests" ON prompt_ab_tests;
+-- 为prompt_ab_tests表创建策略
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'prompt_ab_tests' AND policyname = 'Users can view own AB tests') THEN
+    CREATE POLICY "Users can view own AB tests" ON prompt_ab_tests FOR SELECT USING (created_by = auth.uid());
+  END IF;
+END $$;
 
--- 使用一个策略替代多个
-CREATE POLICY "Users comprehensive AB tests management" ON prompt_ab_tests
-  FOR ALL USING (created_by = auth.uid());
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'prompt_ab_tests' AND policyname = 'Users can manage own AB tests') THEN
+    CREATE POLICY "Users can manage own AB tests" ON prompt_ab_tests FOR ALL USING (created_by = auth.uid());
+  END IF;
+END $$;
 
 -- 协作者表的RLS策略
 DO $$
@@ -563,34 +501,271 @@ END $$;
 -- API密钥管理
 -- =============================================
 
--- API密钥表
+-- 创建API密钥表
 CREATE TABLE IF NOT EXISTS api_keys (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
-  name TEXT NOT NULL,                       -- 密钥名称
-  key_hash TEXT NOT NULL,                   -- 密钥哈希（不存储原始密钥）
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  expires_at TIMESTAMP WITH TIME ZONE,      -- 过期时间
-  last_used_at TIMESTAMP WITH TIME ZONE,    -- 最后使用时间
-  UNIQUE(user_id, name)                     -- 同一用户不能创建同名密钥
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  key_hash TEXT NOT NULL,
+  last_used_at TIMESTAMP WITH TIME ZONE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', now()),
+  expires_at TIMESTAMP WITH TIME ZONE,
+  UNIQUE(user_id, name)
 );
 
--- 启用API密钥表的RLS
+-- 添加索引以提高查询性能
+CREATE INDEX IF NOT EXISTS idx_api_keys_user_id ON api_keys(user_id);
+CREATE INDEX IF NOT EXISTS idx_api_keys_key_hash ON api_keys(key_hash);
+
+-- 启用行级安全策略
 ALTER TABLE api_keys ENABLE ROW LEVEL SECURITY;
 
--- 添加API密钥表的策略
+-- 添加行级安全策略
 DO $$
 BEGIN
-  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'api_keys' AND policyname = 'Users can view own API keys') THEN
-    CREATE POLICY "Users can view own API keys" ON api_keys
-      FOR SELECT USING (user_id = get_auth_uid());
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'api_keys' AND policyname = 'Users can only view their own API keys') THEN
+    CREATE POLICY "Users can only view their own API keys" 
+      ON api_keys FOR SELECT 
+      USING (auth.uid() = user_id);
   END IF;
 END $$;
 
 DO $$
 BEGIN
-  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'api_keys' AND policyname = 'Users can manage own API keys') THEN
-    CREATE POLICY "Users can manage own API keys" ON api_keys
-      FOR ALL USING (user_id = get_auth_uid());
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'api_keys' AND policyname = 'Users can only insert their own API keys') THEN
+    CREATE POLICY "Users can only insert their own API keys" 
+      ON api_keys FOR INSERT 
+      WITH CHECK (auth.uid() = user_id);
   END IF;
 END $$;
+
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'api_keys' AND policyname = 'Users can only update their own API keys') THEN
+    CREATE POLICY "Users can only update their own API keys" 
+      ON api_keys FOR UPDATE 
+      USING (auth.uid() = user_id);
+  END IF;
+END $$;
+
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'api_keys' AND policyname = 'Users can only delete their own API keys') THEN
+    CREATE POLICY "Users can only delete their own API keys" 
+      ON api_keys FOR DELETE 
+      USING (auth.uid() = user_id);
+  END IF;
+END $$;
+
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'api_keys' AND policyname = 'Service role has full access to API keys') THEN
+    CREATE POLICY "Service role has full access to API keys" 
+      ON api_keys FOR ALL 
+      USING (auth.jwt() ->> 'role' = 'service_role');
+  END IF;
+END $$;
+
+-- =============================================
+-- 类别管理系统
+-- =============================================
+
+-- 创建类别表
+CREATE TABLE IF NOT EXISTS categories (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  name TEXT NOT NULL UNIQUE,           -- 类别名称（中文）
+  name_en TEXT,                        -- 英文名称（可选）
+  icon TEXT,                           -- 图标名称或类名
+  description TEXT,                    -- 类别描述
+  sort_order INT DEFAULT 0,            -- 排序顺序
+  is_active BOOLEAN DEFAULT TRUE,      -- 是否启用
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- 创建索引
+CREATE INDEX IF NOT EXISTS idx_categories_sort_order ON categories(sort_order);
+CREATE INDEX IF NOT EXISTS idx_categories_is_active ON categories(is_active);
+
+-- 启用行级安全策略
+ALTER TABLE categories ENABLE ROW LEVEL SECURITY;
+
+-- 添加行级安全策略 - 所有人都可以查看类别
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'categories' AND policyname = 'Everyone can view categories') THEN
+    CREATE POLICY "Everyone can view categories" 
+      ON categories FOR SELECT 
+      USING (is_active = true);
+  END IF;
+END $$;
+
+-- 只有管理员可以管理类别（这里暂时允许所有认证用户，后续可以调整）
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'categories' AND policyname = 'Authenticated users can manage categories') THEN
+    CREATE POLICY "Authenticated users can manage categories" 
+      ON categories FOR ALL 
+      USING (auth.role() = 'authenticated');
+  END IF;
+END $$;
+
+-- 为现有的prompts表添加category_id外键（可选，保持向后兼容）
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'prompts' AND column_name = 'category_id'
+  ) THEN
+    ALTER TABLE prompts ADD COLUMN category_id UUID REFERENCES categories(id);
+    CREATE INDEX IF NOT EXISTS idx_prompts_category_id ON prompts(category_id);
+  END IF;
+END $$;
+
+-- 为prompt_versions表也添加category_id（可选）
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'prompt_versions' AND column_name = 'category_id'
+  ) THEN
+    ALTER TABLE prompt_versions ADD COLUMN category_id UUID REFERENCES categories(id);
+    CREATE INDEX IF NOT EXISTS idx_prompt_versions_category_id ON prompt_versions(category_id);
+  END IF;
+END $$;
+
+-- =============================================
+-- 初始化示例数据
+-- =============================================
+
+-- 插入预置类别数据
+INSERT INTO categories (name, name_en, icon, description, sort_order) VALUES
+-- 基础类别
+('全部', 'all', 'grid-3x3', '显示所有类别的提示词', 0),
+('通用', 'general', 'layers', '通用助手和日常对话类提示词', 10),
+
+-- 学术和专业类别
+('学术', 'academic', 'academic-cap', '学术研究、论文写作、学术分析类提示词', 20),
+('职业', 'professional', 'briefcase', '职场沟通、简历优化、面试准备类提示词', 30),
+
+-- 创作和内容类别
+('文案', 'copywriting', 'pencil', '广告文案、营销内容、产品描述类提示词', 40),
+('设计', 'design', 'color-swatch', '设计思维、创意构思、视觉设计类提示词', 50),
+('绘画', 'painting', 'paint-brush', '绘画创作、艺术指导、风格描述类提示词', 55),
+
+-- 教育和娱乐类别
+('教育', 'education', 'book-open', '教学辅导、知识解释、学习指导类提示词', 60),
+('情感', 'emotional', 'heart', '情感支持、心理咨询、人际关系类提示词', 70),
+('娱乐', 'entertainment', 'sparkles', '游戏、故事创作、趣味对话类提示词', 80),
+('游戏', 'gaming', 'puzzle-piece', '游戏策略、角色扮演、游戏设计类提示词', 90),
+
+-- 生活和实用类别
+('生活', 'lifestyle', 'home', '日常生活、健康建议、生活技巧类提示词', 100),
+('商业', 'business', 'chart-bar', '商业分析、市场策略、企业管理类提示词', 110),
+('办公', 'office', 'document-text', '办公自动化、文档处理、会议记录类提示词', 120),
+
+-- 技术类别
+('编程', 'programming', 'code', '代码编写、程序调试、技术解答类提示词', 130),
+('翻译', 'translation', 'language', '多语言翻译、本地化、语言学习类提示词', 140),
+
+-- 多媒体类别
+('视频', 'video', 'video-camera', '视频制作、脚本编写、视频策划类提示词', 150),
+('播客', 'podcast', 'microphone', '播客制作、音频内容、访谈策划类提示词', 160),
+('音乐', 'music', 'musical-note', '音乐创作、歌词编写、音乐分析类提示词', 170),
+
+-- 专业领域类别
+('健康', 'health', 'heart-pulse', '健康咨询、医疗信息、养生建议类提示词', 180),
+('科技', 'technology', 'cpu-chip', '科技趋势、技术分析、创新思维类提示词', 190)
+
+ON CONFLICT (name) DO UPDATE SET
+  name_en = EXCLUDED.name_en,
+  icon = EXCLUDED.icon,
+  description = EXCLUDED.description,
+  sort_order = EXCLUDED.sort_order,
+  updated_at = NOW();
+
+-- 为现有数据设置created_by字段（使用user_id字段的值）
+UPDATE prompts 
+SET created_by = user_id 
+WHERE created_by IS NULL AND user_id IS NOT NULL;
+
+-- 更新现有提示词的category_id
+UPDATE prompts 
+SET category_id = c.id 
+FROM categories c 
+WHERE prompts.category = c.name 
+  AND prompts.category_id IS NULL;
+
+-- 更新现有提示词版本的category_id
+UPDATE prompt_versions 
+SET category_id = c.id 
+FROM categories c 
+WHERE prompt_versions.category = c.name 
+  AND prompt_versions.category_id IS NULL;
+
+-- 添加默认提示词示例
+-- 注意：需要有至少一个用户才能插入这些数据
+INSERT INTO prompts (name, description, category, tags, messages, created_at, updated_at, version, is_public, user_id)
+SELECT
+  'general_assistant',
+  '通用助手提示词，用于日常对话和问答',
+  '通用',
+  ARRAY['对话', '助手', '基础'],
+  '[{"role":"system","content":{"type":"text","text":"你是一个有用的AI助手，能够回答用户的各种问题并提供帮助。"}}]'::JSONB,
+  NOW(),
+  NOW(),
+  1,
+  true,  -- 设为公开
+  id     -- 使用第一个找到的用户ID
+FROM auth.users
+ORDER BY created_at
+LIMIT 1
+ON CONFLICT (name, user_id) DO NOTHING;
+
+-- 代码助手示例
+INSERT INTO prompts (name, description, category, tags, messages, created_at, updated_at, version, is_public, user_id)
+SELECT
+  'code_assistant',
+  '代码助手提示词，用于编程和代码相关问题',
+  '编程',
+  ARRAY['代码', '编程', '开发'],
+  '[{"role":"system","content":{"type":"text","text":"你是一个专业的编程助手，能够帮助用户解决各种编程问题，提供代码示例和解释。\n\n请遵循以下原则：\n1. 提供清晰、简洁的代码示例\n2. 解释代码的工作原理\n3. 指出潜在的问题和优化方向\n4. 使用最佳实践和设计模式\n\n你精通多种编程语言，包括但不限于：JavaScript、TypeScript、Python、Java、C++、Go等。"}}]'::JSONB,
+  NOW(),
+  NOW(),
+  1,
+  true,  -- 设为公开
+  id     -- 使用第一个找到的用户ID
+FROM auth.users
+ORDER BY created_at
+LIMIT 1
+ON CONFLICT (name, user_id) DO NOTHING;
+
+-- 为默认提示词创建初始版本记录
+INSERT INTO prompt_versions (prompt_id, version, messages, description, category, tags, user_id)
+SELECT 
+  p.id,            -- 提示词ID
+  1,             -- 初始版本号
+  p.messages,      -- 提示词内容
+  p.description,   -- 描述
+  p.category,      -- 分类
+  p.tags,          -- 标签
+  p.user_id        -- 用户ID
+FROM prompts p
+WHERE p.name IN ('general_assistant', 'code_assistant')
+  AND NOT EXISTS (
+    SELECT 1 FROM prompt_versions pv 
+    WHERE pv.prompt_id = p.id AND pv.version = 1
+  );
+
+-- =============================================
+-- 表字段注释
+-- =============================================
+
+-- 添加注释
+COMMENT ON COLUMN prompts.allow_collaboration IS '是否允许协作编辑';
+COMMENT ON COLUMN prompts.edit_permission IS '编辑权限级别: owner_only, collaborators, public';
+COMMENT ON COLUMN prompts.created_by IS '创建者用户ID（新字段，与user_id字段功能类似）';
+COMMENT ON COLUMN prompts.last_modified_by IS '最后修改者用户ID';
+
+COMMENT ON TABLE prompt_collaborators IS '提示词协作者表';
+COMMENT ON TABLE prompt_audit_logs IS '提示词操作审计日志表';

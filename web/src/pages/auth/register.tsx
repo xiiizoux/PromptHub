@@ -142,8 +142,8 @@ export default function RegisterPage() {
                 {...register('username', { 
                   required: '请输入用户名',
                   minLength: {
-                    value: 3,
-                    message: '用户名必须至少包含3个字符'
+                    value: 4,
+                    message: '用户名必须至少包含4个字符'
                   },
                   maxLength: {
                     value: 20,
@@ -152,6 +152,20 @@ export default function RegisterPage() {
                   pattern: {
                     value: /^[A-Za-z0-9_-]+$/,
                     message: '用户名只能包含字母、数字、下划线和连字符'
+                  },
+                  validate: {
+                    notReserved: value => {
+                      // 转换为小写进行检查，确保不区分大小写
+                      const lowerValue = value.toLowerCase();
+                      const reservedNames = [
+                        'admin', 'administrator', 'root', 'superuser', 'super', 
+                        'system', 'sysadmin', 'user', 'test', 'guest', 
+                        'manager', 'support', 'service', 'security',
+                        'webmaster', 'postmaster', 'master', 'owner', 'staff'
+                      ];
+                      return !reservedNames.includes(lowerValue) || 
+                        '此用户名为系统保留名，请使用其他用户名';
+                    }
                   }
                 })}
               />
@@ -198,7 +212,7 @@ export default function RegisterPage() {
                     message: '密码必须至少包含8个字符'
                   },
                   pattern: {
-                    value: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d@$!%*?&]{8,}$/,
+                    value: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d@$!%*?&#\-_+=,.;:]{8,}$/,
                     message: '密码必须包含至少一个大写字母、一个小写字母和一个数字'
                   }
                 })}
