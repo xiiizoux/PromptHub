@@ -18,6 +18,7 @@ export interface Prompt {
   version?: number;
   is_public?: boolean;
   user_id?: string;
+  error?: string;  // 添加错误属性，用于存储错误信息
 }
 
 export interface PromptVersion {

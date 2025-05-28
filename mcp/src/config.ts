@@ -24,9 +24,15 @@ export const config = {
   apiKey: getParamValue("api_key") || process.env.API_KEY || 'your-secure-api-key',
   serverKey: getParamValue("server_key") || process.env.SERVER_KEY || 'your-secure-api-key',
   
-  // 存储配置 - 只使用Supabase
+  // 存储配置 - 支持多种存储方案
   storage: {
-    type: 'supabase'
+    // 从环境变量读取存储类型，默认为supabase
+    // 已预留支持: 'supabase', 'file', 'postgresql', 'mysql' 等
+    // 目前只实现了supabase存储适配器
+    type: process.env.STORAGE_TYPE || 'supabase',
+    
+    // 存储路径配置 (用于file类型存储)
+    path: process.env.STORAGE_PATH || './data'
   },
   
   // Supabase 配置

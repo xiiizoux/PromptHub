@@ -2,6 +2,7 @@
  * Supabase适配器包装器
  * 
  * 这个文件包装了共享的Supabase适配器，确保它符合MCP服务的StorageAdapter接口
+ * 增强了错误处理和日志记录能力
  */
 
 // 导入MCP服务的类型定义
@@ -11,32 +12,117 @@ import { extendedSupabaseAdapter as supabaseAdapterInstance } from '../../../sup
 
 /**
  * 包装共享的Supabase适配器，确保类型兼容性
+ * 添加了错误处理和日志能力
  */
 export class SupabaseAdapter implements StorageAdapter {
-  // 代理到共享适配器的方法
+  private connectionVerified: boolean = false;
+  
+  constructor() {
+    // 在创建适配器时验证连接
+    this.verifyConnection().catch(err => {
+      console.error('警告: Supabase连接验证失败:', err.message);
+      console.error('请检查您的Supabase配置和凭证是否正确。');
+      console.error('如果您使用的是Docker环境，请确保映射了正确的.env文件。');
+    });
+  }
+  
+  /**
+   * 验证与Supabase的连接
+   */
+  private async verifyConnection(): Promise<boolean> {
+    try {
+      // 尝试调用一个基本的方法来验证连接
+      // 获取分类列表是一个轻量级的操作
+      await supabaseAdapterInstance.getCategories();
+      this.connectionVerified = true;
+      console.log('已成功连接到Supabase存储');
+      return true;
+    } catch (error) {
+      this.connectionVerified = false;
+      const err = error as Error;
+      console.error('无法连接到Supabase:', err.message);
+      // 打印更多调试信息
+      console.error('请检查Supabase URL和密钥配置是否正确');
+      if (process.env.SUPABASE_URL) {
+        console.debug(`配置的SUPABASE_URL: ${process.env.SUPABASE_URL.substring(0, 15)}...`);
+      } else {
+        console.error('SUPABASE_URL未设置');
+      }
+      return false;
+    }
+  }
+  
+  /**
+   * 处理API调用错误
+   */
+  private handleError<T>(operation: string, error: any, defaultValue: T): T {
+    const err = error as Error;
+    console.error(`Supabase操作 '${operation}' 失败:`, err.message);
+    if (err.stack) {
+      console.debug(err.stack);
+    }
+    return defaultValue;
+  }
+  
+  // 获取存储类型
   getType(): string {
-    return supabaseAdapterInstance.getType();
+    return 'supabase';
   }
   
   // 基本提示词管理
   async getPrompts(filters?: PromptFilters): Promise<PaginatedResponse<Prompt>> {
-    return supabaseAdapterInstance.getPrompts(filters);
+    try {
+      return await supabaseAdapterInstance.getPrompts(filters);
+    } catch (error) {
+      return this.handleError<PaginatedResponse<Prompt>>('getPrompts', error, {
+        data: [],
+        total: 0,
+        page: 1,
+        pageSize: 10,
+        totalPages: 0  // 添加缺少的totalPages属性
+      });
+    }
   }
   
   async getPrompt(nameOrId: string, userId?: string): Promise<Prompt | null> {
-    return supabaseAdapterInstance.getPrompt(nameOrId, userId);
+    try {
+      return await supabaseAdapterInstance.getPrompt(nameOrId, userId);
+    } catch (error) {
+      return this.handleError<Prompt | null>('getPrompt', error, null);
+    }
   }
   
   async createPrompt(prompt: Prompt): Promise<Prompt> {
-    return supabaseAdapterInstance.createPrompt(prompt);
+    try {
+      return await supabaseAdapterInstance.createPrompt(prompt);
+    } catch (error) {
+      // 创建失败时返回原始提示词，并添加错误信息
+      const err = error as Error;
+      console.error('创建提示词失败:', err.message);
+      prompt.error = err.message;
+      return prompt;
+    }
   }
   
   async updatePrompt(nameOrId: string, prompt: Partial<Prompt>, userId?: string): Promise<Prompt> {
-    return supabaseAdapterInstance.updatePrompt(nameOrId, prompt, userId);
+    try {
+      return await supabaseAdapterInstance.updatePrompt(nameOrId, prompt, userId);
+    } catch (error) {
+      const err = error as Error;
+      // 将错误信息添加到提示词对象
+      const errorPrompt = { ...prompt } as Prompt;
+      errorPrompt.error = err.message;
+      errorPrompt.id = nameOrId;
+      return this.handleError<Prompt>('updatePrompt', error, errorPrompt);
+    }
   }
   
   async deletePrompt(nameOrId: string, userId?: string): Promise<boolean> {
-    return supabaseAdapterInstance.deletePrompt(nameOrId, userId);
+    try {
+      return await supabaseAdapterInstance.deletePrompt(nameOrId, userId);
+    } catch (error) {
+      return this.handleError<boolean>('deletePrompt', error, false);
+    }
   }
   
   async searchPrompts(query: string, userId?: string, includePublic: boolean = true): Promise<Prompt[]> {
