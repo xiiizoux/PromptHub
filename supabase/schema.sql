@@ -581,7 +581,7 @@ INSERT INTO categories (name, name_en, icon, description, sort_order) VALUES
 -- 创作和内容类别
 ('文案', 'copywriting', 'pencil', '广告文案、营销内容、产品描述类提示词', 40),
 ('设计', 'design', 'color-swatch', '设计思维、创意构思、视觉设计类提示词', 50),
-('绘图', 'painting', 'paint-brush', '绘画创作、艺术指导、风格描述类提示词', 55),
+('绘画', 'painting', 'paint-brush', '绘画创作、艺术指导、风格描述类提示词', 55),
 
 -- 教育和娱乐类别
 ('教育', 'education', 'book-open', '教学辅导、知识解释、学习指导类提示词', 60),
@@ -613,6 +613,78 @@ ON CONFLICT (name) DO UPDATE SET
   description = EXCLUDED.description,
   sort_order = EXCLUDED.sort_order,
   updated_at = NOW();
+
+-- 为现有数据设置created_by字段（使用user_id字段的值）
+UPDATE prompts 
+SET created_by = user_id 
+WHERE created_by IS NULL AND user_id IS NOT NULL;
+
+-- 更新现有提示词的category_id
+UPDATE prompts 
+SET category_id = c.id 
+FROM categories c 
+WHERE prompts.category = c.name 
+  AND prompts.category_id IS NULL;
+
+-- 更新现有提示词版本的category_id
+UPDATE prompt_versions 
+SET category_id = c.id 
+FROM categories c 
+WHERE prompt_versions.category = c.name 
+  AND prompt_versions.category_id IS NULL;
+
+-- 添加默认提示词示例
+INSERT INTO prompts (name, description, category, tags, messages, created_at, updated_at, version, is_public, user_id)
+SELECT
+  'general_assistant',
+  '通用助手提示词，用于日常对话和问答',
+  '通用',
+  ARRAY['对话', '助手', '基础'],
+  '[{"role":"system","content":{"type":"text","text":"你是一个有用的AI助手，能够回答用户的各种问题并提供帮助。"}}]'::JSONB,
+  NOW(),
+  NOW(),
+  1,
+  true,
+  id
+FROM auth.users
+ORDER BY created_at
+LIMIT 1
+ON CONFLICT (name, user_id) DO NOTHING;
+
+-- 代码助手示例
+INSERT INTO prompts (name, description, category, tags, messages, created_at, updated_at, version, is_public, user_id)
+SELECT
+  'code_assistant',
+  '代码助手提示词，用于编程和代码相关问题',
+  '编程',
+  ARRAY['代码', '编程', '开发'],
+  '[{"role":"system","content":{"type":"text","text":"你是一个专业的编程助手，能够帮助用户解决各种编程问题，提供代码示例和解释。\\n\\n请遵循以下原则：\\n1. 提供清晰、简洁的代码示例\\n2. 解释代码的工作原理\\n3. 指出潜在的问题和优化方向\\n4. 使用最佳实践和设计模式\\n\\n你精通多种编程语言，包括但不限于：JavaScript、TypeScript、Python、Java、C++、Go等。"}}]'::JSONB,
+  NOW(),
+  NOW(),
+  1,
+  true,
+  id
+FROM auth.users
+ORDER BY created_at
+LIMIT 1
+ON CONFLICT (name, user_id) DO NOTHING;
+
+-- 为默认提示词创建初始版本记录
+INSERT INTO prompt_versions (prompt_id, version, messages, description, category, tags, user_id)
+SELECT 
+  p.id,
+  1,
+  p.messages,
+  p.description,
+  p.category,
+  p.tags,
+  p.user_id
+FROM prompts p
+WHERE p.name IN ('general_assistant', 'code_assistant')
+  AND NOT EXISTS (
+    SELECT 1 FROM prompt_versions pv 
+    WHERE pv.prompt_id = p.id AND pv.version = 1
+  );
 
 -- =============================================
 -- 表字段注释
