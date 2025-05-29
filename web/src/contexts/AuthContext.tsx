@@ -101,7 +101,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                      authUser.user_metadata?.full_name || 
                      authUser.email?.split('@')[0] || 'User',
         role: 'user',
-        created_at: authUser.created_at
+        created_at: authUser.created_at || new Date().toISOString()
       };
 
       const appUser: User = {
@@ -239,6 +239,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (error) {
         throw error;
       }
+
+      // 如果用户立即确认（比如在开发模式下），同步数据到users表
+      if (data.user && data.user.email_confirmed_at) {
+        try {
+          const { error: insertError } = await supabase
+            .from('users')
+            .insert({
+              id: data.user.id,
+              email: email,
+              display_name: username,
+              role: 'user',
+              created_at: data.user.created_at
+            });
+            
+          if (insertError && insertError.code !== '23505') { // 23505 是重复键错误
+            console.error('创建用户记录失败:', insertError);
+          }
+        } catch (insertErr) {
+          console.error('插入用户数据时出错:', insertErr);
+        }
+      }
       
       // 注册成功，但可能需要邮箱验证
       return;
@@ -282,8 +303,40 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return null;
       }
       
-      const { data: { session } } = await supabase.auth.getSession();
-      return session?.access_token || null;
+      // 获取当前会话并自动刷新令牌
+      const { data: { session }, error } = await supabase.auth.getSession();
+      
+      if (error) {
+        console.error('获取会话失败:', error);
+        return null;
+      }
+      
+      if (!session) {
+        console.warn('没有有效的用户会话');
+        return null;
+      }
+      
+      // 检查令牌是否即将过期（提前5分钟刷新）
+      const expiresAt = session.expires_at || 0;
+      const now = Math.floor(Date.now() / 1000);
+      const timeUntilExpiry = expiresAt - now;
+      
+      if (timeUntilExpiry < 300) { // 5分钟 = 300秒
+        console.log('令牌即将过期，尝试刷新...');
+        const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
+        
+        if (refreshError) {
+          console.error('刷新令牌失败:', refreshError);
+          return session.access_token;
+        }
+        
+        if (refreshData.session) {
+          console.log('令牌刷新成功');
+          return refreshData.session.access_token;
+        }
+      }
+      
+      return session.access_token;
     } catch (err) {
       console.error('获取令牌失败:', err);
       return null;
