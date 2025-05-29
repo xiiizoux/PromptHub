@@ -32,12 +32,92 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // 只在客户端执行认证检查
       if (typeof window !== 'undefined') {
         await checkAuth();
+        
+        // 监听认证状态变化
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+          console.log('Auth state change:', event, session?.user?.id);
+          
+          if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+            if (session?.user) {
+              await ensureUserInDatabase(session.user);
+            }
+          } else if (event === 'SIGNED_OUT') {
+            setUser(null);
+            setIsAuthenticated(false);
+          }
+        });
+
+        return () => subscription.unsubscribe();
       }
       setLoading(false);
     };
 
     initAuth();
   }, []);
+
+  // 确保用户数据在数据库中
+  const ensureUserInDatabase = async (authUser: any) => {
+    try {
+      // 检查用户是否已存在于users表
+      const { data: existingUser, error: fetchError } = await supabase
+        .from('users')
+        .select('*')
+        .eq('id', authUser.id)
+        .single();
+
+      if (fetchError && fetchError.code !== 'PGRST116') { // PGRST116 表示未找到记录
+        console.error('检查用户存在性失败:', fetchError);
+        return;
+      }
+
+      // 如果用户不存在，创建用户记录
+      if (!existingUser) {
+        const userData = {
+          id: authUser.id,
+          email: authUser.email,
+          display_name: authUser.user_metadata?.username || 
+                       authUser.user_metadata?.full_name || 
+                       authUser.email?.split('@')[0] || 'User',
+          role: 'user',
+          created_at: authUser.created_at
+        };
+
+        const { error: insertError } = await supabase
+          .from('users')
+          .insert(userData);
+
+        if (insertError) {
+          console.error('创建用户记录失败:', insertError);
+        } else {
+          console.log('用户记录创建成功:', userData);
+        }
+      }
+
+      // 更新本地用户状态
+      const finalUserData = existingUser || {
+        id: authUser.id,
+        email: authUser.email,
+        display_name: authUser.user_metadata?.username || 
+                     authUser.user_metadata?.full_name || 
+                     authUser.email?.split('@')[0] || 'User',
+        role: 'user',
+        created_at: authUser.created_at
+      };
+
+      const appUser: User = {
+        id: finalUserData.id,
+        username: finalUserData.display_name,
+        email: finalUserData.email,
+        role: finalUserData.role || 'user',
+        created_at: finalUserData.created_at || new Date().toISOString()
+      };
+
+      setUser(appUser);
+      setIsAuthenticated(true);
+    } catch (err) {
+      console.error('确保用户数据同步失败:', err);
+    }
+  };
 
   // 检查用户认证状态
   const checkAuth = async (): Promise<boolean> => {
