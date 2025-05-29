@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth, withAuth } from '@/contexts/AuthContext';
+import Link from 'next/link';
 import { 
   UserIcon, 
   KeyIcon, 
@@ -12,7 +13,10 @@ import {
   EyeIcon,
   EyeSlashIcon,
   ClipboardIcon,
-  CheckIcon
+  CheckIcon,
+  DocumentTextIcon,
+  ArrowTopRightOnSquareIcon,
+  PencilIcon
 } from '@heroicons/react/24/outline';
 
 interface ApiKey {
@@ -24,20 +28,35 @@ interface ApiKey {
   last_used_at?: string;
 }
 
+interface UserPrompt {
+  id: string;
+  name: string;
+  description: string;
+  category: string;
+  tags: string[];
+  is_public: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
 const ProfilePage = () => {
   const { user, getToken } = useAuth();
   const [activeTab, setActiveTab] = useState('profile');
   const [apiKeys, setApiKeys] = useState<ApiKey[]>([]);
+  const [userPrompts, setUserPrompts] = useState<UserPrompt[]>([]);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [newKeyName, setNewKeyName] = useState('');
   const [newKeyExpiry, setNewKeyExpiry] = useState(30);
   const [visibleKeys, setVisibleKeys] = useState<Set<string>>(new Set());
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [promptsLoading, setPromptsLoading] = useState(false);
+  const [promptCount, setPromptCount] = useState(0);
 
   const tabs = [
     { id: 'profile', name: '个人资料', icon: UserIcon },
     { id: 'api-keys', name: 'API密钥', icon: KeyIcon },
+    { id: 'my-prompts', name: '我的提示词', icon: DocumentTextIcon },
   ];
 
   const expiryOptions = [
@@ -55,23 +74,82 @@ const ProfilePage = () => {
     }
   }, [activeTab]);
 
+  // 加载用户提示词
+  useEffect(() => {
+    if (activeTab === 'my-prompts') {
+      fetchUserPrompts();
+    }
+  }, [activeTab]);
+
+  // 加载用户提示词数量（用于统计）
+  useEffect(() => {
+    fetchPromptCount();
+  }, []);
+
   const fetchApiKeys = async () => {
     setLoading(true);
     try {
       const token = await getToken();
+      console.log('获取到的token:', token ? `${token.substring(0, 20)}...` : 'null');
+      
       const response = await fetch('/api/profile/api-keys', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      console.log('API响应状态:', response.status);
+      console.log('API响应头:', response.headers);
+      
+      if (response.ok) {
+        const data = await response.json();
+        console.log('API响应数据:', data);
+        setApiKeys(data.keys || []);
+      } else {
+        const errorData = await response.text();
+        console.error('API请求失败:', response.status, errorData);
+      }
+    } catch (error) {
+      console.error('获取API密钥失败:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchUserPrompts = async () => {
+    setPromptsLoading(true);
+    try {
+      const token = await getToken();
+      const response = await fetch('/api/profile/prompts?pageSize=20', {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       });
       if (response.ok) {
         const data = await response.json();
-        setApiKeys(data.keys || []);
+        setUserPrompts(data.prompts || []);
       }
     } catch (error) {
-      console.error('获取API密钥失败:', error);
+      console.error('获取用户提示词失败:', error);
     } finally {
-      setLoading(false);
+      setPromptsLoading(false);
+    }
+  };
+
+  const fetchPromptCount = async () => {
+    try {
+      const token = await getToken();
+      const response = await fetch('/api/profile/prompts?pageSize=1000', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setPromptCount(data.pagination?.total || 0);
+      }
+    } catch (error) {
+      console.error('获取提示词数量失败:', error);
     }
   };
 
@@ -259,7 +337,7 @@ const ProfilePage = () => {
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div className="text-center p-4 glass rounded-xl border border-neon-cyan/10">
                       <SparklesIcon className="h-8 w-8 text-neon-cyan mx-auto mb-2" />
-                      <div className="text-2xl font-bold text-white">0</div>
+                      <div className="text-2xl font-bold text-white">{promptCount}</div>
                       <div className="text-sm text-gray-400">创建的提示词</div>
                     </div>
                     <div className="text-center p-4 glass rounded-xl border border-neon-purple/10">
@@ -285,15 +363,43 @@ const ProfilePage = () => {
                     <h2 className="text-2xl font-bold text-white">API密钥管理</h2>
                     <p className="text-gray-400 mt-1">创建和管理您的API密钥</p>
                   </div>
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => setShowCreateForm(true)}
-                    className="btn-primary flex items-center space-x-2"
-                  >
-                    <PlusIcon className="h-5 w-5" />
-                    <span>创建密钥</span>
-                  </motion.button>
+                  <div className="flex space-x-3">
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={async () => {
+                        try {
+                          const token = await getToken();
+                          console.log('测试认证token:', token ? `${token.substring(0, 20)}...` : 'null');
+                          
+                          const response = await fetch('/api/test-auth', {
+                            headers: {
+                              'Authorization': `Bearer ${token}`
+                            }
+                          });
+                          
+                          const result = await response.json();
+                          console.log('认证测试结果:', result);
+                          alert(`认证测试: ${JSON.stringify(result, null, 2)}`);
+                        } catch (error) {
+                          console.error('认证测试失败:', error);
+                          alert('认证测试失败');
+                        }
+                      }}
+                      className="btn-secondary text-sm"
+                    >
+                      测试认证
+                    </motion.button>
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => setShowCreateForm(true)}
+                      className="btn-primary flex items-center space-x-2"
+                    >
+                      <PlusIcon className="h-5 w-5" />
+                      <span>创建密钥</span>
+                    </motion.button>
+                  </div>
                 </div>
 
                 {/* 创建密钥表单 */}
@@ -441,6 +547,124 @@ const ProfilePage = () => {
                 )}
               </div>
             )}
+
+            {activeTab === 'my-prompts' && (
+              <div className="space-y-6">
+                {/* 创建提示词按钮 */}
+                <div className="flex justify-between items-center">
+                  <div>
+                    <h2 className="text-2xl font-bold text-white">我的提示词</h2>
+                    <p className="text-gray-400 mt-1">创建和管理您的提示词</p>
+                  </div>
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    className="btn-primary flex items-center space-x-2"
+                  >
+                    <Link href="/create" className="flex items-center space-x-2">
+                      <PlusIcon className="h-5 w-5" />
+                      <span>创建提示词</span>
+                    </Link>
+                  </motion.button>
+                </div>
+
+                {/* 提示词列表 */}
+                {promptsLoading && !userPrompts.length ? (
+                  <div className="glass rounded-2xl p-8 border border-neon-cyan/20 text-center">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-neon-cyan mx-auto mb-4"></div>
+                    <p className="text-gray-400">加载中...</p>
+                  </div>
+                ) : userPrompts.length === 0 ? (
+                  <div className="glass rounded-2xl p-8 border border-neon-cyan/20 text-center">
+                    <DocumentTextIcon className="h-12 w-12 text-gray-500 mx-auto mb-4" />
+                    <p className="text-gray-400">您还没有创建任何提示词</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {userPrompts.map((prompt, index) => (
+                      <motion.div
+                        key={prompt.id}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: index * 0.1 }}
+                        className="glass rounded-2xl p-6 border border-neon-cyan/20 hover:border-neon-cyan/40 transition-all duration-300"
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-center space-x-3 mb-2">
+                              <h3 className="text-lg font-semibold text-white">{prompt.name}</h3>
+                              <span className={`px-2 py-1 text-xs rounded-full ${
+                                prompt.is_public 
+                                  ? 'bg-neon-green/20 text-neon-green border border-neon-green/30'
+                                  : 'bg-neon-orange/20 text-neon-orange border border-neon-orange/30'
+                              }`}>
+                                {prompt.is_public ? '公开' : '私有'}
+                              </span>
+                              <span className="px-2 py-1 text-xs rounded-full bg-neon-purple/20 text-neon-purple border border-neon-purple/30">
+                                {prompt.category}
+                              </span>
+                            </div>
+                            <p className="text-gray-300 mb-3">{prompt.description}</p>
+                            
+                            {/* 标签展示 */}
+                            {prompt.tags && prompt.tags.length > 0 && (
+                              <div className="flex flex-wrap gap-1 mb-3">
+                                {prompt.tags.slice(0, 3).map((tag, tagIndex) => (
+                                  <span
+                                    key={tagIndex}
+                                    className="px-2 py-1 text-xs rounded-full bg-neon-cyan/10 text-neon-cyan border border-neon-cyan/20"
+                                  >
+                                    {tag}
+                                  </span>
+                                ))}
+                                {prompt.tags.length > 3 && (
+                                  <span className="px-2 py-1 text-xs rounded-full bg-gray-600/20 text-gray-400 border border-gray-600/20">
+                                    +{prompt.tags.length - 3}
+                                  </span>
+                                )}
+                              </div>
+                            )}
+                            
+                            <div className="flex items-center space-x-4 text-sm text-gray-400 mb-4">
+                              <span>创建于 {formatDate(prompt.created_at)}</span>
+                              <span>最后更新 {formatDate(prompt.updated_at)}</span>
+                            </div>
+                            
+                            <div className="flex items-center space-x-2">
+                              <Link 
+                                href={`/prompts/${prompt.name}`}
+                                className="p-2 glass rounded-lg hover:bg-neon-cyan/10 transition-colors group"
+                                title="查看提示词详情"
+                              >
+                                <ArrowTopRightOnSquareIcon className="h-5 w-5 text-gray-400 group-hover:text-neon-cyan" />
+                              </Link>
+                              <Link
+                                href={`/prompts/${prompt.name}/edit`}
+                                className="p-2 glass rounded-lg hover:bg-neon-purple/10 transition-colors group"
+                                title="编辑提示词"
+                              >
+                                <PencilIcon className="h-5 w-5 text-gray-400 group-hover:text-neon-purple" />
+                              </Link>
+                              <button
+                                onClick={() => copyToClipboard(prompt.name, prompt.id)}
+                                className="p-2 glass rounded-lg hover:bg-neon-green/10 transition-colors group"
+                                title="复制提示词名称"
+                              >
+                                {copiedKey === prompt.id ? (
+                                  <CheckIcon className="h-5 w-5 text-neon-green" />
+                                ) : (
+                                  <ClipboardIcon className="h-5 w-5 text-gray-400 group-hover:text-neon-green" />
+                                )}
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </motion.div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
           </motion.div>
         </AnimatePresence>
       </div>
@@ -449,4 +673,5 @@ const ProfilePage = () => {
 };
 
 export default withAuth(ProfilePage);
+
 
