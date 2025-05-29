@@ -147,11 +147,49 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           .eq('id', supaUser.id)
           .single();
         
+        // 如果users表中没有记录，尝试创建
+        if (userError && userError.code === 'PGRST116') {
+          await ensureUserInDatabase(supaUser);
+          // 重新获取用户数据
+          const { data: newUserData } = await supabase
+            .from('users')
+            .select('*')
+            .eq('id', supaUser.id)
+            .single();
+          
+          if (newUserData) {
+            const appUser: User = {
+              id: supaUser.id,
+              username: newUserData.display_name || supaUser.email?.split('@')[0] || '',
+              email: supaUser.email || '',
+              role: newUserData.role || 'user',
+              created_at: supaUser.created_at || new Date().toISOString()
+            };
+            
+            setUser(appUser);
+            setIsAuthenticated(true);
+            return true;
+          }
+        } else if (!userError && userData) {
+          const appUser: User = {
+            id: supaUser.id,
+            username: userData.display_name || supaUser.email?.split('@')[0] || '',
+            email: supaUser.email || '',
+            role: userData.role || 'user',
+            created_at: supaUser.created_at || new Date().toISOString()
+          };
+          
+          setUser(appUser);
+          setIsAuthenticated(true);
+          return true;
+        }
+        
+        // 如果获取用户数据失败，使用基本信息
         const appUser: User = {
           id: supaUser.id,
-          username: userData?.display_name || supaUser.email?.split('@')[0] || '',
+          username: supaUser.email?.split('@')[0] || '',
           email: supaUser.email || '',
-          role: userData?.role || 'user',
+          role: 'user',
           created_at: supaUser.created_at || new Date().toISOString()
         };
         
