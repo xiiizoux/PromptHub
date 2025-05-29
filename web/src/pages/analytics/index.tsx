@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { motion, AnimatePresence } from 'framer-motion';
 import { getPrompts, getPromptPerformance } from '@/lib/api';
 import { PromptInfo, PromptPerformance } from '@/types';
-import { ChartBarIcon, ArrowRightIcon, CheckCircleIcon } from '@heroicons/react/24/outline';
+import { ChartBarIcon, ArrowRightIcon, CheckCircleIcon, ChartPieIcon, ClockIcon, StarIcon, FireIcon } from '@heroicons/react/24/outline';
 
 export default function AnalyticsPage() {
   const [prompts, setPrompts] = useState<PromptInfo[]>([]);
@@ -63,181 +64,318 @@ export default function AnalyticsPage() {
   };
 
   return (
-    <div className="bg-gray-50 min-h-screen py-8">
-      <div className="container-tight">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">提示词性能分析</h1>
-          <p className="mt-2 text-gray-600">
-            查看和分析提示词的使用情况和效果，获取数据驱动的优化建议
-          </p>
-        </div>
+    <div className="min-h-screen bg-dark-bg-primary relative overflow-hidden">
+      {/* 背景网格效果 */}
+      <div className="fixed inset-0 bg-grid-pattern opacity-10 pointer-events-none"></div>
+      
+      {/* 背景装饰元素 */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-1/4 -right-48 w-96 h-96 bg-gradient-to-br from-neon-cyan/20 to-neon-purple/20 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-1/4 -left-48 w-96 h-96 bg-gradient-to-tr from-neon-pink/20 to-neon-purple/20 rounded-full blur-3xl"></div>
+      </div>
 
-        {/* 错误提示 */}
-        {error && (
-          <div className="rounded-md bg-red-50 p-4 mb-6">
-            <div className="flex">
-              <div className="ml-3">
-                <h3 className="text-sm font-medium text-red-800">发生错误</h3>
-                <div className="mt-2 text-sm text-red-700">
-                  <p>{error}</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
+      <div className="relative z-10 py-16">
+        <div className="container-tight">
+          {/* 页面标题 */}
+          <motion.div 
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            className="mb-12 text-center"
+          >
+            <motion.h1 
+              className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-neon-cyan via-neon-purple to-neon-pink bg-clip-text text-transparent mb-6"
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 1, delay: 0.2 }}
+            >
+              数据分析中心
+            </motion.h1>
+            <motion.p 
+              className="text-xl text-gray-400 max-w-3xl mx-auto leading-relaxed"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.4 }}
+            >
+              深入洞察提示词性能数据，驱动AI优化决策
+            </motion.p>
+          </motion.div>
 
-        {/* 加载状态 */}
-        {loading ? (
-          <div className="text-center py-12">
-            <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-primary-500 border-r-transparent"></div>
-            <p className="mt-4 text-gray-600">正在加载分析数据...</p>
-          </div>
-        ) : (
-          <>
-            {/* 总体统计 */}
-            <div className="bg-white rounded-lg shadow-sm p-6 mb-8">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">总体统计</h2>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="bg-primary-50 rounded-lg p-4">
-                  <div className="text-primary-600 text-lg font-semibold">
-                    {Object.values(performanceData).reduce((sum, data) => sum + (data.total_usage || 0), 0).toLocaleString('zh-CN')}
+          {/* 错误提示 */}
+          <AnimatePresence>
+            {error && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9, y: -20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.9, y: -20 }}
+                className="mb-8"
+              >
+                <div className="p-6 bg-gradient-to-r from-red-500/20 to-pink-500/20 border border-red-500/30 rounded-xl backdrop-blur-sm">
+                  <div className="flex items-center">
+                    <div className="flex-shrink-0">
+                      <svg className="h-6 w-6 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    </div>
+                    <div className="ml-3">
+                      <h3 className="text-lg font-medium text-red-300">发生错误</h3>
+                      <div className="mt-2 text-red-200">
+                        <p>{error}</p>
+                      </div>
+                    </div>
                   </div>
-                  <div className="text-sm text-gray-600">总使用次数</div>
                 </div>
-                <div className="bg-green-50 rounded-lg p-4">
-                  <div className="text-green-600 text-lg font-semibold">
-                    {formatPercent(Object.values(performanceData).reduce((sum, data) => sum + (data.success_rate || 0), 0) / (Object.keys(performanceData).length || 1))}
-                  </div>
-                  <div className="text-sm text-gray-600">平均成功率</div>
-                </div>
-                <div className="bg-blue-50 rounded-lg p-4">
-                  <div className="text-blue-600 text-lg font-semibold">
-                    {formatTime(Object.values(performanceData).reduce((sum, data) => sum + (data.average_latency || 0), 0) / (Object.keys(performanceData).length || 1))}
-                  </div>
-                  <div className="text-sm text-gray-600">平均响应时间</div>
-                </div>
-              </div>
-            </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
-            {/* 提示词性能表格 */}
-            <div className="bg-white rounded-lg shadow-sm overflow-hidden mb-8">
-              <div className="px-6 py-4 border-b border-gray-200">
-                <h2 className="text-xl font-semibold text-gray-900">提示词性能排名</h2>
+          {/* 加载状态 */}
+          {loading ? (
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="text-center py-20"
+            >
+              <div className="relative inline-block">
+                <div className="w-16 h-16 border-4 border-neon-cyan/30 border-t-neon-cyan rounded-full animate-spin"></div>
+                <div className="absolute inset-0 w-16 h-16 border-4 border-transparent border-t-neon-purple rounded-full animate-spin animate-reverse"></div>
               </div>
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        提示词
-                      </th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        使用次数
-                      </th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        成功率
-                      </th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        平均评分
-                      </th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        响应时间
-                      </th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        查看详情
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {prompts.map((prompt) => {
-                      const performance = performanceData[prompt.name];
-                      return (
-                        <tr key={prompt.name} className="hover:bg-gray-50">
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="flex items-center">
-                              <div className="text-sm font-medium text-gray-900">
-                                {prompt.name}
-                              </div>
-                            </div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-sm text-gray-900">
-                              {performance ? formatNumber(performance.total_usage) : '-'}
-                            </div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            {performance ? (
+              <motion.p 
+                className="mt-6 text-xl text-gray-400"
+                animate={{ opacity: [0.5, 1, 0.5] }}
+                transition={{ duration: 2, repeat: Infinity }}
+              >
+                正在加载分析数据...
+              </motion.p>
+            </motion.div>
+          ) : (
+            <>
+              {/* 总体统计 */}
+              <motion.div 
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, delay: 0.6 }}
+                className="bg-dark-card/50 backdrop-blur-md rounded-2xl border border-dark-border shadow-2xl p-8 mb-12"
+              >
+                <h2 className="text-2xl font-bold text-white mb-8 flex items-center">
+                  <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-neon-cyan to-neon-purple p-0.5 mr-4">
+                    <div className="w-full h-full bg-dark-bg-primary rounded-lg flex items-center justify-center">
+                      <ChartPieIcon className="h-5 w-5 text-neon-cyan" />
+                    </div>
+                  </div>
+                  总体统计
+                </h2>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <motion.div 
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.6, delay: 0.8 }}
+                    className="bg-gradient-to-br from-neon-cyan/20 to-neon-purple/20 border border-neon-cyan/30 rounded-xl p-6 hover:shadow-neon-sm transition-all duration-300"
+                  >
+                    <div className="flex items-center mb-4">
+                      <FireIcon className="h-8 w-8 text-neon-cyan mr-3" />
+                      <span className="text-sm text-gray-400">总使用次数</span>
+                    </div>
+                    <div className="text-3xl font-bold text-neon-cyan">
+                      {Object.values(performanceData).reduce((sum, data) => sum + (data.total_usage || 0), 0).toLocaleString('zh-CN')}
+                    </div>
+                  </motion.div>
+                  
+                  <motion.div 
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.6, delay: 1 }}
+                    className="bg-gradient-to-br from-neon-purple/20 to-neon-pink/20 border border-neon-purple/30 rounded-xl p-6 hover:shadow-neon-sm transition-all duration-300"
+                  >
+                    <div className="flex items-center mb-4">
+                      <CheckCircleIcon className="h-8 w-8 text-neon-purple mr-3" />
+                      <span className="text-sm text-gray-400">平均成功率</span>
+                    </div>
+                    <div className="text-3xl font-bold text-neon-purple">
+                      {formatPercent(Object.values(performanceData).reduce((sum, data) => sum + (data.success_rate || 0), 0) / (Object.keys(performanceData).length || 1))}
+                    </div>
+                  </motion.div>
+                  
+                  <motion.div 
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.6, delay: 1.2 }}
+                    className="bg-gradient-to-br from-neon-pink/20 to-neon-cyan/20 border border-neon-pink/30 rounded-xl p-6 hover:shadow-neon-sm transition-all duration-300"
+                  >
+                    <div className="flex items-center mb-4">
+                      <ClockIcon className="h-8 w-8 text-neon-pink mr-3" />
+                      <span className="text-sm text-gray-400">平均响应时间</span>
+                    </div>
+                    <div className="text-3xl font-bold text-neon-pink">
+                      {formatTime(Object.values(performanceData).reduce((sum, data) => sum + (data.average_latency || 0), 0) / (Object.keys(performanceData).length || 1))}
+                    </div>
+                  </motion.div>
+                </div>
+              </motion.div>
+
+              {/* 提示词性能表格 */}
+              <motion.div 
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, delay: 1.4 }}
+                className="bg-dark-card/50 backdrop-blur-md rounded-2xl border border-dark-border shadow-2xl overflow-hidden"
+              >
+                <div className="p-8 border-b border-dark-border">
+                  <h2 className="text-2xl font-bold text-white flex items-center">
+                    <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-neon-purple to-neon-pink p-0.5 mr-4">
+                      <div className="w-full h-full bg-dark-bg-primary rounded-lg flex items-center justify-center">
+                        <ChartBarIcon className="h-5 w-5 text-neon-purple" />
+                      </div>
+                    </div>
+                    提示词性能排名
+                  </h2>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="min-w-full">
+                    <thead className="bg-dark-bg-secondary/50">
+                      <tr>
+                        <th scope="col" className="px-6 py-4 text-left text-xs font-medium text-neon-cyan uppercase tracking-wider">
+                          提示词
+                        </th>
+                        <th scope="col" className="px-6 py-4 text-left text-xs font-medium text-neon-cyan uppercase tracking-wider">
+                          使用次数
+                        </th>
+                        <th scope="col" className="px-6 py-4 text-left text-xs font-medium text-neon-cyan uppercase tracking-wider">
+                          成功率
+                        </th>
+                        <th scope="col" className="px-6 py-4 text-left text-xs font-medium text-neon-cyan uppercase tracking-wider">
+                          平均评分
+                        </th>
+                        <th scope="col" className="px-6 py-4 text-left text-xs font-medium text-neon-cyan uppercase tracking-wider">
+                          响应时间
+                        </th>
+                        <th scope="col" className="px-6 py-4 text-left text-xs font-medium text-neon-cyan uppercase tracking-wider">
+                          查看详情
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-dark-border">
+                      {prompts.map((prompt, index) => {
+                        const performance = performanceData[prompt.name];
+                        return (
+                          <motion.tr 
+                            key={prompt.name}
+                            initial={{ opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ duration: 0.6, delay: 1.6 + index * 0.1 }}
+                            className="hover:bg-dark-card/30 transition-colors duration-300"
+                          >
+                            <td className="px-6 py-4 whitespace-nowrap">
                               <div className="flex items-center">
-                                <div className={`mr-2 flex-shrink-0 h-2.5 w-2.5 rounded-full ${
-                                  performance.success_rate > 0.9 ? 'bg-green-400' : 
-                                  performance.success_rate > 0.7 ? 'bg-yellow-400' : 'bg-red-400'
-                                }`}></div>
-                                <div className="text-sm text-gray-900">{formatPercent(performance.success_rate)}</div>
+                                <div className="text-sm font-medium text-white">
+                                  {prompt.name}
+                                </div>
                               </div>
-                            ) : '-'}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-sm text-gray-900">
-                              {performance && performance.average_rating ? performance.average_rating.toFixed(1) : '-'}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="text-sm text-gray-300">
+                                {performance ? formatNumber(performance.total_usage) : '-'}
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              {performance ? (
+                                <div className="flex items-center">
+                                  <div className={`mr-3 flex-shrink-0 h-3 w-3 rounded-full shadow-neon-sm ${
+                                    performance.success_rate > 0.9 ? 'bg-green-400' : 
+                                    performance.success_rate > 0.7 ? 'bg-yellow-400' : 'bg-red-400'
+                                  }`}></div>
+                                  <div className="text-sm text-gray-300">{formatPercent(performance.success_rate)}</div>
+                                </div>
+                              ) : '-'}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="flex items-center">
+                                {performance && performance.average_rating ? (
+                                  <>
+                                    <StarIcon className="h-4 w-4 text-yellow-400 mr-2" />
+                                    <span className="text-sm text-gray-300">{performance.average_rating.toFixed(1)}</span>
+                                  </>
+                                ) : (
+                                  <span className="text-sm text-gray-500">-</span>
+                                )}
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="text-sm text-gray-300">
+                                {performance ? formatTime(performance.average_latency) : '-'}
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm">
+                              <Link 
+                                href={`/analytics/${prompt.name}`} 
+                                className="inline-flex items-center text-neon-cyan hover:text-neon-purple transition-colors duration-300 group"
+                              >
+                                <span>详情</span>
+                                <ArrowRightIcon className="h-4 w-4 ml-1 group-hover:translate-x-1 transition-transform duration-300" />
+                              </Link>
+                            </td>
+                          </motion.tr>
+                        );
+                      })}
+                      
+                      {prompts.length === 0 && (
+                        <tr>
+                          <td colSpan={6} className="px-6 py-12 text-center">
+                            <div className="text-gray-400">
+                              <ChartBarIcon className="mx-auto h-12 w-12 text-gray-500 mb-4" />
+                              <h3 className="text-lg font-medium text-white mb-2">暂无数据</h3>
+                              <p>当前没有可用的性能分析数据</p>
                             </div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-sm text-gray-900">
-                              {performance ? formatTime(performance.average_latency) : '-'}
-                            </div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            <Link href={`/analytics/${prompt.name}`} className="text-primary-600 hover:text-primary-900">
-                              详情
-                            </Link>
                           </td>
                         </tr>
-                      );
-                    })}
-                    
-                    {prompts.length === 0 && (
-                      <tr>
-                        <td colSpan={6} className="px-6 py-4 text-center text-sm text-gray-500">
-                          暂无数据
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </div>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </motion.div>
 
-            {/* 优化建议 */}
-            <div className="bg-white rounded-lg shadow-sm p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">优化建议</h2>
-              <ul className="space-y-3">
-                <li className="flex items-start">
-                  <CheckCircleIcon className="h-5 w-5 text-green-500 mr-2 mt-0.5" />
-                  <span className="text-gray-700">定期分析性能数据，关注成功率低于80%的提示词，考虑优化其指令或增加示例</span>
-                </li>
-                <li className="flex items-start">
-                  <CheckCircleIcon className="h-5 w-5 text-green-500 mr-2 mt-0.5" />
-                  <span className="text-gray-700">检查平均响应时间较长的提示词，尝试简化其复杂度或分解为多个步骤</span>
-                </li>
-                <li className="flex items-start">
-                  <CheckCircleIcon className="h-5 w-5 text-green-500 mr-2 mt-0.5" />
-                  <span className="text-gray-700">收集并分析用户反馈，了解评分低的原因，有针对性地改进提示词</span>
-                </li>
-                <li className="flex items-start">
-                  <CheckCircleIcon className="h-5 w-5 text-green-500 mr-2 mt-0.5" />
-                  <span className="text-gray-700">对于常用提示词，考虑创建多个版本针对不同的使用场景</span>
-                </li>
-              </ul>
-              
-              <div className="mt-6">
-                <Link href="/docs/optimization" className="inline-flex items-center text-primary-600 hover:text-primary-800">
-                  查看更多优化指南
-                  <ArrowRightIcon className="ml-1 h-4 w-4" />
-                </Link>
-              </div>
-            </div>
-          </>
-        )}
+              {/* 优化建议 */}
+              <motion.div 
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, delay: 2 }}
+                className="mt-12"
+              >
+                <div className="bg-dark-card/50 backdrop-blur-md rounded-2xl border border-dark-border shadow-2xl p-8">
+                  <h2 className="text-2xl font-bold text-white mb-6 flex items-center">
+                    <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-neon-cyan to-neon-pink p-0.5 mr-4">
+                      <div className="w-full h-full bg-dark-bg-primary rounded-lg flex items-center justify-center">
+                        <CheckCircleIcon className="h-5 w-5 text-neon-cyan" />
+                      </div>
+                    </div>
+                    优化建议
+                  </h2>
+                  <div className="space-y-4">
+                    {[
+                      "定期分析性能数据，关注成功率低于80%的提示词，考虑优化其指令或增加示例",
+                      "检查平均响应时间较长的提示词，尝试简化其复杂度或分解为多个步骤",
+                      "收集并分析用户反馈，了解评分的原因，有针对性地改进提示词",
+                      "对于常用提示词，考虑创建更多版本来针对不同的使用场景"
+                    ].map((suggestion, index) => (
+                      <motion.div
+                        key={index}
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 0.6, delay: 2.2 + index * 0.2 }}
+                        className="flex items-start"
+                      >
+                        <div className="flex-shrink-0 w-6 h-6 rounded-full bg-gradient-to-r from-neon-cyan to-neon-purple flex items-center justify-center mt-0.5 mr-4">
+                          <CheckCircleIcon className="h-4 w-4 text-white" />
+                        </div>
+                        <p className="text-gray-300 leading-relaxed">{suggestion}</p>
+                      </motion.div>
+                    ))}
+                  </div>
+                </div>
+              </motion.div>
+            </>
+          )}
+        </div>
       </div>
     </div>
   );

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { getPrompts, getCategories, getTags } from '@/lib/api';
 import { PromptInfo, PromptFilters as PromptFiltersType } from '@/types';
 import PromptCard from '@/components/prompts/PromptCard';
@@ -23,7 +24,7 @@ export default function PromptsPage() {
     const fetchCategories = async () => {
       try {
         const data = await getCategories();
-        // 确保“全部”选项始终存在
+        // 确保"全部"选项始终存在
         if (data.length > 0 && !data.includes('全部')) {
           setCategories(['全部', ...data]);
         } else {
@@ -85,7 +86,9 @@ export default function PromptsPage() {
   const handlePageChange = (newPage: number) => {
     setFilters({ ...filters, page: newPage });
     // 滚动到页面顶部
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    if (typeof window !== 'undefined') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
   };
 
   // 渲染分页控件
@@ -104,129 +107,245 @@ export default function PromptsPage() {
     // 添加页码按钮
     for (let i = startPage; i <= endPage; i++) {
       pages.push(
-        <button
+        <motion.button
           key={i}
           onClick={() => handlePageChange(i)}
-          className={`relative inline-flex items-center px-4 py-2 text-sm font-medium ${
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          className={`relative inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg border transition-all duration-300 ${
             i === currentPage
-              ? 'z-10 bg-primary-600 text-white focus:z-20'
-              : 'bg-white text-gray-500 hover:bg-gray-50 focus:z-20'
-          } border border-gray-300`}
+              ? 'bg-gradient-to-r from-neon-cyan to-neon-purple text-white shadow-neon border-neon-cyan'
+              : 'bg-dark-card/50 text-neon-cyan border-dark-border hover:bg-dark-card hover:border-neon-cyan hover:shadow-neon-sm backdrop-blur-sm'
+          }`}
         >
           {i}
-        </button>
+        </motion.button>
       );
     }
     
     return (
-      <div className="flex items-center justify-between border-t border-gray-200 bg-white px-4 py-3 sm:px-6">
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="flex items-center justify-between p-6 bg-dark-card/30 backdrop-blur-md rounded-xl border border-dark-border shadow-xl"
+      >
         <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
           <div>
-            <p className="text-sm text-gray-700">
-              显示第 <span className="font-medium">{(currentPage - 1) * (filters.pageSize || 12) + 1}</span> 到{' '}
-              <span className="font-medium">
+            <p className="text-sm text-gray-400">
+              显示第 <span className="font-medium text-neon-cyan">{(currentPage - 1) * (filters.pageSize || 12) + 1}</span> 到{' '}
+              <span className="font-medium text-neon-cyan">
                 {Math.min(currentPage * (filters.pageSize || 12), prompts.length)}
               </span>{' '}
-              条，共 <span className="font-medium">{prompts.length}</span> 条结果
+              条，共 <span className="font-medium text-neon-purple">{prompts.length}</span> 条结果
             </p>
           </div>
           <div>
-            <nav className="isolate inline-flex -space-x-px rounded-md shadow-sm" aria-label="Pagination">
-              <button
+            <nav className="flex items-center space-x-2" aria-label="Pagination">
+              <motion.button
                 onClick={() => handlePageChange(currentPage - 1)}
                 disabled={currentPage === 1}
-                className={`relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-400 ${
-                  currentPage === 1 ? 'cursor-not-allowed' : 'hover:bg-gray-50'
-                } border border-gray-300`}
+                whileHover={{ scale: currentPage === 1 ? 1 : 1.05 }}
+                whileTap={{ scale: currentPage === 1 ? 1 : 0.95 }}
+                className={`relative inline-flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${
+                  currentPage === 1 
+                    ? 'cursor-not-allowed text-gray-600 bg-dark-card/30' 
+                    : 'text-neon-cyan bg-dark-card/50 border border-dark-border hover:bg-dark-card hover:border-neon-cyan hover:shadow-neon-sm backdrop-blur-sm'
+                }`}
               >
                 <span className="sr-only">上一页</span>
                 <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                   <path fillRule="evenodd" d="M12.79 5.23a.75.75 0 01-.02 1.06L8.832 10l3.938 3.71a.75.75 0 11-1.04 1.08l-4.5-4.25a.75.75 0 010-1.08l4.5-4.25a.75.75 0 011.06.02z" clipRule="evenodd" />
                 </svg>
-              </button>
+              </motion.button>
               
-              {pages}
+              <div className="flex space-x-1">
+                {pages}
+              </div>
               
-              <button
+              <motion.button
                 onClick={() => handlePageChange(currentPage + 1)}
                 disabled={currentPage === totalPages}
-                className={`relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-400 ${
-                  currentPage === totalPages ? 'cursor-not-allowed' : 'hover:bg-gray-50'
-                } border border-gray-300`}
+                whileHover={{ scale: currentPage === totalPages ? 1 : 1.05 }}
+                whileTap={{ scale: currentPage === totalPages ? 1 : 0.95 }}
+                className={`relative inline-flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${
+                  currentPage === totalPages 
+                    ? 'cursor-not-allowed text-gray-600 bg-dark-card/30' 
+                    : 'text-neon-cyan bg-dark-card/50 border border-dark-border hover:bg-dark-card hover:border-neon-cyan hover:shadow-neon-sm backdrop-blur-sm'
+                }`}
               >
                 <span className="sr-only">下一页</span>
                 <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                   <path fillRule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clipRule="evenodd" />
                 </svg>
-              </button>
+              </motion.button>
             </nav>
           </div>
         </div>
-      </div>
+      </motion.div>
     );
   };
 
   return (
-    <div className="bg-gray-50 min-h-screen py-8">
-      <div className="container-tight">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">浏览提示词</h1>
-          <p className="mt-2 text-gray-600">
-            探索我们的提示词库，找到适合您需求的完美提示词
-          </p>
-        </div>
+    <div className="min-h-screen bg-dark-bg-primary relative overflow-hidden">
+      {/* 背景网格效果 */}
+      <div className="fixed inset-0 bg-grid-pattern opacity-10 pointer-events-none"></div>
+      
+      <div className="relative z-10 py-16">
+        <div className="container-tight">
+          {/* 页面标题 */}
+          <motion.div 
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            className="mb-12 text-center"
+          >
+            <motion.h1 
+              className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-neon-cyan via-neon-purple to-neon-pink bg-clip-text text-transparent mb-6"
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 1, delay: 0.2 }}
+            >
+              探索提示词宇宙
+            </motion.h1>
+            <motion.p 
+              className="text-xl text-gray-400 max-w-3xl mx-auto leading-relaxed"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.4 }}
+            >
+              在这里发现最强大的AI提示词，解锁无限创意可能
+            </motion.p>
+          </motion.div>
 
-        {/* 过滤器 */}
-        <PromptFilters
-          filters={filters}
-          onFilterChange={handleFilterChange}
-          categories={categories}
-          tags={tags}
-        />
+          {/* 过滤器 */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.6 }}
+          >
+            <PromptFilters
+              filters={filters}
+              onFilterChange={handleFilterChange}
+              categories={categories}
+              tags={tags}
+            />
+          </motion.div>
 
-        {/* 错误提示 */}
-        {error && (
-          <div className="rounded-md bg-red-50 p-4 mb-6">
-            <div className="flex">
-              <div className="ml-3">
-                <h3 className="text-sm font-medium text-red-800">发生错误</h3>
-                <div className="mt-2 text-sm text-red-700">
-                  <p>{error}</p>
+          {/* 错误提示 */}
+          <AnimatePresence>
+            {error && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9, y: -20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.9, y: -20 }}
+                className="mb-8"
+              >
+                <div className="p-6 bg-gradient-to-r from-red-500/20 to-pink-500/20 border border-red-500/30 rounded-xl backdrop-blur-sm">
+                  <div className="flex items-center">
+                    <div className="flex-shrink-0">
+                      <svg className="h-6 w-6 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    </div>
+                    <div className="ml-3">
+                      <h3 className="text-lg font-medium text-red-300">发生错误</h3>
+                      <div className="mt-2 text-red-200">
+                        <p>{error}</p>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
-          </div>
-        )}
+              </motion.div>
+            )}
+          </AnimatePresence>
 
-        {/* 加载状态 */}
-        {loading ? (
-          <div className="text-center py-12">
-            <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-primary-500 border-r-transparent"></div>
-            <p className="mt-4 text-gray-600">正在加载提示词...</p>
-          </div>
-        ) : (
-          <>
-            {/* 没有结果 */}
-            {prompts.length === 0 && !loading && !error ? (
-              <div className="text-center py-12 bg-white rounded-lg shadow-sm">
-                <h3 className="mt-2 text-lg font-medium text-gray-900">没有找到提示词</h3>
-                <p className="mt-1 text-gray-500">尝试调整过滤条件或清除搜索关键词</p>
-              </div>
+          {/* 内容区域 */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.8, delay: 0.8 }}
+          >
+            {/* 加载状态 */}
+            {loading ? (
+              <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="text-center py-20"
+              >
+                <div className="relative inline-block">
+                  <div className="w-16 h-16 border-4 border-neon-cyan/30 border-t-neon-cyan rounded-full animate-spin"></div>
+                  <div className="absolute inset-0 w-16 h-16 border-4 border-transparent border-t-neon-purple rounded-full animate-spin animate-reverse"></div>
+                </div>
+                <motion.p 
+                  className="mt-6 text-xl text-gray-400"
+                  animate={{ opacity: [0.5, 1, 0.5] }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                >
+                  正在加载提示词...
+                </motion.p>
+              </motion.div>
             ) : (
               <>
-                {/* 提示词网格 */}
-                <div className="card-grid">
-                  {prompts.map((prompt) => (
-                    <PromptCard key={prompt.name} prompt={prompt} />
-                  ))}
-                </div>
+                {/* 没有结果 */}
+                {prompts.length === 0 && !loading && !error ? (
+                  <motion.div 
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="text-center py-20"
+                  >
+                    <div className="bg-dark-card/50 backdrop-blur-md rounded-xl border border-dark-border p-12 shadow-xl">
+                      <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-to-r from-neon-cyan to-neon-purple p-0.5">
+                        <div className="w-full h-full bg-dark-bg-primary rounded-full flex items-center justify-center">
+                          <svg className="w-8 h-8 text-neon-cyan" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                          </svg>
+                        </div>
+                      </div>
+                      <h3 className="text-2xl font-bold text-white mb-3">没有找到提示词</h3>
+                      <p className="text-gray-400 text-lg">尝试调整过滤条件或清除搜索关键词</p>
+                    </div>
+                  </motion.div>
+                ) : (
+                  <>
+                    {/* 提示词网格 */}
+                    <motion.div 
+                      className="card-grid mb-12"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ duration: 0.8, delay: 1 }}
+                    >
+                      {prompts.map((prompt, index) => (
+                        <motion.div
+                          key={prompt.name}
+                          initial={{ opacity: 0, y: 30 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ 
+                            duration: 0.6, 
+                            delay: 1.2 + index * 0.1,
+                            ease: "easeOut"
+                          }}
+                        >
+                          <PromptCard prompt={prompt} />
+                        </motion.div>
+                      ))}
+                    </motion.div>
 
-                {/* 分页 */}
-                {totalPages > 1 && renderPagination()}
+                    {/* 分页 */}
+                    {totalPages > 1 && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.8, delay: 1.5 }}
+                      >
+                        {renderPagination()}
+                      </motion.div>
+                    )}
+                  </>
+                )}
               </>
             )}
-          </>
-        )}
+          </motion.div>
+        </div>
       </div>
     </div>
   );

@@ -240,6 +240,7 @@ export const withAuth = <P extends object>(Component: React.ComponentType<P>): R
   const AuthComponent: React.FC<P> = (props) => {
     const { isAuthenticated, loading } = useAuth();
     const [mounted, setMounted] = useState(false);
+    const [redirecting, setRedirecting] = useState(false);
 
     useEffect(() => {
       setMounted(true);
@@ -247,22 +248,75 @@ export const withAuth = <P extends object>(Component: React.ComponentType<P>): R
 
     useEffect(() => {
       // 只在客户端挂载完成后执行路由重定向
-      if (mounted && !loading && !isAuthenticated) {
-        const currentUrl = window.location.pathname + window.location.search;
-        window.location.href = `/auth/login?returnUrl=${encodeURIComponent(currentUrl)}`;
+      if (mounted && !loading && !isAuthenticated && !redirecting) {
+        setRedirecting(true);
+        
+        // 使用Next.js动态导入router避免SSR问题
+        import('next/router').then(({ default: Router }) => {
+          const currentUrl = window.location.pathname + window.location.search;
+          Router.push(`/auth/login?returnUrl=${encodeURIComponent(currentUrl)}`);
+        }).catch(() => {
+          // 如果Next.js路由器失败，回退到原生方法
+          const currentUrl = window.location.pathname + window.location.search;
+          window.location.href = `/auth/login?returnUrl=${encodeURIComponent(currentUrl)}`;
+        });
       }
-    }, [mounted, isAuthenticated, loading]);
+    }, [mounted, isAuthenticated, loading, redirecting]);
 
-    // 在服务器端渲染或组件未挂载时，返回加载界面
-    if (!mounted || loading || !isAuthenticated) {
+    // 在服务器端渲染时，返回null避免内容闪烁
+    if (typeof window === 'undefined') {
+      return null;
+    }
+
+    // 组件未挂载或正在重定向时，返回null避免闪烁
+    if (!mounted || redirecting) {
+      return null;
+    }
+
+    // 正在加载认证状态时，显示cyberpunk风格的加载界面
+    if (loading) {
       return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-50">
-          <div className="text-center">
-            <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-primary-500 border-r-transparent"></div>
-            <p className="mt-4 text-gray-600">正在验证身份...</p>
+        <div className="min-h-screen bg-dark-bg-primary flex items-center justify-center relative overflow-hidden">
+          {/* 背景装饰 */}
+          <div className="absolute inset-0">
+            <div className="absolute top-1/4 -right-48 w-96 h-96 bg-gradient-to-br from-neon-cyan/20 to-neon-purple/20 rounded-full blur-3xl"></div>
+            <div className="absolute bottom-1/4 -left-48 w-96 h-96 bg-gradient-to-tr from-neon-pink/20 to-neon-purple/20 rounded-full blur-3xl"></div>
+          </div>
+          
+          {/* 加载内容 */}
+          <div className="relative z-10 text-center">
+            {/* 旋转的加载图标 */}
+            <div className="relative mx-auto mb-8">
+              <div className="w-16 h-16 border-4 border-neon-cyan/30 rounded-full animate-spin">
+                <div className="absolute top-0 left-0 w-full h-full border-4 border-transparent border-t-neon-cyan rounded-full animate-pulse"></div>
+              </div>
+              <div className="absolute inset-0 w-16 h-16 border-4 border-neon-purple/20 rounded-full animate-ping"></div>
+            </div>
+            
+            {/* 加载文本 */}
+            <div className="space-y-2">
+              <h3 className="text-xl font-bold gradient-text">验证身份中</h3>
+              <p className="text-gray-400 text-sm">正在连接到服务器...</p>
+            </div>
+            
+            {/* 装饰线条 */}
+            <div className="mt-8 flex justify-center space-x-1">
+              {[0, 1, 2].map((i) => (
+                <div
+                  key={i}
+                  className="w-2 h-2 bg-neon-cyan rounded-full animate-pulse"
+                  style={{ animationDelay: `${i * 0.2}s` }}
+                ></div>
+              ))}
+            </div>
           </div>
         </div>
       );
+    }
+
+    // 用户未认证，返回null等待重定向
+    if (!isAuthenticated) {
+      return null;
     }
 
     // 认证通过，渲染原始组件

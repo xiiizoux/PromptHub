@@ -1,34 +1,55 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Bars3Icon, XMarkIcon, UserCircleIcon } from '@heroicons/react/24/outline';
-import { ChevronDownIcon } from '@heroicons/react/20/solid';
+import { motion, AnimatePresence } from 'framer-motion';
+import { 
+  Bars3Icon, 
+  XMarkIcon, 
+  UserCircleIcon,
+  SparklesIcon,
+  DocumentTextIcon,
+  ChartBarIcon,
+  HomeIcon,
+  PlusCircleIcon,
+  ArrowRightOnRectangleIcon,
+  UserIcon,
+  KeyIcon
+} from '@heroicons/react/24/outline';
 import { useAuth } from '@/contexts/AuthContext';
+import clsx from 'clsx';
 
 const navigation = [
-  { name: '首页', href: '/' },
-  { name: '浏览提示词', href: '/prompts' },
-  { name: '创建提示词', href: '/create' },
-  { name: '性能分析', href: '/analytics' },
-  { name: '文档', href: '/docs' },
+  { name: '首页', href: '/', icon: HomeIcon },
+  { name: '浏览提示词', href: '/prompts', icon: SparklesIcon },
+  { name: '创建提示词', href: '/create', icon: PlusCircleIcon },
+  { name: '性能分析', href: '/analytics', icon: ChartBarIcon },
+  { name: '文档', href: '/docs', icon: DocumentTextIcon },
 ];
 
 const Navbar: React.FC = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const { user, signOut } = useAuth();
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
+  // 监听滚动事件
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 10);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
   // 判断当前路径是否活跃
   const isActive = (path: string) => {
-    // 在服务器端渲染时，无法判断路径
     if (!mounted || typeof window === 'undefined') {
       return false;
     }
-    
     const currentPath = window.location.pathname;
     if (path === '/') {
       return currentPath === path;
@@ -43,7 +64,6 @@ const Navbar: React.FC = () => {
   // 点击页面其他位置关闭用户菜单
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      // 只有当点击元素不在菜单内且不是菜单按钮时才关闭菜单
       if (
         userMenuOpen &&
         userMenuRef.current && 
@@ -60,198 +80,302 @@ const Navbar: React.FC = () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [userMenuOpen]);
-  
+
   return (
-    <header className="bg-white shadow-sm">
-      <nav className="container-tight mx-auto flex items-center justify-between py-4" aria-label="Global">
-        <div className="flex lg:flex-1">
-          <Link href="/" className="flex items-center -m-1.5 p-1.5">
-            <span className="sr-only">Prompt Hub</span>
-            <div className="flex items-center">
-              <div className="rounded-full overflow-hidden w-12 h-12 shadow-sm">
+    <motion.header 
+      initial={{ y: -100 }}
+      animate={{ y: 0 }}
+      transition={{ duration: 0.5 }}
+      className={clsx(
+        'fixed top-0 left-0 right-0 z-50 transition-all duration-300',
+        scrolled ? 'glass shadow-2xl backdrop-blur-xl' : 'bg-transparent'
+      )}
+    >
+      <nav className="container-custom mx-auto flex items-center justify-between py-4">
+        {/* Logo */}
+        <motion.div 
+          className="flex lg:flex-1"
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+        >
+          <Link href="/" className="flex items-center space-x-3">
+            <div className="relative w-12 h-12">
+              <div className="absolute inset-0 bg-gradient-to-br from-neon-cyan to-neon-pink rounded-full blur-md animate-pulse-slow"></div>
+              <div className="relative rounded-full overflow-hidden w-full h-full glass border border-neon-cyan/30">
                 <img 
                   src="/images/logo.png" 
                   alt="PromptHub Logo" 
                   className="w-full h-full object-cover" 
                 />
               </div>
-              <div className="ml-2 flex items-baseline">
-                <span 
-                  className="text-4xl font-extrabold bg-gradient-to-r from-primary-600 to-primary-700 bg-clip-text text-transparent"
-                  style={{ 
-                    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Helvetica Neue", "Arial", sans-serif',
-                    letterSpacing: '0.02em',
-                    fontWeight: '800'
-                  }}
-                >
-                  Prompt
-                </span>
-                <span 
-                  className="text-4xl font-thin text-gray-600 ml-1"
-                  style={{ 
-                    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Helvetica Neue", "Arial", sans-serif',
-                    letterSpacing: '0.04em',
-                    fontWeight: '200'
-                  }}
-                >
-                  Hub
-                </span>
-              </div>
+            </div>
+            <div className="flex items-baseline">
+              <span className="text-3xl font-bold gradient-text animate-text-shimmer bg-[length:200%_auto]">
+                Prompt
+              </span>
+              <span className="text-3xl font-light text-neon-cyan ml-1 neon-glow">
+                Hub
+              </span>
             </div>
           </Link>
-        </div>
+        </motion.div>
         
         {/* 移动端菜单按钮 */}
         <div className="flex lg:hidden">
-          <button
+          <motion.button
+            whileTap={{ scale: 0.9 }}
             type="button"
-            className="inline-flex items-center justify-center rounded-md p-2 text-gray-700"
+            className="glass p-2 rounded-lg text-neon-cyan"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           >
             <span className="sr-only">打开主菜单</span>
-            {mobileMenuOpen ? (
-              <XMarkIcon className="h-6 w-6" aria-hidden="true" />
-            ) : (
-              <Bars3Icon className="h-6 w-6" aria-hidden="true" />
-            )}
-          </button>
+            <AnimatePresence mode="wait">
+              {mobileMenuOpen ? (
+                <motion.div
+                  key="close"
+                  initial={{ rotate: -90 }}
+                  animate={{ rotate: 0 }}
+                  exit={{ rotate: 90 }}
+                >
+                  <XMarkIcon className="h-6 w-6" />
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="menu"
+                  initial={{ rotate: 90 }}
+                  animate={{ rotate: 0 }}
+                  exit={{ rotate: -90 }}
+                >
+                  <Bars3Icon className="h-6 w-6" />
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </motion.button>
         </div>
         
         {/* 桌面端菜单 */}
-        <div className="hidden lg:flex lg:gap-x-8">
-          {navigation.map((item) => (
-            <Link
-              key={item.name}
-              href={item.href}
-              className={`text-lg font-semibold leading-6 transition-all duration-300 ease-in-out ${
-                isActive(item.href)
-                  ? 'text-primary-600 border-b-2 border-primary-600 scale-105'
-                  : 'text-gray-700 hover:text-primary-600 hover:scale-110 hover:border-b-2 hover:border-primary-300'
-              }`}
-            >
-              {item.name}
-            </Link>
-          ))}
+        <div className="hidden lg:flex lg:gap-x-1">
+          {navigation.map((item, index) => {
+            const Icon = item.icon;
+            return (
+              <motion.div
+                key={item.name}
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.1 }}
+              >
+                <Link
+                  href={item.href}
+                  className={clsx(
+                    'group relative px-4 py-2 flex items-center space-x-2 rounded-lg transition-all duration-300',
+                    isActive(item.href)
+                      ? 'text-neon-cyan'
+                      : 'text-gray-400 hover:text-neon-cyan'
+                  )}
+                >
+                  <Icon className="h-5 w-5" />
+                  <span className="text-sm font-medium uppercase tracking-wider">{item.name}</span>
+                  {isActive(item.href) && (
+                    <motion.div
+                      layoutId="activeTab"
+                      className="absolute inset-0 bg-neon-cyan/10 rounded-lg border border-neon-cyan/30"
+                      transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                    />
+                  )}
+                  <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-neon-cyan/0 via-neon-cyan/10 to-neon-cyan/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-xl" />
+                </Link>
+              </motion.div>
+            );
+          })}
         </div>
         
-        <div className="hidden lg:flex lg:flex-1 lg:justify-end space-x-4">
+        {/* 用户菜单 */}
+        <div className="hidden lg:flex lg:flex-1 lg:justify-end items-center space-x-4">
           {user ? (
             <div className="relative">
-              <button
+              <motion.button
                 ref={userButtonRef}
-                className="flex items-center text-sm font-medium text-gray-700 hover:text-gray-900"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className={clsx(
+                  'flex items-center space-x-2 px-4 py-2 rounded-lg glass transition-all duration-300',
+                  'text-gray-300 hover:text-neon-cyan hover:border-neon-cyan/30'
+                )}
                 onClick={() => setUserMenuOpen(!userMenuOpen)}
               >
-                <UserCircleIcon className="h-6 w-6 mr-1" />
-                <span>{user.display_name || user.email.split('@')[0]}</span>
-                <ChevronDownIcon className="h-4 w-4 ml-1" />
-              </button>
-              
-              {userMenuOpen && (
-                <div ref={userMenuRef} className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-10 ring-1 ring-black ring-opacity-5">
-                  <Link href="/profile" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                    个人资料
-                  </Link>
-                  <Link href="/profile/api-keys" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                    API密钥管理
-                  </Link>
-                  <button
-                    onClick={() => {
-                      signOut();
-                      setUserMenuOpen(false);
-                      if (typeof window !== 'undefined') {
-                        window.location.href = '/';
-                      }
-                    }}
-                    className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
-                  >
-                    退出登录
-                  </button>
+                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-neon-cyan to-neon-pink p-0.5">
+                  <div className="w-full h-full rounded-full bg-dark-bg-primary flex items-center justify-center">
+                    <UserCircleIcon className="h-5 w-5 text-neon-cyan" />
+                  </div>
                 </div>
-              )}
+                <span className="text-sm font-medium">{user.display_name || user.email.split('@')[0]}</span>
+                <motion.svg
+                  animate={{ rotate: userMenuOpen ? 180 : 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="h-4 w-4"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </motion.svg>
+              </motion.button>
+              
+              <AnimatePresence>
+                {userMenuOpen && (
+                  <motion.div
+                    ref={userMenuRef}
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.2 }}
+                    className="absolute right-0 mt-2 w-56 glass rounded-xl border border-neon-cyan/20 overflow-hidden"
+                  >
+                    <Link href="/profile" className="flex items-center space-x-3 px-4 py-3 text-gray-300 hover:text-neon-cyan hover:bg-neon-cyan/10 transition-all">
+                      <UserIcon className="h-5 w-5" />
+                      <span>个人资料</span>
+                    </Link>
+                    <Link href="/profile/api-keys" className="flex items-center space-x-3 px-4 py-3 text-gray-300 hover:text-neon-cyan hover:bg-neon-cyan/10 transition-all">
+                      <KeyIcon className="h-5 w-5" />
+                      <span>API密钥管理</span>
+                    </Link>
+                    <div className="border-t border-neon-cyan/10 my-1" />
+                    <button
+                      onClick={() => {
+                        signOut();
+                        setUserMenuOpen(false);
+                        if (typeof window !== 'undefined') {
+                          window.location.href = '/';
+                        }
+                      }}
+                      className="flex items-center space-x-3 w-full px-4 py-3 text-neon-red hover:bg-neon-red/10 transition-all"
+                    >
+                      <ArrowRightOnRectangleIcon className="h-5 w-5" />
+                      <span>退出登录</span>
+                    </button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           ) : (
             <>
-              <Link href="/auth/register" className="text-sm font-semibold leading-6 text-primary-600 hover:text-primary-700">
-                注册
-              </Link>
-              <Link href="/auth/login" className="text-sm font-semibold leading-6 text-gray-900">
-                登录 <span aria-hidden="true">&rarr;</span>
-              </Link>
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.3 }}
+              >
+                <Link 
+                  href="/auth/register" 
+                  className="btn-secondary text-sm"
+                >
+                  注册
+                </Link>
+              </motion.div>
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.4 }}
+              >
+                <Link 
+                  href="/auth/login" 
+                  className="btn-primary text-sm"
+                >
+                  登录
+                </Link>
+              </motion.div>
             </>
           )}
         </div>
       </nav>
       
       {/* 移动端菜单 */}
-      {mobileMenuOpen && (
-        <div className="lg:hidden">
-          <div className="space-y-2 px-4 pb-3 pt-2">
-            {navigation.map((item) => (
-              <Link
-                key={item.name}
-                href={item.href}
-                className={`block rounded-md px-3 py-2 text-lg font-medium transition-all duration-200 ${
-                  isActive(item.href)
-                    ? 'bg-primary-50 text-primary-600 scale-102 shadow-sm'
-                    : 'text-gray-700 hover:bg-gray-50 hover:text-primary-600 hover:translate-x-1'
-                }`}
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                {item.name}
-              </Link>
-            ))}
-            {user ? (
-              <>
-                <Link
-                  href="/profile"
-                  className="block rounded-md px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-50 hover:text-primary-600"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  个人资料
-                </Link>
-                <Link
-                  href="/profile/api-keys"
-                  className="block rounded-md px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-50 hover:text-primary-600"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  API密钥管理
-                </Link>
-                <button
-                  onClick={() => {
-                    signOut();
-                    setMobileMenuOpen(false);
-                    if (typeof window !== 'undefined') {
-                      window.location.href = '/';
-                    }
-                  }}
-                  className="block w-full text-left rounded-md px-3 py-2 text-base font-medium text-red-600 hover:bg-gray-50"
-                >
-                  退出登录
-                </button>
-              </>
-            ) : (
-              <>
-                <Link
-                  href="/auth/register"
-                  className="block rounded-md px-3 py-2 text-base font-medium text-primary-600 hover:bg-gray-50 hover:text-primary-700"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  注册
-                </Link>
-                <Link
-                  href="/auth/login"
-                  className="block rounded-md px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-50 hover:text-primary-600"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  登录
-                </Link>
-              </>
-            )}
-          </div>
-        </div>
-      )}
-    </header>
+      <AnimatePresence>
+        {mobileMenuOpen && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.3 }}
+            className="lg:hidden glass border-t border-neon-cyan/10"
+          >
+            <div className="container-custom py-4 space-y-2">
+              {navigation.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <Link
+                    key={item.name}
+                    href={item.href}
+                    className={clsx(
+                      'flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200',
+                      isActive(item.href)
+                        ? 'bg-neon-cyan/10 text-neon-cyan border border-neon-cyan/30'
+                        : 'text-gray-400 hover:text-neon-cyan hover:bg-neon-cyan/5'
+                    )}
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    <Icon className="h-5 w-5" />
+                    <span className="font-medium">{item.name}</span>
+                  </Link>
+                );
+              })}
+              
+              <div className="border-t border-neon-cyan/10 pt-4 mt-4">
+                {user ? (
+                  <>
+                    <Link
+                      href="/profile"
+                      className="flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-400 hover:text-neon-cyan hover:bg-neon-cyan/5 transition-all"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      <UserIcon className="h-5 w-5" />
+                      <span>个人资料</span>
+                    </Link>
+                    <Link
+                      href="/profile/api-keys"
+                      className="flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-400 hover:text-neon-cyan hover:bg-neon-cyan/5 transition-all"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      <KeyIcon className="h-5 w-5" />
+                      <span>API密钥管理</span>
+                    </Link>
+                    <button
+                      onClick={() => {
+                        signOut();
+                        setMobileMenuOpen(false);
+                        if (typeof window !== 'undefined') {
+                          window.location.href = '/';
+                        }
+                      }}
+                      className="flex items-center space-x-3 w-full px-4 py-3 rounded-lg text-neon-red hover:bg-neon-red/10 transition-all"
+                    >
+                      <ArrowRightOnRectangleIcon className="h-5 w-5" />
+                      <span>退出登录</span>
+                    </button>
+                  </>
+                ) : (
+                  <div className="space-y-2">
+                    <Link
+                      href="/auth/register"
+                      className="block btn-secondary text-center"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      注册
+                    </Link>
+                    <Link
+                      href="/auth/login"
+                      className="block btn-primary text-center"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      登录
+                    </Link>
+                  </div>
+                )}
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.header>
   );
 };
 
