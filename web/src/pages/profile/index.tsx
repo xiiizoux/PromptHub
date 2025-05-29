@@ -25,7 +25,7 @@ interface ApiKey {
 }
 
 const ProfilePage = () => {
-  const { user } = useAuth();
+  const { user, getToken } = useAuth();
   const [activeTab, setActiveTab] = useState('profile');
   const [apiKeys, setApiKeys] = useState<ApiKey[]>([]);
   const [showCreateForm, setShowCreateForm] = useState(false);
@@ -58,7 +58,12 @@ const ProfilePage = () => {
   const fetchApiKeys = async () => {
     setLoading(true);
     try {
-      const response = await fetch('/api/profile/api-keys');
+      const token = await getToken();
+      const response = await fetch('/api/profile/api-keys', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
       if (response.ok) {
         const data = await response.json();
         setApiKeys(data.keys || []);
@@ -78,9 +83,13 @@ const ProfilePage = () => {
 
     setLoading(true);
     try {
+      const token = await getToken();
       const response = await fetch('/api/profile/api-keys', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify({
           name: newKeyName,
           expires_in_days: newKeyExpiry
@@ -109,8 +118,12 @@ const ProfilePage = () => {
 
     setLoading(true);
     try {
+      const token = await getToken();
       const response = await fetch(`/api/profile/api-keys?id=${keyId}`, {
         method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
       });
 
       if (response.ok) {
@@ -157,7 +170,7 @@ const ProfilePage = () => {
 
   return (
     <div className="min-h-screen bg-dark-bg-primary py-8">
-      <div className="container-tight">
+      <div className="container-custom">
         {/* 头部 */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}

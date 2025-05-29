@@ -203,7 +203,7 @@ export default function PromptDetailsPage({ prompt }: PromptDetailsPageProps) {
 
   return (
     <div className="bg-gray-50 min-h-screen py-8">
-      <div className="container-tight">
+      <div className="container-custom">
         {/* 返回按钮 */}
         <div className="mb-6">
           <Link href="/prompts" className="inline-flex items-center text-sm font-medium text-primary-600 hover:text-primary-700">

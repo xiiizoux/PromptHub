@@ -42,7 +42,7 @@ export default function ContactPage() {
   if (submitted) {
     return (
       <div className="bg-gray-50 min-h-screen py-16">
-        <div className="container-tight">
+        <div className="container-custom">
           <div className="max-w-2xl mx-auto text-center">
             <div className="flex justify-center mb-6">
               <div className="h-16 w-16 rounded-full bg-green-100 flex items-center justify-center">
@@ -81,7 +81,7 @@ export default function ContactPage() {
 
   return (
     <div className="bg-gray-50 min-h-screen py-8">
-      <div className="container-tight">
+      <div className="container-custom">
         {/* Header */}
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold text-gray-900 mb-4">联系我们</h1>

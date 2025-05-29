@@ -16,7 +16,7 @@ export default function AboutPage() {
     <div className="bg-gray-50 min-h-screen">
       {/* Hero Section */}
       <div className="bg-gradient-to-br from-primary-600 to-secondary-700 text-white">
-        <div className="container-tight py-16">
+        <div className="container-custom py-16">
           <div className="text-center">
             <div className="flex justify-center mb-6">
               <div className="h-20 w-20 rounded-full bg-white/20 flex items-center justify-center">
@@ -35,7 +35,7 @@ export default function AboutPage() {
 
       {/* Mission Section */}
       <div className="py-16">
-        <div className="container-tight">
+        <div className="container-custom">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-gray-900 mb-4">我们的使命</h2>
             <p className="text-lg text-gray-600 max-w-3xl mx-auto">
@@ -85,7 +85,7 @@ export default function AboutPage() {
 
       {/* Features Section */}
       <div className="bg-white py-16">
-        <div className="container-tight">
+        <div className="container-custom">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-gray-900 mb-4">核心功能</h2>
             <p className="text-lg text-gray-600">
@@ -139,7 +139,7 @@ export default function AboutPage() {
 
       {/* Technology Stack */}
       <div className="py-16">
-        <div className="container-tight">
+        <div className="container-custom">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-gray-900 mb-4">技术架构</h2>
             <p className="text-lg text-gray-600">
@@ -197,7 +197,7 @@ export default function AboutPage() {
 
       {/* Open Source */}
       <div className="bg-white py-16">
-        <div className="container-tight">
+        <div className="container-custom">
           <div className="text-center">
             <div className="flex justify-center mb-6">
               <HeartIcon className="h-16 w-16 text-red-500" />
@@ -233,7 +233,7 @@ export default function AboutPage() {
 
       {/* Contact Section */}
       <div className="py-16">
-        <div className="container-tight">
+        <div className="container-custom">
           <div className="text-center">
             <h2 className="text-3xl font-bold text-gray-900 mb-4">联系我们</h2>
             <p className="text-lg text-gray-600 mb-8">
