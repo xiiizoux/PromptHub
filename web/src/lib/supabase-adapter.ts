@@ -550,7 +550,7 @@ export class SupabaseAdapter {
   }
 
   // API密钥管理
-  async generateApiKey(userId: string, name: string, expiresInDays?: number): Promise<string> {
+  async generateApiKey(userId: string, name: string, expiresInDays?: number): Promise<any> {
     try {
       const apiKey = crypto.randomBytes(32).toString('hex');
       const keyHash = crypto.createHash('sha256').update(apiKey).digest('hex');
@@ -562,20 +562,29 @@ export class SupabaseAdapter {
         expiresAt = date.toISOString();
       }
       
-      const { error } = await this.supabase
+      const { data, error } = await this.supabase
         .from('api_keys')
         .insert({
           user_id: userId,
           name,
           key_hash: keyHash,
           expires_at: expiresAt
-        });
+        })
+        .select('id, name, created_at, expires_at')
+        .single();
         
       if (error) {
         throw new Error(`创建API密钥失败: ${error.message}`);
       }
       
-      return apiKey;
+      return {
+        id: data.id,
+        name: data.name,
+        key: apiKey, // 返回真实的API密钥（仅在创建时）
+        user_id: userId,
+        created_at: data.created_at,
+        expires_in_days: expiresInDays || -1
+      };
     } catch (err: any) {
       console.error('生成API密钥时出错:', err);
       throw err;
@@ -586,7 +595,7 @@ export class SupabaseAdapter {
     try {
       const { data, error } = await this.supabase
         .from('api_keys')
-        .select('id, name, created_at, last_used_at, expires_at')
+        .select('id, name, created_at, last_used_at, expires_at, key_hash')
         .eq('user_id', userId)
         .order('created_at', { ascending: false });
         
@@ -594,10 +603,27 @@ export class SupabaseAdapter {
         throw new Error(`获取API密钥列表失败: ${error.message}`);
       }
       
-      return (data || []).map(key => ({
-        ...key,
-        user_id: userId
-      }));
+      return (data || []).map(key => {
+        let expires_in_days = -1; // 默认永不过期
+        
+        if (key.expires_at) {
+          const expiryDate = new Date(key.expires_at);
+          const now = new Date();
+          const diffTime = expiryDate.getTime() - now.getTime();
+          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+          expires_in_days = Math.max(0, diffDays);
+        }
+        
+        return {
+          id: key.id,
+          name: key.name,
+          key: key.key_hash ? '*'.repeat(32) + key.key_hash.substring(0, 8) : 'hidden', // 显示部分哈希作为标识
+          user_id: userId,
+          created_at: key.created_at,
+          last_used_at: key.last_used_at,
+          expires_in_days
+        };
+      });
     } catch (err: any) {
       console.error('获取API密钥列表时出错:', err);
       return [];

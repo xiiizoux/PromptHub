@@ -208,7 +208,7 @@ const Navbar: React.FC = () => {
                     <UserCircleIcon className="h-5 w-5 text-neon-cyan" />
                   </div>
                 </div>
-                <span className="text-sm font-medium">{user.display_name || user.email.split('@')[0]}</span>
+                <span className="text-sm font-medium">{user.username || user.email?.split('@')[0] || 'User'}</span>
                 <motion.svg
                   animate={{ rotate: userMenuOpen ? 180 : 0 }}
                   transition={{ duration: 0.2 }}
@@ -234,10 +234,6 @@ const Navbar: React.FC = () => {
                     <Link href="/profile" className="flex items-center space-x-3 px-4 py-3 text-gray-300 hover:text-neon-cyan hover:bg-neon-cyan/10 transition-all">
                       <UserIcon className="h-5 w-5" />
                       <span>个人资料</span>
-                    </Link>
-                    <Link href="/profile/api-keys" className="flex items-center space-x-3 px-4 py-3 text-gray-300 hover:text-neon-cyan hover:bg-neon-cyan/10 transition-all">
-                      <KeyIcon className="h-5 w-5" />
-                      <span>API密钥管理</span>
                     </Link>
                     <div className="border-t border-neon-cyan/10 my-1" />
                     <button
@@ -329,14 +325,6 @@ const Navbar: React.FC = () => {
                     >
                       <UserIcon className="h-5 w-5" />
                       <span>个人资料</span>
-                    </Link>
-                    <Link
-                      href="/profile/api-keys"
-                      className="flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-400 hover:text-neon-cyan hover:bg-neon-cyan/5 transition-all"
-                      onClick={() => setMobileMenuOpen(false)}
-                    >
-                      <KeyIcon className="h-5 w-5" />
-                      <span>API密钥管理</span>
                     </Link>
                     <button
                       onClick={() => {

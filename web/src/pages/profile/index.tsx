@@ -1,390 +1,439 @@
 import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/router';
-import { useForm } from 'react-hook-form';
-import axios from 'axios';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth, withAuth } from '@/contexts/AuthContext';
-import { User } from '@/types';
+import { 
+  UserIcon, 
+  KeyIcon, 
+  EnvelopeIcon, 
+  CalendarIcon,
+  SparklesIcon,
+  TrashIcon,
+  PlusIcon,
+  EyeIcon,
+  EyeSlashIcon,
+  ClipboardIcon,
+  CheckIcon
+} from '@heroicons/react/24/outline';
 
-interface ProfileFormData {
-  username: string;
-  email: string;
-  currentPassword: string;
-  newPassword: string;
-  confirmPassword: string;
+interface ApiKey {
+  id: string;
+  name: string;
+  key: string;
+  expires_in_days: number;
+  created_at: string;
+  last_used_at?: string;
 }
 
 const ProfilePage = () => {
-  const { user, isAuthenticated } = useAuth();
-  const [isLoading, setIsLoading] = useState(false);
-  const [isPasswordChangeOpen, setIsPasswordChangeOpen] = useState(false);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const router = useRouter();
+  const { user } = useAuth();
+  const [activeTab, setActiveTab] = useState('profile');
+  const [apiKeys, setApiKeys] = useState<ApiKey[]>([]);
+  const [showCreateForm, setShowCreateForm] = useState(false);
+  const [newKeyName, setNewKeyName] = useState('');
+  const [newKeyExpiry, setNewKeyExpiry] = useState(30);
+  const [visibleKeys, setVisibleKeys] = useState<Set<string>>(new Set());
+  const [copiedKey, setCopiedKey] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
-  const { register, handleSubmit, reset, watch, formState: { errors } } = useForm<ProfileFormData>({
-    defaultValues: {
-      username: user?.username || '',
-      email: user?.email || '',
-      currentPassword: '',
-      newPassword: '',
-      confirmPassword: ''
-    }
-  });
+  const tabs = [
+    { id: 'profile', name: '个人资料', icon: UserIcon },
+    { id: 'api-keys', name: 'API密钥', icon: KeyIcon },
+  ];
 
-  // 当用户信息加载完成后重置表单
+  const expiryOptions = [
+    { value: 7, label: '7天' },
+    { value: 30, label: '30天' },
+    { value: 90, label: '90天' },
+    { value: 365, label: '1年' },
+    { value: -1, label: '永不过期' },
+  ];
+
+  // 加载API密钥
   useEffect(() => {
-    if (user) {
-      reset({
-        username: user.username,
-        email: user.email,
-        currentPassword: '',
-        newPassword: '',
-        confirmPassword: ''
-      });
+    if (activeTab === 'api-keys') {
+      fetchApiKeys();
     }
-  }, [user, reset]);
+  }, [activeTab]);
 
-  const newPassword = watch('newPassword');
-
-  // 提交个人信息更新
-  const onSubmit = async (data: ProfileFormData) => {
-    setIsLoading(true);
-    setSuccessMessage(null);
-    setErrorMessage(null);
-
+  const fetchApiKeys = async () => {
+    setLoading(true);
     try {
-      // 根据是否更改密码决定发送的数据
-      const updateData: any = {
-        username: data.username,
-      };
-
-      // 如果用户选择更改密码
-      if (isPasswordChangeOpen && data.currentPassword && data.newPassword) {
-        updateData.currentPassword = data.currentPassword;
-        updateData.newPassword = data.newPassword;
+      const response = await fetch('/api/profile/api-keys');
+      if (response.ok) {
+        const data = await response.json();
+        setApiKeys(data.keys || []);
       }
-
-      // 调用API更新用户信息
-      const token = localStorage.getItem('auth_token');
-      const response = await axios.put('/api/auth/profile', updateData, {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      });
-
-      if (response.data.success) {
-        setSuccessMessage('个人信息更新成功');
-        // 如果更改了密码，重置密码字段
-        if (isPasswordChangeOpen) {
-          reset({
-            ...data,
-            currentPassword: '',
-            newPassword: '',
-            confirmPassword: ''
-          });
-          setIsPasswordChangeOpen(false);
-        }
-      } else {
-        setErrorMessage(response.data.message || '更新失败，请稍后再试');
-      }
-    } catch (err: any) {
-      console.error('更新个人信息失败:', err);
-      setErrorMessage(err.response?.data?.message || '更新失败，请稍后再试');
+    } catch (error) {
+      console.error('获取API密钥失败:', error);
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
-  // 获取用户创建的提示词数量
-  const [promptCount, setPromptCount] = useState(0);
-  useEffect(() => {
-    const fetchPromptCount = async () => {
-      if (!isAuthenticated || !user) return;
-      
-      try {
-        const token = localStorage.getItem('auth_token');
-        const response = await axios.get(`/api/prompts/count?author=${user.username}`, {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        });
-        
-        if (response.data.count !== undefined) {
-          setPromptCount(response.data.count);
-        }
-      } catch (err) {
-        console.error('获取提示词数量失败:', err);
+  const createApiKey = async () => {
+    if (!newKeyName.trim()) {
+      alert('请输入密钥名称');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await fetch('/api/profile/api-keys', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: newKeyName,
+          expires_in_days: newKeyExpiry
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setApiKeys([...apiKeys, data.key]);
+        setNewKeyName('');
+        setNewKeyExpiry(30);
+        setShowCreateForm(false);
+      } else {
+        alert('创建API密钥失败');
       }
-    };
-    
-    fetchPromptCount();
-  }, [isAuthenticated, user]);
+    } catch (error) {
+      console.error('创建API密钥失败:', error);
+      alert('创建API密钥失败');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const deleteApiKey = async (keyId: string) => {
+    if (!confirm('确定要删除这个API密钥吗？')) return;
+
+    setLoading(true);
+    try {
+      const response = await fetch(`/api/profile/api-keys?id=${keyId}`, {
+        method: 'DELETE',
+      });
+
+      if (response.ok) {
+        setApiKeys(apiKeys.filter(key => key.id !== keyId));
+      } else {
+        alert('删除API密钥失败');
+      }
+    } catch (error) {
+      console.error('删除API密钥失败:', error);
+      alert('删除API密钥失败');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const toggleKeyVisibility = (keyId: string) => {
+    const newVisibleKeys = new Set(visibleKeys);
+    if (newVisibleKeys.has(keyId)) {
+      newVisibleKeys.delete(keyId);
+    } else {
+      newVisibleKeys.add(keyId);
+    }
+    setVisibleKeys(newVisibleKeys);
+  };
+
+  const copyToClipboard = async (text: string, keyId: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedKey(keyId);
+      setTimeout(() => setCopiedKey(null), 2000);
+    } catch (error) {
+      console.error('复制失败:', error);
+    }
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('zh-CN');
+  };
+
+  const maskApiKey = (key: string) => {
+    if (key.length <= 8) return key;
+    return key.substring(0, 4) + '••••••••' + key.substring(key.length - 4);
+  };
 
   return (
-    <div className="bg-gray-50 min-h-screen py-8">
+    <div className="min-h-screen bg-dark-bg-primary py-8">
       <div className="container-tight">
-        {/* 个人资料导航栏 */}
-        <div className="bg-white shadow-sm rounded-lg overflow-hidden mb-6">
-          <div className="p-4 bg-gray-50 border-b border-gray-200">
-            <h2 className="text-lg font-semibold text-gray-900">账户管理</h2>
-          </div>
-          <div className="p-0">
-            <nav className="flex divide-x divide-gray-200">
-              <a href="/profile" className="flex-1 px-4 py-3 text-center text-primary-600 font-medium border-b-2 border-primary-600">
-                个人资料
-              </a>
-              <a href="/profile/api-keys" className="flex-1 px-4 py-3 text-center text-gray-500 hover:text-gray-900 font-medium hover:bg-gray-50">
-                API密钥管理
-              </a>
+        {/* 头部 */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-8"
+        >
+          <h1 className="text-4xl font-bold gradient-text mb-2">账户管理</h1>
+          <p className="text-gray-400">管理您的个人信息和API密钥</p>
+        </motion.div>
+
+        {/* 标签页导航 */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="mb-8"
+        >
+          <div className="border-b border-neon-cyan/20">
+            <nav className="flex space-x-8">
+              {tabs.map((tab) => {
+                const Icon = tab.icon;
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`group relative flex items-center space-x-2 py-4 px-1 border-b-2 transition-all duration-300 ${
+                      activeTab === tab.id
+                        ? 'border-neon-cyan text-neon-cyan'
+                        : 'border-transparent text-gray-400 hover:text-neon-cyan hover:border-neon-cyan/50'
+                    }`}
+                  >
+                    <Icon className="h-5 w-5" />
+                    <span className="font-medium">{tab.name}</span>
+                    {activeTab === tab.id && (
+                      <motion.div
+                        layoutId="activeTab"
+                        className="absolute inset-0 rounded-lg bg-neon-cyan/10"
+                        transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                      />
+                    )}
+                  </button>
+                );
+              })}
             </nav>
           </div>
-        </div>
-        
-        <div className="bg-white shadow-sm rounded-lg overflow-hidden">
-          <div className="p-6 border-b border-gray-200">
-            <h1 className="text-2xl font-bold text-gray-900">个人资料</h1>
-            <p className="mt-2 text-gray-600">
-              查看和更新您的个人信息
-            </p>
-          </div>
+        </motion.div>
 
-          <div className="p-6">
-            {/* 成功消息 */}
-            {successMessage && (
-              <div className="mb-6 bg-green-50 p-4 rounded-md">
-                <div className="flex">
-                  <div className="flex-shrink-0">
-                    <svg className="h-5 w-5 text-green-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                    </svg>
+        {/* 内容区域 */}
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={activeTab}
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            transition={{ duration: 0.3 }}
+          >
+            {activeTab === 'profile' && (
+              <div className="space-y-8">
+                {/* 个人信息卡片 */}
+                <div className="glass rounded-2xl p-8 border border-neon-cyan/20">
+                  <div className="flex items-center space-x-6 mb-6">
+                    <div className="relative">
+                      <div className="w-24 h-24 rounded-full bg-gradient-to-br from-neon-cyan to-neon-pink p-1">
+                        <div className="w-full h-full rounded-full bg-dark-bg-primary flex items-center justify-center">
+                          <UserIcon className="h-12 w-12 text-neon-cyan" />
+                        </div>
+                      </div>
+                      <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-neon-green rounded-full border-2 border-dark-bg-primary flex items-center justify-center">
+                        <div className="w-3 h-3 bg-neon-green rounded-full animate-pulse"></div>
+                      </div>
+                    </div>
+                    <div>
+                      <h2 className="text-2xl font-bold text-white mb-1">{user?.username}</h2>
+                      <div className="flex items-center space-x-2 text-gray-400">
+                        <EnvelopeIcon className="h-4 w-4" />
+                        <span>{user?.email}</span>
+                      </div>
+                      <div className="flex items-center space-x-2 text-gray-400 mt-1">
+                        <CalendarIcon className="h-4 w-4" />
+                        <span>加入于 {user?.created_at ? formatDate(user.created_at) : '未知'}</span>
+                      </div>
+                    </div>
                   </div>
-                  <div className="ml-3">
-                    <p className="text-sm font-medium text-green-800">
-                      {successMessage}
-                    </p>
+
+                  {/* 统计信息 */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div className="text-center p-4 glass rounded-xl border border-neon-cyan/10">
+                      <SparklesIcon className="h-8 w-8 text-neon-cyan mx-auto mb-2" />
+                      <div className="text-2xl font-bold text-white">0</div>
+                      <div className="text-sm text-gray-400">创建的提示词</div>
+                    </div>
+                    <div className="text-center p-4 glass rounded-xl border border-neon-purple/10">
+                      <KeyIcon className="h-8 w-8 text-neon-purple mx-auto mb-2" />
+                      <div className="text-2xl font-bold text-white">{apiKeys.length}</div>
+                      <div className="text-sm text-gray-400">API密钥</div>
+                    </div>
+                    <div className="text-center p-4 glass rounded-xl border border-neon-pink/10">
+                      <UserIcon className="h-8 w-8 text-neon-pink mx-auto mb-2" />
+                      <div className="text-2xl font-bold text-white">{user?.role || 'user'}</div>
+                      <div className="text-sm text-gray-400">账户类型</div>
+                    </div>
                   </div>
                 </div>
               </div>
             )}
 
-            {/* 错误消息 */}
-            {errorMessage && (
-              <div className="mb-6 bg-red-50 p-4 rounded-md">
-                <div className="flex">
-                  <div className="flex-shrink-0">
-                    <svg className="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                    </svg>
+            {activeTab === 'api-keys' && (
+              <div className="space-y-6">
+                {/* 创建API密钥按钮 */}
+                <div className="flex justify-between items-center">
+                  <div>
+                    <h2 className="text-2xl font-bold text-white">API密钥管理</h2>
+                    <p className="text-gray-400 mt-1">创建和管理您的API密钥</p>
                   </div>
-                  <div className="ml-3">
-                    <p className="text-sm font-medium text-red-800">
-                      {errorMessage}
-                    </p>
-                  </div>
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => setShowCreateForm(true)}
+                    className="btn-primary flex items-center space-x-2"
+                  >
+                    <PlusIcon className="h-5 w-5" />
+                    <span>创建密钥</span>
+                  </motion.button>
                 </div>
-              </div>
-            )}
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* 左侧：用户信息卡片 */}
-              <div className="md:col-span-1">
-                <div className="bg-gray-50 p-6 rounded-lg">
-                  <div className="flex flex-col items-center text-center">
-                    <div className="h-24 w-24 rounded-full bg-gradient-to-br from-primary-500 to-secondary-600 flex items-center justify-center text-white text-4xl font-bold">
-                      {user?.username.charAt(0).toUpperCase() || 'U'}
-                    </div>
-                    <h3 className="mt-4 text-lg font-medium text-gray-900">{user?.username}</h3>
-                    <p className="text-gray-500">{user?.email}</p>
-                    <p className="mt-1 text-sm text-gray-500">
-                      加入于 {user?.created_at ? new Date(user.created_at).toLocaleDateString('zh-CN') : '未知日期'}
-                    </p>
-                  </div>
-                  <div className="mt-6 border-t border-gray-200 pt-4">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-500">角色</span>
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary-100 text-primary-800">
-                        {user?.role === 'admin' ? '管理员' : user?.role === 'contributor' ? '贡献者' : '用户'}
-                      </span>
-                    </div>
-                    <div className="mt-3 flex justify-between items-center">
-                      <span className="text-sm text-gray-500">创建的提示词</span>
-                      <span className="text-sm font-medium text-gray-900">{promptCount}</span>
-                    </div>
-                  </div>
-                  <div className="mt-6">
-                    <button
-                      type="button"
-                      onClick={() => router.push('/prompts?author=' + user?.username)}
-                      className="w-full btn-outline"
+                {/* 创建密钥表单 */}
+                <AnimatePresence>
+                  {showCreateForm && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="glass rounded-2xl p-6 border border-neon-cyan/20"
                     >
-                      查看我的提示词
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              {/* 右侧：个人信息表单 */}
-              <div className="md:col-span-2">
-                <form onSubmit={handleSubmit(onSubmit)}>
-                  <div className="space-y-6">
-                    <div>
-                      <label htmlFor="username" className="block text-sm font-medium text-gray-700">
-                        用户名
-                      </label>
-                      <input
-                        type="text"
-                        id="username"
-                        className={`mt-1 input ${errors.username ? 'border-red-500' : ''}`}
-                        {...register('username', { 
-                          required: '请输入用户名',
-                          minLength: {
-                            value: 3,
-                            message: '用户名必须至少包含3个字符'
-                          },
-                          maxLength: {
-                            value: 20,
-                            message: '用户名不能超过20个字符'
-                          },
-                          pattern: {
-                            value: /^[A-Za-z0-9_-]+$/,
-                            message: '用户名只能包含字母、数字、下划线和连字符'
-                          }
-                        })}
-                      />
-                      {errors.username && (
-                        <p className="mt-1 text-sm text-red-600">{errors.username.message}</p>
-                      )}
-                    </div>
-
-                    <div>
-                      <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                        电子邮件
-                      </label>
-                      <input
-                        type="email"
-                        id="email"
-                        className="mt-1 input bg-gray-100"
-                        value={user?.email || ''}
-                        disabled
-                      />
-                      <p className="mt-1 text-xs text-gray-500">
-                        电子邮件地址不可更改
-                      </p>
-                    </div>
-
-                    {/* 密码更改区域 */}
-                    <div className="border-t border-gray-200 pt-6">
-                      <div className="flex justify-between items-center mb-4">
-                        <h3 className="text-lg font-medium text-gray-900">更改密码</h3>
+                      <h3 className="text-lg font-semibold text-white mb-4">创建新的API密钥</h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-300 mb-2">
+                            密钥名称
+                          </label>
+                          <input
+                            type="text"
+                            value={newKeyName}
+                            onChange={(e) => setNewKeyName(e.target.value)}
+                            placeholder="例如：开发环境"
+                            className="input-primary w-full"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-300 mb-2">
+                            有效期
+                          </label>
+                          <select
+                            value={newKeyExpiry}
+                            onChange={(e) => setNewKeyExpiry(Number(e.target.value))}
+                            className="input-primary w-full"
+                          >
+                            {expiryOptions.map((option) => (
+                              <option key={option.value} value={option.value}>
+                                {option.label}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+                      <div className="flex space-x-3">
                         <button
-                          type="button"
-                          onClick={() => setIsPasswordChangeOpen(!isPasswordChangeOpen)}
-                          className="text-sm text-primary-600 hover:text-primary-500"
+                          onClick={createApiKey}
+                          disabled={loading || !newKeyName.trim()}
+                          className="btn-primary disabled:opacity-50"
                         >
-                          {isPasswordChangeOpen ? '取消' : '更改密码'}
+                          {loading ? '创建中...' : '创建密钥'}
+                        </button>
+                        <button
+                          onClick={() => {
+                            setShowCreateForm(false);
+                            setNewKeyName('');
+                            setNewKeyExpiry(30);
+                          }}
+                          className="btn-secondary"
+                        >
+                          取消
                         </button>
                       </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
 
-                      {isPasswordChangeOpen && (
-                        <div className="space-y-4">
-                          <div>
-                            <label htmlFor="currentPassword" className="block text-sm font-medium text-gray-700">
-                              当前密码
-                            </label>
-                            <input
-                              type="password"
-                              id="currentPassword"
-                              className={`mt-1 input ${errors.currentPassword ? 'border-red-500' : ''}`}
-                              {...register('currentPassword', { 
-                                required: '请输入当前密码'
-                              })}
-                            />
-                            {errors.currentPassword && (
-                              <p className="mt-1 text-sm text-red-600">{errors.currentPassword.message}</p>
-                            )}
-                          </div>
-
-                          <div>
-                            <label htmlFor="newPassword" className="block text-sm font-medium text-gray-700">
-                              新密码
-                            </label>
-                            <input
-                              type="password"
-                              id="newPassword"
-                              className={`mt-1 input ${errors.newPassword ? 'border-red-500' : ''}`}
-                              {...register('newPassword', { 
-                                required: '请输入新密码',
-                                minLength: {
-                                  value: 8,
-                                  message: '密码必须至少包含8个字符'
-                                },
-                                pattern: {
-                                  value: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d@$!%*?&#\-_+=,.;:]{8,}$/,
-                                  message: '密码必须包含至少一个大写字母、一个小写字母和一个数字'
-                                }
-                              })}
-                            />
-                            {errors.newPassword && (
-                              <p className="mt-1 text-sm text-red-600">{errors.newPassword.message}</p>
-                            )}
-                          </div>
-
-                          <div>
-                            <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
-                              确认新密码
-                            </label>
-                            <input
-                              type="password"
-                              id="confirmPassword"
-                              className={`mt-1 input ${errors.confirmPassword ? 'border-red-500' : ''}`}
-                              {...register('confirmPassword', { 
-                                required: '请确认新密码',
-                                validate: value => value === newPassword || '两次输入的密码不匹配'
-                              })}
-                            />
-                            {errors.confirmPassword && (
-                              <p className="mt-1 text-sm text-red-600">{errors.confirmPassword.message}</p>
-                            )}
+                {/* API密钥列表 */}
+                {loading && !apiKeys.length ? (
+                  <div className="glass rounded-2xl p-8 border border-neon-cyan/20 text-center">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-neon-cyan mx-auto mb-4"></div>
+                    <p className="text-gray-400">加载中...</p>
+                  </div>
+                ) : apiKeys.length === 0 ? (
+                  <div className="glass rounded-2xl p-8 border border-neon-cyan/20 text-center">
+                    <KeyIcon className="h-12 w-12 text-gray-500 mx-auto mb-4" />
+                    <p className="text-gray-400">您还没有创建任何API密钥</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {apiKeys.map((apiKey, index) => (
+                      <motion.div
+                        key={apiKey.id}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: index * 0.1 }}
+                        className="glass rounded-2xl p-6 border border-neon-cyan/20 hover:border-neon-cyan/40 transition-all duration-300"
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-center space-x-3 mb-2">
+                              <h3 className="text-lg font-semibold text-white">{apiKey.name}</h3>
+                              <span className="px-2 py-1 text-xs rounded-full bg-neon-green/20 text-neon-green border border-neon-green/30">
+                                活跃
+                              </span>
+                            </div>
+                            <div className="flex items-center space-x-4 text-sm text-gray-400">
+                              <span>创建于 {formatDate(apiKey.created_at)}</span>
+                              {apiKey.last_used_at && (
+                                <span>最后使用 {formatDate(apiKey.last_used_at)}</span>
+                              )}
+                              {apiKey.expires_in_days > 0 && (
+                                <span>
+                                  {apiKey.expires_in_days}天后过期
+                                </span>
+                              )}
+                            </div>
+                            <div className="flex items-center space-x-2 mt-3">
+                              <code className="flex-1 bg-dark-bg-secondary p-3 rounded-lg text-neon-cyan font-mono text-sm">
+                                {visibleKeys.has(apiKey.id) ? apiKey.key : maskApiKey(apiKey.key)}
+                              </code>
+                              <button
+                                onClick={() => toggleKeyVisibility(apiKey.id)}
+                                className="p-2 glass rounded-lg hover:bg-neon-cyan/10 transition-colors"
+                                title={visibleKeys.has(apiKey.id) ? '隐藏密钥' : '显示密钥'}
+                              >
+                                {visibleKeys.has(apiKey.id) ? (
+                                  <EyeSlashIcon className="h-5 w-5 text-gray-400" />
+                                ) : (
+                                  <EyeIcon className="h-5 w-5 text-gray-400" />
+                                )}
+                              </button>
+                              <button
+                                onClick={() => copyToClipboard(apiKey.key, apiKey.id)}
+                                className="p-2 glass rounded-lg hover:bg-neon-cyan/10 transition-colors"
+                                title="复制密钥"
+                              >
+                                {copiedKey === apiKey.id ? (
+                                  <CheckIcon className="h-5 w-5 text-neon-green" />
+                                ) : (
+                                  <ClipboardIcon className="h-5 w-5 text-gray-400" />
+                                )}
+                              </button>
+                              <button
+                                onClick={() => deleteApiKey(apiKey.id)}
+                                className="p-2 glass rounded-lg hover:bg-neon-red/10 transition-colors"
+                                title="删除密钥"
+                              >
+                                <TrashIcon className="h-5 w-5 text-neon-red" />
+                              </button>
+                            </div>
                           </div>
                         </div>
-                      )}
-                    </div>
-
-                    <div className="flex justify-end">
-                      <button
-                        type="button"
-                        onClick={() => router.push('/')}
-                        className="btn-outline mr-3"
-                      >
-                        取消
-                      </button>
-                      <button
-                        type="submit"
-                        disabled={isLoading}
-                        className={`btn-primary ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
-                      >
-                        {isLoading ? (
-                          <>
-                            <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                            </svg>
-                            保存中...
-                          </>
-                        ) : '保存更改'}
-                      </button>
-                    </div>
+                      </motion.div>
+                    ))}
                   </div>
-                </form>
+                )}
               </div>
-            </div>
-          </div>
-        </div>
+            )}
+          </motion.div>
+        </AnimatePresence>
       </div>
     </div>
   );
 };
 
-// 使用身份验证高阶组件包装组件
 export default withAuth(ProfilePage);
 
