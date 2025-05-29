@@ -12,6 +12,7 @@ services:
       - PORT=9010
       - FRONTEND_PORT=9011
       - TRANSPORT_TYPE=sse
+      - NODE_OPTIONS=--max-old-space-size=4096  # 为UI库预留更多内存
       
       # 存储配置 - 默认使用supabase
       # 可选值: supabase (已预留file, postgresql, mysql等类型支持)
@@ -38,6 +39,13 @@ services:
       # 配置文件挂载 (只读模式)
       - ./.env:/app/.env:ro
     restart: unless-stopped
+    # 内存限制配置 - 支持重型UI应用构建和运行
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+        reservations:
+          memory: 1G
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:9010", "&&", "curl", "-f", "http://localhost:9011"]
       interval: 30s
