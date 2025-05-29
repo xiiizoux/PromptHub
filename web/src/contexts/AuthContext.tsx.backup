@@ -127,6 +127,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // 确保只在客户端运行
       if (typeof window === 'undefined') {
         console.log('服务器端，跳过认证检查');
+        setLoading(false);
         return false;
       }
       
@@ -137,6 +138,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         console.error('获取会话失败:', sessionError);
         setUser(null);
         setIsAuthenticated(false);
+        setLoading(false);
         return false;
       }
       
@@ -144,6 +146,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         console.log('无有效会话或用户');
         setUser(null);
         setIsAuthenticated(false);
+        setLoading(false);
         return false;
       }
       
@@ -156,6 +159,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         console.error('获取用户信息失败:', userError);
         setUser(null);
         setIsAuthenticated(false);
+        setLoading(false);
         return false;
       }
       
@@ -210,11 +214,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.log('设置用户状态:', appUser);
       setUser(appUser);
       setIsAuthenticated(true);
+      setLoading(false);
       return true;
+      
     } catch (err) {
       console.error('认证检查失败:', err);
       setUser(null);
       setIsAuthenticated(false);
+      setLoading(false);
       return false;
     }
   };
