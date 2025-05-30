@@ -643,7 +643,11 @@ export class SupabaseAdapter {
 
   async deleteApiKey(userId: string, keyId: string): Promise<boolean> {
     try {
-      const { error } = await this.supabase
+      // 创建管理员客户端以绕过RLS策略
+      const adminClient = createSupabaseClient(true);
+      console.log('使用管理员权限删除API密钥', { userId, keyId });
+      
+      const { error } = await adminClient
         .from('api_keys')
         .delete()
         .eq('id', keyId)
