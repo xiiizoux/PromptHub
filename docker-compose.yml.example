@@ -2,7 +2,7 @@ services:
   # PromptHub主应用 (Web + MCP)
   prompthub:
     build: .
-    container_name: prompthub-app
+    container_name: prompthub
     ports:
       - "9010:9010"  # MCP服务端口
       - "9011:9011"  # Web服务端口
