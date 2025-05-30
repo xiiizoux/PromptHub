@@ -92,7 +92,7 @@ const ProfilePage = () => {
       const token = await getToken();
       console.log('获取到的token:', token ? `${token.substring(0, 20)}...` : 'null');
       
-      const response = await fetch('/api/profile/api-keys', {
+      const response = await fetch('/api/auth/api-keys', {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -104,7 +104,7 @@ const ProfilePage = () => {
       if (response.ok) {
         const data = await response.json();
         console.log('API响应数据:', data);
-        setApiKeys(data.keys || []);
+        setApiKeys(data.data || []);
       } else {
         const errorData = await response.text();
         console.error('API请求失败:', response.status, errorData);
@@ -154,15 +154,15 @@ const ProfilePage = () => {
   };
 
   const createApiKey = async () => {
-    if (!newKeyName.trim()) {
-      alert('请输入密钥名称');
+    if (!newKeyName) {
+      alert('请输入API密钥名称');
       return;
     }
 
     setLoading(true);
     try {
       const token = await getToken();
-      const response = await fetch('/api/profile/api-keys', {
+      const response = await fetch('/api/auth/api-keys', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -170,34 +170,42 @@ const ProfilePage = () => {
         },
         body: JSON.stringify({
           name: newKeyName,
-          expires_in_days: newKeyExpiry
-        }),
+          expiresInDays: newKeyExpiry
+        })
       });
 
       if (response.ok) {
         const data = await response.json();
-        setApiKeys([...apiKeys, data.key]);
+        // 添加新创建的密钥到列表中
+        const newKey = data.data;
+        setApiKeys(prev => [newKey, ...prev]);
         setNewKeyName('');
-        setNewKeyExpiry(30);
         setShowCreateForm(false);
+        
+        // 自动显示新创建的密钥
+        setVisibleKeys(prev => new Set([...prev, newKey.id]));
       } else {
-        alert('创建API密钥失败');
+        const errorData = await response.text();
+        console.error('创建API密钥失败:', response.status, errorData);
+        alert(`创建API密钥失败: ${errorData}`);
       }
     } catch (error) {
       console.error('创建API密钥失败:', error);
-      alert('创建API密钥失败');
+      alert('创建API密钥失败，请检查控制台日志');
     } finally {
       setLoading(false);
     }
   };
 
   const deleteApiKey = async (keyId: string) => {
-    if (!confirm('确定要删除这个API密钥吗？')) return;
+    if (!confirm('确定要删除此API密钥吗？此操作无法撤销。')) {
+      return;
+    }
 
     setLoading(true);
     try {
       const token = await getToken();
-      const response = await fetch(`/api/profile/api-keys?id=${keyId}`, {
+      const response = await fetch(`/api/auth/api-keys?id=${keyId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -205,13 +213,16 @@ const ProfilePage = () => {
       });
 
       if (response.ok) {
-        setApiKeys(apiKeys.filter(key => key.id !== keyId));
+        // 从列表中移除被删除的密钥
+        setApiKeys(prev => prev.filter(key => key.id !== keyId));
       } else {
-        alert('删除API密钥失败');
+        const errorData = await response.text();
+        console.error('删除API密钥失败:', response.status, errorData);
+        alert(`删除API密钥失败: ${errorData}`);
       }
     } catch (error) {
       console.error('删除API密钥失败:', error);
-      alert('删除API密钥失败');
+      alert('删除API密钥失败，请检查控制台日志');
     } finally {
       setLoading(false);
     }
