@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth, withAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/lib/supabase';
 import Link from 'next/link';
 import { 
   UserIcon, 
@@ -98,44 +99,93 @@ const ProfilePage = () => {
   const fetchApiKeys = async () => {
     setLoading(true);
     try {
-      // 直接使用Supabase适配器获取API密钥
-      // 这样可以确保使用同一个认证会话
-      import('@/lib/supabase-adapter').then(async ({ default: supabaseAdapter }) => {
-        try {
-          const apiKeys = await supabaseAdapter.listApiKeys(user?.id || '');
-          console.log('获取到API密钥:', apiKeys.length);
-          setApiKeys(apiKeys);
-        } catch (adapterError) {
-          console.error('通过适配器获取API密钥失败:', adapterError);
-          
-          // 如果适配器方法失败，回退到直接API调用
-          const token = await getToken();
-          if (!token) {
-            alert('认证失败，请先登录或刷新页面');
-            return;
-          }
-          
-          const response = await fetch('/api/auth/api-keys', {
-            headers: { 'Authorization': `Bearer ${token}` }
-          });
-          
-          if (response.ok) {
-            const result = await response.json();
-            setApiKeys(result.data || []);
-          } else {
-            console.error('API请求失败:', response.status);
-            if (response.status === 401) {
-              alert('您的登录已过期，请刷新页面后重试');
-            }
-          }
+      // 首先尝试刷新会话
+      try {
+        // 手动刷新Supabase会话
+        const { data } = await supabase.auth.refreshSession();
+        if (data?.session) {
+          console.log('会话刷新成功');
         }
-      }).catch(error => {
-        console.error('加载适配器失败:', error);
-      }).finally(() => {
+      } catch (refreshError) {
+        console.warn('刷新会话失败，将继续尝试:', refreshError);
+      }
+
+      // 直接使用Supabase适配器获取API密钥
+      try {
+        const { default: supabaseAdapter } = await import('@/lib/supabase-adapter');
+        
+        // 检查用户ID是否可用
+        if (!user?.id) {
+          throw new Error('用户ID不可用，请刷新页面');
+        }
+        
+        console.log('使用Supabase适配器获取API密钥...');
+        const apiKeys = await supabaseAdapter.listApiKeys(user.id);
+        console.log('获取到API密钥:', apiKeys.length);
+        setApiKeys(apiKeys);
         setLoading(false);
-      });
+        return; // 成功返回，不执行后续代码
+      } catch (adapterError) {
+        console.error('通过适配器获取API密钥失败:', adapterError);
+      }
+      
+      // 如果适配器方法失败，尝试直接调用Supabase
+      try {
+        console.log('尝试直接使用Supabase获取API密钥...');
+        const { data: keysData, error: keysError } = await supabase
+          .from('api_keys')
+          .select('*')
+          .eq('user_id', user?.id || '');
+        
+        if (keysError) {
+          throw keysError;
+        }
+        
+        if (keysData) {
+          console.log('直接从数据库获取到API密钥:', keysData.length);
+          setApiKeys(keysData);
+          setLoading(false);
+          return; // 成功返回，不执行后续代码
+        }
+      } catch (dbError) {
+        console.error('直接从数据库获取API密钥失败:', dbError);
+      }
+      
+      // 如果前两种方法失败，回退到直接API调用
+      try {
+        console.log('尝试通过API获取密钥...');
+        const token = await getToken();
+        if (!token) {
+          throw new Error('无法获取认证令牌');
+        }
+        
+        const response = await fetch('/api/auth/api-keys', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (response.ok) {
+          const result = await response.json();
+          console.log('API请求获取到API密钥:', result.data?.length || 0);
+          setApiKeys(result.data || []);
+        } else {
+          throw new Error(`API请求失败: ${response.status}`);
+        }
+      } catch (apiError: any) {
+        console.error('API请求获取API密钥失败:', apiError);
+        
+        // 显示用户友好的错误消息
+        if (apiError.status === 401 || apiError.message?.includes('401')) {
+          alert('您的登录已过期，请刷新页面后重试');
+        } else {
+          alert(`无法获取API密钥: ${apiError.message || '请检查网络连接和认证状态'}`);
+        }
+        
+        // 设置空的API密钥列表
+        setApiKeys([]);
+      }
     } catch (error) {
-      console.error('获取API密钥时发生错误:', error);
+      console.error('获取API密钥时发生意外错误:', error);
+    } finally {
       setLoading(false);
     }
   };
