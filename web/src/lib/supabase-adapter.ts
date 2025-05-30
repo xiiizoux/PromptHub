@@ -644,6 +644,61 @@ export class SupabaseAdapter {
       return false;
     }
   }
+  
+  /**
+   * 创建新提示词
+   * @param promptData 提示词数据
+   * @returns 新创建的提示词
+   */
+  async createPrompt(promptData: Partial<Prompt>): Promise<Prompt> {
+    try {
+      console.log('尝试创建提示词:', promptData);
+      
+      // 确保提示词数据结构正确
+      const promptToCreate = {
+        name: promptData.name || '',
+        description: promptData.description || '',
+        category: promptData.category || '通用',
+        tags: Array.isArray(promptData.tags) ? promptData.tags : [],
+        messages: promptData.messages || [{ role: 'system', content: promptData.content || '' }],
+        is_public: promptData.is_public ?? true,
+        user_id: promptData.user_id || '',
+        version: promptData.version || '1.0',
+        created_at: new Date().toISOString(),
+      };
+      
+      // 验证必填字段
+      if (!promptToCreate.name) {
+        throw new Error('提示词名称是必填的');
+      }
+      
+      if (!promptToCreate.user_id) {
+        throw new Error('用户ID是必填的');
+      }
+      
+      // 尝试插入提示词
+      const { data, error } = await this.supabase
+        .from('prompts')
+        .insert(promptToCreate)
+        .select('*')
+        .single();
+      
+      if (error) {
+        console.error('插入提示词失败:', error);
+        throw new Error(`创建提示词失败: ${error.message}`);
+      }
+      
+      if (!data) {
+        throw new Error('创建提示词失败: 没有返回数据');
+      }
+      
+      console.log('提示词创建成功:', data);
+      return data as Prompt;
+    } catch (err: any) {
+      console.error('创建提示词时出错:', err);
+      throw err;
+    }
+  }
 }
 
 // 创建适配器实例

@@ -152,14 +152,41 @@ function CreatePromptPage() {
     setIsSubmitting(true);
     
     try {
+      // 添加必要的字段
       data.input_variables = variables;
       data.tags = tags;
       data.compatible_models = models;
       
+      // 确保设置用户ID
+      if (user?.id) {
+        data.user_id = user.id;
+      }
+      
+      // 添加其他必要的字段
+      data.is_public = data.is_public ?? true; // 默认公开
+      
+      console.log('正在提交提示词数据:', { ...data, user: user?.id });
+      
+      // 尝试使用Supabase适配器直接创建
+      try {
+        const { default: supabaseAdapter } = await import('@/lib/supabase-adapter');
+        const newPrompt = await supabaseAdapter.createPrompt(data as any);
+        console.log('提示词创建成功:', newPrompt);
+        router.push(`/prompts/${newPrompt.name}`);
+        return;
+      } catch (adapterError) {
+        console.error('使用适配器创建提示词失败，尝试API方式:', adapterError);
+      }
+      
+      // 如果适配器方式失败，回退到原来的API调用
       const newPrompt = await createPrompt(data);
+      console.log('提示词创建成功:', newPrompt);
       router.push(`/prompts/${newPrompt.name}`);
-    } catch (error) {
+    } catch (error: any) {
       console.error('创建提示词失败:', error);
+      
+      // 显示错误消息
+      alert(`创建提示词失败: ${error.message || '请检查您的认证状态或网络连接'}`);
       setIsSubmitting(false);
     }
   };

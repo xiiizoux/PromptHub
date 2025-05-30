@@ -165,11 +165,42 @@ export const getPromptDetails = async (name: string): Promise<PromptDetails> => 
 // 创建新提示词
 export const createPrompt = async (prompt: Partial<PromptDetails>): Promise<PromptDetails> => {
   try {
-    const response = await mcpApi.post<any>('/tools/create_prompt/invoke', prompt);
-    const result = response.data?.content?.text ? JSON.parse(response.data.content.text) : {};
-    return result as PromptDetails;
-  } catch (error) {
-    console.error('创建提示词失败:', error);
+    // 获取认证令牌
+    let token = null;
+    if (typeof window !== 'undefined') {
+      // 尝试从浏览器存储中获取令牌
+      token = localStorage.getItem('auth.token'); // Supabase令牌
+      
+      // 如果没有找到令牌，检查其他可能的存储地点
+      if (!token) {
+        try {
+          // 尝试从会话存储中获取
+          const authSession = localStorage.getItem('supabase.auth.token');
+          if (authSession) {
+            const parsed = JSON.parse(authSession);
+            token = parsed?.currentSession?.access_token;
+          }
+        } catch (e) {
+          console.warn('解析会话存储令牌失败:', e);
+        }
+      }
+    }
+    
+    // 添加认证头
+    const headers: Record<string, string> = {};
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+    
+    // 执行创建请求
+    console.log('发送创建提示词请求:', { prompt, hasToken: !!token });
+    const response = await api.post<ApiResponse<PromptDetails>>('/prompts', prompt, { 
+      headers 
+    });
+    
+    return response.data.data;
+  } catch (error: any) {
+    console.error('创建提示词失败:', error.response?.data || error);
     throw error;
   }
 };
