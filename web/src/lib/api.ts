@@ -163,24 +163,55 @@ export const getPromptDetails = async (name: string): Promise<PromptDetails> => 
     
     // 获取当前用户ID（如果有的话）
     let userId = null;
-    if (typeof localStorage !== 'undefined') {
-      const userSession = localStorage.getItem('supabase.auth.token');
-      if (userSession) {
+    let userToken = null;
+    
+    // 尝试不同的存储位置获取用户信息
+    if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
+      // 尝试从 Supabase auth token 获取
+      try {
+        const supabaseAuthStr = localStorage.getItem('supabase.auth.token');
+        if (supabaseAuthStr) {
+          const supabaseAuth = JSON.parse(supabaseAuthStr);
+          userId = supabaseAuth?.currentSession?.user?.id;
+          userToken = supabaseAuth?.currentSession?.access_token;
+          console.log('从 supabase.auth.token 获取到用户ID:', userId);
+        }
+      } catch (e) {
+        console.error('解析 supabase.auth.token 失败:', e);
+      }
+      
+      // 如果上面的方法失败，尝试从 sb-xxx-auth-token 获取
+      if (!userId) {
         try {
-          const parsedSession = JSON.parse(userSession);
-          userId = parsedSession?.currentSession?.user?.id;
+          // 遍历所有localStorage条目，寻找 Supabase 令牌
+          for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key && key.includes('-auth-token')) {
+              const tokenStr = localStorage.getItem(key);
+              if (tokenStr) {
+                const tokenData = JSON.parse(tokenStr);
+                userId = tokenData?.user?.id;
+                userToken = tokenData?.access_token;
+                if (userId) {
+                  console.log('从', key, '获取到用户ID:', userId);
+                  break;
+                }
+              }
+            }
+          }
         } catch (e) {
-          console.error('解析用户会话信息失败:', e);
+          console.error('遍历localStorage寻找用户ID失败:', e);
         }
       }
     }
 
-    console.log('获取提示词详情:', name, '用户ID:', userId);
+    console.log('获取提示词详情:', name, '用户ID:', userId || '未登录');
     
     const response = await axios.get<any>(`${baseUrl}/api/prompts/${name}`, {
       headers: {
         'Content-Type': 'application/json',
-        ...(userId ? { 'x-user-id': userId } : {})
+        ...(userId ? { 'x-user-id': userId } : {}),
+        ...(userToken ? { 'Authorization': `Bearer ${userToken}` } : {})
       }
     });
     

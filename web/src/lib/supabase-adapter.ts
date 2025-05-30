@@ -608,13 +608,21 @@ export class SupabaseAdapter {
 
   async listApiKeys(userId: string): Promise<ApiKey[]> {
     try {
+      if (!userId) {
+        console.error('用户ID不可用，无法获取API密钥');
+        return [];
+      }
+      
+      console.log('获取用户 ' + userId + ' 的API密钥列表');
+      
       // 创建管理员客户端以绕过RLS策略
       const adminClient = createSupabaseClient(true);
-      console.log('使用管理员权限获取API密钥列表', { userId });
+      console.log('使用管理员权限获取API密钥列表');
       
+      // 直接使用标准查询
       const { data, error } = await adminClient
         .from('api_keys')
-        .select('id, name, created_at, last_used_at, expires_at, key_hash')
+        .select('id, name, created_at, last_used_at, expires_at, key_hash, user_id')
         .eq('user_id', userId)
         .order('created_at', { ascending: false });
         

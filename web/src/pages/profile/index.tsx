@@ -110,99 +110,139 @@ const ProfilePage = () => {
       return;
     }
     
+    console.log('开始获取API密钥...');
     setLoading(true);
     
     // 添加超时保护，确保加载状态不会无限持续
     const timeoutId = setTimeout(() => {
-      console.warn('获取API密钥超时 (10秒)');
+      console.warn('获取API密钥超时 (30秒)');
       setLoading(false);
       setApiKeys([]); // 设置空列表结束加载状态
-    }, 10000); // 10秒超时
+    }, 30000); // 30秒超时
     
     try {
-      // 首先尝试刷新会话
-      try {
-        // 手动刷新Supabase会话
-        const { data } = await supabase.auth.refreshSession();
-        if (data?.session) {
-          console.log('会话刷新成功');
-        }
-      } catch (refreshError) {
-        console.warn('刷新会话失败，将继续尝试:', refreshError);
-      }
-
-      // 直接使用Supabase适配器获取API密钥
-      try {
-        const { default: supabaseAdapter } = await import('@/lib/supabase-adapter');
-        
-        // 检查用户ID是否可用
-        if (!user?.id) {
-          throw new Error('用户ID不可用，请刷新页面');
-        }
-        
-        console.log('使用Supabase适配器获取API密钥...');
-        const apiKeys = await supabaseAdapter.listApiKeys(user.id);
-        console.log('获取到API密钥:', apiKeys.length);
-        
-        // 处理类型兼容性，使用类型断言确保类型兼容
-        const formattedKeys = apiKeys.map(key => {
-          // 适配器返回的已经包含所需字段，只需要正确指定类型
-          return key as unknown as ApiKey;
-        });
-        
-        setApiKeys(formattedKeys);
-        clearTimeout(timeoutId); // 在提前返回前清除超时计时器
+      console.log('尝试获取API密钥...');
+      
+      // 首先确保我们有用户ID
+      if (!user?.id) {
+        console.error('用户ID不可用，无法获取API密钥');
+        setApiKeys([]);
+        clearTimeout(timeoutId);
         setLoading(false);
-        return; // 成功返回，不执行后续代码
-      } catch (adapterError) {
-        console.error('通过适配器获取API密钥失败:', adapterError);
+        return;
       }
       
-      // 如果适配器方法失败，尝试直接调用Supabase
-      try {
-        console.log('尝试直接使用Supabase获取API密钥...');
-        const { data: keysData, error: keysError } = await supabase
-          .from('api_keys')
-          .select('*')
-          .eq('user_id', user?.id || '');
-        
-        if (keysError) {
-          throw keysError;
-        }
-        
-        if (keysData) {
-          console.log('直接从数据库获取到API密钥:', keysData.length);
-          setApiKeys(keysData);
-          clearTimeout(timeoutId); // 清除超时计时器
-          setLoading(false);
-          return; // 成功返回，不执行后续代码
-        }
-      } catch (dbError) {
-        console.error('直接从数据库获取API密钥失败:', dbError);
-      }
+      // 直接使用专用的API端点
+      // 步骤1: 获取验证令牌
+      let token = null;
       
-      // 如果前两种方法失败，回退到直接API调用
+      // 从各种可能的存储位置获取用户令牌
       try {
-        console.log('尝试通过API获取密钥...');
-        const token = await getToken();
+        // 尝试从 supabase.auth.token 获取
+        const authToken = localStorage.getItem('supabase.auth.token');
+        if (authToken) {
+          const parsedToken = JSON.parse(authToken);
+          token = parsedToken?.currentSession?.access_token;
+          if (token) {
+            console.log('从 supabase.auth.token 获取到令牌');
+          }
+        }
+        
+        // 如果上面的方法失败，尝试遍历其他可能的令牌存储位置
         if (!token) {
-          throw new Error('无法获取认证令牌');
+          for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key && key.includes('-auth-token')) {
+              try {
+                const storedToken = localStorage.getItem(key);
+                if (storedToken) {
+                  const parsed = JSON.parse(storedToken);
+                  if (parsed?.access_token) {
+                    token = parsed.access_token;
+                    console.log(`从 ${key} 获取到令牌`);
+                    break;
+                  }
+                }
+              } catch (e) {
+                console.error(`无法解析 ${key} 中的令牌:`, e);
+              }
+            }
+          }
         }
         
-        const response = await fetch('/api/auth/api-keys', {
+        // 如果还是没有令牌，尝试刷新会话
+        if (!token) {
+          console.log('没有找到令牌，尝试刷新会话');
+          const { data } = await supabase.auth.refreshSession();
+          if (data?.session) {
+            token = data.session.access_token;
+            console.log('会话刷新成功，获取到新令牌');
+          }
+        }
+      } catch (tokenError) {
+        console.error('获取令牌失败:', tokenError);
+      }
+      
+      // 如果我们没有令牌，尝试直接使用管理员权限获取
+      if (!token) {
+        try {
+          console.log('没有可用的令牌，尝试直接获取API密钥');
+          const { default: supabaseAdapter } = await import('@/lib/supabase-adapter');
+          const apiKeys = await supabaseAdapter.listApiKeys(user.id);
+          
+          console.log('通过管理员权限获取到API密钥:', apiKeys.length);
+          setApiKeys(apiKeys);
+          clearTimeout(timeoutId);
+          setLoading(false);
+          return;
+        } catch (adapterError) {
+          console.error('使用管理员权限获取API密钥失败:', adapterError);
+        }
+      }
+      
+      // 如果有令牌，使用API端点
+      if (token) {
+        console.log('使用令牌请求API密钥端点');
+        const response = await fetch('/api/profile/api-keys', {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         
         if (response.ok) {
           const result = await response.json();
-          console.log('API请求获取到API密钥:', result.data?.length || 0);
-          setApiKeys(result.data || []);
+          if (result.success && result.data && result.data.keys) {
+            console.log('从 API 端点获取到API密钥:', result.data.keys.length);
+            setApiKeys(result.data.keys);
+            clearTimeout(timeoutId);
+            setLoading(false);
+            return;
+          } else {
+            console.error('API响应不包含有效数据:', result);
+          }
         } else {
-          throw new Error(`API请求失败: ${response.status}`);
+          const errorText = await response.text();
+          console.error(`API请求失败: ${response.status}`, errorText);
         }
-      } catch (apiError: any) {
-        console.error('API请求获取API密钥失败:', apiError);
-        
+      }
+      
+      // 如果所有方法都失败，尝试最后的办法 - 直接访问数据库
+      console.log('尝试直接使用Supabase客户端获取API密钥');
+      const { data: keysData, error: keysError } = await supabase
+        .from('api_keys')
+        .select('*')
+        .eq('user_id', user.id);
+      
+      if (keysError) {
+        console.error('直接使用Supabase客户端获取API密钥失败:', keysError);
+        setApiKeys([]);
+      } else if (keysData) {
+        console.log('直接从数据库获取到API密钥:', keysData.length);
+        setApiKeys(keysData);
+      } else {
+        setApiKeys([]);
+      }
+    } catch (apiError: any) {
+      console.error('API请求获取API密钥失败:', apiError);
+      
         // 显示用户友好的错误消息
         if (apiError.status === 401 || apiError.message?.includes('401')) {
           alert('您的登录已过期，请刷新页面后重试');

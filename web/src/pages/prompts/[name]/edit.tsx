@@ -908,9 +908,72 @@ export default withAuth(EditPromptPage);
 
 export const getServerSideProps: GetServerSideProps = async (context) => {
   const { name } = context.params!;
+  const { req } = context;
   
   try {
-    const prompt = await getPromptDetails(name as string);
+    // 从 Cookie 获取用户信息（如果有的话）
+    let userId = null;
+    if (req.headers.cookie) {
+      const cookies = req.headers.cookie.split(';').map(c => c.trim());
+      for (const cookie of cookies) {
+        if (cookie.startsWith('supabase-auth-token=')) {
+          try {
+            const tokenValue = decodeURIComponent(cookie.split('=')[1]);
+            const tokenData = JSON.parse(tokenValue);
+            userId = tokenData?.currentSession?.user?.id;
+            if (userId) {
+              console.log('从 cookie 获取到用户ID:', userId);
+              break;
+            }
+          } catch (e) {
+            console.error('解析 cookie 中的用户数据失败:', e);
+          }
+        }
+      }
+    }
+    
+    // 直接使用 Supabase 客户端获取提示词详情
+    const { createClient } = await import('@supabase/supabase-js');
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+    
+    const supabase = createClient(supabaseUrl, supabaseKey);
+    
+    // 构建查询
+    let query = supabase
+      .from('prompts')
+      .select('*')
+      .eq('name', name);
+      
+    // 如果有用户ID，则允许用户编辑自己的提示词
+    if (userId) {
+      // 允许获取用户自己的提示词或公开提示词
+      query = query.or(`user_id.eq.${userId},is_public.eq.true`);
+    } else {
+      // 未登录用户只能获取公开提示词
+      query = query.eq('is_public', true);
+    }
+    
+    const { data: prompt, error } = await query.single();
+    
+    if (error) {
+      throw new Error(`获取提示词失败: ${error.message}`);
+    }
+    
+    if (!prompt) {
+      throw new Error('找不到提示词');
+    }
+    
+    // 检查用户是否是提示词的所有者
+    if (userId && prompt.user_id !== userId) {
+      // 如果用户不是提示词的所有者，则不允许编辑
+      return {
+        redirect: {
+          destination: `/prompts/${name}`,
+          permanent: false,
+        },
+      };
+    }
     
     return {
       props: {

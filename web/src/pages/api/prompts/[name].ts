@@ -1,5 +1,10 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { supabase } from '../../../lib/supabase';
+import { createClient } from '@supabase/supabase-js';
+
+// 获取Supabase配置
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   // 获取提示词名称
@@ -28,13 +33,29 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 // 获取单个提示词详情
 async function handleGetPrompt(req: NextApiRequest, res: NextApiResponse, name: string) {
   try {
-    // 从获取提示词详情，只获取公开的提示词
-    const { data: prompt, error } = await supabase
+    // 从请求头部获取用户ID（如果有的话）
+    const userId = req.headers['x-user-id'] as string;
+    console.log('提示词详情请求 -', name, ', 用户ID:', userId || '未登录');
+    
+    // 创建管理员客户端以绕过RLS策略
+    const adminClient = createClient(supabaseUrl, supabaseKey);
+    
+    // 构建查询条件
+    let query = adminClient
       .from('prompts')
       .select('*')
-      .eq('name', name)
-      .eq('is_public', true)
-      .single();
+      .eq('name', name);
+    
+    // 如果用户已登录，显示公开提示词或用户自己的提示词
+    if (userId) {
+      query = query.or(`is_public.eq.true,user_id.eq.${userId}`);
+      console.log('允许访问公开或用户自己的提示词');
+    } else {
+      query = query.eq('is_public', true);
+      console.log('未登录用户只能访问公开提示词');
+    }
+    
+    const { data: prompt, error } = await query.single();
 
     if (error) {
       if (error.code === 'PGRST116') {
