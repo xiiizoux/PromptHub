@@ -552,9 +552,11 @@ export class SupabaseAdapter {
   // API密钥管理
   async generateApiKey(userId: string, name: string, expiresInDays?: number): Promise<any> {
     try {
+      // 生成随机密钥和哈希
       const apiKey = crypto.randomBytes(32).toString('hex');
       const keyHash = crypto.createHash('sha256').update(apiKey).digest('hex');
       
+      // 计算过期时间
       let expiresAt: string | null = null;
       if (expiresInDays && expiresInDays > 0) {
         const date = new Date();
@@ -562,7 +564,12 @@ export class SupabaseAdapter {
         expiresAt = date.toISOString();
       }
       
-      const { data, error } = await this.supabase
+      // 创建管理员客户端以绕过RLS策略
+      const adminClient = createSupabaseClient(true);
+      console.log('使用管理员权限创建API密钥', { userId, name });
+      
+      // 使用管理员客户端插入记录
+      const { data, error } = await adminClient
         .from('api_keys')
         .insert({
           user_id: userId,
@@ -593,7 +600,11 @@ export class SupabaseAdapter {
 
   async listApiKeys(userId: string): Promise<ApiKey[]> {
     try {
-      const { data, error } = await this.supabase
+      // 创建管理员客户端以绕过RLS策略
+      const adminClient = createSupabaseClient(true);
+      console.log('使用管理员权限获取API密钥列表', { userId });
+      
+      const { data, error } = await adminClient
         .from('api_keys')
         .select('id, name, created_at, last_used_at, expires_at, key_hash')
         .eq('user_id', userId)
