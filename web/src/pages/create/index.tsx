@@ -149,88 +149,17 @@ function CreatePromptPage() {
 
   // 表单提交
   const onSubmit = async (data: PromptFormData) => {
-    // 设置超时处理，避免无限期等待
-    let submissionTimeout: NodeJS.Timeout | null = null;
-    const timeout = 15000; // 15秒超时
-    
     setIsSubmitting(true);
     
-    // 设置超时处理
-    submissionTimeout = setTimeout(() => {
-      console.error('创建提示词操作超时');
-      alert('创建操作超时，请检查网络连接或稍后重试');
-      setIsSubmitting(false);
-    }, timeout);
-    
     try {
-      // 添加必要的字段
       data.input_variables = variables;
       data.tags = tags;
       data.compatible_models = models;
       
-      // 确保设置用户ID
-      if (!user?.id) {
-        alert('用户未登录或ID不可用，请刷新页面后重试');
-        if (submissionTimeout) clearTimeout(submissionTimeout);
-        setIsSubmitting(false);
-        return;
-      }
-      
-      data.user_id = user.id;
-      
-      // 添加其他必要的字段
-      data.is_public = data.is_public ?? true; // 默认公开
-      
-      console.log('正在提交提示词数据:', { 
-        name: data.name,
-        description: data.description, 
-        category: data.category,
-        user: user.id,
-        tags: tags.length
-      });
-      
-      let success = false;
-      
-      // 尝试使用Supabase适配器直接创建
-      try {
-        const { default: supabaseAdapter } = await import('@/lib/supabase-adapter');
-        const newPrompt = await supabaseAdapter.createPrompt(data as any);
-        console.log('提示词创建成功:', newPrompt);
-        
-        // 清除超时处理
-        if (submissionTimeout) clearTimeout(submissionTimeout);
-        success = true;
-        
-        // 导航到新提示词页面
-        router.push(`/prompts/${newPrompt.name}`);
-        return;
-      } catch (adapterError) {
-        console.error('使用适配器创建提示词失败，尝试API方式:', adapterError);
-      }
-      
-      if (!success) {
-        // 如果适配器方式失败，回退到原来的API调用
-        const newPrompt = await createPrompt(data);
-        console.log('提示词创建成功(通过API):', newPrompt);
-        
-        // 清除超时处理
-        if (submissionTimeout) clearTimeout(submissionTimeout);
-        
-        // 导航到新提示词页面
-        router.push(`/prompts/${newPrompt.name}`);
-      }
-    } catch (error: any) {
-      // 清除超时处理
-      if (submissionTimeout) clearTimeout(submissionTimeout);
-      
+      const newPrompt = await createPrompt(data);
+      router.push(`/prompts/${newPrompt.name}`);
+    } catch (error) {
       console.error('创建提示词失败:', error);
-      
-      // 显示错误消息
-      const errorMessage = error.message || '请检查您的认证状态或网络连接';
-      alert(`创建提示词失败: ${errorMessage}`);
-    } finally {
-      // 确保清除超时处理并重置状态
-      if (submissionTimeout) clearTimeout(submissionTimeout);
       setIsSubmitting(false);
     }
   };

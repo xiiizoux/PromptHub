@@ -31,7 +31,6 @@ export interface Prompt {
   category: string;
   tags: string[];
   messages: any[];
-  content?: string;  // 添加content字段以允许处理原始内容
   is_public: boolean;
   user_id: string;
   version?: number;
@@ -643,80 +642,6 @@ export class SupabaseAdapter {
     } catch (err) {
       console.error('删除API密钥时出错:', err);
       return false;
-    }
-  }
-  
-  /**
-   * 创建新提示词
-   * @param promptData 提示词数据
-   * @returns 新创建的提示词
-   */
-  async createPrompt(promptData: Partial<Prompt>): Promise<Prompt> {
-    try {
-      console.log('开始创建提示词过程');
-      
-      // 直接使用当前的会话获取用户ID
-      let userId = promptData.user_id;
-      
-      // 如果没有提供用户ID，尝试从当前会话获取
-      if (!userId) {
-        const { data: sessionData } = await this.supabase.auth.getSession();
-        const session = sessionData?.session;
-        
-        if (session?.user) {
-          userId = session.user.id;
-          console.log('从当前会话获取用户ID:', userId);
-        } else {
-          console.error('未能从会话获取用户ID');
-          throw new Error('用户未登录或会话已过期');
-        }
-      }
-      
-      // 确保提示词数据结构正确
-      const promptToCreate = {
-        name: promptData.name || '',
-        description: promptData.description || '',
-        category: promptData.category || '通用',
-        tags: Array.isArray(promptData.tags) ? promptData.tags : [],
-        messages: promptData.messages || [{ role: 'system', content: (promptData as any).content || '' }],
-        is_public: promptData.is_public ?? true,
-        user_id: userId,
-        version: promptData.version || '1.0',
-        created_at: new Date().toISOString(),
-      };
-      
-      // 验证必填字段
-      if (!promptToCreate.name) {
-        throw new Error('提示词名称是必填的');
-      }
-      
-      console.log('将创建提示词:', { 
-        name: promptToCreate.name,
-        userId: promptToCreate.user_id,
-        category: promptToCreate.category,
-      });
-      
-      // 尝试插入提示词
-      const { data, error } = await this.supabase
-        .from('prompts')
-        .insert(promptToCreate)
-        .select('*')
-        .single();
-      
-      if (error) {
-        console.error('插入提示词失败:', error);
-        throw new Error(`创建提示词失败: ${error.message}`);
-      }
-      
-      if (!data) {
-        throw new Error('创建提示词失败: 没有返回数据');
-      }
-      
-      console.log('提示词创建成功:', data);
-      return data as Prompt;
-    } catch (err: any) {
-      console.error('创建提示词时出错:', err);
-      throw err;
     }
   }
 }

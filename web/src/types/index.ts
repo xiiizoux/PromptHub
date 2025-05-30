@@ -8,7 +8,7 @@ export interface PromptInfo {
   description: string;
   category?: string;
   tags?: string[];
-  version?: string;
+  version?: number;  // 改为数字类型以匹配数据库结构
   created_at?: string;
   updated_at?: string;
   author?: string;
@@ -42,7 +42,7 @@ export interface PromptExample {
 
 // 提示词版本
 export interface PromptVersion {
-  version: string;
+  version: number;  // 改为数字类型以匹配数据库结构
   content: string;
   created_at: string;
   author?: string;
@@ -53,7 +53,7 @@ export interface PromptVersion {
 export interface PromptUsage {
   usage_id: string;
   prompt_id: string;
-  version: string;
+  version: number;  // 改为数字类型以匹配数据库结构
   input_tokens: number;
   output_tokens: number;
   latency: number;
