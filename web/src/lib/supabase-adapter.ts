@@ -169,7 +169,11 @@ export class SupabaseAdapter {
         sortBy = 'latest'
       } = filters || {};
 
-      let query = this.supabase.from('prompts').select('*', { count: 'exact' });
+      // 使用管理员权限绕过RLS策略
+      const adminClient = createSupabaseClient(true);
+      console.log('使用管理员权限获取提示词列表', { userId });
+      
+      let query = adminClient.from('prompts').select('*', { count: 'exact' });
 
       if (category && category !== '全部') {
         query = query.eq('category', category);
@@ -245,7 +249,11 @@ export class SupabaseAdapter {
 
   async getPrompt(nameOrId: string, userId?: string): Promise<Prompt | null> {
     try {
-      let query = this.supabase
+      // 使用管理员权限绕过RLS策略
+      const adminClient = createSupabaseClient(true);
+      console.log('使用管理员权限获取单个提示词', { nameOrId, userId });
+      
+      let query = adminClient
         .from('prompts')
         .select('*');
         
