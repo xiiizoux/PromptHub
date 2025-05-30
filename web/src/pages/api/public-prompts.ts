@@ -1,10 +1,12 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { createClient } from '@supabase/supabase-js';
 
-// 初始化Supabase客户端
+// 初始化Supabase客户端（使用服务角色密钥以绕过RLS）
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-const supabaseKey = process.env.SUPABASE_SERVICE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 const supabase = createClient(supabaseUrl, supabaseKey);
+
+console.log('初始化Supabase客户端，使用服务角色密钥：', !!process.env.SUPABASE_SERVICE_ROLE_KEY);
 
 type PromptData = {
   id: string;
@@ -25,12 +27,24 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // 解析查询参数
     const { search, category, tag } = req.query;
     
+    // 获取请求中的用户ID（如果存在）
+    const userId = req.headers['x-user-id'] as string;
+    console.log('请求中的用户ID:', userId);
+    
     // 构建查询
     let query = supabase
       .from('prompts')
-      .select('*')
-      // 只获取公开的提示词
-      .eq('is_public', true);
+      .select('*');
+
+    // 如果有用户ID，则获取该用户的所有提示词和公开提示词
+    // 如果没有用户ID，则只获取公开提示词
+    if (userId) {
+      query = query.or(`user_id.eq.${userId},is_public.eq.true`);
+      console.log('获取用户自己的提示词和公开提示词');
+    } else {
+      query = query.eq('is_public', true);
+      console.log('只获取公开提示词');
+    }
     
     // 添加搜索条件
     if (search && typeof search === 'string') {

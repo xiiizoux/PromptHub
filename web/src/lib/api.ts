@@ -105,9 +105,25 @@ export const getPrompts = async (filters?: PromptFilters): Promise<PaginatedResp
       queryParams.append('tag', filters.tags[0]);
     }
 
+    // 获取当前用户ID（如果有的话）
+    let userId = null;
+    if (typeof localStorage !== 'undefined') {
+      const userSession = localStorage.getItem('supabase.auth.token');
+      if (userSession) {
+        try {
+          const parsedSession = JSON.parse(userSession);
+          userId = parsedSession?.currentSession?.user?.id;
+        } catch (e) {
+          console.error('解析用户会话信息失败:', e);
+        }
+      }
+    }
+
     // 使用新的REST API端点
-    console.log('发送请求到:', `/public-prompts?${queryParams.toString()}`);
-    const response = await api.get<any>(`/public-prompts?${queryParams.toString()}`);
+    console.log('发送请求到:', `/public-prompts?${queryParams.toString()}`, '用户ID:', userId);
+    const response = await api.get<any>(`/public-prompts?${queryParams.toString()}`, {
+      headers: userId ? { 'x-user-id': userId } : {}
+    });
     
     // 输出原始响应信息
     console.log('获取提示词响应:', response.data);
@@ -145,9 +161,26 @@ export const getPromptDetails = async (name: string): Promise<PromptDetails> => 
       ? `http://localhost:${process.env.FRONTEND_PORT || 9011}` 
       : '';
     
+    // 获取当前用户ID（如果有的话）
+    let userId = null;
+    if (typeof localStorage !== 'undefined') {
+      const userSession = localStorage.getItem('supabase.auth.token');
+      if (userSession) {
+        try {
+          const parsedSession = JSON.parse(userSession);
+          userId = parsedSession?.currentSession?.user?.id;
+        } catch (e) {
+          console.error('解析用户会话信息失败:', e);
+        }
+      }
+    }
+
+    console.log('获取提示词详情:', name, '用户ID:', userId);
+    
     const response = await axios.get<any>(`${baseUrl}/api/prompts/${name}`, {
       headers: {
         'Content-Type': 'application/json',
+        ...(userId ? { 'x-user-id': userId } : {})
       }
     });
     
@@ -197,6 +230,10 @@ export const createPrompt = async (prompt: Partial<PromptDetails>): Promise<Prom
     const response = await api.post<ApiResponse<PromptDetails>>('/prompts', prompt, { 
       headers 
     });
+    
+    if (!response.data || !response.data.data) {
+      throw new Error((response.data as any)?.message || '创建提示词失败');
+    }
     
     return response.data.data;
   } catch (error: any) {

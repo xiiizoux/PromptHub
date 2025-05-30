@@ -28,13 +28,26 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 // 获取单个提示词详情
 async function handleGetPrompt(req: NextApiRequest, res: NextApiResponse, name: string) {
   try {
-    // 从Supabase获取提示词详情
-    const { data: prompt, error } = await supabase
+    // 获取请求中的用户ID（如果存在）
+    const userId = req.headers['x-user-id'] as string;
+    console.log('提示词详情API请求中的用户ID:', userId);
+    
+    // 如果有用户ID，检查是否是用户自己的提示词或者公开提示词
+    // 如果没有用户ID，只检查公开提示词
+    let query = supabase
       .from('prompts')
       .select('*')
-      .eq('name', name)
-      .eq('is_public', true)
-      .single();
+      .eq('name', name);
+      
+    if (userId) {
+      query = query.or(`user_id.eq.${userId},is_public.eq.true`);
+      console.log('获取用户自己的提示词或者公开提示词');
+    } else {
+      query = query.eq('is_public', true);
+      console.log('只获取公开提示词');
+    }
+    
+    const { data: prompt, error } = await query.single();
 
     if (error) {
       if (error.code === 'PGRST116') {
