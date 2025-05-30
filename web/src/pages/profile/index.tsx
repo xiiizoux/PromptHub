@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth, withAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
-import type { ApiKey as AdapterApiKey } from '@/lib/supabase-adapter';
 import Link from 'next/link';
 import { 
   UserIcon, 
@@ -22,18 +21,13 @@ import {
 } from '@heroicons/react/24/outline';
 
 // 定义与适配器返回的API密钥兼容的接口
-// 注意：适配器返回的ApiKey接口已经包含了key和expires_in_days字段
-// 见supabase-adapter.ts的listApiKeys方法
+// 从 supabase-adapter.ts 导入ApiKey类型并进行扩展
+import type { ApiKey as AdapterApiKey } from '@/lib/supabase-adapter';
 
-interface ApiKey {
-  id: string;
-  name: string;
-  key: string;
-  user_id: string;
-  expires_in_days: number;
-  created_at: string;
-  last_used_at?: string;
-  expires_at?: string; // 兼容适配器返回的ApiKey类型
+// 扩展适配器的ApiKey类型，添加前端需要的属性
+interface ApiKey extends AdapterApiKey {
+  key?: string;
+  expires_in_days?: number;
 }
 
 interface UserPrompt {
@@ -836,7 +830,7 @@ const ProfilePage = () => {
                               {apiKey.last_used_at && (
                                 <span>最后使用 {formatDate(apiKey.last_used_at)}</span>
                               )}
-                              {apiKey.expires_in_days > 0 && (
+                              {apiKey.expires_in_days && apiKey.expires_in_days > 0 && (
                                 <span>
                                   {apiKey.expires_in_days}天后过期
                                 </span>
@@ -844,7 +838,7 @@ const ProfilePage = () => {
                             </div>
                             <div className="flex items-center space-x-2 mt-3">
                               <code className="flex-1 bg-dark-bg-secondary p-3 rounded-lg text-neon-cyan font-mono text-sm">
-                                {visibleKeys.has(apiKey.id) ? apiKey.key : maskApiKey(apiKey.key)}
+                                {visibleKeys.has(apiKey.id) ? apiKey.key || '' : maskApiKey(apiKey.key || '')}
                               </code>
                               <button
                                 onClick={() => toggleKeyVisibility(apiKey.id)}
@@ -858,7 +852,7 @@ const ProfilePage = () => {
                                 )}
                               </button>
                               <button
-                                onClick={() => copyToClipboard(apiKey.key, apiKey.id)}
+                                onClick={() => copyToClipboard(apiKey.key || '', apiKey.id)}
                                 className="p-2 glass rounded-lg hover:bg-neon-cyan/10 transition-colors"
                                 title="复制密钥"
                               >
