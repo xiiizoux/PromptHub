@@ -36,7 +36,10 @@ interface UserPrompt {
   tags: string[];
   is_public: boolean;
   created_at: string;
-  updated_at: string;
+  updated_at?: string; // 设为可选，与Supabase适配器的Prompt类型兼容
+  user_id?: string;
+  version?: number;
+  messages?: any[];
 }
 
 const ProfilePage = () => {
@@ -52,6 +55,7 @@ const ProfilePage = () => {
   const [loading, setLoading] = useState(false);
   const [promptsLoading, setPromptsLoading] = useState(false);
   const [promptCount, setPromptCount] = useState(0);
+  const [promptCounts, setPromptCounts] = useState<{total: number, public: number, private: number}>({total: 0, public: 0, private: 0});
 
   const tabs = [
     { id: 'profile', name: '个人资料', icon: UserIcon },
@@ -139,15 +143,45 @@ const ProfilePage = () => {
   const fetchUserPrompts = async () => {
     setPromptsLoading(true);
     try {
-      const token = await getToken();
-      const response = await fetch('/api/profile/prompts?pageSize=20', {
-        headers: {
-          'Authorization': `Bearer ${token}`
+      // 直接使用Supabase适配器获取用户提示词
+      const { default: supabaseAdapter } = await import('@/lib/supabase-adapter');
+      
+      if (!user?.id) {
+        console.warn('未登录用户无法获取提示词');
+        setPromptsLoading(false);
+        return;
+      }
+      
+      try {
+        // 使用适配器获取用户提示词
+        const result = await supabaseAdapter.getPrompts({
+          userId: user.id,
+          page: 1,
+          pageSize: 20
+        });
+        
+        console.log('获取到用户提示词:', result.data.length);
+        setUserPrompts(result.data || []);
+      } catch (adapterError) {
+        console.error('通过适配器获取提示词失败:', adapterError);
+        
+        // 如果适配器方法失败，回退到直接API调用
+        const token = await getToken();
+        if (!token) {
+          console.error('无法获取认证令牌');
+          return;
         }
-      });
-      if (response.ok) {
-        const data = await response.json();
-        setUserPrompts(data.prompts || []);
+        
+        const response = await fetch('/api/profile/prompts?pageSize=20', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          setUserPrompts(data.prompts || []);
+        }
       }
     } catch (error) {
       console.error('获取用户提示词失败:', error);
@@ -158,18 +192,70 @@ const ProfilePage = () => {
 
   const fetchPromptCount = async () => {
     try {
-      const token = await getToken();
-      const response = await fetch('/api/profile/prompts?pageSize=1000', {
-        headers: {
-          'Authorization': `Bearer ${token}`
+      // 直接使用Supabase适配器获取提示词计数
+      const { default: supabaseAdapter } = await import('@/lib/supabase-adapter');
+      
+      if (!user?.id) {
+        console.warn('未登录用户无法获取提示词计数');
+        setPromptCounts({ total: 0, public: 0, private: 0 });
+        return;
+      }
+      
+      try {
+        // 使用适配器获取用户所有提示词
+        const result = await supabaseAdapter.getPrompts({
+          userId: user.id,
+          page: 1,
+          pageSize: 1000  // 大量传输以便统计
+        });
+        
+        const promptsList = result.data || [];
+        const totalCount = promptsList.length;
+        const publicCount = promptsList.filter(p => p.is_public).length;
+        const privateCount = totalCount - publicCount;
+        
+        console.log('提示词计数统计:', { total: totalCount, public: publicCount, private: privateCount });
+        
+        setPromptCounts({
+          total: totalCount,
+          public: publicCount,
+          private: privateCount
+        });
+      } catch (adapterError) {
+        console.error('通过适配器获取提示词计数失败:', adapterError);
+        
+        // 如果适配器方法失败，回退到直接API调用
+        const token = await getToken();
+        if (!token) {
+          console.error('无法获取认证令牌');
+          setPromptCounts({ total: 0, public: 0, private: 0 });
+          return;
         }
-      });
-      if (response.ok) {
-        const data = await response.json();
-        setPromptCount(data.pagination?.total || 0);
+        
+        const response = await fetch('/api/profile/prompts?pageSize=1000', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          const totalCount = data.prompts ? data.prompts.length : 0;
+          const publicCount = data.prompts ? data.prompts.filter((p: any) => p.is_public).length : 0;
+          const privateCount = totalCount - publicCount;
+          
+          setPromptCounts({
+            total: totalCount,
+            public: publicCount,
+            private: privateCount
+          });
+        } else {
+          setPromptCounts({ total: 0, public: 0, private: 0 });
+        }
       }
     } catch (error) {
-      console.error('获取提示词数量失败:', error);
+      console.error('获取提示词统计失败:', error);
+      setPromptCounts({ total: 0, public: 0, private: 0 });
     }
   };
 
@@ -283,25 +369,58 @@ const ProfilePage = () => {
 
     setLoading(true);
     try {
-      const token = await getToken();
-      const response = await fetch(`/api/auth/api-keys?id=${keyId}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`
+      // 直接使用Supabase适配器删除API密钥
+      const { default: supabaseAdapter } = await import('@/lib/supabase-adapter');
+      
+      if (!user?.id) {
+        alert('您尚未登录或会话已过期，请刷新页面后重试');
+        setLoading(false);
+        return;
+      }
+      
+      console.log('正在删除API密钥:', { keyId, userId: user.id });
+      
+      try {
+        // 直接使用适配器删除API密钥
+        const success = await supabaseAdapter.deleteApiKey(user.id, keyId);
+        
+        if (success) {
+          console.log('API密钥删除成功:', keyId);
+          // 从列表中移除已删除的密钥
+          setApiKeys(prev => prev.filter(key => key.id !== keyId));
+        } else {
+          console.error('API密钥删除失败');
+          alert('删除API密钥失败，请稍后重试');
         }
-      });
-
-      if (response.ok) {
-        // 从列表中移除被删除的密钥
-        setApiKeys(prev => prev.filter(key => key.id !== keyId));
-      } else {
-        const errorData = await response.text();
-        console.error('删除API密钥失败:', response.status, errorData);
-        alert(`删除API密钥失败: ${errorData}`);
+      } catch (adapterError) {
+        console.error('通过适配器删除API密钥失败:', adapterError);
+        
+        // 如果适配器方法失败，回退到直接API调用
+        const token = await getToken();
+        if (!token) {
+          alert('认证失败，请刷新页面后重试');
+          return;
+        }
+        
+        const response = await fetch(`/api/auth/api-keys?id=${keyId}`, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        
+        if (response.ok) {
+          // 从列表中移除已删除的密钥
+          setApiKeys(prev => prev.filter(key => key.id !== keyId));
+        } else {
+          const errorText = await response.text();
+          console.error('删除API密钥失败:', response.status, errorText);
+          alert(`删除API密钥失败: ${errorText}`);
+        }
       }
     } catch (error) {
-      console.error('删除API密钥失败:', error);
-      alert('删除API密钥失败，请检查控制台日志');
+      console.error('删除API密钥时发生错误:', error);
+      alert('删除API密钥失败，请稍后重试');
     } finally {
       setLoading(false);
     }
@@ -717,7 +836,7 @@ const ProfilePage = () => {
                             
                             <div className="flex items-center space-x-4 text-sm text-gray-400 mb-4">
                               <span>创建于 {formatDate(prompt.created_at)}</span>
-                              <span>最后更新 {formatDate(prompt.updated_at)}</span>
+                              {prompt.updated_at && <span>最后更新 {formatDate(prompt.updated_at)}</span>}
                             </div>
                             
                             <div className="flex items-center space-x-2">
