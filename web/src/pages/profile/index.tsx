@@ -243,18 +243,15 @@ const ProfilePage = () => {
     } catch (apiError: any) {
       console.error('API请求获取API密钥失败:', apiError);
       
-        // 显示用户友好的错误消息
-        if (apiError.status === 401 || apiError.message?.includes('401')) {
-          alert('您的登录已过期，请刷新页面后重试');
-        } else {
-          alert(`无法获取API密钥: ${apiError.message || '请检查网络连接和认证状态'}`);
-        }
-        
-        // 设置空的API密钥列表
-        setApiKeys([]);
+      // 显示用户友好的错误消息
+      if (apiError.status === 401 || apiError.message?.includes('401')) {
+        alert('您的登录已过期，请刷新页面后重试');
+      } else {
+        alert(`无法获取API密钥: ${apiError.message || '请检查网络连接和认证状态'}`);
       }
-    } catch (error) {
-      console.error('获取API密钥时发生意外错误:', error);
+      
+      // 设置空的API密钥列表
+      setApiKeys([]);
     } finally {
       setLoading(false);
     }
