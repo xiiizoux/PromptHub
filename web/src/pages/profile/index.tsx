@@ -69,10 +69,15 @@ const ProfilePage = () => {
 
   // 加载API密钥
   useEffect(() => {
-    if (activeTab === 'api-keys') {
-      fetchApiKeys();
+    if (activeTab === 'api-keys' && user) {
+      // 等待页面加载完成后再执行请求
+      const timer = setTimeout(() => {
+        console.log('正在获取API密钥, 用户ID:', user.id);
+        fetchApiKeys();
+      }, 500);
+      return () => clearTimeout(timer);
     }
-  }, [activeTab]);
+  }, [activeTab, user]);
 
   // 加载用户提示词
   useEffect(() => {
@@ -89,9 +94,17 @@ const ProfilePage = () => {
   const fetchApiKeys = async () => {
     setLoading(true);
     try {
+      // 确保获取到有效的令牌
       const token = await getToken();
-      console.log('获取到的token:', token ? `${token.substring(0, 20)}...` : 'null');
+      if (!token) {
+        console.error('无法获取认证令牌');
+        alert('认证失败，请刷新页面后重试');
+        return;
+      }
       
+      console.log('获取到有效令牌:', token.substring(0, 10) + '...');
+      
+      // 发送请求获取API密钥
       const response = await fetch('/api/auth/api-keys', {
         headers: {
           'Authorization': `Bearer ${token}`
@@ -99,18 +112,31 @@ const ProfilePage = () => {
       });
       
       console.log('API响应状态:', response.status);
-      console.log('API响应头:', response.headers);
       
       if (response.ok) {
-        const data = await response.json();
-        console.log('API响应数据:', data);
-        setApiKeys(data.data || []);
+        const result = await response.json();
+        console.log('API密钥获取成功:', result);
+        
+        // 确保处理正确的响应结构
+        if (result.success) {
+          // 新API结构
+          setApiKeys(result.data || []);
+        } else {
+          console.error('响应成功但数据格式不正确:', result);
+          setApiKeys([]);
+        }
       } else {
-        const errorData = await response.text();
-        console.error('API请求失败:', response.status, errorData);
+        const errorText = await response.text();
+        console.error('获取API密钥失败:', response.status, errorText);
+        
+        if (response.status === 401) {
+          // 认证错误，尝试刷新页面
+          alert('认证已过期，请刷新页面后重试');
+        }
       }
     } catch (error) {
-      console.error('获取API密钥失败:', error);
+      console.error('获取API密钥时发生错误:', error);
+      alert('获取API密钥失败，请稍后重试');
     } finally {
       setLoading(false);
     }
@@ -154,14 +180,24 @@ const ProfilePage = () => {
   };
 
   const createApiKey = async () => {
-    if (!newKeyName) {
+    if (!newKeyName.trim()) {
       alert('请输入API密钥名称');
       return;
     }
 
     setLoading(true);
     try {
+      // 获取并验证令牌
       const token = await getToken();
+      if (!token) {
+        console.error('无法获取认证令牌');
+        alert('认证失败，请刷新页面后重试');
+        return;
+      }
+      
+      console.log('正在创建API密钥:', { name: newKeyName, expiresInDays: newKeyExpiry });
+      
+      // 发送创建API密钥请求
       const response = await fetch('/api/auth/api-keys', {
         method: 'POST',
         headers: {
@@ -170,28 +206,69 @@ const ProfilePage = () => {
         },
         body: JSON.stringify({
           name: newKeyName,
-          expiresInDays: newKeyExpiry
+          expiresInDays: newKeyExpiry,
+          expires_in_days: newKeyExpiry // 同时发送两种格式以兼容后端
         })
       });
 
+      console.log('API密钥创建响应状态:', response.status);
+
       if (response.ok) {
-        const data = await response.json();
+        const result = await response.json();
+        console.log('API密钥创建成功:', result);
+        
+        // 处理不同的响应结构
+        let newKey = null;
+        if (result.success && result.data) {
+          // 新结构
+          newKey = result.data;
+        } else if (result.key) {
+          // 兼容旧结构
+          newKey = result.key;
+        } else {
+          console.error('无法解析API密钥响应:', result);
+          alert('创建API密钥成功，但无法显示密钥信息。请刷新页面查看。');
+          setNewKeyName('');
+          setShowCreateForm(false);
+          // 刷新密钥列表
+          fetchApiKeys();
+          return;
+        }
+        
         // 添加新创建的密钥到列表中
-        const newKey = data.data;
         setApiKeys(prev => [newKey, ...prev]);
         setNewKeyName('');
         setShowCreateForm(false);
         
         // 自动显示新创建的密钥
         setVisibleKeys(prev => new Set([...prev, newKey.id]));
+        
+        // 如果密钥中包含原始密钥字符串，显示提示
+        if (newKey.key && newKey.key.length > 32) {
+          alert(`API密钥创建成功。请保存密钥：${newKey.key}\n注意：这是唯一一次显示完整密钥的机会！`);
+        }
       } else {
-        const errorData = await response.text();
-        console.error('创建API密钥失败:', response.status, errorData);
-        alert(`创建API密钥失败: ${errorData}`);
+        // 错误处理
+        let errorMessage = '';
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.error || JSON.stringify(errorData);
+        } catch (e) {
+          // 如果无法解析JSON，尝试获取原始文本
+          errorMessage = await response.text();
+        }
+        
+        console.error('创建API密钥失败:', response.status, errorMessage);
+        
+        if (response.status === 401) {
+          alert('认证失败，请刷新页面后重试');
+        } else {
+          alert(`创建API密钥失败: ${errorMessage}`);
+        }
       }
     } catch (error) {
-      console.error('创建API密钥失败:', error);
-      alert('创建API密钥失败，请检查控制台日志');
+      console.error('创建API密钥时发生错误:', error);
+      alert('创建API密钥失败，请稍后重试');
     } finally {
       setLoading(false);
     }

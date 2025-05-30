@@ -358,33 +358,49 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       // 确保只在客户端运行
       if (typeof window === 'undefined') {
+        console.log('服务器端环境，无法获取令牌');
         return null;
       }
       
-      // 获取当前会话并自动刷新令牌
-      const { data: { session }, error } = await supabase.auth.getSession();
+      // 1. 先尝试通过getSession获取会话
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
       
-      if (error) {
-        console.error('获取会话失败:', error);
-        return null;
+      if (sessionError) {
+        console.error('获取会话失败:', sessionError);
+        throw sessionError;
       }
       
-      if (!session) {
-        console.warn('没有有效的用户会话');
-        return null;
+      // 没有有效会话，尝试强制刷新
+      if (!sessionData?.session) {
+        console.warn('未找到有效会话，尝试刷新...');
+        const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
+        
+        if (refreshError || !refreshData.session) {
+          console.error('刷新会话失败，需要重新登录:', refreshError);
+          // 触发登出流程
+          setIsAuthenticated(false);
+          setUser(null);
+          return null;
+        }
+        
+        console.log('会话刷新成功');
+        return refreshData.session.access_token;
       }
       
-      // 检查令牌是否即将过期（提前5分钟刷新）
+      const session = sessionData.session;
+      
+      // 2. 检查令牌是否即将过期（提前5分钟刷新）
       const expiresAt = session.expires_at || 0;
       const now = Math.floor(Date.now() / 1000);
       const timeUntilExpiry = expiresAt - now;
       
+      // 如果令牌即将过期，主动刷新
       if (timeUntilExpiry < 300) { // 5分钟 = 300秒
         console.log('令牌即将过期，尝试刷新...');
         const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
         
         if (refreshError) {
-          console.error('刷新令牌失败:', refreshError);
+          console.error('刷新令牌失败，使用现有令牌:', refreshError);
           return session.access_token;
         }
         
@@ -394,6 +410,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
       }
       
+      // 3. 返回有效的访问令牌
       return session.access_token;
     } catch (err) {
       console.error('获取令牌失败:', err);
