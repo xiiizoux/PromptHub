@@ -550,11 +550,24 @@ CREATE POLICY "Users can view audit logs for their prompts" ON prompt_audit_logs
   );
 
 -- API密钥表策略
-CREATE POLICY "Users can view own API keys" ON api_keys
-  FOR SELECT USING (user_id = get_auth_uid());
+DROP POLICY IF EXISTS "Users can view own API keys" ON api_keys;
+DROP POLICY IF EXISTS "Users can manage own API keys" ON api_keys;
 
-CREATE POLICY "Users can manage own API keys" ON api_keys
-  FOR ALL USING (user_id = get_auth_uid());
+-- 分离的详细策略（替换原来的通用策略）
+CREATE POLICY "用户可以查看自己的API密钥"
+ON api_keys
+FOR SELECT
+USING (auth.uid() = user_id);
+
+CREATE POLICY "用户可以创建自己的API密钥"
+ON api_keys
+FOR INSERT
+WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "用户可以删除自己的API密钥"
+ON api_keys
+FOR DELETE
+USING (auth.uid() = user_id);
 
 -- 类别表策略 - 所有人都可以查看类别
 CREATE POLICY "Everyone can view categories" ON categories
