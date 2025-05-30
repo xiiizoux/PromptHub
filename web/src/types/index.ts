@@ -18,7 +18,8 @@ export interface PromptInfo {
 
 // 提示词详情
 export interface PromptDetails extends PromptInfo {
-  content: string;
+  content?: string;                       // 原始内容（用于表单，但不存在于数据库中）
+  messages?: Array<{role: string; content: string}>; // 消息数组，对应数据库中的JSONB字段
   template_format?: string;
   input_variables?: string[];
   examples?: PromptExample[];
@@ -31,6 +32,7 @@ export interface PromptDetails extends PromptInfo {
   user_id?: string;                       // 所有者用户ID
   created_by?: string;                    // 创建者ID
   last_modified_by?: string;              // 最后修改者ID
+  category_id?: string;                   // 分类 ID，对应数据库中的category_id字段
 }
 
 // 提示词示例

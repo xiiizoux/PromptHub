@@ -22,7 +22,12 @@ import { useAuth, withAuth } from '@/contexts/AuthContext';
 // 预设模型选项
 const MODEL_OPTIONS = ['GPT-4', 'GPT-3.5', 'Claude-2', 'Claude-Instant', 'Gemini-Pro', 'Llama-2', 'Mistral-7B'];
 
-type PromptFormData = Omit<PromptDetails, 'created_at' | 'updated_at'>;
+// 扩展类型，添加messages字段和其他数据库中的字段
+type PromptFormData = Omit<PromptDetails, 'created_at' | 'updated_at'> & {
+  messages?: Array<{role: string; content: string}>; // 添加messages字段
+  allow_collaboration?: boolean;  // 添加allow_collaboration字段
+  edit_permission?: 'owner_only' | 'collaborators' | 'public'; // 添加edit_permission字段
+};
 
 function CreatePromptPage() {
   const router = useRouter();
@@ -74,10 +79,12 @@ function CreatePromptPage() {
     defaultValues: {
       name: '',
       description: '',
-      content: '',
-      category: '',
-      version: '1.0',
-      author: '',
+      content: '',  // 会被转换为messages JSONB格式
+      category: '通用', // 与数据库默认值保持一致
+      version: 1,  // 改为整数类型，与数据库保持一致
+      is_public: false, // 默认非公开，与数据库默认值保持一致
+      allow_collaboration: false, // 默认不允许协作编辑
+      edit_permission: 'owner_only', // 默认仅所有者可编辑
       template_format: 'text',
       input_variables: [],
       tags: [],
@@ -149,17 +156,92 @@ function CreatePromptPage() {
 
   // 表单提交
   const onSubmit = async (data: PromptFormData) => {
+    // 设置超时处理，避免无限期等待
+    let submissionTimeout: NodeJS.Timeout | null = null;
+    const timeout = 15000; // 15秒超时
+    
     setIsSubmitting(true);
     
+    // 设置超时处理
+    submissionTimeout = setTimeout(() => {
+      console.error('创建提示词操作超时');
+      alert('创建操作超时，请检查网络连接或稍后重试');
+      setIsSubmitting(false);
+    }, timeout);
+    
     try {
+      // 添加必要的字段
       data.input_variables = variables;
       data.tags = tags;
       data.compatible_models = models;
       
-      const newPrompt = await createPrompt(data);
-      router.push(`/prompts/${newPrompt.name}`);
-    } catch (error) {
+      // 确保设置用户ID
+      if (!user?.id) {
+        alert('用户未登录或ID不可用，请刷新页面后重试');
+        if (submissionTimeout) clearTimeout(submissionTimeout);
+        setIsSubmitting(false);
+        return;
+      }
+      
+      // 添加用户ID
+      data.user_id = user.id;
+      
+      // 确保版本是整数
+      data.version = 1; // 版本必须是整数类型
+      
+      // 将content字段转换为messages格式
+      if (data.content && !data.messages) {
+        data.messages = [
+          {
+            role: 'system',
+            content: data.content
+          }
+        ];
+        // 删除原始content字段，因为数据库中不存在该字段
+        delete (data as any).content;
+      }
+      
+      console.log('正在提交提示词数据:', { 
+        name: data.name,
+        description: data.description, 
+        category: data.category,
+        user: user.id,
+        tags: tags.length,
+        is_public: data.is_public,
+        version: data.version
+      });
+      
+      let success = false;
+      
+      // 尝试使用Supabase适配器直接创建
+      try {
+        const { default: supabaseAdapter } = await import('@/lib/supabase-adapter');
+        const newPrompt = await supabaseAdapter.createPrompt(data as any);
+        console.log('提示词创建成功:', newPrompt);
+        
+        // 清除超时处理
+        if (submissionTimeout) clearTimeout(submissionTimeout);
+        success = true;
+        
+        // 导航到新提示词页面
+        router.push(`/prompts/${newPrompt.name}`);
+        return;
+      } catch (adapterError) {
+        console.error('使用适配器创建提示词失败，尝试API方式:', adapterError);
+      }
+      
+      // 如果适配器方式失败，回退到原来的API调用
+      if (!success) {
+        const newPrompt = await createPrompt(data as any);
+        console.log('提示词创建成功:', newPrompt);
+        router.push(`/prompts/${newPrompt.name}`);
+      }
+    } catch (error: any) {
       console.error('创建提示词失败:', error);
+      alert(`创建提示词失败: ${error.message || '请检查您的认证状态或网络连接'}`);
+    } finally {
+      // 在所有情况下都确保清除超时并重置状态
+      if (submissionTimeout) clearTimeout(submissionTimeout);
       setIsSubmitting(false);
     }
   };

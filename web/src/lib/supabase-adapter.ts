@@ -644,6 +644,98 @@ export class SupabaseAdapter {
       return false;
     }
   }
+  
+  /**
+   * 创建新提示词
+   * @param promptData 提示词数据
+   * @returns 新创建的提示词
+   */
+  async createPrompt(promptData: Partial<Prompt>): Promise<Prompt> {
+    try {
+      console.log('开始创建提示词过程');
+      
+      // 直接使用当前的会话获取用户ID
+      let userId = promptData.user_id;
+      
+      // 如果没有提供用户ID，尝试从当前会话获取
+      if (!userId) {
+        const { data: sessionData } = await this.supabase.auth.getSession();
+        const session = sessionData?.session;
+        
+        if (session?.user) {
+          userId = session.user.id;
+          console.log('从当前会话获取用户ID:', userId);
+        } else {
+          console.error('未能从会话获取用户ID');
+          throw new Error('用户未登录或会话已过期');
+        }
+      }
+      
+      // 处理messages字段 - 数据库需要JSONB格式
+      let messagesValue;
+      if (promptData.messages && Array.isArray(promptData.messages)) {
+        messagesValue = promptData.messages;
+      } else if ((promptData as any).content) {
+        // 如果没有messages字段，但有content字段，则创建一个system消息
+        messagesValue = [{
+          role: 'system',
+          content: (promptData as any).content
+        }];
+      } else {
+        // 默认空消息
+        messagesValue = [{
+          role: 'system',
+          content: ''
+        }];
+      }
+      
+      // 构建要插入的提示词数据
+      const promptToCreate = {
+        name: promptData.name || '',
+        description: promptData.description || '',
+        category: promptData.category || '通用',
+        tags: Array.isArray(promptData.tags) ? promptData.tags : [],
+        messages: messagesValue,  // 正确设置messages字段为JSONB格式
+        is_public: promptData.is_public ?? true,
+        user_id: userId,
+        version: typeof promptData.version === 'number' ? promptData.version : 1, // 确保版本是整数
+        created_at: new Date().toISOString(),
+      };
+      
+      // 验证必填字段
+      if (!promptToCreate.name) {
+        throw new Error('提示词名称是必填的');
+      }
+      
+      console.log('将创建提示词:', { 
+        name: promptToCreate.name,
+        userId: promptToCreate.user_id,
+        category: promptToCreate.category,
+      });
+      
+      // 尝试插入提示词
+      const { data, error } = await this.supabase
+        .from('prompts')
+        .insert(promptToCreate)
+        .select('*')
+        .single();
+      
+      if (error) {
+        console.error('插入提示词失败:', error);
+        throw new Error(`创建提示词失败: ${error.message}`);
+      }
+      
+      if (!data) {
+        throw new Error('创建提示词失败: 没有返回数据');
+      }
+      
+      console.log('提示词创建成功:', data);
+      return data as Prompt;
+    } catch (err: any) {
+      console.error('创建提示词时出错:', err);
+      throw err;
+    }
+  }
 }
 
 // 创建适配器实例
