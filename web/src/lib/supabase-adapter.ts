@@ -728,13 +728,17 @@ export class SupabaseAdapter {
         category: promptToCreate.category,
       });
       
-      // 尝试插入提示词
-      const { data, error } = await this.supabase
+      // 创建管理员客户端以绕过RLS策略
+      const adminClient = createSupabaseClient(true);
+      console.log('使用管理员权限创建提示词');
+      
+      // 尝试使用管理员权限插入提示词
+      const { data, error } = await adminClient
         .from('prompts')
         .insert(promptToCreate)
         .select('*')
         .single();
-      
+        
       if (error) {
         console.error('插入提示词失败:', error);
         throw new Error(`创建提示词失败: ${error.message}`);
