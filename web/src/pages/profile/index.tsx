@@ -94,50 +94,44 @@ const ProfilePage = () => {
   const fetchApiKeys = async () => {
     setLoading(true);
     try {
-      // 确保获取到有效的令牌
-      const token = await getToken();
-      if (!token) {
-        console.error('无法获取认证令牌');
-        alert('认证失败，请刷新页面后重试');
-        return;
-      }
-      
-      console.log('获取到有效令牌:', token.substring(0, 10) + '...');
-      
-      // 发送请求获取API密钥
-      const response = await fetch('/api/auth/api-keys', {
-        headers: {
-          'Authorization': `Bearer ${token}`
+      // 直接使用Supabase适配器获取API密钥
+      // 这样可以确保使用同一个认证会话
+      import('@/lib/supabase-adapter').then(async ({ default: supabaseAdapter }) => {
+        try {
+          const apiKeys = await supabaseAdapter.listApiKeys(user?.id || '');
+          console.log('获取到API密钥:', apiKeys.length);
+          setApiKeys(apiKeys);
+        } catch (adapterError) {
+          console.error('通过适配器获取API密钥失败:', adapterError);
+          
+          // 如果适配器方法失败，回退到直接API调用
+          const token = await getToken();
+          if (!token) {
+            alert('认证失败，请先登录或刷新页面');
+            return;
+          }
+          
+          const response = await fetch('/api/auth/api-keys', {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          
+          if (response.ok) {
+            const result = await response.json();
+            setApiKeys(result.data || []);
+          } else {
+            console.error('API请求失败:', response.status);
+            if (response.status === 401) {
+              alert('您的登录已过期，请刷新页面后重试');
+            }
+          }
         }
+      }).catch(error => {
+        console.error('加载适配器失败:', error);
+      }).finally(() => {
+        setLoading(false);
       });
-      
-      console.log('API响应状态:', response.status);
-      
-      if (response.ok) {
-        const result = await response.json();
-        console.log('API密钥获取成功:', result);
-        
-        // 确保处理正确的响应结构
-        if (result.success) {
-          // 新API结构
-          setApiKeys(result.data || []);
-        } else {
-          console.error('响应成功但数据格式不正确:', result);
-          setApiKeys([]);
-        }
-      } else {
-        const errorText = await response.text();
-        console.error('获取API密钥失败:', response.status, errorText);
-        
-        if (response.status === 401) {
-          // 认证错误，尝试刷新页面
-          alert('认证已过期，请刷新页面后重试');
-        }
-      }
     } catch (error) {
       console.error('获取API密钥时发生错误:', error);
-      alert('获取API密钥失败，请稍后重试');
-    } finally {
       setLoading(false);
     }
   };
@@ -187,83 +181,91 @@ const ProfilePage = () => {
 
     setLoading(true);
     try {
-      // 获取并验证令牌
-      const token = await getToken();
-      if (!token) {
-        console.error('无法获取认证令牌');
-        alert('认证失败，请刷新页面后重试');
+      // 直接使用Supabase适配器创建API密钥
+      const { default: supabaseAdapter } = await import('@/lib/supabase-adapter');
+      
+      if (!user?.id) {
+        alert('您尚未登录或会话已过期，请刷新页面后重试');
+        setLoading(false);
         return;
       }
       
-      console.log('正在创建API密钥:', { name: newKeyName, expiresInDays: newKeyExpiry });
+      console.log('正在创建API密钥:', { name: newKeyName, expiryDays: newKeyExpiry, userId: user.id });
       
-      // 发送创建API密钥请求
-      const response = await fetch('/api/auth/api-keys', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          name: newKeyName,
-          expiresInDays: newKeyExpiry,
-          expires_in_days: newKeyExpiry // 同时发送两种格式以兼容后端
-        })
-      });
-
-      console.log('API密钥创建响应状态:', response.status);
-
-      if (response.ok) {
-        const result = await response.json();
-        console.log('API密钥创建成功:', result);
-        
-        // 处理不同的响应结构
-        let newKey = null;
-        if (result.success && result.data) {
-          // 新结构
-          newKey = result.data;
-        } else if (result.key) {
-          // 兼容旧结构
-          newKey = result.key;
-        } else {
-          console.error('无法解析API密钥响应:', result);
-          alert('创建API密钥成功，但无法显示密钥信息。请刷新页面查看。');
-          setNewKeyName('');
-          setShowCreateForm(false);
-          // 刷新密钥列表
-          fetchApiKeys();
-          return;
-        }
+      try {
+        // 直接使用适配器创建API密钥
+        const newKey = await supabaseAdapter.generateApiKey(user.id, newKeyName, newKeyExpiry);
+        console.log('API密钥创建成功:', newKey);
         
         // 添加新创建的密钥到列表中
         setApiKeys(prev => [newKey, ...prev]);
         setNewKeyName('');
         setShowCreateForm(false);
         
-        // 自动显示新创建的密钥
+        // 自动显示并复制新创建的密钥
         setVisibleKeys(prev => new Set([...prev, newKey.id]));
         
         // 如果密钥中包含原始密钥字符串，显示提示
         if (newKey.key && newKey.key.length > 32) {
-          alert(`API密钥创建成功。请保存密钥：${newKey.key}\n注意：这是唯一一次显示完整密钥的机会！`);
+          // 使用浏览器API复制到剪贴板
+          try {
+            await navigator.clipboard.writeText(newKey.key);
+            alert(`API密钥创建成功并已复制到剪贴板：\n${newKey.key}\n\n注意：这是唯一一次显示完整密钥的机会！`);
+          } catch (e) {
+            alert(`API密钥创建成功。请手动复制密钥：\n${newKey.key}\n\n注意：这是唯一一次显示完整密钥的机会！`);
+          }
         }
-      } else {
-        // 错误处理
-        let errorMessage = '';
-        try {
-          const errorData = await response.json();
-          errorMessage = errorData.error || JSON.stringify(errorData);
-        } catch (e) {
-          // 如果无法解析JSON，尝试获取原始文本
-          errorMessage = await response.text();
-        }
+      } catch (adapterError) {
+        console.error('通过适配器创建API密钥失败:', adapterError);
         
-        console.error('创建API密钥失败:', response.status, errorMessage);
-        
-        if (response.status === 401) {
+        // 如果适配器方法失败，回退到直接API调用
+        const token = await getToken();
+        if (!token) {
           alert('认证失败，请刷新页面后重试');
+          return;
+        }
+        
+        const response = await fetch('/api/auth/api-keys', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            name: newKeyName,
+            expiresInDays: newKeyExpiry,
+            expires_in_days: newKeyExpiry
+          })
+        });
+        
+        if (response.ok) {
+          const result = await response.json();
+          const newKey = result.data || result.key;
+          
+          if (newKey) {
+            setApiKeys(prev => [newKey, ...prev]);
+            setNewKeyName('');
+            setShowCreateForm(false);
+            
+            if (newKey.key && newKey.key.length > 32) {
+              alert(`API密钥创建成功。请保存密钥：${newKey.key}`);
+            } else {
+              alert('API密钥创建成功');
+              // 刷新密钥列表以获取完整数据
+              fetchApiKeys();
+            }
+          } else {
+            alert('密钥创建成功，但无法显示详情。请刷新页面。');
+            fetchApiKeys();
+          }
         } else {
-          alert(`创建API密钥失败: ${errorMessage}`);
+          // 错误处理
+          try {
+            const errorData = await response.json();
+            alert(`创建API密钥失败: ${errorData.error || JSON.stringify(errorData)}`);
+          } catch {
+            alert('创建API密钥失败，请稍后重试');
+          }
         }
       }
     } catch (error) {

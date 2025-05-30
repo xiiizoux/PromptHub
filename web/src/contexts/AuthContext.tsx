@@ -353,67 +353,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  // 获取当前用户的访问令牌
+  // 获取当前用户的访问令牌 - 简化版
   const getToken = async (): Promise<string | null> => {
     try {
-      // 确保只在客户端运行
+      // 仅在客户端执行
       if (typeof window === 'undefined') {
-        console.log('服务器端环境，无法获取令牌');
         return null;
       }
-      
-      // 1. 先尝试通过getSession获取会话
-      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-      
-      if (sessionError) {
-        console.error('获取会话失败:', sessionError);
-        throw sessionError;
+
+      // 直接从当前用户中获取会话
+      const { data } = await supabase.auth.getSession();
+      const session = data?.session;
+
+      // 如果没有有效会话，返回null
+      if (!session) {
+        console.warn('无法获取用户会话');
+        return null;
       }
-      
-      // 没有有效会话，尝试强制刷新
-      if (!sessionData?.session) {
-        console.warn('未找到有效会话，尝试刷新...');
-        const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
-        
-        if (refreshError || !refreshData.session) {
-          console.error('刷新会话失败，需要重新登录:', refreshError);
-          // 触发登出流程
-          setIsAuthenticated(false);
-          setUser(null);
-          return null;
-        }
-        
-        console.log('会话刷新成功');
-        return refreshData.session.access_token;
-      }
-      
-      const session = sessionData.session;
-      
-      // 2. 检查令牌是否即将过期（提前5分钟刷新）
-      const expiresAt = session.expires_at || 0;
-      const now = Math.floor(Date.now() / 1000);
-      const timeUntilExpiry = expiresAt - now;
-      
-      // 如果令牌即将过期，主动刷新
-      if (timeUntilExpiry < 300) { // 5分钟 = 300秒
-        console.log('令牌即将过期，尝试刷新...');
-        const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
-        
-        if (refreshError) {
-          console.error('刷新令牌失败，使用现有令牌:', refreshError);
-          return session.access_token;
-        }
-        
-        if (refreshData.session) {
-          console.log('令牌刷新成功');
-          return refreshData.session.access_token;
-        }
-      }
-      
-      // 3. 返回有效的访问令牌
+
+      // 返回访问令牌
       return session.access_token;
     } catch (err) {
-      console.error('获取令牌失败:', err);
+      console.error('获取令牌时出错:', err);
       return null;
     }
   };
