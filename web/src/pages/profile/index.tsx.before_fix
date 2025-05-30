@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth, withAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
-import type { ApiKey as AdapterApiKey } from '@/lib/supabase-adapter';
 import Link from 'next/link';
 import { 
   UserIcon, 
@@ -21,19 +20,13 @@ import {
   PencilIcon
 } from '@heroicons/react/24/outline';
 
-// 定义与适配器返回的API密钥兼容的接口
-// 注意：适配器返回的ApiKey接口已经包含了key和expires_in_days字段
-// 见supabase-adapter.ts的listApiKeys方法
-
 interface ApiKey {
   id: string;
   name: string;
   key: string;
-  user_id: string;
   expires_in_days: number;
   created_at: string;
   last_used_at?: string;
-  expires_at?: string; // 兼容适配器返回的ApiKey类型
 }
 
 interface UserPrompt {
@@ -143,15 +136,7 @@ const ProfilePage = () => {
         console.log('使用Supabase适配器获取API密钥...');
         const apiKeys = await supabaseAdapter.listApiKeys(user.id);
         console.log('获取到API密钥:', apiKeys.length);
-        
-        // 处理类型兼容性，使用类型断言确保类型兼容
-        const formattedKeys = apiKeys.map(key => {
-          // 适配器返回的已经包含所需字段，只需要正确指定类型
-          return key as unknown as ApiKey;
-        });
-        
-        setApiKeys(formattedKeys);
-        clearTimeout(timeoutId); // 在提前返回前清除超时计时器
+        setApiKeys(apiKeys);
         setLoading(false);
         return; // 成功返回，不执行后续代码
       } catch (adapterError) {
@@ -173,7 +158,6 @@ const ProfilePage = () => {
         if (keysData) {
           console.log('直接从数据库获取到API密钥:', keysData.length);
           setApiKeys(keysData);
-          clearTimeout(timeoutId); // 清除超时计时器
           setLoading(false);
           return; // 成功返回，不执行后续代码
         }
@@ -368,12 +352,8 @@ const ProfilePage = () => {
         setNewKeyName('');
         setShowCreateForm(false);
         
-        // 自动显示并复制新创建的密钥 - 使用Array.from解决Set迭代问题
-        setVisibleKeys(prev => {
-          // 先转换为Array，再添加新元素，然后转回成Set
-          const prevArray = Array.from(prev);
-          return new Set([...prevArray, newKey.id]);
-        });
+        // 自动显示并复制新创建的密钥
+        setVisibleKeys(prev => new Set([...prev, newKey.id]));
         
         // 如果密钥中包含原始密钥字符串，显示提示
         if (newKey.key && newKey.key.length > 32) {
@@ -511,20 +491,13 @@ const ProfilePage = () => {
   };
 
   const toggleKeyVisibility = (keyId: string) => {
-    // 使用Array.from处理Set迭代兼容性问题
-    const visibleKeysArray = Array.from(visibleKeys);
-    let newVisibleKeysArray: string[];
-    
-    if (visibleKeys.has(keyId)) {
-      // 如果密钥已可见，则从数组中移除
-      newVisibleKeysArray = visibleKeysArray.filter(id => id !== keyId);
+    const newVisibleKeys = new Set(visibleKeys);
+    if (newVisibleKeys.has(keyId)) {
+      newVisibleKeys.delete(keyId);
     } else {
-      // 如果密钥不可见，则添加到数组中
-      newVisibleKeysArray = [...visibleKeysArray, keyId];
+      newVisibleKeys.add(keyId);
     }
-    
-    // 创建新的Set
-    setVisibleKeys(new Set(newVisibleKeysArray));
+    setVisibleKeys(newVisibleKeys);
   };
 
   const copyToClipboard = async (text: string, keyId: string) => {
