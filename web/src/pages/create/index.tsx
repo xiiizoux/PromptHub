@@ -408,7 +408,7 @@ function CreatePromptPage() {
                     )}
                   </div>
                   <div>
-                    <h3 className="text-white font-medium">{watch('is_public') ? '公开分享' : '私人提示词'}</h3>
+                    <h3 className="text-sm font-medium text-gray-300">{watch('is_public') ? '公开分享' : '私人提示词'}</h3>
                     <p className="text-gray-400 text-sm">{watch('is_public') ? '所有人可以看到并使用您的提示词' : '只有您自己可以访问此提示词'}</p>
                   </div>
                 </div>

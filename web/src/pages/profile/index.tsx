@@ -576,6 +576,45 @@ const ProfilePage = () => {
     if (key.length <= 8) return key;
     return key.substring(0, 4) + '••••••••' + key.substring(key.length - 4);
   };
+  
+  // 删除提示词
+  const deletePrompt = async (promptId: string) => {
+    if (!confirm('确定要删除这个提示词吗？此操作不可恢复。')) {
+      return;
+    }
+    
+    try {
+      // 获取认证令牌
+      const token = await getToken();
+      if (!token) {
+        alert('无法获取认证令牌，请重新登录');
+        return;
+      }
+      
+      // 调用API删除提示词
+      const response = await fetch(`/api/prompts/${promptId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (response.ok) {
+        // 从列表中移除已删除的提示词
+        setUserPrompts(userPrompts.filter(p => p.id !== promptId));
+        // 更新提示词计数
+        setPromptCount(prevCount => prevCount - 1);
+        alert('提示词已成功删除');
+      } else {
+        const error = await response.json();
+        throw new Error(error.message || '删除提示词失败');
+      }
+    } catch (error: any) {
+      console.error('删除提示词失败:', error);
+      alert(`删除提示词失败: ${error.message || '请检查您的权限或网络连接'}`);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-dark-bg-primary py-8">
@@ -695,32 +734,7 @@ const ProfilePage = () => {
                     <p className="text-gray-400 mt-1">创建和管理您的API密钥</p>
                   </div>
                   <div className="flex space-x-3">
-                    <motion.button
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={async () => {
-                        try {
-                          const token = await getToken();
-                          console.log('测试认证token:', token ? `${token.substring(0, 20)}...` : 'null');
-                          
-                          const response = await fetch('/api/test-auth', {
-                            headers: {
-                              'Authorization': `Bearer ${token}`
-                            }
-                          });
-                          
-                          const result = await response.json();
-                          console.log('认证测试结果:', result);
-                          alert(`认证测试: ${JSON.stringify(result, null, 2)}`);
-                        } catch (error) {
-                          console.error('认证测试失败:', error);
-                          alert('认证测试失败');
-                        }
-                      }}
-                      className="btn-secondary text-sm"
-                    >
-                      测试认证
-                    </motion.button>
+
                     <motion.button
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
@@ -837,31 +851,6 @@ const ProfilePage = () => {
                               )}
                             </div>
                             <div className="flex items-center space-x-2 mt-3">
-                              <code className="flex-1 bg-dark-bg-secondary p-3 rounded-lg text-neon-cyan font-mono text-sm">
-                                {visibleKeys.has(apiKey.id) ? apiKey.key || '' : maskApiKey(apiKey.key || '')}
-                              </code>
-                              <button
-                                onClick={() => toggleKeyVisibility(apiKey.id)}
-                                className="p-2 glass rounded-lg hover:bg-neon-cyan/10 transition-colors"
-                                title={visibleKeys.has(apiKey.id) ? '隐藏密钥' : '显示密钥'}
-                              >
-                                {visibleKeys.has(apiKey.id) ? (
-                                  <EyeSlashIcon className="h-5 w-5 text-gray-400" />
-                                ) : (
-                                  <EyeIcon className="h-5 w-5 text-gray-400" />
-                                )}
-                              </button>
-                              <button
-                                onClick={() => copyToClipboard(apiKey.key || '', apiKey.id)}
-                                className="p-2 glass rounded-lg hover:bg-neon-cyan/10 transition-colors"
-                                title="复制密钥"
-                              >
-                                {copiedKey === apiKey.id ? (
-                                  <CheckIcon className="h-5 w-5 text-neon-green" />
-                                ) : (
-                                  <ClipboardIcon className="h-5 w-5 text-gray-400" />
-                                )}
-                              </button>
                               <button
                                 onClick={() => deleteApiKey(apiKey.id)}
                                 className="p-2 glass rounded-lg hover:bg-neon-red/10 transition-colors"
@@ -986,6 +975,13 @@ const ProfilePage = () => {
                                 ) : (
                                   <ClipboardIcon className="h-5 w-5 text-gray-400 group-hover:text-neon-green" />
                                 )}
+                              </button>
+                              <button
+                                onClick={() => deletePrompt(prompt.id)}
+                                className="p-2 glass rounded-lg hover:bg-neon-red/10 transition-colors group"
+                                title="删除提示词"
+                              >
+                                <TrashIcon className="h-5 w-5 text-gray-400 group-hover:text-neon-red" />
                               </button>
                             </div>
                           </div>
