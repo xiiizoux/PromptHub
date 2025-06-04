@@ -36,8 +36,8 @@ RUN cd mcp && npm install && \
     npm install --save-dev dotenv-cli@latest tsx@latest typescript@latest && \
     npm install --save dotenv@latest
 
-# 安装Web依赖 - 为UI库预留更多内存
-RUN cd web && NODE_OPTIONS="--max-old-space-size=4096" npm install
+# 安装Web依赖 - 为UI库预留更多内存并解决依赖冲突
+RUN cd web && NODE_OPTIONS="--max-old-space-size=4096" npm install --legacy-peer-deps
 
 # 安装Supabase依赖
 RUN cd supabase && npm install
@@ -51,11 +51,11 @@ COPY . .
 # 构建MCP服务
 RUN cd mcp && npm run build
 
-# 构建Web应用 - 为重型UI库构建预留更多内存和时间
+# 构建Web应用 - 为重型UI库构建预留更多内存和时间并解决依赖冲突
 RUN cd web && \
     NODE_OPTIONS="--max-old-space-size=4096" \
     NODE_ENV=production \
-    npm run build
+    npm run build --legacy-peer-deps
 
 # 创建必要的目录
 RUN mkdir -p /app/logs /app/mcp/data
