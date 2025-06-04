@@ -69,7 +69,7 @@ SUPABASE_SERVICE_ROLE_KEY=your-supabase-service-key
 
 ```bash
 # 使用部署脚本（推荐）
-./deploy-docker.sh
+./docker-deploy.sh
 
 # 或手动部署
 docker-compose up -d
@@ -261,7 +261,7 @@ sudo systemctl stop <service-name>
 ```bash
 # 修复文件权限
 sudo chown -R $USER:$USER .
-chmod +x deploy-docker.sh docker-start.sh
+chmod +x docker-deploy.sh docker-start.sh
 ```
 
 #### 3. 内存不足

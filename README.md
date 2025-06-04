@@ -160,10 +160,10 @@ Prompt Hub是一个综合性的提示词服务平台，专为大型语言模型(
 
 ```bash
 # 给脚本执行权限
-chmod +x deploy-docker.sh
+chmod +x docker-deploy.sh
 
 # 运行一键部署
-./deploy-docker.sh
+./docker-deploy.sh
 ```
 
 部署脚本会自动：

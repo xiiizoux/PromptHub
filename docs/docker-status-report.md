@@ -11,7 +11,7 @@
 - ✅ **Dockerfile.optimized**：多阶段构建优化版本完整
 - ✅ **docker-compose.yml**：完整的服务编排配置
 - ✅ **docker-start.sh**：容器启动脚本正确
-- ✅ **deploy-docker.sh**：一键部署脚本功能完整
+- ✅ **docker-deploy.sh**：一键部署脚本功能完整
 - ✅ **test-docker.sh**：Docker测试脚本完整
 - ✅ **nginx.conf**：反向代理配置正确
 
@@ -79,7 +79,7 @@ docker-compose --profile local-db up -d
 docker-compose --profile local-db --profile cache --profile proxy up -d
 
 # 一键部署
-./deploy-docker.sh
+./docker-deploy.sh
 ```
 
 ## 🔧 可用的Docker脚本
@@ -92,7 +92,7 @@ docker-compose --profile local-db --profile cache --profile proxy up -d
 
 ### 测试和部署
 - `./test-docker.sh` - 完整测试流程
-- `./deploy-docker.sh` - 一键部署
+- `./docker-deploy.sh` - 一键部署
 - `npm run docker:test` - 运行测试
 - `npm run docker:cleanup` - 清理环境
 
@@ -118,7 +118,7 @@ docker-compose --profile local-db --profile cache up -d
 ### 3. 生产环境
 ```bash
 # 包含反向代理的完整栈
-./deploy-docker.sh
+./docker-deploy.sh
 ```
 
 ## 📈 健康检查

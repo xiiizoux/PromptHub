@@ -51,7 +51,7 @@
     "docker:clean": "docker-compose down -v --remove-orphans",
     "docker:test": "./test-docker.sh",
     "docker:cleanup": "./test-docker.sh cleanup",
-    "docker:deploy": "./deploy-docker.sh",
+    "docker:deploy": "./docker-deploy.sh",
     "supabase:start": "cd supabase && supabase start",
     "supabase:stop": "cd supabase && supabase stop",
     "supabase:reset": "cd supabase && supabase db reset",

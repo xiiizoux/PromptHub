@@ -1,5 +1,5 @@
 #!/bin/bash
-# deploy-docker.sh - PromptHub Docker部署脚本
+# docker-deploy.sh - PromptHub Docker部署脚本
 
 set -e
 
@@ -132,7 +132,7 @@ show_access_info() {
     echo "查看日志: docker-compose logs -f"
     echo "重启服务: docker-compose restart"
     echo "停止服务: docker-compose down"
-    echo "更新服务: ./deploy-docker.sh"
+    echo "更新服务: ./docker-deploy.sh"
 }
 
 # 主函数

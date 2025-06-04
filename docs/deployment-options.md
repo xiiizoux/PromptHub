@@ -128,10 +128,10 @@ Docker部署是推荐的生产环境部署方式，提供了完整的容器化�
 
 ```bash
 # 给脚本执行权限
-chmod +x deploy-docker.sh
+chmod +x docker-deploy.sh
 
 # 运行部署脚本
-./deploy-docker.sh
+./docker-deploy.sh
 ```
 
 部署脚本会自动：
