@@ -2,18 +2,25 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { GetServerSideProps } from 'next';
 import { useForm, Controller } from 'react-hook-form';
+import { motion, AnimatePresence } from 'framer-motion';
 import { updatePrompt, getCategories, getTags, getPromptDetails } from '@/lib/api';
 import { PromptDetails, PermissionCheck } from '@/types';
 import Link from 'next/link';
-import { 
-  ChevronLeftIcon, 
-  XMarkIcon, 
-  PlusCircleIcon, 
-  LockClosedIcon, 
+import {
+  ChevronLeftIcon,
+  XMarkIcon,
+  PlusCircleIcon,
+  LockClosedIcon,
   ArrowRightIcon,
   ExclamationTriangleIcon,
   CheckCircleIcon,
-  ShieldExclamationIcon
+  ShieldExclamationIcon,
+  SparklesIcon,
+  CodeBracketIcon,
+  TagIcon,
+  DocumentTextIcon,
+  UserIcon,
+  CpuChipIcon
 } from '@heroicons/react/24/outline';
 import { useAuth, withAuth } from '@/contexts/AuthContext';
 import { 
@@ -37,6 +44,7 @@ const MODEL_OPTIONS = ['GPT-4', 'GPT-3.5', 'Claude-2', 'Claude-Instant', 'Gemini
 
 type PromptFormData = Omit<PromptDetails, 'created_at' | 'updated_at'> & {
   is_public?: boolean;
+  version?: string | number; // 允许版本字段为字符串或数字
 };
 
 interface EditPromptPageProps {
@@ -122,7 +130,7 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
       description: prompt.description,
       content: prompt.content,
       category: prompt.category,
-      version: currentVersionFormatted,
+      version: currentVersionFormatted as any,
       author: prompt.author || user?.display_name || user?.username || '',
       template_format: prompt.template_format || 'text',
       input_variables: prompt.input_variables || [],
@@ -257,7 +265,7 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
       description: prompt.description,
       content: prompt.content,
       category: prompt.category,
-      version: prompt.version || '1.0',
+      version: (prompt.version || '1.0') as any,
       author: prompt.author || user?.display_name || user?.username || '',
       template_format: prompt.template_format || 'text',
       input_variables: prompt.input_variables || [],
@@ -343,357 +351,459 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
   }
 
   return (
-    <div className="bg-gray-50 min-h-screen py-8">
-      <div className="container-custom">
-        {/* 返回按钮 */}
-        <div className="mb-6">
-          <Link href={`/prompts/${prompt.name}`} className="inline-flex items-center text-sm font-medium text-primary-600 hover:text-primary-700">
-            <ChevronLeftIcon className="h-5 w-5 mr-1" />
-            返回提示词详情
-          </Link>
-        </div>
+    <div className="min-h-screen bg-dark-bg-primary relative overflow-hidden">
+      {/* 背景网格效果 */}
+      <div className="fixed inset-0 bg-grid-pattern opacity-10 pointer-events-none"></div>
+      
+      {/* 背景装饰元素 */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-1/4 -right-48 w-96 h-96 bg-gradient-to-br from-neon-cyan/20 to-neon-purple/20 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-1/4 -left-48 w-96 h-96 bg-gradient-to-tr from-neon-pink/20 to-neon-purple/20 rounded-full blur-3xl"></div>
+      </div>
 
-        {/* 权限提示 */}
-        {permissionCheck && permissionCheck.canEdit && (
-          <div className="mb-6 bg-blue-50 border border-blue-200 rounded-md p-4">
-            <div className="flex">
-              <CheckCircleIcon className="h-5 w-5 text-blue-400" />
-              <div className="ml-3">
-                <p className="text-sm font-medium text-blue-800">
-                  编辑权限确认
-                </p>
-                <p className="text-sm text-blue-700 mt-1">
-                  {permissionCheck.message}
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
-        
-        {/* 成功提示 */}
-        {saveSuccess && (
-          <div className="mb-6 bg-green-50 border border-green-200 rounded-md p-4">
-            <div className="flex">
-              <CheckCircleIcon className="h-5 w-5 text-green-400" />
-              <div className="ml-3">
-                <p className="text-sm font-medium text-green-800">
-                  提示词已成功更新！
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
+      <div className="relative z-10 py-16">
+        <div className="container-custom">
+          {/* 返回按钮 */}
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="mb-8"
+          >
+            <Link
+              href={`/prompts/${prompt.name}`}
+              className="inline-flex items-center text-neon-cyan hover:text-neon-purple transition-colors duration-300 group"
+            >
+              <ChevronLeftIcon className="h-5 w-5 mr-2 group-hover:-translate-x-1 transition-transform duration-300" />
+              返回提示词详情
+            </Link>
+          </motion.div>
 
-        {/* 未保存更改提示 */}
-        {hasUnsavedChanges && (
-          <div className="mb-6 bg-yellow-50 border border-yellow-200 rounded-md p-4">
-            <div className="flex">
-              <ExclamationTriangleIcon className="h-5 w-5 text-yellow-400" />
-              <div className="ml-3">
-                <p className="text-sm font-medium text-yellow-800">
-                  您有未保存的更改
-                </p>
-                <p className="text-sm text-yellow-700 mt-1">
-                  请记得保存您的更改，否则离开页面时将丢失。
-                </p>
+          {/* 权限提示 */}
+          {permissionCheck && permissionCheck.canEdit && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mb-6 glass rounded-xl border border-neon-cyan/20 p-4"
+            >
+              <div className="flex">
+                <CheckCircleIcon className="h-5 w-5 text-neon-cyan" />
+                <div className="ml-3">
+                  <p className="text-sm font-medium text-white">
+                    编辑权限确认
+                  </p>
+                  <p className="text-sm text-gray-400 mt-1">
+                    {permissionCheck.message}
+                  </p>
+                </div>
               </div>
-            </div>
-          </div>
-        )}
-        
-        <div className="bg-white shadow-sm rounded-lg overflow-hidden">
-          {/* 页面标题 */}
-          <div className="p-6 border-b border-gray-200">
-            <h1 className="text-2xl font-bold text-gray-900">编辑提示词</h1>
-            <p className="mt-2 text-gray-600">
-              编辑 "{prompt.name}" 的详细信息。所有带 * 的字段为必填项。
-            </p>
-          </div>
+            </motion.div>
+          )}
           
-          {/* 表单内容 */}
-          <form onSubmit={handleSubmit(onSubmit)} className="p-6">
-            <div className="space-y-6">
+          {/* 成功提示 */}
+          {saveSuccess && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mb-6 glass rounded-xl border border-neon-green/20 p-4"
+            >
+              <div className="flex">
+                <CheckCircleIcon className="h-5 w-5 text-neon-green" />
+                <div className="ml-3">
+                  <p className="text-sm font-medium text-white">
+                    提示词已成功更新！
+                  </p>
+                </div>
+              </div>
+            </motion.div>
+          )}
+
+          {/* 未保存更改提示 */}
+          {hasUnsavedChanges && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mb-6 glass rounded-xl border border-neon-orange/20 p-4"
+            >
+              <div className="flex">
+                <ExclamationTriangleIcon className="h-5 w-5 text-neon-orange" />
+                <div className="ml-3">
+                  <p className="text-sm font-medium text-white">
+                    您有未保存的更改
+                  </p>
+                  <p className="text-sm text-gray-400 mt-1">
+                    请记得保存您的更改，否则离开页面时将丢失。
+                  </p>
+                </div>
+              </div>
+            </motion.div>
+          )}
+
+          {/* 页面标题 */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            className="mb-12 text-center"
+          >
+            <motion.h1
+              className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-neon-cyan via-neon-purple to-neon-pink bg-clip-text text-transparent mb-6"
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 1, delay: 0.2 }}
+            >
+              编辑提示词
+            </motion.h1>
+            <motion.p
+              className="text-xl text-gray-400 max-w-3xl mx-auto leading-relaxed"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.4 }}
+            >
+              编辑 "{prompt.name}" 的详细信息。所有带 * 的字段为必填项。
+            </motion.p>
+          </motion.div>
+          
+          {/* 表单容器 */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.6 }}
+            className="glass rounded-3xl border border-neon-cyan/20 shadow-2xl p-8"
+          >
+          
+            <form onSubmit={handleSubmit(onSubmit as any)} className="space-y-8">
               {/* 基本信息 */}
-              <div>
-                <h3 className="text-lg font-medium text-gray-900 mb-4">基本信息</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {/* 提示词名称 */}
-                  <div>
-                    <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
-                      提示词名称 *
-                    </label>
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.8 }}
+                className="grid grid-cols-1 lg:grid-cols-2 gap-8"
+              >
+                <div className="space-y-2">
+                  <label className="flex items-center text-sm font-medium text-gray-300 mb-3">
+                    <SparklesIcon className="h-5 w-5 text-neon-cyan mr-2" />
+                    提示词名称 *
+                  </label>
+                  <input
+                    {...register('name', {
+                      required: '提示词名称是必填的',
+                      pattern: {
+                        value: /^[a-zA-Z0-9_-]+$/,
+                        message: '名称只能包含字母、数字、下划线和连字符'
+                      }
+                    })}
+                    type="text"
+                    placeholder="提示词名称无法修改"
+                    className="input-primary w-full bg-dark-bg-secondary/50 text-gray-400"
+                    disabled
+                  />
+                  {errors.name && (
+                    <p className="text-neon-red text-sm mt-1">{errors.name.message}</p>
+                  )}
+                  <p className="text-xs text-gray-500">
+                    提示词的唯一标识符，编辑时无法修改
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="flex items-center text-sm font-medium text-gray-300 mb-3">
+                    <CodeBracketIcon className="h-5 w-5 text-neon-purple mr-2" />
+                    版本 *
+                  </label>
+                  <div className="flex items-center space-x-2">
                     <input
                       type="text"
-                      id="name"
-                      className="input"
-                      placeholder="例如：code_assistant"
-                      {...register('name', { 
-                        required: '提示词名称是必填的',
-                        pattern: {
-                          value: /^[a-zA-Z0-9_-]+$/,
-                          message: '名称只能包含字母、数字、下划线和连字符'
+                      className="input-primary w-full"
+                      placeholder="例如：1.0"
+                      {...register('version', {
+                        required: '版本是必填的',
+                        validate: (value) => {
+                          if (!value) {
+                            return '版本是必填的';
+                          }
+                          if (!validateVersionFormat(String(value))) {
+                            return '版本号格式错误，应为 X.Y 格式（如：1.0, 2.5）';
+                          }
+                          if (!canIncrementVersion(currentVersionFormatted, String(value))) {
+                            return `新版本号必须大于当前版本 ${currentVersionFormatted}`;
+                          }
+                          return true;
                         }
                       })}
-                      disabled // 通常编辑时不允许修改名称
                     />
-                    {errors.name && (
-                      <p className="mt-1 text-sm text-red-600">{errors.name.message}</p>
-                    )}
-                    <p className="mt-1 text-xs text-gray-500">
-                      提示词的唯一标识符，编辑时无法修改
-                    </p>
-                  </div>
-
-                  {/* 版本 */}
-                  <div>
-                    <label htmlFor="version" className="block text-sm font-medium text-gray-700 mb-1">
-                      版本 *
-                    </label>
-                    <div className="flex items-center space-x-2">
-                      <input
-                        type="text"
-                        id="version"
-                        className="input flex-1"
-                        placeholder="例如：1.0"
-                        {...register('version', { 
-                          required: '版本是必填的',
-                          validate: (value) => {
-                            if (!value) {
-                              return '版本是必填的';
-                            }
-                            if (!validateVersionFormat(value)) {
-                              return '版本号格式错误，应为 X.Y 格式（如：1.0, 2.5）';
-                            }
-                            if (!canIncrementVersion(currentVersionFormatted, value)) {
-                              return `新版本号必须大于当前版本 ${currentVersionFormatted}`;
-                            }
-                            return true;
-                          }
-                        })}
-                      />
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const currentVersion = watch('version') || currentVersionFormatted;
-                          const suggested = suggestNextVersion(currentVersion, 'minor');
-                          setValue('version', suggested);
-                        }}
-                        className="btn-secondary text-sm px-3 py-1"
-                        title="建议下一版本"
-                      >
-                        +0.1
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const suggested = suggestNextVersion(currentVersionFormatted, 'major');
-                          setValue('version', suggested);
-                        }}
-                        className="btn-secondary text-sm px-3 py-1"
-                        title="建议主版本"
-                      >
-                        +1.0
-                      </button>
-                    </div>
-                    {errors.version && (
-                      <p className="mt-1 text-sm text-red-600">{errors.version.message}</p>
-                    )}
-                    <p className="mt-1 text-xs text-gray-500">
-                      当前版本：{currentVersionFormatted}，新版本必须递增且保留1位小数
-                    </p>
-                  </div>
-
-                  {/* 作者 */}
-                  <div>
-                    <label htmlFor="author" className="block text-sm font-medium text-gray-700 mb-1">
-                      作者
-                    </label>
-                    <input
-                      type="text"
-                      id="author"
-                      className="input"
-                      placeholder="作者姓名"
-                      {...register('author')}
-                      disabled={!checkFieldPermission('author', permissionCheck)}
-                    />
-                    {!checkFieldPermission('author', permissionCheck) && (
-                      <p className="mt-1 text-xs text-gray-500">
-                        只有创建者和管理员可以修改作者信息
-                      </p>
-                    )}
-                  </div>
-
-                  {/* 分类 */}
-                  <div>
-                    <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-1">
-                      分类 *
-                    </label>
-                    <select
-                      id="category"
-                      className="input"
-                      {...register('category', { required: '分类是必填的' })}
-                      disabled={categoriesLoading}
-                    >
-                      <option value="">选择分类</option>
-                      {categories.map(category => (
-                        <option key={category} value={category}>{category}</option>
-                      ))}
-                    </select>
-                    {errors.category && (
-                      <p className="mt-1 text-sm text-red-600">{errors.category.message}</p>
-                    )}
-                  </div>
-                </div>
-
-                {/* 描述 */}
-                <div className="mt-6">
-                  <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
-                    描述 *
-                  </label>
-                  <textarea
-                    id="description"
-                    rows={3}
-                    className="input"
-                    placeholder="简要描述这个提示词的用途和特点"
-                    {...register('description', { required: '描述是必填的' })}
-                  />
-                  {errors.description && (
-                    <p className="mt-1 text-sm text-red-600">{errors.description.message}</p>
-                  )}
-                </div>
-              </div>
-
-              {/* 提示词内容 */}
-              <div>
-                <h3 className="text-lg font-medium text-gray-900 mb-4">提示词内容</h3>
-                
-                {/* 模板格式 */}
-                <div className="mb-4">
-                  <label htmlFor="template_format" className="block text-sm font-medium text-gray-700 mb-1">
-                    模板格式
-                  </label>
-                  <select
-                    id="template_format"
-                    className="input max-w-xs"
-                    {...register('template_format')}
-                  >
-                    <option value="text">纯文本</option>
-                    <option value="json">JSON</option>
-                    <option value="yaml">YAML</option>
-                    <option value="markdown">Markdown</option>
-                  </select>
-                </div>
-
-                {/* 提示词内容 */}
-                <div>
-                  <label htmlFor="content" className="block text-sm font-medium text-gray-700 mb-1">
-                    提示词内容 *
-                  </label>
-                  <textarea
-                    id="content"
-                    rows={12}
-                    className="input font-mono text-sm"
-                    placeholder="输入您的提示词内容。使用 {{变量名}} 来定义变量。"
-                    {...register('content', { required: '提示词内容是必填的' })}
-                    onBlur={detectVariables}
-                  />
-                  {errors.content && (
-                    <p className="mt-1 text-sm text-red-600">{errors.content.message}</p>
-                  )}
-                  <div className="mt-2 flex space-x-4">
                     <button
                       type="button"
-                      onClick={detectVariables}
-                      className="text-sm text-primary-600 hover:text-primary-700"
+                      onClick={() => {
+                        const currentVersion = watch('version') || currentVersionFormatted;
+                        const suggested = suggestNextVersion(String(currentVersion), 'minor');
+                        setValue('version', suggested as any);
+                      }}
+                      className="btn-secondary text-sm px-3 py-1"
+                      title="建议下一版本"
                     >
-                      自动检测变量
+                      +0.1
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const suggested = suggestNextVersion(String(currentVersionFormatted), 'major');
+                        setValue('version', suggested as any);
+                      }}
+                      className="btn-secondary text-sm px-3 py-1"
+                      title="建议主版本"
+                    >
+                      +1.0
                     </button>
                   </div>
+                  {errors.version && (
+                    <p className="text-neon-red text-sm mt-1">{errors.version.message}</p>
+                  )}
+                  <p className="text-xs text-gray-500">
+                    当前版本：{currentVersionFormatted}，新版本必须递增且保留1位小数
+                  </p>
                 </div>
-              </div>
+              </motion.div>
 
-              {/* 输入变量 */}
-              <div>
-                <h3 className="text-lg font-medium text-gray-900 mb-4">输入变量</h3>
-                <p className="text-sm text-gray-600 mb-4">
-                  定义提示词中使用的变量。变量在提示词中使用 {`{{变量名}}`} 的格式。
-                </p>
+              {/* 分类和作者 */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 1 }}
+                className="grid grid-cols-1 lg:grid-cols-2 gap-8"
+              >
+                <div className="space-y-2">
+                  <label className="flex items-center text-sm font-medium text-gray-300 mb-3">
+                    <TagIcon className="h-5 w-5 text-neon-cyan mr-2" />
+                    分类 *
+                  </label>
+                  <select
+                    {...register('category', { required: '请选择分类' })}
+                    className="input-primary w-full"
+                    disabled={categoriesLoading}
+                  >
+                    <option value="">选择分类</option>
+                    {categories.map((category) => (
+                      <option key={category} value={category}>
+                        {category}
+                      </option>
+                    ))}
+                  </select>
+                  {errors.category && (
+                    <p className="text-neon-red text-sm mt-1">{errors.category.message}</p>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <label className="flex items-center text-sm font-medium text-gray-300 mb-3">
+                    <UserIcon className="h-5 w-5 text-neon-purple mr-2" />
+                    作者
+                  </label>
+                  <input
+                    {...register('author')}
+                    type="text"
+                    placeholder={user?.username || "您的名字"}
+                    className="input-primary w-full"
+                    disabled={!checkFieldPermission('author', permissionCheck)}
+                  />
+                  {!checkFieldPermission('author', permissionCheck) && (
+                    <p className="text-xs text-gray-500">
+                      只有创建者和管理员可以修改作者信息
+                    </p>
+                  )}
+                </div>
+              </motion.div>
+
+              {/* 公开/私有选项 */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 1.1 }}
+                className="flex items-center justify-between p-4 border border-neon-cyan/20 rounded-xl bg-dark-bg-secondary"
+              >
+                <div className="flex items-center">
+                  <div className="mr-3 text-neon-cyan">
+                    {watch('is_public') ? (
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064" />
+                      </svg>
+                    ) : (
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                      </svg>
+                    )}
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-medium text-gray-300">{watch('is_public') ? '公开分享' : '私人提示词'}</h3>
+                    <p className="text-gray-400 text-sm">{watch('is_public') ? '所有人可以看到并使用您的提示词' : '只有您自己可以访问此提示词'}</p>
+                  </div>
+                </div>
+                <div className="flex items-center">
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      className="sr-only peer"
+                      {...register('is_public')}
+                      disabled={!checkFieldPermission('is_public', permissionCheck)}
+                    />
+                    <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-neon-cyan rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-neon-cyan"></div>
+                  </label>
+                </div>
+              </motion.div>
+
+              {/* 描述 */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 1.2 }}
+                className="space-y-2"
+              >
+                <label className="flex items-center text-sm font-medium text-gray-300 mb-3">
+                  <DocumentTextIcon className="h-5 w-5 text-neon-cyan mr-2" />
+                  描述 *
+                </label>
+                <textarea
+                  {...register('description', { required: '请输入描述' })}
+                  rows={3}
+                  placeholder="简要描述您的提示词的用途和特点..."
+                  className="input-primary w-full resize-none"
+                />
+                {errors.description && (
+                  <p className="text-neon-red text-sm mt-1">{errors.description.message}</p>
+                )}
+              </motion.div>
+
+              {/* 提示词内容 */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 1.4 }}
+                className="space-y-2"
+              >
+                <label className="flex items-center text-sm font-medium text-gray-300 mb-3">
+                  <SparklesIcon className="h-5 w-5 text-neon-cyan mr-2" />
+                  提示词内容 *
+                </label>
+                <div className="relative">
+                  <textarea
+                    {...register('content', { required: '请输入提示词内容' })}
+                    rows={8}
+                    placeholder="在这里输入您的提示词内容。使用 {{变量名}} 来定义可替换的变量..."
+                    className="input-primary w-full resize-none font-mono"
+                    onChange={detectVariables}
+                  />
+                  <div className="absolute top-3 right-3 text-xs text-gray-500">
+                    使用 {`{{变量名}}`} 定义变量
+                  </div>
+                </div>
+                {errors.content && (
+                  <p className="text-neon-red text-sm mt-1">{errors.content.message}</p>
+                )}
+              </motion.div>
+
+              {/* 变量管理 */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 1.6 }}
+                className="space-y-4"
+              >
+                <label className="flex items-center text-sm font-medium text-gray-300">
+                  <CodeBracketIcon className="h-5 w-5 text-neon-purple mr-2" />
+                  输入变量
+                </label>
                 
                 {/* 添加变量 */}
-                <div className="flex space-x-2 mb-4">
+                <div className="flex space-x-3">
                   <input
                     type="text"
                     value={variableInput}
                     onChange={(e) => setVariableInput(e.target.value)}
-                    placeholder="变量名"
-                    className="input flex-1"
+                    placeholder="输入变量名"
+                    className="input-primary flex-1"
                     onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addVariable())}
                   />
-                  <button
+                  <motion.button
                     type="button"
                     onClick={addVariable}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
                     className="btn-secondary"
                   >
-                    <PlusCircleIcon className="h-4 w-4 mr-1" />
-                    添加
-                  </button>
+                    <PlusCircleIcon className="h-5 w-5" />
+                  </motion.button>
                 </div>
 
                 {/* 变量列表 */}
-                {variables.length > 0 && (
-                  <div className="flex flex-wrap gap-2">
-                    {variables.map(variable => (
-                      <span
-                        key={variable}
-                        className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800"
-                      >
-                        {variable}
-                        <button
-                          type="button"
-                          onClick={() => removeVariable(variable)}
-                          className="ml-2 text-blue-600 hover:text-blue-800"
+                <AnimatePresence>
+                  {variables.length > 0 && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="flex flex-wrap gap-2"
+                    >
+                      {variables.map((variable) => (
+                        <motion.span
+                          key={variable}
+                          initial={{ opacity: 0, scale: 0.8 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          exit={{ opacity: 0, scale: 0.8 }}
+                          className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-neon-cyan/20 text-neon-cyan border border-neon-cyan/30"
                         >
-                          <XMarkIcon className="h-4 w-4" />
-                        </button>
-                      </span>
-                    ))}
-                  </div>
-                )}
-              </div>
+                          {variable}
+                          <button
+                            type="button"
+                            onClick={() => removeVariable(variable)}
+                            className="ml-2 hover:text-neon-red transition-colors"
+                          >
+                            <XMarkIcon className="h-4 w-4" />
+                          </button>
+                        </motion.span>
+                      ))}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </motion.div>
 
-              {/* 标签 */}
-              <div>
-                <h3 className="text-lg font-medium text-gray-900 mb-4">标签</h3>
-                <p className="text-sm text-gray-600 mb-4">
-                  添加标签以便更好地分类和搜索提示词。
-                </p>
+              {/* 标签管理 */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 1.8 }}
+                className="space-y-4"
+              >
+                <label className="flex items-center text-sm font-medium text-gray-300">
+                  <TagIcon className="h-5 w-5 text-neon-purple mr-2" />
+                  标签
+                </label>
                 
                 {/* 添加标签 */}
-                <div className="flex space-x-2 mb-4">
+                <div className="flex space-x-3">
                   <input
                     type="text"
                     value={tagInput}
                     onChange={(e) => setTagInput(e.target.value)}
-                    placeholder="标签名"
-                    className="input flex-1"
+                    placeholder="输入标签"
+                    className="input-primary flex-1"
                     onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addTag())}
                   />
-                  <button
+                  <motion.button
                     type="button"
                     onClick={addTag}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
                     className="btn-secondary"
                   >
-                    <PlusCircleIcon className="h-4 w-4 mr-1" />
-                    添加
-                  </button>
+                    <PlusCircleIcon className="h-5 w-5" />
+                  </motion.button>
                 </div>
 
-                {/* 建议标签 */}
+                {/* 推荐标签 */}
                 {!tagsLoading && suggestedTags.length > 0 && (
-                  <div className="mb-4">
-                    <p className="text-sm font-medium text-gray-700 mb-2">建议标签：</p>
+                  <div className="space-y-2">
+                    <p className="text-xs text-gray-500">推荐标签：</p>
                     <div className="flex flex-wrap gap-2">
-                      {suggestedTags.filter(tag => !tags.includes(tag)).slice(0, 10).map(tag => (
+                      {suggestedTags.filter(tag => !tags.includes(tag)).slice(0, 10).map((tag) => (
                         <button
                           key={tag}
                           type="button"
@@ -702,10 +812,9 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
                             setTags(newTags);
                             setValue('tags', newTags);
                           }}
-                          className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 hover:bg-gray-200"
+                          className={`px-3 py-1 rounded-full text-sm border transition-all duration-300 bg-dark-bg-secondary/50 text-gray-400 border-gray-600 hover:border-neon-purple hover:text-neon-purple`}
                         >
                           {tag}
-                          <PlusCircleIcon className="ml-1 h-3 w-3" />
                         </button>
                       ))}
                     </div>
@@ -713,190 +822,183 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
                 )}
 
                 {/* 已选标签 */}
-                {tags.length > 0 && (
-                  <div className="flex flex-wrap gap-2">
-                    {tags.map(tag => (
-                      <span
-                        key={tag}
-                        className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800"
-                      >
-                        {tag}
-                        <button
-                          type="button"
-                          onClick={() => removeTag(tag)}
-                          className="ml-2 text-green-600 hover:text-green-800"
+                <AnimatePresence>
+                  {tags.length > 0 && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="flex flex-wrap gap-2"
+                    >
+                      {tags.map((tag) => (
+                        <motion.span
+                          key={tag}
+                          initial={{ opacity: 0, scale: 0.8 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          exit={{ opacity: 0, scale: 0.8 }}
+                          className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-neon-purple/20 text-neon-purple border border-neon-purple/30"
                         >
-                          <XMarkIcon className="h-4 w-4" />
-                        </button>
-                      </span>
-                    ))}
-                  </div>
-                )}
-              </div>
+                          {tag}
+                          <button
+                            type="button"
+                            onClick={() => removeTag(tag)}
+                            className="ml-2 hover:text-neon-red transition-colors"
+                          >
+                            <XMarkIcon className="h-4 w-4" />
+                          </button>
+                        </motion.span>
+                      ))}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </motion.div>
 
               {/* 兼容模型 */}
-              <div>
-                <h3 className="text-lg font-medium text-gray-900 mb-4">兼容模型</h3>
-                <p className="text-sm text-gray-600 mb-4">
-                  选择与此提示词兼容的AI模型。
-                </p>
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 2 }}
+                className="space-y-4"
+              >
+                <label className="flex items-center text-sm font-medium text-gray-300">
+                  <CpuChipIcon className="h-5 w-5 text-neon-cyan mr-2" />
+                  兼容模型
+                </label>
                 
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-                  {MODEL_OPTIONS.map(model => (
-                    <label
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  {MODEL_OPTIONS.map((model) => (
+                    <motion.button
                       key={model}
-                      className="relative flex items-center p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50"
+                      type="button"
+                      onClick={() => toggleModel(model)}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      className={`p-3 rounded-xl border transition-all duration-300 ${
+                        models.includes(model)
+                          ? 'bg-neon-cyan/20 text-neon-cyan border-neon-cyan/50 shadow-neon-sm'
+                          : 'bg-dark-bg-secondary/50 text-gray-400 border-gray-600 hover:border-neon-cyan hover:text-neon-cyan'
+                      }`}
                     >
-                      <input
-                        type="checkbox"
-                        checked={models.includes(model)}
-                        onChange={() => toggleModel(model)}
-                        className="sr-only"
-                      />
-                      <div className={`flex-1 ${models.includes(model) ? 'text-primary-700' : 'text-gray-700'}`}>
-                        <div className="text-sm font-medium">{model}</div>
-                      </div>
-                      {models.includes(model) && (
-                        <CheckCircleIcon className="h-5 w-5 text-primary-600" />
-                      )}
-                    </label>
+                      {model}
+                    </motion.button>
                   ))}
                 </div>
-              </div>
+              </motion.div>
 
               {/* 可见性和权限设置 */}
-              <div>
-                <h3 className="text-lg font-medium text-gray-900 mb-4">可见性和权限设置</h3>
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 2.1 }}
+                className="space-y-4"
+              >
+                <label className="flex items-center text-sm font-medium text-gray-300">
+                  <ShieldExclamationIcon className="h-5 w-5 text-neon-purple mr-2" />
+                  协作设置
+                </label>
                 
-                <div className="space-y-4">
-                  {/* 公开设置 */}
-                  <Controller
-                    name="is_public"
-                    control={control}
-                    render={({ field }) => (
-                      <label className="relative flex items-start p-4 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50">
-                        <div className="flex items-center h-5">
-                          <input
-                            type="checkbox"
-                            checked={field.value}
-                            onChange={field.onChange}
-                            className="h-4 w-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
-                            disabled={!checkFieldPermission('is_public', permissionCheck)}
-                          />
-                        </div>
-                        <div className="ml-3">
-                          <div className="text-sm font-medium text-gray-900">
-                            公开提示词
-                          </div>
-                          <div className="text-sm text-gray-500">
-                            允许其他用户查看和使用这个提示词
-                          </div>
-                          {!checkFieldPermission('is_public', permissionCheck) && (
-                            <div className="text-xs text-orange-600 mt-1">
-                              您无权修改提示词的可见性设置
-                            </div>
-                          )}
-                        </div>
-                        {!field.value && (
-                          <LockClosedIcon className="ml-auto h-5 w-5 text-gray-400" />
-                        )}
-                      </label>
-                    )}
-                  />
-
-                  {/* 协作设置 */}
-                  <div className="relative flex items-start p-4 border border-gray-200 rounded-lg">
-                    <div className="flex items-center h-5">
-                      <input
-                        type="checkbox"
-                        checked={watch('allow_collaboration') || false}
-                        onChange={(e) => setValue('allow_collaboration', e.target.checked)}
-                        className="h-4 w-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
-                        disabled={!checkFieldPermission('allow_collaboration', permissionCheck)}
-                      />
-                    </div>
-                    <div className="ml-3">
-                      <div className="text-sm font-medium text-gray-900">
-                        允许协作编辑
-                      </div>
-                      <div className="text-sm text-gray-500">
-                        允许其他贡献者编辑这个提示词（仅在公开时有效）
-                      </div>
-                      {!checkFieldPermission('allow_collaboration', permissionCheck) && (
-                        <div className="text-xs text-orange-600 mt-1">
-                          您无权修改协作设置
-                        </div>
-                      )}
-                    </div>
+                <div className="relative flex items-start p-4 border border-neon-cyan/20 rounded-xl bg-dark-bg-secondary">
+                  <div className="flex items-center h-5">
+                    <input
+                      type="checkbox"
+                      checked={watch('allow_collaboration') || false}
+                      onChange={(e) => setValue('allow_collaboration', e.target.checked)}
+                      className="h-4 w-4 text-neon-cyan border-gray-600 rounded focus:ring-neon-cyan"
+                      disabled={!checkFieldPermission('allow_collaboration', permissionCheck)}
+                    />
                   </div>
-
-                  {/* 编辑权限级别 */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      编辑权限级别
-                    </label>
-                    <select
-                      value={watch('edit_permission') || PERMISSION_LEVELS.OWNER_ONLY}
-                      onChange={(e) => setValue('edit_permission', e.target.value as any)}
-                      className="input"
-                      disabled={!checkFieldPermission('edit_permission', permissionCheck)}
-                    >
-                      {Object.entries(PERMISSION_LEVEL_DESCRIPTIONS).map(([key, description]) => (
-                        <option key={key} value={key}>
-                          {description}
-                        </option>
-                      ))}
-                    </select>
-                    {!checkFieldPermission('edit_permission', permissionCheck) && (
-                      <p className="mt-1 text-xs text-orange-600">
-                        您无权修改编辑权限设置
-                      </p>
+                  <div className="ml-3">
+                    <div className="text-sm font-medium text-gray-300">
+                      允许协作编辑
+                    </div>
+                    <div className="text-sm text-gray-400">
+                      允许其他贡献者编辑这个提示词（仅在公开时有效）
+                    </div>
+                    {!checkFieldPermission('allow_collaboration', permissionCheck) && (
+                      <div className="text-xs text-neon-orange mt-1">
+                        您无权修改协作设置
+                      </div>
                     )}
                   </div>
                 </div>
-              </div>
-            </div>
 
-            {/* 表单操作按钮 */}
-            <div className="mt-8 pt-6 border-t border-gray-200">
-              <div className="flex justify-between">
-                <div className="flex space-x-3">
-                  <button
-                    type="button"
-                    onClick={handleReset}
-                    className="btn-secondary"
-                    disabled={isSubmitting}
+                {/* 编辑权限级别 */}
+                <div className="p-4 border border-neon-cyan/20 rounded-xl bg-dark-bg-secondary">
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    编辑权限级别
+                  </label>
+                  <select
+                    value={watch('edit_permission') || PERMISSION_LEVELS.OWNER_ONLY}
+                    onChange={(e) => setValue('edit_permission', e.target.value as any)}
+                    className="input-primary w-full"
+                    disabled={!checkFieldPermission('edit_permission', permissionCheck)}
                   >
-                    重置
-                  </button>
-                  <Link
-                    href={`/prompts/${prompt.name}`}
-                    className="btn-secondary inline-flex items-center"
+                    {Object.entries(PERMISSION_LEVEL_DESCRIPTIONS).map(([key, description]) => (
+                      <option key={key} value={key}>
+                        {description}
+                      </option>
+                    ))}
+                  </select>
+                  {!checkFieldPermission('edit_permission', permissionCheck) && (
+                    <p className="mt-1 text-xs text-neon-orange">
+                      您无权修改编辑权限设置
+                    </p>
+                  )}
+                </div>
+              </motion.div>
+
+              {/* 提交按钮 */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 2.2 }}
+                className="flex justify-end space-x-4 pt-8"
+              >
+                <Link href={`/prompts/${prompt.name}`}>
+                  <motion.button
+                    type="button"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    className="btn-secondary"
                   >
                     取消
-                  </Link>
-                </div>
+                  </motion.button>
+                </Link>
+
+                <motion.button
+                  type="button"
+                  onClick={handleReset}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="btn-secondary"
+                  disabled={isSubmitting}
+                >
+                  重置
+                </motion.button>
                 
-                <button
+                <motion.button
                   type="submit"
                   disabled={isSubmitting || !permissionCheck?.canEdit}
-                  className="btn-primary inline-flex items-center"
+                  whileHover={{ scale: isSubmitting ? 1 : 1.05 }}
+                  whileTap={{ scale: isSubmitting ? 1 : 0.95 }}
+                  className="btn-primary flex items-center space-x-2 disabled:opacity-50"
                 >
                   {isSubmitting ? (
                     <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                      保存中...
+                      <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                      <span>保存中...</span>
                     </>
                   ) : (
                     <>
-                      保存更改
-                      <ArrowRightIcon className="ml-2 h-4 w-4" />
+                      <SparklesIcon className="h-5 w-5" />
+                      <span>保存更改</span>
+                      <ArrowRightIcon className="h-5 w-5" />
                     </>
                   )}
-                </button>
-              </div>
-            </div>
-          </form>
+                </motion.button>
+              </motion.div>
+            </form>
+          </motion.div>
         </div>
       </div>
     </div>
