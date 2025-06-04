@@ -6,18 +6,22 @@
  */
 
 // 导入MCP服务的类型定义
-import { StorageAdapter, Prompt, PromptVersion, User, AuthResponse, PromptFilters, PaginatedResponse, ApiKey } from '../types.js';
-// 导入共享的扩展Supabase适配器实例
+import { StorageAdapter, Prompt, PromptVersion, User, AuthResponse, PromptFilters, PaginatedResponse, ApiKey, Comment } from '../types.js';
 import { extendedSupabaseAdapter as supabaseAdapterInstance } from '../../../supabase/index.js';
+import { SocialStorageExtensions } from './stub-social-adapter.js';
 
 /**
  * 包装共享的Supabase适配器，确保类型兼容性
  * 添加了错误处理和日志能力
+ * 继承SocialStorageExtensions以实现社交功能相关的存根方法
  */
-export class SupabaseAdapter implements StorageAdapter {
+export class SupabaseAdapter extends SocialStorageExtensions implements StorageAdapter {
   private connectionVerified: boolean = false;
   
   constructor() {
+    // 调用父类构造函数
+    super();
+    
     // 在创建适配器时验证连接
     this.verifyConnection().catch(err => {
       console.error('警告: Supabase连接验证失败:', err.message);
@@ -31,24 +35,19 @@ export class SupabaseAdapter implements StorageAdapter {
    */
   private async verifyConnection(): Promise<boolean> {
     try {
-      // 尝试调用一个基本的方法来验证连接
-      // 获取分类列表是一个轻量级的操作
-      await supabaseAdapterInstance.getCategories();
-      this.connectionVerified = true;
-      console.log('已成功连接到Supabase存储');
-      return true;
-    } catch (error) {
-      this.connectionVerified = false;
-      const err = error as Error;
-      console.error('无法连接到Supabase:', err.message);
-      // 打印更多调试信息
-      console.error('请检查Supabase URL和密钥配置是否正确');
-      if (process.env.SUPABASE_URL) {
-        console.debug(`配置的SUPABASE_URL: ${process.env.SUPABASE_URL.substring(0, 15)}...`);
-      } else {
-        console.error('SUPABASE_URL未设置');
+      // 执行简单查询验证连接
+      const { data, error } = await supabaseAdapterInstance.supabase.from('system_settings').select('name').limit(1);
+      
+      if (error) {
+        throw new Error(`Supabase connection test failed: ${error.message}`);
       }
-      return false;
+      
+      this.connectionVerified = true;
+      return true;
+    } catch (err) {
+      this.connectionVerified = false;
+      console.error('SUPABASE_URL未设置或连接失败');
+      throw err;
     }
   }
   
@@ -214,5 +213,23 @@ export class SupabaseAdapter implements StorageAdapter {
   
   async deleteApiKey(userId: string, keyId: string): Promise<boolean> {
     return supabaseAdapterInstance.deleteApiKey(userId, keyId);
+  }
+
+  // 获取用户信息
+  async getUser(userId: string): Promise<User | null> {
+    try {
+      return await supabaseAdapterInstance.getUser(userId);
+    } catch (error) {
+      return this.handleError<User | null>('getUser', error, null);
+    }
+  }
+  
+  // 获取单条评论
+  async getComment(commentId: string): Promise<Comment | null> {
+    try {
+      return await supabaseAdapterInstance.getComment(commentId);
+    } catch (error) {
+      return this.handleError<Comment | null>('getComment', error, null);
+    }
   }
 }
