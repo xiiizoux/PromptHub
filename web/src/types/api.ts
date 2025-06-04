@@ -129,3 +129,112 @@ export namespace McpApi {
     };
   }
 }
+
+// 社交API端点
+export namespace SocialApi {
+  // 关注相关
+  export interface UserFollowRequest {
+    followingId: string;
+  }
+  export type UserFollowResponse = ApiResponse<{ success: boolean }>;
+  
+  // 点赞、收藏等互动
+  export interface InteractionRequest {
+    promptId: string;
+    type: 'like' | 'bookmark' | 'share';
+  }
+  export type InteractionResponse = ApiResponse<{ success: boolean }>;
+  
+  // 评论相关
+  export interface CommentRequest {
+    promptId: string;
+    content: string;
+    parentId?: string;
+  }
+  export type CommentResponse = ApiResponse<any>;
+  
+  // 话题相关
+  export interface TopicRequest {
+    title: string;
+    description?: string;
+  }
+  export type TopicResponse = ApiResponse<any>;
+  
+  // 话题帖子
+  export interface TopicPostRequest {
+    topicId: string;
+    title: string;
+    content: string;
+  }
+  export type TopicPostResponse = ApiResponse<any>;
+}
+
+// 通知API端点
+export namespace NotificationApi {
+  // 通知类型
+  export type NotificationType =
+    | 'follow'       // 关注通知
+    | 'like'         // 点赞通知
+    | 'comment'      // 评论通知
+    | 'reply'        // 回复通知
+    | 'mention'      // 提及通知
+    | 'system';      // 系统通知
+
+  // 通知汇总频率
+  export type DigestFrequency = 'daily' | 'weekly';
+  
+  // 通知对象
+  export interface Notification {
+    id?: string;
+    user_id: string;
+    type: NotificationType;
+    content: string;
+    related_id?: string;  // 关联的资源ID（提示词、评论等）
+    actor_id?: string;    // 触发通知的用户ID
+    is_read: boolean;
+    created_at: string;
+    actor?: {
+      id: string;
+      email: string;
+      display_name?: string;
+    };
+    group_id?: string;    // 通知分组ID
+  }
+  
+  // 通知偏好设置
+  export interface NotificationPreference {
+    id?: string;
+    user_id: string;
+    follow_notifications: boolean;
+    like_notifications: boolean;
+    comment_notifications: boolean;
+    reply_notifications: boolean;
+    mention_notifications: boolean;
+    system_notifications: boolean;
+    email_notifications: boolean;
+    push_notifications: boolean;
+    digest_notifications: boolean;
+    digest_frequency: DigestFrequency;
+    created_at?: string;
+    updated_at?: string;
+  }
+  
+  // 获取通知
+  export type GetNotificationsResponse = ApiResponse<PaginatedResponse<Notification>>;
+  
+  // 获取未读通知数量
+  export type GetUnreadCountResponse = ApiResponse<{ count: number }>;
+  
+  // 标记通知为已读
+  export interface MarkAsReadRequest {
+    notificationId?: string;
+    allNotifications?: boolean;
+  }
+  export type MarkAsReadResponse = ApiResponse<{ success: boolean }>;
+  
+  // 获取通知偏好设置
+  export type GetPreferencesResponse = ApiResponse<NotificationPreference>;
+  
+  // 更新通知偏好设置
+  export type UpdatePreferencesResponse = ApiResponse<NotificationPreference>;
+}

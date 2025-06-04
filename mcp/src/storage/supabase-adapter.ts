@@ -9,13 +9,16 @@ import {
   AuthResponse, 
   PromptFilters,
   PaginatedResponse,
-  ApiKey
+  ApiKey,
+  Comment
 } from '../types.js';
+import { SocialStorageExtensions } from './stub-social-adapter.js';
 
-export class SupabaseAdapter implements StorageAdapter {
+export class SupabaseAdapter extends SocialStorageExtensions implements StorageAdapter {
   private supabase: SupabaseClient;
 
   constructor() {
+    super();
     // 确保使用正确的配置访问Supabase URL和匿名密钥
     if (!config.supabase?.url || !config.supabase?.anonKey) {
       throw new Error('Supabase URL and anon key are required for Supabase adapter');
@@ -962,6 +965,52 @@ export class SupabaseAdapter implements StorageAdapter {
     } catch (err) {
       console.error('删除API密钥时出错:', err);
       return false;
+    }
+  }
+  
+  // 获取用户信息
+  async getUser(userId: string): Promise<User | null> {
+    try {
+      const { data, error } = await this.supabase
+        .from('users')
+        .select('*')
+        .eq('id', userId)
+        .single();
+        
+      if (error || !data) {
+        return null;
+      }
+      
+      return {
+        id: data.id,
+        email: data.email,
+        display_name: data.display_name,
+        created_at: data.created_at
+      };
+    } catch (err) {
+      console.error('获取用户信息时出错:', err);
+      return null;
+    }
+  }
+  
+  // 获取单条评论
+  async getComment(commentId: string): Promise<Comment | null> {
+    try {
+      const { data, error } = await this.supabase
+        .from('comments')
+        .select('*')
+        .eq('id', commentId)
+        .single();
+        
+      if (error || !data) {
+        return null;
+      }
+      
+      // 显式转换为自定义Comment类型，避免与DOM Comment类型冲突
+      return data as Comment;
+    } catch (err) {
+      console.error('获取评论信息时出错:', err);
+      return null;
     }
   }
 }

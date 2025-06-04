@@ -33,6 +33,104 @@ export interface PromptVersion {
   user_id?: string;
 }
 
+// 用户关注关系
+export interface UserFollow {
+  id?: string;
+  follower_id: string;
+  following_id: string;
+  created_at?: string;
+}
+
+// 社交互动（点赞、收藏、分享）
+export interface SocialInteraction {
+  id?: string;
+  prompt_id: string;
+  user_id: string;
+  type: 'like' | 'bookmark' | 'share';
+  created_at?: string;
+}
+
+// 评论
+export interface Comment {
+  id?: string;
+  prompt_id: string;
+  user_id: string;
+  content: string;
+  parent_id?: string;
+  created_at?: string;
+  updated_at?: string;
+  user?: User; // 关联的用户信息（可选）
+  replies?: Comment[]; // 回复（可选）
+}
+
+// 话题
+export interface Topic {
+  id?: string;
+  title: string;
+  description?: string;
+  creator_id: string;
+  created_at?: string;
+  updated_at?: string;
+  post_count?: number; // 帖子数量
+  creator?: User; // 创建者信息
+}
+
+// 话题帖子
+export interface TopicPost {
+  id?: string;
+  topic_id: string;
+  user_id: string;
+  title: string;
+  content: string;
+  created_at?: string;
+  updated_at?: string;
+  user?: User; // 用户信息
+}
+
+// 通知类型枚举
+export type NotificationType =
+  | 'follow'       // 关注通知
+  | 'like'         // 点赞通知
+  | 'comment'      // 评论通知
+  | 'reply'        // 回复通知
+  | 'mention'      // 提及通知
+  | 'system';      // 系统通知
+
+// 通知汇总频率
+export type DigestFrequency = 'daily' | 'weekly';
+
+// 通知接口
+export interface Notification {
+  id?: string;
+  user_id: string;
+  type: NotificationType;
+  content: string;
+  related_id?: string;  // 关联的资源ID（提示词、评论等）
+  actor_id?: string;    // 触发通知的用户ID
+  is_read: boolean;
+  created_at: string;
+  actor?: User;         // 触发通知的用户信息（可选）
+  group_id?: string;    // 通知分组ID，用于将相关通知分组显示
+}
+
+// 通知偏好设置接口
+export interface NotificationPreference {
+  id?: string;
+  user_id: string;
+  follow_notifications: boolean;
+  like_notifications: boolean;
+  comment_notifications: boolean;
+  reply_notifications: boolean;
+  mention_notifications: boolean;
+  system_notifications: boolean;
+  email_notifications: boolean;
+  push_notifications: boolean;
+  digest_notifications: boolean;
+  digest_frequency: DigestFrequency;
+  created_at?: string;
+  updated_at?: string;
+}
+
 export interface User {
   id: string;
   email: string;
@@ -144,6 +242,56 @@ export interface StorageAdapter {
   updateApiKeyLastUsed(apiKey: string): Promise<void>;
   listApiKeys(userId: string): Promise<ApiKey[]>;
   deleteApiKey(userId: string, keyId: string): Promise<boolean>;
+  
+  // 社交关系管理
+  followUser(followerId: string, followingId: string): Promise<UserFollow>;
+  unfollowUser(followerId: string, followingId: string): Promise<boolean>;
+  getUserFollowers(userId: string, page?: number, pageSize?: number): Promise<PaginatedResponse<User>>;
+  getUserFollowing(userId: string, page?: number, pageSize?: number): Promise<PaginatedResponse<User>>;
+  checkIfFollowing(followerId: string, followingId: string): Promise<boolean>;
+  
+  // 社交互动（点赞、收藏、分享）
+  createSocialInteraction(userId: string, promptId: string, type: string): Promise<SocialInteraction>;
+  removeSocialInteraction(userId: string, promptId: string, type: string): Promise<boolean>;
+  getPromptInteractions(promptId: string, type?: string, userId?: string): Promise<{
+    likes: number;
+    bookmarks: number;
+    shares: number;
+    userInteraction?: {
+      liked: boolean;
+      bookmarked: boolean;
+      shared: boolean;
+    }
+  }>;
+  
+  // 评论管理
+  createComment(userId: string, promptId: string, content: string, parentId?: string): Promise<Comment>;
+  getPromptComments(promptId: string, page?: number, pageSize?: number): Promise<PaginatedResponse<Comment>>;
+  deleteComment(commentId: string, userId: string): Promise<boolean>;
+  
+  // 话题管理
+  createTopic(topic: Topic): Promise<Topic>;
+  getTopics(page?: number, pageSize?: number): Promise<PaginatedResponse<Topic>>;
+  getTopic(topicId: string): Promise<Topic | null>;
+  
+  // 话题帖子管理
+  createTopicPost(post: TopicPost): Promise<TopicPost>;
+  getTopicPosts(topicId: string, page?: number, pageSize?: number): Promise<PaginatedResponse<TopicPost>>;
+  getTopicPost(postId: string): Promise<TopicPost | null>;
+  
+  // 通知管理
+  createNotification(notification: Notification): Promise<Notification>;
+  getUserNotifications(userId: string, page?: number, pageSize?: number, unreadOnly?: boolean): Promise<PaginatedResponse<Notification>>;
+  markNotificationAsRead(notificationId: string, userId: string): Promise<boolean>;
+  markAllNotificationsAsRead(userId: string): Promise<number>;
+  getUnreadNotificationCount(userId: string): Promise<number>;
+  deleteNotification(notificationId: string, userId: string): Promise<boolean>;
+  getGroupedNotifications(userId: string, page?: number, pageSize?: number): Promise<PaginatedResponse<Notification[]>>;
+  
+  // 通知偏好设置
+  getUserNotificationPreferences(userId: string): Promise<NotificationPreference>;
+  updateUserNotificationPreferences(userId: string, preferences: Partial<NotificationPreference>): Promise<NotificationPreference>;
+  shouldSendNotification(userId: string, type: NotificationType): Promise<boolean>;
 }
 
 export interface MCPToolRequest {
