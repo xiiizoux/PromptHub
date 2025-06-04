@@ -153,12 +153,41 @@ async function handleUpdatePrompt(req: NextApiRequest, res: NextApiResponse, nam
 // 删除提示词
 async function handleDeletePrompt(req: NextApiRequest, res: NextApiResponse, name: string) {
   try {
-    // 从Supabase删除提示词
-    const { error } = await supabase
-      .from('prompts')
-      .delete()
-      .eq('name', name)
-      .eq('is_public', true);
+    // 获取用户ID
+    const userId = req.headers['x-user-id'] as string;
+    
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: '未授权，请登录后再删除提示词'
+      });
+    }
+    
+    console.log(`尝试删除提示词 - 参数:${name}, 用户ID:${userId}`);
+    
+    // 创建管理员客户端以绕过RLS策略
+    const adminClient = createClient(supabaseUrl, supabaseKey);
+    
+    // 确定删除条件 - 支持通过ID或名称删除
+    let query = adminClient.from('prompts').delete();
+    
+    // 检查name是否为UUID格式（可能是ID）
+    const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (uuidPattern.test(name)) {
+      // 如果是UUID格式，按ID查询
+      console.log('按ID删除提示词:', name);
+      query = query.eq('id', name);
+    } else {
+      // 否则按名称查询
+      console.log('按名称删除提示词:', name);
+      query = query.eq('name', name);
+    }
+    
+    // 确保只能删除自己的提示词
+    query = query.eq('user_id', userId);
+    
+    // 执行删除操作
+    const { error, count } = await query;
 
     if (error) {
       console.error('删除提示词错误:', error);
@@ -166,6 +195,13 @@ async function handleDeletePrompt(req: NextApiRequest, res: NextApiResponse, nam
         success: false, 
         message: '删除提示词失败',
         error: error.message
+      });
+    }
+    
+    if (count === 0) {
+      return res.status(404).json({
+        success: false,
+        message: '未找到提示词或您没有权限删除该提示词'
       });
     }
 

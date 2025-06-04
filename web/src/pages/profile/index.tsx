@@ -591,8 +591,8 @@ const ProfilePage = () => {
         return;
       }
       
-      // 调用API删除提示词
-      const response = await fetch(`/api/prompts/${promptId}`, {
+      // 使用专用的删除提示词API端点
+      const response = await fetch(`/api/prompts/delete-by-id?id=${promptId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -604,7 +604,7 @@ const ProfilePage = () => {
         // 从列表中移除已删除的提示词
         setUserPrompts(userPrompts.filter(p => p.id !== promptId));
         // 更新提示词计数
-        setPromptCount(prevCount => prevCount - 1);
+        setPromptCount(prevCount => Math.max(0, prevCount - 1));
         alert('提示词已成功删除');
       } else {
         const error = await response.json();
