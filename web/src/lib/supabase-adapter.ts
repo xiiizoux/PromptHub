@@ -370,64 +370,6 @@ export class SupabaseAdapter {
     } catch (err: any) {
       console.error('用户登录时出错:', err);
       return { user: null, error: err.message || '登录失败' };
-
-  async verifyToken(token: string): Promise<User | null> {
-    try {
-      console.log('验证token...');
-      
-      // 验证JWT
-      const { data, error } = await this.supabase.auth.getUser(token);
-      
-      if (error || !data.user) {
-        console.error('JWT验证失败:', error || '无用户数据');
-        return null;
-      }
-      
-      console.log('JWT验证成功, 用户ID:', data.user.id);
-      
-      // 创建管理员客户端以绕过RLS策略
-      const adminClient = createSupabaseClient(true);
-      
-      // 获取用户详细信息，使用管理员客户端
-      const { data: userData, error: userError } = await adminClient
-        .from('users')
-        .select('*')
-        .eq('id', data.user.id);
-      
-      if (userError) {
-        console.error('获取用户信息失败:', userError);
-        return null;
-      }
-      
-      // 检查是否有用户数据
-      if (!userData || userData.length === 0) {
-        console.log('未找到用户信息，使用基本认证信息');
-        // 如果在users表中没找到，说明可能是新用户或数据未同步
-        // 返回基本用户信息
-        return {
-          id: data.user.id,
-          email: data.user.email || '',
-          username: data.user.email?.split('@')[0] || '',
-          created_at: data.user.created_at || new Date().toISOString(),
-          role: 'user'
-        };
-      }
-      
-      console.log('获取用户详细信息成功');
-      const userInfo = userData[0]; // 使用第一个匹配结果
-      
-      // 返回用户信息
-      return {
-        id: data.user.id,
-        email: data.user.email || '',
-        username: userInfo.username || data.user.email?.split('@')[0] || '',
-        display_name: userInfo.display_name,
-        created_at: userInfo.created_at || data.user.created_at,
-        role: userInfo.role || 'user'
-      };
-    } catch (error) {
-      console.error('验证token时出错:', error);
-      return null;
     }
   }
 
