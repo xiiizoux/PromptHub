@@ -585,6 +585,7 @@ async function handleUpdatePrompt(params: any, req?: express.Request) {
 
   // 构建部分更新对象
   const updateData: Partial<Prompt> = {};
+  if (params.name) updateData.name = params.name;
   if (params.description) updateData.description = params.description;
   if (params.category) updateData.category = params.category;
   if (params.tags) updateData.tags = params.tags;
@@ -596,7 +597,7 @@ async function handleUpdatePrompt(params: any, req?: express.Request) {
   return {
     content: {
       type: 'text',
-      text: `提示词 "${params.name}" 更新成功`,
+      text: JSON.stringify(updatedPrompt, null, 2),
     },
   };
 }

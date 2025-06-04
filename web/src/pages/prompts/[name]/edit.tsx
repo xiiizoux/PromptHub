@@ -243,16 +243,22 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
       data.tags = tags;
       data.compatible_models = models;
       
-      await updatePrompt(prompt.name, data);
+      const result = await updatePrompt(prompt.name, data);
       
       setSaveSuccess(true);
       setHasUnsavedChanges(false);
       setTimeout(() => setSaveSuccess(false), 3000);
       
-      // 可选：更新成功后跳转到详情页
-      // router.push(`/prompts/${prompt.name}`);
+      // 如果提示词名称已更改，重定向到新的URL路径
+      if (data.name !== prompt.name) {
+        // 短暂延迟后跳转，让用户先看到成功消息
+        setTimeout(() => {
+          router.push(`/prompts/${data.name}`);
+        }, 1500);
+      }
     } catch (error) {
       console.error('更新提示词失败:', error);
+      alert(`更新失败: ${error instanceof Error ? error.message : '未知错误'}`);
     } finally {
       setIsSubmitting(false);
     }
@@ -493,15 +499,14 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
                       }
                     })}
                     type="text"
-                    placeholder="提示词名称无法修改"
-                    className="input-primary w-full bg-dark-bg-secondary/50 text-gray-400"
-                    disabled
+                    placeholder="输入提示词名称"
+                    className="input-primary w-full"
                   />
                   {errors.name && (
                     <p className="text-neon-red text-sm mt-1">{errors.name.message}</p>
                   )}
                   <p className="text-xs text-gray-500">
-                    提示词的唯一标识符，编辑时无法修改
+                    提示词显示名称，可以随时修改
                   </p>
                 </div>
 
