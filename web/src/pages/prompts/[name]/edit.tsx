@@ -167,11 +167,12 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
   const promptContent = watch('content');
 
   // 自动检测变量
-  const detectVariables = () => {
-    if (!promptContent) return;
+  const detectVariables = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const content = e.target.value;
+    if (!content) return;
     
     const regex = /\{\{([a-zA-Z0-9_]+)\}\}/g;
-    const matches = promptContent.match(regex);
+    const matches = content.match(regex);
     
     if (matches) {
       const detectedVars = Array.from(new Set(matches.map(match => match.slice(2, -2))));
@@ -492,11 +493,7 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
                   </label>
                   <input
                     {...register('name', {
-                      required: '提示词名称是必填的',
-                      pattern: {
-                        value: /^[a-zA-Z0-9_-]+$/,
-                        message: '名称只能包含字母、数字、下划线和连字符'
-                      }
+                      required: '提示词名称是必填的'
                     })}
                     type="text"
                     placeholder="输入提示词名称"
@@ -639,7 +636,7 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
                   </div>
                   <div>
                     <h3 className="text-sm font-medium text-gray-300">{watch('is_public') ? '公开分享' : '私人提示词'}</h3>
-                    <p className="text-gray-400 text-sm">{watch('is_public') ? '所有人可以看到并使用您的提示词' : '只有您自己可以访问此提示词'}</p>
+                    <p className="text-gray-400 text-sm">{watch('is_public') ? '所有人可以查看和使用您的提示词（访问权限）' : '只有您自己可以访问此提示词'}</p>
                   </div>
                 </div>
                 <div className="flex items-center">
@@ -694,7 +691,9 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
                     rows={8}
                     placeholder="在这里输入您的提示词内容。使用 {{变量名}} 来定义可替换的变量..."
                     className="input-primary w-full resize-none font-mono"
-                    onChange={detectVariables}
+                    onChange={(e) => {
+                      detectVariables(e);
+                    }}
                   />
                   <div className="absolute top-3 right-3 text-xs text-gray-500">
                     使用 {`{{变量名}}`} 定义变量
@@ -917,7 +916,7 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
                       允许协作编辑
                     </div>
                     <div className="text-sm text-gray-400">
-                      允许其他贡献者编辑这个提示词（仅在公开时有效）
+                      允许其他贡献者修改这个提示词的内容（编辑权限，仅在公开分享时有效）
                     </div>
                     {!checkFieldPermission('allow_collaboration', permissionCheck) && (
                       <div className="text-xs text-neon-orange mt-1">

@@ -1,21 +1,26 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { useForm } from 'react-hook-form';
+import {
+  PERMISSION_LEVELS,
+  PERMISSION_LEVEL_DESCRIPTIONS
+} from '@/lib/permissions';
 import { motion, AnimatePresence } from 'framer-motion';
 import { createPrompt, getCategories, getTags } from '@/lib/api';
 import { PromptDetails } from '@/types';
 import Link from 'next/link';
-import { 
-  ChevronLeftIcon, 
-  XMarkIcon, 
-  PlusCircleIcon, 
+import {
+  ChevronLeftIcon,
+  XMarkIcon,
+  PlusCircleIcon,
   ArrowRightIcon,
   SparklesIcon,
   CodeBracketIcon,
   TagIcon,
   DocumentTextIcon,
   UserIcon,
-  CpuChipIcon
+  CpuChipIcon,
+  ShieldExclamationIcon
 } from '@heroicons/react/24/outline';
 import { useAuth, withAuth } from '@/contexts/AuthContext';
 
@@ -96,14 +101,15 @@ function CreatePromptPage() {
   const promptContent = watch('content');
 
   // 自动检测变量
-  const detectVariables = () => {
-    if (!promptContent) return;
+  const detectVariables = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const content = e.target.value;
+    if (!content) return;
     const regex = /\{\{([a-zA-Z0-9_]+)\}\}/g;
-    const matches = promptContent.match(regex);
+    const matches = content.match(regex);
     
     if (matches) {
       const detectedVars = Array.from(new Set(matches.map(match => match.slice(2, -2))));
-      if (detectedVars.length > 0 && !variables.includes(detectedVars[0])) {
+      if (detectedVars.length > 0) {
         setVariables(prev => Array.from(new Set([...prev, ...detectedVars])));
         setValue('input_variables', Array.from(new Set([...variables, ...detectedVars])));
       }
@@ -409,7 +415,7 @@ function CreatePromptPage() {
                   </div>
                   <div>
                     <h3 className="text-sm font-medium text-gray-300">{watch('is_public') ? '公开分享' : '私人提示词'}</h3>
-                    <p className="text-gray-400 text-sm">{watch('is_public') ? '所有人可以看到并使用您的提示词' : '只有您自己可以访问此提示词'}</p>
+                    <p className="text-gray-400 text-sm">{watch('is_public') ? '所有人可以查看和使用您的提示词（访问权限）' : '只有您自己可以访问此提示词'}</p>
                   </div>
                 </div>
                 <div className="flex items-center">
@@ -463,7 +469,7 @@ function CreatePromptPage() {
                     rows={8}
                     placeholder="在这里输入您的提示词内容。使用 {{变量名}} 来定义可替换的变量..."
                     className="input-primary w-full resize-none font-mono"
-                    onChange={detectVariables}
+                    onChange={(e) => detectVariables(e)}
                   />
                   <div className="absolute top-3 right-3 text-xs text-gray-500">
                     使用 {`{{变量名}}`} 定义变量
@@ -657,6 +663,56 @@ function CreatePromptPage() {
                       {model}
                     </motion.button>
                   ))}
+                </div>
+              </motion.div>
+
+              {/* 协作设置 */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 2.1 }}
+                className="space-y-4"
+              >
+                <label className="flex items-center text-sm font-medium text-gray-300">
+                  <ShieldExclamationIcon className="h-5 w-5 text-neon-purple mr-2" />
+                  协作设置
+                </label>
+                
+                <div className="relative flex items-start p-4 border border-neon-cyan/20 rounded-xl bg-dark-bg-secondary">
+                  <div className="flex items-center h-5">
+                    <input
+                      type="checkbox"
+                      checked={watch('allow_collaboration') || false}
+                      onChange={(e) => setValue('allow_collaboration', e.target.checked)}
+                      className="h-4 w-4 text-neon-cyan border-gray-600 rounded focus:ring-neon-cyan"
+                    />
+                  </div>
+                  <div className="ml-3">
+                    <div className="text-sm font-medium text-gray-300">
+                      允许协作编辑
+                    </div>
+                    <div className="text-sm text-gray-400">
+                      允许其他贡献者修改这个提示词的内容（编辑权限，仅在公开分享时有效）
+                    </div>
+                  </div>
+                </div>
+
+                {/* 编辑权限级别 */}
+                <div className="p-4 border border-neon-cyan/20 rounded-xl bg-dark-bg-secondary">
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    编辑权限级别
+                  </label>
+                  <select
+                    value={watch('edit_permission') || PERMISSION_LEVELS.OWNER_ONLY}
+                    onChange={(e) => setValue('edit_permission', e.target.value as any)}
+                    className="input-primary w-full"
+                  >
+                    {Object.entries(PERMISSION_LEVEL_DESCRIPTIONS).map(([key, description]) => (
+                      <option key={key} value={key}>
+                        {description}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </motion.div>
 

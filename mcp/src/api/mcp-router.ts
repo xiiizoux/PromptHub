@@ -132,6 +132,54 @@ router.get('/tools', optionalAuthMiddleware, (req, res) => {
       },
     },
     {
+      name: 'update_prompt',
+      description: '更新现有提示词',
+      schema_version: 'v1',
+      parameters: {
+        name: {
+          type: 'string',
+          description: '提示词名称',
+          required: true,
+        } as ToolParameter,
+        description: {
+          type: 'string',
+          description: '提示词描述',
+          required: false,
+        } as ToolParameter,
+        category: {
+          type: 'string',
+          description: '提示词分类',
+          required: false,
+        } as ToolParameter,
+        tags: {
+          type: 'array',
+          description: '提示词标签',
+          required: false,
+          items: {
+            type: 'string',
+          },
+        } as ToolParameter,
+        messages: {
+          type: 'array',
+          description: '提示词消息',
+          required: false,
+          items: {
+            type: 'object',
+          },
+        } as ToolParameter,
+        is_public: {
+          type: 'boolean',
+          description: '是否公开可见',
+          required: false,
+        } as ToolParameter,
+        allow_collaboration: {
+          type: 'boolean',
+          description: '是否允许协作编辑',
+          required: false,
+        } as ToolParameter,
+      },
+    },
+    {
       name: 'search_prompts',
       description: '根据关键词搜索提示词',
       schema_version: 'v1',
