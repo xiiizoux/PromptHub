@@ -1,18 +1,13 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { createClient } from '@supabase/supabase-js';
+import { apiHandler, successResponse, errorResponse } from '@/lib/api-handler';
 
 // 获取Supabase配置
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  // 只允许DELETE方法
-  if (req.method !== 'DELETE') {
-    return res.status(405).json({ 
-      success: false, 
-      message: '方法不允许，仅支持DELETE请求'
-    });
-  }
+// 处理删除提示词请求
+async function deletePromptHandler(req: NextApiRequest, res: NextApiResponse) {
 
   // 获取提示词ID
   const { id } = req.query;
@@ -25,8 +20,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    // 获取用户ID
-    const userId = req.headers['x-user-id'] as string;
+    // 获取用户ID，从请求对象的user属性获取（由api-handler添加）
+    const userId = (req as any).user?.id;
     
     if (!userId) {
       return res.status(401).json({
@@ -75,3 +70,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     });
   }
 }
+
+// 使用API处理器包装我们的处理函数
+export default apiHandler(deletePromptHandler, {
+  requireAuth: true,
+  allowedMethods: ['DELETE']
+});
