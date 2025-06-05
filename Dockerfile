@@ -63,8 +63,10 @@ RUN mkdir -p /app/logs /app/mcp/data
 # 暴露端口
 EXPOSE 9010 9011
 
-# 复制Docker启动脚本
+# 复制Docker启动脚本和修复脚本
 COPY docker-start.sh /app/docker-start.sh
+COPY fix-docker-enum.cjs /app/fix-docker-enum.cjs
+COPY fix-docker-import.cjs /app/fix-docker-import.cjs
 RUN chmod +x /app/docker-start.sh
 
 # 清除默认entrypoint

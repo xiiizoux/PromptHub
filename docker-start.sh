@@ -59,6 +59,14 @@ export API_KEY=default-api-key-for-docker
 echo "运行代码修复脚本修复潜在的引号问题..."
 cd /app/mcp && node fix-quotes.js
 
+# 修复enum语法问题
+echo "运行修复脚本处理enum语法问题..."
+cd /app && node fix-docker-enum.cjs
+
+# 修复重复导入问题
+echo "运行修复脚本处理重复导入问题..."
+cd /app && node fix-docker-import.cjs
+
 # 直接使用node运行编译后的代码
 echo "尝试使用编译后的代码启动MCP服务"
 # 使用正确的路径启动MCP服务
