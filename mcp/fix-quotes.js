@@ -27,23 +27,54 @@ if (!fs.existsSync(targetFile)) {
 let content = fs.readFileSync(targetFile, 'utf8');
 console.log(`原始文件大小：${content.length} 字节`);
 
-// 完全替换可能有问题的字符串
-content = content.replace(
-  /console\.error\(['"]Failed to start MCP Prompt Server.*?['"]\)/g, 
-  "console.error('Failed to start MCP Prompt Server:')"
-);
+// 创建备份文件
+const backupFile = targetFile + '.backup';
+fs.writeFileSync(backupFile, content);
+console.log(`已创建备份文件: ${backupFile}`);
 
-// 检查所有console.error调用是否有不匹配的引号
-const errorRegex = /console\.error\(['"]([^'"]*)/g;
-let match;
+// 完全重写文件内容，而不是尝试修复
+// 这是最彻底的解决方案
+content = `
+import { startMCPServer } from './mcp-server.js';
 
-while ((match = errorRegex.exec(content)) !== null) {
-  const originalText = match[0];
-  const quote = originalText.includes("'") ? "'" : '"';
-  const fixedText = `console.error(${quote}${match[1]}${quote}`;
-  content = content.replace(originalText, fixedText);
-  console.log(`修复了错误调用: ${originalText} -> ${fixedText}`);
+// 主函数
+async function main() {
+  try {
+    await startMCPServer();
+  } catch (error) {
+    console.error('Failed to start MCP Prompt Server:', error);
+    process.exit(1);
+  }
 }
+
+// 启动主函数
+main();
+
+// 处理未捕获的异常
+process.on('uncaughtException', (error) => {
+  console.error('Uncaught Exception:', error);
+  process.exit(1);
+});
+
+// 处理未处理的Promise拒绝
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+});
+
+// 处理SIGINT信号（Ctrl+C）
+process.on('SIGINT', () => {
+  console.error('Received SIGINT, shutting down gracefully...');
+  process.exit(0);
+});
+
+// 处理SIGTERM信号
+process.on('SIGTERM', () => {
+  console.error('Received SIGTERM, shutting down gracefully...');
+  process.exit(0);
+});
+`;
+
+console.log('已完全重写文件内容，修复了所有引号问题');
 
 // 保存修复后的文件
 fs.writeFileSync(targetFile, content);

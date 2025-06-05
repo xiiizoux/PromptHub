@@ -113,28 +113,54 @@ const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
 pkg.type = 'module'; // 确保使用ESM
 fs.writeFileSync(distPkgPath, JSON.stringify(pkg, null, 2));
 
-// 特殊后处理：修复编译后的主文件中的引号问题
+// 特殊后处理：完全重写主文件以避免引号问题
 console.log('执行特殊后处理修复...');
 const indexPath = runFromRoot ? './mcp/dist/src/index.js' : './dist/src/index.js';
 console.log(`处理index文件：${indexPath}`);
 if (fs.existsSync(indexPath)) {
-  let indexContent = fs.readFileSync(indexPath, 'utf8');
+  // 直接创建一个全新的index.js，而不是尝试修复现有文件
+  const newIndexContent = `
+import { startMCPServer } from './mcp-server.js';
+
+// 主函数
+async function main() {
+  try {
+    await startMCPServer();
+  } catch (error) {
+    console.error('Failed to start MCP Prompt Server:', error);
+    process.exit(1);
+  }
+}
+
+// 启动主函数
+main();
+
+// 处理未捕获的异常
+process.on('uncaughtException', (error) => {
+  console.error('Uncaught Exception:', error);
+  process.exit(1);
+});
+
+// 处理未处理的Promise拒绝
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+});
+
+// 处理SIGINT信号（Ctrl+C）
+process.on('SIGINT', () => {
+  console.error('Received SIGINT, shutting down gracefully...');
+  process.exit(0);
+});
+
+// 处理SIGTERM信号
+process.on('SIGTERM', () => {
+  console.error('Received SIGTERM, shutting down gracefully...');
+  process.exit(0);
+});
+`;
   
-  // 特殊修复引号问题
-  indexContent = indexContent
-    // 修复单引号问题
-    .replace(/console\.error\('([^']*)/g, (match, p1) => {
-      return `console.error('${p1}'`;
-    })
-    // 修复双引号问题
-    .replace(/console\.error\("([^"]*)/g, (match, p1) => {
-      return `console.error("${p1}"`;  
-    })
-    // 完全替换出问题的错误语句
-    .replace(/console\.error\('Failed to start MCP Prompt Server[^']*/, "console.error('Failed to start MCP Prompt Server:'");
-  
-  fs.writeFileSync(indexPath, indexContent);
-  console.log(`已修复 ${indexPath} 文件中的引号问题`);
+  fs.writeFileSync(indexPath, newIndexContent);
+  console.log(`已完全重写 ${indexPath} 文件，避免引号问题`);
 }
 
 console.log('构建完成！');
