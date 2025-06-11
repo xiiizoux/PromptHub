@@ -27,9 +27,12 @@ mcp/build/
 .env.development.local
 .env.test.local
 .env.production.local
+docker-compose.yml
+
+# cursor相关文件和文件夹
 •cursorignore
 •cursorrules
-docker-compose.yml
+•cursor
 
 # 日志文件
 logs/
