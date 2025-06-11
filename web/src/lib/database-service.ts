@@ -178,43 +178,52 @@ export class DatabaseService {
    */
   async getPromptByName(name: string, userId?: string): Promise<PromptDetails | null> {
     try {
-      // 使用联合查询一次性获取提示词和用户信息
-      const { data, error } = await this.adapter.supabase
-        .from('prompts')
-        .select(`
-          *,
-          user:users!prompts_user_id_fkey(username, display_name)
-        `)
-        .eq('name', name)
-        .or(userId ? `user_id.eq.${userId},is_public.eq.true` : 'is_public.eq.true')
-        .single();
-
-      if (error || !data) {
-        console.error('获取提示词详情失败:', error);
+      // 首先获取提示词基本信息
+      const prompt = await this.adapter.getPrompt(name, userId);
+      if (!prompt) {
+        console.log(`提示词 ${name} 不存在或无权限访问`);
         return null;
+      }
+
+      // 然后获取作者信息
+      let authorName = '未知用户';
+      if (prompt.user_id) {
+        try {
+          const { data: userData, error: userError } = await this.adapter.supabase
+            .from('users')
+            .select('username, display_name')
+            .eq('id', prompt.user_id)
+            .single();
+
+          if (!userError && userData) {
+            authorName = userData.display_name || userData.username || '未知用户';
+          }
+        } catch (userErr) {
+          console.warn('获取用户信息失败，使用默认作者名:', userErr);
+        }
       }
 
       // 转换为PromptDetails格式
       const promptDetails: PromptDetails = {
-        id: data.id,
-        name: data.name,
-        description: data.description || '',
-        category: data.category || '通用',
-        tags: Array.isArray(data.tags) ? data.tags : [],
-        messages: data.messages || [],
-        is_public: Boolean(data.is_public),
-        user_id: data.user_id,
-        version: data.version || 1,
-        created_at: data.created_at,
-        updated_at: data.updated_at,
+        id: prompt.id,
+        name: prompt.name,
+        description: prompt.description || '',
+        category: prompt.category || '通用',
+        tags: Array.isArray(prompt.tags) ? prompt.tags : [],
+        messages: prompt.messages || [],
+        is_public: Boolean(prompt.is_public),
+        user_id: prompt.user_id,
+        version: prompt.version || 1,
+        created_at: prompt.created_at,
+        updated_at: prompt.updated_at,
         
         // 扩展字段
-        content: data.messages?.[0]?.content || '',
-        input_variables: this.extractInputVariables(data.messages?.[0]?.content || ''),
-        compatible_models: data.compatible_models || ['gpt-4', 'gpt-3.5-turbo', 'claude-3'],
-        allow_collaboration: Boolean(data.allow_collaboration || data.is_public),
-        edit_permission: data.edit_permission || 'owner',
-        author: data.user?.display_name || data.user?.username || '未知用户'
+        content: prompt.messages?.[0]?.content || '',
+        input_variables: this.extractInputVariables(prompt.messages?.[0]?.content || ''),
+        compatible_models: ['gpt-4', 'gpt-3.5-turbo', 'claude-3'], // 默认兼容模型
+        allow_collaboration: Boolean(prompt.is_public), // 基于是否公开来设置
+        edit_permission: 'owner', // 默认只有所有者可编辑
+        author: authorName
       };
 
       return promptDetails;
