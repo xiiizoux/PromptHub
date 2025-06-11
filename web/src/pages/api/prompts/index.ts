@@ -1,107 +1,83 @@
+/**
+ * 提示词API路由 - 完全解耦版本
+ * 直接使用数据库服务，不依赖MCP服务
+ * 
+ * GET /api/prompts - 获取提示词列表
+ * POST /api/prompts - 创建新提示词
+ */
+
 import { NextApiRequest, NextApiResponse } from 'next';
-import { supabase } from '../../../lib/supabase';
+import { apiHandler, successResponse, errorResponse } from '@/lib/api-handler';
+import { databaseService, PromptDetails } from '@/lib/database-service';
+import { withApiAuth } from '@/middleware/withApiAuth';
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  // 根据请求方法调用相应的处理函数
-  switch (req.method) {
-    case 'GET':
-      return handleGetPrompts(req, res);
-    case 'POST':
-      return handleCreatePrompt(req, res);
-    default:
-      return res.status(405).json({ success: false, message: '方法不允许' });
-  }
+interface PromptsQuery {
+  category?: string;
+  tags?: string | string[];
+  search?: string;
+  page?: string;
+  pageSize?: string;
+  sortBy?: 'latest' | 'popular' | 'rating';
+  isPublic?: string;
 }
 
-// 获取提示词列表
-async function handleGetPrompts(req: NextApiRequest, res: NextApiResponse) {
-  try {
-        const page = Number(req.query.page) || 1;
-        const pageSize = Number(req.query.pageSize) || 10;
-    const offset = (page - 1) * pageSize;
+export default apiHandler(async (req: NextApiRequest, res: NextApiResponse) => {
+  if (req.method === 'GET') {
+    try {
+      const query = req.query as PromptsQuery;
+      
+      // 解析查询参数
+      const filters = {
+        category: query.category,
+        tags: Array.isArray(query.tags) ? query.tags : query.tags ? [query.tags] : undefined,
+        search: query.search,
+        page: query.page ? parseInt(query.page) : 1,
+        pageSize: query.pageSize ? parseInt(query.pageSize) : 20,
+        sortBy: query.sortBy || 'latest' as const,
+        isPublic: query.isPublic !== 'false' // 默认只显示公开的提示词
+      };
 
-    // 从Supabase获取提示词列表
-    const { data: prompts, error, count } = await supabase
-      .from('prompts')
-      .select('*', { count: 'exact' })
-      .eq('is_public', true)
-      .order('created_at', { ascending: false })
-      .range(offset, offset + pageSize - 1);
+      console.log('获取提示词列表，过滤条件:', filters);
 
-    if (error) {
-      console.error('获取提示词列表错误:', error);
-      return res.status(500).json({ 
-        success: false, 
-        message: '获取提示词列表失败',
-        error: error.message
-      });
+      // 使用数据库服务获取提示词列表
+      const result = await databaseService.getPrompts(filters);
+
+      return successResponse(res, result);
+    } catch (error: any) {
+      console.error('获取提示词列表失败:', error);
+      return errorResponse(res, `获取提示词列表失败: ${error.message}`);
     }
-
-    return res.status(200).json({
-      success: true,
-      data: prompts || [],
-      total: count || 0,
-          page,
-          pageSize,
-      totalPages: Math.ceil((count || 0) / pageSize)
-    });
-  } catch (error) {
-    console.error('获取提示词列表错误:', error);
-    return res.status(500).json({ 
-      success: false, 
-      message: '获取提示词列表过程中发生错误' 
-    });
   }
-}
 
-// 创建新提示词
-async function handleCreatePrompt(req: NextApiRequest, res: NextApiResponse) {
-  try {
-    // 验证请求体
-    const { name, content, description, category, tags } = req.body;
-    
-    if (!name || !content) {
-      return res.status(400).json({ 
-        success: false, 
-        message: '提示词名称和内容是必需的' 
-      });
-    }
-    
-    // 插入新提示词到Supabase
-    const { data: newPrompt, error } = await supabase
-      .from('prompts')
-      .insert([{
-        name,
-        content,
-        description: description || '',
-        category: category || 'general',
-        tags: tags || [],
-        is_public: true,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      }])
-      .select()
-      .single();
+  if (req.method === 'POST') {
+    // 创建提示词需要认证，使用withApiAuth包装处理函数
+    return withApiAuth(async (req: NextApiRequest, res: NextApiResponse, userId: string) => {
+      try {
+        const promptData: Partial<PromptDetails> = req.body;
+        
+        // 验证必填字段
+        if (!promptData.name) {
+          return errorResponse(res, '提示词名称是必填的');
+        }
 
-    if (error) {
-      console.error('创建提示词错误:', error);
-      return res.status(500).json({ 
-        success: false, 
-        message: '创建提示词失败',
-        error: error.message
-      });
-    }
+        // 设置用户ID
+        promptData.user_id = userId;
 
-    return res.status(201).json({
-      success: true,
-      data: newPrompt,
-      message: '提示词创建成功'
-    });
-  } catch (error) {
-    console.error('创建提示词错误:', error);
-    return res.status(500).json({ 
-      success: false, 
-      message: '创建提示词过程中发生错误' 
-    });
+        console.log('创建新提示词:', { name: promptData.name, userId });
+
+        // 使用数据库服务创建提示词
+        const newPrompt = await databaseService.createPrompt(promptData);
+
+        return successResponse(res, newPrompt);
+      } catch (error: any) {
+        console.error('创建提示词失败:', error);
+        return errorResponse(res, `创建提示词失败: ${error.message}`);
+      }
+    })(req, res);
   }
-}
+
+  return errorResponse(res, `不支持的方法: ${req.method}`);
+}, {
+  allowedMethods: ['GET', 'POST'],
+  requireAuth: false // GET请求不需要认证，POST请求在内部处理认证
+});

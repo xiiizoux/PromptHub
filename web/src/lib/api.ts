@@ -67,8 +67,8 @@ export const getCategories = async (): Promise<string[]> => {
 // 获取所有标签
 export const getTags = async (): Promise<string[]> => {
   try {
-    // 通过Next.js API Routes调用，符合项目架构
-    const response = await api.get<{success: boolean; data: string[]}>('/tags');
+    // 直接调用Web服务API，不再依赖MCP服务
+    const response = await api.get<any>('/tags');
     if (response.data.success) {
       return response.data.data || [];
     }
@@ -276,58 +276,86 @@ export const createPrompt = async (prompt: Partial<PromptDetails>): Promise<Prom
 // 更新提示词
 export const updatePrompt = async (name: string, prompt: Partial<PromptDetails>): Promise<PromptDetails> => {
   try {
-    // 转换前端数据格式为MCP工具期望的格式
-    const mcpData = {
-      name: name,
-      description: prompt.description,
-      category: prompt.category,
-      tags: prompt.tags,
-      content: prompt.content,
-      input_variables: prompt.input_variables,
-      compatible_models: prompt.compatible_models,
-      template_format: prompt.template_format,
-      is_public: prompt.is_public,
-      allow_collaboration: prompt.allow_collaboration,
-      edit_permission: prompt.edit_permission,
-      author: prompt.author,
-      version: prompt.version
-    };
-
-    // 移除undefined字段
-    Object.keys(mcpData).forEach(key => {
-      if ((mcpData as any)[key] === undefined) {
-        delete (mcpData as any)[key];
+    // 获取认证令牌
+    let token = null;
+    if (typeof window !== 'undefined') {
+      token = localStorage.getItem('auth.token');
+      
+      if (!token) {
+        try {
+          const authSession = localStorage.getItem('supabase.auth.token');
+          if (authSession) {
+            const parsed = JSON.parse(authSession);
+            token = parsed?.currentSession?.access_token;
+          }
+        } catch (e) {
+          console.warn('解析会话存储令牌失败:', e);
+        }
       }
-    });
-
-    console.log('发送更新提示词请求:', mcpData);
-    
-    const response = await mcpApi.post<any>('/tools/update_prompt/invoke', mcpData);
-    
-    console.log('更新提示词响应:', response.data);
-    
-    // 处理MCP工具的响应格式
-    if (response.data && response.data.content && response.data.content.text) {
-      const result = JSON.parse(response.data.content.text);
-      return result as PromptDetails;
-    } else if (response.data && response.data.data) {
-      return response.data.data as PromptDetails;
-    } else {
-      throw new Error('响应格式不正确');
     }
-  } catch (error) {
+    
+    // 添加认证头
+    const headers: Record<string, string> = {};
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    console.log('发送更新提示词请求:', { name, prompt, hasToken: !!token });
+    
+    // 直接调用Web服务API，不再依赖MCP服务
+    const response = await api.put<any>(`/prompts/${encodeURIComponent(name)}`, prompt, {
+      headers
+    });
+    
+    if (!response.data.success) {
+      throw new Error(response.data.message || '更新提示词失败');
+    }
+
+    console.log('提示词更新成功:', response.data.data);
+    return response.data.data as PromptDetails;
+
+  } catch (error: any) {
     console.error(`更新提示词 ${name} 失败:`, error);
-    throw error;
+    throw new Error(`更新提示词失败: ${error.response?.data?.message || error.message}`);
   }
 };
 
 // 删除提示词
 export const deletePrompt = async (name: string): Promise<boolean> => {
   try {
-    const response = await mcpApi.post<any>('/tools/delete_prompt/invoke', { name });
-    const result = response.data?.content?.text ? JSON.parse(response.data.content.text) : { success: false };
-    return !!result.success;
-  } catch (error) {
+    // 获取认证令牌
+    let token = null;
+    if (typeof window !== 'undefined') {
+      token = localStorage.getItem('auth.token');
+      
+      if (!token) {
+        try {
+          const authSession = localStorage.getItem('supabase.auth.token');
+          if (authSession) {
+            const parsed = JSON.parse(authSession);
+            token = parsed?.currentSession?.access_token;
+          }
+        } catch (e) {
+          console.warn('解析会话存储令牌失败:', e);
+        }
+      }
+    }
+    
+    // 添加认证头
+    const headers: Record<string, string> = {};
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    console.log('发送删除提示词请求:', { name, hasToken: !!token });
+    
+    // 直接调用Web服务API，不再依赖MCP服务
+    const response = await api.delete<any>(`/prompts/${encodeURIComponent(name)}`, {
+      headers
+    });
+    
+    return response.data.success === true;
+  } catch (error: any) {
     console.error(`删除提示词 ${name} 失败:`, error);
     return false;
   }
