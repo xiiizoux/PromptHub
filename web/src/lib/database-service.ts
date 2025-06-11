@@ -590,12 +590,15 @@ export class DatabaseService {
    * 从提示词内容中提取输入变量
    */
   private extractInputVariables(content: string): string[] {
-    const matches = content.match(/\{\{(\w+)\}\}/g);
+    if (!content) return [];
+    
+    // 修复正则表达式以正确匹配 {{variable}} 格式
+    const matches = content.match(/\{\{([^}]+)\}\}/g);
     if (!matches) return [];
     
     return Array.from(new Set(
-      matches.map(match => match.replace(/[{}]/g, ''))
-    ));
+      matches.map(match => match.replace(/^\{\{|\}\}$/g, '').trim())
+    )).filter(variable => variable.length > 0);
   }
 }
 

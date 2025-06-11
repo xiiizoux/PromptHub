@@ -56,12 +56,35 @@ interface EditPromptPageProps {
 function EditPromptPage({ prompt }: EditPromptPageProps) {
   const router = useRouter();
   const { user } = useAuth();
+  
+  // 格式化当前版本号
+  const currentVersionFormatted = typeof prompt.version === 'number' 
+    ? formatVersionFromInt(prompt.version) 
+    : prompt.version || '1.0';
+
+  // 确保所有数据都有默认值
+  const safePromptData = {
+    name: prompt.name || '',
+    description: prompt.description || '',
+    content: prompt.content || prompt.messages?.[0]?.content || '',
+    category: prompt.category || '通用',
+    tags: Array.isArray(prompt.tags) ? prompt.tags : [],
+    input_variables: Array.isArray(prompt.input_variables) ? prompt.input_variables : [],
+    compatible_models: Array.isArray(prompt.compatible_models) ? prompt.compatible_models : ['GPT-4', 'GPT-3.5', 'Claude-2'],
+    version: currentVersionFormatted as any,
+    author: prompt.author || user?.display_name || user?.username || '未知用户',
+    template_format: prompt.template_format || 'text',
+    is_public: prompt.is_public !== undefined ? prompt.is_public : false,
+    allow_collaboration: prompt.allow_collaboration !== undefined ? prompt.allow_collaboration : false,
+    edit_permission: prompt.edit_permission || 'owner_only',
+  };
+  
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [variables, setVariables] = useState<string[]>(prompt.input_variables || []);
+  const [variables, setVariables] = useState<string[]>(safePromptData.input_variables);
   const [variableInput, setVariableInput] = useState('');
-  const [tags, setTags] = useState<string[]>(prompt.tags || []);
+  const [tags, setTags] = useState<string[]>(safePromptData.tags);
   const [tagInput, setTagInput] = useState('');
-  const [models, setModels] = useState<string[]>(prompt.compatible_models || []);
+  const [models, setModels] = useState<string[]>(safePromptData.compatible_models);
   const [categories, setCategories] = useState<string[]>([]);
   const [categoriesLoading, setCategoriesLoading] = useState(true);
   const [suggestedTags, setSuggestedTags] = useState<string[]>([]);
@@ -103,28 +126,9 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
 
     fetchTags();
   }, []);
-  
-  // 格式化当前版本号
-  const currentVersionFormatted = typeof prompt.version === 'number' 
-    ? formatVersionFromInt(prompt.version) 
-    : prompt.version || '1.0';
 
   const { register, handleSubmit, control, formState: { errors }, setValue, watch, reset } = useForm<PromptFormData>({
-    defaultValues: {
-      name: prompt.name || '',
-      description: prompt.description || '',
-      content: prompt.content || '',
-      category: prompt.category || '通用',
-      version: currentVersionFormatted as any,
-      author: prompt.author || user?.display_name || user?.username || '未知用户',
-      template_format: prompt.template_format || 'text',
-      input_variables: prompt.input_variables || [],
-      tags: prompt.tags || [],
-      compatible_models: prompt.compatible_models || [],
-      is_public: prompt.is_public !== undefined ? prompt.is_public : false,
-      allow_collaboration: prompt.allow_collaboration !== undefined ? prompt.allow_collaboration : false,
-      edit_permission: prompt.edit_permission || 'owner_only',
-    }
+    defaultValues: safePromptData
   });
 
   // 权限检查和作者信息更新
@@ -177,11 +181,13 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
     const content = e.target.value;
     if (!content) return;
     
-    const regex = /\{\{([a-zA-Z0-9_]+)\}\}/g;
-    const matches = content.match(regex);
+    // 修复正则表达式以正确匹配 {{variable}} 格式
+    const matches = content.match(/\{\{([^}]+)\}\}/g);
     
     if (matches) {
-      const detectedVars = Array.from(new Set(matches.map(match => match.slice(2, -2))));
+      const detectedVars = Array.from(new Set(
+        matches.map(match => match.replace(/^\{\{|\}\}$/g, '').trim())
+      )).filter(variable => variable.length > 0);
       
       if (detectedVars.length > 0) {
         const newVariables = Array.from(new Set([...variables, ...detectedVars]));
