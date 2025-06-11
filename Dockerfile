@@ -48,9 +48,8 @@ RUN npm install -g typescript
 # 复制所有项目文件
 COPY . .
 
-# 构建MCP服务 - 使用修复后的构建脚本
-COPY docker-build-fix.cjs ./mcp/
-RUN cd mcp && NODE_OPTIONS="--max-old-space-size=4096" node docker-build-fix.cjs
+# 构建MCP服务 - 直接使用TypeScript编译
+RUN cd mcp && NODE_OPTIONS="--max-old-space-size=4096" npx tsc
 
 # 构建Web应用
 RUN cd web && \
