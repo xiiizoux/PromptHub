@@ -276,9 +276,45 @@ export const createPrompt = async (prompt: Partial<PromptDetails>): Promise<Prom
 // 更新提示词
 export const updatePrompt = async (name: string, prompt: Partial<PromptDetails>): Promise<PromptDetails> => {
   try {
-    const response = await mcpApi.post<any>('/tools/update_prompt/invoke', { name, ...prompt });
-    const result = response.data?.content?.text ? JSON.parse(response.data.content.text) : {};
-    return result as PromptDetails;
+    // 转换前端数据格式为MCP工具期望的格式
+    const mcpData = {
+      name: name,
+      description: prompt.description,
+      category: prompt.category,
+      tags: prompt.tags,
+      content: prompt.content,
+      input_variables: prompt.input_variables,
+      compatible_models: prompt.compatible_models,
+      template_format: prompt.template_format,
+      is_public: prompt.is_public,
+      allow_collaboration: prompt.allow_collaboration,
+      edit_permission: prompt.edit_permission,
+      author: prompt.author,
+      version: prompt.version
+    };
+
+    // 移除undefined字段
+    Object.keys(mcpData).forEach(key => {
+      if ((mcpData as any)[key] === undefined) {
+        delete (mcpData as any)[key];
+      }
+    });
+
+    console.log('发送更新提示词请求:', mcpData);
+    
+    const response = await mcpApi.post<any>('/tools/update_prompt/invoke', mcpData);
+    
+    console.log('更新提示词响应:', response.data);
+    
+    // 处理MCP工具的响应格式
+    if (response.data && response.data.content && response.data.content.text) {
+      const result = JSON.parse(response.data.content.text);
+      return result as PromptDetails;
+    } else if (response.data && response.data.data) {
+      return response.data.data as PromptDetails;
+    } else {
+      throw new Error('响应格式不正确');
+    }
   } catch (error) {
     console.error(`更新提示词 ${name} 失败:`, error);
     throw error;
