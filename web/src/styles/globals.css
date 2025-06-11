@@ -378,3 +378,27 @@ code, pre, .font-mono {
     color: black;
   }
 }
+
+/* 边框动画效果 */
+.animate-border-beam {
+  animation: border-beam 2s linear infinite;
+}
+
+@keyframes border-beam {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+/* 文字闪烁动画 */
+.animate-text-shimmer {
+  animation: text-shimmer 2s ease-in-out infinite alternate;
+}
+
+@keyframes text-shimmer {
+  0% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: 100% 50%;
+  }
+}
