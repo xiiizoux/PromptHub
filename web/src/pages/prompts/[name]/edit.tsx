@@ -131,6 +131,53 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
     defaultValues: safePromptData
   });
 
+  // 数据同步：确保状态变量与表单数据保持一致
+  useEffect(() => {
+    // 如果input_variables为空，尝试从content中提取变量
+    let finalVariables = safePromptData.input_variables || [];
+    if (finalVariables.length === 0 && safePromptData.content) {
+      const matches = safePromptData.content.match(/\{\{([^}]+)\}\}/g);
+      if (matches) {
+        finalVariables = Array.from(new Set(
+          matches.map(match => match.replace(/^\{\{|\}\}$/g, '').trim())
+        )).filter(variable => variable.length > 0);
+      }
+    }
+    
+    // 同步变量
+    if (finalVariables.length > 0) {
+      setVariables(finalVariables);
+      setValue('input_variables', finalVariables);
+    }
+    
+    // 同步标签
+    if (safePromptData.tags && safePromptData.tags.length > 0) {
+      setTags(safePromptData.tags);
+      setValue('tags', safePromptData.tags);
+    }
+    
+    // 同步兼容模型
+    if (safePromptData.compatible_models && safePromptData.compatible_models.length > 0) {
+      setModels(safePromptData.compatible_models);
+      setValue('compatible_models', safePromptData.compatible_models);
+    }
+    
+    // 确保分类正确设置（重要：分类必须确保设置）
+    if (safePromptData.category) {
+      setValue('category', safePromptData.category);
+      console.log('设置分类为:', safePromptData.category);
+    }
+    
+    console.log('数据同步完成:', {
+      extractedVariables: finalVariables,
+      originalVariables: safePromptData.input_variables,
+      tags: safePromptData.tags,
+      models: safePromptData.compatible_models,
+      category: safePromptData.category,
+      content: safePromptData.content ? safePromptData.content.substring(0, 100) + '...' : 'empty'
+    });
+  }, [safePromptData, setValue]);
+
   // 权限检查和作者信息更新
   useEffect(() => {
     if (user) {
