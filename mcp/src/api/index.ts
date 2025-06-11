@@ -1,9 +1,9 @@
 import express from 'express';
 import cors from 'cors';
-import { config, validateConfig } from '../src/config.js';
-import { StorageFactory } from '../src/storage/storage-factory.js';
-import { Prompt, ApiResponse, StorageAdapter } from '../src/types.js';
-import mcpRouter from '../src/api/mcp-router.js';
+import { config, validateConfig } from '../config.js';
+import { StorageFactory } from '../storage/storage-factory.js';
+import { Prompt, ApiResponse, StorageAdapter } from '../types.js';
+import mcpRouter from './mcp-router.js';
 
 const app = express();
 const storage: StorageAdapter = StorageFactory.getStorage();

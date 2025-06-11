@@ -1,16 +1,31 @@
 #!/usr/bin/env node
 
+import express from 'express';
 import { PromptServer } from './mcp-server.js';
 import { validateConfig } from './config.js';
 
-async function main() {
+export async function startMCPServer() {
   try {
     // 验证配置
     validateConfig();
     
+    console.log('正在启动MCP服务器...');
+    
     // 创建并启动提示词服务器
     const server = new PromptServer();
     await server.start();
+    
+    console.log('MCP服务器启动成功');
+    return server;
+  } catch (error) {
+    console.error('启动MCP服务器失败:', error);
+    throw error;
+  }
+}
+
+async function main() {
+  try {
+    await startMCPServer();
   } catch (error) {
     console.error('Failed to start MCP Prompt Server:', error);
     process.exit(1);
@@ -30,12 +45,12 @@ process.on('unhandledRejection', (reason, promise) => {
 
 // 优雅关闭
 process.on('SIGINT', () => {
-  console.error('Received SIGINT, shutting down gracefully...');
+  console.log('Received SIGINT, shutting down gracefully...');
   process.exit(0);
 });
 
 process.on('SIGTERM', () => {
-  console.error('Received SIGTERM, shutting down gracefully...');
+  console.log('Received SIGTERM, shutting down gracefully...');
   process.exit(0);
 });
 

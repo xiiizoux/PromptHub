@@ -57,7 +57,7 @@ export API_KEY=default-api-key-for-docker
 # 直接使用node运行编译后的代码
 echo "启动MCP服务"
 # 使用正确的路径启动MCP服务
-cd /app/mcp && node dist/src/index.js > /app/logs/mcp.log 2>&1 &
+cd /app/mcp && node dist/index.js > /app/logs/mcp.log 2>&1 &
 
 MCP_PID=$!
 

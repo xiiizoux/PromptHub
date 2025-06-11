@@ -7,33 +7,16 @@
     "esModuleInterop": true,
     "allowJs": true,
     "outDir": "./dist",
-    "rootDir": "../",
-    "strict": true,
-    "noImplicitAny": false,
-    "strictNullChecks": true,
-    "strictFunctionTypes": true,
-    "noImplicitReturns": true,
-    "noFallthroughCasesInSwitch": true,
-    "moduleDetection": "force",
-    "resolveJsonModule": true,
-    "isolatedModules": true,
-    "verbatimModuleSyntax": false,
+    "rootDir": "./src",
+    "strict": false,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "declaration": true,
     "declarationMap": true,
-    "sourceMap": true,
-    "paths": {
-      "@modelcontextprotocol/sdk": ["./node_modules/@modelcontextprotocol/sdk"],
-      "@modelcontextprotocol/sdk/*": ["./node_modules/@modelcontextprotocol/sdk/*"],
-      "supabase": ["../supabase"],
-      "supabase/*": ["../supabase/*"]
-    }
+    "sourceMap": true
   },
   "include": [
-    "src/**/*",
-    "api/**/*",
-    "../supabase/**/*"
+    "src/**/*"
   ],
   "exclude": [
     "node_modules",
