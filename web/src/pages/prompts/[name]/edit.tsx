@@ -70,21 +70,6 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [permissionCheck, setPermissionCheck] = useState<PermissionCheck | null>(null);
 
-  // 权限检查
-  useEffect(() => {
-    if (user) {
-      const permission = checkEditPermission(prompt, user);
-      setPermissionCheck(permission);
-      
-      // 如果没有权限，3秒后重定向到详情页
-      if (!permission.canEdit) {
-        setTimeout(() => {
-          router.push(`/prompts/${prompt.name}`);
-        }, 3000);
-      }
-    }
-  }, [user, prompt, router]);
-  
   // 获取分类数据
   useEffect(() => {
     const fetchCategories = async () => {
@@ -126,21 +111,42 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
 
   const { register, handleSubmit, control, formState: { errors }, setValue, watch, reset } = useForm<PromptFormData>({
     defaultValues: {
-      name: prompt.name,
-      description: prompt.description,
-      content: prompt.content,
-      category: prompt.category,
+      name: prompt.name || '',
+      description: prompt.description || '',
+      content: prompt.content || '',
+      category: prompt.category || '通用',
       version: currentVersionFormatted as any,
-      author: prompt.author || user?.display_name || user?.username || '',
+      author: prompt.author || user?.display_name || user?.username || '未知用户',
       template_format: prompt.template_format || 'text',
       input_variables: prompt.input_variables || [],
       tags: prompt.tags || [],
       compatible_models: prompt.compatible_models || [],
-      is_public: prompt.is_public || false,
-      allow_collaboration: prompt.allow_collaboration || false,
+      is_public: prompt.is_public !== undefined ? prompt.is_public : false,
+      allow_collaboration: prompt.allow_collaboration !== undefined ? prompt.allow_collaboration : false,
       edit_permission: prompt.edit_permission || 'owner_only',
     }
   });
+
+  // 权限检查和作者信息更新
+  useEffect(() => {
+    if (user) {
+      const permission = checkEditPermission(prompt, user);
+      setPermissionCheck(permission);
+      
+      // 更新作者信息如果当前没有作者或作者为未知用户
+      if (!prompt.author || prompt.author === '未知用户') {
+        const authorName = user.display_name || user.username || user.email.split('@')[0];
+        setValue('author', authorName);
+      }
+      
+      // 如果没有权限，3秒后重定向到详情页
+      if (!permission.canEdit) {
+        setTimeout(() => {
+          router.push(`/prompts/${prompt.name}`);
+        }, 3000);
+      }
+    }
+  }, [user, prompt, router, setValue]);
 
   // 监听表单变化以检测未保存的更改
   const watchedValues = watch();

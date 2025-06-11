@@ -86,7 +86,77 @@ export class DatabaseService {
    * 获取所有分类
    */
   async getCategories(): Promise<string[]> {
-    return await this.adapter.getCategories();
+    try {
+      // 先尝试从专用的categories表获取
+      const { data: categoriesData, error: categoriesError } = await this.adapter.supabase
+        .from('categories')
+        .select('name, sort_order')
+        .eq('is_active', true)
+        .order('sort_order');
+
+      if (!categoriesError && categoriesData && categoriesData.length > 0) {
+        return categoriesData.map(item => item.name);
+      }
+
+      console.log('categories表为空或不存在，初始化预设分类');
+      
+      // 如果categories表为空，初始化预设分类
+      const defaultCategories = [
+        { name: '通用', sort_order: 1 },
+        { name: '创意写作', sort_order: 2 },
+        { name: '代码辅助', sort_order: 3 },
+        { name: '数据分析', sort_order: 4 },
+        { name: '营销推广', sort_order: 5 },
+        { name: '学术研究', sort_order: 6 },
+        { name: '教育培训', sort_order: 7 },
+        { name: '商务办公', sort_order: 8 },
+        { name: '内容翻译', sort_order: 9 },
+        { name: '问答助手', sort_order: 10 }
+      ];
+
+      // 尝试插入默认分类到categories表
+      const { data: insertData, error: insertError } = await this.adapter.supabase
+        .from('categories')
+        .insert(defaultCategories.map(cat => ({
+          name: cat.name,
+          sort_order: cat.sort_order,
+          is_active: true,
+          created_at: new Date().toISOString()
+        })))
+        .select('name');
+
+      if (!insertError && insertData) {
+        console.log('成功初始化categories表');
+        return insertData.map(item => item.name);
+      }
+
+      console.log('无法写入categories表，使用提示词中的分类作为备选');
+      
+      // 如果无法写入categories表，从prompts表中提取现有分类
+      const { data: promptsData, error: promptsError } = await this.adapter.supabase
+        .from('prompts')
+        .select('category')
+        .not('category', 'is', null)
+        .order('category');
+
+      if (!promptsError && promptsData) {
+        const existingCategories = Array.from(new Set(
+          promptsData.map(item => item.category).filter(Boolean)
+        ));
+        
+        if (existingCategories.length > 0) {
+          return existingCategories as string[];
+        }
+      }
+
+      // 最后的兜底方案：返回默认分类名称
+      return defaultCategories.map(cat => cat.name);
+      
+    } catch (error) {
+      console.error('获取分类失败:', error);
+      // 发生错误时返回默认分类
+      return ['通用', '创意写作', '代码辅助', '数据分析', '营销推广', '学术研究', '教育培训', '商务办公', '内容翻译', '问答助手'];
+    }
   }
 
   /**
@@ -108,18 +178,43 @@ export class DatabaseService {
    */
   async getPromptByName(name: string, userId?: string): Promise<PromptDetails | null> {
     try {
-      const prompt = await this.adapter.getPrompt(name, userId);
-      if (!prompt) return null;
+      // 使用联合查询一次性获取提示词和用户信息
+      const { data, error } = await this.adapter.supabase
+        .from('prompts')
+        .select(`
+          *,
+          user:users!prompts_user_id_fkey(username, display_name)
+        `)
+        .eq('name', name)
+        .or(userId ? `user_id.eq.${userId},is_public.eq.true` : 'is_public.eq.true')
+        .single();
 
-      // 将Prompt转换为PromptDetails
+      if (error || !data) {
+        console.error('获取提示词详情失败:', error);
+        return null;
+      }
+
+      // 转换为PromptDetails格式
       const promptDetails: PromptDetails = {
-        ...prompt,
-        content: prompt.messages?.[0]?.content || '',
-        input_variables: this.extractInputVariables(prompt.messages?.[0]?.content || ''),
-        compatible_models: ['gpt-4', 'gpt-3.5-turbo', 'claude-3'], // 默认兼容模型
-        allow_collaboration: prompt.is_public,
-        edit_permission: 'owner',
-        author: await this.getUsernameById(prompt.user_id)
+        id: data.id,
+        name: data.name,
+        description: data.description || '',
+        category: data.category || '通用',
+        tags: Array.isArray(data.tags) ? data.tags : [],
+        messages: data.messages || [],
+        is_public: Boolean(data.is_public),
+        user_id: data.user_id,
+        version: data.version || 1,
+        created_at: data.created_at,
+        updated_at: data.updated_at,
+        
+        // 扩展字段
+        content: data.messages?.[0]?.content || '',
+        input_variables: this.extractInputVariables(data.messages?.[0]?.content || ''),
+        compatible_models: data.compatible_models || ['gpt-4', 'gpt-3.5-turbo', 'claude-3'],
+        allow_collaboration: Boolean(data.allow_collaboration || data.is_public),
+        edit_permission: data.edit_permission || 'owner',
+        author: data.user?.display_name || data.user?.username || '未知用户'
       };
 
       return promptDetails;
