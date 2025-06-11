@@ -52,25 +52,11 @@ cd /app/mcp
 echo "初始化MCP服务环境变量..."
 export NODE_ENV=production
 # 使用之前设置的STORAGE_TYPE环境变量
-# FORCE_LOCAL_STORAGE环境变量已经被移除
 export API_KEY=default-api-key-for-docker
 
-# 先运行引号修复脚本
-echo "运行代码修复脚本修复潜在的引号问题..."
-cd /app/mcp && node fix-quotes.js
-
-# 修复enum语法问题
-echo "运行修复脚本处理enum语法问题..."
-cd /app && node fix-docker-enum.cjs
-
-# 修复重复导入问题
-echo "运行修复脚本处理重复导入问题..."
-cd /app && node fix-docker-import.cjs
-
 # 直接使用node运行编译后的代码
-echo "尝试使用编译后的代码启动MCP服务"
+echo "启动MCP服务"
 # 使用正确的路径启动MCP服务
-# 根据容器中的实际路径启动
 cd /app/mcp && node dist/src/index.js > /app/logs/mcp.log 2>&1 &
 
 MCP_PID=$!
@@ -128,4 +114,4 @@ echo "服务已成功启动，监控日志..."
 tail -f /app/logs/mcp.log /app/logs/web.log
 
 echo "一个或多个服务已停止，退出容器..."
-exit 1 
+exit 1

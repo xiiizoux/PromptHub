@@ -1,0 +1,30 @@
+import express from 'express';
+import cors from 'cors';
+import { createServer } from 'http';
+import { authenticateRequest, optionalAuthMiddleware, publicAccessMiddleware } from './api/auth-middleware.js';
+
+// 错误码枚举
+// 错误码枚举 - 改为JavaScript对象
+const ErrorCode = {
+  InvalidParams: 1,
+  MethodNotFound: 2,
+  InternalError: 3,
+  Unauthorized: 4
+};
+
+// 自定义错误类
+class PromptServerError extends Error {
+  constructor(message, code) {
+    super(message);
+    this.code = code;
+    this.name = 'PromptServerError';
+  }
+}
+}
+
+import { config } from './config.js';
+import { StorageFactory } from './storage/storage-factory.js';
+import { Prompt, PromptVersion, StorageAdapter } from './types.js';
+import mcpRouter from './api/mcp-router.js';
+import apiKeysRouter from './api/api-keys-router.js';
+

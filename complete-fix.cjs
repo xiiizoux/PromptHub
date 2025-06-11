@@ -1,17 +1,3 @@
-#!/bin/bash
-# 最终的Docker修复脚本 - 彻底重写所有关键文件
-
-# 设置错误处理
-set -e
-echo "开始执行最终Docker修复脚本..."
-
-# 停止现有容器
-echo "停止现有容器..."
-sudo docker stop prompthub || true
-
-# 创建修复脚本
-echo "创建最终修复脚本..."
-cat > complete-fix.cjs << 'EOF'
 const fs = require('fs');
 const path = require('path');
 
@@ -724,42 +710,3 @@ if (configFixed && authMiddlewareFixed && mcpServerFixed && indexFixed &&
   console.error("修复过程中出现错误，请检查日志！");
   process.exit(1);
 }
-EOF
-
-# 复制修复脚本到Docker容器
-echo "复制修复脚本到Docker容器..."
-sudo docker cp complete-fix.cjs prompthub:/app/complete-fix.cjs
-
-# 启动容器
-echo "启动容器..."
-sudo docker start prompthub
-
-# 等待容器启动
-echo "等待容器启动 (5秒)..."
-sleep 5
-
-# 在容器内执行修复脚本
-echo "在Docker容器中执行最终修复脚本..."
-sudo docker exec prompthub node /app/complete-fix.cjs
-
-# 重启容器以应用所有修复
-echo "重启容器以应用所有修复..."
-sudo docker restart prompthub
-
-# 等待容器重启
-echo "等待容器重启并检查服务状态 (30秒)..."
-sleep 30
-
-# 查看容器日志
-echo "显示容器日志最后30行以检查启动状态:"
-sudo docker logs prompthub | tail -n 30
-
-# 最终状态检查
-echo "详细检查MCP服务状态..."
-sudo docker exec prompthub sh -c "ps aux | grep node"
-
-# 检查MCP服务端口是否在监听
-echo "检查MCP服务端口是否在监听..."
-sudo docker exec prompthub sh -c "netstat -tulpn | grep 9010" || echo "MCP服务可能未启动或netstat未安装"
-
-echo "修复完成！Docker容器应该已正常启动。"
