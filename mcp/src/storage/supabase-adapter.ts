@@ -757,6 +757,34 @@ export class SupabaseAdapter extends SocialStorageExtensions implements StorageA
     }
   }
 
+  async signInWithOAuth(provider: 'google' | 'github' | 'discord', redirectTo?: string): Promise<AuthResponse> {
+    try {
+      const { data, error } = await this.supabase.auth.signInWithOAuth({
+        provider,
+        options: {
+          redirectTo: redirectTo || `${process.env.FRONTEND_URL || 'http://localhost:9011'}/auth/callback`,
+          queryParams: provider === 'google' ? {
+            access_type: 'offline',
+            prompt: 'consent',
+          } : undefined,
+        }
+      });
+      
+      if (error) {
+        throw new Error(`${provider} 登录失败: ${error.message}`);
+      }
+      
+      // OAuth登录会重定向，所以这里不会有用户数据
+      return {
+        user: null,
+        token: ''
+      };
+    } catch (err) {
+      console.error(`${provider} OAuth登录时出错:`, err);
+      throw err;
+    }
+  }
+
   async signOut(): Promise<void> {
     try {
       const { error } = await this.supabase.auth.signOut();

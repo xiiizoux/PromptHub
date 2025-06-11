@@ -8,6 +8,7 @@ interface AuthContextType {
   loading: boolean;
   error: string | null;
   login: (email: string, password: string, remember?: boolean) => Promise<void>;
+  loginWithGoogle: () => Promise<void>;
   register: (username: string, email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   signOut: () => Promise<void>; // 添加别名，与logout相同
@@ -36,7 +37,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           await checkAuth();
           
           // 监听认证状态变化
-          const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+          const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event: any, session: any) => {
             console.log('Auth state change:', event, session?.user?.id);
             
             if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
@@ -330,6 +331,39 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  // Google OAuth登录
+  const loginWithGoogle = async (): Promise<void> => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      // 使用Supabase进行Google OAuth登录
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          },
+        }
+      });
+      
+      if (error) {
+        throw error;
+      }
+      
+      // OAuth重定向会自动处理，所以这里不需要进一步处理
+      // 用户数据同步将在onAuthStateChange回调中处理
+    } catch (err: any) {
+      console.error('Google登录失败:', err);
+      setError(err.message || 'Google登录失败，请稍后再试');
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // 登出
   const logout = async (): Promise<void> => {
     setLoading(true);
@@ -384,6 +418,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     loading,
     error,
     login,
+    loginWithGoogle,
     register,
     logout,
     signOut: logout, // 添加别名，与logout相同
