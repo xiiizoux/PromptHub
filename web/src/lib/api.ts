@@ -229,25 +229,68 @@ export const getPromptDetails = async (name: string): Promise<PromptDetails> => 
 // 创建新提示词
 export const createPrompt = async (prompt: Partial<PromptDetails>): Promise<PromptDetails> => {
   try {
-    // 获取认证令牌
+    // 获取认证令牌 - 使用正确的Supabase存储键
     let token = null;
+    
     if (typeof window !== 'undefined') {
-      // 尝试从浏览器存储中获取令牌
-      token = localStorage.getItem('auth.token'); // Supabase令牌
+      // 方法1: 检查PromptHub专用的存储键
+      try {
+        const authData = localStorage.getItem('prompthub-auth-token');
+        if (authData) {
+          const parsedAuth = JSON.parse(authData);
+          token = parsedAuth?.access_token;
+          console.log('从prompthub-auth-token获取到认证令牌');
+        }
+      } catch (e) {
+        console.warn('解析prompthub-auth-token失败:', e);
+      }
       
-      // 如果没有找到令牌，检查其他可能的存储地点
+      // 方法2: 检查标准的auth.token（备用）
+      if (!token) {
+        token = localStorage.getItem('auth.token');
+      }
+      
+      // 方法3: 检查其他Supabase标准格式的令牌存储（备用）
       if (!token) {
         try {
-          // 尝试从会话存储中获取
+          // 遍历localStorage寻找Supabase会话令牌
+          for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key && key.includes('auth-token')) {
+              const tokenData = localStorage.getItem(key);
+              if (tokenData) {
+                const parsedData = JSON.parse(tokenData);
+                token = parsedData?.access_token;
+                if (token) {
+                  console.log('从其他Supabase存储获取到认证令牌:', key);
+                  break;
+                }
+              }
+            }
+          }
+        } catch (e) {
+          console.warn('从其他Supabase存储获取令牌失败:', e);
+        }
+      }
+      
+      // 方法4: 尝试从supabase.auth.token获取（最后备用）
+      if (!token) {
+        try {
           const authSession = localStorage.getItem('supabase.auth.token');
           if (authSession) {
             const parsed = JSON.parse(authSession);
             token = parsed?.currentSession?.access_token;
           }
         } catch (e) {
-          console.warn('解析会话存储令牌失败:', e);
+          console.warn('解析supabase.auth.token失败:', e);
         }
       }
+    }
+    
+    console.log('创建提示词 - 认证令牌状态:', { hasToken: !!token, tokenLength: token?.length });
+    
+    if (!token) {
+      throw new Error('未提供认证令牌，请重新登录');
     }
     
     // 添加认证头
@@ -276,11 +319,51 @@ export const createPrompt = async (prompt: Partial<PromptDetails>): Promise<Prom
 // 更新提示词
 export const updatePrompt = async (name: string, prompt: Partial<PromptDetails>): Promise<PromptDetails> => {
   try {
-    // 获取认证令牌
+    // 获取认证令牌 - 使用正确的Supabase存储键
     let token = null;
+    
     if (typeof window !== 'undefined') {
-      token = localStorage.getItem('auth.token');
+      // 方法1: 检查PromptHub专用的存储键
+      try {
+        const authData = localStorage.getItem('prompthub-auth-token');
+        if (authData) {
+          const parsedAuth = JSON.parse(authData);
+          token = parsedAuth?.access_token;
+          console.log('从prompthub-auth-token获取到认证令牌');
+        }
+      } catch (e) {
+        console.warn('解析prompthub-auth-token失败:', e);
+      }
       
+      // 方法2: 检查标准的auth.token（备用）
+      if (!token) {
+        token = localStorage.getItem('auth.token');
+      }
+      
+      // 方法3: 检查其他Supabase标准格式的令牌存储（备用）
+      if (!token) {
+        try {
+          // 遍历localStorage寻找Supabase会话令牌
+          for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key && key.includes('auth-token')) {
+              const tokenData = localStorage.getItem(key);
+              if (tokenData) {
+                const parsedData = JSON.parse(tokenData);
+                token = parsedData?.access_token;
+                if (token) {
+                  console.log('从其他Supabase存储获取到认证令牌:', key);
+                  break;
+                }
+              }
+            }
+          }
+        } catch (e) {
+          console.warn('从其他Supabase存储获取令牌失败:', e);
+        }
+      }
+      
+      // 方法4: 尝试从supabase.auth.token获取（最后备用）
       if (!token) {
         try {
           const authSession = localStorage.getItem('supabase.auth.token');
@@ -289,16 +372,22 @@ export const updatePrompt = async (name: string, prompt: Partial<PromptDetails>)
             token = parsed?.currentSession?.access_token;
           }
         } catch (e) {
-          console.warn('解析会话存储令牌失败:', e);
+          console.warn('解析supabase.auth.token失败:', e);
         }
       }
     }
     
-    // 添加认证头
-    const headers: Record<string, string> = {};
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
+    console.log('认证令牌状态:', { hasToken: !!token, tokenLength: token?.length });
+    
+    if (!token) {
+      throw new Error('未提供认证令牌，请重新登录');
     }
+    
+    // 添加认证头
+    const headers: Record<string, string> = {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    };
 
     console.log('发送更新提示词请求:', { name, prompt, hasToken: !!token });
     
@@ -316,6 +405,9 @@ export const updatePrompt = async (name: string, prompt: Partial<PromptDetails>)
 
   } catch (error: any) {
     console.error(`更新提示词 ${name} 失败:`, error);
+    if (error.response?.status === 401) {
+      throw new Error('认证失败，请重新登录');
+    }
     throw new Error(`更新提示词失败: ${error.response?.data?.message || error.message}`);
   }
 };
