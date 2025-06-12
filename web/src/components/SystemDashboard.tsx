@@ -12,7 +12,6 @@ import {
   GlobeAltIcon
 } from '@heroicons/react/24/outline';
 import { getSystemPerformance } from '@/lib/api';
-import { Line, Bar, Doughnut } from 'react-chartjs-2';
 import toast from 'react-hot-toast';
 
 interface SystemDashboardProps {
@@ -244,202 +243,68 @@ export const SystemDashboard: React.FC<SystemDashboardProps> = ({ className = ''
         </div>
       </motion.div>
 
-      {/* 系统资源使用情况 */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* 响应时间趋势 */}
+      {/* 简化的性能指标 */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* API健康状态 */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
-          className="glass rounded-xl border border-neon-purple/20 p-6"
+          className="glass rounded-xl border border-green-400/20 p-6"
         >
-          <h4 className="text-lg font-semibold text-white mb-4">响应时间趋势</h4>
-          <div className="h-64">
-            <Line
-              data={{
-                labels: ['00:00', '04:00', '08:00', '12:00', '16:00', '20:00'],
-                datasets: [
-                  {
-                    label: '响应时间 (ms)',
-                    data: [450, 380, 520, 680, 590, 420],
-                    borderColor: '#9D4EDD',
-                    backgroundColor: 'rgba(157, 78, 221, 0.1)',
-                    tension: 0.4,
-                  },
-                ],
-              }}
-              options={{
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                  legend: {
-                    labels: { color: '#9CA3AF' }
-                  },
-                },
-                scales: {
-                  x: {
-                    ticks: { color: '#9CA3AF' },
-                    grid: { color: '#374151' },
-                  },
-                  y: {
-                    ticks: { color: '#9CA3AF' },
-                    grid: { color: '#374151' },
-                  },
-                },
-              }}
-            />
+          <h4 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+            <CheckCircleIcon className="h-5 w-5 text-green-400" />
+            API可用性
+          </h4>
+          <div className="text-center">
+            <div className="text-4xl font-bold text-green-400 mb-2">98%</div>
+            <p className="text-sm text-gray-400">99.8% SLA</p>
+            <div className="w-full bg-gray-700 rounded-full h-2 mt-4">
+              <div className="bg-green-400 h-2 rounded-full" style={{ width: '98%' }}></div>
+            </div>
           </div>
         </motion.div>
 
-        {/* 用户活动分布 */}
+        {/* 数据库性能 */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.6 }}
-          className="glass rounded-xl border border-neon-pink/20 p-6"
+          className="glass rounded-xl border border-blue-400/20 p-6"
         >
-          <h4 className="text-lg font-semibold text-white mb-4">用户活动分布</h4>
-          <div className="h-64">
-            <Bar
-              data={{
-                labels: ['创建', '使用', '收藏', '评分', '分享'],
-                datasets: [
-                  {
-                    label: '活动次数',
-                    data: [120, 890, 340, 150, 80],
-                    backgroundColor: [
-                      'rgba(0, 229, 255, 0.8)',
-                      'rgba(157, 78, 221, 0.8)',
-                      'rgba(255, 20, 147, 0.8)',
-                      'rgba(255, 215, 0, 0.8)',
-                      'rgba(34, 197, 94, 0.8)',
-                    ],
-                  },
-                ],
-              }}
-              options={{
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                  legend: { display: false },
-                },
-                scales: {
-                  x: {
-                    ticks: { color: '#9CA3AF' },
-                    grid: { color: '#374151' },
-                  },
-                  y: {
-                    ticks: { color: '#9CA3AF' },
-                    grid: { color: '#374151' },
-                  },
-                },
-              }}
-            />
+          <h4 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+            <CpuChipIcon className="h-5 w-5 text-blue-400" />
+            数据库性能
+          </h4>
+          <div className="text-center">
+            <div className="text-4xl font-bold text-blue-400 mb-2">95%</div>
+            <p className="text-sm text-gray-400">平均查询 &lt; 50ms</p>
+            <div className="w-full bg-gray-700 rounded-full h-2 mt-4">
+              <div className="bg-blue-400 h-2 rounded-full" style={{ width: '95%' }}></div>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* 存储使用率 */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.7 }}
+          className="glass rounded-xl border border-yellow-400/20 p-6"
+        >
+          <h4 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+            <ServerIcon className="h-5 w-5 text-yellow-400" />
+            存储使用率
+          </h4>
+          <div className="text-center">
+            <div className="text-4xl font-bold text-yellow-400 mb-2">85%</div>
+            <p className="text-sm text-gray-400">1.2TB / 2.0TB</p>
+            <div className="w-full bg-gray-700 rounded-full h-2 mt-4">
+              <div className="bg-yellow-400 h-2 rounded-full" style={{ width: '85%' }}></div>
+            </div>
           </div>
         </motion.div>
       </div>
-
-      {/* 健康状态详情 */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.7 }}
-        className="glass rounded-xl border border-neon-yellow/20 p-6"
-      >
-        <h4 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-          <CpuChipIcon className="h-5 w-5 text-neon-yellow" />
-          系统健康状态
-        </h4>
-        
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* API健康状态 */}
-          <div className="text-center">
-            <div className="w-20 h-20 mx-auto mb-3">
-              <Doughnut
-                data={{
-                  datasets: [
-                    {
-                      data: [98, 2],
-                      backgroundColor: ['#10B981', '#374151'],
-                      borderWidth: 0,
-                    },
-                  ],
-                }}
-                options={{
-                  cutout: '70%',
-                  plugins: {
-                    legend: { display: false },
-                    tooltip: { enabled: false },
-                  },
-                }}
-              />
-              <div className="absolute inset-0 flex items-center justify-center">
-                <span className="text-lg font-bold text-green-400">98%</span>
-              </div>
-            </div>
-            <h5 className="font-medium text-white">API可用性</h5>
-            <p className="text-sm text-gray-400">99.8% SLA</p>
-          </div>
-
-          {/* 数据库健康状态 */}
-          <div className="text-center">
-            <div className="w-20 h-20 mx-auto mb-3 relative">
-              <Doughnut
-                data={{
-                  datasets: [
-                    {
-                      data: [95, 5],
-                      backgroundColor: ['#3B82F6', '#374151'],
-                      borderWidth: 0,
-                    },
-                  ],
-                }}
-                options={{
-                  cutout: '70%',
-                  plugins: {
-                    legend: { display: false },
-                    tooltip: { enabled: false },
-                  },
-                }}
-              />
-              <div className="absolute inset-0 flex items-center justify-center">
-                <span className="text-lg font-bold text-blue-400">95%</span>
-              </div>
-            </div>
-            <h5 className="font-medium text-white">数据库性能</h5>
-            <p className="text-sm text-gray-400">平均查询 < 50ms</p>
-          </div>
-
-          {/* 存储健康状态 */}
-          <div className="text-center">
-            <div className="w-20 h-20 mx-auto mb-3 relative">
-              <Doughnut
-                data={{
-                  datasets: [
-                    {
-                      data: [85, 15],
-                      backgroundColor: ['#F59E0B', '#374151'],
-                      borderWidth: 0,
-                    },
-                  ],
-                }}
-                options={{
-                  cutout: '70%',
-                  plugins: {
-                    legend: { display: false },
-                    tooltip: { enabled: false },
-                  },
-                }}
-              />
-              <div className="absolute inset-0 flex items-center justify-center">
-                <span className="text-lg font-bold text-yellow-400">85%</span>
-              </div>
-            </div>
-            <h5 className="font-medium text-white">存储使用率</h5>
-            <p className="text-sm text-gray-400">1.2TB / 2.0TB</p>
-          </div>
-        </div>
-      </motion.div>
     </div>
   );
 }; 

@@ -1067,25 +1067,19 @@ export async function getOptimizationSuggestions(promptId: string): Promise<Opti
   return response.data.suggestions;
 }
 
-export async function getSystemPerformance(): Promise<{
-  total_prompts: number;
-  active_users: number;
-  avg_response_time: number;
-  system_health: 'excellent' | 'good' | 'fair' | 'poor';
-  recent_activity: Array<{
-    timestamp: string;
-    prompt_name: string;
-    user_id: string;
-    performance_score: number;
-  }>;
-}> {
-  const response = await api.get('/performance/system');
-  
-  if (!response.data.success) {
-    throw new Error('获取系统性能失败');
+// 获取系统性能数据
+export const getSystemPerformance = async () => {
+  try {
+    const response = await api.get('/performance/system');
+    if (response.data.success) {
+      return response.data.data;
+    } else {
+      throw new Error(response.data.error || '获取系统性能数据失败');
+    }
+  } catch (error: any) {
+    console.error('获取系统性能数据失败:', error);
+    throw error;
   }
-
-  return response.data;
-}
+};
 
 export default api;
