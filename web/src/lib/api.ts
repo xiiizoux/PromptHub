@@ -832,4 +832,260 @@ export async function importPrompts(importData: any, options?: {
   return response.data;
 }
 
+// 语义搜索相关API
+export interface SearchSuggestion {
+  text: string;
+  type: 'keyword' | 'category' | 'semantic' | 'history';
+  confidence?: number;
+}
+
+export interface SemanticSearchParams {
+  query: string;
+  mode: 'semantic' | 'keyword';
+  limit?: number;
+  filters?: {
+    categories?: string[];
+    tags?: string[];
+    minRating?: number;
+  };
+}
+
+export async function performSemanticSearch(params: SemanticSearchParams): Promise<PromptDetails[]> {
+  const response = await api.post('/search/semantic', params);
+  
+  if (!response.data.success) {
+    throw new Error('语义搜索失败');
+  }
+
+  return response.data.results;
+}
+
+export async function getSearchSuggestions(query: string): Promise<SearchSuggestion[]> {
+  const response = await api.get(`/search/suggestions?q=${encodeURIComponent(query)}`);
+  
+  if (!response.data.success) {
+    throw new Error('获取搜索建议失败');
+  }
+
+  return response.data.suggestions;
+}
+
+export async function saveSearchQuery(query: string): Promise<void> {
+  try {
+    await api.post('/search/save-query', { query });
+  } catch (error) {
+    // 搜索查询保存失败不影响主要功能，只记录错误
+    console.error('保存搜索查询失败:', error);
+  }
+}
+
+export async function getSearchHistory(): Promise<string[]> {
+  try {
+    const response = await api.get('/search/history');
+    
+    if (!response.data.success) {
+      return [];
+    }
+
+    return response.data.history;
+  } catch (error) {
+    console.error('获取搜索历史失败:', error);
+    return [];
+  }
+}
+
+export async function getSearchStats(): Promise<{
+  totalSearches: number;
+  popularQueries: Array<{ query: string; count: number }>;
+  popularCategories: Array<{ category: string; count: number }>;
+  recentTrends: Array<{ query: string; timestamp: string }>;
+}> {
+  const response = await api.get('/search/stats');
+  
+  if (!response.data.success) {
+    throw new Error('获取搜索统计失败');
+  }
+
+  return response.data;
+}
+
+// 推荐系统相关API
+export type RecommendationType = 'personalized' | 'similar' | 'trending' | 'collaborative';
+
+export interface RecommendationResult {
+  prompt: PromptDetails & {
+    author?: string;
+    likes?: number;
+    usage_count?: number;
+  };
+  score: number;
+  reason: string;
+  algorithm: string;
+}
+
+export async function getRecommendations(
+  type: RecommendationType, 
+  userId?: string, 
+  limit: number = 10
+): Promise<RecommendationResult[]> {
+  const response = await api.post('/recommendations/get', { type, userId, limit });
+  
+  if (!response.data.success) {
+    throw new Error('获取推荐失败');
+  }
+
+  return response.data.recommendations;
+}
+
+export async function getPersonalizedRecommendations(
+  userId: string, 
+  limit: number = 10
+): Promise<RecommendationResult[]> {
+  const response = await api.get(`/recommendations/personalized?userId=${userId}&limit=${limit}`);
+  
+  if (!response.data.success) {
+    throw new Error('获取个性化推荐失败');
+  }
+
+  return response.data.recommendations;
+}
+
+export async function getSimilarPrompts(
+  promptId: string, 
+  limit: number = 10
+): Promise<RecommendationResult[]> {
+  const response = await api.get(`/recommendations/similar?promptId=${promptId}&limit=${limit}`);
+  
+  if (!response.data.success) {
+    throw new Error('获取相似推荐失败');
+  }
+
+  return response.data.recommendations;
+}
+
+export async function getTrendingPrompts(limit: number = 10): Promise<RecommendationResult[]> {
+  const response = await api.get(`/recommendations/trending?limit=${limit}`);
+  
+  if (!response.data.success) {
+    throw new Error('获取热门推荐失败');
+  }
+
+  return response.data.recommendations;
+}
+
+export async function updateRecommendationFeedback(
+  userId: string,
+  promptId: string,
+  feedback: 'like' | 'dislike' | 'not_interested'
+): Promise<void> {
+  const response = await api.post('/recommendations/feedback', {
+    userId,
+    promptId,
+    feedback
+  });
+  
+  if (!response.data.success) {
+    throw new Error('更新推荐反馈失败');
+  }
+}
+
+// 性能监控相关API
+export interface PerformanceMetrics {
+  overall_score: number;
+  avg_response_time: number;
+  response_time_trend: 'up' | 'down' | 'stable';
+  response_time_change: number;
+  success_rate: number;
+  success_rate_trend: 'up' | 'down' | 'stable';
+  success_rate_change: number;
+  avg_tokens: number;
+  token_usage_trend: 'up' | 'down' | 'stable';
+  user_satisfaction: number;
+  satisfaction_trend: 'up' | 'down' | 'stable';
+  satisfaction_count: number;
+  time_series: {
+    labels: string[];
+    response_times: number[];
+    usage_counts: number[];
+  };
+  usage_distribution: {
+    labels: string[];
+    values: number[];
+  };
+}
+
+export interface PerformanceAnalysis {
+  key_findings: string[];
+  bottlenecks: string[];
+  performance_trends: {
+    trend: 'improving' | 'declining' | 'stable';
+    factors: string[];
+  };
+}
+
+export interface OptimizationSuggestion {
+  title: string;
+  description: string;
+  priority: 'high' | 'medium' | 'low';
+  expected_improvement: string;
+  implementation_effort: 'low' | 'medium' | 'high';
+}
+
+export async function getPerformanceMetrics(
+  promptId: string, 
+  timeRange: '24h' | '7d' | '30d' | '90d' = '7d'
+): Promise<PerformanceMetrics> {
+  const response = await api.get(`/performance/metrics?promptId=${promptId}&timeRange=${timeRange}`);
+  
+  if (!response.data.success) {
+    throw new Error('获取性能指标失败');
+  }
+
+  return response.data.metrics;
+}
+
+export async function getPerformanceAnalysis(
+  promptId: string, 
+  timeRange: '24h' | '7d' | '30d' | '90d' = '7d'
+): Promise<PerformanceAnalysis> {
+  const response = await api.get(`/performance/analysis?promptId=${promptId}&timeRange=${timeRange}`);
+  
+  if (!response.data.success) {
+    throw new Error('获取性能分析失败');
+  }
+
+  return response.data.analysis;
+}
+
+export async function getOptimizationSuggestions(promptId: string): Promise<OptimizationSuggestion[]> {
+  const response = await api.get(`/performance/suggestions?promptId=${promptId}`);
+  
+  if (!response.data.success) {
+    throw new Error('获取优化建议失败');
+  }
+
+  return response.data.suggestions;
+}
+
+export async function getSystemPerformance(): Promise<{
+  total_prompts: number;
+  active_users: number;
+  avg_response_time: number;
+  system_health: 'excellent' | 'good' | 'fair' | 'poor';
+  recent_activity: Array<{
+    timestamp: string;
+    prompt_name: string;
+    user_id: string;
+    performance_score: number;
+  }>;
+}> {
+  const response = await api.get('/performance/system');
+  
+  if (!response.data.success) {
+    throw new Error('获取系统性能失败');
+  }
+
+  return response.data;
+}
+
 export default api;
