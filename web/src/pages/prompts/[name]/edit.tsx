@@ -62,6 +62,19 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
     ? formatVersionFromInt(prompt.version) 
     : prompt.version || '1.0';
 
+  // 修复edit_permission数据映射
+  const mapEditPermission = (serverValue: any): 'owner_only' | 'collaborators' | 'public' => {
+    switch (serverValue) {
+      case 'owner':
+        return 'owner_only';
+      case 'collaborators':
+      case 'public':
+        return serverValue;
+      default:
+        return 'owner_only';
+    }
+  };
+
   // 确保所有数据都有默认值
   const safePromptData = {
     name: prompt.name || '',
@@ -76,8 +89,16 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
     template_format: prompt.template_format || 'text',
     is_public: prompt.is_public !== undefined ? prompt.is_public : false,
     allow_collaboration: prompt.allow_collaboration !== undefined ? prompt.allow_collaboration : false,
-    edit_permission: prompt.edit_permission || 'owner_only',
+    edit_permission: mapEditPermission(prompt.edit_permission),
   };
+  
+  // 添加权限常量调试日志
+  console.log('权限常量状态检查:', {
+    PERMISSION_LEVELS,
+    PERMISSION_LEVEL_DESCRIPTIONS,
+    promptEditPermission: prompt.edit_permission,
+    mappedEditPermission: safePromptData.edit_permission
+  });
   
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [variables, setVariables] = useState<string[]>(safePromptData.input_variables);
@@ -1131,7 +1152,8 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       author: prompt.author || prompt.user_id || '',
       is_public: Boolean(prompt.is_public),
       allow_collaboration: Boolean(prompt.allow_collaboration),
-      edit_permission: prompt.edit_permission || 'owner_only',
+      edit_permission: prompt.edit_permission === 'owner' ? 'owner_only' as const : 
+                      (prompt.edit_permission || 'owner_only' as const),
       user_id: prompt.user_id || '',
       created_at: prompt.created_at || new Date().toISOString(),
       updated_at: prompt.updated_at || new Date().toISOString(),
