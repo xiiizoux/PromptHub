@@ -149,13 +149,19 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
     setTags(safePromptData.tags || []);
     setModels(safePromptData.compatible_models || []);
     
-    console.log('一次性数据初始化完成:', {
+    console.log('前端一次性数据初始化完成:', {
+      promptName: safePromptData.name,
+      category: safePromptData.category,
       extractedVariables: finalVariables,
       originalVariables: safePromptData.input_variables,
       tags: safePromptData.tags,
       models: safePromptData.compatible_models,
-      category: safePromptData.category,
-      content: safePromptData.content ? safePromptData.content.substring(0, 100) + '...' : 'empty'
+      content: safePromptData.content ? safePromptData.content.substring(0, 100) + '...' : 'empty',
+      formDefaultValues: {
+        name: safePromptData.name,
+        category: safePromptData.category,
+        description: safePromptData.description
+      }
     });
   }, []); // 空依赖数组，仅执行一次
 
@@ -623,12 +629,14 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
                     className="input-primary w-full"
                     disabled={categoriesLoading}
                   >
-                    <option value="">选择分类</option>
-                    {categories.map((category) => (
+                    {!categoriesLoading && categories.map((category) => (
                       <option key={category} value={category}>
                         {category}
                       </option>
                     ))}
+                    {categoriesLoading && (
+                      <option value="">加载中...</option>
+                    )}
                   </select>
                   {errors.category && (
                     <p className="text-neon-red text-sm mt-1">{errors.category.message}</p>
