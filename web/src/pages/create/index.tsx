@@ -22,6 +22,9 @@ import {
   CpuChipIcon,
   ShieldExclamationIcon
 } from '@heroicons/react/24/outline';
+import { AIAnalyzeButton, AIAnalysisResultDisplay } from '@/components/AIAnalyzeButton';
+import { AIAnalysisResult } from '@/lib/ai-analyzer';
+import { AIConfigButton } from '@/components/AIConfigPanel';
 import { useAuth, withAuth } from '@/contexts/AuthContext';
 
 // 预设模型选项
@@ -47,6 +50,8 @@ function CreatePromptPage() {
   const [categoriesLoading, setCategoriesLoading] = useState(true);
   const [suggestedTags, setSuggestedTags] = useState<string[]>([]);
   const [tagsLoading, setTagsLoading] = useState(true);
+  const [aiAnalysisResult, setAiAnalysisResult] = useState<AIAnalysisResult | null>(null);
+  const [showAiAnalysis, setShowAiAnalysis] = useState(false);
   
   // 获取分类数据
   useEffect(() => {
@@ -158,6 +163,43 @@ function CreatePromptPage() {
     
     setModels(newModels);
     setValue('compatible_models', newModels);
+  };
+
+  // AI分析结果处理
+  const handleAIAnalysis = (result: Partial<AIAnalysisResult>) => {
+    setAiAnalysisResult(result as AIAnalysisResult);
+    setShowAiAnalysis(true);
+  };
+
+  // 应用AI分析结果
+  const applyAIResults = (data: Partial<AIAnalysisResult>) => {
+    if (data.category) {
+      setValue('category', data.category);
+    }
+    if (data.tags && data.tags.length > 0) {
+      const newTags = Array.from(new Set([...tags, ...data.tags]));
+      setTags(newTags);
+      setValue('tags', newTags);
+    }
+    if (data.variables && data.variables.length > 0) {
+      const newVariables = Array.from(new Set([...variables, ...data.variables]));
+      setVariables(newVariables);
+      setValue('input_variables', newVariables);
+    }
+    if (data.version) {
+      setValue('version', 1); // 创建页面版本固定为1
+    }
+    if (data.compatibleModels && data.compatibleModels.length > 0) {
+      const newModels = Array.from(new Set([...models, ...data.compatibleModels]));
+      setModels(newModels);
+      setValue('compatible_models', newModels);
+    }
+    if (data.description && !watch('description')) {
+      setValue('description', data.description);
+    }
+    
+    // 关闭分析结果显示
+    setShowAiAnalysis(false);
   };
 
   // 表单提交
@@ -459,10 +501,44 @@ function CreatePromptPage() {
                 transition={{ delay: 1.4 }}
                 className="space-y-2"
               >
-                <label className="flex items-center text-sm font-medium text-gray-300 mb-3">
-                  <SparklesIcon className="h-5 w-5 text-neon-cyan mr-2" />
-                  提示词内容 *
-                </label>
+                <div className="flex items-center justify-between mb-3">
+                  <label className="flex items-center text-sm font-medium text-gray-300">
+                    <SparklesIcon className="h-5 w-5 text-neon-cyan mr-2" />
+                    提示词内容 *
+                  </label>
+                  
+                  {/* AI分析按钮组 */}
+                  <div className="flex items-center gap-2">
+                    <AIAnalyzeButton
+                      content={watch('content') || ''}
+                      onAnalysisComplete={handleAIAnalysis}
+                      variant="full"
+                      className="text-xs px-3 py-1"
+                    />
+                    <AIAnalyzeButton
+                      content={watch('content') || ''}
+                      onAnalysisComplete={(result) => {
+                        if (result.category) {
+                          setValue('category', result.category);
+                        }
+                      }}
+                      variant="classify"
+                      className="text-xs px-3 py-1"
+                    />
+                    <AIAnalyzeButton
+                      content={watch('content') || ''}
+                      onAnalysisComplete={(result) => {
+                        if (result.variables) {
+                          setVariables(result.variables);
+                          setValue('input_variables', result.variables);
+                        }
+                      }}
+                      variant="variables"
+                      className="text-xs px-3 py-1"
+                    />
+                    <AIConfigButton className="text-xs" />
+                  </div>
+                </div>
                 <div className="relative">
                   <textarea
                     {...register('content', { required: '请输入提示词内容' })}
@@ -478,6 +554,32 @@ function CreatePromptPage() {
                 {errors.content && (
                   <p className="text-neon-red text-sm mt-1">{errors.content.message}</p>
                 )}
+                
+                {/* AI分析结果显示 */}
+                <AnimatePresence>
+                  {showAiAnalysis && aiAnalysisResult && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 20, height: 0 }}
+                      animate={{ opacity: 1, y: 0, height: 'auto' }}
+                      exit={{ opacity: 0, y: -20, height: 0 }}
+                      className="mt-4"
+                    >
+                      <div className="relative">
+                        <AIAnalysisResultDisplay
+                          result={aiAnalysisResult}
+                          onApplyResults={applyAIResults}
+                        />
+                        <button
+                          onClick={() => setShowAiAnalysis(false)}
+                          className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors"
+                          title="关闭AI分析结果"
+                        >
+                          <XMarkIcon className="h-5 w-5" />
+                        </button>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </motion.div>
 
               {/* 变量管理 */}

@@ -42,6 +42,14 @@ check_file "web/src/lib/ai-analyzer.ts" || ((error_count++))
 check_file "web/src/pages/api/ai-analyze.ts" || ((error_count++))
 check_file "web/src/components/AIAnalyzeButton.tsx" || ((error_count++))
 check_file "web/src/components/AIConfigPanel.tsx" || ((error_count++))
+
+# 检查创建和编辑页面的AI功能一致性
+if grep -q "AIAnalyzeButton" "web/src/pages/create/index.tsx" && grep -q "AIAnalyzeButton" "web/src/pages/prompts/[name]/edit.tsx"; then
+    echo -e "${GREEN}✅ 创建和编辑页面都包含AI分析功能${NC}"
+else
+    echo -e "${RED}❌ 创建或编辑页面缺少AI分析功能${NC}"
+    ((error_count++))
+fi
 echo ""
 
 echo -e "${BLUE}2. 检查依赖包配置...${NC}"
