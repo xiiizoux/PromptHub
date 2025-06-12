@@ -35,42 +35,60 @@ export default function PromptDetailsPage({ prompt }: PromptDetailsPageProps) {
   const [copied, setCopied] = useState(false);
   const [usageTracked, setUsageTracked] = useState(false);
   
-  // 变量值状态管理
-  const [variableValues, setVariableValues] = useState<Record<string, string>>({});
-  const [processedContent, setProcessedContent] = useState<string>('');
-
-  // 初始化变量值
-  useEffect(() => {
-    if (prompt.input_variables) {
-      const initialValues: Record<string, string> = {};
-      prompt.input_variables.forEach(variable => {
-        initialValues[variable] = `[${variable}]`;
-      });
-      setVariableValues(initialValues);
+  // 从prompt数据中获取完整的内容
+  const getFullContent = () => {
+    // 优先从messages获取内容
+    if (prompt.messages && prompt.messages.length > 0) {
+      return prompt.messages.map(msg => msg.content).join('\n\n');
     }
-  }, [prompt.input_variables]);
+    // 回退到content字段
+    if (prompt.content) {
+      return prompt.content;
+    }
+    return '';
+  };
 
-  // 实时更新内容
+  // 提取变量的函数
+  const extractVariablesFromText = (text: string): string[] => {
+    const regex = /\{\{([a-zA-Z0-9_\u4e00-\u9fa5]+)\}\}/g;
+    const variables = new Set<string>();
+    let match;
+    while ((match = regex.exec(text)) !== null) {
+      variables.add(match[1].trim());
+    }
+    return Array.from(variables);
+  };
+
+  // 获取完整内容和提取变量
+  const fullContent = getFullContent();
+  const allVariables = prompt.input_variables && prompt.input_variables.length > 0 
+    ? prompt.input_variables 
+    : extractVariablesFromText(fullContent);
+
+  // 状态管理
+  const [variableValues, setVariableValues] = useState<Record<string, string>>(() => {
+    const initialValues: Record<string, string> = {};
+    allVariables.forEach(variable => {
+      initialValues[variable] = '';
+    });
+    return initialValues;
+  });
+  
+  const [processedContent, setProcessedContent] = useState<string>(fullContent);
+
+  // 当变量值变化时更新处理后的内容
   useEffect(() => {
-    let content = getVersionContent();
-    
-    // 替换变量
+    let content = fullContent;
     Object.entries(variableValues).forEach(([variable, value]) => {
       const regex = new RegExp(`\\{\\{\\s*${variable}\\s*\\}\\}`, 'g');
-      content = content.replace(regex, value || `[${variable}]`);
+      content = content.replace(regex, value || `{{${variable}}}`);
     });
-    
     setProcessedContent(content);
-  }, [variableValues, selectedVersion]);
+  }, [variableValues, fullContent]);
 
-  // 获取当前选中版本的内容
+  // 获取当前选中版本的内容（暂时简化，因为没有版本系统）
   const getVersionContent = () => {
-    if (!prompt.versions || prompt.versions.length === 0) {
-      return prompt.content || '';
-    }
-
-    const version = prompt.versions.find(v => v.version.toString() === selectedVersion);
-    return version ? version.content : prompt.content || '';
+    return processedContent;
   };
 
   // 更新变量值
@@ -220,7 +238,7 @@ export default function PromptDetailsPage({ prompt }: PromptDetailsPageProps) {
 
   // 渲染变量输入区域
   const renderVariableInputs = () => {
-    if (!prompt.input_variables || prompt.input_variables.length === 0) {
+    if (!allVariables || allVariables.length === 0) {
       return (
         <div className="text-sm text-gray-400 text-center py-8">
           此提示词没有输入变量
@@ -230,7 +248,7 @@ export default function PromptDetailsPage({ prompt }: PromptDetailsPageProps) {
 
     return (
       <div className="space-y-4">
-        {prompt.input_variables.map((variable) => (
+        {allVariables.map((variable) => (
           <div key={variable}>
             <label className="block text-sm font-medium text-gray-300 mb-2">
               {variable}

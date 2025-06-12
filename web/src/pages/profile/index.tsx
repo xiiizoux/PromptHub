@@ -56,7 +56,6 @@ const ProfilePage = () => {
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [promptsLoading, setPromptsLoading] = useState(false);
-  const [promptCount, setPromptCount] = useState(0);
   const [promptCounts, setPromptCounts] = useState<{total: number, public: number, private: number}>({total: 0, public: 0, private: 0});
 
   const tabs = [
@@ -94,8 +93,35 @@ const ProfilePage = () => {
 
   // 加载用户提示词数量（用于统计）
   useEffect(() => {
-    fetchPromptCount();
-  }, []);
+    if (user) {
+      fetchPromptCount();
+    }
+  }, [user]);
+
+  // 当切换到个人资料标签时刷新统计数据
+  useEffect(() => {
+    if (activeTab === 'profile' && user) {
+      fetchPromptCount();
+      // 同时加载API密钥用于统计显示
+      fetchApiKeysForStats();
+    }
+  }, [activeTab, user]);
+
+  // 简化的API密钥获取函数，专门用于统计
+  const fetchApiKeysForStats = async () => {
+    try {
+      if (!user?.id) return;
+      
+      const { default: supabaseAdapter } = await import('@/lib/supabase-adapter');
+      const apiKeysList = await supabaseAdapter.listApiKeys(user.id);
+      setApiKeys(apiKeysList);
+      console.log('API密钥统计数据获取成功:', apiKeysList.length);
+    } catch (error) {
+      console.error('获取API密钥统计失败:', error);
+      // 设置空数组，确保显示0而不是undefined
+      setApiKeys([]);
+    }
+  };
 
   const fetchApiKeys = async () => {
     // 防止重复请求
@@ -604,7 +630,11 @@ const ProfilePage = () => {
         // 从列表中移除已删除的提示词
         setUserPrompts(userPrompts.filter(p => p.id !== promptId));
         // 更新提示词计数
-        setPromptCount(prevCount => Math.max(0, prevCount - 1));
+        // 更新提示词计数统计
+      setPromptCounts(prev => ({
+        ...prev,
+        total: Math.max(0, prev.total - 1)
+      }));
         alert('提示词已成功删除');
       } else {
         const error = await response.json();
@@ -707,7 +737,7 @@ const ProfilePage = () => {
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div className="text-center p-4 glass rounded-xl border border-neon-cyan/10">
                       <SparklesIcon className="h-8 w-8 text-neon-cyan mx-auto mb-2" />
-                      <div className="text-2xl font-bold text-white">{promptCount}</div>
+                      <div className="text-2xl font-bold text-white">{promptCounts.total}</div>
                       <div className="text-sm text-gray-400">创建的提示词</div>
                     </div>
                     <div className="text-center p-4 glass rounded-xl border border-neon-purple/10">
