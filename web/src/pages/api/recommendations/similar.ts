@@ -81,10 +81,27 @@ async function getSimilarPrompts(promptId: string, limit: number) {
         const similarity = calculateSimilarity(sourcePrompt, candidate);
         const socialStats = await getPromptSocialStats(candidate.id);
         
+        // 安全地获取作者信息
+        let authorName = '匿名用户';
+        try {
+          if (candidate.users) {
+            if (Array.isArray(candidate.users) && candidate.users.length > 0) {
+              const user = candidate.users[0] as any;
+              authorName = user?.display_name || user?.email || '匿名用户';
+            } else {
+              const user = candidate.users as any;
+              authorName = user?.display_name || user?.email || '匿名用户';
+            }
+          }
+        } catch (error) {
+          // 如果出错就使用默认值
+          authorName = '匿名用户';
+        }
+
         return {
           prompt: {
             ...candidate,
-            author: candidate.users?.display_name || candidate.users?.email || '匿名用户',
+            author: authorName,
             likes: socialStats.likes,
             usage_count: socialStats.usage_count,
             average_rating: socialStats.average_rating
@@ -176,8 +193,8 @@ function calculateTagSimilarity(tags1: string[], tags2: string[]): number {
   const set2 = new Set(tags2.map(tag => tag.toLowerCase()));
 
   // 计算交集
-  const intersection = new Set([...set1].filter(x => set2.has(x)));
-  const union = new Set([...set1, ...set2]);
+  const intersection = new Set(Array.from(set1).filter(x => set2.has(x)));
+  const union = new Set([...Array.from(set1), ...Array.from(set2)]);
 
   // Jaccard相似度
   return intersection.size / union.size;
@@ -195,8 +212,8 @@ function calculateContentSimilarity(content1: string, content2: string): number 
   const set1 = new Set(words1);
   const set2 = new Set(words2);
 
-  const intersection = new Set([...set1].filter(x => set2.has(x)));
-  const union = new Set([...set1, ...set2]);
+  const intersection = new Set(Array.from(set1).filter(x => set2.has(x)));
+  const union = new Set([...Array.from(set1), ...Array.from(set2)]);
 
   return intersection.size / union.size;
 }
@@ -213,8 +230,8 @@ function calculateTextSimilarity(text1: string, text2: string): number {
   const set1 = new Set(words1);
   const set2 = new Set(words2);
 
-  const intersection = new Set([...set1].filter(x => set2.has(x)));
-  const union = new Set([...set1, ...set2]);
+  const intersection = new Set(Array.from(set1).filter(x => set2.has(x)));
+  const union = new Set([...Array.from(set1), ...Array.from(set2)]);
 
   return intersection.size / union.size;
 }
