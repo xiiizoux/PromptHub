@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  FlaskBeakerIcon, 
+  BeakerIcon, 
   ChartBarIcon,
   ArrowPathIcon,
   CheckCircleIcon,
@@ -11,15 +11,60 @@ import {
   DocumentDuplicateIcon
 } from '@heroicons/react/24/outline';
 import { useAuth } from '@/contexts/AuthContext';
-import { 
-  createABTest, 
-  getABTests, 
-  updateABTest, 
-  getABTestResults,
-  ABTest,
-  ABTestResults 
-} from '@/lib/api';
 import toast from 'react-hot-toast';
+
+// 定义A/B测试相关的类型
+interface ABTest {
+  id: string;
+  name: string;
+  description: string;
+  prompt_id: string;
+  creator_id: string;
+  status: 'running' | 'paused' | 'completed' | 'cancelled';
+  traffic_allocation: number;
+  test_type: string;
+  participant_count?: number;
+  variant_a: {
+    name: string;
+    description: string;
+  };
+  variant_b: {
+    name: string;
+    description: string;
+  };
+  created_at: string;
+  updated_at: string;
+}
+
+interface ABTestResults {
+  total_participants: number;
+  confidence_level: number;
+  statistical_significance: boolean;
+  variant_a_metrics: Record<string, unknown>;
+  variant_b_metrics: Record<string, unknown>;
+  recommendations?: string;
+}
+
+// 临时的API函数，用于演示
+const createABTest = async (data: Partial<ABTest>): Promise<ABTest> => {
+  // 这里应该是实际的API调用
+  throw new Error('A/B测试功能正在开发中');
+};
+
+const getABTests = async (promptId?: string): Promise<ABTest[]> => {
+  // 这里应该是实际的API调用
+  return [];
+};
+
+const updateABTest = async (id: string, data: Partial<ABTest>): Promise<ABTest> => {
+  // 这里应该是实际的API调用
+  throw new Error('A/B测试功能正在开发中');
+};
+
+const getABTestResults = async (testId: string): Promise<ABTestResults> => {
+  // 这里应该是实际的API调用
+  throw new Error('A/B测试功能正在开发中');
+};
 
 interface ABTestManagerProps {
   promptId?: string;
@@ -135,7 +180,7 @@ export const ABTestManager: React.FC<ABTestManagerProps> = ({
   if (!promptId) {
     return (
       <div className={`text-center py-8 ${className}`}>
-        <FlaskBeakerIcon className="h-12 w-12 text-gray-600 mx-auto mb-4" />
+        <BeakerIcon className="h-12 w-12 text-gray-600 mx-auto mb-4" />
         <p className="text-gray-400">请选择一个提示词来管理A/B测试</p>
       </div>
     );
@@ -146,7 +191,7 @@ export const ABTestManager: React.FC<ABTestManagerProps> = ({
       {/* 标题和创建按钮 */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <FlaskBeakerIcon className="h-6 w-6 text-neon-cyan" />
+          <BeakerIcon className="h-6 w-6 text-neon-cyan" />
           <h3 className="text-xl font-semibold text-white">A/B测试管理</h3>
           <span className="px-2 py-1 bg-neon-cyan/20 text-neon-cyan text-xs rounded-full">
             {tests.length} 个测试
@@ -157,7 +202,7 @@ export const ABTestManager: React.FC<ABTestManagerProps> = ({
           onClick={() => setShowCreateModal(true)}
           className="btn-primary flex items-center gap-2"
         >
-          <FlaskBeakerIcon className="h-4 w-4" />
+          <BeakerIcon className="h-4 w-4" />
           创建测试
         </button>
       </div>
@@ -170,7 +215,7 @@ export const ABTestManager: React.FC<ABTestManagerProps> = ({
         </div>
       ) : tests.length === 0 ? (
         <div className="text-center py-12">
-          <FlaskBeakerIcon className="h-16 w-16 text-gray-600 mx-auto mb-4" />
+          <BeakerIcon className="h-16 w-16 text-gray-600 mx-auto mb-4" />
           <h4 className="text-lg font-medium text-gray-400 mb-2">还没有A/B测试</h4>
           <p className="text-gray-500 mb-6">创建A/B测试来比较不同版本的提示词效果</p>
           <button
@@ -566,7 +611,7 @@ const TestResultsModal: React.FC<TestResultsModalProps> = ({
                   {Object.entries(results.variant_a_metrics).map(([metric, value]) => (
                     <div key={metric} className="flex justify-between">
                       <span className="text-gray-400">{metric}</span>
-                      <span className="text-white font-medium">{value}</span>
+                      <span className="text-white font-medium">{String(value)}</span>
                     </div>
                   ))}
                 </div>
@@ -578,7 +623,7 @@ const TestResultsModal: React.FC<TestResultsModalProps> = ({
                   {Object.entries(results.variant_b_metrics).map(([metric, value]) => (
                     <div key={metric} className="flex justify-between">
                       <span className="text-gray-400">{metric}</span>
-                      <span className="text-white font-medium">{value}</span>
+                      <span className="text-white font-medium">{String(value)}</span>
                     </div>
                   ))}
                 </div>

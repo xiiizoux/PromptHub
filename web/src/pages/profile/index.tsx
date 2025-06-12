@@ -24,7 +24,8 @@ import {
   ChatBubbleLeftRightIcon,
   ArrowUpTrayIcon,
   ArrowDownTrayIcon,
-  ChartBarIcon
+  ChartBarIcon,
+  QuestionMarkCircleIcon
 } from '@heroicons/react/24/outline';
 
 // 定义与适配器返回的API密钥兼容的接口
@@ -375,12 +376,27 @@ const ProfilePage = () => {
     try {
       if (!user?.id) return;
       
-      const { default: supabaseAdapter } = await import('@/lib/supabase-adapter');
-      // 这里需要实现获取用户收藏的提示词
-      // 暂时使用空数组，后续需要实现收藏功能的后端逻辑
-      const bookmarkedPrompts: UserPrompt[] = [];
-      setBookmarks(bookmarkedPrompts);
-      console.log('收藏夹数据获取成功:', bookmarkedPrompts.length);
+      const token = await getToken();
+      if (!token) {
+        console.error('无法获取认证令牌');
+        setBookmarks([]);
+        return;
+      }
+
+      const response = await fetch('/api/user/bookmarks', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setBookmarks(data || []);
+        console.log('收藏夹数据获取成功:', data?.length || 0);
+      } else {
+        console.error('获取收藏夹失败:', response.status);
+        setBookmarks([]);
+      }
     } catch (error) {
       console.error('获取收藏夹失败:', error);
       setBookmarks([]);
@@ -395,18 +411,43 @@ const ProfilePage = () => {
     try {
       if (!user?.id) return;
       
-      // 这里需要实现获取用户使用历史
-      // 暂时使用模拟数据
-      const history = [
-        {
-          id: '1',
-          prompt_name: '示例提示词',
-          used_at: new Date().toISOString(),
-          usage_count: 5
+      const token = await getToken();
+      if (!token) {
+        console.error('无法获取认证令牌');
+        setUsageHistory([]);
+        return;
+      }
+
+      const response = await fetch('/api/user/usage-history?pageSize=50', {
+        headers: {
+          'Authorization': `Bearer ${token}`
         }
-      ];
-      setUsageHistory(history);
-      console.log('使用历史数据获取成功:', history.length);
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        if (result.success) {
+          // 转换数据格式以匹配导出格式
+          const formattedHistory = result.data.map((item: any) => ({
+            id: item.id,
+            prompt_name: item.prompt_name,
+            used_at: item.created_at,
+            usage_count: 1, // 每条记录代表一次使用
+            model: item.model,
+            input_tokens: item.input_tokens,
+            output_tokens: item.output_tokens,
+            latency_ms: item.latency_ms
+          }));
+          setUsageHistory(formattedHistory);
+          console.log('使用历史数据获取成功:', formattedHistory.length);
+        } else {
+          console.error('获取使用历史失败:', result.error);
+          setUsageHistory([]);
+        }
+      } else {
+        console.error('获取使用历史失败:', response.status);
+        setUsageHistory([]);
+      }
     } catch (error) {
       console.error('获取使用历史失败:', error);
       setUsageHistory([]);
@@ -421,19 +462,86 @@ const ProfilePage = () => {
     try {
       if (!user?.id) return;
       
-      // 这里需要实现获取用户的评分和评论
-      // 暂时使用模拟数据
-      const ratings = [
-        {
-          id: '1',
-          prompt_name: '示例提示词',
-          rating: 5,
-          review: '很好的提示词',
-          created_at: new Date().toISOString()
+      const token = await getToken();
+      if (!token) {
+        console.error('无法获取认证令牌');
+        setUserRatings([]);
+        return;
+      }
+
+      // 获取用户的所有评分
+      // 注意：我们需要查询用户评分的提示词，然后获取评分信息
+      const { default: supabaseAdapter } = await import('@/lib/supabase-adapter');
+      
+      try {
+        // 使用 Supabase 直接查询用户评分
+        const response = await fetch('/api/user/ratings', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success) {
+            // 转换数据格式以匹配导出格式
+            const formattedRatings = data.ratings.map((item: any) => ({
+              id: item.id,
+              prompt_name: item.prompt_name || '未知提示词',
+              rating: item.rating,
+              review: item.comment || item.feedback_text || '',
+              created_at: item.created_at
+            }));
+            setUserRatings(formattedRatings);
+            console.log('评分评论数据获取成功:', formattedRatings.length);
+          } else {
+            console.error('获取评分失败:', data.error);
+            setUserRatings([]);
+          }
+        } else {
+          // 如果没有专门的用户评分API，回退到空数组
+          console.log('暂无用户评分API，设置为空数组');
+          setUserRatings([]);
         }
-      ];
-      setUserRatings(ratings);
-      console.log('评分评论数据获取成功:', ratings.length);
+      } catch (apiError) {
+        console.error('通过API获取评分失败，尝试直接数据库查询:', apiError);
+        
+        // 回退方案：直接查询数据库
+        const { createClient } = await import('@supabase/supabase-js');
+        const supabase = createClient(
+          process.env.NEXT_PUBLIC_SUPABASE_URL!,
+          process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+        );
+
+        const { data: ratingsData, error } = await supabase
+          .from('prompt_feedback')
+          .select(`
+            id,
+            rating,
+            feedback_text,
+            created_at,
+            prompts (
+              name
+            )
+          `)
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false });
+
+        if (error) {
+          console.error('数据库查询评分失败:', error);
+          setUserRatings([]);
+        } else {
+          const formattedRatings = (ratingsData || []).map((item: any) => ({
+            id: item.id,
+            prompt_name: item.prompts?.name || '未知提示词',
+            rating: item.rating,
+            review: item.feedback_text || '',
+            created_at: item.created_at
+          }));
+          setUserRatings(formattedRatings);
+          console.log('评分评论数据获取成功（数据库）:', formattedRatings.length);
+        }
+      }
     } catch (error) {
       console.error('获取评分评论失败:', error);
       setUserRatings([]);
@@ -454,7 +562,9 @@ const ProfilePage = () => {
         usage_history: usageHistory,
         ratings: userRatings,
         exported_at: new Date().toISOString(),
-        user_id: user.id
+        user_id: user.id,
+        version: "1.0",
+        description: "PromptHub用户数据导出文件"
       };
       
       // 创建下载文件
@@ -475,6 +585,119 @@ const ProfilePage = () => {
     }
   };
 
+  // 下载JSON模板
+  const handleDownloadTemplate = () => {
+    const template = {
+      prompts: [
+        {
+          name: "示例提示词",
+          description: "这是一个示例提示词的描述",
+          category: "工作",
+          tags: ["示例", "模板"],
+          messages: [
+            {
+              role: "system",
+              content: "你是一个有用的AI助手。"
+            },
+            {
+              role: "user", 
+              content: "请帮我{{任务描述}}，要求{{具体要求}}。"
+            }
+          ],
+          is_public: false,
+          version: 1
+        }
+      ],
+      bookmarks: [],
+      usage_history: [],
+      ratings: [],
+      version: "1.0",
+      description: "PromptHub导入模板文件 - 请填写您的提示词数据",
+      template: true,
+      instructions: {
+        prompts: "在此数组中添加您要导入的提示词",
+        fields: {
+          name: "提示词名称（必填）",
+          description: "提示词描述（必填）",
+          category: "分类（可选，如：工作、学习、创意等）",
+          tags: "标签数组（可选）",
+          messages: "对话消息数组，包含system和user消息",
+          is_public: "是否公开（true/false）",
+          version: "版本号（默认为1）"
+        },
+        notes: [
+          "请保持JSON格式正确",
+          "必填字段不能为空",
+          "messages数组至少包含一个user消息",
+          "导入前会验证数据格式"
+        ]
+      }
+    };
+
+    const blob = new Blob([JSON.stringify(template, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'prompthub-import-template.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  // 验证导入数据格式
+  const validateImportData = (data: any): { valid: boolean; errors: string[] } => {
+    const errors: string[] = [];
+
+    // 检查基本结构
+    if (!data || typeof data !== 'object') {
+      errors.push('文件格式无效：必须是有效的JSON对象');
+      return { valid: false, errors };
+    }
+
+    // 检查prompts数组
+    if (!data.prompts || !Array.isArray(data.prompts)) {
+      errors.push('缺少prompts数组或格式错误');
+      return { valid: false, errors };
+    }
+
+    // 验证每个prompt
+    data.prompts.forEach((prompt: any, index: number) => {
+      const promptErrors: string[] = [];
+
+      if (!prompt.name || typeof prompt.name !== 'string') {
+        promptErrors.push('名称（name）是必填字段');
+      }
+
+      if (!prompt.description || typeof prompt.description !== 'string') {
+        promptErrors.push('描述（description）是必填字段');
+      }
+
+      if (!prompt.messages || !Array.isArray(prompt.messages) || prompt.messages.length === 0) {
+        promptErrors.push('messages数组是必填字段且不能为空');
+      } else {
+        // 检查是否至少有一个user消息
+        const hasUserMessage = prompt.messages.some((msg: any) => msg.role === 'user');
+        if (!hasUserMessage) {
+          promptErrors.push('至少需要一个role为"user"的消息');
+        }
+
+        // 验证messages格式
+        prompt.messages.forEach((msg: any, msgIndex: number) => {
+          if (!msg.role || !msg.content) {
+            promptErrors.push(`消息${msgIndex + 1}缺少role或content字段`);
+          }
+        });
+      }
+
+      if (promptErrors.length > 0) {
+        errors.push(`提示词${index + 1}（${prompt.name || '未命名'}）: ${promptErrors.join(', ')}`);
+      }
+    });
+
+    return { valid: errors.length === 0, errors };
+  };
+
   // 处理文件导入
   const handleImportData = async (file: File) => {
     try {
@@ -482,20 +705,90 @@ const ProfilePage = () => {
       const importData = JSON.parse(text);
       
       // 验证导入数据格式
-      if (!importData.prompts || !Array.isArray(importData.prompts)) {
-        alert('导入文件格式不正确');
+      const validation = validateImportData(importData);
+      if (!validation.valid) {
+        alert(`导入文件格式错误：\n${validation.errors.join('\n')}`);
         return;
       }
+
+      // 确认导入
+      const confirmMessage = `准备导入 ${importData.prompts.length} 个提示词。\n\n注意：这将会创建新的提示词，不会覆盖现有数据。\n\n确定要继续吗？`;
+      if (!confirm(confirmMessage)) {
+        return;
+      }
+
+      // 开始导入
+      setLoading(true);
       
-      // 这里需要实现将数据导入到数据库的逻辑
-      console.log('准备导入数据:', importData);
-      
-      // 暂时只显示导入预览
-      setExportData(importData);
-      alert(`成功读取导入文件！包含 ${importData.prompts.length} 个提示词`);
+      try {
+        const token = await getToken();
+        if (!token) {
+          throw new Error('认证失败，请重新登录');
+        }
+
+        let successCount = 0;
+        let failCount = 0;
+        const errors: string[] = [];
+
+        // 逐个导入提示词
+        for (const promptData of importData.prompts) {
+          try {
+            const response = await fetch('/api/prompts', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+              },
+              body: JSON.stringify({
+                name: promptData.name,
+                description: promptData.description,
+                category: promptData.category || '未分类',
+                tags: promptData.tags || [],
+                messages: promptData.messages,
+                is_public: promptData.is_public || false,
+                version: promptData.version || 1
+              })
+            });
+
+            if (response.ok) {
+              successCount++;
+            } else {
+              const errorData = await response.json();
+              failCount++;
+              errors.push(`${promptData.name}: ${errorData.error || '导入失败'}`);
+            }
+          } catch (promptError) {
+            failCount++;
+            errors.push(`${promptData.name}: ${promptError instanceof Error ? promptError.message : '未知错误'}`);
+          }
+        }
+
+        // 显示导入结果
+        let resultMessage = `导入完成！\n成功: ${successCount}个\n失败: ${failCount}个`;
+        if (errors.length > 0) {
+          resultMessage += `\n\n失败详情:\n${errors.slice(0, 5).join('\n')}`;
+          if (errors.length > 5) {
+            resultMessage += `\n... 还有${errors.length - 5}个错误`;
+          }
+        }
+
+        alert(resultMessage);
+
+        // 刷新数据
+        if (successCount > 0) {
+          fetchUserPrompts();
+          fetchPromptCount();
+        }
+        
+      } catch (error) {
+        console.error('导入过程中发生错误:', error);
+        alert(`导入失败: ${error instanceof Error ? error.message : '未知错误'}`);
+      } finally {
+        setLoading(false);
+      }
       
     } catch (error) {
-      console.error('导入数据失败:', error);
+      console.error('解析导入文件失败:', error);
       alert('导入文件格式错误或文件损坏');
     }
   };
@@ -1363,7 +1656,7 @@ const ProfilePage = () => {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   {/* 导出数据 */}
                   <div className="glass rounded-2xl p-6 border border-neon-green/20">
                     <div className="flex items-center space-x-3 mb-4">
@@ -1385,17 +1678,38 @@ const ProfilePage = () => {
                     </button>
                   </div>
 
-                  {/* 导入数据 */}
+                  {/* 下载JSON模板 */}
                   <div className="glass rounded-2xl p-6 border border-neon-blue/20">
                     <div className="flex items-center space-x-3 mb-4">
                       <ArrowDownTrayIcon className="h-8 w-8 text-neon-blue" />
                       <div>
-                        <h3 className="text-lg font-semibold text-white">导入数据</h3>
-                        <p className="text-gray-400 text-sm">从备份文件恢复数据</p>
+                        <h3 className="text-lg font-semibold text-white">下载模板</h3>
+                        <p className="text-gray-400 text-sm">获取导入模板</p>
                       </div>
                     </div>
                     <p className="text-gray-300 mb-4">
-                      选择之前导出的JSON文件来恢复您的数据。
+                      下载标准JSON模板，填写您的提示词数据。
+                    </p>
+                    <button
+                      onClick={handleDownloadTemplate}
+                      className="btn-secondary w-full flex items-center justify-center space-x-2"
+                    >
+                      <ArrowDownTrayIcon className="h-5 w-5" />
+                      <span>下载模板</span>
+                    </button>
+                  </div>
+
+                  {/* 导入数据 */}
+                  <div className="glass rounded-2xl p-6 border border-neon-purple/20">
+                    <div className="flex items-center space-x-3 mb-4">
+                      <ArrowUpTrayIcon className="h-8 w-8 text-neon-purple" />
+                      <div>
+                        <h3 className="text-lg font-semibold text-white">导入数据</h3>
+                        <p className="text-gray-400 text-sm">从JSON文件导入</p>
+                      </div>
+                    </div>
+                    <p className="text-gray-300 mb-4">
+                      选择填写好的JSON文件来导入您的提示词。
                     </p>
                     <div className="space-y-3">
                       <input
@@ -1407,15 +1721,25 @@ const ProfilePage = () => {
                             setImportFile(file);
                           }
                         }}
-                        className="block w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-neon-blue/20 file:text-neon-blue hover:file:bg-neon-blue/30 file:cursor-pointer"
+                        className="block w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-neon-purple/20 file:text-neon-purple hover:file:bg-neon-purple/30 file:cursor-pointer"
                       />
                       {importFile && (
                         <button
                           onClick={() => handleImportData(importFile)}
-                          className="btn-secondary w-full flex items-center justify-center space-x-2"
+                          disabled={loading}
+                          className="btn-secondary w-full flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                          <ArrowDownTrayIcon className="h-5 w-5" />
-                          <span>导入 {importFile.name}</span>
+                          {loading ? (
+                            <>
+                              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-neon-purple"></div>
+                              <span>导入中...</span>
+                            </>
+                          ) : (
+                            <>
+                              <ArrowUpTrayIcon className="h-5 w-5" />
+                              <span>导入 {importFile.name}</span>
+                            </>
+                          )}
                         </button>
                       )}
                     </div>
@@ -1426,6 +1750,28 @@ const ProfilePage = () => {
                         </p>
                       </div>
                     )}
+                  </div>
+                </div>
+
+                {/* 使用说明 */}
+                <div className="glass rounded-2xl p-6 border border-neon-cyan/20">
+                  <h3 className="text-lg font-semibold text-white mb-4 flex items-center space-x-2">
+                    <QuestionMarkCircleIcon className="h-6 w-6 text-neon-cyan" />
+                    <span>使用说明</span>
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-sm text-gray-300">
+                    <div>
+                      <h4 className="text-neon-green font-medium mb-2">1. 导出数据</h4>
+                      <p>点击"导出数据"按钮，系统会将您的所有数据打包成JSON文件下载。</p>
+                    </div>
+                    <div>
+                      <h4 className="text-neon-blue font-medium mb-2">2. 下载模板</h4>
+                      <p>如需批量导入新提示词，请先下载JSON模板，按格式填写您的数据。</p>
+                    </div>
+                    <div>
+                      <h4 className="text-neon-purple font-medium mb-2">3. 导入数据</h4>
+                      <p>选择填写好的JSON文件，系统会验证格式并批量创建提示词。</p>
+                    </div>
                   </div>
                 </div>
 

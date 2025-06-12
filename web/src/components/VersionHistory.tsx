@@ -6,10 +6,9 @@ import {
   EyeIcon,
   DocumentDuplicateIcon,
   TagIcon,
-  BranchIcon,
+  CodeBracketIcon,
   UserIcon,
   CalendarIcon,
-  CodeBracketIcon,
   PlusIcon
 } from '@heroicons/react/24/outline';
 import { useAuth } from '@/contexts/AuthContext';
@@ -243,7 +242,7 @@ export const VersionHistory: React.FC<VersionHistoryProps> = ({
                 <div className="flex-1">
                   <div className="flex items-center gap-3 mb-2">
                     <div className="flex items-center gap-2">
-                      <BranchIcon className="h-4 w-4 text-neon-cyan" />
+                      <CodeBracketIcon className="h-4 w-4 text-neon-cyan" />
                       <span className="text-white font-medium">
                         版本 #{versions.length - index}
                       </span>
