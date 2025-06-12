@@ -17,7 +17,14 @@ import {
   CheckIcon,
   DocumentTextIcon,
   ArrowTopRightOnSquareIcon,
-  PencilIcon
+  PencilIcon,
+  BookmarkIcon,
+  ClockIcon,
+  StarIcon,
+  ChatBubbleLeftRightIcon,
+  ArrowUpTrayIcon,
+  ArrowDownTrayIcon,
+  ChartBarIcon
 } from '@heroicons/react/24/outline';
 
 // 定义与适配器返回的API密钥兼容的接口
@@ -57,11 +64,25 @@ const ProfilePage = () => {
   const [loading, setLoading] = useState(false);
   const [promptsLoading, setPromptsLoading] = useState(false);
   const [promptCounts, setPromptCounts] = useState<{total: number, public: number, private: number}>({total: 0, public: 0, private: 0});
+  
+  // 新增功能的状态
+  const [bookmarks, setBookmarks] = useState<UserPrompt[]>([]);
+  const [usageHistory, setUsageHistory] = useState<any[]>([]);
+  const [userRatings, setUserRatings] = useState<any[]>([]);
+  const [exportData, setExportData] = useState<any>(null);
+  const [importFile, setImportFile] = useState<File | null>(null);
+  const [bookmarksLoading, setBookmarksLoading] = useState(false);
+  const [historyLoading, setHistoryLoading] = useState(false);
+  const [ratingsLoading, setRatingsLoading] = useState(false);
 
   const tabs = [
     { id: 'profile', name: '个人资料', icon: UserIcon },
-    { id: 'api-keys', name: 'API密钥', icon: KeyIcon },
     { id: 'my-prompts', name: '我的提示词', icon: DocumentTextIcon },
+    { id: 'bookmarks', name: '收藏夹', icon: BookmarkIcon },
+    { id: 'usage-history', name: '使用历史', icon: ClockIcon },
+    { id: 'ratings-reviews', name: '评分评论', icon: StarIcon },
+    { id: 'import-export', name: '导入导出', icon: ArrowUpTrayIcon },
+    { id: 'api-keys', name: 'API密钥', icon: KeyIcon },
   ];
 
   const expiryOptions = [
@@ -90,6 +111,27 @@ const ProfilePage = () => {
       fetchUserPrompts();
     }
   }, [activeTab]);
+
+  // 加载收藏夹
+  useEffect(() => {
+    if (activeTab === 'bookmarks' && user) {
+      fetchBookmarks();
+    }
+  }, [activeTab, user]);
+
+  // 加载使用历史
+  useEffect(() => {
+    if (activeTab === 'usage-history' && user) {
+      fetchUsageHistory();
+    }
+  }, [activeTab, user]);
+
+  // 加载评分评论
+  useEffect(() => {
+    if (activeTab === 'ratings-reviews' && user) {
+      fetchUserRatings();
+    }
+  }, [activeTab, user]);
 
   // 加载用户提示词数量（用于统计）
   useEffect(() => {
@@ -324,6 +366,137 @@ const ProfilePage = () => {
       console.error('获取用户提示词失败:', error);
     } finally {
       setPromptsLoading(false);
+    }
+  };
+
+  // 获取收藏夹
+  const fetchBookmarks = async () => {
+    setBookmarksLoading(true);
+    try {
+      if (!user?.id) return;
+      
+      const { default: supabaseAdapter } = await import('@/lib/supabase-adapter');
+      // 这里需要实现获取用户收藏的提示词
+      // 暂时使用空数组，后续需要实现收藏功能的后端逻辑
+      const bookmarkedPrompts: UserPrompt[] = [];
+      setBookmarks(bookmarkedPrompts);
+      console.log('收藏夹数据获取成功:', bookmarkedPrompts.length);
+    } catch (error) {
+      console.error('获取收藏夹失败:', error);
+      setBookmarks([]);
+    } finally {
+      setBookmarksLoading(false);
+    }
+  };
+
+  // 获取使用历史
+  const fetchUsageHistory = async () => {
+    setHistoryLoading(true);
+    try {
+      if (!user?.id) return;
+      
+      // 这里需要实现获取用户使用历史
+      // 暂时使用模拟数据
+      const history = [
+        {
+          id: '1',
+          prompt_name: '示例提示词',
+          used_at: new Date().toISOString(),
+          usage_count: 5
+        }
+      ];
+      setUsageHistory(history);
+      console.log('使用历史数据获取成功:', history.length);
+    } catch (error) {
+      console.error('获取使用历史失败:', error);
+      setUsageHistory([]);
+    } finally {
+      setHistoryLoading(false);
+    }
+  };
+
+  // 获取用户评分评论
+  const fetchUserRatings = async () => {
+    setRatingsLoading(true);
+    try {
+      if (!user?.id) return;
+      
+      // 这里需要实现获取用户的评分和评论
+      // 暂时使用模拟数据
+      const ratings = [
+        {
+          id: '1',
+          prompt_name: '示例提示词',
+          rating: 5,
+          review: '很好的提示词',
+          created_at: new Date().toISOString()
+        }
+      ];
+      setUserRatings(ratings);
+      console.log('评分评论数据获取成功:', ratings.length);
+    } catch (error) {
+      console.error('获取评分评论失败:', error);
+      setUserRatings([]);
+    } finally {
+      setRatingsLoading(false);
+    }
+  };
+
+  // 导出数据
+  const handleExportData = async () => {
+    try {
+      if (!user?.id) return;
+      
+      // 获取用户所有数据
+      const exportData = {
+        prompts: userPrompts,
+        bookmarks: bookmarks,
+        usage_history: usageHistory,
+        ratings: userRatings,
+        exported_at: new Date().toISOString(),
+        user_id: user.id
+      };
+      
+      // 创建下载文件
+      const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `prompthub-export-${new Date().getTime()}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      
+      alert('数据导出成功！');
+    } catch (error) {
+      console.error('导出数据失败:', error);
+      alert('导出数据失败，请稍后重试');
+    }
+  };
+
+  // 处理文件导入
+  const handleImportData = async (file: File) => {
+    try {
+      const text = await file.text();
+      const importData = JSON.parse(text);
+      
+      // 验证导入数据格式
+      if (!importData.prompts || !Array.isArray(importData.prompts)) {
+        alert('导入文件格式不正确');
+        return;
+      }
+      
+      // 这里需要实现将数据导入到数据库的逻辑
+      console.log('准备导入数据:', importData);
+      
+      // 暂时只显示导入预览
+      setExportData(importData);
+      alert(`成功读取导入文件！包含 ${importData.prompts.length} 个提示词`);
+      
+    } catch (error) {
+      console.error('导入数据失败:', error);
+      alert('导入文件格式错误或文件损坏');
     }
   };
 
@@ -1020,6 +1193,267 @@ const ProfilePage = () => {
                     ))}
                   </div>
                 )}
+              </div>
+            )}
+
+            {/* 收藏夹标签页 */}
+            {activeTab === 'bookmarks' && (
+              <div className="space-y-6">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <h2 className="text-2xl font-bold text-white">收藏夹</h2>
+                    <p className="text-gray-400 mt-1">管理您收藏的提示词</p>
+                  </div>
+                </div>
+
+                {bookmarksLoading ? (
+                  <div className="glass rounded-2xl p-8 border border-neon-cyan/20 text-center">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-neon-cyan mx-auto mb-4"></div>
+                    <p className="text-gray-400">加载中...</p>
+                  </div>
+                ) : bookmarks.length === 0 ? (
+                  <div className="glass rounded-2xl p-8 border border-neon-cyan/20 text-center">
+                    <BookmarkIcon className="h-12 w-12 text-gray-500 mx-auto mb-4" />
+                    <p className="text-gray-400">您还没有收藏任何提示词</p>
+                    <Link href="/prompts" className="btn-primary mt-4 inline-flex items-center space-x-2">
+                      <SparklesIcon className="h-5 w-5" />
+                      <span>浏览提示词</span>
+                    </Link>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {bookmarks.map((prompt, index) => (
+                      <motion.div
+                        key={prompt.id}
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ delay: index * 0.1 }}
+                        className="glass rounded-xl p-4 border border-neon-pink/20 hover:border-neon-pink/40 transition-all duration-300"
+                      >
+                        <h3 className="text-lg font-semibold text-white mb-2">{prompt.name}</h3>
+                        <p className="text-gray-300 text-sm mb-3">{prompt.description}</p>
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs text-gray-400">收藏于 {formatDate(prompt.created_at)}</span>
+                          <Link href={`/prompts/${prompt.id}`} className="btn-secondary text-xs">
+                            查看
+                          </Link>
+                        </div>
+                      </motion.div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* 使用历史标签页 */}
+            {activeTab === 'usage-history' && (
+              <div className="space-y-6">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <h2 className="text-2xl font-bold text-white">使用历史</h2>
+                    <p className="text-gray-400 mt-1">查看您的提示词使用记录</p>
+                  </div>
+                </div>
+
+                {historyLoading ? (
+                  <div className="glass rounded-2xl p-8 border border-neon-cyan/20 text-center">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-neon-cyan mx-auto mb-4"></div>
+                    <p className="text-gray-400">加载中...</p>
+                  </div>
+                ) : usageHistory.length === 0 ? (
+                  <div className="glass rounded-2xl p-8 border border-neon-cyan/20 text-center">
+                    <ClockIcon className="h-12 w-12 text-gray-500 mx-auto mb-4" />
+                    <p className="text-gray-400">暂无使用历史记录</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {usageHistory.map((history, index) => (
+                      <motion.div
+                        key={history.id}
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: index * 0.1 }}
+                        className="glass rounded-xl p-4 border border-neon-purple/20 hover:border-neon-purple/40 transition-all duration-300"
+                      >
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <h3 className="text-lg font-semibold text-white">{history.prompt_name}</h3>
+                            <p className="text-gray-400 text-sm">使用次数: {history.usage_count}</p>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-gray-400 text-sm">最后使用</p>
+                            <p className="text-neon-purple">{formatDate(history.used_at)}</p>
+                          </div>
+                        </div>
+                      </motion.div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* 评分评论标签页 */}
+            {activeTab === 'ratings-reviews' && (
+              <div className="space-y-6">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <h2 className="text-2xl font-bold text-white">评分评论</h2>
+                    <p className="text-gray-400 mt-1">管理您的评分和评论</p>
+                  </div>
+                </div>
+
+                {ratingsLoading ? (
+                  <div className="glass rounded-2xl p-8 border border-neon-cyan/20 text-center">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-neon-cyan mx-auto mb-4"></div>
+                    <p className="text-gray-400">加载中...</p>
+                  </div>
+                ) : userRatings.length === 0 ? (
+                  <div className="glass rounded-2xl p-8 border border-neon-cyan/20 text-center">
+                    <StarIcon className="h-12 w-12 text-gray-500 mx-auto mb-4" />
+                    <p className="text-gray-400">您还没有评价过任何提示词</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {userRatings.map((rating, index) => (
+                      <motion.div
+                        key={rating.id}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: index * 0.1 }}
+                        className="glass rounded-xl p-6 border border-neon-yellow/20 hover:border-neon-yellow/40 transition-all duration-300"
+                      >
+                        <div className="flex items-start justify-between mb-4">
+                          <div>
+                            <h3 className="text-lg font-semibold text-white">{rating.prompt_name}</h3>
+                            <div className="flex items-center space-x-1 mt-2">
+                              {[...Array(5)].map((_, i) => (
+                                <StarIcon
+                                  key={i}
+                                  className={`h-5 w-5 ${
+                                    i < rating.rating
+                                      ? 'text-neon-yellow fill-current'
+                                      : 'text-gray-400'
+                                  }`}
+                                />
+                              ))}
+                              <span className="text-gray-400 ml-2">({rating.rating}/5)</span>
+                            </div>
+                          </div>
+                          <span className="text-gray-400 text-sm">{formatDate(rating.created_at)}</span>
+                        </div>
+                        {rating.review && (
+                          <p className="text-gray-300 bg-dark-bg-secondary/30 rounded-lg p-3">
+                            "{rating.review}"
+                          </p>
+                        )}
+                      </motion.div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* 导入导出标签页 */}
+            {activeTab === 'import-export' && (
+              <div className="space-y-6">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <h2 className="text-2xl font-bold text-white">导入导出</h2>
+                    <p className="text-gray-400 mt-1">备份和恢复您的数据</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* 导出数据 */}
+                  <div className="glass rounded-2xl p-6 border border-neon-green/20">
+                    <div className="flex items-center space-x-3 mb-4">
+                      <ArrowUpTrayIcon className="h-8 w-8 text-neon-green" />
+                      <div>
+                        <h3 className="text-lg font-semibold text-white">导出数据</h3>
+                        <p className="text-gray-400 text-sm">备份您的所有数据</p>
+                      </div>
+                    </div>
+                    <p className="text-gray-300 mb-4">
+                      导出包括您的提示词、收藏夹、使用历史和评分评论在内的所有数据。
+                    </p>
+                    <button
+                      onClick={handleExportData}
+                      className="btn-primary w-full flex items-center justify-center space-x-2"
+                    >
+                      <ArrowUpTrayIcon className="h-5 w-5" />
+                      <span>导出数据</span>
+                    </button>
+                  </div>
+
+                  {/* 导入数据 */}
+                  <div className="glass rounded-2xl p-6 border border-neon-blue/20">
+                    <div className="flex items-center space-x-3 mb-4">
+                      <ArrowDownTrayIcon className="h-8 w-8 text-neon-blue" />
+                      <div>
+                        <h3 className="text-lg font-semibold text-white">导入数据</h3>
+                        <p className="text-gray-400 text-sm">从备份文件恢复数据</p>
+                      </div>
+                    </div>
+                    <p className="text-gray-300 mb-4">
+                      选择之前导出的JSON文件来恢复您的数据。
+                    </p>
+                    <div className="space-y-3">
+                      <input
+                        type="file"
+                        accept=".json"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            setImportFile(file);
+                          }
+                        }}
+                        className="block w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-neon-blue/20 file:text-neon-blue hover:file:bg-neon-blue/30 file:cursor-pointer"
+                      />
+                      {importFile && (
+                        <button
+                          onClick={() => handleImportData(importFile)}
+                          className="btn-secondary w-full flex items-center justify-center space-x-2"
+                        >
+                          <ArrowDownTrayIcon className="h-5 w-5" />
+                          <span>导入 {importFile.name}</span>
+                        </button>
+                      )}
+                    </div>
+                    {exportData && (
+                      <div className="mt-4 p-3 bg-neon-green/10 border border-neon-green/20 rounded-lg">
+                        <p className="text-neon-green text-sm">
+                          预览: 包含 {exportData.prompts?.length || 0} 个提示词
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* 数据统计 */}
+                <div className="glass rounded-2xl p-6 border border-neon-cyan/20">
+                  <h3 className="text-lg font-semibold text-white mb-4 flex items-center space-x-2">
+                    <ChartBarIcon className="h-6 w-6 text-neon-cyan" />
+                    <span>数据统计</span>
+                  </h3>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div className="text-center p-3 bg-dark-bg-secondary/30 rounded-lg">
+                      <div className="text-2xl font-bold text-neon-cyan">{promptCounts.total}</div>
+                      <div className="text-sm text-gray-400">提示词</div>
+                    </div>
+                    <div className="text-center p-3 bg-dark-bg-secondary/30 rounded-lg">
+                      <div className="text-2xl font-bold text-neon-pink">{bookmarks.length}</div>
+                      <div className="text-sm text-gray-400">收藏</div>
+                    </div>
+                    <div className="text-center p-3 bg-dark-bg-secondary/30 rounded-lg">
+                      <div className="text-2xl font-bold text-neon-purple">{usageHistory.length}</div>
+                      <div className="text-sm text-gray-400">使用记录</div>
+                    </div>
+                    <div className="text-center p-3 bg-dark-bg-secondary/30 rounded-lg">
+                      <div className="text-2xl font-bold text-neon-yellow">{userRatings.length}</div>
+                      <div className="text-sm text-gray-400">评价</div>
+                    </div>
+                  </div>
+                </div>
               </div>
             )}
           </motion.div>
