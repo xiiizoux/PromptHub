@@ -138,22 +138,15 @@ const OptimizerPage: React.FC = () => {
           </div>
         </div>
 
-        <div className="relative z-10 container mx-auto px-4 py-8">
+        <div className="relative z-10 w-full px-4 py-8">
           {/* 英雄区域 */}
           <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             className="text-center mb-12"
           >
-            <div className="flex items-center justify-between mb-8">
-              <button
-                onClick={() => router.back()}
-                className="p-3 rounded-xl glass border border-neon-cyan/30 hover:border-neon-cyan/60 text-gray-300 hover:text-neon-cyan transition-all duration-300 group"
-              >
-                <ArrowLeftIcon className="h-5 w-5 group-hover:-translate-x-1 transition-transform" />
-              </button>
-
-              {optimizedPrompt && (
+            {optimizedPrompt && (
+              <div className="flex justify-end mb-8">
                 <motion.button
                   initial={{ opacity: 0, scale: 0.8 }}
                   animate={{ opacity: 1, scale: 1 }}
@@ -173,10 +166,10 @@ const OptimizerPage: React.FC = () => {
                     </>
                   )}
                 </motion.button>
-              )}
-            </div>
+              </div>
+            )}
 
-            {/* 主标题 */}
+            {/* 主标题区域 */}
             <motion.div
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
@@ -190,9 +183,6 @@ const OptimizerPage: React.FC = () => {
             <h1 className="text-5xl md:text-7xl font-bold mb-6">
               <span className="block gradient-text animate-text-shimmer bg-[length:200%_auto]">
                 提示词优化器
-              </span>
-              <span className="block text-2xl md:text-3xl mt-4 text-gray-300 font-light">
-                释放AI的无限潜力
               </span>
             </h1>
             
@@ -238,9 +228,9 @@ const OptimizerPage: React.FC = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
-            className="mb-12"
+            className="mb-12 w-full"
           >
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 w-full">
               {features.map((feature, index) => {
                 const Icon = feature.icon;
                 return (
@@ -273,11 +263,11 @@ const OptimizerPage: React.FC = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.6 }}
-            className="mb-16"
+            className="mb-16 w-full"
           >
             <PromptOptimizerComponent
               onOptimizedPrompt={handleOptimizedPrompt}
-              className="max-w-6xl mx-auto"
+              className="w-full"
             />
           </motion.div>
 
