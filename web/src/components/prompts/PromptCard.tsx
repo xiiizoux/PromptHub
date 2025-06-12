@@ -14,10 +14,11 @@ import {
   FireIcon
 } from '@heroicons/react/24/outline';
 import { StarIcon as StarSolidIcon } from '@heroicons/react/24/solid';
+import { InteractionButtons } from '@/components/BookmarkButton';
 import clsx from 'clsx';
 
 interface PromptCardProps {
-  prompt: PromptInfo;
+  prompt: PromptInfo & { id: string }; // 确保包含id字段
 }
 
 const PromptCard: React.FC<PromptCardProps> = ({ prompt }) => {
@@ -146,7 +147,7 @@ const PromptCard: React.FC<PromptCardProps> = ({ prompt }) => {
           {renderTags(prompt.tags)}
           
           {/* 底部信息 */}
-          <div className="mt-4 pt-4 border-t border-neon-cyan/10 space-y-2">
+          <div className="mt-4 pt-4 border-t border-neon-cyan/10 space-y-3">
             {/* 评分 */}
             {renderRating(prompt.rating)}
             
@@ -165,6 +166,14 @@ const PromptCard: React.FC<PromptCardProps> = ({ prompt }) => {
               <div className="flex items-center space-x-1">
                 <ClockIcon className="h-3 w-3" />
                 <span>{formatDate(prompt.updated_at || prompt.created_at)}</span>
+              </div>
+            </div>
+            
+            {/* 互动按钮 */}
+            <div className="flex items-center justify-between">
+              <div></div> {/* 占位符 */}
+              <div onClick={(e) => e.preventDefault()}> {/* 阻止Link的点击事件 */}
+                <InteractionButtons promptId={prompt.id} size="sm" />
               </div>
             </div>
           </div>

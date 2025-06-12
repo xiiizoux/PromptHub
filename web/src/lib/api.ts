@@ -566,4 +566,270 @@ export const getMcpTools = async (): Promise<any> => {
   return response.data;
 };
 
+// 社交互动 API (收藏、点赞、分享)
+export interface SocialInteraction {
+  id: string;
+  prompt_id: string;
+  user_id: string;
+  type: 'like' | 'bookmark' | 'share';
+  created_at: string;
+}
+
+export async function toggleBookmark(promptId: string): Promise<{ bookmarked: boolean }> {
+  const response = await api.post('/prompts/bookmark', { promptId });
+
+  if (response.data.bookmarked !== undefined) {
+    return { bookmarked: response.data.bookmarked };
+  }
+
+  throw new Error('切换收藏状态失败');
+}
+
+export async function toggleLike(promptId: string): Promise<{ liked: boolean }> {
+  const response = await api.post('/prompts/like', { promptId });
+
+  if (response.data.liked !== undefined) {
+    return { liked: response.data.liked };
+  }
+
+  throw new Error('切换点赞状态失败');
+}
+
+export async function getUserBookmarks(): Promise<PromptDetails[]> {
+  const apiKey = process.env.API_KEY || localStorage.getItem('api_key');
+  const response = await fetch(`${process.env.API_BASE_URL}/api/user/bookmarks`, {
+    headers: {
+      'Authorization': `Bearer ${apiKey}`,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error('获取收藏列表失败');
+  }
+
+  return response.json();
+}
+
+export async function getPromptInteractions(promptId: string): Promise<{
+  likes: number;
+  bookmarks: number;
+  userLiked: boolean;
+  userBookmarked: boolean;
+}> {
+  const response = await api.get(`/prompts/interactions?promptId=${promptId}`);
+
+  if (!response.data.success) {
+    throw new Error('获取互动信息失败');
+  }
+
+  return response.data;
+}
+
+// 使用历史记录 API
+export interface UsageRecord {
+  id: string;
+  prompt_id: string;
+  prompt_name: string;
+  prompt_version: number;
+  user_id: string;
+  session_id?: string;
+  model?: string;
+  input_tokens?: number;
+  output_tokens?: number;
+  latency_ms?: number;
+  created_at: string;
+  client_metadata?: any;
+}
+
+export async function recordUsage(promptId: string, metadata?: {
+  model?: string;
+  input_tokens?: number;
+  output_tokens?: number;
+  latency_ms?: number;
+  session_id?: string;
+  client_metadata?: any;
+}): Promise<void> {
+  const response = await api.post('/prompts/usage', { promptId, ...metadata });
+  
+  if (!response.data.success) {
+    throw new Error('记录使用历史失败');
+  }
+}
+
+export async function getUserUsageHistory(params?: {
+  page?: number;
+  pageSize?: number;
+  promptId?: string;
+  model?: string;
+  dateFrom?: string;
+  dateTo?: string;
+}): Promise<{
+  data: UsageRecord[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+}> {
+  const queryParams = new URLSearchParams();
+  
+  if (params?.page) queryParams.append('page', params.page.toString());
+  if (params?.pageSize) queryParams.append('pageSize', params.pageSize.toString());
+  if (params?.promptId) queryParams.append('promptId', params.promptId);
+  if (params?.model) queryParams.append('model', params.model);
+  if (params?.dateFrom) queryParams.append('dateFrom', params.dateFrom);
+  if (params?.dateTo) queryParams.append('dateTo', params.dateTo);
+
+  const response = await api.get(`/user/usage-history?${queryParams}`);
+
+  if (!response.data.success) {
+    throw new Error('获取使用历史失败');
+  }
+
+  return response.data;
+}
+
+export async function getUsageStats(): Promise<{
+  totalUsage: number;
+  thisWeekUsage: number;
+  thisMonthUsage: number;
+  favoritePrompts: Array<{
+    prompt_id: string;
+    prompt_name: string;
+    usage_count: number;
+  }>;
+  modelStats: Array<{
+    model: string;
+    usage_count: number;
+  }>;
+}> {
+  const response = await api.get('/user/usage-stats');
+
+  if (!response.data.success) {
+    throw new Error('获取使用统计失败');
+  }
+
+  return response.data;
+}
+
+// 评分和评论系统 API
+export interface Rating {
+  id: string;
+  prompt_id: string;
+  user_id: string;
+  rating: number; // 1-5星
+  comment?: string;
+  created_at: string;
+  updated_at: string;
+  user?: {
+    display_name?: string;
+    email?: string;
+  };
+}
+
+export async function submitRating(promptId: string, data: {
+  rating: number;
+  comment?: string;
+}): Promise<{ success: boolean }> {
+  const response = await api.post('/prompts/rating', { promptId, ...data });
+  
+  if (!response.data.success) {
+    throw new Error('提交评分失败');
+  }
+
+  return response.data;
+}
+
+export async function getPromptRatings(promptId: string, params?: {
+  page?: number;
+  pageSize?: number;
+}): Promise<{
+  data: Rating[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+  averageRating: number;
+  ratingDistribution: Record<string, number>;
+}> {
+  const queryParams = new URLSearchParams();
+  queryParams.append('promptId', promptId);
+  
+  if (params?.page) queryParams.append('page', params.page.toString());
+  if (params?.pageSize) queryParams.append('pageSize', params.pageSize.toString());
+
+  const response = await api.get(`/prompts/ratings?${queryParams}`);
+
+  if (!response.data.success) {
+    throw new Error('获取评分失败');
+  }
+
+  return response.data;
+}
+
+export async function updateRating(promptId: string, data: {
+  rating: number;
+  comment?: string;
+}): Promise<{ success: boolean }> {
+  const response = await api.put('/prompts/rating', { promptId, ...data });
+  
+  if (!response.data.success) {
+    throw new Error('更新评分失败');
+  }
+
+  return response.data;
+}
+
+export async function deleteRating(promptId: string): Promise<{ success: boolean }> {
+  const response = await api.delete('/prompts/rating', { data: { promptId } });
+  
+  if (!response.data.success) {
+    throw new Error('删除评分失败');
+  }
+
+  return response.data;
+}
+
+export async function getUserRating(promptId: string): Promise<Rating | null> {
+  try {
+    const response = await api.get(`/prompts/user-rating?promptId=${promptId}`);
+    
+    if (!response.data.success) {
+      return null;
+    }
+
+    return response.data.rating;
+  } catch (error) {
+    // 如果没有找到用户评分，返回null
+    return null;
+  }
+}
+
+// 导入/导出相关
+export async function exportPrompts(promptIds: string[], format: 'json' | 'csv' | 'txt' = 'json'): Promise<Blob> {
+  const response = await api.post('/prompts/export', { promptIds, format }, {
+    responseType: 'blob'
+  });
+  
+  return response.data;
+}
+
+export async function importPrompts(importData: any, options?: {
+  allowDuplicates?: boolean;
+  skipDuplicates?: boolean;
+}): Promise<{
+  success: boolean;
+  imported_count: number;
+  total_count: number;
+  errors?: string[];
+  prompts: Array<{ id: string; name: string }>;
+}> {
+  const response = await api.post('/prompts/import', { importData, options });
+  
+  if (!response.data.success) {
+    throw new Error(response.data.error || '导入失败');
+  }
+
+  return response.data;
+}
+
 export default api;

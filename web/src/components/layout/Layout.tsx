@@ -3,6 +3,8 @@ import Head from 'next/head';
 import dynamic from 'next/dynamic';
 import Navbar from './Navbar';
 import Footer from './Footer';
+import Navigation from '@/components/Navigation';
+import { useGlobalKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 
 // 动态导入粒子背景组件，避免SSR问题
 const ParticlesBackground = dynamic(
@@ -21,6 +23,8 @@ const Layout: React.FC<LayoutProps> = ({
   title = 'Prompt Hub - AI提示词管理平台',
   description = '一个用于管理和分享AI提示词的现代化平台，帮助您充分发挥AI模型的潜力。'
 }) => {
+  // 启用全局键盘快捷键
+  useGlobalKeyboardShortcuts();
   return (
     <>
       <Head>
@@ -48,6 +52,9 @@ const Layout: React.FC<LayoutProps> = ({
           
           <Footer />
         </div>
+        
+        {/* 移动端底部导航 */}
+        <Navigation />
       </div>
     </>
   );

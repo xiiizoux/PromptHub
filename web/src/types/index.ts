@@ -18,6 +18,7 @@ export interface PromptInfo {
 
 // 提示词详情
 export interface PromptDetails extends PromptInfo {
+  id: string;                             // 提示词ID
   content?: string;                       // 原始内容（用于表单，但不存在于数据库中）
   messages?: Array<{role: string; content: string}>; // 消息数组，对应数据库中的JSONB字段
   template_format?: string;
