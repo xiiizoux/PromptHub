@@ -24,11 +24,15 @@ export default function PromptsPage() {
     const fetchCategories = async () => {
       try {
         const data = await getCategories();
+        // 兼容对象数组和字符串数组
+        const categoryNames = Array.isArray(data) && typeof data[0] === 'object'
+          ? data.map((cat: any) => cat.name)
+          : data;
         // 确保"全部"选项始终存在
-        if (data.length > 0 && !data.includes('全部')) {
-          setCategories(['全部', ...data]);
+        if (categoryNames.length > 0 && !categoryNames.includes('全部')) {
+          setCategories(['全部', ...categoryNames]);
         } else {
-          setCategories(data);
+          setCategories(categoryNames);
         }
       } catch (err) {
         console.error('获取分类失败:', err);
@@ -316,7 +320,7 @@ export default function PromptsPage() {
                     >
                       {prompts.map((prompt, index) => (
                         <motion.div
-                          key={prompt.name}
+                          key={prompt.id || prompt.name}
                           initial={{ opacity: 0, y: 30 }}
                           animate={{ opacity: 1, y: 0 }}
                           transition={{ 
@@ -325,7 +329,7 @@ export default function PromptsPage() {
                             ease: "easeOut"
                           }}
                         >
-                          <PromptCard prompt={prompt} />
+                          <PromptCard prompt={{ ...prompt, id: prompt.id || prompt.name }} />
                         </motion.div>
                       ))}
                     </motion.div>
