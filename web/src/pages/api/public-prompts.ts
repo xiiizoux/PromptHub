@@ -20,7 +20,6 @@ type PromptData = {
   created_at: string;
   updated_at: string;
   created_by?: string;
-  author?: string;
 };
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -37,7 +36,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const userId = req.headers['x-user-id'] as string;
     console.log('请求中的用户ID:', userId);
     
-    // 构建查询 - 加入users表获取作者信息
+    // 构建基础查询 - 不使用外键关系，先获取提示词数据
     let query = supabase
       .from('prompts')
       .select(`
@@ -51,15 +50,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         user_id,
         created_at,
         updated_at,
-        created_by,
-        users!user_id(
-          display_name,
-          email
-        ),
-        creator:users!created_by(
-          display_name,
-          email
-        )
+        created_by
       `);
 
     // 如果有用户ID，则获取该用户的所有提示词和公开提示词
@@ -88,7 +79,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
     
     // 执行查询
-    const { data, error } = await query;
+    const { data: promptsData, error } = await query;
 
     if (error) {
       console.error('获取提示词失败:', error);
@@ -98,12 +89,57 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       });
     }
 
-    console.log('原始查询结果:', JSON.stringify(data?.[0], null, 2));
+    console.log('获取到的提示词数量:', promptsData?.length || 0);
+
+    // 如果没有提示词，直接返回
+    if (!promptsData || promptsData.length === 0) {
+      return res.status(200).json({
+        success: true,
+        data: [],
+        total: 0,
+        page: 1,
+        pageSize: 0,
+        totalPages: 1
+      });
+    }
+
+    // 收集所有唯一的用户ID
+    const userIds = Array.from(new Set(
+      promptsData
+        .map(p => p.user_id || p.created_by)
+        .filter(Boolean)
+    ));
+
+    console.log('需要获取用户信息的用户ID:', userIds);
+
+    // 分别查询用户信息
+    let usersData: any[] = [];
+    if (userIds.length > 0) {
+      const { data: users, error: usersError } = await supabase
+        .from('users')
+        .select('id, display_name, email')
+        .in('id', userIds);
+
+      if (!usersError && users) {
+        usersData = users;
+      } else {
+        console.warn('获取用户信息失败:', usersError);
+      }
+    }
+
+    // 创建用户ID到用户信息的映射
+    const userMap = new Map();
+    usersData.forEach(user => {
+      userMap.set(user.id, user);
+    });
+
+    console.log('用户映射表:', Object.fromEntries(userMap));
 
     // 格式化响应，确保包含所有必要字段
-    const formattedData = (data || []).map((prompt: any) => {
-      // 确定作者信息的优先级：creator > users > 默认值
-      const authorInfo = prompt.creator || prompt.users;
+    const formattedData = promptsData.map((prompt: PromptData) => {
+      // 确定作者信息的优先级：created_by > user_id
+      const authorId = prompt.created_by || prompt.user_id;
+      const authorInfo = authorId ? userMap.get(authorId) : null;
       const authorName = authorInfo?.display_name || 
                         authorInfo?.email?.split('@')[0] || 
                         '未知用户';
@@ -123,7 +159,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       };
     });
 
-    console.log('格式化后的数据:', JSON.stringify(formattedData?.[0], null, 2));
+    console.log('格式化后的数据样例:', JSON.stringify(formattedData?.[0], null, 2));
 
     // 返回结果
     return res.status(200).json({
