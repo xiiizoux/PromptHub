@@ -2,7 +2,22 @@ import React, { useState, useEffect } from 'react';
 import { GetServerSideProps } from 'next';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { ChevronLeftIcon, DocumentTextIcon, ClockIcon, UserIcon, ChartBarIcon } from '@heroicons/react/24/outline';
+import { motion, AnimatePresence } from 'framer-motion';
+import { 
+  ChevronLeftIcon, 
+  DocumentTextIcon, 
+  ClockIcon, 
+  UserIcon, 
+  ChartBarIcon,
+  CheckCircleIcon,
+  StarIcon,
+  FireIcon,
+  SparklesIcon,
+  CubeTransparentIcon,
+  ChartPieIcon,
+  BoltIcon,
+  PresentationChartLineIcon
+} from '@heroicons/react/24/outline';
 import { getPromptDetails, getPromptPerformance, getPerformanceReport } from '@/lib/api';
 import { PromptDetails, PromptPerformance } from '@/types';
 
@@ -43,386 +58,643 @@ export default function PromptAnalyticsPage({ prompt, performance, report }: Pro
   };
 
   return (
-    <div className="bg-gray-50 min-h-screen py-8">
-      <div className="container-custom">
-        {/* 返回按钮 */}
-        <div className="mb-6">
-          <Link href="/analytics" className="inline-flex items-center text-sm font-medium text-primary-600 hover:text-primary-700">
-            <ChevronLeftIcon className="h-5 w-5 mr-1" />
-            返回性能分析
-          </Link>
-        </div>
-        
-        {/* 提示词基本信息 */}
-        <div className="bg-white shadow-sm rounded-lg overflow-hidden mb-8">
-          <div className="p-6 border-b border-gray-200">
-            <div className="flex justify-between items-start">
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">{prompt.name} - 性能分析</h1>
-                <p className="mt-2 text-gray-600">{prompt.description}</p>
-              </div>
-              <Link 
-                href={`/prompts/${prompt.id}`}
-                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-primary-700 bg-primary-50 hover:bg-primary-100"
-              >
-                <DocumentTextIcon className="h-5 w-5 mr-2" />
-                查看提示词
-              </Link>
-            </div>
-            
-            <div className="mt-4 flex flex-wrap items-center gap-4 text-sm text-gray-500">
-              <div className="flex items-center">
-                <ClockIcon className="h-4 w-4 mr-1" />
-                创建于 {formatDate(prompt.created_at)}
-              </div>
-              {prompt.updated_at && prompt.updated_at !== prompt.created_at && (
-                <div className="flex items-center">
-                  <ClockIcon className="h-4 w-4 mr-1" />
-                  更新于 {formatDate(prompt.updated_at)}
-                </div>
-              )}
-              {prompt.author && (
-                <div className="flex items-center">
-                  <UserIcon className="h-4 w-4 mr-1" />
-                  {prompt.author}
-                </div>
-              )}
-              {prompt.version && (
-                <div className="flex items-center">
-                  <DocumentTextIcon className="h-4 w-4 mr-1" />
-                  v{prompt.version}
-                </div>
-              )}
-            </div>
-          </div>
+    <div className="min-h-screen bg-dark-bg-primary relative overflow-hidden">
+      {/* 背景网格效果 */}
+      <div className="fixed inset-0 bg-grid-pattern opacity-10 pointer-events-none"></div>
+      
+      {/* 背景装饰元素 */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-1/4 -right-48 w-96 h-96 bg-gradient-to-br from-neon-cyan/20 to-neon-purple/20 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-1/4 -left-48 w-96 h-96 bg-gradient-to-tr from-neon-pink/20 to-neon-purple/20 rounded-full blur-3xl"></div>
+        <div className="absolute top-3/4 right-1/4 w-64 h-64 bg-gradient-to-br from-neon-yellow/10 to-neon-green/10 rounded-full blur-2xl"></div>
+      </div>
+
+      <div className="relative z-10 py-8">
+        <div className="container-custom">
+          {/* 返回按钮 */}
+          <motion.div 
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.6 }}
+            className="mb-8"
+          >
+            <Link 
+              href="/analytics" 
+              className="inline-flex items-center glass rounded-lg px-4 py-2 border border-neon-cyan/30 text-neon-cyan hover:text-neon-purple hover:border-neon-purple/30 transition-all duration-300 group"
+            >
+              <ChevronLeftIcon className="h-5 w-5 mr-2 group-hover:-translate-x-1 transition-transform duration-300" />
+              <span className="font-medium">返回性能分析</span>
+            </Link>
+          </motion.div>
           
-          {/* 时间范围选择器 */}
-          <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
-            <div className="flex items-center justify-between">
-              <div className="text-sm font-medium text-gray-700">选择时间范围：</div>
-              <div className="flex space-x-2">
-                <button
-                  type="button"
-                  onClick={() => setTimeRange('day')}
-                  className={`px-3 py-1 text-sm font-medium rounded-md ${
-                    timeRange === 'day'
-                      ? 'bg-primary-100 text-primary-800'
-                      : 'bg-white text-gray-700 hover:bg-gray-50'
-                  }`}
+          {/* 提示词基本信息 */}
+          <motion.div 
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.2 }}
+            className="glass rounded-2xl border border-neon-cyan/20 overflow-hidden mb-8 shadow-2xl"
+          >
+            <div className="p-8 border-b border-neon-cyan/10">
+              <div className="flex justify-between items-start">
+                <div className="flex-1">
+                  <motion.h1 
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.8, delay: 0.4 }}
+                    className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-neon-cyan via-neon-purple to-neon-pink bg-clip-text text-transparent mb-4"
+                  >
+                    {prompt.name}
+                  </motion.h1>
+                  <motion.p 
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.6, delay: 0.6 }}
+                    className="text-lg text-gray-300 leading-relaxed"
+                  >
+                    {prompt.description}
+                  </motion.p>
+                </div>
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.6, delay: 0.8 }}
                 >
-                  今日
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setTimeRange('week')}
-                  className={`px-3 py-1 text-sm font-medium rounded-md ${
-                    timeRange === 'week'
-                      ? 'bg-primary-100 text-primary-800'
-                      : 'bg-white text-gray-700 hover:bg-gray-50'
-                  }`}
-                >
-                  本周
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setTimeRange('month')}
-                  className={`px-3 py-1 text-sm font-medium rounded-md ${
-                    timeRange === 'month'
-                      ? 'bg-primary-100 text-primary-800'
-                      : 'bg-white text-gray-700 hover:bg-gray-50'
-                  }`}
-                >
-                  本月
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setTimeRange('all')}
-                  className={`px-3 py-1 text-sm font-medium rounded-md ${
-                    timeRange === 'all'
-                      ? 'bg-primary-100 text-primary-800'
-                      : 'bg-white text-gray-700 hover:bg-gray-50'
-                  }`}
-                >
-                  全部
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-        
-        {/* 性能指标卡片 */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          {/* 使用次数 */}
-          <div className="bg-white shadow-sm rounded-lg p-6">
-            <div className="flex items-center">
-              <div className="flex-shrink-0 bg-primary-100 rounded-md p-3">
-                <ChartBarIcon className="h-6 w-6 text-primary-600" />
-              </div>
-              <div className="ml-5">
-                <div className="text-sm font-medium text-gray-500">使用次数</div>
-                <div className="mt-1 text-3xl font-semibold text-gray-900">
-                  {formatNumber(performance.total_usage)}
-                </div>
-              </div>
-            </div>
-          </div>
-          
-          {/* 成功率 */}
-          <div className="bg-white shadow-sm rounded-lg p-6">
-            <div className="flex items-center">
-              <div className="flex-shrink-0 bg-green-100 rounded-md p-3">
-                <svg className="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-              </div>
-              <div className="ml-5">
-                <div className="text-sm font-medium text-gray-500">成功率</div>
-                <div className="mt-1 text-3xl font-semibold text-gray-900">
-                  {formatPercent(performance.success_rate)}
-                </div>
-              </div>
-            </div>
-          </div>
-          
-          {/* 平均评分 */}
-          <div className="bg-white shadow-sm rounded-lg p-6">
-            <div className="flex items-center">
-              <div className="flex-shrink-0 bg-yellow-100 rounded-md p-3">
-                <svg className="h-6 w-6 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
-                </svg>
-              </div>
-              <div className="ml-5">
-                <div className="text-sm font-medium text-gray-500">平均评分</div>
-                <div className="mt-1 text-3xl font-semibold text-gray-900">
-                  {performance.average_rating ? performance.average_rating.toFixed(1) : '暂无'}
-                </div>
-              </div>
-            </div>
-          </div>
-          
-          {/* 平均响应时间 */}
-          <div className="bg-white shadow-sm rounded-lg p-6">
-            <div className="flex items-center">
-              <div className="flex-shrink-0 bg-blue-100 rounded-md p-3">
-                <svg className="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-              <div className="ml-5">
-                <div className="text-sm font-medium text-gray-500">平均响应时间</div>
-                <div className="mt-1 text-3xl font-semibold text-gray-900">
-                  {formatTime(performance.average_latency)}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        
-        {/* Token统计 */}
-        <div className="bg-white shadow-sm rounded-lg overflow-hidden mb-8">
-          <div className="px-6 py-4 border-b border-gray-200">
-            <h2 className="text-lg font-medium text-gray-900">Token统计</h2>
-          </div>
-          <div className="p-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <h3 className="text-sm font-medium text-gray-500 mb-2">平均Token消耗</h3>
-                <div className="bg-gray-50 rounded-lg p-4">
-                  <div className="flex justify-between mb-2">
-                    <span className="text-sm text-gray-600">输入Token</span>
-                    <span className="text-sm font-medium text-gray-900">{formatNumber(performance.token_stats.input_avg)}</span>
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2.5">
-                    <div className="bg-blue-600 h-2.5 rounded-full" style={{ width: `${Math.min(100, (performance.token_stats.input_avg / (performance.token_stats.input_avg + performance.token_stats.output_avg)) * 100)}%` }}></div>
-                  </div>
-                  
-                  <div className="flex justify-between mt-4 mb-2">
-                    <span className="text-sm text-gray-600">输出Token</span>
-                    <span className="text-sm font-medium text-gray-900">{formatNumber(performance.token_stats.output_avg)}</span>
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2.5">
-                    <div className="bg-green-600 h-2.5 rounded-full" style={{ width: `${Math.min(100, (performance.token_stats.output_avg / (performance.token_stats.input_avg + performance.token_stats.output_avg)) * 100)}%` }}></div>
-                  </div>
-                </div>
+                  <Link 
+                    href={`/prompts/${prompt.id}`}
+                    className="btn-primary flex items-center space-x-2 group"
+                  >
+                    <DocumentTextIcon className="h-5 w-5 group-hover:rotate-12 transition-transform duration-300" />
+                    <span>查看提示词</span>
+                  </Link>
+                </motion.div>
               </div>
               
-              <div>
-                <h3 className="text-sm font-medium text-gray-500 mb-2">总Token消耗</h3>
-                <div className="bg-gray-50 rounded-lg p-4">
-                  <div className="flex justify-between mb-2">
-                    <span className="text-sm text-gray-600">输入Token</span>
-                    <span className="text-sm font-medium text-gray-900">{formatNumber(performance.token_stats.total_input)}</span>
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 1 }}
+                className="mt-6 flex flex-wrap items-center gap-6 text-sm"
+              >
+                <div className="flex items-center text-gray-400 group">
+                  <ClockIcon className="h-4 w-4 mr-2 text-neon-cyan group-hover:text-neon-purple transition-colors duration-300" />
+                  <span>创建于 {formatDate(prompt.created_at)}</span>
+                </div>
+                {prompt.updated_at && prompt.updated_at !== prompt.created_at && (
+                  <div className="flex items-center text-gray-400 group">
+                    <ClockIcon className="h-4 w-4 mr-2 text-neon-purple group-hover:text-neon-pink transition-colors duration-300" />
+                    <span>更新于 {formatDate(prompt.updated_at)}</span>
                   </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2.5">
-                    <div className="bg-blue-600 h-2.5 rounded-full" style={{ width: `${Math.min(100, (performance.token_stats.total_input / (performance.token_stats.total_input + performance.token_stats.total_output)) * 100)}%` }}></div>
+                )}
+                {prompt.author && (
+                  <div className="flex items-center text-gray-400 group">
+                    <UserIcon className="h-4 w-4 mr-2 text-neon-pink group-hover:text-neon-cyan transition-colors duration-300" />
+                    <span>{prompt.author}</span>
                   </div>
-                  
-                  <div className="flex justify-between mt-4 mb-2">
-                    <span className="text-sm text-gray-600">输出Token</span>
-                    <span className="text-sm font-medium text-gray-900">{formatNumber(performance.token_stats.total_output)}</span>
+                )}
+                {prompt.version && (
+                  <div className="flex items-center text-gray-400 group">
+                    <SparklesIcon className="h-4 w-4 mr-2 text-neon-yellow group-hover:text-neon-green transition-colors duration-300" />
+                    <span>v{prompt.version}</span>
                   </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2.5">
-                    <div className="bg-green-600 h-2.5 rounded-full" style={{ width: `${Math.min(100, (performance.token_stats.total_output / (performance.token_stats.total_input + performance.token_stats.total_output)) * 100)}%` }}></div>
+                )}
+              </motion.div>
+            </div>
+            
+            {/* 时间范围选择器 */}
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.6, delay: 1.2 }}
+              className="px-8 py-6 bg-dark-bg-secondary/30"
+            >
+              <div className="flex items-center justify-between">
+                <div className="text-sm font-medium text-neon-cyan flex items-center">
+                  <ChartBarIcon className="h-5 w-5 mr-2" />
+                  选择时间范围：
+                </div>
+                <div className="flex space-x-2">
+                  {[
+                    { key: 'day', label: '今日', icon: '📅' },
+                    { key: 'week', label: '本周', icon: '📊' },
+                    { key: 'month', label: '本月', icon: '📈' },
+                    { key: 'all', label: '全部', icon: '🌟' }
+                  ].map((item, index) => (
+                    <motion.button
+                      key={item.key}
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ duration: 0.4, delay: 1.4 + index * 0.1 }}
+                      type="button"
+                      onClick={() => setTimeRange(item.key)}
+                      className={`px-4 py-2 text-sm font-medium rounded-lg transition-all duration-300 ${
+                        timeRange === item.key
+                          ? 'bg-gradient-to-r from-neon-cyan to-neon-purple text-white shadow-neon-sm'
+                          : 'glass border border-neon-cyan/20 text-gray-400 hover:text-neon-cyan hover:border-neon-cyan/40'
+                      }`}
+                    >
+                      <span className="mr-1">{item.icon}</span>
+                      {item.label}
+                    </motion.button>
+                  ))}
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+          
+          {/* 性能指标卡片 */}
+          <motion.div 
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 1.6 }}
+            className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 mb-8"
+          >
+            {/* 使用次数 */}
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.6, delay: 1.8 }}
+              className="glass rounded-xl p-6 border border-neon-cyan/20 hover:border-neon-cyan/40 transition-all duration-300 group"
+            >
+              <div className="flex items-center">
+                <div className="flex-shrink-0 w-12 h-12 rounded-lg bg-gradient-to-r from-neon-cyan to-neon-purple p-0.5 group-hover:scale-110 transition-transform duration-300">
+                  <div className="w-full h-full bg-dark-bg-primary rounded-lg flex items-center justify-center">
+                    <FireIcon className="h-6 w-6 text-neon-cyan" />
+                  </div>
+                </div>
+                <div className="ml-4">
+                  <div className="text-sm font-medium text-gray-400 group-hover:text-gray-300 transition-colors duration-300">使用次数</div>
+                  <div className="mt-1 text-2xl font-bold text-neon-cyan">
+                    {formatNumber(performance.total_usage)}
                   </div>
                 </div>
               </div>
+            </motion.div>
+            
+            {/* 成功率 */}
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.6, delay: 2 }}
+              className="glass rounded-xl p-6 border border-neon-green/20 hover:border-neon-green/40 transition-all duration-300 group"
+            >
+              <div className="flex items-center">
+                <div className="flex-shrink-0 w-12 h-12 rounded-lg bg-gradient-to-r from-neon-green to-neon-cyan p-0.5 group-hover:scale-110 transition-transform duration-300">
+                  <div className="w-full h-full bg-dark-bg-primary rounded-lg flex items-center justify-center">
+                    <CheckCircleIcon className="h-6 w-6 text-neon-green" />
+                  </div>
+                </div>
+                <div className="ml-4">
+                  <div className="text-sm font-medium text-gray-400 group-hover:text-gray-300 transition-colors duration-300">成功率</div>
+                  <div className="mt-1 text-2xl font-bold text-neon-green">
+                    {formatPercent(performance.success_rate)}
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+            
+            {/* 平均评分 */}
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.6, delay: 2.2 }}
+              className="glass rounded-xl p-6 border border-neon-yellow/20 hover:border-neon-yellow/40 transition-all duration-300 group"
+            >
+              <div className="flex items-center">
+                <div className="flex-shrink-0 w-12 h-12 rounded-lg bg-gradient-to-r from-neon-yellow to-neon-orange p-0.5 group-hover:scale-110 transition-transform duration-300">
+                  <div className="w-full h-full bg-dark-bg-primary rounded-lg flex items-center justify-center">
+                    <StarIcon className="h-6 w-6 text-neon-yellow" />
+                  </div>
+                </div>
+                <div className="ml-4">
+                  <div className="text-sm font-medium text-gray-400 group-hover:text-gray-300 transition-colors duration-300">平均评分</div>
+                  <div className="mt-1 text-2xl font-bold text-neon-yellow">
+                    {performance.average_rating ? performance.average_rating.toFixed(1) : '暂无'}
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+            
+            {/* 平均响应时间 */}
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.6, delay: 2.4 }}
+              className="glass rounded-xl p-6 border border-neon-purple/20 hover:border-neon-purple/40 transition-all duration-300 group"
+            >
+              <div className="flex items-center">
+                <div className="flex-shrink-0 w-12 h-12 rounded-lg bg-gradient-to-r from-neon-purple to-neon-pink p-0.5 group-hover:scale-110 transition-transform duration-300">
+                  <div className="w-full h-full bg-dark-bg-primary rounded-lg flex items-center justify-center">
+                    <BoltIcon className="h-6 w-6 text-neon-purple" />
+                  </div>
+                </div>
+                <div className="ml-4">
+                  <div className="text-sm font-medium text-gray-400 group-hover:text-gray-300 transition-colors duration-300">平均响应时间</div>
+                  <div className="mt-1 text-2xl font-bold text-neon-purple">
+                    {formatTime(performance.average_latency)}
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+          
+          {/* Token统计 */}
+          <motion.div 
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 2.6 }}
+            className="glass rounded-2xl border border-neon-cyan/20 overflow-hidden mb-8 shadow-2xl"
+          >
+            <div className="px-8 py-6 border-b border-neon-cyan/10">
+              <h2 className="text-2xl font-bold text-white flex items-center">
+                <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-neon-cyan to-neon-purple p-0.5 mr-4">
+                  <div className="w-full h-full bg-dark-bg-primary rounded-lg flex items-center justify-center">
+                    <CubeTransparentIcon className="h-5 w-5 text-neon-cyan" />
+                  </div>
+                </div>
+                Token统计
+              </h2>
             </div>
-          </div>
-        </div>
-        
-        {/* 版本分布 */}
-        {performance.version_distribution && Object.keys(performance.version_distribution).length > 0 && (
-          <div className="bg-white shadow-sm rounded-lg overflow-hidden mb-8">
-            <div className="px-6 py-4 border-b border-gray-200">
-              <h2 className="text-lg font-medium text-gray-900">版本分布</h2>
-            </div>
-            <div className="p-6">
-              <div className="space-y-4">
-                {Object.entries(performance.version_distribution).map(([version, count], index) => (
-                  <div key={version}>
-                    <div className="flex justify-between mb-1">
-                      <span className="text-sm font-medium text-gray-700">v{version}</span>
-                      <span className="text-sm text-gray-600">
-                        {formatNumber(count as number)} ({formatPercent((count as number) / performance.total_usage)})
-                      </span>
-                    </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2.5">
-                      <div 
-                        className={`h-2.5 rounded-full ${
-                          index % 3 === 0 ? 'bg-primary-600' : 
-                          index % 3 === 1 ? 'bg-secondary-600' : 'bg-green-600'
-                        }`} 
-                        style={{ width: `${((count as number) / performance.total_usage) * 100}%` }}
-                      ></div>
+            <div className="p-8">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <motion.div
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.6, delay: 2.8 }}
+                >
+                  <h3 className="text-lg font-medium text-neon-cyan mb-4 flex items-center">
+                    <ChartPieIcon className="h-5 w-5 mr-2" />
+                    平均Token消耗
+                  </h3>
+                  <div className="glass rounded-xl p-6 border border-neon-cyan/20">
+                    <div className="space-y-4">
+                      <div>
+                        <div className="flex justify-between mb-2">
+                          <span className="text-sm text-gray-300 flex items-center">
+                            <span className="w-3 h-3 rounded-full bg-neon-blue mr-2"></span>
+                            输入Token
+                          </span>
+                          <span className="text-sm font-medium text-neon-blue">{formatNumber(performance.token_stats.input_avg)}</span>
+                        </div>
+                        <div className="w-full bg-dark-bg-secondary rounded-full h-3 overflow-hidden">
+                          <motion.div 
+                            initial={{ width: 0 }}
+                            animate={{ width: `${Math.min(100, (performance.token_stats.input_avg / (performance.token_stats.input_avg + performance.token_stats.output_avg)) * 100)}%` }}
+                            transition={{ duration: 1, delay: 3 }}
+                            className="bg-gradient-to-r from-neon-blue to-neon-cyan h-full rounded-full shadow-neon-sm"
+                          ></motion.div>
+                        </div>
+                      </div>
+                      
+                      <div>
+                        <div className="flex justify-between mb-2">
+                          <span className="text-sm text-gray-300 flex items-center">
+                            <span className="w-3 h-3 rounded-full bg-neon-green mr-2"></span>
+                            输出Token
+                          </span>
+                          <span className="text-sm font-medium text-neon-green">{formatNumber(performance.token_stats.output_avg)}</span>
+                        </div>
+                        <div className="w-full bg-dark-bg-secondary rounded-full h-3 overflow-hidden">
+                          <motion.div 
+                            initial={{ width: 0 }}
+                            animate={{ width: `${Math.min(100, (performance.token_stats.output_avg / (performance.token_stats.input_avg + performance.token_stats.output_avg)) * 100)}%` }}
+                            transition={{ duration: 1, delay: 3.2 }}
+                            className="bg-gradient-to-r from-neon-green to-neon-cyan h-full rounded-full shadow-neon-sm"
+                          ></motion.div>
+                        </div>
+                      </div>
                     </div>
                   </div>
-                ))}
+                </motion.div>
+                
+                <motion.div
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.6, delay: 3.4 }}
+                >
+                  <h3 className="text-lg font-medium text-neon-purple mb-4 flex items-center">
+                    <PresentationChartLineIcon className="h-5 w-5 mr-2" />
+                    总Token消耗
+                  </h3>
+                  <div className="glass rounded-xl p-6 border border-neon-purple/20">
+                    <div className="space-y-4">
+                      <div>
+                        <div className="flex justify-between mb-2">
+                          <span className="text-sm text-gray-300 flex items-center">
+                            <span className="w-3 h-3 rounded-full bg-neon-blue mr-2"></span>
+                            输入Token
+                          </span>
+                          <span className="text-sm font-medium text-neon-blue">{formatNumber(performance.token_stats.total_input)}</span>
+                        </div>
+                        <div className="w-full bg-dark-bg-secondary rounded-full h-3 overflow-hidden">
+                          <motion.div 
+                            initial={{ width: 0 }}
+                            animate={{ width: `${Math.min(100, (performance.token_stats.total_input / (performance.token_stats.total_input + performance.token_stats.total_output)) * 100)}%` }}
+                            transition={{ duration: 1, delay: 3.6 }}
+                            className="bg-gradient-to-r from-neon-blue to-neon-purple h-full rounded-full shadow-neon-sm"
+                          ></motion.div>
+                        </div>
+                      </div>
+                      
+                      <div>
+                        <div className="flex justify-between mb-2">
+                          <span className="text-sm text-gray-300 flex items-center">
+                            <span className="w-3 h-3 rounded-full bg-neon-green mr-2"></span>
+                            输出Token
+                          </span>
+                          <span className="text-sm font-medium text-neon-green">{formatNumber(performance.token_stats.total_output)}</span>
+                        </div>
+                        <div className="w-full bg-dark-bg-secondary rounded-full h-3 overflow-hidden">
+                          <motion.div 
+                            initial={{ width: 0 }}
+                            animate={{ width: `${Math.min(100, (performance.token_stats.total_output / (performance.token_stats.total_input + performance.token_stats.total_output)) * 100)}%` }}
+                            transition={{ duration: 1, delay: 3.8 }}
+                            className="bg-gradient-to-r from-neon-green to-neon-purple h-full rounded-full shadow-neon-sm"
+                          ></motion.div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
               </div>
             </div>
-          </div>
-        )}
-        
-        {/* 反馈分析 */}
-        <div className="bg-white shadow-sm rounded-lg overflow-hidden mb-8">
-          <div className="px-6 py-4 border-b border-gray-200">
-            <h2 className="text-lg font-medium text-gray-900">反馈分析</h2>
-          </div>
-          <div className="p-6">
-            {performance.feedback_count > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="md:col-span-2">
-                  <h3 className="text-sm font-medium text-gray-500 mb-4">评分分布</h3>
-                  <div className="space-y-3">
-                    {[5, 4, 3, 2, 1].map((rating) => {
-                      // 这里使用模拟数据，实际应用中应该从API获取
-                      const count = Math.floor(Math.random() * performance.feedback_count);
-                      const percentage = (count / performance.feedback_count) * 100;
-                      
-                      return (
-                        <div key={rating} className="flex items-center">
-                          <div className="min-w-[30px] text-sm font-medium text-gray-700">{rating}星</div>
-                          <div className="w-full mx-2">
-                            <div className="w-full bg-gray-200 rounded-full h-2.5">
-                              <div 
-                                className={`h-2.5 rounded-full ${
-                                  rating >= 4 ? 'bg-green-600' : 
-                                  rating === 3 ? 'bg-yellow-500' : 'bg-red-500'
-                                }`}
-                                style={{ width: `${percentage}%` }}
-                              ></div>
-                            </div>
+          </motion.div>
+          
+          {/* 版本分布 */}
+          {performance.version_distribution && Object.keys(performance.version_distribution).length > 0 && (
+            <motion.div 
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 4 }}
+              className="glass rounded-2xl border border-neon-purple/20 overflow-hidden mb-8 shadow-2xl"
+            >
+              <div className="px-8 py-6 border-b border-neon-purple/10">
+                <h2 className="text-2xl font-bold text-white flex items-center">
+                  <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-neon-purple to-neon-pink p-0.5 mr-4">
+                    <div className="w-full h-full bg-dark-bg-primary rounded-lg flex items-center justify-center">
+                      <SparklesIcon className="h-5 w-5 text-neon-purple" />
+                    </div>
+                  </div>
+                  版本分布
+                </h2>
+              </div>
+              <div className="p-8">
+                <div className="space-y-6">
+                  {Object.entries(performance.version_distribution).map(([version, count], index) => (
+                    <motion.div 
+                      key={version}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ duration: 0.6, delay: 4.2 + index * 0.2 }}
+                    >
+                      <div className="flex justify-between mb-3">
+                        <span className="text-lg font-medium text-white flex items-center">
+                          <span className={`w-4 h-4 rounded-full mr-3 ${
+                            index % 4 === 0 ? 'bg-neon-cyan shadow-neon-cyan' : 
+                            index % 4 === 1 ? 'bg-neon-purple shadow-neon-purple' : 
+                            index % 4 === 2 ? 'bg-neon-pink shadow-neon-pink' : 'bg-neon-green shadow-neon-green'
+                          } shadow-md`}></span>
+                          v{version}
+                        </span>
+                        <div className="text-right">
+                          <div className="text-lg font-bold text-white">
+                            {formatNumber(count as number)}
                           </div>
-                          <div className="min-w-[80px] text-right text-sm text-gray-600">
-                            {count} ({percentage.toFixed(1)}%)
+                          <div className="text-sm text-gray-400">
+                            {formatPercent((count as number) / performance.total_usage)}
                           </div>
                         </div>
-                      );
-                    })}
-                  </div>
-                </div>
-                
-                <div>
-                  <h3 className="text-sm font-medium text-gray-500 mb-4">反馈统计</h3>
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    <div className="flex justify-between mb-2">
-                      <span className="text-sm text-gray-600">总反馈数</span>
-                      <span className="text-sm font-medium text-gray-900">{formatNumber(performance.feedback_count)}</span>
-                    </div>
-                    <div className="flex justify-between mb-2">
-                      <span className="text-sm text-gray-600">反馈率</span>
-                      <span className="text-sm font-medium text-gray-900">
-                        {formatPercent(performance.feedback_count / performance.total_usage)}
-                      </span>
-                    </div>
-                    <div className="flex justify-between mb-2">
-                      <span className="text-sm text-gray-600">平均评分</span>
-                      <span className="text-sm font-medium text-gray-900">
-                        {performance.average_rating ? performance.average_rating.toFixed(1) : '暂无'}
-                      </span>
-                    </div>
-                  </div>
+                      </div>
+                      <div className="w-full bg-dark-bg-secondary rounded-full h-4 overflow-hidden">
+                        <motion.div 
+                          initial={{ width: 0 }}
+                          animate={{ width: `${((count as number) / performance.total_usage) * 100}%` }}
+                          transition={{ duration: 1, delay: 4.4 + index * 0.2 }}
+                          className={`h-full rounded-full shadow-md ${
+                            index % 4 === 0 ? 'bg-gradient-to-r from-neon-cyan to-neon-blue' : 
+                            index % 4 === 1 ? 'bg-gradient-to-r from-neon-purple to-neon-pink' : 
+                            index % 4 === 2 ? 'bg-gradient-to-r from-neon-pink to-neon-red' : 'bg-gradient-to-r from-neon-green to-neon-cyan'
+                          }`}
+                        ></motion.div>
+                      </div>
+                    </motion.div>
+                  ))}
                 </div>
               </div>
-            ) : (
-              <div className="text-center py-8">
-                <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M12 14h.01M20 4v7a4 4 0 01-4 4H8a4 4 0 01-4-4V4m0 0h16M4 4l3.465 1.683M20 4l-3.465 1.683" />
-                </svg>
-                <h3 className="mt-2 text-sm font-medium text-gray-900">暂无反馈</h3>
-                <p className="mt-1 text-sm text-gray-500">该提示词尚未收到用户反馈</p>
-              </div>
-            )}
-          </div>
-        </div>
-        
-        {/* 优化建议 */}
-        <div className="bg-white shadow-sm rounded-lg overflow-hidden">
-          <div className="px-6 py-4 border-b border-gray-200">
-            <h2 className="text-lg font-medium text-gray-900">优化建议</h2>
-          </div>
-          <div className="p-6">
-            {report && report.suggestions ? (
-              <div className="space-y-4">
-                {report.suggestions.map((suggestion: string, index: number) => (
-                  <div key={index} className="flex">
-                    <div className="flex-shrink-0">
-                      <svg className="h-6 w-6 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                      </svg>
-                    </div>
-                    <div className="ml-3">
-                      <p className="text-sm text-gray-700">{suggestion}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="bg-gray-50 rounded-lg p-4">
-                <div className="flex">
-                  <div className="flex-shrink-0">
-                    <svg className="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-                    </svg>
-                  </div>
-                  <div className="ml-3 flex-1 md:flex md:justify-between">
-                    <p className="text-sm text-gray-700">
-                      基于目前的使用数据，尚无针对性的优化建议。请继续收集更多的使用数据和用户反馈。
-                    </p>
+            </motion.div>
+          )}
+          
+          {/* 反馈分析 */}
+          <motion.div 
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 5 }}
+            className="glass rounded-2xl border border-neon-yellow/20 overflow-hidden mb-8 shadow-2xl"
+          >
+            <div className="px-8 py-6 border-b border-neon-yellow/10">
+              <h2 className="text-2xl font-bold text-white flex items-center">
+                <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-neon-yellow to-neon-orange p-0.5 mr-4">
+                  <div className="w-full h-full bg-dark-bg-primary rounded-lg flex items-center justify-center">
+                    <StarIcon className="h-5 w-5 text-neon-yellow" />
                   </div>
                 </div>
-              </div>
-            )}
-            
-            <div className="mt-6">
-              <Link 
-                                  href={`/prompts/${prompt.id}/edit`}
-                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700"
-              >
-                编辑提示词
-              </Link>
+                反馈分析
+              </h2>
             </div>
-          </div>
+            <div className="p-8">
+              {performance.feedback_count > 0 ? (
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                  <motion.div 
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.6, delay: 5.2 }}
+                    className="lg:col-span-2"
+                  >
+                    <h3 className="text-lg font-medium text-neon-yellow mb-6 flex items-center">
+                      <StarIcon className="h-5 w-5 mr-2" />
+                      评分分布
+                    </h3>
+                    <div className="space-y-4">
+                      {[5, 4, 3, 2, 1].map((rating, index) => {
+                        // 这里使用模拟数据，实际应用中应该从API获取
+                        const count = Math.floor(Math.random() * performance.feedback_count);
+                        const percentage = (count / performance.feedback_count) * 100;
+                        
+                        return (
+                          <motion.div 
+                            key={rating} 
+                            initial={{ opacity: 0, x: -10 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ duration: 0.4, delay: 5.4 + index * 0.1 }}
+                            className="flex items-center"
+                          >
+                            <div className="min-w-[60px] text-sm font-medium text-gray-300 flex items-center">
+                              <StarIcon className={`h-4 w-4 mr-2 ${
+                                rating >= 4 ? 'text-neon-yellow' : 
+                                rating === 3 ? 'text-neon-orange' : 'text-neon-red'
+                              }`} />
+                              {rating}星
+                            </div>
+                            <div className="flex-1 mx-4">
+                              <div className="w-full bg-dark-bg-secondary rounded-full h-3 overflow-hidden">
+                                <motion.div 
+                                  initial={{ width: 0 }}
+                                  animate={{ width: `${percentage}%` }}
+                                  transition={{ duration: 1, delay: 5.6 + index * 0.1 }}
+                                  className={`h-full rounded-full shadow-md ${
+                                    rating >= 4 ? 'bg-gradient-to-r from-neon-green to-neon-cyan' : 
+                                    rating === 3 ? 'bg-gradient-to-r from-neon-yellow to-neon-orange' : 'bg-gradient-to-r from-neon-red to-neon-pink'
+                                  }`}
+                                ></motion.div>
+                              </div>
+                            </div>
+                            <div className="min-w-[100px] text-right text-sm">
+                              <div className="text-white font-medium">{count}</div>
+                              <div className="text-gray-400">({percentage.toFixed(1)}%)</div>
+                            </div>
+                          </motion.div>
+                        );
+                      })}
+                    </div>
+                  </motion.div>
+                  
+                  <motion.div
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.6, delay: 6 }}
+                  >
+                    <h3 className="text-lg font-medium text-neon-orange mb-6 flex items-center">
+                      <ChartBarIcon className="h-5 w-5 mr-2" />
+                      反馈统计
+                    </h3>
+                    <div className="glass rounded-xl p-6 border border-neon-orange/20 space-y-4">
+                      <div className="flex justify-between items-center p-3 bg-dark-bg-secondary/30 rounded-lg">
+                        <span className="text-sm text-gray-300">总反馈数</span>
+                        <span className="text-lg font-bold text-neon-orange">{formatNumber(performance.feedback_count)}</span>
+                      </div>
+                      <div className="flex justify-between items-center p-3 bg-dark-bg-secondary/30 rounded-lg">
+                        <span className="text-sm text-gray-300">反馈率</span>
+                        <span className="text-lg font-bold text-neon-cyan">
+                          {formatPercent(performance.feedback_count / performance.total_usage)}
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center p-3 bg-dark-bg-secondary/30 rounded-lg">
+                        <span className="text-sm text-gray-300">平均评分</span>
+                        <div className="flex items-center">
+                          <StarIcon className="h-5 w-5 text-neon-yellow mr-1" />
+                          <span className="text-lg font-bold text-neon-yellow">
+                            {performance.average_rating ? performance.average_rating.toFixed(1) : '暂无'}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </motion.div>
+                </div>
+              ) : (
+                <motion.div 
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.6, delay: 5.2 }}
+                  className="text-center py-12"
+                >
+                  <div className="w-20 h-20 rounded-full bg-gradient-to-r from-gray-600/20 to-gray-400/20 flex items-center justify-center mx-auto mb-6">
+                    <StarIcon className="h-10 w-10 text-gray-500" />
+                  </div>
+                  <h3 className="text-xl font-bold text-white mb-2">暂无反馈</h3>
+                  <p className="text-gray-400">该提示词尚未收到用户反馈</p>
+                </motion.div>
+              )}
+            </div>
+          </motion.div>
+          
+          {/* 优化建议 */}
+          <motion.div 
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 6.5 }}
+            className="glass rounded-2xl border border-neon-green/20 overflow-hidden shadow-2xl"
+          >
+            <div className="px-8 py-6 border-b border-neon-green/10">
+              <h2 className="text-2xl font-bold text-white flex items-center">
+                <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-neon-green to-neon-cyan p-0.5 mr-4">
+                  <div className="w-full h-full bg-dark-bg-primary rounded-lg flex items-center justify-center">
+                    <SparklesIcon className="h-5 w-5 text-neon-green" />
+                  </div>
+                </div>
+                优化建议
+              </h2>
+            </div>
+            <div className="p-8">
+              {report && report.suggestions ? (
+                <div className="space-y-6">
+                  {report.suggestions.map((suggestion: string, index: number) => (
+                    <motion.div 
+                      key={index} 
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ duration: 0.6, delay: 6.7 + index * 0.2 }}
+                      className="flex items-start group"
+                    >
+                      <div className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-r from-neon-green to-neon-cyan flex items-center justify-center mr-4 group-hover:scale-110 transition-transform duration-300">
+                        <CheckCircleIcon className="h-5 w-5 text-white" />
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-gray-300 leading-relaxed group-hover:text-white transition-colors duration-300">{suggestion}</p>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {[
+                    { 
+                      title: "性能优化", 
+                      content: "监控响应时间，优化提示词长度和复杂度",
+                      icon: BoltIcon,
+                      color: "neon-yellow"
+                    },
+                    { 
+                      title: "用户体验", 
+                      content: "收集用户反馈，持续改进提示词质量",
+                      icon: StarIcon,
+                      color: "neon-pink"
+                    },
+                    { 
+                      title: "成功率提升", 
+                      content: "分析失败案例，调整指令结构和示例",
+                      icon: CheckCircleIcon,
+                      color: "neon-green"
+                    },
+                    { 
+                      title: "版本管理", 
+                      content: "定期发布新版本，A/B测试不同方案",
+                      icon: SparklesIcon,
+                      color: "neon-cyan"
+                    }
+                  ].map((item, index) => (
+                    <motion.div
+                      key={index}
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ duration: 0.6, delay: 6.7 + index * 0.2 }}
+                      className="glass rounded-xl p-6 border border-gray-600/20 hover:border-gray-400/40 transition-all duration-300 group"
+                    >
+                      <div className="flex items-start">
+                        <div className={`flex-shrink-0 w-10 h-10 rounded-lg bg-gradient-to-r from-${item.color} to-neon-purple p-0.5 mr-4 group-hover:scale-110 transition-transform duration-300`}>
+                          <div className="w-full h-full bg-dark-bg-primary rounded-lg flex items-center justify-center">
+                            <item.icon className={`h-5 w-5 text-${item.color}`} />
+                          </div>
+                        </div>
+                        <div>
+                          <h4 className="text-lg font-semibold text-white mb-2 group-hover:text-gray-200 transition-colors duration-300">{item.title}</h4>
+                          <p className="text-gray-400 group-hover:text-gray-300 transition-colors duration-300">{item.content}</p>
+                        </div>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </motion.div>
         </div>
       </div>
     </div>
