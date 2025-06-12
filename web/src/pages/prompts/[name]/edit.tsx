@@ -22,6 +22,9 @@ import {
   UserIcon,
   CpuChipIcon
 } from '@heroicons/react/24/outline';
+import { AIAnalyzeButton, AIAnalysisResultDisplay } from '@/components/AIAnalyzeButton';
+import { AIAnalysisResult } from '@/lib/ai-analyzer';
+import { AIConfigButton } from '@/components/AIConfigPanel';
 import { useAuth, withAuth } from '@/contexts/AuthContext';
 import { 
   checkEditPermission, 
@@ -113,6 +116,8 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [permissionCheck, setPermissionCheck] = useState<PermissionCheck | null>(null);
+  const [aiAnalysisResult, setAiAnalysisResult] = useState<AIAnalysisResult | null>(null);
+  const [showAiAnalysis, setShowAiAnalysis] = useState(false);
 
   // 获取分类数据
   useEffect(() => {
@@ -299,6 +304,55 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
     
     setModels(newModels);
     setValue('compatible_models', newModels);
+  };
+
+  // AI分析处理函数
+  const handleAIAnalysis = (result: Partial<AIAnalysisResult>) => {
+    console.log('收到AI分析结果:', result);
+    
+    // 将结果设置到状态中
+    if (result as AIAnalysisResult) {
+      setAiAnalysisResult(result as AIAnalysisResult);
+      setShowAiAnalysis(true);
+    }
+  };
+
+  // 应用AI分析结果
+  const applyAIResults = (data: Partial<AIAnalysisResult>) => {
+    console.log('应用AI分析结果:', data);
+    
+    // 应用分类
+    if (data.category) {
+      setValue('category', data.category);
+      setHasUnsavedChanges(true);
+    }
+    
+    // 应用标签
+    if (data.tags && Array.isArray(data.tags)) {
+      setTags(data.tags);
+      setValue('tags', data.tags);
+      setHasUnsavedChanges(true);
+    }
+    
+    // 应用版本
+    if (data.version) {
+      setValue('version', data.version);
+      setHasUnsavedChanges(true);
+    }
+    
+    // 应用变量
+    if (data.variables && Array.isArray(data.variables)) {
+      setVariables(data.variables);
+      setValue('input_variables', data.variables);
+      setHasUnsavedChanges(true);
+    }
+    
+    // 应用兼容模型
+    if (data.compatibleModels && Array.isArray(data.compatibleModels)) {
+      setModels(data.compatibleModels);
+      setValue('compatible_models', data.compatibleModels);
+      setHasUnsavedChanges(true);
+    }
   };
 
   // 表单提交
@@ -762,10 +816,47 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
                 transition={{ delay: 1.4 }}
                 className="space-y-2"
               >
-                <label className="flex items-center text-sm font-medium text-gray-300 mb-3">
-                  <SparklesIcon className="h-5 w-5 text-neon-cyan mr-2" />
-                  提示词内容 *
-                </label>
+                <div className="flex items-center justify-between mb-3">
+                  <label className="flex items-center text-sm font-medium text-gray-300">
+                    <SparklesIcon className="h-5 w-5 text-neon-cyan mr-2" />
+                    提示词内容 *
+                  </label>
+                  
+                  {/* AI分析按钮组 */}
+                  <div className="flex items-center gap-2">
+                    <AIAnalyzeButton
+                      content={watch('content') || ''}
+                      onAnalysisComplete={handleAIAnalysis}
+                      variant="full"
+                      className="text-xs px-3 py-1"
+                    />
+                    <AIAnalyzeButton
+                      content={watch('content') || ''}
+                      onAnalysisComplete={(result) => {
+                        if (result.category) {
+                          setValue('category', result.category);
+                          setHasUnsavedChanges(true);
+                        }
+                      }}
+                      variant="classify"
+                      className="text-xs px-3 py-1"
+                    />
+                    <AIAnalyzeButton
+                      content={watch('content') || ''}
+                      onAnalysisComplete={(result) => {
+                        if (result.variables) {
+                          setVariables(result.variables);
+                          setValue('input_variables', result.variables);
+                          setHasUnsavedChanges(true);
+                        }
+                      }}
+                      variant="variables"
+                      className="text-xs px-3 py-1"
+                    />
+                    <AIConfigButton className="text-xs" />
+                  </div>
+                </div>
+                
                 <div className="relative">
                   <textarea
                     {...register('content', { required: '请输入提示词内容' })}
@@ -783,6 +874,32 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
                 {errors.content && (
                   <p className="text-neon-red text-sm mt-1">{errors.content.message}</p>
                 )}
+                
+                {/* AI分析结果显示 */}
+                <AnimatePresence>
+                  {showAiAnalysis && aiAnalysisResult && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 20, height: 0 }}
+                      animate={{ opacity: 1, y: 0, height: 'auto' }}
+                      exit={{ opacity: 0, y: -20, height: 0 }}
+                      className="mt-4"
+                    >
+                      <div className="relative">
+                        <AIAnalysisResultDisplay
+                          result={aiAnalysisResult}
+                          onApplyResults={applyAIResults}
+                        />
+                        <button
+                          onClick={() => setShowAiAnalysis(false)}
+                          className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors"
+                          title="关闭AI分析结果"
+                        >
+                          <XMarkIcon className="h-5 w-5" />
+                        </button>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </motion.div>
 
               {/* 变量管理 */}
