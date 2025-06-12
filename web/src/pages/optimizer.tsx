@@ -182,14 +182,9 @@ const OptimizerPage: React.FC = () => {
               </h1>
             </motion.div>
             
-            <h2 className="text-5xl md:text-7xl font-bold mb-6">
-              <span className="block gradient-text animate-text-shimmer bg-[length:200%_auto]">
-                提示词优化器
-              </span>
-            </h2>
-            
+            {/* 简要描述 */}
             <motion.p 
-              className="text-xl text-gray-400 max-w-4xl mx-auto mb-16"
+              className="text-xl text-gray-400 max-w-3xl mx-auto mb-8"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.5 }}
