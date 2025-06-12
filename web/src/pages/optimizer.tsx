@@ -174,20 +174,22 @@ const OptimizerPage: React.FC = () => {
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               transition={{ duration: 0.5, delay: 0.2 }}
-              className="inline-flex items-center px-6 py-3 rounded-full glass border border-neon-cyan/30 mb-8"
+              className="mb-8"
             >
-              <SparklesIcon className="h-5 w-5 text-neon-cyan mr-3" />
-              <span className="text-neon-cyan font-medium">AI驱动的智能优化</span>
+              <h1 className="text-4xl md:text-6xl font-bold text-neon-cyan mb-4">
+                <SparklesIcon className="h-8 w-8 md:h-12 md:w-12 text-neon-cyan mr-4 inline" />
+                AI驱动的智能优化
+              </h1>
             </motion.div>
             
-            <h1 className="text-5xl md:text-7xl font-bold mb-6">
+            <h2 className="text-5xl md:text-7xl font-bold mb-6">
               <span className="block gradient-text animate-text-shimmer bg-[length:200%_auto]">
                 提示词优化器
               </span>
-            </h1>
+            </h2>
             
             <motion.p 
-              className="text-xl text-gray-400 max-w-4xl mx-auto mb-12"
+              className="text-xl text-gray-400 max-w-4xl mx-auto mb-16"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.5 }}
@@ -195,32 +197,6 @@ const OptimizerPage: React.FC = () => {
               利用先进的AI技术优化您的提示词，提升准确性、清晰度和效果。
               让每个提示词都发挥最大潜能。
             </motion.p>
-
-            {/* 统计数据 */}
-            <motion.div 
-              className="grid grid-cols-3 gap-6 max-w-2xl mx-auto mb-16"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.7 }}
-            >
-              {stats.map((stat, index) => {
-                const Icon = stat.icon;
-                return (
-                  <motion.div
-                    key={stat.label}
-                    className="glass rounded-xl p-6 border border-neon-cyan/20 hover:border-neon-cyan/40 transition-all duration-300"
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    transition={{ delay: 0.9 + index * 0.1 }}
-                    whileHover={{ y: -5, scale: 1.05 }}
-                  >
-                    <Icon className="h-8 w-8 text-neon-cyan mx-auto mb-3" />
-                    <div className="text-2xl font-bold gradient-text">{stat.value}</div>
-                    <div className="text-sm text-gray-400">{stat.label}</div>
-                  </motion.div>
-                );
-              })}
-            </motion.div>
           </motion.div>
 
           {/* 功能卡片 */}

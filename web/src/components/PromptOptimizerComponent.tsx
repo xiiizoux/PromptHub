@@ -43,6 +43,7 @@ export const PromptOptimizerComponent: React.FC<PromptOptimizerProps> = ({
   const [iterationRequirements, setIterationRequirements] = useState('');
   const [iterationType, setIterationType] = useState<IterationRequest['type']>('refine');
   const [result, setResult] = useState<OptimizationResult | null>(null);
+  const [analysisScore, setAnalysisScore] = useState<OptimizationResult['score'] | null>(null);
 
   // 同步外部prompt变化
   useEffect(() => {
@@ -51,12 +52,17 @@ export const PromptOptimizerComponent: React.FC<PromptOptimizerProps> = ({
     }
   }, [initialPrompt]);
 
-  // 自动分析
+  // 当提示词改变时，清空之前的分析结果
   useEffect(() => {
     if (prompt.trim() && prompt.length > 10) {
-      handleAnalyze();
+      // 如果在分析标签页，自动分析
+      if (activeTab === 'analyze') {
+        handleAnalyze();
+      }
+    } else {
+      setAnalysisScore(null);
     }
-  }, [prompt]);
+  }, [prompt, activeTab]);
 
   const handleOptimize = async () => {
     if (!prompt.trim()) {
@@ -125,19 +131,30 @@ export const PromptOptimizerComponent: React.FC<PromptOptimizerProps> = ({
   };
 
   const handleAnalyze = async () => {
-    if (!prompt.trim()) return;
+    if (!prompt.trim()) {
+      toast.error('请输入要分析的提示词');
+      return;
+    }
 
     setIsAnalyzing(true);
     try {
       const score = await analyzePrompt(prompt);
-      if (score && result) {
-        setResult({
-          ...result,
-          score
-        });
+      if (score) {
+        setAnalysisScore(score);
+        // 如果当前有结果，也更新结果中的评分
+        if (result) {
+          setResult({
+            ...result,
+            score
+          });
+        }
+        toast.success('质量分析完成！');
+      } else {
+        toast.error('分析失败：请检查API配置');
       }
     } catch (error) {
       console.error('分析失败:', error);
+      toast.error(`分析失败: ${error instanceof Error ? error.message : '未知错误'}`);
     } finally {
       setIsAnalyzing(false);
     }
@@ -355,7 +372,7 @@ export const PromptOptimizerComponent: React.FC<PromptOptimizerProps> = ({
           </motion.div>
         )}
 
-        {activeTab === 'analyze' && result?.score && (
+        {activeTab === 'analyze' && (
           <motion.div
             key="analyze"
             initial={{ opacity: 0, y: 20 }}
@@ -368,30 +385,55 @@ export const PromptOptimizerComponent: React.FC<PromptOptimizerProps> = ({
               质量分析
             </h3>
 
-            <div className="space-y-4">
-              <ScoreBar 
-                label="清晰性" 
-                value={result.score.clarity} 
-                color="bg-gradient-to-r from-neon-green to-neon-cyan" 
-              />
-              <ScoreBar 
-                label="具体性" 
-                value={result.score.specificity} 
-                color="bg-gradient-to-r from-neon-cyan to-neon-blue" 
-              />
-              <ScoreBar 
-                label="完整性" 
-                value={result.score.completeness} 
-                color="bg-gradient-to-r from-neon-purple to-neon-pink" 
-              />
-              <ScoreBar 
-                label="综合评分" 
-                value={result.score.overall} 
-                color="bg-gradient-to-r from-neon-yellow to-neon-orange" 
-              />
+            {/* 分析按钮 */}
+            <div className="mb-6">
+              <button
+                onClick={handleAnalyze}
+                disabled={isAnalyzing || !prompt.trim()}
+                className="w-full bg-gradient-to-r from-neon-yellow to-neon-orange hover:from-neon-yellow/80 hover:to-neon-orange/80 disabled:from-gray-600 disabled:to-gray-700 disabled:cursor-not-allowed text-white font-medium py-3 px-6 rounded-xl transition-all duration-200 flex items-center justify-center space-x-2"
+              >
+                {isAnalyzing ? (
+                  <>
+                    <ChartBarIcon className="h-5 w-5 animate-spin" />
+                    <span>正在分析...</span>
+                  </>
+                ) : (
+                  <>
+                    <ChartBarIcon className="h-5 w-5" />
+                    <span>开始质量分析</span>
+                  </>
+                )}
+              </button>
             </div>
 
-            {result.suggestions && result.suggestions.length > 0 && (
+            {/* 分析结果显示 */}
+            {(analysisScore || result?.score) && (
+              <div className="space-y-4">
+                <ScoreBar 
+                  label="清晰性" 
+                  value={(analysisScore || result?.score)?.clarity || 0} 
+                  color="bg-gradient-to-r from-neon-green to-neon-cyan" 
+                />
+                <ScoreBar 
+                  label="具体性" 
+                  value={(analysisScore || result?.score)?.specificity || 0} 
+                  color="bg-gradient-to-r from-neon-cyan to-neon-blue" 
+                />
+                <ScoreBar 
+                  label="完整性" 
+                  value={(analysisScore || result?.score)?.completeness || 0} 
+                  color="bg-gradient-to-r from-neon-purple to-neon-pink" 
+                />
+                <ScoreBar 
+                  label="综合评分" 
+                  value={(analysisScore || result?.score)?.overall || 0} 
+                  color="bg-gradient-to-r from-neon-yellow to-neon-orange" 
+                />
+              </div>
+            )}
+
+            {/* 改进建议 */}
+            {result?.suggestions && result.suggestions.length > 0 && (
               <div className="mt-6">
                 <h4 className="font-medium text-white mb-3 flex items-center">
                   <InformationCircleIcon className="h-4 w-4 text-neon-yellow mr-2" />
@@ -405,6 +447,19 @@ export const PromptOptimizerComponent: React.FC<PromptOptimizerProps> = ({
                     </div>
                   ))}
                 </div>
+              </div>
+            )}
+
+            {/* 如果没有分析结果，显示提示 */}
+            {!analysisScore && !result?.score && !isAnalyzing && (
+              <div className="text-center py-8">
+                <ChartBarIcon className="h-12 w-12 text-gray-600 mx-auto mb-4" />
+                <p className="text-gray-400 mb-2">
+                  {prompt.trim() ? '点击上方按钮开始分析提示词质量' : '请先在上方输入要分析的提示词'}
+                </p>
+                <p className="text-sm text-gray-500">
+                  分析将从清晰性、具体性、完整性等维度评估您的提示词
+                </p>
               </div>
             )}
           </motion.div>
