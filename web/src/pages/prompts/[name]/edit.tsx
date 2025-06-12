@@ -99,6 +99,11 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
       try {
         const data = await getCategories();
         setCategories(data);
+        console.log('分类数据加载完成:', {
+          categories: data,
+          currentCategory: safePromptData.category,
+          isCurrentCategoryInList: data.includes(safePromptData.category)
+        });
       } catch (err) {
         console.error('获取分类失败:', err);
         setCategories(['通用', '创意写作', '代码辅助', '数据分析', '营销', '学术研究', '教育']);
@@ -633,13 +638,16 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
                     className="input-primary w-full"
                     disabled={categoriesLoading}
                   >
-                    {!categoriesLoading && categories.map((category) => (
-                      <option key={category} value={category}>
-                        {category}
-                      </option>
-                    ))}
-                    {categoriesLoading && (
-                      <option value="">加载中...</option>
+                    {categoriesLoading ? (
+                      // 加载期间显示当前分类值
+                      <option value={safePromptData.category}>{safePromptData.category}</option>
+                    ) : (
+                      // 加载完成后显示所有分类选项
+                      categories.map((category) => (
+                        <option key={category} value={category}>
+                          {category}
+                        </option>
+                      ))
                     )}
                   </select>
                   {errors.category && (
