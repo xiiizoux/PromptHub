@@ -131,7 +131,7 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
     defaultValues: safePromptData
   });
 
-  // 数据同步：确保状态变量与表单数据保持一致
+  // 一次性数据初始化：仅在组件挂载时执行
   useEffect(() => {
     // 如果input_variables为空，尝试从content中提取变量
     let finalVariables = safePromptData.input_variables || [];
@@ -144,31 +144,12 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
       }
     }
     
-    // 同步变量
-    if (finalVariables.length > 0) {
-      setVariables(finalVariables);
-      setValue('input_variables', finalVariables);
-    }
+    // 同步状态变量（但不调用setValue避免无限循环）
+    setVariables(finalVariables);
+    setTags(safePromptData.tags || []);
+    setModels(safePromptData.compatible_models || []);
     
-    // 同步标签
-    if (safePromptData.tags && safePromptData.tags.length > 0) {
-      setTags(safePromptData.tags);
-      setValue('tags', safePromptData.tags);
-    }
-    
-    // 同步兼容模型
-    if (safePromptData.compatible_models && safePromptData.compatible_models.length > 0) {
-      setModels(safePromptData.compatible_models);
-      setValue('compatible_models', safePromptData.compatible_models);
-    }
-    
-    // 确保分类正确设置（重要：分类必须确保设置）
-    if (safePromptData.category) {
-      setValue('category', safePromptData.category);
-      console.log('设置分类为:', safePromptData.category);
-    }
-    
-    console.log('数据同步完成:', {
+    console.log('一次性数据初始化完成:', {
       extractedVariables: finalVariables,
       originalVariables: safePromptData.input_variables,
       tags: safePromptData.tags,
@@ -176,7 +157,7 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
       category: safePromptData.category,
       content: safePromptData.content ? safePromptData.content.substring(0, 100) + '...' : 'empty'
     });
-  }, [safePromptData, setValue]);
+  }, []); // 空依赖数组，仅执行一次
 
   // 权限检查和作者信息更新
   useEffect(() => {
@@ -1104,11 +1085,22 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     
     const prompt = result.data;
     
+    // 添加详细的调试输出
+    console.log('getServerSideProps - API返回的原始数据:', JSON.stringify(prompt, null, 2));
+    console.log('getServerSideProps - 数据字段检查:', {
+      name: prompt.name,
+      category: prompt.category,
+      tags: prompt.tags,
+      input_variables: prompt.input_variables,
+      content: prompt.content ? prompt.content.substring(0, 100) + '...' : 'empty',
+      messages: prompt.messages
+    });
+    
     // 确保数据格式符合PromptDetails类型
     const promptDetails: PromptDetails = {
       name: prompt.name || name as string,
       description: prompt.description || '',
-      content: prompt.content || '',
+      content: prompt.content || prompt.messages?.[0]?.content || '', // 尝试从messages中提取content
       category: prompt.category || '通用',
       tags: Array.isArray(prompt.tags) ? prompt.tags : [],
       input_variables: Array.isArray(prompt.input_variables) ? prompt.input_variables : [],
@@ -1123,6 +1115,8 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       created_at: prompt.created_at || new Date().toISOString(),
       updated_at: prompt.updated_at || new Date().toISOString(),
     };
+    
+    console.log('getServerSideProps - 处理后的数据:', JSON.stringify(promptDetails, null, 2));
     
     return {
       props: {
