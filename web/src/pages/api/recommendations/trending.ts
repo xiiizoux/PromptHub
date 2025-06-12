@@ -62,43 +62,57 @@ async function getTrendingPrompts(limit: number) {
     }
 
     // 获取使用统计
-    const { data: usageStats, error: usageError } = await supabase
+    const { data: usageStatsRaw, error: usageError } = await supabase
       .from('prompt_usage')
-      .select('prompt_id, count(*)')
-      .group('prompt_id');
+      .select('prompt_id');
+    if (usageError) throw usageError;
+    const usageStats = usageStatsRaw?.reduce((acc, cur) => {
+      acc[cur.prompt_id] = (acc[cur.prompt_id] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
 
     // 获取社交互动统计
-    const { data: socialStats, error: socialError } = await supabase
+    const { data: socialStatsRaw, error: socialError } = await supabase
       .from('social_interactions')
-      .select('prompt_id, type, count(*)')
-      .group('prompt_id, type');
+      .select('prompt_id, type');
+    if (socialError) throw socialError;
+    const socialStats = {} as Record<string, { likes: number; bookmarks: number }>;
+    socialStatsRaw?.forEach(stat => {
+      if (!socialStats[stat.prompt_id]) socialStats[stat.prompt_id] = { likes: 0, bookmarks: 0 };
+      if (stat.type === 'like') socialStats[stat.prompt_id].likes++;
+      if (stat.type === 'bookmark') socialStats[stat.prompt_id].bookmarks++;
+    });
 
     // 获取评分统计
-    const { data: ratingStats, error: ratingError } = await supabase
+    const { data: ratingStatsRaw, error: ratingError } = await supabase
       .from('ratings')
-      .select('prompt_id, avg(rating), count(*)')
-      .group('prompt_id');
+      .select('prompt_id, rating');
+    if (ratingError) throw ratingError;
+    const ratingStats = {} as Record<string, { sum: number; count: number }>;
+    ratingStatsRaw?.forEach(stat => {
+      if (!ratingStats[stat.prompt_id]) ratingStats[stat.prompt_id] = { sum: 0, count: 0 };
+      ratingStats[stat.prompt_id].sum += stat.rating;
+      ratingStats[stat.prompt_id].count++;
+    });
+
+    // 计算平均分
+    const ratingMap = new Map<string, { avg: number; count: number }>();
+    Object.entries(ratingStats).forEach(([prompt_id, { sum, count }]) => {
+      ratingMap.set(prompt_id, {
+        avg: count > 0 ? sum / count : 0,
+        count
+      });
+    });
 
     // 构建统计映射
     const usageMap = new Map<string, number>();
-    usageStats?.forEach((stat: any) => {
-      usageMap.set(stat.prompt_id, stat.count || 0);
+    Object.entries(usageStats || {}).forEach(([prompt_id, count]) => {
+      usageMap.set(prompt_id, count);
     });
 
     const socialMap = new Map<string, { likes: number; bookmarks: number }>();
-    socialStats?.forEach((stat: any) => {
-      const existing = socialMap.get(stat.prompt_id) || { likes: 0, bookmarks: 0 };
-      if (stat.type === 'like') existing.likes = stat.count || 0;
-      if (stat.type === 'bookmark') existing.bookmarks = stat.count || 0;
-      socialMap.set(stat.prompt_id, existing);
-    });
-
-    const ratingMap = new Map<string, { avg: number; count: number }>();
-    ratingStats?.forEach((stat: any) => {
-      ratingMap.set(stat.prompt_id, {
-        avg: parseFloat(stat.avg) || 0,
-        count: stat.count || 0
-      });
+    Object.entries(socialStats || {}).forEach(([prompt_id, obj]) => {
+      socialMap.set(prompt_id, obj);
     });
 
     // 计算热门分数并排序

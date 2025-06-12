@@ -6,7 +6,7 @@ import {
   PERMISSION_LEVEL_DESCRIPTIONS
 } from '@/lib/permissions';
 import { motion, AnimatePresence } from 'framer-motion';
-import { createPrompt, getCategories, getTags } from '@/lib/api';
+import { createPrompt, getCategories, getTags, Category } from '@/lib/api';
 import { PromptDetails } from '@/types';
 import Link from 'next/link';
 import {
@@ -24,7 +24,6 @@ import {
 } from '@heroicons/react/24/outline';
 import { AIAnalyzeButton, AIAnalysisResultDisplay } from '@/components/AIAnalyzeButton';
 import { AIAnalysisResult } from '@/lib/ai-analyzer';
-import { AIConfigButton } from '@/components/AIConfigPanel';
 import { useAuth, withAuth } from '@/contexts/AuthContext';
 
 // 预设模型选项
@@ -46,7 +45,7 @@ function CreatePromptPage() {
   const [tags, setTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState('');
   const [models, setModels] = useState<string[]>([]);
-  const [categories, setCategories] = useState<string[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [categoriesLoading, setCategoriesLoading] = useState(true);
   const [suggestedTags, setSuggestedTags] = useState<string[]>([]);
   const [tagsLoading, setTagsLoading] = useState(true);
@@ -61,13 +60,27 @@ function CreatePromptPage() {
         setCategories(data);
       } catch (err) {
         console.error('获取分类失败:', err);
-        setCategories(['通用', '创意写作', '代码辅助', '数据分析', '营销', '学术研究', '教育']);
+        setCategories([
+          { name: '通用' }, { name: '创意写作' }, { name: '代码辅助' }, { name: '数据分析' }, { name: '营销' }, { name: '学术研究' }, { name: '教育' }
+        ]);
       } finally {
         setCategoriesLoading(false);
       }
     };
     fetchCategories();
   }, []);
+  
+  // 分类加载后自动匹配（如AI分析后或编辑场景）
+  useEffect(() => {
+    if (!categoriesLoading && categories.length > 0) {
+      const currentCategory = watch('category');
+      if (currentCategory) {
+        const matched = matchCategory(currentCategory, categories);
+        if (matched) setValue('category', matched.name);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [categoriesLoading, categories]);
   
   // 获取标签数据
   useEffect(() => {
@@ -171,10 +184,33 @@ function CreatePromptPage() {
     setShowAiAnalysis(true);
   };
 
+  // 智能分类映射函数
+  function matchCategory(aiCategory: string, categories: Category[]): Category | null {
+    if (!aiCategory) return null;
+    // 1. 精确匹配
+    let match = categories.find(cat => cat.name === aiCategory);
+    if (match) return match;
+    // 2. 忽略大小写
+    match = categories.find(cat => cat.name?.toLowerCase() === aiCategory.toLowerCase());
+    if (match) return match;
+    // 3. 英文名
+    match = categories.find(cat => cat.name_en?.toLowerCase() === aiCategory.toLowerCase());
+    if (match) return match;
+    // 4. 别名
+    match = categories.find(cat => cat.alias?.split(',').map(a => a.trim()).includes(aiCategory));
+    if (match) return match;
+    // 5. 模糊包含
+    match = categories.find(cat => aiCategory.includes(cat.name) || cat.name.includes(aiCategory));
+    if (match) return match;
+    return null;
+  }
+
   // 应用AI分析结果
   const applyAIResults = (data: Partial<AIAnalysisResult>) => {
     if (data.category) {
-      setValue('category', data.category);
+      const matched = matchCategory(data.category, categories);
+      if (matched) setValue('category', matched.name);
+      else setValue('category', '');
     }
     if (data.tags && data.tags.length > 0) {
       const newTags = Array.from(new Set([...tags, ...data.tags]));
@@ -411,8 +447,8 @@ function CreatePromptPage() {
                   >
                     <option value="">选择分类</option>
                     {categories.map((category) => (
-                      <option key={category} value={category}>
-                        {category}
+                      <option key={category.id || category.name} value={category.name}>
+                        {category.name}
                       </option>
                     ))}
                   </select>
@@ -511,32 +547,17 @@ function CreatePromptPage() {
                   <div className="flex items-center gap-2">
                     <AIAnalyzeButton
                       content={watch('content') || ''}
-                      onAnalysisComplete={handleAIAnalysis}
+                      onAnalysisComplete={(result) => {
+                        if (result.suggestedTitle) setValue('name', result.suggestedTitle);
+                        if (result.category) setValue('category', result.category);
+                        if (result.description) setValue('description', result.description);
+                        if (result.tags) setValue('tags', result.tags);
+                        if (result.variables) setValue('input_variables', result.variables);
+                        setAiAnalysisResult(result as AIAnalysisResult);
+                        setShowAiAnalysis(true);
+                      }}
                       variant="full"
-                      className="text-xs px-3 py-1"
                     />
-                    <AIAnalyzeButton
-                      content={watch('content') || ''}
-                      onAnalysisComplete={(result) => {
-                        if (result.category) {
-                          setValue('category', result.category);
-                        }
-                      }}
-                      variant="classify"
-                      className="text-xs px-3 py-1"
-                    />
-                    <AIAnalyzeButton
-                      content={watch('content') || ''}
-                      onAnalysisComplete={(result) => {
-                        if (result.variables) {
-                          setVariables(result.variables);
-                          setValue('input_variables', result.variables);
-                        }
-                      }}
-                      variant="variables"
-                      className="text-xs px-3 py-1"
-                    />
-                    <AIConfigButton className="text-xs" />
                   </div>
                 </div>
                 <div className="relative">

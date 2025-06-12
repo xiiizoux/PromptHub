@@ -224,3 +224,14 @@ export interface Notification {
   type: 'success' | 'error' | 'warning' | 'info';
   duration?: number;
 }
+
+// 分类类型
+export interface Category {
+  id?: string;
+  name: string;
+  name_en?: string;
+  alias?: string;
+  description?: string;
+  sort_order?: number;
+  is_active?: boolean;
+}

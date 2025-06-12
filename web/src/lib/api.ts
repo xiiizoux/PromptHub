@@ -49,11 +49,22 @@ api.interceptors.response.use(
  * 提示词相关API
  */
 
+// 分类类型定义
+export interface Category {
+  id?: string;
+  name: string;
+  name_en?: string;
+  alias?: string;
+  description?: string;
+  sort_order?: number;
+  is_active?: boolean;
+}
+
 // 获取所有分类
-export const getCategories = async (): Promise<string[]> => {
+export const getCategories = async (): Promise<Category[]> => {
   try {
     // 通过Next.js API Routes调用，符合项目架构
-    const response = await api.get<{success: boolean; data: string[]}>('/categories');
+    const response = await api.get<{success: boolean; data: Category[]}>('/categories');
     if (response.data.success) {
       return response.data.data || [];
     }

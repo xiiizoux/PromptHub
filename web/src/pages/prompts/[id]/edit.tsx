@@ -3,7 +3,7 @@ import { useRouter } from 'next/router';
 import { GetServerSideProps } from 'next';
 import { useForm, Controller } from 'react-hook-form';
 import { motion, AnimatePresence } from 'framer-motion';
-import { updatePrompt, getCategories, getTags, getPromptDetails } from '@/lib/api';
+import { updatePrompt, getCategories, getTags, getPromptDetails, Category } from '@/lib/api';
 import { PromptDetails, PermissionCheck } from '@/types';
 import Link from 'next/link';
 import {
@@ -24,7 +24,6 @@ import {
 } from '@heroicons/react/24/outline';
 import { AIAnalyzeButton, AIAnalysisResultDisplay } from '@/components/AIAnalyzeButton';
 import { AIAnalysisResult } from '@/lib/ai-analyzer';
-import { AIConfigButton } from '@/components/AIConfigPanel';
 import { useAuth, withAuth } from '@/contexts/AuthContext';
 import { 
   checkEditPermission, 
@@ -53,8 +52,6 @@ type PromptFormData = Omit<PromptDetails, 'created_at' | 'updated_at'> & {
 interface EditPromptPageProps {
   prompt: PromptDetails;
 }
-
-
 
 function EditPromptPage({ prompt }: EditPromptPageProps) {
   const router = useRouter();
@@ -109,7 +106,7 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
   const [tags, setTags] = useState<string[]>(safePromptData.tags);
   const [tagInput, setTagInput] = useState('');
   const [models, setModels] = useState<string[]>(safePromptData.compatible_models);
-  const [categories, setCategories] = useState<string[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [categoriesLoading, setCategoriesLoading] = useState(true);
   const [suggestedTags, setSuggestedTags] = useState<string[]>([]);
   const [tagsLoading, setTagsLoading] = useState(true);
@@ -128,18 +125,31 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
         console.log('分类数据加载完成:', {
           categories: data,
           currentCategory: safePromptData.category,
-          isCurrentCategoryInList: data.includes(safePromptData.category)
+          isCurrentCategoryInList: data.some(cat => cat.name === safePromptData.category)
         });
       } catch (err) {
         console.error('获取分类失败:', err);
-        setCategories(['通用', '创意写作', '代码辅助', '数据分析', '营销', '学术研究', '教育']);
+        setCategories([
+          { name: '通用' }, { name: '创意写作' }, { name: '代码辅助' }, { name: '数据分析' }, { name: '营销' }, { name: '学术研究' }, { name: '教育' }
+        ]);
       } finally {
         setCategoriesLoading(false);
       }
     };
-
     fetchCategories();
   }, []);
+  
+  // 分类加载后自动匹配（编辑场景）
+  useEffect(() => {
+    if (!categoriesLoading && categories.length > 0) {
+      const currentCategory = watch('category');
+      if (currentCategory) {
+        const matched = matchCategory(currentCategory, categories);
+        if (matched) setValue('category', matched.name);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [categoriesLoading, categories]);
   
   // 获取标签数据
   useEffect(() => {
@@ -159,7 +169,10 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
   }, []);
 
   const { register, handleSubmit, control, formState: { errors }, setValue, watch, reset } = useForm<PromptFormData>({
-    defaultValues: safePromptData
+    defaultValues: {
+      ...(() => { const { version, ...rest } = safePromptData; return rest; })(),
+      version: safePromptData.version ? String(safePromptData.version) : '1',
+    }
   });
 
   // 一次性数据初始化：仅在组件挂载时执行
@@ -317,14 +330,35 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
     }
   };
 
+  // 智能分类映射函数
+  function matchCategory(aiCategory: string, categories: Category[]): Category | null {
+    if (!aiCategory) return null;
+    // 1. 精确匹配
+    let match = categories.find(cat => cat.name === aiCategory);
+    if (match) return match;
+    // 2. 忽略大小写
+    match = categories.find(cat => cat.name?.toLowerCase() === aiCategory.toLowerCase());
+    if (match) return match;
+    // 3. 英文名
+    match = categories.find(cat => cat.name_en?.toLowerCase() === aiCategory.toLowerCase());
+    if (match) return match;
+    // 4. 别名
+    match = categories.find(cat => cat.alias?.split(',').map(a => a.trim()).includes(aiCategory));
+    if (match) return match;
+    // 5. 模糊包含
+    match = categories.find(cat => aiCategory.includes(cat.name) || cat.name.includes(aiCategory));
+    if (match) return match;
+    return null;
+  }
+
   // 应用AI分析结果
   const applyAIResults = (data: Partial<AIAnalysisResult>) => {
     console.log('应用AI分析结果:', data);
     
-    // 应用分类
     if (data.category) {
-      setValue('category', data.category);
-      setHasUnsavedChanges(true);
+      const matched = matchCategory(data.category, categories);
+      if (matched) setValue('category', matched.name);
+      else setValue('category', '');
     }
     
     // 应用标签
@@ -336,7 +370,10 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
     
     // 应用版本
     if (data.version) {
-      setValue('version', data.version);
+      let versionStr = '';
+      if (typeof data.version === 'number') versionStr = String(data.version);
+      else if (typeof data.version === 'string') versionStr = data.version;
+      setValue('version', versionStr as any);
       setHasUnsavedChanges(true);
     }
     
@@ -369,6 +406,7 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
       data.input_variables = variables;
       data.tags = tags;
       data.compatible_models = models;
+      data.version = parseInt(String(data.version), 10) || 1;
       
       const result = await updatePrompt(prompt.id, data);
       
@@ -425,8 +463,6 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
     window.addEventListener('beforeunload', handleBeforeUnload);
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [hasUnsavedChanges]);
-
-
 
   // 权限检查失败时显示错误页面
   if (permissionCheck && !permissionCheck.canEdit) {
@@ -639,24 +675,11 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
                   </label>
                   <div className="flex items-center space-x-2">
                     <input
+                      {...register('version')}
                       type="text"
+                      value={String(watch('version') ?? '')}
+                      onChange={e => setValue('version', e.target.value as any)}
                       className="input-primary w-full"
-                      placeholder="例如：1.0"
-                      {...register('version', {
-                        required: '版本是必填的',
-                        validate: (value) => {
-                          if (!value) {
-                            return '版本是必填的';
-                          }
-                          if (!validateVersionFormat(String(value))) {
-                            return '版本号格式错误，应为 X.Y 格式（如：1.0, 2.5）';
-                          }
-                          if (!canIncrementVersion(currentVersionFormatted, String(value))) {
-                            return `新版本号必须大于当前版本 ${currentVersionFormatted}`;
-                          }
-                          return true;
-                        }
-                      })}
                     />
                     <button
                       type="button"
@@ -708,17 +731,12 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
                     className="input-primary w-full"
                     disabled={categoriesLoading}
                   >
-                    {categoriesLoading ? (
-                      // 加载期间显示当前分类值
-                      <option value={safePromptData.category}>{safePromptData.category}</option>
-                    ) : (
-                      // 加载完成后显示所有分类选项
-                      categories.map((category) => (
-                        <option key={category} value={category}>
-                          {category}
-                        </option>
-                      ))
-                    )}
+                    <option value="">选择分类</option>
+                    {categories.map((category) => (
+                      <option key={category.id || category.name} value={category.name}>
+                        {category.name}
+                      </option>
+                    ))}
                   </select>
                   {errors.category && (
                     <p className="text-neon-red text-sm mt-1">{errors.category.message}</p>
@@ -821,34 +839,17 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
                   <div className="flex items-center gap-2">
                     <AIAnalyzeButton
                       content={watch('content') || ''}
-                      onAnalysisComplete={handleAIAnalysis}
+                      onAnalysisComplete={(result) => {
+                        if (result.suggestedTitle) setValue('name', result.suggestedTitle);
+                        if (result.category) setValue('category', result.category);
+                        if (result.description) setValue('description', result.description);
+                        if (result.tags) setValue('tags', result.tags);
+                        if (result.variables) setValue('input_variables', result.variables);
+                        setAiAnalysisResult(result as AIAnalysisResult);
+                        setShowAiAnalysis(true);
+                      }}
                       variant="full"
-                      className="text-xs px-3 py-1"
                     />
-                    <AIAnalyzeButton
-                      content={watch('content') || ''}
-                      onAnalysisComplete={(result) => {
-                        if (result.category) {
-                          setValue('category', result.category);
-                          setHasUnsavedChanges(true);
-                        }
-                      }}
-                      variant="classify"
-                      className="text-xs px-3 py-1"
-                    />
-                    <AIAnalyzeButton
-                      content={watch('content') || ''}
-                      onAnalysisComplete={(result) => {
-                        if (result.variables) {
-                          setVariables(result.variables);
-                          setValue('input_variables', result.variables);
-                          setHasUnsavedChanges(true);
-                        }
-                      }}
-                      variant="variables"
-                      className="text-xs px-3 py-1"
-                    />
-                    <AIConfigButton className="text-xs" />
                   </div>
                 </div>
                 
