@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { GetServerSideProps } from 'next';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
@@ -31,36 +31,60 @@ interface PromptDetailsPageProps {
 
 export default function PromptDetailsPage({ prompt }: PromptDetailsPageProps) {
   const router = useRouter();
-  const [selectedVersion, setSelectedVersion] = useState<string>(prompt.version || '1.0');
+  const [selectedVersion, setSelectedVersion] = useState<string>(prompt.version?.toString() || '1');
   const [copied, setCopied] = useState(false);
   const [usageTracked, setUsageTracked] = useState(false);
+  
+  // 变量值状态管理
+  const [variableValues, setVariableValues] = useState<Record<string, string>>({});
+  const [processedContent, setProcessedContent] = useState<string>('');
+
+  // 初始化变量值
+  useEffect(() => {
+    if (prompt.input_variables) {
+      const initialValues: Record<string, string> = {};
+      prompt.input_variables.forEach(variable => {
+        initialValues[variable] = `[${variable}]`;
+      });
+      setVariableValues(initialValues);
+    }
+  }, [prompt.input_variables]);
+
+  // 实时更新内容
+  useEffect(() => {
+    let content = getVersionContent();
+    
+    // 替换变量
+    Object.entries(variableValues).forEach(([variable, value]) => {
+      const regex = new RegExp(`\\{\\{\\s*${variable}\\s*\\}\\}`, 'g');
+      content = content.replace(regex, value || `[${variable}]`);
+    });
+    
+    setProcessedContent(content);
+  }, [variableValues, selectedVersion]);
 
   // 获取当前选中版本的内容
   const getVersionContent = () => {
     if (!prompt.versions || prompt.versions.length === 0) {
-      return prompt.content;
+      return prompt.content || '';
     }
 
-    const version = prompt.versions.find(v => v.version === selectedVersion);
-    return version ? version.content : prompt.content;
+    const version = prompt.versions.find(v => v.version.toString() === selectedVersion);
+    return version ? version.content : prompt.content || '';
   };
 
-  // 格式化日期
-  const formatDate = (dateString?: string) => {
-    if (!dateString) return '未知日期';
-    const date = new Date(dateString);
-    return date.toLocaleDateString('zh-CN', { 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric' 
-    });
+  // 更新变量值
+  const updateVariableValue = (variable: string, value: string) => {
+    setVariableValues(prev => ({
+      ...prev,
+      [variable]: value
+    }));
   };
 
-  // 复制提示词内容到剪贴板
+  // 复制处理后的内容到剪贴板
   const copyToClipboard = async () => {
-    const content = getVersionContent();
     try {
-      await navigator.clipboard.writeText(content);
+      await navigator.clipboard.writeText(processedContent);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
       
@@ -69,8 +93,8 @@ export default function PromptDetailsPage({ prompt }: PromptDetailsPageProps) {
         try {
           await trackPromptUsage({
             prompt_id: prompt.name,
-            version: selectedVersion,
-            input_tokens: 0,
+            version: parseInt(selectedVersion) || 1,
+            input_tokens: processedContent.length / 4, // 粗略估算
             output_tokens: 0,
             latency: 0,
             success: true
@@ -85,16 +109,43 @@ export default function PromptDetailsPage({ prompt }: PromptDetailsPageProps) {
     }
   };
 
-  // 获取分类样式
-  const getCategoryStyle = (category?: string) => {
-    const categoryMap: Record<string, { name: string; color: string; icon: any }> = {
-      coding: { name: '编程', color: 'from-neon-cyan to-neon-cyan-dark', icon: CodeBracketIcon },
-      writing: { name: '写作', color: 'from-neon-pink to-neon-yellow', icon: DocumentTextIcon },
-      analysis: { name: '分析', color: 'from-neon-yellow to-neon-green', icon: SparklesIcon },
-      default: { name: '其他', color: 'from-gray-600 to-gray-700', icon: TagIcon }
+  // 格式化日期
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return '未知日期';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('zh-CN', { 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric' 
+    });
+  };
+
+  // 获取分类样式和图标
+  const getCategoryInfo = (category?: string) => {
+    // 分类映射表
+    const categoryMap: Record<string, { color: string; icon: any }> = {
+      '编程': { color: 'from-neon-cyan to-neon-cyan-dark', icon: CodeBracketIcon },
+      '代码': { color: 'from-neon-cyan to-neon-cyan-dark', icon: CodeBracketIcon },
+      '创意写作': { color: 'from-neon-pink to-neon-yellow', icon: DocumentTextIcon },
+      '写作': { color: 'from-neon-pink to-neon-yellow', icon: DocumentTextIcon },
+      '文案': { color: 'from-neon-pink to-neon-yellow', icon: DocumentTextIcon },
+      '数据分析': { color: 'from-neon-yellow to-neon-green', icon: SparklesIcon },
+      '分析': { color: 'from-neon-yellow to-neon-green', icon: SparklesIcon },
+      '通用': { color: 'from-neon-purple to-neon-blue', icon: SparklesIcon },
+      '教育': { color: 'from-neon-green to-neon-yellow', icon: DocumentTextIcon },
+      '商业': { color: 'from-neon-red to-neon-orange', icon: ChartBarIcon },
+      '翻译': { color: 'from-neon-blue to-neon-cyan', icon: DocumentTextIcon },
     };
     
-    return categoryMap[category || 'default'] || categoryMap.default;
+    const info = categoryMap[category || ''] || { 
+      color: 'from-gray-600 to-gray-700', 
+      icon: TagIcon 
+    };
+    
+    return {
+      name: category || '其他',
+      ...info
+    };
   };
 
   // 渲染评分星星
@@ -167,97 +218,37 @@ export default function PromptDetailsPage({ prompt }: PromptDetailsPageProps) {
     );
   };
 
-  // 渲染当前版本信息
-  const renderVersionInfo = () => {
-    if (!prompt.versions || prompt.versions.length === 0) return null;
-    
-    const currentVersion = prompt.versions.find(v => v.version === selectedVersion);
-    if (!currentVersion) return null;
-    
-    return (
-      <motion.div 
-        className="mt-6 glass rounded-xl p-6 border border-neon-cyan/20"
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.3 }}
-      >
-        <h4 className="text-lg font-semibold text-neon-cyan mb-4 flex items-center">
-          <DocumentTextIcon className="h-5 w-5 mr-2" />
-          版本信息
-        </h4>
-        <div className="space-y-2 text-sm text-gray-300">
-          <p><span className="text-gray-500">版本:</span> v{currentVersion.version}</p>
-          {currentVersion.created_at && (
-            <p><span className="text-gray-500">发布时间:</span> {formatDate(currentVersion.created_at)}</p>
-          )}
-          {currentVersion.author && (
-            <p><span className="text-gray-500">作者:</span> {currentVersion.author}</p>
-          )}
-          {currentVersion.notes && (
-            <p><span className="text-gray-500">版本说明:</span> {currentVersion.notes}</p>
-          )}
+  // 渲染变量输入区域
+  const renderVariableInputs = () => {
+    if (!prompt.input_variables || prompt.input_variables.length === 0) {
+      return (
+        <div className="text-sm text-gray-400 text-center py-8">
+          此提示词没有输入变量
         </div>
-      </motion.div>
+      );
+    }
+
+    return (
+      <div className="space-y-4">
+        {prompt.input_variables.map((variable) => (
+          <div key={variable}>
+            <label className="block text-sm font-medium text-gray-300 mb-2">
+              {variable}
+            </label>
+            <input
+              type="text"
+              value={variableValues[variable] || ''}
+              onChange={(e) => updateVariableValue(variable, e.target.value)}
+              placeholder={`输入 ${variable} 的值`}
+              className="w-full px-3 py-2 rounded-lg bg-dark-bg-secondary/50 border border-neon-pink/30 text-white placeholder-gray-400 focus:border-neon-pink/50 focus:outline-none transition-colors font-mono text-sm"
+            />
+          </div>
+        ))}
+      </div>
     );
   };
 
-  // 渲染示例
-  const renderExamples = (examples?: PromptExample[]) => {
-    if (!examples || examples.length === 0) return null;
-    
-    return (
-      <motion.div 
-        className="mt-12"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.5 }}
-      >
-        <h3 className="text-2xl font-bold text-white mb-6 flex items-center">
-          <SparklesIcon className="h-6 w-6 mr-3 text-neon-yellow" />
-          使用示例
-        </h3>
-        <div className="space-y-6">
-          {examples.map((example, index) => (
-            <motion.div 
-              key={index} 
-              className="glass rounded-xl border border-neon-cyan/20 overflow-hidden hover:border-neon-cyan/40 transition-colors"
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.6 + index * 0.1 }}
-            >
-              <div className="px-6 py-4 bg-gradient-to-r from-neon-cyan/10 to-neon-pink/10 border-b border-neon-cyan/20">
-                <h4 className="text-lg font-semibold text-white">
-                  {example.description || `示例 ${index + 1}`}
-                </h4>
-              </div>
-              <div className="p-6 space-y-6">
-                <div>
-                  <h5 className="text-sm font-medium text-neon-cyan uppercase mb-3 flex items-center">
-                    <ArrowPathIcon className="h-4 w-4 mr-2" />
-                    输入
-                  </h5>
-                  <div className="glass rounded-lg p-4 text-sm font-mono overflow-auto max-h-40 border border-gray-600">
-                    <pre className="text-gray-300">{JSON.stringify(example.input, null, 2)}</pre>
-                  </div>
-                </div>
-                <div>
-                  <h5 className="text-sm font-medium text-neon-green uppercase mb-3 flex items-center">
-                    <BoltIcon className="h-4 w-4 mr-2" />
-                    输出
-                  </h5>
-                  <div className="glass rounded-lg p-4 text-sm font-mono overflow-auto max-h-60 border border-gray-600">
-                    <pre className="text-gray-300">{example.output}</pre>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          ))}
-        </div>
-      </motion.div>
-    );
-  };
-
-  const categoryInfo = getCategoryStyle(prompt.category);
+  const categoryInfo = getCategoryInfo(prompt.category);
   const CategoryIcon = categoryInfo.icon;
 
   return (
@@ -364,6 +355,12 @@ export default function PromptDetailsPage({ prompt }: PromptDetailsPageProps) {
                     {prompt.author}
                   </div>
                 )}
+                {prompt.version && (
+                  <div className="flex items-center">
+                    <BoltIcon className="h-4 w-4 mr-2" />
+                    版本 {prompt.version}
+                  </div>
+                )}
                 {prompt.rating !== undefined && (
                   <div className="flex items-center">
                     {renderStars(prompt.rating)}
@@ -403,7 +400,7 @@ export default function PromptDetailsPage({ prompt }: PromptDetailsPageProps) {
                   whileTap={{ scale: 0.95 }}
                 >
                   <ClipboardDocumentIcon className="h-5 w-5 mr-2" />
-                  {copied ? '已复制！' : '复制提示词'}
+                  {copied ? '已复制！' : '复制内容'}
                 </motion.button>
               </div>
               
@@ -411,7 +408,7 @@ export default function PromptDetailsPage({ prompt }: PromptDetailsPageProps) {
               
               <div className="relative">
                 <div className="glass rounded-xl p-6 border border-gray-600 font-mono text-sm leading-relaxed text-gray-200 min-h-[200px] max-h-[600px] overflow-auto">
-                  <pre className="whitespace-pre-wrap">{getVersionContent()}</pre>
+                  <pre className="whitespace-pre-wrap">{processedContent}</pre>
                 </div>
                 
                 {/* 复制成功动画 */}
@@ -429,12 +426,7 @@ export default function PromptDetailsPage({ prompt }: PromptDetailsPageProps) {
                   </motion.div>
                 )}
               </div>
-              
-              {renderVersionInfo()}
             </motion.div>
-            
-            {/* 示例部分 */}
-            {renderExamples(prompt.examples)}
           </div>
           
           {/* 右侧信息栏 */}
@@ -445,12 +437,21 @@ export default function PromptDetailsPage({ prompt }: PromptDetailsPageProps) {
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.4, delay: 0.2 }}
             >
-              <h3 className="text-lg font-semibold text-white mb-6">详细信息</h3>
+              <h3 className="text-lg font-semibold text-white mb-6">变量设置</h3>
               
-              <div className="space-y-4">
+              <div className="space-y-6">
+                {/* 输入变量 */}
+                <div>
+                  <h4 className="text-sm font-medium text-gray-300 mb-4 flex items-center">
+                    <TagIcon className="h-4 w-4 mr-2 text-neon-pink" />
+                    输入变量
+                  </h4>
+                  {renderVariableInputs()}
+                </div>
+                
                 {/* 兼容模型 */}
                 {prompt.compatible_models && prompt.compatible_models.length > 0 && (
-                  <div>
+                  <div className="pt-4 border-t border-neon-cyan/20">
                     <h4 className="text-sm font-medium text-gray-300 mb-3 flex items-center">
                       <BoltIcon className="h-4 w-4 mr-2 text-neon-yellow" />
                       兼容模型
@@ -462,26 +463,6 @@ export default function PromptDetailsPage({ prompt }: PromptDetailsPageProps) {
                           className="block px-3 py-2 rounded-lg text-sm glass border border-neon-green/30 text-neon-green"
                         >
                           {model}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
-                
-                {/* 输入变量 */}
-                {prompt.input_variables && prompt.input_variables.length > 0 && (
-                  <div>
-                    <h4 className="text-sm font-medium text-gray-300 mb-3 flex items-center">
-                      <TagIcon className="h-4 w-4 mr-2 text-neon-pink" />
-                      输入变量
-                    </h4>
-                    <div className="space-y-2">
-                      {prompt.input_variables.map(variable => (
-                        <span 
-                          key={variable}
-                          className="block px-3 py-2 rounded-lg text-sm glass border border-neon-pink/30 text-neon-pink font-mono"
-                        >
-                          {`{${variable}}`}
                         </span>
                       ))}
                     </div>
