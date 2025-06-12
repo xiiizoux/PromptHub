@@ -32,7 +32,7 @@ docker-compose.yml
 # cursor相关文件和文件夹
 •cursorignore
 •cursorrules
-•cursor
+.cursor
 
 # 日志文件
 logs/

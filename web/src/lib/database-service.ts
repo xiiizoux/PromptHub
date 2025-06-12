@@ -13,7 +13,7 @@ export interface PromptDetails extends Prompt {
   input_variables?: string[];
   compatible_models?: string[];
   allow_collaboration?: boolean;
-  edit_permission?: 'owner' | 'collaborators' | 'public';
+  edit_permission?: 'owner_only' | 'collaborators' | 'public';
   author?: string;
 }
 
@@ -191,15 +191,26 @@ export class DatabaseService {
         try {
           const { data: userData, error: userError } = await this.adapter.supabase
             .from('users')
-            .select('username, display_name')
+            .select('display_name, email')
             .eq('id', prompt.user_id)
             .single();
 
           if (!userError && userData) {
-            authorName = userData.display_name || userData.username || '未知用户';
+            authorName = userData.display_name || userData.email?.split('@')[0] || '未知用户';
           }
         } catch (userErr) {
           console.warn('获取用户信息失败，使用默认作者名:', userErr);
+        }
+      }
+
+      // 处理内容提取
+      let content = '';
+      if (prompt.messages && Array.isArray(prompt.messages) && prompt.messages.length > 0) {
+        const firstMessage = prompt.messages[0];
+        if (typeof firstMessage.content === 'string') {
+          content = firstMessage.content;
+        } else if (typeof firstMessage.content === 'object' && firstMessage.content?.text) {
+          content = firstMessage.content.text;
         }
       }
 
@@ -218,13 +229,23 @@ export class DatabaseService {
         updated_at: prompt.updated_at,
         
         // 扩展字段
-        content: prompt.messages?.[0]?.content || '',
-        input_variables: this.extractInputVariables(prompt.messages?.[0]?.content || ''),
+        content: content,
+        input_variables: this.extractInputVariables(content),
         compatible_models: ['gpt-4', 'gpt-3.5-turbo', 'claude-3'], // 默认兼容模型
         allow_collaboration: Boolean(prompt.is_public), // 基于是否公开来设置
-        edit_permission: 'owner', // 默认只有所有者可编辑
+        edit_permission: 'owner_only' as const, // 修复：改为前端期望的值
         author: authorName
       };
+
+      console.log('getPromptByName - 最终处理的数据:', {
+        name: promptDetails.name,
+        category: promptDetails.category,
+        tags: promptDetails.tags,
+        input_variables: promptDetails.input_variables,
+        edit_permission: promptDetails.edit_permission,
+        author: promptDetails.author,
+        contentLength: content.length
+      });
 
       return promptDetails;
     } catch (error) {
@@ -354,8 +375,7 @@ export class DatabaseService {
           parent_id: parentId,
           created_at: new Date().toISOString()
         })
-        .select(`
-          *,
+        .select(`          *,
           user:users(username, display_name)
         `)
         .single();

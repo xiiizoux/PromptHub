@@ -14,7 +14,13 @@ type PromptData = {
   description: string;
   category: string;
   tags: string[];
+  version: number;
   is_public: boolean;
+  user_id: string;
+  created_at: string;
+  updated_at: string;
+  created_by?: string;
+  author?: string;
 };
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -31,10 +37,30 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const userId = req.headers['x-user-id'] as string;
     console.log('请求中的用户ID:', userId);
     
-    // 构建查询
+    // 构建查询 - 加入users表获取作者信息
     let query = supabase
       .from('prompts')
-      .select('*');
+      .select(`
+        id,
+        name,
+        description,
+        category,
+        tags,
+        version,
+        is_public,
+        user_id,
+        created_at,
+        updated_at,
+        created_by,
+        users!user_id(
+          display_name,
+          email
+        ),
+        creator:users!created_by(
+          display_name,
+          email
+        )
+      `);
 
     // 如果有用户ID，则获取该用户的所有提示词和公开提示词
     // 如果没有用户ID，则只获取公开提示词
@@ -72,14 +98,32 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       });
     }
 
-    // 格式化响应
-    const formattedData = (data || []).map((prompt: PromptData) => ({
-      id: prompt.id,
-      name: prompt.name,
-      description: prompt.description,
-      category: prompt.category,
-      tags: prompt.tags || []
-    }));
+    console.log('原始查询结果:', JSON.stringify(data?.[0], null, 2));
+
+    // 格式化响应，确保包含所有必要字段
+    const formattedData = (data || []).map((prompt: any) => {
+      // 确定作者信息的优先级：creator > users > 默认值
+      const authorInfo = prompt.creator || prompt.users;
+      const authorName = authorInfo?.display_name || 
+                        authorInfo?.email?.split('@')[0] || 
+                        '未知用户';
+
+      return {
+        id: prompt.id,
+        name: prompt.name,
+        description: prompt.description,
+        category: prompt.category,
+        tags: prompt.tags || [],
+        version: prompt.version || 1,
+        created_at: prompt.created_at,
+        updated_at: prompt.updated_at,
+        author: authorName,
+        is_public: prompt.is_public,
+        user_id: prompt.user_id
+      };
+    });
+
+    console.log('格式化后的数据:', JSON.stringify(formattedData?.[0], null, 2));
 
     // 返回结果
     return res.status(200).json({
