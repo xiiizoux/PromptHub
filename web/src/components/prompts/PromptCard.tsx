@@ -100,7 +100,7 @@ const PromptCard: React.FC<PromptCardProps> = ({ prompt }) => {
       whileHover={{ y: -5 }}
       transition={{ duration: 0.2 }}
     >
-      <Link href={`/prompts/${prompt.name}`}>
+      <Link href={`/prompts/${prompt.id}`}>
         <div className="card glass border border-neon-cyan/20 hover:border-neon-cyan/40 transition-all duration-300 group cursor-pointer relative overflow-hidden">
           {/* 背景渐变 */}
           <div className={clsx(

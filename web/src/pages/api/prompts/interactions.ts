@@ -8,47 +8,74 @@ const supabase = createClient(
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'GET') {
-    return res.status(405).json({ error: 'Method not allowed' });
+    return res.status(405).json({ 
+      success: false, 
+      error: 'Method not allowed' 
+    });
   }
 
   try {
     const { promptId } = req.query;
-    const authHeader = req.headers.authorization;
-    
-    let userId = null;
-    
-    // 如果有授权header，获取用户ID
-    if (authHeader) {
-      const token = authHeader.replace('Bearer ', '');
-      const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-      if (!authError && user) {
-        userId = user.id;
-      }
+    const userId = req.headers['user-id'] as string;
+
+    if (!promptId || typeof promptId !== 'string') {
+      return res.status(400).json({ 
+        success: false, 
+        error: '提示词ID不能为空' 
+      });
     }
 
-    // 获取点赞和收藏统计
-    const { data: interactions, error: statsError } = await supabase
-      .from('social_interactions')
-      .select('type, user_id')
+    // 获取点赞数
+    const { data: likes, error: likesError } = await supabase
+      .from('prompt_likes')
+      .select('*')
       .eq('prompt_id', promptId);
 
-    if (statsError) {
-      throw statsError;
+    if (likesError) throw likesError;
+
+    // 获取收藏数
+    const { data: bookmarks, error: bookmarksError } = await supabase
+      .from('prompt_bookmarks')
+      .select('*')
+      .eq('prompt_id', promptId);
+
+    if (bookmarksError) throw bookmarksError;
+
+    // 检查用户是否已点赞和收藏
+    let userLiked = false;
+    let userBookmarked = false;
+
+    if (userId) {
+      const { data: userLike } = await supabase
+        .from('prompt_likes')
+        .select('id')
+        .eq('prompt_id', promptId)
+        .eq('user_id', userId)
+        .single();
+
+      const { data: userBookmark } = await supabase
+        .from('prompt_bookmarks')
+        .select('id')
+        .eq('prompt_id', promptId)
+        .eq('user_id', userId)
+        .single();
+
+      userLiked = !!userLike;
+      userBookmarked = !!userBookmark;
     }
 
-    const likes = interactions?.filter(i => i.type === 'like').length || 0;
-    const bookmarks = interactions?.filter(i => i.type === 'bookmark').length || 0;
-    const userLiked = userId ? interactions?.some(i => i.type === 'like' && i.user_id === userId) : false;
-    const userBookmarked = userId ? interactions?.some(i => i.type === 'bookmark' && i.user_id === userId) : false;
-
     res.status(200).json({
-      likes,
-      bookmarks,
-      userLiked: !!userLiked,
-      userBookmarked: !!userBookmarked
+      success: true,
+      likes: likes?.length || 0,
+      bookmarks: bookmarks?.length || 0,
+      userLiked,
+      userBookmarked
     });
   } catch (error: any) {
     console.error('获取互动信息失败:', error);
-    res.status(500).json({ error: error.message || '服务器内部错误' });
+    res.status(500).json({ 
+      success: false, 
+      error: error.message || '获取互动信息失败' 
+    });
   }
 } 

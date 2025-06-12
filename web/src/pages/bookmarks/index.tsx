@@ -177,7 +177,7 @@ const BookmarksPage: React.FC = () => {
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex-1">
                       <Link
-                        href={`/prompts/${bookmark.name}`}
+                        href={`/prompts/${bookmark.id}`}
                         className="text-lg font-semibold text-white hover:text-neon-cyan transition-colors line-clamp-2"
                       >
                         {bookmark.name}

@@ -272,7 +272,7 @@ function CreatePromptPage() {
         success = true;
         
         // 导航到新提示词页面
-        router.push(`/prompts/${newPrompt.name}`);
+        router.push(`/prompts/${newPrompt.id}`);
         return;
       } catch (adapterError) {
         console.error('使用适配器创建提示词失败，尝试API方式:', adapterError);
@@ -282,7 +282,7 @@ function CreatePromptPage() {
       if (!success) {
         const newPrompt = await createPrompt(data as any);
         console.log('提示词创建成功:', newPrompt);
-        router.push(`/prompts/${newPrompt.name}`);
+        router.push(`/prompts/${newPrompt.id}`);
       }
     } catch (error: any) {
       console.error('创建提示词失败:', error);

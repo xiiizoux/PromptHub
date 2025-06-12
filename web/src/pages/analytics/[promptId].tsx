@@ -62,7 +62,7 @@ export default function PromptAnalyticsPage({ prompt, performance, report }: Pro
                 <p className="mt-2 text-gray-600">{prompt.description}</p>
               </div>
               <Link 
-                href={`/prompts/${prompt.name}`}
+                href={`/prompts/${prompt.id}`}
                 className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-primary-700 bg-primary-50 hover:bg-primary-100"
               >
                 <DocumentTextIcon className="h-5 w-5 mr-2" />
@@ -416,7 +416,7 @@ export default function PromptAnalyticsPage({ prompt, performance, report }: Pro
             
             <div className="mt-6">
               <Link 
-                href={`/prompts/${prompt.name}/edit`}
+                                  href={`/prompts/${prompt.id}/edit`}
                 className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700"
               >
                 编辑提示词

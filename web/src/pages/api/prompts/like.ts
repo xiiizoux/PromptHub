@@ -8,34 +8,36 @@ const supabase = createClient(
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
+    return res.status(405).json({ 
+      success: false, 
+      error: 'Method not allowed' 
+    });
   }
 
   try {
     const { promptId } = req.body;
-    const authHeader = req.headers.authorization;
-    
-    if (!authHeader) {
-      return res.status(401).json({ error: '未授权访问' });
+    const userId = req.headers['user-id'] as string;
+
+    if (!promptId) {
+      return res.status(400).json({ 
+        success: false, 
+        error: '提示词ID不能为空' 
+      });
     }
 
-    // 从Authorization header获取token
-    const token = authHeader.replace('Bearer ', '');
-    
-    // 验证用户token
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-    
-    if (authError || !user) {
-      return res.status(401).json({ error: '无效的授权token' });
+    if (!userId) {
+      return res.status(401).json({ 
+        success: false, 
+        error: '需要登录才能点赞' 
+      });
     }
 
-    // 检查是否已点赞
+    // 检查是否已经点赞
     const { data: existingLike, error: checkError } = await supabase
-      .from('social_interactions')
+      .from('prompt_likes')
       .select('id')
       .eq('prompt_id', promptId)
-      .eq('user_id', user.id)
-      .eq('type', 'like')
+      .eq('user_id', userId)
       .single();
 
     if (checkError && checkError.code !== 'PGRST116') {
@@ -45,33 +47,38 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     let liked = false;
 
     if (existingLike) {
-      // 如果已点赞，则取消点赞
+      // 已点赞，取消点赞
       const { error: deleteError } = await supabase
-        .from('social_interactions')
+        .from('prompt_likes')
         .delete()
-        .eq('prompt_id', promptId)
-        .eq('user_id', user.id)
-        .eq('type', 'like');
+        .eq('id', existingLike.id);
 
       if (deleteError) throw deleteError;
       liked = false;
     } else {
-      // 如果未点赞，则添加点赞
+      // 未点赞，添加点赞
       const { error: insertError } = await supabase
-        .from('social_interactions')
+        .from('prompt_likes')
         .insert({
           prompt_id: promptId,
-          user_id: user.id,
-          type: 'like'
+          user_id: userId,
+          created_at: new Date().toISOString()
         });
 
       if (insertError) throw insertError;
       liked = true;
     }
 
-    res.status(200).json({ liked });
+    res.status(200).json({
+      success: true,
+      liked,
+      message: liked ? '点赞成功' : '取消点赞成功'
+    });
   } catch (error: any) {
     console.error('点赞操作失败:', error);
-    res.status(500).json({ error: error.message || '服务器内部错误' });
+    res.status(500).json({ 
+      success: false, 
+      error: error.message || '点赞操作失败' 
+    });
   }
 } 

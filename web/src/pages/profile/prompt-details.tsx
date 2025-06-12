@@ -134,7 +134,7 @@ const PromptDetails = () => {
           <h1 className="text-3xl font-bold text-white">{prompt.name}</h1>
           <div className="flex items-center space-x-3">
             <Link
-              href={`/prompts/${prompt.name}/edit`}
+              href={`/prompts/${prompt.id}/edit`}
               className="btn-secondary flex items-center space-x-2"
             >
               <PencilIcon className="h-5 w-5" />

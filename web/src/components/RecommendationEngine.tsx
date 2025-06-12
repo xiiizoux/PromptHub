@@ -259,7 +259,7 @@ export const RecommendationEngine: React.FC<RecommendationEngineProps> = ({
                 {/* 提示词信息 */}
                 <div className="space-y-3">
                   <Link
-                    href={`/prompts/${rec.prompt.name}`}
+                    href={`/prompts/${rec.prompt.id}`}
                     className="block"
                   >
                     <h4 className="text-lg font-semibold text-white hover:text-neon-cyan transition-colors line-clamp-2 group-hover:text-neon-cyan">

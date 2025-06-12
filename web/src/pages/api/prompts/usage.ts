@@ -8,61 +8,79 @@ const supabase = createClient(
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
+    return res.status(405).json({ 
+      success: false, 
+      error: 'Method not allowed' 
+    });
   }
 
   try {
-    const { promptId } = req.body;
-    const {
-      model,
-      input_tokens,
-      output_tokens,
-      latency_ms,
-      session_id,
-      client_metadata
-    } = req.body;
+    const { promptId, model, input_tokens, output_tokens, latency_ms, session_id, client_metadata } = req.body;
+    const userId = req.headers['user-id'] as string;
 
-    // 获取API密钥进行验证
-    const apiKey = req.headers['x-api-key'];
-    if (!apiKey) {
-      return res.status(401).json({ error: '需要API密钥' });
+    if (!promptId) {
+      return res.status(400).json({ 
+        success: false, 
+        error: '提示词ID不能为空' 
+      });
     }
 
-    // 这里可以添加API密钥验证逻辑
-    // 暂时简单处理，后续可以添加用户验证
+    if (!userId) {
+      return res.status(401).json({ 
+        success: false, 
+        error: '需要登录才能记录使用历史' 
+      });
+    }
 
-    // 生成session_id（如果没有提供）
-    const finalSessionId = session_id || `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    // 获取提示词信息
+    const { data: prompt, error: promptError } = await supabase
+      .from('prompts')
+      .select('name, version')
+      .eq('id', promptId)
+      .single();
 
-    // 记录使用数据
-    const { error: insertError } = await supabase
-      .from('prompt_usage')
+    if (promptError) {
+      return res.status(404).json({ 
+        success: false, 
+        error: '未找到指定的提示词' 
+      });
+    }
+
+    // 记录使用历史
+    const { data: usage, error: usageError } = await supabase
+      .from('prompt_usage_history')
       .insert({
         prompt_id: promptId,
-        prompt_version: 1, // 默认版本，后续可以从提示词表获取
-        user_id: null, // 暂时为null，后续添加用户系统后更新
-        session_id: finalSessionId,
-        model: model || 'unknown',
-        input_tokens: input_tokens || 0,
-        output_tokens: output_tokens || 0,
-        latency_ms: latency_ms || 0,
-        client_metadata: client_metadata || {}
-      });
+        prompt_name: prompt.name,
+        prompt_version: prompt.version || 1,
+        user_id: userId,
+        model: model || null,
+        input_tokens: input_tokens || null,
+        output_tokens: output_tokens || null,
+        latency_ms: latency_ms || null,
+        session_id: session_id || null,
+        client_metadata: client_metadata || null,
+        action: 'use',
+        timestamp: new Date().toISOString()
+      })
+      .select()
+      .single();
 
-    if (insertError) {
-      throw insertError;
-    }
+    if (usageError) throw usageError;
 
-    res.status(200).json({ 
-      success: true, 
-      message: '使用记录已保存',
-      session_id: finalSessionId
+    // 更新提示词使用次数
+    await supabase.rpc('increment_usage_count', { prompt_id: promptId });
+
+    res.status(200).json({
+      success: true,
+      message: '使用历史记录成功',
+      usage_id: usage.id
     });
   } catch (error: any) {
-    console.error('记录使用数据失败:', error);
+    console.error('记录使用历史失败:', error);
     res.status(500).json({ 
       success: false, 
-      error: error.message || '服务器内部错误' 
+      error: error.message || '记录使用历史失败' 
     });
   }
 } 

@@ -180,14 +180,14 @@ const DebugPage = () => {
                         <td className="px-4 py-2">
                           <div className="flex space-x-2">
                             <a 
-                              href={`/prompts/${prompt.name}`} 
+                              href={`/prompts/${prompt.id}`} 
                               target="_blank"
                               className="px-2 py-1 text-xs bg-blue-900/50 text-blue-300 rounded hover:bg-blue-800/50"
                             >
                               公开页面
                             </a>
                             <a 
-                              href={`/prompts/${prompt.name}/edit`} 
+                              href={`/prompts/${prompt.id}/edit`} 
                               target="_blank"
                               className="px-2 py-1 text-xs bg-purple-900/50 text-purple-300 rounded hover:bg-purple-800/50"
                             >

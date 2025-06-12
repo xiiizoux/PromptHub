@@ -207,19 +207,32 @@ export const getPromptDetails = async (name: string): Promise<PromptDetails> => 
 
     console.log('获取提示词详情:', name, '用户ID:', userId || '未登录');
     
-    const response = await axios.get<any>(`${baseUrl}/api/prompts/${name}`, {
-      headers: {
-        'Content-Type': 'application/json',
-        ...(userId ? { 'x-user-id': userId } : {}),
-        ...(userToken ? { 'Authorization': `Bearer ${userToken}` } : {})
-      }
-    });
-    
-    if (!response.data.success) {
-      throw new Error(response.data.message || '获取提示词详情失败');
+    // 在服务器端渲染时使用完整URL，在客户端使用默认的api实例
+    let response;
+    if (typeof window === 'undefined') {
+      // 服务器端：使用完整URL调用
+      response = await axios.get(`${baseUrl}/api/prompts/${encodeURIComponent(name)}`, {
+        headers: {
+          'Content-Type': 'application/json',
+          ...(userId ? { 'user-id': userId } : {}),
+          ...(userToken ? { 'Authorization': `Bearer ${userToken}` } : {})
+        }
+      });
+    } else {
+      // 客户端：使用相对路径
+      response = await api.get(`/prompts/${encodeURIComponent(name)}`, {
+        headers: {
+          ...(userId ? { 'user-id': userId } : {}),
+          ...(userToken ? { 'Authorization': `Bearer ${userToken}` } : {})
+        }
+      });
     }
     
-    return response.data.data as PromptDetails;
+    if (!response.data.success) {
+      throw new Error(response.data.error || '获取提示词详情失败');
+    }
+    
+    return response.data.prompt as PromptDetails;
   } catch (error) {
     console.error(`获取提示词 ${name} 详情失败:`, error);
     throw error;
@@ -301,12 +314,12 @@ export const createPrompt = async (prompt: Partial<PromptDetails>): Promise<Prom
     
     // 执行创建请求
     console.log('发送创建提示词请求:', { prompt, hasToken: !!token });
-    const response = await api.post<ApiResponse<PromptDetails>>('/prompts', prompt, { 
+    const response = await api.post('/prompts', prompt, { 
       headers 
     });
     
-    if (!response.data || !response.data.data) {
-      throw new Error((response.data as any)?.message || '创建提示词失败');
+    if (!response.data || !response.data.success) {
+      throw new Error(response.data?.error || '创建提示词失败');
     }
     
     return response.data.data;
@@ -317,7 +330,7 @@ export const createPrompt = async (prompt: Partial<PromptDetails>): Promise<Prom
 };
 
 // 更新提示词
-export const updatePrompt = async (name: string, prompt: Partial<PromptDetails>): Promise<PromptDetails> => {
+export const updatePrompt = async (id: string, prompt: Partial<PromptDetails>): Promise<PromptDetails> => {
   try {
     // 获取认证令牌 - 使用正确的Supabase存储键
     let token = null;
@@ -389,26 +402,26 @@ export const updatePrompt = async (name: string, prompt: Partial<PromptDetails>)
       'Content-Type': 'application/json'
     };
 
-    console.log('发送更新提示词请求:', { name, prompt, hasToken: !!token });
+    console.log('发送更新提示词请求:', { id, prompt, hasToken: !!token });
     
-    // 直接调用Web服务API，不再依赖MCP服务
-    const response = await api.put<any>(`/prompts/${encodeURIComponent(name)}`, prompt, {
+    // 使用我们的新API端点
+    const response = await api.put(`/prompts/${encodeURIComponent(id)}`, prompt, {
       headers
     });
     
     if (!response.data.success) {
-      throw new Error(response.data.message || '更新提示词失败');
+      throw new Error(response.data.error || '更新提示词失败');
     }
 
-    console.log('提示词更新成功:', response.data.data);
-    return response.data.data as PromptDetails;
+    console.log('提示词更新成功:', response.data.prompt);
+    return response.data.prompt as PromptDetails;
 
   } catch (error: any) {
-    console.error(`更新提示词 ${name} 失败:`, error);
+    console.error(`更新提示词 ${id} 失败:`, error);
     if (error.response?.status === 401) {
       throw new Error('认证失败，请重新登录');
     }
-    throw new Error(`更新提示词失败: ${error.response?.data?.message || error.message}`);
+    throw new Error(`更新提示词失败: ${error.response?.data?.error || error.message}`);
   }
 };
 

@@ -952,14 +952,14 @@ const ProfilePage = () => {
                             
                             <div className="flex items-center space-x-2">
                               <Link 
-                                href={prompt.is_public ? `/prompts/${prompt.name}` : `/profile/prompt-details?id=${prompt.id}`}
+                                href={`/prompts/${prompt.id}`}
                                 className="p-2 glass rounded-lg hover:bg-neon-cyan/10 transition-colors group"
                                 title="查看提示词详情"
                               >
                                 <ArrowTopRightOnSquareIcon className="h-5 w-5 text-gray-400 group-hover:text-neon-cyan" />
                               </Link>
                               <Link
-                                href={`/prompts/${prompt.name}/edit`}
+                                href={`/prompts/${prompt.id}/edit`}
                                 className="p-2 glass rounded-lg hover:bg-neon-purple/10 transition-colors group"
                                 title="编辑提示词"
                               >

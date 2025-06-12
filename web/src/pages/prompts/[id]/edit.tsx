@@ -211,7 +211,7 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
       // 如果没有权限，3秒后重定向到详情页
       if (!permission.canEdit) {
         setTimeout(() => {
-          router.push(`/prompts/${prompt.name}`);
+          router.push(`/prompts/${prompt.id}`);
         }, 3000);
       }
     }
@@ -370,7 +370,7 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
       data.tags = tags;
       data.compatible_models = models;
       
-      const result = await updatePrompt(prompt.name, data);
+      const result = await updatePrompt(prompt.id, data);
       
       setSaveSuccess(true);
       setHasUnsavedChanges(false);
@@ -380,13 +380,8 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
       
       setTimeout(() => setSaveSuccess(false), 5000); // 延长显示时间
       
-      // 如果提示词名称已更改，重定向到新的URL路径
-      if (data.name !== prompt.name) {
-        // 短暂延迟后跳转，让用户先看到成功消息
-        setTimeout(() => {
-          router.push(`/prompts/${data.name}`);
-        }, 2000); // 增加延迟时间
-      }
+      // 名称更改不影响URL，因为我们使用ID
+      // 无需重定向，保持在当前页面
     } catch (error) {
       console.error('更新提示词失败:', error);
       alert(`❌ 更新失败: ${error instanceof Error ? error.message : '未知错误'}`);
@@ -440,7 +435,7 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
         <div className="container-custom">
           {/* 返回按钮 */}
           <div className="mb-6">
-            <Link href={`/prompts/${prompt.name}`} className="inline-flex items-center text-sm font-medium text-primary-600 hover:text-primary-700">
+            <Link href={`/prompts/${prompt.id}`} className="inline-flex items-center text-sm font-medium text-primary-600 hover:text-primary-700">
               <ChevronLeftIcon className="h-5 w-5 mr-1" />
               返回提示词详情
             </Link>
@@ -465,7 +460,7 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
 
             <div className="flex justify-center space-x-4">
               <Link
-                href={`/prompts/${prompt.name}`}
+                href={`/prompts/${prompt.id}`}
                 className="btn-primary"
               >
                 查看提示词详情
@@ -507,7 +502,7 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
             className="mb-8"
           >
             <Link
-              href={`/prompts/${prompt.name}`}
+              href={`/prompts/${prompt.id}`}
               className="inline-flex items-center text-neon-cyan hover:text-neon-purple transition-colors duration-300 group"
             >
               <ChevronLeftIcon className="h-5 w-5 mr-2 group-hover:-translate-x-1 transition-transform duration-300" />
@@ -1156,7 +1151,7 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
                 transition={{ delay: 2.2 }}
                 className="flex justify-end space-x-4 pt-8"
               >
-                <Link href={`/prompts/${prompt.name}`}>
+                <Link href={`/prompts/${prompt.id}`}>
                   <motion.button
                     type="button"
                     whileHover={{ scale: 1.05 }}
@@ -1211,7 +1206,7 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
 export default withAuth(EditPromptPage);
 
 export const getServerSideProps: GetServerSideProps = async (context) => {
-  const { name } = context.params!;
+  const { id } = context.params!;
   
   try {
     // 使用Next.js API路由获取提示词详情，这样可以复用前端的API逻辑
@@ -1224,7 +1219,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     }
     
     // 尝试通过API获取提示词详情
-    const apiResponse = await fetch(`${baseUrl}/api/prompts/${encodeURIComponent(name as string)}`, {
+    const apiResponse = await fetch(`${baseUrl}/api/prompts/${encodeURIComponent(id as string)}`, {
       headers: {
         'Content-Type': 'application/json',
         ...authHeaders,
@@ -1237,15 +1232,16 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     
     const result = await apiResponse.json();
     
-    if (!result.success || !result.data) {
-      throw new Error(result.message || '无法获取提示词数据');
+    if (!result.success || !result.prompt) {
+      throw new Error(result.error || '无法获取提示词数据');
     }
     
-    const prompt = result.data;
+    const prompt = result.prompt;
     
     // 添加详细的调试输出
     console.log('getServerSideProps - API返回的原始数据:', JSON.stringify(prompt, null, 2));
     console.log('getServerSideProps - 数据字段检查:', {
+      id: prompt.id,
       name: prompt.name,
       category: prompt.category,
       tags: prompt.tags,
@@ -1257,7 +1253,8 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     
     // 确保数据格式符合PromptDetails类型
     const promptDetails: PromptDetails = {
-      name: prompt.name || name as string,
+      id: prompt.id,
+      name: prompt.name || id as string,
       description: prompt.description || '',
       content: prompt.content || prompt.messages?.[0]?.content || '', // 尝试从messages中提取content
       category: prompt.category || '通用',

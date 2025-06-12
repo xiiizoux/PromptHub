@@ -8,34 +8,36 @@ const supabase = createClient(
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
+    return res.status(405).json({ 
+      success: false, 
+      error: 'Method not allowed' 
+    });
   }
 
   try {
     const { promptId } = req.body;
-    const authHeader = req.headers.authorization;
-    
-    if (!authHeader) {
-      return res.status(401).json({ error: '未授权访问' });
+    const userId = req.headers['user-id'] as string;
+
+    if (!promptId) {
+      return res.status(400).json({ 
+        success: false, 
+        error: '提示词ID不能为空' 
+      });
     }
 
-    // 从Authorization header获取token
-    const token = authHeader.replace('Bearer ', '');
-    
-    // 验证用户token
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-    
-    if (authError || !user) {
-      return res.status(401).json({ error: '无效的授权token' });
+    if (!userId) {
+      return res.status(401).json({ 
+        success: false, 
+        error: '需要登录才能收藏' 
+      });
     }
 
-    // 检查是否已收藏
+    // 检查是否已经收藏
     const { data: existingBookmark, error: checkError } = await supabase
-      .from('social_interactions')
+      .from('prompt_bookmarks')
       .select('id')
       .eq('prompt_id', promptId)
-      .eq('user_id', user.id)
-      .eq('type', 'bookmark')
+      .eq('user_id', userId)
       .single();
 
     if (checkError && checkError.code !== 'PGRST116') {
@@ -45,33 +47,38 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     let bookmarked = false;
 
     if (existingBookmark) {
-      // 如果已收藏，则取消收藏
+      // 已收藏，取消收藏
       const { error: deleteError } = await supabase
-        .from('social_interactions')
+        .from('prompt_bookmarks')
         .delete()
-        .eq('prompt_id', promptId)
-        .eq('user_id', user.id)
-        .eq('type', 'bookmark');
+        .eq('id', existingBookmark.id);
 
       if (deleteError) throw deleteError;
       bookmarked = false;
     } else {
-      // 如果未收藏，则添加收藏
+      // 未收藏，添加收藏
       const { error: insertError } = await supabase
-        .from('social_interactions')
+        .from('prompt_bookmarks')
         .insert({
           prompt_id: promptId,
-          user_id: user.id,
-          type: 'bookmark'
+          user_id: userId,
+          created_at: new Date().toISOString()
         });
 
       if (insertError) throw insertError;
       bookmarked = true;
     }
 
-    res.status(200).json({ bookmarked });
+    res.status(200).json({
+      success: true,
+      bookmarked,
+      message: bookmarked ? '收藏成功' : '取消收藏成功'
+    });
   } catch (error: any) {
     console.error('收藏操作失败:', error);
-    res.status(500).json({ error: error.message || '服务器内部错误' });
+    res.status(500).json({ 
+      success: false, 
+      error: error.message || '收藏操作失败' 
+    });
   }
 } 

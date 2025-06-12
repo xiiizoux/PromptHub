@@ -92,7 +92,7 @@ export default function PromptDetailsPage({ prompt }: PromptDetailsPageProps) {
       if (!usageTracked) {
         try {
           await trackPromptUsage({
-            prompt_id: prompt.name,
+            prompt_id: prompt.id,
             version: parseInt(selectedVersion) || 1,
             input_tokens: processedContent.length / 4, // 粗略估算
             output_tokens: 0,
@@ -324,7 +324,7 @@ export default function PromptDetailsPage({ prompt }: PromptDetailsPageProps) {
                     <ShareIcon className="h-5 w-5" />
                   </motion.button>
                   <Link 
-                    href={`/prompts/${prompt.name}/edit`}
+                    href={`/prompts/${prompt.id}/edit`}
                     className="p-3 glass rounded-xl border border-neon-yellow/30 text-neon-yellow hover:border-neon-yellow/50 hover:text-white transition-colors"
                   >
                     <PencilSquareIcon className="h-5 w-5" />
@@ -472,7 +472,7 @@ export default function PromptDetailsPage({ prompt }: PromptDetailsPageProps) {
                 {/* 操作按钮 */}
                 <div className="pt-4 border-t border-neon-cyan/20">
                   <Link 
-                    href={`/analytics/${prompt.name}`}
+                    href={`/analytics/${prompt.id}`}
                     className="w-full btn-secondary flex items-center justify-center"
                   >
                     <ChartBarIcon className="h-5 w-5 mr-2" />
@@ -489,10 +489,10 @@ export default function PromptDetailsPage({ prompt }: PromptDetailsPageProps) {
 }
 
 export const getServerSideProps: GetServerSideProps = async (context) => {
-  const { name } = context.params as { name: string };
+  const { id } = context.params as { id: string };
   
   try {
-    const promptDetails = await getPromptDetails(name);
+    const promptDetails = await getPromptDetails(id);
     
     return {
       props: {
@@ -500,7 +500,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       },
     };
   } catch (error) {
-    console.error(`获取提示词 ${name} 详情失败:`, error);
+    console.error(`获取提示词 ${id} 详情失败:`, error);
     
     return {
       notFound: true,
