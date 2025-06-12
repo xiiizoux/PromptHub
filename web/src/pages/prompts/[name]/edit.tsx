@@ -294,18 +294,22 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
       
       setSaveSuccess(true);
       setHasUnsavedChanges(false);
-      setTimeout(() => setSaveSuccess(false), 3000);
+      
+      // 显示弹窗成功提示
+      alert('✅ 提示词保存成功！');
+      
+      setTimeout(() => setSaveSuccess(false), 5000); // 延长显示时间
       
       // 如果提示词名称已更改，重定向到新的URL路径
       if (data.name !== prompt.name) {
         // 短暂延迟后跳转，让用户先看到成功消息
         setTimeout(() => {
           router.push(`/prompts/${data.name}`);
-        }, 1500);
+        }, 2000); // 增加延迟时间
       }
     } catch (error) {
       console.error('更新提示词失败:', error);
-      alert(`更新失败: ${error instanceof Error ? error.message : '未知错误'}`);
+      alert(`❌ 更新失败: ${error instanceof Error ? error.message : '未知错误'}`);
     } finally {
       setIsSubmitting(false);
     }
@@ -1100,8 +1104,9 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       category: prompt.category,
       tags: prompt.tags,
       input_variables: prompt.input_variables,
-      content: prompt.content ? prompt.content.substring(0, 100) + '...' : 'empty',
-      messages: prompt.messages
+      content: prompt.content || 'empty', // 显示完整内容
+      messages: prompt.messages,
+      contentLength: prompt.content ? prompt.content.length : 0
     });
     
     // 确保数据格式符合PromptDetails类型
