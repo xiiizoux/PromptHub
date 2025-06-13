@@ -57,18 +57,8 @@ function CreatePromptPage() {
   useEffect(() => {
     setMounted(true);
   }, []);
-  
-  // 认证检查
-  useEffect(() => {
-    if (!mounted) return;
-    
-    if (!isLoading && !isAuthenticated) {
-      const currentUrl = window.location.pathname + window.location.search;
-      router.push(`/auth/login?returnUrl=${encodeURIComponent(currentUrl)}`);
-    }
-  }, [isLoading, isAuthenticated, router, mounted]);
 
-  // 如果正在加载认证状态或组件未挂载，显示加载界面
+  // 如果组件未挂载或正在加载认证状态，显示加载界面
   if (!mounted || isLoading) {
     return (
       <div className="min-h-screen bg-dark-bg-primary flex items-center justify-center relative overflow-hidden">
@@ -88,48 +78,33 @@ function CreatePromptPage() {
           </div>
           
           <div className="space-y-2">
-            <h3 className="text-xl font-bold gradient-text">验证身份中</h3>
-            <p className="text-gray-400 text-sm">正在连接到服务器...</p>
+            <h3 className="text-xl font-bold gradient-text">正在初始化页面...</h3>
+            <p className="text-gray-400 text-sm">准备创建环境</p>
           </div>
         </div>
       </div>
     );
   }
 
-  // 如果未认证，显示加载界面等待重定向
-  if (!isAuthenticated) {
-    return (
-      <div className="min-h-screen bg-dark-bg-primary flex items-center justify-center relative overflow-hidden">
-        {/* 背景装饰 */}
-        <div className="absolute inset-0">
-          <div className="absolute top-1/4 -right-48 w-96 h-96 bg-gradient-to-br from-neon-cyan/20 to-neon-purple/20 rounded-full blur-3xl"></div>
-          <div className="absolute bottom-1/4 -left-48 w-96 h-96 bg-gradient-to-tr from-neon-pink/20 to-neon-purple/20 rounded-full blur-3xl"></div>
-        </div>
-        
-        {/* 加载内容 */}
-        <div className="relative z-10 text-center">
-          <div className="relative mx-auto mb-8">
-            <div className="w-16 h-16 border-4 border-neon-cyan/30 rounded-full animate-spin">
-              <div className="absolute top-0 left-0 w-full h-full border-4 border-transparent border-t-neon-cyan rounded-full animate-pulse"></div>
-            </div>
-            <div className="absolute inset-0 w-16 h-16 border-4 border-neon-purple/20 rounded-full animate-ping"></div>
-          </div>
-          
-          <div className="space-y-2">
-            <h3 className="text-xl font-bold gradient-text">正在跳转登录</h3>
-            <p className="text-gray-400 text-sm">请稍候...</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  // 客户端认证检查（仅在挂载后）
+  useEffect(() => {
+    if (!mounted) return;
+    
+    if (!isLoading && !isAuthenticated) {
+      const currentUrl = window.location.pathname + window.location.search;
+      router.push(`/auth/login?returnUrl=${encodeURIComponent(currentUrl)}`);
+    }
+  }, [isLoading, isAuthenticated, router, mounted]);
 
   // 获取分类数据
   useEffect(() => {
+    if (!mounted) return;
+    
     const fetchCategories = async () => {
       try {
+        console.log('开始获取类别数据...');
         const data = await getCategories();
-        // 直接使用字符串数组
+        console.log('获取到的类别数据:', data);
         setCategories(data);
       } catch (err) {
         console.error('获取分类失败:', err);
@@ -141,7 +116,7 @@ function CreatePromptPage() {
       }
     };
     fetchCategories();
-  }, []);
+  }, [mounted]);
   
   // 分类加载后自动匹配（如AI分析后或编辑场景）
   useEffect(() => {
@@ -413,6 +388,18 @@ function CreatePromptPage() {
         <div className="absolute top-1/4 -right-48 w-96 h-96 bg-gradient-to-br from-neon-cyan/20 to-neon-purple/20 rounded-full blur-3xl"></div>
         <div className="absolute bottom-1/4 -left-48 w-96 h-96 bg-gradient-to-tr from-neon-pink/20 to-neon-purple/20 rounded-full blur-3xl"></div>
       </div>
+
+      {/* 开发模式调试信息 */}
+      {process.env.NODE_ENV === 'development' && (
+        <div className="fixed top-4 right-4 z-50 bg-black/80 text-white p-4 rounded-lg text-xs space-y-1">
+          <div>挂载状态: {mounted ? '已挂载' : '未挂载'}</div>
+          <div>认证加载: {isLoading ? '加载中' : '完成'}</div>
+          <div>认证状态: {isAuthenticated ? '已认证' : '未认证'}</div>
+          <div>用户: {user?.username || '无'}</div>
+          <div>分类数量: {categories.length}</div>
+          <div>分类加载: {categoriesLoading ? '加载中' : '完成'}</div>
+        </div>
+      )}
 
       <div className="relative z-10 py-16">
         <div className="container-custom">
