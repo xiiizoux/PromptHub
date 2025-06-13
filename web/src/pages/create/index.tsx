@@ -49,8 +49,8 @@ function CreatePromptPage() {
   const [categoriesLoading, setCategoriesLoading] = useState(true);
   const [suggestedTags, setSuggestedTags] = useState<string[]>([]);
   const [tagsLoading, setTagsLoading] = useState(true);
-  const [aiAnalysisResult, setAiAnalysisResult] = useState<AIAnalysisResult | null>(null);
-  const [showAiAnalysis, setShowAiAnalysis] = useState(false);
+  // const [aiAnalysisResult, setAiAnalysisResult] = useState<AIAnalysisResult | null>(null);
+  // const [showAiAnalysis, setShowAiAnalysis] = useState(false);
   const [mounted, setMounted] = useState(false);
   
   // 确保组件已挂载
@@ -118,20 +118,10 @@ function CreatePromptPage() {
     fetchCategories();
   }, [mounted]);
   
-  // 分类加载后自动匹配（如AI分析后或编辑场景）
-  useEffect(() => {
-    if (!categoriesLoading && categories.length > 0) {
-      const currentCategory = watch('category');
-      if (currentCategory) {
-        const matched = matchCategory(currentCategory, categories);
-        if (matched) setValue('category', matched);
-      }
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [categoriesLoading, categories]);
-  
   // 获取标签数据
   useEffect(() => {
+    if (!mounted) return;
+    
     const fetchTags = async () => {
       try {
         const data = await getTags();
@@ -144,7 +134,7 @@ function CreatePromptPage() {
       }
     };
     fetchTags();
-  }, []);
+  }, [mounted]);
   
   const { register, handleSubmit, formState: { errors }, setValue, watch } = useForm<PromptFormData>({
     defaultValues: {
@@ -228,8 +218,9 @@ function CreatePromptPage() {
 
   // AI分析结果处理
   const handleAIAnalysis = (result: Partial<AIAnalysisResult>) => {
-    setAiAnalysisResult(result as AIAnalysisResult);
-    setShowAiAnalysis(true);
+    // setAiAnalysisResult(result as AIAnalysisResult);
+    // setShowAiAnalysis(true);
+    console.log('AI分析功能暂时禁用', result);
   };
 
   // 智能分类映射函数
@@ -283,7 +274,8 @@ function CreatePromptPage() {
     }
     
     // 关闭分析结果显示
-    setShowAiAnalysis(false);
+    // setShowAiAnalysis(false);
+    console.log('应用AI分析结果完成');
   };
 
   // 表单提交
@@ -605,7 +597,8 @@ function CreatePromptPage() {
                   
                   {/* AI分析按钮组 */}
                   <div className="flex items-center gap-2">
-                    <AIAnalyzeButton
+                    {/* AI分析按钮暂时禁用 */}
+                    {/* <AIAnalyzeButton
                       content={watch('content') || ''}
                       onAnalysisComplete={(result) => {
                         if (result.suggestedTitle) setValue('name', result.suggestedTitle);
@@ -613,11 +606,13 @@ function CreatePromptPage() {
                         if (result.description) setValue('description', result.description);
                         if (result.tags) setValue('tags', result.tags);
                         if (result.variables) setValue('input_variables', result.variables);
-                        setAiAnalysisResult(result as AIAnalysisResult);
-                        setShowAiAnalysis(true);
+                        console.log('AI分析完成', result);
                       }}
                       variant="full"
-                    />
+                    /> */}
+                    <div className="text-center text-gray-500 text-sm">
+                      AI分析功能暂时维护中
+                    </div>
                   </div>
                 </div>
                 <div className="relative">
@@ -636,8 +631,8 @@ function CreatePromptPage() {
                   <p className="text-neon-red text-sm mt-1">{errors.content.message}</p>
                 )}
                 
-                {/* AI分析结果显示 */}
-                <AnimatePresence>
+                {/* AI分析结果显示 - 暂时禁用 */}
+                {/* <AnimatePresence>
                   {showAiAnalysis && aiAnalysisResult && (
                     <motion.div
                       initial={{ opacity: 0, y: 20, height: 0 }}
@@ -660,7 +655,7 @@ function CreatePromptPage() {
                       </div>
                     </motion.div>
                   )}
-                </AnimatePresence>
+                </AnimatePresence> */}
               </motion.div>
 
               {/* 变量管理 */}
