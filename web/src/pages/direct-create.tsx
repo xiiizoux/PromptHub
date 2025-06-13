@@ -25,13 +25,10 @@ const DirectCreatePage: React.FC = () => {
         setIsLoading(true);
         const categoriesData = await getCategories();
         const tagsData = await getTags();
-        // 修正：只取分类名
-        const categoryNames = Array.isArray(categoriesData) && typeof categoriesData[0] === 'object'
-          ? categoriesData.map((cat: any) => cat.name)
-          : categoriesData;
-        setCategories(categoryNames);
+        // 直接使用字符串数组
+        setCategories(categoriesData);
         setTags(tagsData);
-        console.log('加载的分类:', categoryNames);
+        console.log('加载的分类:', categoriesData);
         console.log('加载的标签:', tagsData);
       } catch (error) {
         console.error('加载数据失败:', error);

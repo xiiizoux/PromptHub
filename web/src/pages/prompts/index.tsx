@@ -24,15 +24,12 @@ export default function PromptsPage() {
     const fetchCategories = async () => {
       try {
         const data = await getCategories();
-        // 兼容对象数组和字符串数组
-        const categoryNames = Array.isArray(data) && typeof data[0] === 'object'
-          ? data.map((cat: any) => cat.name)
-          : data;
+        // 直接使用字符串数组
         // 确保"全部"选项始终存在
-        if (categoryNames.length > 0 && !categoryNames.includes('全部')) {
-          setCategories(['全部', ...categoryNames]);
+        if (data.length > 0 && !data.includes('全部')) {
+          setCategories(['全部', ...data]);
         } else {
-          setCategories(categoryNames);
+          setCategories(data);
         }
       } catch (err) {
         console.error('获取分类失败:', err);

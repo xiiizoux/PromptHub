@@ -100,9 +100,9 @@ function generateSuggestions(prompt: any, performanceData: any) {
   const { usage, ratings, social } = performanceData;
 
   // 分析响应时间
-  const responseTimes = usage.map(u => u.latency_ms).filter(t => t != null);
+  const responseTimes = usage.map((u: any) => u.latency_ms).filter((t: any) => t != null);
   const avgResponseTime = responseTimes.length > 0 
-    ? responseTimes.reduce((a, b) => a + b, 0) / responseTimes.length 
+    ? responseTimes.reduce((a: number, b: number) => a + b, 0) / responseTimes.length 
     : 0;
 
   if (avgResponseTime > 2000) {
@@ -124,9 +124,9 @@ function generateSuggestions(prompt: any, performanceData: any) {
   }
 
   // 分析Token使用
-  const tokenUsages = usage.map(u => (u.input_tokens || 0) + (u.output_tokens || 0));
+  const tokenUsages = usage.map((u: any) => (u.input_tokens || 0) + (u.output_tokens || 0));
   const avgTokens = tokenUsages.length > 0 
-    ? tokenUsages.reduce((a, b) => a + b, 0) / tokenUsages.length 
+    ? tokenUsages.reduce((a: number, b: number) => a + b, 0) / tokenUsages.length 
     : 0;
 
   if (avgTokens > 3000) {
@@ -141,7 +141,7 @@ function generateSuggestions(prompt: any, performanceData: any) {
 
   // 分析用户满意度
   const avgRating = ratings.length > 0 
-    ? ratings.reduce((sum, r) => sum + r.rating, 0) / ratings.length 
+    ? ratings.reduce((sum: number, r: any) => sum + r.rating, 0) / ratings.length 
     : 0;
 
   if (avgRating < 3 && ratings.length >= 5) {
@@ -174,8 +174,8 @@ function generateSuggestions(prompt: any, performanceData: any) {
   }
 
   // 分析社交互动
-  const likes = social.filter(s => s.type === 'like').length;
-  const bookmarks = social.filter(s => s.type === 'bookmark').length;
+  const likes = social.filter((s: any) => s.type === 'like').length;
+  const bookmarks = social.filter((s: any) => s.type === 'bookmark').length;
 
   if (usage.length > 20 && likes < 5) {
     suggestions.push({

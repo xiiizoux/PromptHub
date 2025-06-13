@@ -61,10 +61,10 @@ export interface Category {
 }
 
 // 获取所有分类
-export const getCategories = async (): Promise<Category[]> => {
+export const getCategories = async (): Promise<string[]> => {
   try {
     // 通过Next.js API Routes调用，符合项目架构
-    const response = await api.get<{success: boolean; data: Category[]}>('/categories');
+    const response = await api.get<{success: boolean; data: string[]}>('/categories');
     if (response.data.success) {
       return response.data.data || [];
     }
@@ -123,7 +123,8 @@ export const getPrompts = async (filters?: PromptFilters): Promise<PaginatedResp
       if (userSession) {
         try {
           const parsedSession = JSON.parse(userSession);
-          userId = parsedSession?.currentSession?.user?.id;
+          const sessionUserId = parsedSession?.currentSession?.user?.id;
+          userId = sessionUserId !== null && sessionUserId !== undefined ? sessionUserId : undefined;
         } catch (e) {
           console.error('解析用户会话信息失败:', e);
         }

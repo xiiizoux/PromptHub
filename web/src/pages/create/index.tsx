@@ -57,11 +57,8 @@ function CreatePromptPage() {
     const fetchCategories = async () => {
       try {
         const data = await getCategories();
-        // 修正：只取分类名
-        const categoryNames = Array.isArray(data) && typeof data[0] === 'object'
-          ? data.map((cat: any) => cat.name)
-          : data;
-        setCategories(categoryNames);
+        // 直接使用字符串数组
+        setCategories(data);
       } catch (err) {
         console.error('获取分类失败:', err);
         setCategories([
@@ -80,7 +77,7 @@ function CreatePromptPage() {
       const currentCategory = watch('category');
       if (currentCategory) {
         const matched = matchCategory(currentCategory, categories);
-        if (matched) setValue('category', matched.name);
+        if (matched) setValue('category', matched);
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps

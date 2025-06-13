@@ -86,7 +86,7 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
     tags: Array.isArray(prompt.tags) ? prompt.tags : [],
     input_variables: Array.isArray(prompt.input_variables) ? prompt.input_variables : [],
     compatible_models: Array.isArray(prompt.compatible_models) ? prompt.compatible_models : ['GPT-4', 'GPT-3.5', 'Claude-2'],
-    version: currentVersionFormatted as any,
+    version: typeof prompt.version === 'number' ? prompt.version : (parseInt(currentVersionFormatted, 10) || 1),
     author: prompt.author || user?.display_name || user?.username || '未知用户',
     template_format: prompt.template_format || 'text',
     is_public: prompt.is_public !== undefined ? prompt.is_public : false,
@@ -123,15 +123,12 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
     const fetchCategories = async () => {
       try {
         const data = await getCategories();
-        // 修正：只取分类名
-        const categoryNames = Array.isArray(data) && typeof data[0] === 'object'
-          ? data.map((cat: any) => cat.name)
-          : data;
-        setCategories(categoryNames);
+        // 直接使用字符串数组
+        setCategories(data);
         console.log('分类数据加载完成:', {
-          categories: categoryNames,
+          categories: data,
           currentCategory: safePromptData.category,
-          isCurrentCategoryInList: categoryNames.some((cat: string) => cat === safePromptData.category)
+          isCurrentCategoryInList: data.some((cat: string) => cat === safePromptData.category)
         });
       } catch (err) {
         console.error('获取分类失败:', err);
@@ -151,7 +148,7 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
       const currentCategory = watch('category');
       if (currentCategory) {
         const matched = matchCategory(currentCategory, categories);
-        if (matched) setValue('category', matched.name);
+        if (matched) setValue('category', matched);
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -177,7 +174,7 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
   const { register, handleSubmit, control, formState: { errors }, setValue, watch, reset } = useForm<PromptFormData>({
     defaultValues: {
       ...(() => { const { version, ...rest } = safePromptData; return rest; })(),
-      version: safePromptData.version ? String(safePromptData.version) : '1',
+      version: safePromptData.version || 1,
     }
   });
 
@@ -244,7 +241,7 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
       description: prompt.description,
       content: prompt.content,
       category: prompt.category,
-      version: prompt.version || '1.0',
+      version: prompt.version || 1,
       author: prompt.author || user?.display_name || user?.username || '',
       template_format: prompt.template_format || 'text',
       input_variables: prompt.input_variables || [],
@@ -414,7 +411,7 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
     
     if (data.category) {
       const matched = matchCategory(data.category, categories);
-      if (matched) setValue('category', matched.name);
+      if (matched) setValue('category', matched);
       else {
         setValue('category', '');
         alert('AI未能识别有效分类，请手动选择');
@@ -430,10 +427,10 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
     
     // 应用版本
     if (data.version) {
-      let versionStr = '';
-      if (typeof data.version === 'number') versionStr = String(data.version);
-      else if (typeof data.version === 'string') versionStr = data.version;
-      setValue('version', versionStr);
+      let versionNum = 1;
+      if (typeof data.version === 'number') versionNum = data.version;
+      else if (typeof data.version === 'string') versionNum = parseInt(data.version, 10) || 1;
+      setValue('version', versionNum);
       setHasUnsavedChanges(true);
     }
     
@@ -501,7 +498,7 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
       description: prompt.description,
       content: prompt.content,
       category: prompt.category,
-      version: (prompt.version || '1.0') as any,
+      version: typeof prompt.version === 'number' ? prompt.version : 1,
       author: prompt.author || user?.display_name || user?.username || '',
       template_format: prompt.template_format || 'text',
       input_variables: prompt.input_variables || [],
