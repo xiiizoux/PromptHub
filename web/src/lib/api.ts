@@ -341,53 +341,32 @@ export const createPrompt = async (prompt: Partial<PromptDetails>): Promise<Prom
 };
 
 // 更新提示词
-export const updatePrompt = async (id: string, prompt: Partial<PromptDetails>): Promise<PromptDetails> => {
+export const updatePrompt = async (id: string, prompt: Partial<PromptDetails>, tokenArg?: string): Promise<PromptDetails> => {
   try {
-    // 获取认证令牌 - 使用正确的Supabase存储键
-    let token = null;
-    
-    if (typeof window !== 'undefined') {
-      // 方法1: 检查PromptHub专用的存储键
+    let token = tokenArg;
+    if (!token && typeof window !== 'undefined') {
+      // 兼容useAuth和supabase
       try {
         const authData = localStorage.getItem('prompthub-auth-token');
         if (authData) {
           const parsedAuth = JSON.parse(authData);
           token = parsedAuth?.access_token;
-          console.log('从prompthub-auth-token获取到认证令牌');
         }
-      } catch (e) {
-        console.warn('解析prompthub-auth-token失败:', e);
-      }
-      
-      // 方法2: 检查标准的auth.token（备用）
+      } catch {}
+      if (!token) token = localStorage.getItem('auth.token');
       if (!token) {
-        token = localStorage.getItem('auth.token');
-      }
-      
-      // 方法3: 检查其他Supabase标准格式的令牌存储（备用）
-      if (!token) {
-        try {
-          // 遍历localStorage寻找Supabase会话令牌
-          for (let i = 0; i < localStorage.length; i++) {
-            const key = localStorage.key(i);
-            if (key && key.includes('auth-token')) {
-              const tokenData = localStorage.getItem(key);
-              if (tokenData) {
-                const parsedData = JSON.parse(tokenData);
-                token = parsedData?.access_token;
-                if (token) {
-                  console.log('从其他Supabase存储获取到认证令牌:', key);
-                  break;
-                }
-              }
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i);
+          if (key && key.includes('auth-token')) {
+            const tokenData = localStorage.getItem(key);
+            if (tokenData) {
+              const parsedData = JSON.parse(tokenData);
+              token = parsedData?.access_token;
+              if (token) break;
             }
           }
-        } catch (e) {
-          console.warn('从其他Supabase存储获取令牌失败:', e);
         }
       }
-      
-      // 方法4: 尝试从supabase.auth.token获取（最后备用）
       if (!token) {
         try {
           const authSession = localStorage.getItem('supabase.auth.token');
@@ -395,43 +374,19 @@ export const updatePrompt = async (id: string, prompt: Partial<PromptDetails>): 
             const parsed = JSON.parse(authSession);
             token = parsed?.currentSession?.access_token;
           }
-        } catch (e) {
-          console.warn('解析supabase.auth.token失败:', e);
-        }
+        } catch {}
       }
     }
-    
-    console.log('认证令牌状态:', { hasToken: !!token, tokenLength: token?.length });
-    
-    if (!token) {
-      throw new Error('未提供认证令牌，请重新登录');
-    }
-    
-    // 添加认证头
+    if (!token) throw new Error('未提供认证令牌，请重新登录');
     const headers: Record<string, string> = {
       'Authorization': `Bearer ${token}`,
       'Content-Type': 'application/json'
     };
-
-    console.log('发送更新提示词请求:', { id, prompt, hasToken: !!token });
-    
-    // 使用我们的新API端点
-    const response = await api.put(`/prompts/${encodeURIComponent(id)}`, prompt, {
-      headers
-    });
-    
-    if (!response.data.success) {
-      throw new Error(response.data.error || '更新提示词失败');
-    }
-
-    console.log('提示词更新成功:', response.data.prompt);
+    const response = await api.put(`/prompts/${encodeURIComponent(id)}`, prompt, { headers });
+    if (!response.data.success) throw new Error(response.data.error || '更新提示词失败');
     return response.data.prompt as PromptDetails;
-
   } catch (error: any) {
-    console.error(`更新提示词 ${id} 失败:`, error);
-    if (error.response?.status === 401) {
-      throw new Error('认证失败，请重新登录');
-    }
+    if (error.response?.status === 401) throw new Error('认证失败，请重新登录');
     throw new Error(`更新提示词失败: ${error.response?.data?.error || error.message}`);
   }
 };

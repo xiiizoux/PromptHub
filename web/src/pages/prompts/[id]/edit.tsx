@@ -40,6 +40,8 @@ import {
   formatVersionFromInt,
   getVersionValidationMessage
 } from '@/lib/version-utils';
+// @ts-ignore
+import { pinyin } from 'pinyin-pro';
 
 // 预设模型选项
 const MODEL_OPTIONS = ['GPT-4', 'GPT-3.5', 'Claude-2', 'Claude-Instant', 'Gemini-Pro', 'Llama-2', 'Mistral-7B'];
@@ -55,7 +57,7 @@ interface EditPromptPageProps {
 
 function EditPromptPage({ prompt }: EditPromptPageProps) {
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, getToken } = useAuth();
   
   // 格式化当前版本号
   const currentVersionFormatted = typeof prompt.version === 'number' 
@@ -348,7 +350,58 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
     // 5. 模糊包含
     match = categories.find(cat => aiCategory.includes(cat.name) || cat.name.includes(aiCategory));
     if (match) return match;
+    // 6. 拼音首字母/全拼模糊
+    const aiPinyin = pinyin(aiCategory, { toneType: 'none', type: 'array' }).join('');
+    const aiPinyinFirst = pinyin(aiCategory, { pattern: 'first', type: 'array' }).join('');
+    for (const cat of categories) {
+      const catPinyin = pinyin(cat.name, { toneType: 'none', type: 'array' }).join('');
+      const catPinyinFirst = pinyin(cat.name, { pattern: 'first', type: 'array' }).join('');
+      if (aiPinyin === catPinyin || aiPinyinFirst === catPinyinFirst) return cat;
+      if (aiPinyin.includes(catPinyin) || catPinyin.includes(aiPinyin)) return cat;
+      if (aiPinyinFirst.includes(catPinyinFirst) || catPinyinFirst.includes(aiPinyinFirst)) return cat;
+    }
+    // 7. 相似度最高（Levenshtein距离）
+    let bestScore = 0;
+    let bestCat: Category | null = null;
+    for (const cat of categories) {
+      const score = stringSimilarity(aiCategory, cat.name);
+      if (score > bestScore) {
+        bestScore = score;
+        bestCat = cat;
+      }
+    }
+    if (bestScore > 0.6) return bestCat; // 阈值可调整
     return null;
+  }
+
+  // 字符串相似度（简单Levenshtein实现或用第三方包）
+  function stringSimilarity(a: string, b: string): number {
+    if (!a || !b) return 0;
+    a = a.toLowerCase();
+    b = b.toLowerCase();
+    if (a === b) return 1;
+    const longer = a.length > b.length ? a : b;
+    const shorter = a.length > b.length ? b : a;
+    const longerLength = longer.length;
+    if (longerLength === 0) return 1;
+    return (longerLength - editDistance(longer, shorter)) / longerLength;
+  }
+  function editDistance(s1: string, s2: string): number {
+    const costs = [];
+    for (let i = 0; i <= s1.length; i++) {
+      let lastValue = i;
+      for (let j = 0; j <= s2.length; j++) {
+        if (i === 0) costs[j] = j;
+        else if (j > 0) {
+          let newValue = costs[j - 1];
+          if (s1.charAt(i - 1) !== s2.charAt(j - 1)) newValue = Math.min(Math.min(newValue, lastValue), costs[j]) + 1;
+          costs[j - 1] = lastValue;
+          lastValue = newValue;
+        }
+      }
+      if (i > 0) costs[s2.length] = lastValue;
+    }
+    return costs[s2.length];
   }
 
   // 应用AI分析结果
@@ -373,7 +426,7 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
       let versionStr = '';
       if (typeof data.version === 'number') versionStr = String(data.version);
       else if (typeof data.version === 'string') versionStr = data.version;
-      setValue('version', versionStr as any);
+      setValue('version', versionStr);
       setHasUnsavedChanges(true);
     }
     
@@ -407,8 +460,14 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
       data.tags = tags;
       data.compatible_models = models;
       data.version = parseInt(String(data.version), 10) || 1;
-      
-      const result = await updatePrompt(prompt.id, data);
+      // 获取token
+      let token = undefined;
+      if (typeof window !== 'undefined' && user && typeof user === 'object') {
+        if (typeof getToken === 'function') {
+          token = await getToken();
+        }
+      }
+      const result = await updatePrompt(prompt.id, data, token || undefined);
       
       setSaveSuccess(true);
       setHasUnsavedChanges(false);
@@ -729,13 +788,13 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
                   <select
                     {...register('category', { required: '请选择分类' })}
                     className="input-primary w-full"
+                    value={watch('category') || ''}
+                    onChange={e => setValue('category', e.target.value)}
                     disabled={categoriesLoading}
                   >
                     <option value="">选择分类</option>
-                    {categories.map((category) => (
-                      <option key={category.id || category.name} value={category.name}>
-                        {category.name}
-                      </option>
+                    {categories.map((cat) => (
+                      <option key={cat.id || cat.name} value={cat.name}>{cat.name}</option>
                     ))}
                   </select>
                   {errors.category && (
