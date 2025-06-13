@@ -87,12 +87,14 @@ export class DatabaseService {
    */
   async getCategories(): Promise<any[]> {
     try {
-      // 先尝试从专用的categories表获取
+      // 先尝试从专用的categories表获取完整对象
       const { data: categoriesData, error: categoriesError } = await this.adapter.supabase
         .from('categories')
         .select('id, name, name_en, alias, description, sort_order, is_active')
         .eq('is_active', true)
         .order('sort_order');
+
+      console.log('从categories表获取的数据:', categoriesData);
 
       if (!categoriesError && categoriesData && categoriesData.length > 0) {
         return categoriesData;
@@ -124,6 +126,7 @@ export class DatabaseService {
         .select('id, name, name_en, alias, description, sort_order, is_active');
 
       if (!insertError && insertData) {
+        console.log('插入默认分类成功:', insertData);
         return insertData;
       }
 
@@ -139,6 +142,7 @@ export class DatabaseService {
           promptsData.map(item => item.category).filter(Boolean)
         ));
         if (existingCategories.length > 0) {
+          console.log('从prompts表提取的分类:', existingCategories);
           // 兜底返回对象数组
           return existingCategories.map((name, idx) => ({
             id: undefined,
@@ -153,6 +157,7 @@ export class DatabaseService {
       }
 
       // 最后的兜底方案：返回默认分类对象
+      console.log('使用默认分类');
       return defaultCategories.map((cat, idx) => ({
         id: undefined,
         name: cat.name,
