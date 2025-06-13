@@ -37,7 +37,7 @@ RUN cd mcp && npm install && \
     npm install --save dotenv@latest
 
 # 安装Web依赖
-RUN cd web && NODE_OPTIONS="--max-old-space-size=4096" npm install --legacy-peer-deps
+RUN cd web && NODE_OPTIONS="--max-old-space-size=4096" npm install
 
 # 安装Supabase依赖
 RUN cd supabase && npm install
@@ -55,7 +55,7 @@ RUN cd mcp && NODE_OPTIONS="--max-old-space-size=4096" npx tsc
 RUN cd web && \
     NODE_OPTIONS="--max-old-space-size=4096" \
     NODE_ENV=production \
-    npm run build --legacy-peer-deps
+    npm run build
 
 # 创建必要的目录
 RUN mkdir -p /app/logs /app/mcp/data
