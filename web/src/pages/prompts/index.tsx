@@ -26,10 +26,14 @@ export default function PromptsPage() {
         const data = await getCategories();
         // 直接使用字符串数组
         // 确保"全部"选项始终存在
-        if (data.length > 0 && !data.includes('全部')) {
-          setCategories(['全部', ...data]);
+        if (data && Array.isArray(data)) {
+          if (data.length > 0 && !data.includes('全部')) {
+            setCategories(['全部', ...data]);
+          } else {
+            setCategories(data);
+          }
         } else {
-          setCategories(data);
+          setCategories(['全部']);
         }
       } catch (err) {
         console.error('获取分类失败:', err);
@@ -45,7 +49,11 @@ export default function PromptsPage() {
     const fetchTags = async () => {
       try {
         const data = await getTags();
-        setTags(data);
+        if (data && Array.isArray(data)) {
+          setTags(data);
+        } else {
+          setTags([]);
+        }
       } catch (err) {
         console.error('获取标签失败:', err);
         // 如果获取失败，设置一些默认标签
@@ -62,9 +70,15 @@ export default function PromptsPage() {
       setLoading(true);
       try {
         const response = await getPrompts(filters);
-        setPrompts(response.data);
-        setTotalPages(response.totalPages);
-        setError(null);
+        if (response && response.data && Array.isArray(response.data)) {
+          setPrompts(response.data);
+          setTotalPages(response.totalPages || 1);
+          setError(null);
+        } else {
+          setPrompts([]);
+          setTotalPages(1);
+          setError('获取提示词数据格式错误');
+        }
       } catch (err) {
         console.error('获取提示词失败:', err);
         setError('无法加载提示词，请稍后再试');
@@ -92,38 +106,19 @@ export default function PromptsPage() {
     }
   };
 
-  // 渲染分页控件
   const renderPagination = () => {
-    const pages = [];
+    if (totalPages <= 1) return null;
+
     const currentPage = filters.page || 1;
-    
-    // 确定显示的页码范围
-    let startPage = Math.max(1, currentPage - 2);
-    let endPage = Math.min(totalPages, startPage + 4);
-    
-    if (endPage - startPage < 4) {
-      startPage = Math.max(1, endPage - 4);
-    }
-    
-    // 添加页码按钮
+    const maxVisiblePages = 5;
+    const startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+    const endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+
+    const pages = [];
     for (let i = startPage; i <= endPage; i++) {
-      pages.push(
-        <motion.button
-          key={i}
-          onClick={() => handlePageChange(i)}
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          className={`relative inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg border transition-all duration-300 ${
-            i === currentPage
-              ? 'bg-gradient-to-r from-neon-cyan to-neon-purple text-white shadow-neon border-neon-cyan'
-              : 'bg-dark-card/50 text-neon-cyan border-dark-border hover:bg-dark-card hover:border-neon-cyan hover:shadow-neon-sm backdrop-blur-sm'
-          }`}
-        >
-          {i}
-        </motion.button>
-      );
+      pages.push(i);
     }
-    
+
     return (
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
@@ -141,44 +136,45 @@ export default function PromptsPage() {
             </p>
           </div>
           <div>
-            <nav className="flex items-center space-x-2" aria-label="Pagination">
-              <motion.button
+            <nav className="isolate inline-flex -space-x-px rounded-md shadow-sm" aria-label="Pagination">
+              {/* 上一页 */}
+              <button
                 onClick={() => handlePageChange(currentPage - 1)}
                 disabled={currentPage === 1}
-                whileHover={{ scale: currentPage === 1 ? 1 : 1.05 }}
-                whileTap={{ scale: currentPage === 1 ? 1 : 0.95 }}
-                className={`relative inline-flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${
-                  currentPage === 1 
-                    ? 'cursor-not-allowed text-gray-600 bg-dark-card/30' 
-                    : 'text-neon-cyan bg-dark-card/50 border border-dark-border hover:bg-dark-card hover:border-neon-cyan hover:shadow-neon-sm backdrop-blur-sm'
-                }`}
+                className="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-dark-border hover:bg-dark-card focus:z-20 focus:outline-offset-0 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <span className="sr-only">上一页</span>
-                <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                <span className="sr-only">Previous</span>
+                <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                   <path fillRule="evenodd" d="M12.79 5.23a.75.75 0 01-.02 1.06L8.832 10l3.938 3.71a.75.75 0 11-1.04 1.08l-4.5-4.25a.75.75 0 010-1.08l4.5-4.25a.75.75 0 011.06.02z" clipRule="evenodd" />
                 </svg>
-              </motion.button>
+              </button>
               
-              <div className="flex space-x-1">
-                {pages}
-              </div>
+              {/* 页码 */}
+              {pages.map((page) => (
+                <button
+                  key={page}
+                  onClick={() => handlePageChange(page)}
+                  className={`relative inline-flex items-center px-4 py-2 text-sm font-semibold ring-1 ring-inset ring-dark-border hover:bg-dark-card focus:z-20 focus:outline-offset-0 ${
+                    page === currentPage
+                      ? 'z-10 bg-neon-cyan text-dark-bg-primary'
+                      : 'text-gray-300'
+                  }`}
+                >
+                  {page}
+                </button>
+              ))}
               
-              <motion.button
+              {/* 下一页 */}
+              <button
                 onClick={() => handlePageChange(currentPage + 1)}
                 disabled={currentPage === totalPages}
-                whileHover={{ scale: currentPage === totalPages ? 1 : 1.05 }}
-                whileTap={{ scale: currentPage === totalPages ? 1 : 0.95 }}
-                className={`relative inline-flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${
-                  currentPage === totalPages 
-                    ? 'cursor-not-allowed text-gray-600 bg-dark-card/30' 
-                    : 'text-neon-cyan bg-dark-card/50 border border-dark-border hover:bg-dark-card hover:border-neon-cyan hover:shadow-neon-sm backdrop-blur-sm'
-                }`}
+                className="relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-dark-border hover:bg-dark-card focus:z-20 focus:outline-offset-0 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <span className="sr-only">下一页</span>
-                <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                <span className="sr-only">Next</span>
+                <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                   <path fillRule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clipRule="evenodd" />
                 </svg>
-              </motion.button>
+              </button>
             </nav>
           </div>
         </div>
@@ -219,48 +215,43 @@ export default function PromptsPage() {
           </motion.div>
 
           {/* 过滤器 */}
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.6 }}
-          >
-            <PromptFilters
-              filters={filters}
-              onFilterChange={handleFilterChange}
-              categories={categories}
-              tags={tags}
-            />
-          </motion.div>
+          {categories.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.6 }}
+            >
+              <PromptFilters
+                filters={filters}
+                onFilterChange={handleFilterChange}
+                categories={categories}
+                tags={tags}
+              />
+            </motion.div>
+          )}
 
           {/* 错误提示 */}
-          <AnimatePresence>
-            {error && (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.9, y: -20 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.9, y: -20 }}
-                className="mb-8"
-              >
-                <div className="p-6 bg-gradient-to-r from-red-500/20 to-pink-500/20 border border-red-500/30 rounded-xl backdrop-blur-sm">
-                  <div className="flex items-center">
-                    <div className="flex-shrink-0">
-                      <svg className="h-6 w-6 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                    </div>
-                    <div className="ml-3">
-                      <h3 className="text-lg font-medium text-red-300">发生错误</h3>
-                      <div className="mt-2 text-red-200">
-                        <p>{error}</p>
-                      </div>
-                    </div>
+          {error && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mb-8"
+            >
+              <div className="bg-red-500/20 border border-red-500/30 rounded-xl p-6 backdrop-blur-sm">
+                <div className="flex items-center">
+                  <div className="flex-shrink-0">
+                    <svg className="h-5 w-5 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                  <div className="ml-3">
+                    <p className="text-red-200">{error}</p>
                   </div>
                 </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          {/* 内容区域 */}
+              </div>
+            </motion.div>
+          )}
+          
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -285,7 +276,7 @@ export default function PromptsPage() {
                   正在加载提示词...
                 </motion.p>
               </motion.div>
-            ) : (
+            ) :
               <>
                 {/* 没有结果 */}
                 {prompts.length === 0 && !loading && !error ? (
@@ -306,7 +297,7 @@ export default function PromptsPage() {
                       <p className="text-gray-400 text-lg">尝试调整过滤条件或清除搜索关键词</p>
                     </div>
                   </motion.div>
-                ) : (
+                ) :
                   <>
                     {/* 提示词网格 */}
                     <motion.div 
@@ -315,20 +306,24 @@ export default function PromptsPage() {
                       animate={{ opacity: 1 }}
                       transition={{ duration: 0.8, delay: 1 }}
                     >
-                      {prompts.map((prompt, index) => (
-                        <motion.div
-                          key={prompt.id || prompt.name}
-                          initial={{ opacity: 0, y: 30 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ 
-                            duration: 0.6, 
-                            delay: 1.2 + index * 0.1,
-                            ease: "easeOut"
-                          }}
-                        >
-                          <PromptCard prompt={{ ...prompt, id: prompt.id || prompt.name }} />
-                        </motion.div>
-                      ))}
+                      {prompts.map((prompt, index) => {
+                        // 确保prompt有id字段
+                        const promptWithId = { ...prompt, id: (prompt as any).id || prompt.name || `prompt-${index}` } as PromptInfo & { id: string };
+                        return (
+                          <motion.div
+                            key={promptWithId.id}
+                            initial={{ opacity: 0, y: 30 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ 
+                              duration: 0.6, 
+                              delay: 1.2 + index * 0.1,
+                              ease: "easeOut"
+                            }}
+                          >
+                            <PromptCard prompt={promptWithId} />
+                          </motion.div>
+                        );
+                      })}
                     </motion.div>
 
                     {/* 分页 */}
@@ -342,9 +337,9 @@ export default function PromptsPage() {
                       </motion.div>
                     )}
                   </>
-                )}
+                }
               </>
-            )}
+            }
           </motion.div>
         </div>
       </div>

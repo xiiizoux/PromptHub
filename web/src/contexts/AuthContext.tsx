@@ -29,42 +29,63 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // 初始化时检查认证状态
   useEffect(() => {
+    let mounted = true;
+    
     const initAuth = async () => {
       try {
         // 只在客户端执行认证检查
-        if (typeof window !== 'undefined') {
+        if (typeof window !== 'undefined' && mounted) {
           console.log('初始化认证状态检查...');
           await checkAuth();
           
           // 监听认证状态变化
           const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event: any, session: any) => {
+            if (!mounted) return;
+            
             console.log('Auth state change:', event, session?.user?.id);
             
-            if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-              if (session?.user) {
-                await ensureUserInDatabase(session.user);
+            try {
+              if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+                if (session?.user) {
+                  await ensureUserInDatabase(session.user);
+                }
+              } else if (event === 'SIGNED_OUT') {
+                if (mounted) {
+                  setUser(null);
+                  setIsAuthenticated(false);
+                }
               }
-            } else if (event === 'SIGNED_OUT') {
-              setUser(null);
-              setIsAuthenticated(false);
+            } catch (err) {
+              console.error('处理认证状态变化时出错:', err);
             }
           });
 
-          return () => subscription.unsubscribe();
+          return () => {
+            mounted = false;
+            subscription.unsubscribe();
+          };
         } else {
           console.log('服务器端，跳过认证初始化');
         }
       } catch (error) {
         console.error('认证初始化失败:', error);
-        setUser(null);
-        setIsAuthenticated(false);
+        if (mounted) {
+          setUser(null);
+          setIsAuthenticated(false);
+        }
       } finally {
         // 确保loading状态被设置为false
-        setIsLoading(false);
+        if (mounted) {
+          setIsLoading(false);
+        }
       }
     };
 
     initAuth();
+    
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   // 确保用户数据在数据库中
@@ -198,32 +219,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             if (!retryError && retryData) {
               userData = retryData;
               console.log('用户创建成功并查询到数据');
-            } else {
-              console.error('重新查询用户仍然失败:', retryError);
             }
           }
         } else {
           userData = data;
-          console.log('从数据库获取用户信息成功');
         }
-      } catch (dbError) {
-        console.error('数据库查询异常:', dbError);
+      } catch (dbErr) {
+        console.error('数据库查询异常:', dbErr);
       }
       
-      // 构建应用用户对象（即使数据库查询失败也要正常运作）
+      // 构建用户对象
       const appUser: User = {
         id: supaUser.id,
-        username: userData?.display_name || supaUser.user_metadata?.username || supaUser.email?.split('@')[0] || 'User',
+        username: userData?.display_name || supaUser.user_metadata?.username || supaUser.email?.split('@')[0] || '',
         email: supaUser.email || '',
         role: userData?.role || 'user',
-        created_at: supaUser.created_at || new Date().toISOString()
+        created_at: userData?.created_at || supaUser.created_at || new Date().toISOString()
       };
       
       console.log('设置用户状态:', appUser);
       setUser(appUser);
       setIsAuthenticated(true);
       return true;
-    } catch (err) {
+    } catch (err: any) {
       console.error('认证检查失败:', err);
       setUser(null);
       setIsAuthenticated(false);
