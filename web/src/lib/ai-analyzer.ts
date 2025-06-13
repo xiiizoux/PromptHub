@@ -115,30 +115,11 @@ class AIAnalyzer {
    */
   private buildSystemPrompt(config: AnalysisConfig): string {
     const language = config.language === 'zh' ? '中文' : 'English';
-    
-    return `你是一个专业的AI提示词分析专家。请分析用户提供的提示词，并返回JSON格式的分析结果。
-
-分析维度：
-1. 分类（category）- 从以下类别中选择最合适的：编程、创意写作、数据分析、营销推广、学术研究、教育培训、商务办公、内容翻译、通用、娱乐
-2. 标签（tags）- 提取3-8个相关标签，体现提示词的核心特征
-3. 难度级别（difficulty）- beginner/intermediate/advanced
-4. 变量提取（variables）- 找出所有{{变量名}}格式的变量
-5. 兼容模型（compatibleModels）- 推荐适合的AI模型
-6. 版本建议（version）- 基于复杂度建议版本号（1.0, 1.1, 2.0等）
-7. 预估token数（estimatedTokens）- 预估处理所需token数量
-8. 置信度（confidence）- 分析结果的置信度（0-1）
-
-${config.includeImprovements ? `
-9. 改进建议（improvements）- 提供3-5个具体的优化建议
-` : ''}
-
-${config.includeSuggestions ? `
-10. 使用场景（useCases）- 列出3-5个典型应用场景
-11. 标题建议（suggestedTitle）- 建议一个简洁明确的标题
-12. 描述建议（description）- 建议一个清晰的描述
-` : ''}
-
-请用${language}回复，返回有效的JSON格式，确保所有字段都存在。`;
+    // 数据库分类（仅中文）
+    const categories = [
+      '全部','通用','学术','职业','文案','设计','绘画','教育','情感','娱乐','游戏','生活','商业','办公','编程','翻译','视频','播客','音乐','健康','科技'
+    ];
+    return `你是一个专业的AI提示词分析专家。请分析用户提供的提示词，并返回JSON格式的分析结果。\n\n分析维度：\n1. 分类（category）- 只能从以下类别中选择最合适的一个，严格返回下列分类的中文名，不要返回其他内容：${categories.join('、')}\n2. 标签（tags）- 提取3-8个相关标签，体现提示词的核心特征\n3. 难度级别（difficulty）- beginner/intermediate/advanced\n4. 变量提取（variables）- 找出所有{{变量名}}格式的变量\n5. 兼容模型（compatibleModels）- 推荐适合的AI模型\n6. 版本建议（version）- 基于复杂度建议版本号（1.0, 1.1, 2.0等）\n7. 预估token数（estimatedTokens）- 预估处理所需token数量\n8. 置信度（confidence）- 分析结果的置信度（0-1）\n${config.includeImprovements ? `9. 改进建议（improvements）- 提供3-5个具体的优化建议` : ''}\n${config.includeSuggestions ? `10. 使用场景（useCases）- 列出3-5个典型应用场景\n11. 标题建议（suggestedTitle）- 建议一个简洁明确的标题\n12. 描述建议（description）- 建议一个清晰的描述` : ''}\n\n请用${language}回复，返回有效的JSON格式，确保所有字段都存在。`;
   }
 
   /**

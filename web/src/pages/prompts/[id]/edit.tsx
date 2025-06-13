@@ -411,7 +411,10 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
     if (data.category) {
       const matched = matchCategory(data.category, categories);
       if (matched) setValue('category', matched.name);
-      else setValue('category', '');
+      else {
+        setValue('category', '');
+        alert('AI未能识别有效分类，请手动选择');
+      }
     }
     
     // 应用标签
@@ -793,9 +796,14 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
                     disabled={categoriesLoading}
                   >
                     <option value="">选择分类</option>
-                    {categories.map((cat) => (
-                      <option key={cat.id || cat.name} value={cat.name}>{cat.name}</option>
-                    ))}
+                    {categories
+                      .slice()
+                      .sort((a, b) => (a.sort_order ?? 9999) - (b.sort_order ?? 9999))
+                      .map((cat) => (
+                        <option key={cat.id || cat.name} value={cat.name}>
+                          {cat.name}
+                        </option>
+                      ))}
                   </select>
                   {errors.category && (
                     <p className="text-neon-red text-sm mt-1">{errors.category.message}</p>
