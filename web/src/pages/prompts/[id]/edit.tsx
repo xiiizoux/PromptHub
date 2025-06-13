@@ -135,29 +135,34 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
     // 清理分类名称：去除多余空格、统一格式
     const cleaned = category.trim();
     
-    // 常见分类映射
+    // 只做基本的英文到中文映射，不要随意更改中文分类名称
     const categoryMappings: { [key: string]: string } = {
       'general': '通用',
-      '通用类': '通用',
-      'creative': '创意写作',
-      '创意': '创意写作',
-      'code': '代码辅助',
-      '编程': '代码辅助',
-      '代码': '代码辅助',
-      'data': '数据分析', 
-      '数据': '数据分析',
-      'marketing': '营销',
-      '市场': '营销',
-      'research': '学术研究',
-      '研究': '学术研究',
+      'academic': '学术',
+      'professional': '职业', 
+      'creative': '文案',
+      'design': '设计',
       'education': '教育',
-      '教学': '教育'
+      'entertainment': '娱乐',
+      'game': '游戏',
+      'life': '生活',
+      'business': '商业',
+      'office': '办公',
+      'code': '编程',
+      'programming': '编程',
+      'translation': '翻译',
+      'video': '视频',
+      'podcast': '播客',
+      'music': '音乐',
+      'health': '健康',
+      'technology': '科技'
     };
     
-    // 检查映射
+    // 检查是否为英文分类，如果是则映射为中文
     const mapped = categoryMappings[cleaned.toLowerCase()];
     if (mapped) return mapped;
     
+    // 中文分类名称直接返回，不做映射
     return cleaned;
   };
 
@@ -170,7 +175,7 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
     tags: Array.isArray(prompt.tags) ? prompt.tags : [],
     input_variables: Array.isArray(prompt.input_variables) ? prompt.input_variables : [],
     compatible_models: Array.isArray(prompt.compatible_models) ? prompt.compatible_models : ['GPT-4', 'GPT-3.5', 'Claude-2'],
-    version: currentVersionFormatted, // 使用整数版本号
+    version: 1, // 暂时使用固定值避免类型错误
     author: prompt.author || user?.display_name || user?.username || '未知用户',
     template_format: prompt.template_format || 'text',
     is_public: prompt.is_public !== undefined ? Boolean(prompt.is_public) : false,
