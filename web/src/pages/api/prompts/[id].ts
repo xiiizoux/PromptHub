@@ -197,8 +197,20 @@ async function getPrompt(req: NextApiRequest, res: NextApiResponse, id: string) 
       }
     }
 
+    // 从messages中提取content用于前端兼容性
+    let contentFromMessages = '';
+    if (prompt.messages && Array.isArray(prompt.messages) && prompt.messages.length > 0) {
+      const systemMessage = prompt.messages.find((msg: any) => msg.role === 'system');
+      if (systemMessage?.content?.text) {
+        contentFromMessages = systemMessage.content.text;
+      } else if (typeof systemMessage?.content === 'string') {
+        contentFromMessages = systemMessage.content;
+      }
+    }
+
     const responseData = {
       ...prompt,
+      content: contentFromMessages, // 添加content字段以保持前端兼容性
       author: authorName,
       category: categoryName,
       average_rating: Math.round(averageRating * 10) / 10,
@@ -223,7 +235,20 @@ async function getPrompt(req: NextApiRequest, res: NextApiResponse, id: string) 
 
 async function updatePrompt(req: NextApiRequest, res: NextApiResponse, id: string) {
   try {
-    const { name, content, description, category_id, tags } = req.body;
+    const { 
+      name, 
+      content, 
+      description, 
+      category, 
+      category_id, 
+      tags, 
+      version,
+      is_public,
+      allow_collaboration,
+      edit_permission,
+      input_variables,
+      compatible_models
+    } = req.body;
     
     // 验证用户身份
     const userId = await authenticateUser(req);
@@ -238,7 +263,7 @@ async function updatePrompt(req: NextApiRequest, res: NextApiResponse, id: strin
     // 检查提示词是否存在且用户有权限
     const { data: existingPrompt, error: fetchError } = await supabase
       .from('prompts')
-      .select('user_id')
+      .select('user_id, created_by')
       .eq('id', id)
       .single();
 
@@ -249,36 +274,99 @@ async function updatePrompt(req: NextApiRequest, res: NextApiResponse, id: strin
       });
     }
 
-    if (existingPrompt.user_id !== userId) {
+    // 检查权限（支持created_by和user_id两个字段）
+    const hasPermission = existingPrompt.user_id === userId || existingPrompt.created_by === userId;
+    
+    if (!hasPermission) {
       return res.status(403).json({ 
         success: false, 
         error: '无权限更新此提示词' 
       });
     }
 
-    // 更新提示词
+    // 构建更新数据
     const updateData: any = {
-      updated_at: new Date().toISOString()
+      updated_at: new Date().toISOString(),
+      last_modified_by: userId
     };
 
+    // 处理基本字段
     if (name !== undefined) updateData.name = name;
-    if (content !== undefined) updateData.content = content;
     if (description !== undefined) updateData.description = description;
-    if (category_id !== undefined) updateData.category_id = category_id;
     if (tags !== undefined) updateData.tags = tags;
+    if (version !== undefined) updateData.version = parseInt(String(version), 10);
+    if (is_public !== undefined) updateData.is_public = Boolean(is_public);
+    if (allow_collaboration !== undefined) updateData.allow_collaboration = Boolean(allow_collaboration);
+    if (edit_permission !== undefined) updateData.edit_permission = edit_permission;
 
+    // 处理分类（支持category_id和category两种方式）
+    if (category_id !== undefined) {
+      updateData.category_id = category_id;
+    } else if (category !== undefined) {
+      updateData.category = category;
+      
+      // 如果提供了分类名称，尝试查找对应的category_id
+      const { data: categoryData } = await supabase
+        .from('categories')
+        .select('id')
+        .eq('name', category)
+        .single();
+      
+      if (categoryData) {
+        updateData.category_id = categoryData.id;
+      }
+    }
+
+    // 处理content字段 - 转换为messages格式
+    if (content !== undefined) {
+      // 将content字符串转换为messages JSONB格式
+      const messages = [{
+        role: "system",
+        content: {
+          type: "text",
+          text: content
+        }
+      }];
+      updateData.messages = messages;
+    }
+
+    console.log('更新提示词数据:', { id, updateData });
+
+    // 执行数据库更新
     const { data: updatedPrompt, error: updateError } = await supabase
       .from('prompts')
       .update(updateData)
       .eq('id', id)
-      .select()
+      .select('*')
       .single();
 
-    if (updateError) throw updateError;
+    if (updateError) {
+      console.error('数据库更新错误:', updateError);
+      throw updateError;
+    }
+
+    // 从messages中提取content用于响应
+    let contentFromMessages = '';
+    if (updatedPrompt.messages && Array.isArray(updatedPrompt.messages) && updatedPrompt.messages.length > 0) {
+      const systemMessage = updatedPrompt.messages.find((msg: any) => msg.role === 'system');
+      if (systemMessage?.content?.text) {
+        contentFromMessages = systemMessage.content.text;
+      } else if (typeof systemMessage?.content === 'string') {
+        contentFromMessages = systemMessage.content;
+      }
+    }
+
+    // 构建响应数据
+    const responseData = {
+      ...updatedPrompt,
+      content: contentFromMessages, // 添加content字段以保持前端兼容性
+      input_variables: input_variables || updatedPrompt.input_variables || [],
+      compatible_models: compatible_models || updatedPrompt.compatible_models || []
+    };
 
     res.status(200).json({
       success: true,
-      prompt: updatedPrompt,
+      prompt: responseData,
       message: '提示词更新成功'
     });
   } catch (error: any) {
