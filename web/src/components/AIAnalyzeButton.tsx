@@ -182,7 +182,7 @@ export const AIAnalysisResultDisplay: React.FC<AIAnalysisResultDisplayProps> = (
         category: result.category,
         tags: result.tags,
         version: result.version,
-        input_variables: result.variables
+        variables: result.variables
       });
       setAppliedFields(new Set(['category', 'tags', 'version', 'variables']));
     }
@@ -263,7 +263,7 @@ export const AIAnalysisResultDisplay: React.FC<AIAnalysisResultDisplayProps> = (
           <div className="flex items-center justify-between mb-2">
             <h4 className="font-medium text-gray-700">📝 提取变量</h4>
             <button
-              onClick={() => applyField('input_variables', result.variables)}
+              onClick={() => applyField('variables', result.variables)}
               disabled={appliedFields.has('variables')}
               className="text-sm text-blue-600 hover:text-blue-800 disabled:text-gray-400"
             >

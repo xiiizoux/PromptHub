@@ -18,10 +18,15 @@ import { InteractionButtons } from '@/components/BookmarkButton';
 import clsx from 'clsx';
 
 interface PromptCardProps {
-  prompt: PromptInfo & { id: string }; // 确保包含id字段
+  prompt: PromptInfo; // 移除id字段的强制要求
 }
 
 const PromptCard: React.FC<PromptCardProps> = ({ prompt }) => {
+  // 如果没有id，不渲染卡片
+  if (!prompt.id) {
+    return null;
+  }
+
   // 辅助函数：格式化日期
   const formatDate = (dateString?: string) => {
     if (!dateString) return '未知日期';

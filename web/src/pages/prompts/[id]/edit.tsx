@@ -24,7 +24,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { AIAnalyzeButton, AIAnalysisResultDisplay } from '@/components/AIAnalyzeButton';
 import { AIAnalysisResult } from '@/lib/ai-analyzer';
-import { useAuth, withAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { 
   checkEditPermission, 
   checkFieldPermission,
@@ -57,7 +57,48 @@ interface EditPromptPageProps {
 
 function EditPromptPage({ prompt }: EditPromptPageProps) {
   const router = useRouter();
-  const { user, getToken } = useAuth();
+  const { user, getToken, isLoading, isAuthenticated } = useAuth();
+  
+  // 认证检查
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      const currentUrl = window.location.pathname + window.location.search;
+      router.push(`/auth/login?returnUrl=${encodeURIComponent(currentUrl)}`);
+    }
+  }, [isLoading, isAuthenticated, router]);
+
+  // 如果正在加载认证状态，显示加载界面
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-dark-bg-primary flex items-center justify-center relative overflow-hidden">
+        {/* 背景装饰 */}
+        <div className="absolute inset-0">
+          <div className="absolute top-1/4 -right-48 w-96 h-96 bg-gradient-to-br from-neon-cyan/20 to-neon-purple/20 rounded-full blur-3xl"></div>
+          <div className="absolute bottom-1/4 -left-48 w-96 h-96 bg-gradient-to-tr from-neon-pink/20 to-neon-purple/20 rounded-full blur-3xl"></div>
+        </div>
+        
+        {/* 加载内容 */}
+        <div className="relative z-10 text-center">
+          <div className="relative mx-auto mb-8">
+            <div className="w-16 h-16 border-4 border-neon-cyan/30 rounded-full animate-spin">
+              <div className="absolute top-0 left-0 w-full h-full border-4 border-transparent border-t-neon-cyan rounded-full animate-pulse"></div>
+            </div>
+            <div className="absolute inset-0 w-16 h-16 border-4 border-neon-purple/20 rounded-full animate-ping"></div>
+          </div>
+          
+          <div className="space-y-2">
+            <h3 className="text-xl font-bold gradient-text">验证身份中</h3>
+            <p className="text-gray-400 text-sm">正在连接到服务器...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // 如果未认证，返回null等待重定向
+  if (!isAuthenticated) {
+    return null;
+  }
   
   // 格式化当前版本号
   const currentVersionFormatted = typeof prompt.version === 'number' 
@@ -1268,8 +1309,7 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
   );
 }
 
-// 使用withAuth包装组件，强制用户登录
-export default withAuth(EditPromptPage);
+export default EditPromptPage;
 
 export const getServerSideProps: GetServerSideProps = async (context) => {
   const { id } = context.params!;

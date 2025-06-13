@@ -272,7 +272,7 @@ export const createPrompt = async (prompt: Partial<PromptDetails>): Promise<Prom
       
       // 方法2: 检查标准的auth.token（备用）
       if (!token) {
-        token = localStorage.getItem('auth.token');
+        token = localStorage.getItem('auth.token') || undefined;
       }
       
       // 方法3: 检查其他Supabase标准格式的令牌存储（备用）
@@ -354,7 +354,7 @@ export const updatePrompt = async (id: string, prompt: Partial<PromptDetails>, t
           token = parsedAuth?.access_token;
         }
       } catch {}
-      if (!token) token = localStorage.getItem('auth.token');
+      if (!token) token = localStorage.getItem('auth.token') || undefined;
       if (!token) {
         for (let i = 0; i < localStorage.length; i++) {
           const key = localStorage.key(i);

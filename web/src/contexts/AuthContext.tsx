@@ -6,6 +6,7 @@ import { User } from '@/types';
 interface AuthContextType {
   user: User | null;
   isLoading: boolean;
+  loading: boolean; // 添加loading属性作为isLoading的别名
   error: string | null;
   login: (email: string, password: string, remember?: boolean) => Promise<void>;
   loginWithGoogle: () => Promise<void>;
@@ -434,6 +435,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const value = {
     user,
     isLoading,
+    loading: isLoading, // 添加loading属性作为isLoading的别名
     error,
     login,
     loginWithGoogle,
