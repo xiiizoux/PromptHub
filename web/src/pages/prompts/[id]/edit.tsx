@@ -101,10 +101,10 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
     return null;
   }
   
-  // 格式化当前版本号 - 整数递增方案
+  // 格式化当前版本号 - 一位小数方案，确保格式一致
   const currentVersionFormatted = typeof prompt.version === 'number' 
-    ? prompt.version 
-    : parseVersionToInt(prompt.version || 1);
+    ? Math.round(prompt.version * 10) / 10  // 确保一位小数格式
+    : parseVersionToInt(prompt.version || 1.0);
 
   // 修复edit_permission数据映射 - 支持更多变体
   const mapEditPermission = (serverValue: any): 'owner_only' | 'collaborators' | 'public' => {
@@ -175,7 +175,7 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
     tags: Array.isArray(prompt.tags) ? prompt.tags : [],
     input_variables: Array.isArray(prompt.input_variables) ? prompt.input_variables : [],
     compatible_models: Array.isArray(prompt.compatible_models) ? prompt.compatible_models : ['GPT-4', 'GPT-3.5', 'Claude-2'],
-    version: 1, // 暂时使用固定值避免类型错误
+    version: currentVersionFormatted, // 使用正确的格式化版本号
     author: prompt.author || user?.display_name || user?.username || '未知用户',
     template_format: prompt.template_format || 'text',
     is_public: prompt.is_public !== undefined ? Boolean(prompt.is_public) : false,
@@ -184,7 +184,7 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
   };
   
   // 添加调试日志以排查问题
-  console.log('编辑页面数据处理结果（整数版本方案）:', {
+  console.log('编辑页面数据处理结果（一位小数版本方案）:', {
     原始版本: prompt.version,
     格式化版本: currentVersionFormatted,
     最终版本: safePromptData.version,
@@ -263,7 +263,7 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
       tags: safePromptData.tags,
       input_variables: safePromptData.input_variables,
       compatible_models: safePromptData.compatible_models,
-      version: parseVersionToInt(safePromptData.version), // 转换为数字
+      version: currentVersionFormatted, // 直接使用格式化后的版本号
       author: safePromptData.author,
       template_format: safePromptData.template_format,
       is_public: safePromptData.is_public,
@@ -631,7 +631,9 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
       description: prompt.description,
       content: prompt.content,
       category: normalizeCategoryName(prompt.category),
-      version: typeof prompt.version === 'number' ? prompt.version : parseVersionToInt(prompt.version), 
+      version: typeof prompt.version === 'number' 
+        ? Math.round(prompt.version * 10) / 10  // 确保一位小数格式
+        : parseVersionToInt(prompt.version || 1.0), 
       author: prompt.author || user?.display_name || user?.username || '',
       template_format: prompt.template_format || 'text',
       input_variables: prompt.input_variables || [],
@@ -642,7 +644,7 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
       edit_permission: mapEditPermission(prompt.edit_permission),
     };
     
-    console.log('重置表单数据（整数版本方案）:', resetData);
+    console.log('重置表单数据（一位小数版本方案）:', resetData);
     
     reset(resetData);
     setVariables(prompt.input_variables || []);
@@ -885,32 +887,32 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
                       type="button"
                       onClick={() => {
                         const currentVersion = watch('version') || currentVersionFormatted;
-                        const suggested = suggestNextVersion(currentVersion);
+                        const suggested = suggestNextVersion(currentVersion, 'minor');
                         setValue('version', suggested);
                       }}
                       className="btn-secondary text-sm px-3 py-1"
-                      title="建议下一版本"
+                      title="小版本更新 (+0.1)"
                     >
-                      +1
+                      +0.1
                     </button>
                     <button
                       type="button"
                       onClick={() => {
                         const currentVersion = watch('version') || currentVersionFormatted;
-                        const suggested = suggestNextVersion(currentVersion) + 9; // 大版本跳跃
+                        const suggested = suggestNextVersion(currentVersion, 'major');
                         setValue('version', suggested);
                       }}
                       className="btn-secondary text-sm px-3 py-1"
-                      title="建议主版本"
+                      title="大版本更新 (+1.0)"
                     >
-                      +10
+                      +1.0
                     </button>
                   </div>
                   {errors.version && (
                     <p className="text-neon-red text-sm mt-1">{errors.version.message}</p>
                   )}
                   <p className="text-xs text-gray-500">
-                    当前版本：{currentVersionFormatted}，新版本必须是大于当前版本的正整数
+                    当前版本：{formatVersionFromInt(currentVersionFormatted)}，新版本必须是大于当前版本的数字（支持一位小数）
                   </p>
                 </div>
               </motion.div>

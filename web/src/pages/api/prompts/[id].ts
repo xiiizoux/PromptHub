@@ -294,7 +294,11 @@ async function updatePrompt(req: NextApiRequest, res: NextApiResponse, id: strin
     if (name !== undefined) updateData.name = name;
     if (description !== undefined) updateData.description = description;
     if (tags !== undefined) updateData.tags = tags;
-    if (version !== undefined) updateData.version = parseInt(String(version), 10);
+    if (version !== undefined) {
+      // 保持小数精度，格式化为一位小数
+      const versionNum = parseFloat(String(version));
+      updateData.version = isNaN(versionNum) ? 1.0 : Math.round(versionNum * 10) / 10;
+    }
     if (is_public !== undefined) updateData.is_public = Boolean(is_public);
     if (allow_collaboration !== undefined) updateData.allow_collaboration = Boolean(allow_collaboration);
     if (edit_permission !== undefined) updateData.edit_permission = edit_permission;
