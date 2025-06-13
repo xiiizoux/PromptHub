@@ -1,7 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // 禁用严格模式以提高稳定性
-  reactStrictMode: false,
+  // 启用严格模式以发现潜在问题
+  reactStrictMode: true,
   // 禁用类型检查
   typescript: {
     ignoreBuildErrors: true,

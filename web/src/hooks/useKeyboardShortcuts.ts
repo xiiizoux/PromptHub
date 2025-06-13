@@ -1,6 +1,7 @@
 import { useEffect, useCallback } from 'react';
 import { useRouter } from 'next/router';
 import toast from 'react-hot-toast';
+import { safeDocument, isBrowser } from '@/lib/dom-utils';
 
 interface KeyboardShortcuts {
   [key: string]: () => void;
@@ -8,8 +9,11 @@ interface KeyboardShortcuts {
 
 export const useKeyboardShortcuts = (shortcuts: KeyboardShortcuts) => {
   const handleKeyDown = useCallback((event: KeyboardEvent) => {
+    // 确保在浏览器环境中运行
+    if (!isBrowser()) return;
+    
     // 忽略在输入框中的按键事件
-    const activeElement = document.activeElement;
+    const activeElement = document?.activeElement;
     const isInputActive = activeElement && (
       activeElement.tagName === 'INPUT' ||
       activeElement.tagName === 'TEXTAREA' ||
@@ -23,7 +27,10 @@ export const useKeyboardShortcuts = (shortcuts: KeyboardShortcuts) => {
     if (event.ctrlKey || event.metaKey) keys.push('ctrl');
     if (event.altKey) keys.push('alt');
     if (event.shiftKey) keys.push('shift');
-    keys.push(event.key.toLowerCase());
+    // 添加空值检查防止toLowerCase错误
+    if (event.key) {
+      keys.push(event.key.toLowerCase());
+    }
 
     const shortcut = keys.join('+');
     
@@ -34,9 +41,13 @@ export const useKeyboardShortcuts = (shortcuts: KeyboardShortcuts) => {
   }, [shortcuts]);
 
   useEffect(() => {
-    document.addEventListener('keydown', handleKeyDown);
+    if (!isBrowser()) return;
+    
+    const added = safeDocument.addEventListener('keydown', handleKeyDown);
     return () => {
-      document.removeEventListener('keydown', handleKeyDown);
+      if (added) {
+        safeDocument.removeEventListener('keydown', handleKeyDown);
+      }
     };
   }, [handleKeyDown]);
 };

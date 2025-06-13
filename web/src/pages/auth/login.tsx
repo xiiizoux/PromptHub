@@ -15,12 +15,18 @@ interface LoginFormData {
 }
 
 export default function LoginPage() {
+  const [mounted, setMounted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
   const { login, loginWithGoogle } = useAuth();
+  
+  // 确保组件已挂载
+  useEffect(() => {
+    setMounted(true);
+  }, []);
   
   const { register, handleSubmit, formState: { errors } } = useForm<LoginFormData>({
     defaultValues: {
@@ -32,7 +38,7 @@ export default function LoginPage() {
   
   // 检查用户是否已经登录，如果是则重定向到目标页面
   useEffect(() => {
-    if (typeof window === 'undefined') return;
+    if (typeof window === 'undefined' || !mounted) return;
     
     const checkSession = async () => {
       try {
@@ -46,7 +52,16 @@ export default function LoginPage() {
     };
     
     checkSession();
-  }, [router]);
+  }, [router, mounted]);
+
+  // 如果组件未挂载，显示加载界面
+  if (!mounted) {
+    return (
+      <div className="min-h-screen bg-dark-bg-primary flex items-center justify-center">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-neon-cyan"></div>
+      </div>
+    );
+  }
 
   const onSubmit = async (data: LoginFormData) => {
     setIsLoading(true);

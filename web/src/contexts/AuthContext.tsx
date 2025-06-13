@@ -37,7 +37,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         // 只在客户端执行认证检查
         if (typeof window !== 'undefined' && mounted) {
           console.log('初始化认证状态检查...');
-          await checkAuth();
+          // 添加延迟确保DOM完全加载
+          setTimeout(async () => {
+            if (mounted) {
+              await checkAuth();
+            }
+          }, 100);
           
           // 监听认证状态变化
           const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event: any, session: any) => {

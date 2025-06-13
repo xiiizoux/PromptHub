@@ -93,7 +93,13 @@ function CreatePromptPage() {
         console.log('开始获取类别数据...');
         const data = await getCategories();
         console.log('获取到的类别数据:', data);
-        setCategories(data);
+        if (data && data.length > 0) {
+          setCategories(data);
+        } else {
+          setCategories([
+            '通用', '创意写作', '代码辅助', '数据分析', '营销', '学术研究', '教育'
+          ]);
+        }
       } catch (err) {
         console.error('获取分类失败:', err);
         setCategories([
@@ -103,7 +109,9 @@ function CreatePromptPage() {
         setCategoriesLoading(false);
       }
     };
-    fetchCategories();
+    
+    // 添加延迟确保组件完全挂载
+    setTimeout(fetchCategories, 200);
   }, [mounted]);
   
   // 获取标签数据
