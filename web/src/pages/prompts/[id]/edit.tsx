@@ -38,6 +38,7 @@ import {
   canIncrementVersion,
   suggestNextVersion,
   formatVersionFromInt,
+  parseVersionToInt,
   getVersionValidationMessage
 } from '@/lib/version-utils';
 // @ts-ignore
@@ -100,47 +101,95 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
     return null;
   }
   
-  // 格式化当前版本号
+  // 格式化当前版本号 - 整数递增方案
   const currentVersionFormatted = typeof prompt.version === 'number' 
-    ? formatVersionFromInt(prompt.version) 
-    : prompt.version || '1.0';
+    ? prompt.version 
+    : parseVersionToInt(prompt.version || 1);
 
-  // 修复edit_permission数据映射
+  // 修复edit_permission数据映射 - 支持更多变体
   const mapEditPermission = (serverValue: any): 'owner_only' | 'collaborators' | 'public' => {
-    switch (serverValue) {
+    // 处理可能的各种格式
+    const normalizedValue = String(serverValue).toLowerCase().trim();
+    
+    switch (normalizedValue) {
       case 'owner':
+      case 'owner_only':
+      case 'owneronly':
         return 'owner_only';
       case 'collaborators':
+      case 'collaborator':
+        return 'collaborators';
       case 'public':
-        return serverValue;
+      case 'everyone':
+        return 'public';
       default:
+        console.warn('未识别的编辑权限值:', serverValue, '使用默认值 owner_only');
         return 'owner_only';
     }
   };
 
-  // 确保所有数据都有默认值
+  // 分类数据标准化处理
+  const normalizeCategoryName = (category: string | undefined): string => {
+    if (!category) return '通用';
+    
+    // 清理分类名称：去除多余空格、统一格式
+    const cleaned = category.trim();
+    
+    // 常见分类映射
+    const categoryMappings: { [key: string]: string } = {
+      'general': '通用',
+      '通用类': '通用',
+      'creative': '创意写作',
+      '创意': '创意写作',
+      'code': '代码辅助',
+      '编程': '代码辅助',
+      '代码': '代码辅助',
+      'data': '数据分析', 
+      '数据': '数据分析',
+      'marketing': '营销',
+      '市场': '营销',
+      'research': '学术研究',
+      '研究': '学术研究',
+      'education': '教育',
+      '教学': '教育'
+    };
+    
+    // 检查映射
+    const mapped = categoryMappings[cleaned.toLowerCase()];
+    if (mapped) return mapped;
+    
+    return cleaned;
+  };
+
+  // 确保所有数据都有默认值并正确格式化
   const safePromptData = {
     name: prompt.name || '',
     description: prompt.description || '',
     content: prompt.content || prompt.messages?.[0]?.content || '',
-    category: prompt.category || '通用',
+    category: normalizeCategoryName(prompt.category),
     tags: Array.isArray(prompt.tags) ? prompt.tags : [],
     input_variables: Array.isArray(prompt.input_variables) ? prompt.input_variables : [],
     compatible_models: Array.isArray(prompt.compatible_models) ? prompt.compatible_models : ['GPT-4', 'GPT-3.5', 'Claude-2'],
-    version: typeof prompt.version === 'number' ? prompt.version : (parseInt(currentVersionFormatted, 10) || 1),
+    version: currentVersionFormatted, // 使用整数版本号
     author: prompt.author || user?.display_name || user?.username || '未知用户',
     template_format: prompt.template_format || 'text',
-    is_public: prompt.is_public !== undefined ? prompt.is_public : false,
-    allow_collaboration: prompt.allow_collaboration !== undefined ? prompt.allow_collaboration : false,
+    is_public: prompt.is_public !== undefined ? Boolean(prompt.is_public) : false,
+    allow_collaboration: prompt.allow_collaboration !== undefined ? Boolean(prompt.allow_collaboration) : false,
     edit_permission: mapEditPermission(prompt.edit_permission),
   };
   
-  // 添加权限常量调试日志
-  console.log('权限常量状态检查:', {
-    PERMISSION_LEVELS,
-    PERMISSION_LEVEL_DESCRIPTIONS,
-    promptEditPermission: prompt.edit_permission,
-    mappedEditPermission: safePromptData.edit_permission
+  // 添加调试日志以排查问题
+  console.log('编辑页面数据处理结果（整数版本方案）:', {
+    原始版本: prompt.version,
+    格式化版本: currentVersionFormatted,
+    最终版本: safePromptData.version,
+    版本类型: typeof safePromptData.version,
+    原始分类: prompt.category,
+    标准化分类: safePromptData.category,
+    原始编辑权限: prompt.edit_permission,
+    映射后编辑权限: safePromptData.edit_permission,
+    权限常量: PERMISSION_LEVELS,
+    映射描述: PERMISSION_LEVEL_DESCRIPTIONS
   });
   
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -183,18 +232,6 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
     fetchCategories();
   }, []);
   
-  // 分类加载后自动匹配（编辑场景）
-  useEffect(() => {
-    if (!categoriesLoading && categories.length > 0) {
-      const currentCategory = watch('category');
-      if (currentCategory) {
-        const matched = matchCategory(currentCategory, categories);
-        if (matched) setValue('category', matched);
-      }
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [categoriesLoading, categories]);
-  
   // 获取标签数据
   useEffect(() => {
     const fetchTags = async () => {
@@ -214,10 +251,46 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
 
   const { register, handleSubmit, control, formState: { errors }, setValue, watch, reset } = useForm<PromptFormData>({
     defaultValues: {
-      ...(() => { const { version, ...rest } = safePromptData; return rest; })(),
-      version: safePromptData.version || 1,
+      name: safePromptData.name,
+      description: safePromptData.description,
+      content: safePromptData.content,
+      category: safePromptData.category,
+      tags: safePromptData.tags,
+      input_variables: safePromptData.input_variables,
+      compatible_models: safePromptData.compatible_models,
+      version: parseVersionToInt(safePromptData.version), // 转换为数字
+      author: safePromptData.author,
+      template_format: safePromptData.template_format,
+      is_public: safePromptData.is_public,
+      allow_collaboration: safePromptData.allow_collaboration,
+      edit_permission: safePromptData.edit_permission,
     }
   });
+
+  // 分类加载后自动匹配（编辑场景） - 移动到useForm之后
+  useEffect(() => {
+    if (!categoriesLoading && categories.length > 0) {
+      const currentCategory = safePromptData.category;
+      
+      // 检查当前分类是否在分类列表中
+      if (currentCategory && !categories.includes(currentCategory)) {
+        // 如果不在列表中，尝试智能匹配
+        const matched = matchCategory(currentCategory, categories);
+        if (matched) {
+          console.log(`分类智能匹配: "${currentCategory}" -> "${matched}"`);
+          setValue('category', matched);
+        } else {
+          // 如果匹配失败，添加到分类列表中
+          console.log(`添加新分类: "${currentCategory}"`);
+          setCategories(prev => [...prev, currentCategory]);
+          setValue('category', currentCategory);
+        }
+      } else if (currentCategory) {
+        // 分类存在于列表中，直接设置
+        setValue('category', currentCategory);
+      }
+    }
+  }, [categoriesLoading, categories, safePromptData.category, setValue]);
 
   // 一次性数据初始化：仅在组件挂载时执行
   useEffect(() => {
@@ -501,10 +574,24 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
     setIsSubmitting(true);
     
     try {
+      // 同步表单数据
       data.input_variables = variables;
       data.tags = tags;
       data.compatible_models = models;
-      data.version = parseInt(String(data.version), 10) || 1;
+      
+      // 确保版本号是整数格式（后端需要）
+      const versionInt = typeof data.version === 'number' 
+        ? data.version 
+        : parseVersionToInt(String(data.version));
+      
+      data.version = versionInt;
+      
+      console.log('提交的表单数据:', {
+        原始版本: data.version,
+        处理后版本: versionInt,
+        其他数据: { ...data, content: data.content?.substring(0, 100) + '...' }
+      });
+      
       // 获取token
       let token = undefined;
       if (typeof window !== 'undefined' && user && typeof user === 'object') {
@@ -534,21 +621,25 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
 
   // 重置表单
   const handleReset = () => {
-    reset({
+    const resetData = {
       name: prompt.name,
       description: prompt.description,
       content: prompt.content,
-      category: prompt.category,
-      version: typeof prompt.version === 'number' ? prompt.version : 1,
+      category: normalizeCategoryName(prompt.category),
+      version: typeof prompt.version === 'number' ? prompt.version : parseVersionToInt(prompt.version), 
       author: prompt.author || user?.display_name || user?.username || '',
       template_format: prompt.template_format || 'text',
       input_variables: prompt.input_variables || [],
       tags: prompt.tags || [],
       compatible_models: prompt.compatible_models || [],
-      is_public: prompt.is_public || false,
-      allow_collaboration: prompt.allow_collaboration || false,
-      edit_permission: prompt.edit_permission || 'owner_only',
-    });
+      is_public: Boolean(prompt.is_public),
+      allow_collaboration: Boolean(prompt.allow_collaboration),
+      edit_permission: mapEditPermission(prompt.edit_permission),
+    };
+    
+    console.log('重置表单数据（整数版本方案）:', resetData);
+    
+    reset(resetData);
     setVariables(prompt.input_variables || []);
     setTags(prompt.tags || []);
     setModels(prompt.compatible_models || []);
@@ -789,31 +880,32 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
                       type="button"
                       onClick={() => {
                         const currentVersion = watch('version') || currentVersionFormatted;
-                        const suggested = suggestNextVersion(String(currentVersion), 'minor');
-                        setValue('version', suggested as any);
+                        const suggested = suggestNextVersion(currentVersion);
+                        setValue('version', suggested);
                       }}
                       className="btn-secondary text-sm px-3 py-1"
                       title="建议下一版本"
                     >
-                      +0.1
+                      +1
                     </button>
                     <button
                       type="button"
                       onClick={() => {
-                        const suggested = suggestNextVersion(String(currentVersionFormatted), 'major');
-                        setValue('version', suggested as any);
+                        const currentVersion = watch('version') || currentVersionFormatted;
+                        const suggested = suggestNextVersion(currentVersion) + 9; // 大版本跳跃
+                        setValue('version', suggested);
                       }}
                       className="btn-secondary text-sm px-3 py-1"
                       title="建议主版本"
                     >
-                      +1.0
+                      +10
                     </button>
                   </div>
                   {errors.version && (
                     <p className="text-neon-red text-sm mt-1">{errors.version.message}</p>
                   )}
                   <p className="text-xs text-gray-500">
-                    当前版本：{currentVersionFormatted}，新版本必须递增且保留1位小数
+                    当前版本：{currentVersionFormatted}，新版本必须是大于当前版本的正整数
                   </p>
                 </div>
               </motion.div>
