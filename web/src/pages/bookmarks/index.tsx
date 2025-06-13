@@ -47,7 +47,7 @@ const BookmarksPage: React.FC = () => {
   });
 
   // 获取所有分类
-  const categories = Array.from(new Set(bookmarks.map(b => b.category)));
+  const categories = Array.from(new Set(bookmarks.map(b => b.category))).filter(Boolean);
 
   const handleBookmarkRemoved = (promptId: string) => {
     setBookmarks(prev => prev.filter(b => b.id !== promptId));

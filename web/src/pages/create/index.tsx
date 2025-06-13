@@ -45,7 +45,7 @@ function CreatePromptPage() {
   const [tags, setTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState('');
   const [models, setModels] = useState<string[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]);
+  const [categories, setCategories] = useState<string[]>([]);
   const [categoriesLoading, setCategoriesLoading] = useState(true);
   const [suggestedTags, setSuggestedTags] = useState<string[]>([]);
   const [tagsLoading, setTagsLoading] = useState(true);
@@ -57,11 +57,15 @@ function CreatePromptPage() {
     const fetchCategories = async () => {
       try {
         const data = await getCategories();
-        setCategories(data);
+        // 修正：只取分类名
+        const categoryNames = Array.isArray(data) && typeof data[0] === 'object'
+          ? data.map((cat: any) => cat.name)
+          : data;
+        setCategories(categoryNames);
       } catch (err) {
         console.error('获取分类失败:', err);
         setCategories([
-          { name: '通用' }, { name: '创意写作' }, { name: '代码辅助' }, { name: '数据分析' }, { name: '营销' }, { name: '学术研究' }, { name: '教育' }
+          '通用', '创意写作', '代码辅助', '数据分析', '营销', '学术研究', '教育'
         ]);
       } finally {
         setCategoriesLoading(false);
@@ -185,22 +189,22 @@ function CreatePromptPage() {
   };
 
   // 智能分类映射函数
-  function matchCategory(aiCategory: string, categories: Category[]): Category | null {
+  function matchCategory(aiCategory: string, categories: string[]): string | null {
     if (!aiCategory) return null;
     // 1. 精确匹配
-    let match = categories.find(cat => cat.name === aiCategory);
+    let match = categories.find(cat => cat === aiCategory);
     if (match) return match;
     // 2. 忽略大小写
-    match = categories.find(cat => cat.name?.toLowerCase() === aiCategory.toLowerCase());
+    match = categories.find(cat => cat.toLowerCase() === aiCategory.toLowerCase());
     if (match) return match;
     // 3. 英文名
-    match = categories.find(cat => cat.name_en?.toLowerCase() === aiCategory.toLowerCase());
+    match = categories.find(cat => cat.toLowerCase() === aiCategory.toLowerCase());
     if (match) return match;
     // 4. 别名
-    match = categories.find(cat => cat.alias?.split(',').map(a => a.trim()).includes(aiCategory));
+    match = categories.find(cat => cat.split(',').map(a => a.trim()).includes(aiCategory));
     if (match) return match;
     // 5. 模糊包含
-    match = categories.find(cat => aiCategory.includes(cat.name) || cat.name.includes(aiCategory));
+    match = categories.find(cat => aiCategory.includes(cat) || cat.includes(aiCategory));
     if (match) return match;
     return null;
   }
@@ -209,7 +213,7 @@ function CreatePromptPage() {
   const applyAIResults = (data: Partial<AIAnalysisResult>) => {
     if (data.category) {
       const matched = matchCategory(data.category, categories);
-      if (matched) setValue('category', matched.name);
+      if (matched) setValue('category', matched);
       else setValue('category', '');
     }
     if (data.tags && data.tags.length > 0) {
@@ -447,8 +451,8 @@ function CreatePromptPage() {
                   >
                     <option value="">选择分类</option>
                     {categories.map((category) => (
-                      <option key={category.id || category.name} value={category.name}>
-                        {category.name}
+                      <option key={category} value={category}>
+                        {category}
                       </option>
                     ))}
                   </select>

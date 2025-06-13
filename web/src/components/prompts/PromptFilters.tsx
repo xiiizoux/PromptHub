@@ -6,7 +6,7 @@ import { FunnelIcon, MagnifyingGlassIcon, XMarkIcon, AdjustmentsHorizontalIcon }
 interface PromptFiltersProps {
   filters: PromptFiltersType;
   onFilterChange: (newFilters: PromptFiltersType) => void;
-  categories: (string | { name: string })[];
+  categories: string[];
   tags: string[];
 }
 
@@ -144,24 +144,23 @@ const PromptFilters: React.FC<PromptFiltersProps> = ({
             </h3>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
               {categories.map((category, index) => {
-                const catName = typeof category === 'string' ? category : (category && 'name' in category ? category.name : '');
                 return (
                   <motion.button
-                    key={catName}
+                    key={category}
                     type="button"
-                    onClick={() => handleCategoryChange(catName)}
+                    onClick={() => handleCategoryChange(category)}
                     initial={{ opacity: 0, scale: 0.9 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ duration: 0.4, delay: 0.4 + index * 0.05 }}
                     whileHover={{ scale: 1.05, y: -2 }}
                     whileTap={{ scale: 0.95 }}
                     className={`px-4 py-3 rounded-xl text-sm font-medium transition-all duration-300 backdrop-blur-sm ${
-                      filters.category === catName
+                      filters.category === category
                         ? 'bg-gradient-to-r from-neon-cyan to-neon-purple text-white shadow-neon border border-neon-cyan'
                         : 'bg-dark-bg-secondary/50 text-gray-300 border border-dark-border hover:bg-dark-card hover:border-neon-cyan hover:text-neon-cyan hover:shadow-neon-sm'
                     }`}
                   >
-                    {catName}
+                    {category}
                   </motion.button>
                 );
               })}

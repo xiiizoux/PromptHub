@@ -108,7 +108,7 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
   const [tags, setTags] = useState<string[]>(safePromptData.tags);
   const [tagInput, setTagInput] = useState('');
   const [models, setModels] = useState<string[]>(safePromptData.compatible_models);
-  const [categories, setCategories] = useState<Category[]>([]);
+  const [categories, setCategories] = useState<string[]>([]);
   const [categoriesLoading, setCategoriesLoading] = useState(true);
   const [suggestedTags, setSuggestedTags] = useState<string[]>([]);
   const [tagsLoading, setTagsLoading] = useState(true);
@@ -123,16 +123,20 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
     const fetchCategories = async () => {
       try {
         const data = await getCategories();
-        setCategories(data);
+        // 修正：只取分类名
+        const categoryNames = Array.isArray(data) && typeof data[0] === 'object'
+          ? data.map((cat: any) => cat.name)
+          : data;
+        setCategories(categoryNames);
         console.log('分类数据加载完成:', {
-          categories: data,
+          categories: categoryNames,
           currentCategory: safePromptData.category,
-          isCurrentCategoryInList: data.some(cat => cat.name === safePromptData.category)
+          isCurrentCategoryInList: categoryNames.some((cat: string) => cat === safePromptData.category)
         });
       } catch (err) {
         console.error('获取分类失败:', err);
         setCategories([
-          { name: '通用' }, { name: '创意写作' }, { name: '代码辅助' }, { name: '数据分析' }, { name: '营销' }, { name: '学术研究' }, { name: '教育' }
+          '通用', '创意写作', '代码辅助', '数据分析', '营销', '学术研究', '教育'
         ]);
       } finally {
         setCategoriesLoading(false);
@@ -333,38 +337,38 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
   };
 
   // 智能分类映射函数
-  function matchCategory(aiCategory: string, categories: Category[]): Category | null {
+  function matchCategory(aiCategory: string, categories: string[]): string | null {
     if (!aiCategory) return null;
     // 1. 精确匹配
-    let match = categories.find(cat => cat.name === aiCategory);
+    let match = categories.find(cat => cat === aiCategory);
     if (match) return match;
     // 2. 忽略大小写
-    match = categories.find(cat => cat.name?.toLowerCase() === aiCategory.toLowerCase());
+    match = categories.find(cat => cat.toLowerCase() === aiCategory.toLowerCase());
     if (match) return match;
     // 3. 英文名
-    match = categories.find(cat => cat.name_en?.toLowerCase() === aiCategory.toLowerCase());
+    match = categories.find(cat => cat.toLowerCase() === aiCategory.toLowerCase());
     if (match) return match;
     // 4. 别名
-    match = categories.find(cat => cat.alias?.split(',').map(a => a.trim()).includes(aiCategory));
+    match = categories.find(cat => cat.split(',').map(a => a.trim()).includes(aiCategory));
     if (match) return match;
     // 5. 模糊包含
-    match = categories.find(cat => aiCategory.includes(cat.name) || cat.name.includes(aiCategory));
+    match = categories.find(cat => aiCategory.includes(cat) || cat.includes(aiCategory));
     if (match) return match;
     // 6. 拼音首字母/全拼模糊
     const aiPinyin = pinyin(aiCategory, { toneType: 'none', type: 'array' }).join('');
     const aiPinyinFirst = pinyin(aiCategory, { pattern: 'first', type: 'array' }).join('');
     for (const cat of categories) {
-      const catPinyin = pinyin(cat.name, { toneType: 'none', type: 'array' }).join('');
-      const catPinyinFirst = pinyin(cat.name, { pattern: 'first', type: 'array' }).join('');
+      const catPinyin = pinyin(cat, { toneType: 'none', type: 'array' }).join('');
+      const catPinyinFirst = pinyin(cat, { pattern: 'first', type: 'array' }).join('');
       if (aiPinyin === catPinyin || aiPinyinFirst === catPinyinFirst) return cat;
       if (aiPinyin.includes(catPinyin) || catPinyin.includes(aiPinyin)) return cat;
       if (aiPinyinFirst.includes(catPinyinFirst) || catPinyinFirst.includes(aiPinyinFirst)) return cat;
     }
     // 7. 相似度最高（Levenshtein距离）
     let bestScore = 0;
-    let bestCat: Category | null = null;
+    let bestCat: string | null = null;
     for (const cat of categories) {
-      const score = stringSimilarity(aiCategory, cat.name);
+      const score = stringSimilarity(aiCategory, cat);
       if (score > bestScore) {
         bestScore = score;
         bestCat = cat;
@@ -796,14 +800,11 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
                     disabled={categoriesLoading}
                   >
                     <option value="">选择分类</option>
-                    {categories
-                      .slice()
-                      .sort((a, b) => (a.sort_order ?? 9999) - (b.sort_order ?? 9999))
-                      .map((cat) => (
-                        <option key={cat.id || cat.name} value={cat.name}>
-                          {cat.name}
-                        </option>
-                      ))}
+                    {categories.map((cat) => (
+                      <option key={cat} value={cat}>
+                        {cat}
+                      </option>
+                    ))}
                   </select>
                   {errors.category && (
                     <p className="text-neon-red text-sm mt-1">{errors.category.message}</p>
