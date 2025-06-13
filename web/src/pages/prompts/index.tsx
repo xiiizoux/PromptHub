@@ -18,9 +18,22 @@ export default function PromptsPage() {
     sortBy: 'latest',
   });
   const [totalPages, setTotalPages] = useState(1);
+  const [mounted, setMounted] = useState(false);
+
+  // 确保组件已挂载
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // 如果组件未挂载，返回null避免SSR问题
+  if (!mounted) {
+    return null;
+  }
 
   // 获取分类数据
   useEffect(() => {
+    if (!mounted) return;
+    
     const fetchCategories = async () => {
       try {
         const data = await getCategories();
@@ -42,10 +55,12 @@ export default function PromptsPage() {
     };
 
     fetchCategories();
-  }, []);
+  }, [mounted]);
   
   // 获取标签数据
   useEffect(() => {
+    if (!mounted) return;
+    
     const fetchTags = async () => {
       try {
         const data = await getTags();
@@ -62,10 +77,12 @@ export default function PromptsPage() {
     };
 
     fetchTags();
-  }, []);
+  }, [mounted]);
 
   // 获取提示词数据
   useEffect(() => {
+    if (!mounted) return;
+    
     const fetchPrompts = async () => {
       setLoading(true);
       try {
@@ -89,7 +106,7 @@ export default function PromptsPage() {
     };
 
     fetchPrompts();
-  }, [filters]);
+  }, [filters, mounted]);
 
   // 处理过滤器变更
   const handleFilterChange = (newFilters: PromptFiltersType) => {
@@ -306,24 +323,20 @@ export default function PromptsPage() {
                       animate={{ opacity: 1 }}
                       transition={{ duration: 0.8, delay: 1 }}
                     >
-                      {prompts.map((prompt, index) => {
-                        // 确保prompt有id字段
-                        const promptWithId = { ...prompt, id: (prompt as any).id || prompt.name || `prompt-${index}` } as PromptInfo & { id: string };
-                        return (
-                          <motion.div
-                            key={promptWithId.id}
-                            initial={{ opacity: 0, y: 30 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ 
-                              duration: 0.6, 
-                              delay: 1.2 + index * 0.1,
-                              ease: "easeOut"
-                            }}
-                          >
-                            <PromptCard prompt={promptWithId} />
-                          </motion.div>
-                        );
-                      })}
+                      {prompts.map((prompt, index) => (
+                        <motion.div
+                          key={prompt.id || prompt.name || `prompt-${index}`}
+                          initial={{ opacity: 0, y: 30 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ 
+                            duration: 0.6, 
+                            delay: 1.2 + index * 0.1,
+                            ease: "easeOut"
+                          }}
+                        >
+                          <PromptCard prompt={prompt} />
+                        </motion.div>
+                      ))}
                     </motion.div>
 
                     {/* 分页 */}

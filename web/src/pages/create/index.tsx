@@ -51,14 +51,27 @@ function CreatePromptPage() {
   const [tagsLoading, setTagsLoading] = useState(true);
   const [aiAnalysisResult, setAiAnalysisResult] = useState<AIAnalysisResult | null>(null);
   const [showAiAnalysis, setShowAiAnalysis] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  
+  // 确保组件已挂载
+  useEffect(() => {
+    setMounted(true);
+  }, []);
   
   // 认证检查
   useEffect(() => {
+    if (!mounted) return;
+    
     if (!isLoading && !isAuthenticated) {
       const currentUrl = window.location.pathname + window.location.search;
       router.push(`/auth/login?returnUrl=${encodeURIComponent(currentUrl)}`);
     }
-  }, [isLoading, isAuthenticated, router]);
+  }, [isLoading, isAuthenticated, router, mounted]);
+
+  // 如果组件未挂载，返回null避免SSR问题
+  if (!mounted) {
+    return null;
+  }
 
   // 如果正在加载认证状态，显示加载界面
   if (isLoading) {

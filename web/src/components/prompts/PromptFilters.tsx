@@ -125,7 +125,7 @@ const PromptFilters: React.FC<PromptFiltersProps> = ({
         <motion.div 
           initial={{ opacity: 0, height: 0 }}
           animate={{ 
-            opacity: showMobileFilters || (typeof window !== 'undefined' && window.innerWidth >= 768) ? 1 : showMobileFilters ? 1 : 1,
+            opacity: 1,
             height: 'auto'
           }}
           exit={{ opacity: 0, height: 0 }}
