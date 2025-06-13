@@ -65,18 +65,22 @@ export const getCategories = async (): Promise<string[]> => {
   try {
     // 通过Next.js API Routes调用，符合项目架构
     const response = await api.get<{success: boolean; data: Category[]}>('/categories');
-    if (response.data.success) {
+    console.log('分类API响应:', response.data);
+    
+    if (response.data.success && response.data.data && response.data.data.length > 0) {
       // 将类别对象数组转换为字符串数组
-      const categories = (response.data.data || []).map(category => category.name);
+      const categories = response.data.data.map(category => category.name);
       console.log('获取到的分类:', categories);
-      
-      // 数据库中已经包含"全部"分类，不需要重复添加
       return categories;
     }
-    return ['全部'];
+    
+    console.log('API返回空数据或不成功，使用默认分类');
+    // 如果API返回空数据或失败，返回默认分类
+    return ['通用', '创意写作', '代码辅助', '数据分析', '营销', '学术研究', '教育'];
   } catch (error) {
     console.error('获取分类失败:', error);
-    return ['全部'];
+    // 发生错误时也返回默认分类
+    return ['通用', '创意写作', '代码辅助', '数据分析', '营销', '学术研究', '教育'];
   }
 };
 
@@ -85,13 +89,19 @@ export const getTags = async (): Promise<string[]> => {
   try {
     // 直接调用Web服务API，不再依赖MCP服务
     const response = await api.get<any>('/tags');
-    if (response.data.success) {
-      return response.data.data || [];
+    console.log('标签API响应:', response.data);
+    
+    if (response.data.success && response.data.data && response.data.data.length > 0) {
+      return response.data.data;
     }
-    return [];
+    
+    console.log('API返回空标签数据或不成功，使用默认标签');
+    // 如果API返回空数据或失败，返回默认标签
+    return ['GPT-4', 'GPT-3.5', 'Claude', 'Gemini', '初学者', '高级', '长文本', '结构化输出', '翻译', '润色'];
   } catch (error) {
     console.error('获取标签失败:', error);
-    return [];
+    // 发生错误时也返回默认标签
+    return ['GPT-4', 'GPT-3.5', 'Claude', 'Gemini', '初学者', '高级', '长文本', '结构化输出', '翻译', '润色'];
   }
 };
 

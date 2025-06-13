@@ -15,18 +15,13 @@ interface LoginFormData {
 }
 
 export default function LoginPage() {
-  const [mounted, setMounted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
+  const [initializing, setInitializing] = useState(true);
   const router = useRouter();
   const { login, loginWithGoogle } = useAuth();
-  
-  // 确保组件已挂载
-  useEffect(() => {
-    setMounted(true);
-  }, []);
   
   const { register, handleSubmit, formState: { errors } } = useForm<LoginFormData>({
     defaultValues: {
@@ -38,8 +33,6 @@ export default function LoginPage() {
   
   // 检查用户是否已经登录，如果是则重定向到目标页面
   useEffect(() => {
-    if (typeof window === 'undefined' || !mounted) return;
-    
     const checkSession = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
@@ -48,14 +41,16 @@ export default function LoginPage() {
         }
       } catch (err) {
         console.error('检查会话失败:', err);
+      } finally {
+        setInitializing(false);
       }
     };
     
     checkSession();
-  }, [router, mounted]);
+  }, [router]);
 
-  // 如果组件未挂载，显示加载界面
-  if (!mounted) {
+  // 如果还在初始化，显示加载界面
+  if (initializing) {
     return (
       <div className="min-h-screen bg-dark-bg-primary flex items-center justify-center">
         <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-neon-cyan"></div>

@@ -45,49 +45,15 @@ function CreatePromptPage() {
   const [tags, setTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState('');
   const [models, setModels] = useState<string[]>([]);
-  const [categories, setCategories] = useState<string[]>([]);
-  const [categoriesLoading, setCategoriesLoading] = useState(true);
-  const [suggestedTags, setSuggestedTags] = useState<string[]>([]);
-  const [tagsLoading, setTagsLoading] = useState(true);
-  const [mounted, setMounted] = useState(false);
-  
-  // 确保组件已挂载
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  const [categories, setCategories] = useState<string[]>([
+    '通用', '创意写作', '代码辅助', '数据分析', '营销', '学术研究', '教育'
+  ]);
+  const [suggestedTags, setSuggestedTags] = useState<string[]>([
+    'GPT-4', 'GPT-3.5', 'Claude', 'Gemini', '初学者', '高级', '长文本', '结构化输出', '翻译', '润色'
+  ]);
 
-  // 如果组件未挂载，显示加载界面
-  if (!mounted) {
-    return (
-      <div className="min-h-screen bg-dark-bg-primary flex items-center justify-center relative overflow-hidden">
-        {/* 背景装饰 */}
-        <div className="absolute inset-0">
-          <div className="absolute top-1/4 -right-48 w-96 h-96 bg-gradient-to-br from-neon-cyan/20 to-neon-purple/20 rounded-full blur-3xl"></div>
-          <div className="absolute bottom-1/4 -left-48 w-96 h-96 bg-gradient-to-tr from-neon-pink/20 to-neon-purple/20 rounded-full blur-3xl"></div>
-        </div>
-        
-        {/* 加载内容 */}
-        <div className="relative z-10 text-center">
-          <div className="relative mx-auto mb-8">
-            <div className="w-16 h-16 border-4 border-neon-cyan/30 rounded-full animate-spin">
-              <div className="absolute top-0 left-0 w-full h-full border-4 border-transparent border-t-neon-cyan rounded-full animate-pulse"></div>
-            </div>
-            <div className="absolute inset-0 w-16 h-16 border-4 border-neon-purple/20 rounded-full animate-ping"></div>
-          </div>
-          
-          <div className="space-y-2">
-            <h3 className="text-xl font-bold gradient-text">正在初始化页面...</h3>
-            <p className="text-gray-400 text-sm">准备创建环境</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // 获取分类数据
+  // 获取分类数据 - 异步但不阻塞页面显示
   useEffect(() => {
-    if (!mounted) return;
-    
     const fetchCategories = async () => {
       try {
         console.log('开始获取类别数据...');
@@ -95,43 +61,32 @@ function CreatePromptPage() {
         console.log('获取到的类别数据:', data);
         if (data && data.length > 0) {
           setCategories(data);
-        } else {
-          setCategories([
-            '通用', '创意写作', '代码辅助', '数据分析', '营销', '学术研究', '教育'
-          ]);
         }
       } catch (err) {
         console.error('获取分类失败:', err);
-        setCategories([
-          '通用', '创意写作', '代码辅助', '数据分析', '营销', '学术研究', '教育'
-        ]);
-      } finally {
-        setCategoriesLoading(false);
+        // 保持默认分类
       }
     };
     
-    // 添加延迟确保组件完全挂载
-    setTimeout(fetchCategories, 200);
-  }, [mounted]);
+    fetchCategories();
+  }, []);
   
-  // 获取标签数据
+  // 获取标签数据 - 异步但不阻塞页面显示
   useEffect(() => {
-    if (!mounted) return;
-    
     const fetchTags = async () => {
       try {
         const data = await getTags();
-        setSuggestedTags(data);
+        if (data && data.length > 0) {
+          setSuggestedTags(data);
+        }
       } catch (err) {
         console.error('获取标签失败:', err);
-        setSuggestedTags(['GPT-4', 'GPT-3.5', 'Claude', 'Gemini', '初学者', '高级', '长文本', '结构化输出', '翻译', '润色']);
-      } finally {
-        setTagsLoading(false);
+        // 保持默认标签
       }
     };
     fetchTags();
-  }, [mounted]);
-  
+  }, []);
+
   const { register, handleSubmit, formState: { errors }, setValue, watch } = useForm<PromptFormData>({
     defaultValues: {
       name: '',
@@ -255,9 +210,7 @@ function CreatePromptPage() {
       {/* 开发模式调试信息 */}
       {process.env.NODE_ENV === 'development' && (
         <div className="fixed top-4 right-4 z-50 bg-black/80 text-white p-4 rounded-lg text-xs space-y-1">
-          <div>挂载状态: {mounted ? '已挂载' : '未挂载'}</div>
           <div>分类数量: {categories.length}</div>
-          <div>分类加载: {categoriesLoading ? '加载中' : '完成'}</div>
         </div>
       )}
 
@@ -363,7 +316,6 @@ function CreatePromptPage() {
                   <select
                     {...register('category', { required: '请选择分类' })}
                     className="input-primary w-full"
-                    disabled={categoriesLoading}
                   >
                     <option value="">选择分类</option>
                     {categories.map((category) => (
@@ -541,28 +493,26 @@ function CreatePromptPage() {
                 </div>
 
                 {/* 推荐标签 */}
-                {!tagsLoading && suggestedTags.length > 0 && (
-                  <div className="space-y-2">
-                    <p className="text-xs text-gray-500">推荐标签：</p>
-                    <div className="flex flex-wrap gap-2">
-                      {suggestedTags.slice(0, 10).map((tag) => (
-                        <button
-                          key={tag}
-                          type="button"
-                          onClick={() => !tags.includes(tag) && (setTags([...tags, tag]), setValue('tags', [...tags, tag]))}
-                          disabled={tags.includes(tag)}
-                          className={`px-3 py-1 rounded-full text-sm border transition-all duration-300 ${
-                            tags.includes(tag)
-                              ? 'bg-neon-purple/20 text-neon-purple border-neon-purple/30 opacity-50'
-                              : 'bg-dark-bg-secondary/50 text-gray-400 border-gray-600 hover:border-neon-purple hover:text-neon-purple'
-                          }`}
-                        >
-                          {tag}
-                        </button>
-                      ))}
-                    </div>
+                <div className="space-y-2">
+                  <p className="text-xs text-gray-500">推荐标签：</p>
+                  <div className="flex flex-wrap gap-2">
+                    {suggestedTags.slice(0, 10).map((tag) => (
+                      <button
+                        key={tag}
+                        type="button"
+                        onClick={() => !tags.includes(tag) && (setTags([...tags, tag]), setValue('tags', [...tags, tag]))}
+                        disabled={tags.includes(tag)}
+                        className={`px-3 py-1 rounded-full text-sm border transition-all duration-300 ${
+                          tags.includes(tag)
+                            ? 'bg-neon-purple/20 text-neon-purple border-neon-purple/30 opacity-50'
+                            : 'bg-dark-bg-secondary/50 text-gray-400 border-gray-600 hover:border-neon-purple hover:text-neon-purple'
+                        }`}
+                      >
+                        {tag}
+                      </button>
+                    ))}
                   </div>
-                )}
+                </div>
 
                 {/* 已选标签 */}
                 <AnimatePresence>
