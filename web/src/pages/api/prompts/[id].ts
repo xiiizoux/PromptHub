@@ -6,6 +6,32 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
+// 验证用户令牌并获取用户ID
+async function authenticateUser(req: NextApiRequest): Promise<string | null> {
+  try {
+    const authHeader = req.headers.authorization;
+    
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return null;
+    }
+    
+    const token = authHeader.substring(7);
+    
+    // 验证用户token
+    const { data: { user }, error } = await supabase.auth.getUser(token);
+    
+    if (error || !user) {
+      console.error('JWT验证失败:', error);
+      return null;
+    }
+    
+    return user.id;
+  } catch (error) {
+    console.error('认证错误:', error);
+    return null;
+  }
+}
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const { id } = req.query;
 
@@ -78,6 +104,9 @@ async function getPrompt(req: NextApiRequest, res: NextApiResponse, id: string) 
       prompt = promptByName;
     }
 
+    // 获取当前用户ID（可选）
+    const userId = await authenticateUser(req);
+
     // 增加查看次数
     await supabase
       .from('prompts')
@@ -88,12 +117,12 @@ async function getPrompt(req: NextApiRequest, res: NextApiResponse, id: string) 
       .eq('id', prompt.id);
 
     // 记录使用历史
-    if (req.headers['user-id']) {
+    if (userId) {
       await supabase
         .from('prompt_usage_history')
         .insert({
           prompt_id: prompt.id,
-          user_id: req.headers['user-id'] as string,
+          user_id: userId,
           action: 'view',
           timestamp: new Date().toISOString()
         });
@@ -116,12 +145,12 @@ async function getPrompt(req: NextApiRequest, res: NextApiResponse, id: string) 
 
     // 获取用户是否已收藏
     let isBookmarked = false;
-    if (req.headers['user-id']) {
+    if (userId) {
       const { data: bookmark } = await supabase
         .from('prompt_bookmarks')
         .select('id')
         .eq('prompt_id', prompt.id)
-        .eq('user_id', req.headers['user-id'] as string)
+        .eq('user_id', userId)
         .single();
       
       isBookmarked = !!bookmark;
@@ -129,12 +158,12 @@ async function getPrompt(req: NextApiRequest, res: NextApiResponse, id: string) 
 
     // 获取用户评分
     let userRating = null;
-    if (req.headers['user-id']) {
+    if (userId) {
       const { data: rating } = await supabase
         .from('prompt_ratings')
         .select('rating')
         .eq('prompt_id', prompt.id)
-        .eq('user_id', req.headers['user-id'] as string)
+        .eq('user_id', userId)
         .single();
       
       userRating = rating?.rating || null;
@@ -195,8 +224,10 @@ async function getPrompt(req: NextApiRequest, res: NextApiResponse, id: string) 
 async function updatePrompt(req: NextApiRequest, res: NextApiResponse, id: string) {
   try {
     const { name, content, description, category_id, tags } = req.body;
-    const userId = req.headers['user-id'] as string;
-
+    
+    // 验证用户身份
+    const userId = await authenticateUser(req);
+    
     if (!userId) {
       return res.status(401).json({ 
         success: false, 
@@ -261,8 +292,9 @@ async function updatePrompt(req: NextApiRequest, res: NextApiResponse, id: strin
 
 async function deletePrompt(req: NextApiRequest, res: NextApiResponse, id: string) {
   try {
-    const userId = req.headers['user-id'] as string;
-
+    // 验证用户身份
+    const userId = await authenticateUser(req);
+    
     if (!userId) {
       return res.status(401).json({ 
         success: false, 

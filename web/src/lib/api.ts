@@ -360,49 +360,48 @@ export const createPrompt = async (prompt: Partial<PromptDetails>): Promise<Prom
 export const updatePrompt = async (id: string, prompt: Partial<PromptDetails>, tokenArg?: string): Promise<PromptDetails> => {
   try {
     let token = tokenArg;
+    
+    // 如果没有提供token，尝试从Supabase获取当前session的token
     if (!token && typeof window !== 'undefined') {
-      // 兼容useAuth和supabase
       try {
-        const authData = localStorage.getItem('prompthub-auth-token');
-        if (authData) {
-          const parsedAuth = JSON.parse(authData);
-          token = parsedAuth?.access_token;
+        // 动态导入Supabase客户端以避免SSR问题
+        const { supabase } = await import('@/lib/supabase');
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (session?.access_token) {
+          token = session.access_token;
+          console.log('从Supabase session获取到token');
         }
-      } catch {}
-      if (!token) token = localStorage.getItem('auth.token') || undefined;
-      if (!token) {
-        for (let i = 0; i < localStorage.length; i++) {
-          const key = localStorage.key(i);
-          if (key && key.includes('auth-token')) {
-            const tokenData = localStorage.getItem(key);
-            if (tokenData) {
-              const parsedData = JSON.parse(tokenData);
-              token = parsedData?.access_token;
-              if (token) break;
-            }
-          }
-        }
-      }
-      if (!token) {
-        try {
-          const authSession = localStorage.getItem('supabase.auth.token');
-          if (authSession) {
-            const parsed = JSON.parse(authSession);
-            token = parsed?.currentSession?.access_token;
-          }
-        } catch {}
+      } catch (error) {
+        console.error('获取Supabase token失败:', error);
       }
     }
-    if (!token) throw new Error('未提供认证令牌，请重新登录');
+    
+    if (!token) {
+      throw new Error('未找到有效的认证令牌，请重新登录');
+    }
+    
     const headers: Record<string, string> = {
       'Authorization': `Bearer ${token}`,
       'Content-Type': 'application/json'
     };
+    
+    console.log('发送更新提示词请求:', { id, hasToken: !!token });
+    
     const response = await api.put(`/prompts/${encodeURIComponent(id)}`, prompt, { headers });
-    if (!response.data.success) throw new Error(response.data.error || '更新提示词失败');
+    
+    if (!response.data.success) {
+      throw new Error(response.data.error || '更新提示词失败');
+    }
+    
     return response.data.prompt as PromptDetails;
   } catch (error: any) {
-    if (error.response?.status === 401) throw new Error('认证失败，请重新登录');
+    console.error('更新提示词失败:', error);
+    
+    if (error.response?.status === 401) {
+      throw new Error('认证失败，请重新登录');
+    }
+    
     throw new Error(`更新提示词失败: ${error.response?.data?.error || error.message}`);
   }
 };
