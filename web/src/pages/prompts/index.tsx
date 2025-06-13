@@ -25,27 +25,28 @@ export default function PromptsPage() {
     setMounted(true);
   }, []);
 
-  // 如果组件未挂载，返回null避免SSR问题
-  if (!mounted) {
-    return null;
-  }
-
   // 获取分类数据
   useEffect(() => {
     if (!mounted) return;
     
     const fetchCategories = async () => {
       try {
+        console.log('开始获取类别数据...');
         const data = await getCategories();
+        console.log('获取到的类别数据:', data);
         // 直接使用字符串数组
         // 确保"全部"选项始终存在
         if (data && Array.isArray(data)) {
           if (data.length > 0 && !data.includes('全部')) {
-            setCategories(['全部', ...data]);
+            const finalCategories = ['全部', ...data];
+            console.log('设置类别数据（添加全部）:', finalCategories);
+            setCategories(finalCategories);
           } else {
+            console.log('设置类别数据（原数据）:', data);
             setCategories(data);
           }
         } else {
+          console.log('类别数据格式错误，使用默认值');
           setCategories(['全部']);
         }
       } catch (err) {
@@ -84,14 +85,19 @@ export default function PromptsPage() {
     if (!mounted) return;
     
     const fetchPrompts = async () => {
+      console.log('开始获取提示词数据，filters:', filters);
       setLoading(true);
       try {
         const response = await getPrompts(filters);
+        console.log('获取提示词响应:', response);
+        
         if (response && response.data && Array.isArray(response.data)) {
+          console.log('设置提示词数据，数量:', response.data.length);
           setPrompts(response.data);
           setTotalPages(response.totalPages || 1);
           setError(null);
         } else {
+          console.error('获取提示词数据格式错误:', response);
           setPrompts([]);
           setTotalPages(1);
           setError('获取提示词数据格式错误');
@@ -101,6 +107,7 @@ export default function PromptsPage() {
         setError('无法加载提示词，请稍后再试');
         setPrompts([]);
       } finally {
+        console.log('提示词数据加载完成');
         setLoading(false);
       }
     };
@@ -206,154 +213,187 @@ export default function PromptsPage() {
       
       <div className="relative z-10 py-16">
         <div className="container-custom">
-          {/* 页面标题 */}
-          <motion.div 
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            className="mb-12 text-center"
-          >
-            <motion.h1 
-              className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-neon-cyan via-neon-purple to-neon-pink bg-clip-text text-transparent mb-6"
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 1, delay: 0.2 }}
+          {/* 如果组件未挂载，显示加载状态 */}
+          {!mounted ? (
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="text-center py-20"
             >
-              探索提示词宇宙
-            </motion.h1>
-            <motion.p 
-              className="text-xl text-gray-400 max-w-3xl mx-auto leading-relaxed"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.4 }}
-            >
-              在这里发现最强大的AI提示词，解锁无限创意可能
-            </motion.p>
-          </motion.div>
-
-          {/* 过滤器 */}
-          {categories.length > 0 && (
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.6 }}
-            >
-              <PromptFilters
-                filters={filters}
-                onFilterChange={handleFilterChange}
-                categories={categories}
-                tags={tags}
-              />
-            </motion.div>
-          )}
-
-          {/* 错误提示 */}
-          {error && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="mb-8"
-            >
-              <div className="bg-red-500/20 border border-red-500/30 rounded-xl p-6 backdrop-blur-sm">
-                <div className="flex items-center">
-                  <div className="flex-shrink-0">
-                    <svg className="h-5 w-5 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                  </div>
-                  <div className="ml-3">
-                    <p className="text-red-200">{error}</p>
-                  </div>
-                </div>
+              <div className="relative inline-block">
+                <div className="w-16 h-16 border-4 border-neon-cyan/30 border-t-neon-cyan rounded-full animate-spin"></div>
+                <div className="absolute inset-0 w-16 h-16 border-4 border-transparent border-t-neon-purple rounded-full animate-spin animate-reverse"></div>
               </div>
-            </motion.div>
-          )}
-          
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.8, delay: 0.8 }}
-          >
-            {/* 加载状态 */}
-            {loading ? (
-              <motion.div 
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="text-center py-20"
+              <motion.p 
+                className="mt-6 text-xl text-gray-400"
+                animate={{ opacity: [0.5, 1, 0.5] }}
+                transition={{ duration: 2, repeat: Infinity }}
               >
-                <div className="relative inline-block">
-                  <div className="w-16 h-16 border-4 border-neon-cyan/30 border-t-neon-cyan rounded-full animate-spin"></div>
-                  <div className="absolute inset-0 w-16 h-16 border-4 border-transparent border-t-neon-purple rounded-full animate-spin animate-reverse"></div>
-                </div>
-                <motion.p 
-                  className="mt-6 text-xl text-gray-400"
-                  animate={{ opacity: [0.5, 1, 0.5] }}
-                  transition={{ duration: 2, repeat: Infinity }}
+                正在初始化页面...
+              </motion.p>
+            </motion.div>
+          ) : (
+            <>
+              {/* 页面标题 */}
+              <motion.div 
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8 }}
+                className="mb-12 text-center"
+              >
+                <motion.h1 
+                  className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-neon-cyan via-neon-purple to-neon-pink bg-clip-text text-transparent mb-6"
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 1, delay: 0.2 }}
                 >
-                  正在加载提示词...
+                  探索提示词宇宙
+                </motion.h1>
+                <motion.p 
+                  className="text-xl text-gray-400 max-w-3xl mx-auto leading-relaxed"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.8, delay: 0.4 }}
+                >
+                  在这里发现最强大的AI提示词，解锁无限创意可能
                 </motion.p>
               </motion.div>
-            ) :
-              <>
-                {/* 没有结果 */}
-                {prompts.length === 0 && !loading && !error ? (
+
+              {/* 过滤器 */}
+              <motion.div
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, delay: 0.6 }}
+              >
+                <PromptFilters
+                  filters={filters}
+                  onFilterChange={handleFilterChange}
+                  categories={categories}
+                  tags={tags}
+                />
+              </motion.div>
+
+              {/* 错误提示 */}
+              {error && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="mb-8"
+                >
+                  <div className="bg-red-500/20 border border-red-500/30 rounded-xl p-6 backdrop-blur-sm">
+                    <div className="flex items-center">
+                      <div className="flex-shrink-0">
+                        <svg className="h-5 w-5 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      </div>
+                      <div className="ml-3">
+                        <p className="text-red-200">{error}</p>
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+              
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.8, delay: 0.8 }}
+              >
+                {/* 调试信息 */}
+                {process.env.NODE_ENV === 'development' && (
+                  <div className="mb-4 p-4 bg-gray-800 rounded-lg text-xs text-gray-300">
+                    <div>mounted: {mounted.toString()}</div>
+                    <div>loading: {loading.toString()}</div>
+                    <div>prompts.length: {prompts.length}</div>
+                    <div>error: {error || 'null'}</div>
+                    <div>categories.length: {categories.length}</div>
+                    <div>filters: {JSON.stringify(filters)}</div>
+                  </div>
+                )}
+                
+                {/* 加载状态 */}
+                {loading ? (
                   <motion.div 
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
                     className="text-center py-20"
                   >
-                    <div className="bg-dark-card/50 backdrop-blur-md rounded-xl border border-dark-border p-12 shadow-xl">
-                      <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-to-r from-neon-cyan to-neon-purple p-0.5">
-                        <div className="w-full h-full bg-dark-bg-primary rounded-full flex items-center justify-center">
-                          <svg className="w-8 h-8 text-neon-cyan" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-                          </svg>
-                        </div>
-                      </div>
-                      <h3 className="text-2xl font-bold text-white mb-3">没有找到提示词</h3>
-                      <p className="text-gray-400 text-lg">尝试调整过滤条件或清除搜索关键词</p>
+                    <div className="relative inline-block">
+                      <div className="w-16 h-16 border-4 border-neon-cyan/30 border-t-neon-cyan rounded-full animate-spin"></div>
+                      <div className="absolute inset-0 w-16 h-16 border-4 border-transparent border-t-neon-purple rounded-full animate-spin animate-reverse"></div>
                     </div>
+                    <motion.p 
+                      className="mt-6 text-xl text-gray-400"
+                      animate={{ opacity: [0.5, 1, 0.5] }}
+                      transition={{ duration: 2, repeat: Infinity }}
+                    >
+                      正在加载提示词...
+                    </motion.p>
                   </motion.div>
                 ) :
                   <>
-                    {/* 提示词网格 */}
-                    <motion.div 
-                      className="card-grid mb-12"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ duration: 0.8, delay: 1 }}
-                    >
-                      {prompts.map((prompt, index) => (
-                        <motion.div
-                          key={prompt.id || prompt.name || `prompt-${index}`}
-                          initial={{ opacity: 0, y: 30 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ 
-                            duration: 0.6, 
-                            delay: 1.2 + index * 0.1,
-                            ease: "easeOut"
-                          }}
-                        >
-                          <PromptCard prompt={prompt} />
-                        </motion.div>
-                      ))}
-                    </motion.div>
-
-                    {/* 分页 */}
-                    {totalPages > 1 && (
-                      <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.8, delay: 1.5 }}
+                    {/* 没有结果 */}
+                    {prompts.length === 0 && !loading && !error ? (
+                      <motion.div 
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        className="text-center py-20"
                       >
-                        {renderPagination()}
+                        <div className="bg-dark-card/50 backdrop-blur-md rounded-xl border border-dark-border p-12 shadow-xl">
+                          <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-to-r from-neon-cyan to-neon-purple p-0.5">
+                            <div className="w-full h-full bg-dark-bg-primary rounded-full flex items-center justify-center">
+                              <svg className="w-8 h-8 text-neon-cyan" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                              </svg>
+                            </div>
+                          </div>
+                          <h3 className="text-2xl font-bold text-white mb-3">没有找到提示词</h3>
+                          <p className="text-gray-400 text-lg">尝试调整过滤条件或清除搜索关键词</p>
+                        </div>
                       </motion.div>
-                    )}
+                    ) :
+                      <>
+                        {/* 提示词网格 */}
+                        <motion.div 
+                          className="card-grid mb-12"
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          transition={{ duration: 0.8, delay: 1 }}
+                        >
+                          {prompts.map((prompt, index) => (
+                            <motion.div
+                              key={prompt.id || prompt.name || `prompt-${index}`}
+                              initial={{ opacity: 0, y: 30 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              transition={{ 
+                                duration: 0.6, 
+                                delay: 1.2 + index * 0.1,
+                                ease: "easeOut"
+                              }}
+                            >
+                              <PromptCard prompt={prompt} />
+                            </motion.div>
+                          ))}
+                        </motion.div>
+
+                        {/* 分页 */}
+                        {totalPages > 1 && (
+                          <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.8, delay: 1.5 }}
+                          >
+                            {renderPagination()}
+                          </motion.div>
+                        )}
+                      </>
+                    }
                   </>
                 }
-              </>
-            }
-          </motion.div>
+              </motion.div>
+            </>
+          )}
         </div>
       </div>
     </div>

@@ -106,19 +106,32 @@ export class SupabaseAdapter {
   // 基本提示词管理
   async getCategories(): Promise<string[]> {
     try {
-      // 首先尝试从专用的categories表获取
-      const { data: categoriesData, error: categoriesError } = await this.supabase
+      console.log('=== SupabaseAdapter: 开始获取categories ===');
+      
+      // 使用管理员权限客户端
+      const adminClient = createSupabaseClient(true);
+      
+      // 首先尝试从专用的categories表获取，去除is_active过滤
+      const { data: categoriesData, error: categoriesError } = await adminClient
         .from('categories')
-        .select('name')
-        .eq('is_active', true)
+        .select('name, sort_order, is_active')
         .order('sort_order');
 
+      console.log('categories表查询结果:', {
+        error: categoriesError,
+        count: categoriesData?.length || 0,
+        sample: categoriesData?.slice(0, 3)
+      });
+
       if (!categoriesError && categoriesData && categoriesData.length > 0) {
+        console.log('成功从categories表获取数据');
         return categoriesData.map(item => item.name);
       }
 
+      console.log('categories表查询失败，回退到prompts表');
+      
       // 如果categories表没有数据，回退到从prompts表提取
-      const { data, error } = await this.supabase
+      const { data, error } = await adminClient
         .from('prompts')
         .select('category')
         .order('category');
@@ -129,6 +142,7 @@ export class SupabaseAdapter {
       }
 
       const categories = Array.from(new Set(data.map(item => item.category).filter(Boolean)));
+      console.log('从prompts表提取的分类:', categories);
       return categories as string[];
     } catch (err) {
       console.error('获取分类时出错:', err);

@@ -87,50 +87,29 @@ export class DatabaseService {
    */
   async getCategories(): Promise<any[]> {
     try {
-      // 先尝试从专用的categories表获取完整对象
+      console.log('=== 开始获取categories表数据 ===');
+      
+      // 先尝试从专用的categories表获取完整对象，去除is_active过滤条件
       const { data: categoriesData, error: categoriesError } = await this.adapter.supabase
         .from('categories')
         .select('id, name, name_en, alias, description, sort_order, is_active')
-        .eq('is_active', true)
         .order('sort_order');
 
-      console.log('从categories表获取的数据:', categoriesData);
+      console.log('数据库查询结果:', {
+        error: categoriesError,
+        dataLength: categoriesData?.length || 0,
+        data: categoriesData
+      });
 
       if (!categoriesError && categoriesData && categoriesData.length > 0) {
+        console.log('成功从categories表获取数据，数量:', categoriesData.length);
+        console.log('返回的分类:', categoriesData.map(c => c.name));
         return categoriesData;
       }
 
-      // 如果categories表为空，初始化预设分类
-      const defaultCategories = [
-        { name: '通用', sort_order: 1 },
-        { name: '创意写作', sort_order: 2 },
-        { name: '代码辅助', sort_order: 3 },
-        { name: '数据分析', sort_order: 4 },
-        { name: '营销推广', sort_order: 5 },
-        { name: '学术研究', sort_order: 6 },
-        { name: '教育培训', sort_order: 7 },
-        { name: '商务办公', sort_order: 8 },
-        { name: '内容翻译', sort_order: 9 },
-        { name: '问答助手', sort_order: 10 }
-      ];
+      console.log('categories表查询失败或无数据，尝试备用方案');
 
-      // 尝试插入默认分类到categories表
-      const { data: insertData, error: insertError } = await this.adapter.supabase
-        .from('categories')
-        .insert(defaultCategories.map(cat => ({
-          name: cat.name,
-          sort_order: cat.sort_order,
-          is_active: true,
-          created_at: new Date().toISOString()
-        })))
-        .select('id, name, name_en, alias, description, sort_order, is_active');
-
-      if (!insertError && insertData) {
-        console.log('插入默认分类成功:', insertData);
-        return insertData;
-      }
-
-      // 如果无法写入categories表，从prompts表中提取现有分类
+      // 如果categories表查询失败，从prompts表中提取现有分类
       const { data: promptsData, error: promptsError } = await this.adapter.supabase
         .from('prompts')
         .select('category')
@@ -143,7 +122,7 @@ export class DatabaseService {
         ));
         if (existingCategories.length > 0) {
           console.log('从prompts表提取的分类:', existingCategories);
-          // 兜底返回对象数组
+          // 返回对象数组格式
           return existingCategories.map((name, idx) => ({
             id: undefined,
             name,
@@ -157,23 +136,11 @@ export class DatabaseService {
       }
 
       // 最后的兜底方案：返回默认分类对象
-      console.log('使用默认分类');
-      return defaultCategories.map((cat, idx) => ({
-        id: undefined,
-        name: cat.name,
-        name_en: undefined,
-        alias: undefined,
-        description: undefined,
-        sort_order: cat.sort_order,
-        is_active: true
-      }));
-    } catch (error) {
-      console.error('获取分类失败:', error);
-      // 发生错误时返回默认分类对象
+      console.log('使用默认分类兜底方案');
       const defaultCategories = [
         { name: '通用', sort_order: 1 },
-        { name: '创意写作', sort_order: 2 },
-        { name: '代码辅助', sort_order: 3 },
+        { name: '编程', sort_order: 2 },
+        { name: '创意写作', sort_order: 3 },
         { name: '数据分析', sort_order: 4 },
         { name: '营销推广', sort_order: 5 },
         { name: '学术研究', sort_order: 6 },
@@ -182,7 +149,35 @@ export class DatabaseService {
         { name: '内容翻译', sort_order: 9 },
         { name: '问答助手', sort_order: 10 }
       ];
-      return defaultCategories.map((cat, idx) => ({
+      
+      return defaultCategories.map((cat) => ({
+        id: undefined,
+        name: cat.name,
+        name_en: undefined,
+        alias: undefined,
+        description: undefined,
+        sort_order: cat.sort_order,
+        is_active: true
+      }));
+      
+    } catch (error) {
+      console.error('获取分类失败:', error);
+      
+      // 发生错误时返回默认分类对象
+      const defaultCategories = [
+        { name: '通用', sort_order: 1 },
+        { name: '编程', sort_order: 2 },
+        { name: '创意写作', sort_order: 3 },
+        { name: '数据分析', sort_order: 4 },
+        { name: '营销推广', sort_order: 5 },
+        { name: '学术研究', sort_order: 6 },
+        { name: '教育培训', sort_order: 7 },
+        { name: '商务办公', sort_order: 8 },
+        { name: '内容翻译', sort_order: 9 },
+        { name: '问答助手', sort_order: 10 }
+      ];
+      
+      return defaultCategories.map((cat) => ({
         id: undefined,
         name: cat.name,
         name_en: undefined,

@@ -64,14 +64,19 @@ export interface Category {
 export const getCategories = async (): Promise<string[]> => {
   try {
     // 通过Next.js API Routes调用，符合项目架构
-    const response = await api.get<{success: boolean; data: string[]}>('/categories');
+    const response = await api.get<{success: boolean; data: Category[]}>('/categories');
     if (response.data.success) {
-      return response.data.data || [];
+      // 将类别对象数组转换为字符串数组
+      const categories = (response.data.data || []).map(category => category.name);
+      console.log('获取到的分类:', categories);
+      
+      // 数据库中已经包含"全部"分类，不需要重复添加
+      return categories;
     }
-    return [];
+    return ['全部'];
   } catch (error) {
     console.error('获取分类失败:', error);
-    return [];
+    return ['全部'];
   }
 };
 

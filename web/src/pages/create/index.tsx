@@ -68,13 +68,8 @@ function CreatePromptPage() {
     }
   }, [isLoading, isAuthenticated, router, mounted]);
 
-  // 如果组件未挂载，返回null避免SSR问题
-  if (!mounted) {
-    return null;
-  }
-
-  // 如果正在加载认证状态，显示加载界面
-  if (isLoading) {
+  // 如果正在加载认证状态或组件未挂载，显示加载界面
+  if (!mounted || isLoading) {
     return (
       <div className="min-h-screen bg-dark-bg-primary flex items-center justify-center relative overflow-hidden">
         {/* 背景装饰 */}
@@ -101,9 +96,32 @@ function CreatePromptPage() {
     );
   }
 
-  // 如果未认证，返回null等待重定向
+  // 如果未认证，显示加载界面等待重定向
   if (!isAuthenticated) {
-    return null;
+    return (
+      <div className="min-h-screen bg-dark-bg-primary flex items-center justify-center relative overflow-hidden">
+        {/* 背景装饰 */}
+        <div className="absolute inset-0">
+          <div className="absolute top-1/4 -right-48 w-96 h-96 bg-gradient-to-br from-neon-cyan/20 to-neon-purple/20 rounded-full blur-3xl"></div>
+          <div className="absolute bottom-1/4 -left-48 w-96 h-96 bg-gradient-to-tr from-neon-pink/20 to-neon-purple/20 rounded-full blur-3xl"></div>
+        </div>
+        
+        {/* 加载内容 */}
+        <div className="relative z-10 text-center">
+          <div className="relative mx-auto mb-8">
+            <div className="w-16 h-16 border-4 border-neon-cyan/30 rounded-full animate-spin">
+              <div className="absolute top-0 left-0 w-full h-full border-4 border-transparent border-t-neon-cyan rounded-full animate-pulse"></div>
+            </div>
+            <div className="absolute inset-0 w-16 h-16 border-4 border-neon-purple/20 rounded-full animate-ping"></div>
+          </div>
+          
+          <div className="space-y-2">
+            <h3 className="text-xl font-bold gradient-text">正在跳转登录</h3>
+            <p className="text-gray-400 text-sm">请稍候...</p>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   // 获取分类数据
