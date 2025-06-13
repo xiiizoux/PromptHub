@@ -100,7 +100,7 @@ async function getKeywordSuggestions(query: string) {
 
     // 从描述中提取相关短语
     const descWords = prompt.description?.split(/[，。！？\s]+/) || [];
-    descWords.forEach(word => {
+    descWords.forEach((word: string) => {
       if (word.length > 2 && word.toLowerCase().includes(query.toLowerCase())) {
         suggestions.push({
           text: word,
@@ -232,7 +232,7 @@ function deduplicateAndScore(suggestions: any[]) {
   });
 
   // 按置信度和类型权重排序
-  const typeWeights = {
+  const typeWeights: Record<string, number> = {
     semantic: 3,
     keyword: 2,
     category: 1.5,
@@ -240,8 +240,8 @@ function deduplicateAndScore(suggestions: any[]) {
   };
 
   return unique.sort((a, b) => {
-    const scoreA = (a.confidence || 0.5) * typeWeights[a.type];
-    const scoreB = (b.confidence || 0.5) * typeWeights[b.type];
+    const scoreA = (a.confidence || 0.5) * (typeWeights[a.type] || 1);
+    const scoreB = (b.confidence || 0.5) * (typeWeights[b.type] || 1);
     return scoreB - scoreA;
   });
 } 

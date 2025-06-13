@@ -271,7 +271,8 @@ ${content}
       detectedTags.push('分析', '数据处理');
     }
 
-    return [...new Set([...detectedTags, ...commonTags])].slice(0, 6);
+    const tagSet = new Set([...detectedTags, ...commonTags]);
+    return Array.from(tagSet).slice(0, 6);
   }
 
   /**

@@ -5,7 +5,7 @@ import { User } from '@/types';
 // 定义认证上下文的类型
 interface AuthContextType {
   user: User | null;
-  loading: boolean;
+  isLoading: boolean;
   error: string | null;
   login: (email: string, password: string, remember?: boolean) => Promise<void>;
   loginWithGoogle: () => Promise<void>;
@@ -23,7 +23,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 // 认证提供者组件
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
@@ -60,7 +60,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setIsAuthenticated(false);
       } finally {
         // 确保loading状态被设置为false
-        setLoading(false);
+        setIsLoading(false);
       }
     };
 
@@ -233,7 +233,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // 登录
   const login = async (email: string, password: string, remember = false): Promise<void> => {
-    setLoading(true);
+    setIsLoading(true);
     setError(null);
     
     try {
@@ -273,13 +273,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setError(err.message || '登录失败，请检查您的凭据');
       throw err;
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
   // 注册
   const register = async (username: string, email: string, password: string): Promise<void> => {
-    setLoading(true);
+    setIsLoading(true);
     setError(null);
     
     try {
@@ -327,13 +327,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setError(err.message || '注册失败，请稍后再试');
       throw err;
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
   // Google OAuth登录
   const loginWithGoogle = async (): Promise<void> => {
-    setLoading(true);
+    setIsLoading(true);
     setError(null);
     
     try {
@@ -360,13 +360,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setError(err.message || 'Google登录失败，请稍后再试');
       throw err;
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
   // 登出
   const logout = async (): Promise<void> => {
-    setLoading(true);
+    setIsLoading(true);
     
     try {
       // 使用Supabase登出
@@ -383,7 +383,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.error('登出失败:', err);
       setError(err.message || '登出失败，请稍后再试');
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
@@ -415,7 +415,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const value = {
     user,
-    loading,
+    isLoading,
     error,
     login,
     loginWithGoogle,
@@ -442,7 +442,7 @@ export const useAuth = (): AuthContextType => {
 // 保护路由的高阶组件
 export const withAuth = <P extends object>(Component: React.ComponentType<P>): React.FC<P> => {
   const AuthComponent: React.FC<P> = (props) => {
-    const { isAuthenticated, loading } = useAuth();
+    const { isAuthenticated, isLoading } = useAuth();
     const [mounted, setMounted] = useState(false);
     const [redirecting, setRedirecting] = useState(false);
 
@@ -452,7 +452,7 @@ export const withAuth = <P extends object>(Component: React.ComponentType<P>): R
 
     useEffect(() => {
       // 只在客户端挂载完成后执行路由重定向
-      if (mounted && !loading && !isAuthenticated && !redirecting) {
+      if (mounted && !isLoading && !isAuthenticated && !redirecting) {
         setRedirecting(true);
         
         // 使用Next.js动态导入router避免SSR问题
@@ -465,7 +465,7 @@ export const withAuth = <P extends object>(Component: React.ComponentType<P>): R
           window.location.href = `/auth/login?returnUrl=${encodeURIComponent(currentUrl)}`;
         });
       }
-    }, [mounted, isAuthenticated, loading, redirecting]);
+    }, [mounted, isAuthenticated, isLoading, redirecting]);
 
     // 在服务器端渲染时，返回null避免内容闪烁
     if (typeof window === 'undefined') {
@@ -478,7 +478,7 @@ export const withAuth = <P extends object>(Component: React.ComponentType<P>): R
     }
 
     // 正在加载认证状态时，显示cyberpunk风格的加载界面
-    if (loading) {
+    if (isLoading) {
       return (
         <div className="min-h-screen bg-dark-bg-primary flex items-center justify-center relative overflow-hidden">
           {/* 背景装饰 */}
