@@ -38,7 +38,7 @@ type PromptFormData = Omit<PromptDetails, 'created_at' | 'updated_at'> & {
 
 function CreatePromptPage() {
   const router = useRouter();
-  const { user, isLoading, isAuthenticated } = useAuth();
+  const { user } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [variables, setVariables] = useState<string[]>([]);
   const [variableInput, setVariableInput] = useState('');
@@ -49,8 +49,6 @@ function CreatePromptPage() {
   const [categoriesLoading, setCategoriesLoading] = useState(true);
   const [suggestedTags, setSuggestedTags] = useState<string[]>([]);
   const [tagsLoading, setTagsLoading] = useState(true);
-  // const [aiAnalysisResult, setAiAnalysisResult] = useState<AIAnalysisResult | null>(null);
-  // const [showAiAnalysis, setShowAiAnalysis] = useState(false);
   const [mounted, setMounted] = useState(false);
   
   // 确保组件已挂载
@@ -58,8 +56,8 @@ function CreatePromptPage() {
     setMounted(true);
   }, []);
 
-  // 如果组件未挂载或正在加载认证状态，显示加载界面
-  if (!mounted || isLoading) {
+  // 如果组件未挂载，显示加载界面
+  if (!mounted) {
     return (
       <div className="min-h-screen bg-dark-bg-primary flex items-center justify-center relative overflow-hidden">
         {/* 背景装饰 */}
@@ -85,16 +83,6 @@ function CreatePromptPage() {
       </div>
     );
   }
-
-  // 客户端认证检查（仅在挂载后）
-  useEffect(() => {
-    if (!mounted) return;
-    
-    if (!isLoading && !isAuthenticated) {
-      const currentUrl = window.location.pathname + window.location.search;
-      router.push(`/auth/login?returnUrl=${encodeURIComponent(currentUrl)}`);
-    }
-  }, [isLoading, isAuthenticated, router, mounted]);
 
   // 获取分类数据
   useEffect(() => {
@@ -152,9 +140,6 @@ function CreatePromptPage() {
       compatible_models: [],
     }
   });
-
-  // 监听提示词内容以提取变量
-  const promptContent = watch('content');
 
   // 自动检测变量
   const detectVariables = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -216,156 +201,34 @@ function CreatePromptPage() {
     setValue('compatible_models', newModels);
   };
 
-  // AI分析结果处理
-  const handleAIAnalysis = (result: Partial<AIAnalysisResult>) => {
-    // setAiAnalysisResult(result as AIAnalysisResult);
-    // setShowAiAnalysis(true);
-    console.log('AI分析功能暂时禁用', result);
-  };
-
-  // 智能分类映射函数
-  function matchCategory(aiCategory: string, categories: string[]): string | null {
-    if (!aiCategory) return null;
-    // 1. 精确匹配
-    let match = categories.find(cat => cat === aiCategory);
-    if (match) return match;
-    // 2. 忽略大小写
-    match = categories.find(cat => cat.toLowerCase() === aiCategory.toLowerCase());
-    if (match) return match;
-    // 3. 英文名
-    match = categories.find(cat => cat.toLowerCase() === aiCategory.toLowerCase());
-    if (match) return match;
-    // 4. 别名
-    match = categories.find(cat => cat.split(',').map(a => a.trim()).includes(aiCategory));
-    if (match) return match;
-    // 5. 模糊包含
-    match = categories.find(cat => aiCategory.includes(cat) || cat.includes(aiCategory));
-    if (match) return match;
-    return null;
-  }
-
-  // 应用AI分析结果
-  const applyAIResults = (data: Partial<AIAnalysisResult>) => {
-    if (data.category) {
-      const matched = matchCategory(data.category, categories);
-      if (matched) setValue('category', matched);
-      else setValue('category', '');
-    }
-    if (data.tags && data.tags.length > 0) {
-      const newTags = Array.from(new Set([...tags, ...data.tags]));
-      setTags(newTags);
-      setValue('tags', newTags);
-    }
-    if (data.variables && data.variables.length > 0) {
-      const newVariables = Array.from(new Set([...variables, ...data.variables]));
-      setVariables(newVariables);
-      setValue('input_variables', newVariables);
-    }
-    if (data.version) {
-      setValue('version', 1); // 创建页面版本固定为1
-    }
-    if (data.compatibleModels && data.compatibleModels.length > 0) {
-      const newModels = Array.from(new Set([...models, ...data.compatibleModels]));
-      setModels(newModels);
-      setValue('compatible_models', newModels);
-    }
-    if (data.description && !watch('description')) {
-      setValue('description', data.description);
-    }
-    
-    // 关闭分析结果显示
-    // setShowAiAnalysis(false);
-    console.log('应用AI分析结果完成');
-  };
-
   // 表单提交
   const onSubmit = async (data: PromptFormData) => {
-    // 设置超时处理，避免无限期等待
-    let submissionTimeout: NodeJS.Timeout | null = null;
-    const timeout = 15000; // 15秒超时
-    
     setIsSubmitting(true);
     
-    // 设置超时处理
-    submissionTimeout = setTimeout(() => {
-      console.error('创建提示词操作超时');
-      alert('创建操作超时，请检查网络连接或稍后重试');
-      setIsSubmitting(false);
-    }, timeout);
-    
     try {
-      // 添加必要的字段
-      data.input_variables = variables;
-      data.tags = tags;
-      data.compatible_models = models;
+      console.log('提交提示词数据:', data);
       
-      // 确保设置用户ID
-      if (!user?.id) {
-        alert('用户未登录或ID不可用，请刷新页面后重试');
-        if (submissionTimeout) clearTimeout(submissionTimeout);
-        setIsSubmitting(false);
-        return;
-      }
+      // 构建完整的数据对象
+      const promptData = {
+        ...data,
+        version: Number(data.version) || 1,
+        author: data.author || user?.username || '未知作者',
+        input_variables: variables,
+        tags,
+        compatible_models: models,
+      };
+
+      console.log('即将创建的提示词:', promptData);
       
-      // 添加用户ID
-      data.user_id = user.id;
+      const newPrompt = await createPrompt(promptData as any);
+      console.log('提示词创建成功:', newPrompt);
       
-      // 确保版本是整数
-      data.version = 1; // 版本必须是整数类型
-      
-      // 将content字段转换为messages格式
-      if (data.content && !data.messages) {
-        data.messages = [
-          {
-            role: 'system',
-            content: data.content
-          }
-        ];
-        // 删除原始content字段，因为数据库中不存在该字段
-        delete (data as any).content;
-      }
-      
-      console.log('正在提交提示词数据:', { 
-        name: data.name,
-        description: data.description, 
-        category: data.category,
-        user: user.id,
-        tags: tags.length,
-        is_public: data.is_public,
-        version: data.version
-      });
-      
-      let success = false;
-      
-      // 尝试使用Supabase适配器直接创建
-      try {
-        const { default: supabaseAdapter } = await import('@/lib/supabase-adapter');
-        const newPrompt = await supabaseAdapter.createPrompt(data as any);
-        console.log('提示词创建成功:', newPrompt);
-        
-        // 清除超时处理
-        if (submissionTimeout) clearTimeout(submissionTimeout);
-        success = true;
-        
-        // 导航到新提示词页面
-        router.push(`/prompts/${newPrompt.id}`);
-        return;
-      } catch (adapterError) {
-        console.error('使用适配器创建提示词失败，尝试API方式:', adapterError);
-      }
-      
-      // 如果适配器方式失败，回退到原来的API调用
-      if (!success) {
-        const newPrompt = await createPrompt(data as any);
-        console.log('提示词创建成功:', newPrompt);
-        router.push(`/prompts/${newPrompt.id}`);
-      }
+      // 导航到新提示词页面
+      router.push(`/prompts/${newPrompt.id}`);
     } catch (error: any) {
       console.error('创建提示词失败:', error);
       alert(`创建提示词失败: ${error.message || '请检查您的认证状态或网络连接'}`);
     } finally {
-      // 在所有情况下都确保清除超时并重置状态
-      if (submissionTimeout) clearTimeout(submissionTimeout);
       setIsSubmitting(false);
     }
   };
@@ -385,9 +248,6 @@ function CreatePromptPage() {
       {process.env.NODE_ENV === 'development' && (
         <div className="fixed top-4 right-4 z-50 bg-black/80 text-white p-4 rounded-lg text-xs space-y-1">
           <div>挂载状态: {mounted ? '已挂载' : '未挂载'}</div>
-          <div>认证加载: {isLoading ? '加载中' : '完成'}</div>
-          <div>认证状态: {isAuthenticated ? '已认证' : '未认证'}</div>
-          <div>用户: {user?.username || '无'}</div>
           <div>分类数量: {categories.length}</div>
           <div>分类加载: {categoriesLoading ? '加载中' : '完成'}</div>
         </div>
@@ -524,43 +384,6 @@ function CreatePromptPage() {
               </motion.div>
 
               {/* 描述 */}
-              {/* 公开/私有选项 */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 1.1 }}
-                className="flex items-center justify-between p-4 border border-neon-cyan/20 rounded-xl bg-dark-bg-secondary"
-              >
-                <div className="flex items-center">
-                  <div className="mr-3 text-neon-cyan">
-                    {watch('is_public') ? (
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064" />
-                      </svg>
-                    ) : (
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                      </svg>
-                    )}
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-medium text-gray-300">{watch('is_public') ? '公开分享' : '私人提示词'}</h3>
-                    <p className="text-gray-400 text-sm">{watch('is_public') ? '所有人可以查看和使用您的提示词（访问权限）' : '只有您自己可以访问此提示词'}</p>
-                  </div>
-                </div>
-                <div className="flex items-center">
-                  <label className="relative inline-flex items-center cursor-pointer">
-                    <input 
-                      type="checkbox" 
-                      className="sr-only peer" 
-                      {...register('is_public')} 
-                      defaultChecked={false}
-                    />
-                    <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-neon-cyan rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-neon-cyan"></div>
-                  </label>
-                </div>
-              </motion.div>
-
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -586,97 +409,52 @@ function CreatePromptPage() {
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 1.4 }}
-                className="space-y-2"
+                transition={{ delay: 1.3 }}
+                className="space-y-4"
               >
-                <div className="flex items-center justify-between mb-3">
-                  <label className="flex items-center text-sm font-medium text-gray-300">
-                    <SparklesIcon className="h-5 w-5 text-neon-cyan mr-2" />
-                    提示词内容 *
-                  </label>
-                  
-                  {/* AI分析按钮组 */}
-                  <div className="flex items-center gap-2">
-                    {/* AI分析按钮暂时禁用 */}
-                    {/* <AIAnalyzeButton
-                      content={watch('content') || ''}
-                      onAnalysisComplete={(result) => {
-                        if (result.suggestedTitle) setValue('name', result.suggestedTitle);
-                        if (result.category) setValue('category', result.category);
-                        if (result.description) setValue('description', result.description);
-                        if (result.tags) setValue('tags', result.tags);
-                        if (result.variables) setValue('input_variables', result.variables);
-                        console.log('AI分析完成', result);
-                      }}
-                      variant="full"
-                    /> */}
-                    <div className="text-center text-gray-500 text-sm">
-                      AI分析功能暂时维护中
-                    </div>
-                  </div>
-                </div>
+                <label className="flex items-center text-sm font-medium text-gray-300">
+                  <CodeBracketIcon className="h-5 w-5 text-neon-cyan mr-2" />
+                  提示词内容 *
+                </label>
+                
                 <div className="relative">
                   <textarea
                     {...register('content', { required: '请输入提示词内容' })}
-                    rows={8}
-                    placeholder="在这里输入您的提示词内容。使用 {{变量名}} 来定义可替换的变量..."
-                    className="input-primary w-full resize-none font-mono"
-                    onChange={(e) => detectVariables(e)}
+                    rows={10}
+                    placeholder="在这里编写您的提示词内容。您可以使用 {{变量名}} 来定义动态变量..."
+                    className="input-primary w-full font-mono text-sm resize-none"
+                    onChange={detectVariables}
                   />
-                  <div className="absolute top-3 right-3 text-xs text-gray-500">
-                    使用 {`{{变量名}}`} 定义变量
+                  
+                  {/* AI分析按钮 */}
+                  <div className="absolute top-4 right-4">
+                    {/* AI分析功能暂时禁用 */}
                   </div>
                 </div>
+                
                 {errors.content && (
                   <p className="text-neon-red text-sm mt-1">{errors.content.message}</p>
                 )}
-                
-                {/* AI分析结果显示 - 暂时禁用 */}
-                {/* <AnimatePresence>
-                  {showAiAnalysis && aiAnalysisResult && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 20, height: 0 }}
-                      animate={{ opacity: 1, y: 0, height: 'auto' }}
-                      exit={{ opacity: 0, y: -20, height: 0 }}
-                      className="mt-4"
-                    >
-                      <div className="relative">
-                        <AIAnalysisResultDisplay
-                          result={aiAnalysisResult}
-                          onApplyResults={applyAIResults}
-                        />
-                        <button
-                          onClick={() => setShowAiAnalysis(false)}
-                          className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors"
-                          title="关闭AI分析结果"
-                        >
-                          <XMarkIcon className="h-5 w-5" />
-                        </button>
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence> */}
               </motion.div>
 
               {/* 变量管理 */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 1.6 }}
+                transition={{ delay: 1.4 }}
                 className="space-y-4"
               >
                 <label className="flex items-center text-sm font-medium text-gray-300">
-                  <CodeBracketIcon className="h-5 w-5 text-neon-purple mr-2" />
+                  <TagIcon className="h-5 w-5 text-neon-purple mr-2" />
                   输入变量
                 </label>
                 
-                {/* 添加变量 */}
-                <div className="flex space-x-3">
+                <div className="flex gap-2">
                   <input
                     type="text"
                     value={variableInput}
                     onChange={(e) => setVariableInput(e.target.value)}
-                    placeholder="输入变量名"
+                    placeholder="添加新变量..."
                     className="input-primary flex-1"
                     onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addVariable())}
                   />
@@ -691,7 +469,6 @@ function CreatePromptPage() {
                   </motion.button>
                 </div>
 
-                {/* 变量列表 */}
                 <AnimatePresence>
                   {variables.length > 0 && (
                     <motion.div
@@ -727,21 +504,20 @@ function CreatePromptPage() {
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 1.8 }}
+                transition={{ delay: 1.5 }}
                 className="space-y-4"
               >
                 <label className="flex items-center text-sm font-medium text-gray-300">
-                  <TagIcon className="h-5 w-5 text-neon-purple mr-2" />
+                  <TagIcon className="h-5 w-5 text-neon-pink mr-2" />
                   标签
                 </label>
                 
-                {/* 添加标签 */}
-                <div className="flex space-x-3">
+                <div className="flex gap-2">
                   <input
                     type="text"
                     value={tagInput}
                     onChange={(e) => setTagInput(e.target.value)}
-                    placeholder="输入标签"
+                    placeholder="添加新标签..."
                     className="input-primary flex-1"
                     onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addTag())}
                   />
@@ -841,6 +617,43 @@ function CreatePromptPage() {
                       {model}
                     </motion.button>
                   ))}
+                </div>
+              </motion.div>
+
+              {/* 公开/私有选项 */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 1.1 }}
+                className="flex items-center justify-between p-4 border border-neon-cyan/20 rounded-xl bg-dark-bg-secondary"
+              >
+                <div className="flex items-center">
+                  <div className="mr-3 text-neon-cyan">
+                    {watch('is_public') ? (
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064" />
+                      </svg>
+                    ) : (
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                      </svg>
+                    )}
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-medium text-gray-300">{watch('is_public') ? '公开分享' : '私人提示词'}</h3>
+                    <p className="text-gray-400 text-sm">{watch('is_public') ? '所有人可以查看和使用您的提示词（访问权限）' : '只有您自己可以访问此提示词'}</p>
+                  </div>
+                </div>
+                <div className="flex items-center">
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input 
+                      type="checkbox" 
+                      className="sr-only peer" 
+                      {...register('is_public')} 
+                      defaultChecked={false}
+                    />
+                    <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-neon-cyan rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-neon-cyan"></div>
+                  </label>
                 </div>
               </motion.div>
 
