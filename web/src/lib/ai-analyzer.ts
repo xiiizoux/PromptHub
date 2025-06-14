@@ -61,7 +61,8 @@ class AIAnalyzer {
    */
   async analyzePrompt(
     content: string, 
-    config: Partial<AnalysisConfig> = {}
+    config: Partial<AnalysisConfig> = {},
+    existingTags: string[] = [] // 新增参数：系统中已存在的标签
   ): Promise<AIAnalysisResult> {
     if (!this.apiKey) {
       throw new Error('OpenAI API key not configured');
@@ -75,7 +76,7 @@ class AIAnalyzer {
       ...config
     };
 
-    const systemPrompt = this.buildSystemPrompt(defaultConfig);
+    const systemPrompt = this.buildSystemPrompt(defaultConfig, existingTags);
     const userPrompt = this.buildUserPrompt(content, defaultConfig);
 
     try {
@@ -100,26 +101,65 @@ class AIAnalyzer {
       );
 
       const result = JSON.parse(response.data.choices[0].message.content);
+      
+      // 对标签进行智能合并处理
+      if (result.tags && existingTags.length > 0) {
+        result.tags = this.mergeTagsIntelligently(result.tags, existingTags);
+      }
+      
       return this.validateAndFormatResult(result, content);
 
     } catch (error: any) {
       console.error('AI analysis failed:', error);
       
       // 如果API调用失败，返回基础分析结果
-      return this.getFallbackAnalysis(content);
+      const fallbackResult = this.getFallbackAnalysis(content);
+      
+      // 对后备结果也进行标签合并
+      if (fallbackResult.tags && existingTags.length > 0) {
+        fallbackResult.tags = this.mergeTagsIntelligently(fallbackResult.tags, existingTags);
+      }
+      
+      return fallbackResult;
     }
   }
 
   /**
    * 构建系统提示词
    */
-  private buildSystemPrompt(config: AnalysisConfig): string {
+  private buildSystemPrompt(config: AnalysisConfig, existingTags: string[] = []): string {
     const language = config.language === 'zh' ? '中文' : 'English';
-    // 数据库分类（仅中文）
+    // 21个预设分类（与数据库categories表完全一致）
     const categories = [
-      '全部','通用','学术','职业','文案','设计','绘画','教育','情感','娱乐','游戏','生活','商业','办公','编程','翻译','视频','播客','音乐','健康','科技'
+      '全部', '通用', '学术', '职业', '文案', '设计', '绘画', '教育', '情感', '娱乐', '游戏', '生活', '商业', '办公', '编程', '翻译', '视频', '播客', '音乐', '健康', '科技'
     ];
-    return `你是一个专业的AI提示词分析专家。请分析用户提供的提示词，并返回JSON格式的分析结果。\n\n分析维度：\n1. 分类（category）- 只能从以下类别中选择最合适的一个，严格返回下列分类的中文名，不要返回其他内容：${categories.join('、')}\n2. 标签（tags）- 提取3-8个相关标签，体现提示词的核心特征\n3. 难度级别（difficulty）- beginner/intermediate/advanced\n4. 变量提取（variables）- 找出所有{{变量名}}格式的变量\n5. 兼容模型（compatibleModels）- 推荐适合的AI模型\n6. 版本建议（version）- 基于复杂度建议版本号（1.0, 1.1, 2.0等）\n7. 预估token数（estimatedTokens）- 预估处理所需token数量\n8. 置信度（confidence）- 分析结果的置信度（0-1）\n${config.includeImprovements ? `9. 改进建议（improvements）- 提供3-5个具体的优化建议` : ''}\n${config.includeSuggestions ? `10. 使用场景（useCases）- 列出3-5个典型应用场景\n11. 标题建议（suggestedTitle）- 建议一个简洁明确的标题\n12. 描述建议（description）- 建议一个清晰的描述` : ''}\n\n请用${language}回复，返回有效的JSON格式，确保所有字段都存在。`;
+    
+    // 构建已有标签提示
+    const existingTagsHint = existingTags.length > 0 
+      ? `\n\n系统中已有以下标签，请优先使用这些标签（如果相关的话）：${existingTags.slice(0, 20).join('、')}`
+      : '';
+    
+    return `你是一个专业的AI提示词分析专家。请分析用户提供的提示词，并返回JSON格式的分析结果。
+
+分析要求：
+1. 分类（category）- 必须从以下21个预设分类中选择最合适的一个，严格返回下列分类名称，不要自由发挥或创造新分类：${categories.join('、')}
+2. 标签（tags）- 提取3-8个相关标签，体现提示词的核心特征
+3. 难度级别（difficulty）- beginner/intermediate/advanced
+4. 变量提取（variables）- 找出所有{{变量名}}格式的变量
+5. 兼容模型（compatibleModels）- 推荐适合的AI模型
+6. 版本建议（version）- 基于复杂度建议版本号（1.0, 1.1, 2.0等）
+7. 预估token数（estimatedTokens）- 预估处理所需token数量
+8. 置信度（confidence）- 分析结果的置信度（0-1）
+${config.includeImprovements ? `9. 改进建议（improvements）- 提供3-5个具体的优化建议` : ''}
+${config.includeSuggestions ? `10. 使用场景（useCases）- 列出3-5个典型应用场景
+11. 标题建议（suggestedTitle）- 建议一个简洁明确的标题
+12. 描述建议（description）- 建议一个清晰的描述` : ''}
+
+重要提醒：
+- 分类必须严格从上述21个预设分类中选择，不要使用"创意写作"、"数据分析"等不在列表中的分类
+- 如果不确定分类，请选择"通用"
+- 标签优先使用已有标签，只有在确实需要时才创建新标签${existingTagsHint}
+- 请用${language}回复，返回有效的JSON格式，确保所有字段都存在。`;
   }
 
   /**
@@ -207,25 +247,47 @@ ${content}
    */
   private detectCategoryByKeywords(content: string): string {
     const keywords = {
-      '编程': ['代码', 'code', '函数', 'function', '编程', '开发', 'debug', '算法'],
-      '创意写作': ['故事', '小说', '文章', '创意', '写作', '剧本', '诗歌'],
-      '数据分析': ['数据', '分析', '统计', '图表', '报告', 'excel', 'sql'],
-      '营销推广': ['营销', '推广', '广告', '文案', '品牌', '用户'],
-      '学术研究': ['研究', '论文', '学术', '文献', '理论', '实验'],
-      '教育培训': ['教学', '培训', '学习', '课程', '教育', '指导'],
-      '商务办公': ['商务', '办公', '会议', '邮件', '报告', '管理'],
-      '内容翻译': ['翻译', '语言', '转换', 'translate', '多语言']
+      '编程': ['代码', 'code', '函数', 'function', '编程', '开发', 'debug', '算法', 'javascript', 'python', 'java', 'css', 'html'],
+      '文案': ['文案', '广告', '营销', '宣传', '推广', '产品描述', '品牌'],
+      '设计': ['设计', '视觉', '创意', '布局', '界面', 'ui', 'ux', 'logo'],
+      '绘画': ['绘画', '画画', '艺术', '插画', '素描', '美术', '画作', '创作', '色彩', '构图'],
+      '教育': ['教学', '培训', '学习', '课程', '教育', '指导', '辅导'],
+      '学术': ['研究', '论文', '学术', '文献', '理论', '实验', '分析'],
+      '职业': ['工作', '职场', '简历', '面试', '职业', '求职', '招聘'],
+      '商业': ['商业', '生意', '投资', '创业', '管理', '市场', '销售'],
+      '办公': ['办公', '文档', '报告', '会议', '邮件', '表格', '演示'],
+      '翻译': ['翻译', '语言', '转换', 'translate', '多语言', '英语', '中文'],
+      '视频': ['视频', '影片', '制作', '剪辑', '拍摄', '脚本'],
+      '播客': ['播客', '音频', '录音', '访谈', '节目', '电台'],
+      '音乐': ['音乐', '歌曲', '作曲', '歌词', '旋律', '乐器'],
+      '健康': ['健康', '医疗', '运动', '养生', '心理', '身体'],
+      '科技': ['科技', '技术', '创新', '数字', '人工智能', 'ai', '机器学习'],
+      '生活': ['生活', '日常', '家庭', '购物', '旅行', '美食'],
+      '娱乐': ['娱乐', '游戏', '电影', '小说', '故事', '趣味'],
+      '游戏': ['游戏', '玩法', '策略', '角色', '关卡', '竞技'],
+      '情感': ['情感', '心理', '情绪', '关系', '爱情', '友情']
     };
 
     const lowerContent = content.toLowerCase();
     
+    // 计算每个分类的匹配分数
+    let bestCategory = '通用';
+    let bestScore = 0;
+    
     for (const [category, words] of Object.entries(keywords)) {
-      if (words.some(word => lowerContent.includes(word.toLowerCase()))) {
-        return category;
+      let score = 0;
+      for (const word of words) {
+        if (lowerContent.includes(word.toLowerCase())) {
+          score++;
+        }
+      }
+      if (score > bestScore) {
+        bestScore = score;
+        bestCategory = category;
       }
     }
     
-    return '通用';
+    return bestCategory;
   }
 
   /**
@@ -265,6 +327,10 @@ ${content}
     }
 
     try {
+      const categories = [
+        '全部', '通用', '学术', '职业', '文案', '设计', '绘画', '教育', '情感', '娱乐', '游戏', '生活', '商业', '办公', '编程', '翻译', '视频', '播客', '音乐', '健康', '科技'
+      ];
+      
       const response = await axios.post(
         `${this.baseURL}/chat/completions`,
         {
@@ -272,7 +338,7 @@ ${content}
           messages: [
             { 
               role: 'system', 
-              content: '你是一个提示词分类专家。请将提示词分类到以下类别之一：编程、创意写作、数据分析、营销推广、学术研究、教育培训、商务办公、内容翻译、通用、娱乐。只返回分类名称，不要其他内容。' 
+              content: `你是一个提示词分类专家。请将提示词分类到以下21个预设分类之一：${categories.join('、')}。只返回分类名称，不要其他内容。如果不确定，请选择"通用"。` 
             },
             { role: 'user', content: `请为以下提示词分类：\n\n${content}` }
           ],
@@ -287,7 +353,16 @@ ${content}
         }
       );
 
-      return response.data.choices[0].message.content.trim();
+      const aiCategory = response.data.choices[0].message.content.trim();
+      
+      // 验证AI返回的分类是否在预设列表中
+      if (categories.includes(aiCategory)) {
+        return aiCategory;
+      } else {
+        // 如果AI返回的分类不在预设列表中，使用关键词检测
+        console.warn(`AI返回了无效分类: ${aiCategory}，使用关键词检测`);
+        return this.detectCategoryByKeywords(content);
+      }
     } catch (error) {
       console.error('Quick classify failed:', error);
       return this.detectCategoryByKeywords(content);
@@ -295,14 +370,147 @@ ${content}
   }
 
   /**
-   * 提取标签（仅返回标签列表）
+   * 智能标签合并 - 优先使用已有的相似标签
    */
-  async extractTags(content: string): Promise<string[]> {
+  private mergeTagsIntelligently(aiTags: string[], existingTags: string[]): string[] {
+    const mergedTags: string[] = [];
+    
+    for (const aiTag of aiTags) {
+      const matchedTag = this.findSimilarTag(aiTag, existingTags);
+      
+      if (matchedTag) {
+        // 使用已有的相似标签
+        if (!mergedTags.includes(matchedTag)) {
+          mergedTags.push(matchedTag);
+        }
+      } else {
+        // 没有相似标签，使用AI建议的新标签
+        if (!mergedTags.includes(aiTag)) {
+          mergedTags.push(aiTag);
+        }
+      }
+    }
+    
+    return mergedTags;
+  }
+
+  /**
+   * 查找相似标签
+   */
+  private findSimilarTag(aiTag: string, existingTags: string[]): string | null {
+    const lowerAiTag = aiTag.toLowerCase().trim();
+    
+    // 1. 完全匹配
+    const exactMatch = existingTags.find(tag => tag.toLowerCase().trim() === lowerAiTag);
+    if (exactMatch) return exactMatch;
+    
+    // 2. 包含关系匹配
+    const containsMatch = existingTags.find(tag => {
+      const lowerExistingTag = tag.toLowerCase().trim();
+      return lowerExistingTag.includes(lowerAiTag) || lowerAiTag.includes(lowerExistingTag);
+    });
+    if (containsMatch) return containsMatch;
+    
+    // 3. 同义词匹配
+    const synonymMatch = this.findSynonymTag(lowerAiTag, existingTags);
+    if (synonymMatch) return synonymMatch;
+    
+    // 4. 相似度匹配（使用简单的字符串相似度）
+    for (const existingTag of existingTags) {
+      const similarity = this.calculateStringSimilarity(lowerAiTag, existingTag.toLowerCase().trim());
+      if (similarity > 0.7) { // 相似度阈值
+        return existingTag;
+      }
+    }
+    
+    return null;
+  }
+
+  /**
+   * 同义词匹配
+   */
+  private findSynonymTag(aiTag: string, existingTags: string[]): string | null {
+    const synonyms: { [key: string]: string[] } = {
+      '开发': ['编程', '代码', '程序', 'dev', 'development'],
+      '编程': ['开发', '代码', '程序', 'programming', 'coding'],
+      '代码': ['编程', '开发', '程序', 'code'],
+      '写作': ['文案', '创作', '内容', 'writing'],
+      '文案': ['写作', '内容', '营销', 'copywriting'],
+      '设计': ['ui', 'ux', '界面', 'design'],
+      '翻译': ['转换', '语言', 'translation'],
+      '分析': ['数据', '统计', 'analysis'],
+      '助手': ['ai', '智能', 'assistant'],
+      '初学者': ['新手', '入门', 'beginner'],
+      '高级': ['专业', '进阶', 'advanced'],
+      '自动化': ['automation', '自动']
+    };
+    
+    for (const [synonym, alternatives] of Object.entries(synonyms)) {
+      if (alternatives.includes(aiTag)) {
+        const match = existingTags.find(tag => tag.toLowerCase().includes(synonym));
+        if (match) return match;
+      }
+    }
+    
+    return null;
+  }
+
+  /**
+   * 计算字符串相似度（简单版本）
+   */
+  private calculateStringSimilarity(str1: string, str2: string): number {
+    if (str1 === str2) return 1;
+    
+    const longer = str1.length > str2.length ? str1 : str2;
+    const shorter = str1.length > str2.length ? str2 : str1;
+    
+    if (longer.length === 0) return 1;
+    
+    const editDistance = this.levenshteinDistance(longer, shorter);
+    return (longer.length - editDistance) / longer.length;
+  }
+
+  /**
+   * 计算编辑距离
+   */
+  private levenshteinDistance(str1: string, str2: string): number {
+    const matrix = Array(str2.length + 1).fill(null).map(() => Array(str1.length + 1).fill(null));
+    
+    for (let i = 0; i <= str1.length; i++) {
+      matrix[0][i] = i;
+    }
+    for (let j = 0; j <= str2.length; j++) {
+      matrix[j][0] = j;
+    }
+    
+    for (let j = 1; j <= str2.length; j++) {
+      for (let i = 1; i <= str1.length; i++) {
+        const indicator = str1[i - 1] === str2[j - 1] ? 0 : 1;
+        matrix[j][i] = Math.min(
+          matrix[j][i - 1] + 1,     // deletion
+          matrix[j - 1][i] + 1,     // insertion
+          matrix[j - 1][i - 1] + indicator  // substitution
+        );
+      }
+    }
+    
+    return matrix[str2.length][str1.length];
+  }
+
+  /**
+   * 提取标签（仅返回标签列表）- 支持已有标签智能合并
+   */
+  async extractTags(content: string, existingTags: string[] = []): Promise<string[]> {
     if (!this.apiKey) {
-      return this.extractTagsByKeywords(content);
+      const fallbackTags = this.extractTagsByKeywords(content);
+      return this.mergeTagsIntelligently(fallbackTags, existingTags);
     }
 
     try {
+      const existingTagsHint = existingTags.length > 0 
+        ? `\n\n请优先使用以下已有标签（如果相关）：${existingTags.slice(0, 15).join('、')}` 
+        : '';
+        
       const response = await axios.post(
         `${this.baseURL}/chat/completions`,
         {
@@ -310,7 +518,7 @@ ${content}
           messages: [
             { 
               role: 'system', 
-              content: '你是一个标签提取专家。请为提示词提取3-6个最相关的标签。用逗号分隔，只返回标签列表。' 
+              content: `你是一个标签提取专家。请为提示词提取3-6个最相关的标签。用逗号分隔，只返回标签列表。优先使用已有标签，避免创建重复或相似的标签。${existingTagsHint}` 
             },
             { role: 'user', content: `请为以下提示词提取标签：\n\n${content}` }
           ],
@@ -326,10 +534,14 @@ ${content}
       );
 
       const tagsText = response.data.choices[0].message.content.trim();
-      return tagsText.split(',').map((tag: string) => tag.trim()).filter((tag: string) => tag.length > 0);
+      const aiTags = tagsText.split(',').map((tag: string) => tag.trim()).filter((tag: string) => tag.length > 0);
+      
+      // 智能合并标签
+      return this.mergeTagsIntelligently(aiTags, existingTags);
     } catch (error) {
       console.error('Tag extraction failed:', error);
-      return this.extractTagsByKeywords(content);
+      const fallbackTags = this.extractTagsByKeywords(content);
+      return this.mergeTagsIntelligently(fallbackTags, existingTags);
     }
   }
 

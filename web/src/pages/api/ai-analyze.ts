@@ -1,5 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { aiAnalyzer, AIAnalysisResult } from '../../lib/ai-analyzer';
+import { getTags } from '../../lib/api';
 
 export default async function handler(
   req: NextApiRequest,
@@ -16,11 +17,20 @@ export default async function handler(
       return res.status(400).json({ error: '请提供有效的提示词内容' });
     }
 
+    // 获取系统中已有的标签（用于智能合并）
+    let existingTags: string[] = [];
+    try {
+      existingTags = await getTags();
+    } catch (error) {
+      console.warn('获取已有标签失败，将使用默认标签', error);
+      existingTags = ['GPT-4', 'GPT-3.5', 'Claude', 'Gemini', '初学者', '高级', '长文本', '结构化输出', '翻译', '润色'];
+    }
+
     // 根据action执行不同的分析功能
     switch (action) {
       case 'full_analyze':
-        // 完整分析
-        const fullResult = await aiAnalyzer.analyzePrompt(content, config);
+        // 完整分析 - 传递已有标签
+        const fullResult = await aiAnalyzer.analyzePrompt(content, config, existingTags);
         return res.status(200).json({ success: true, data: fullResult });
 
       case 'quick_classify':
@@ -29,8 +39,8 @@ export default async function handler(
         return res.status(200).json({ success: true, data: { category } });
 
       case 'extract_tags':
-        // 提取标签
-        const tags = await aiAnalyzer.extractTags(content);
+        // 提取标签 - 传递已有标签进行智能合并
+        const tags = await aiAnalyzer.extractTags(content, existingTags);
         return res.status(200).json({ success: true, data: { tags } });
 
       case 'suggest_version':
@@ -56,6 +66,10 @@ export default async function handler(
         // 获取配置信息
         const configInfo = aiAnalyzer.getConfig();
         return res.status(200).json({ success: true, data: configInfo });
+
+      case 'get_existing_tags':
+        // 获取系统中已有的标签
+        return res.status(200).json({ success: true, data: { tags: existingTags } });
 
       default:
         return res.status(400).json({ error: '不支持的分析操作类型' });

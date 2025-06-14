@@ -441,99 +441,58 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
     setValue('compatible_models', newModels);
   };
 
-  // AI分析处理函数
+  // 智能分类映射函数
+  function matchCategory(aiCategory: string, categories: string[]): string | null {
+    if (!aiCategory) return null;
+    
+    // 1. 精确匹配
+    let match = categories.find(cat => cat === aiCategory);
+    if (match) return match;
+    
+    // 2. 忽略大小写
+    match = categories.find(cat => cat.toLowerCase() === aiCategory.toLowerCase());
+    if (match) return match;
+    
+    // 3. 包含匹配
+    match = categories.find(cat => aiCategory.includes(cat) || cat.includes(aiCategory));
+    if (match) return match;
+    
+    // 如果都不匹配，返回null，让调用者决定是否使用默认值
+    return null;
+  }
+
+  // AI分析处理函数 - 更新以确保正确的分类映射
   const handleAIAnalysis = (result: Partial<AIAnalysisResult>) => {
     console.log('收到AI分析结果:', result);
     
     // 将结果设置到状态中
     if (result as AIAnalysisResult) {
+      // 映射分类到可用分类
+      if (result.category) {
+        const mappedCategory = matchCategory(result.category, categories);
+        if (mappedCategory) {
+          result.category = mappedCategory;
+        } else {
+          // 如果没有匹配的分类，使用通用分类
+          result.category = '通用';
+        }
+      }
+      
       setAiAnalysisResult(result as AIAnalysisResult);
       setShowAiAnalysis(true);
     }
   };
-
-  // 智能分类映射函数
-  function matchCategory(aiCategory: string, categories: string[]): string | null {
-    if (!aiCategory) return null;
-    // 1. 精确匹配
-    let match = categories.find(cat => cat === aiCategory);
-    if (match) return match;
-    // 2. 忽略大小写
-    match = categories.find(cat => cat.toLowerCase() === aiCategory.toLowerCase());
-    if (match) return match;
-    // 3. 英文名
-    match = categories.find(cat => cat.toLowerCase() === aiCategory.toLowerCase());
-    if (match) return match;
-    // 4. 别名
-    match = categories.find(cat => cat.split(',').map(a => a.trim()).includes(aiCategory));
-    if (match) return match;
-    // 5. 模糊包含
-    match = categories.find(cat => aiCategory.includes(cat) || cat.includes(aiCategory));
-    if (match) return match;
-    // 6. 拼音首字母/全拼模糊
-    const aiPinyin = pinyin(aiCategory, { toneType: 'none', type: 'array' }).join('');
-    const aiPinyinFirst = pinyin(aiCategory, { pattern: 'first', type: 'array' }).join('');
-    for (const cat of categories) {
-      const catPinyin = pinyin(cat, { toneType: 'none', type: 'array' }).join('');
-      const catPinyinFirst = pinyin(cat, { pattern: 'first', type: 'array' }).join('');
-      if (aiPinyin === catPinyin || aiPinyinFirst === catPinyinFirst) return cat;
-      if (aiPinyin.includes(catPinyin) || catPinyin.includes(aiPinyin)) return cat;
-      if (aiPinyinFirst.includes(catPinyinFirst) || catPinyinFirst.includes(aiPinyinFirst)) return cat;
-    }
-    // 7. 相似度最高（Levenshtein距离）
-    let bestScore = 0;
-    let bestCat: string | null = null;
-    for (const cat of categories) {
-      const score = stringSimilarity(aiCategory, cat);
-      if (score > bestScore) {
-        bestScore = score;
-        bestCat = cat;
-      }
-    }
-    if (bestScore > 0.6) return bestCat; // 阈值可调整
-    return null;
-  }
-
-  // 字符串相似度（简单Levenshtein实现或用第三方包）
-  function stringSimilarity(a: string, b: string): number {
-    if (!a || !b) return 0;
-    a = a.toLowerCase();
-    b = b.toLowerCase();
-    if (a === b) return 1;
-    const longer = a.length > b.length ? a : b;
-    const shorter = a.length > b.length ? b : a;
-    const longerLength = longer.length;
-    if (longerLength === 0) return 1;
-    return (longerLength - editDistance(longer, shorter)) / longerLength;
-  }
-  function editDistance(s1: string, s2: string): number {
-    const costs = [];
-    for (let i = 0; i <= s1.length; i++) {
-      let lastValue = i;
-      for (let j = 0; j <= s2.length; j++) {
-        if (i === 0) costs[j] = j;
-        else if (j > 0) {
-          let newValue = costs[j - 1];
-          if (s1.charAt(i - 1) !== s2.charAt(j - 1)) newValue = Math.min(Math.min(newValue, lastValue), costs[j]) + 1;
-          costs[j - 1] = lastValue;
-          lastValue = newValue;
-        }
-      }
-      if (i > 0) costs[s2.length] = lastValue;
-    }
-    return costs[s2.length];
-  }
 
   // 应用AI分析结果
   const applyAIResults = (data: Partial<AIAnalysisResult>) => {
     console.log('应用AI分析结果:', data);
     
     if (data.category) {
-      const matched = matchCategory(data.category, categories);
-      if (matched) setValue('category', matched);
-      else {
-        setValue('category', '');
-        alert('AI未能识别有效分类，请手动选择');
+      const mapped = matchCategory(data.category, categories);
+      if (mapped) {
+        data.category = mapped;
+      } else {
+        data.category = '通用';
       }
     }
     
@@ -1050,8 +1009,7 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
                         if (result.description) setValue('description', result.description);
                         if (result.tags) setValue('tags', result.tags);
                         if (result.variables) setValue('input_variables', result.variables);
-                        setAiAnalysisResult(result as AIAnalysisResult);
-                        setShowAiAnalysis(true);
+                        handleAIAnalysis(result);
                       }}
                       variant="full"
                     />

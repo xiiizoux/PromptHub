@@ -46,11 +46,97 @@ function CreatePromptPage() {
   const [tagInput, setTagInput] = useState('');
   const [models, setModels] = useState<string[]>([]);
   const [categories, setCategories] = useState<string[]>([
-    '通用', '创意写作', '代码辅助', '数据分析', '营销', '学术研究', '教育'
+    '通用', '学术', '职业', '文案', '设计', '绘画', '教育', '情感', '娱乐', '游戏', '生活', '商业', '办公', '编程', '翻译', '视频', '播客', '音乐', '健康', '科技'
   ]);
   const [suggestedTags, setSuggestedTags] = useState<string[]>([
     'GPT-4', 'GPT-3.5', 'Claude', 'Gemini', '初学者', '高级', '长文本', '结构化输出', '翻译', '润色'
   ]);
+  // AI分析状态
+  const [aiAnalysisResult, setAiAnalysisResult] = useState<AIAnalysisResult | null>(null);
+  const [showAiAnalysis, setShowAiAnalysis] = useState(false);
+
+  // 智能分类映射函数
+  const matchCategory = (aiCategory: string, availableCategories: string[]): string => {
+    if (!aiCategory) return '通用';
+    
+    // 1. 精确匹配
+    if (availableCategories.includes(aiCategory)) {
+      return aiCategory;
+    }
+    
+    // 2. 忽略大小写匹配
+    const lowerAiCategory = aiCategory.toLowerCase();
+    const match = availableCategories.find(cat => cat.toLowerCase() === lowerAiCategory);
+    if (match) return match;
+    
+    // 3. 包含匹配
+    const containsMatch = availableCategories.find(cat => 
+      aiCategory.includes(cat) || cat.includes(aiCategory)
+    );
+    if (containsMatch) return containsMatch;
+    
+    // 4. 如果都不匹配，返回通用
+    return '通用';
+  };
+
+  // AI分析处理函数
+  const handleAIAnalysis = (result: Partial<AIAnalysisResult>) => {
+    console.log('收到AI分析结果:', result);
+    
+    if (result as AIAnalysisResult) {
+      // 映射分类到可用分类
+      if (result.category) {
+        const mappedCategory = matchCategory(result.category, categories);
+        result.category = mappedCategory;
+      }
+      
+      setAiAnalysisResult(result as AIAnalysisResult);
+      setShowAiAnalysis(true);
+    }
+  };
+
+  // 应用AI分析结果
+  const applyAIResults = (data: Partial<AIAnalysisResult>) => {
+    if (data.category) {
+      const mappedCategory = matchCategory(data.category, categories);
+      setValue('category', mappedCategory);
+    }
+    if (data.tags && Array.isArray(data.tags)) {
+      const combinedTags = [...tags, ...data.tags];
+      const uniqueTags = combinedTags.filter((tag, index, array) => array.indexOf(tag) === index);
+      setTags(uniqueTags);
+      setValue('tags', uniqueTags);
+      
+      // 显示标签合并提示
+      console.log('AI分析建议的标签:', data.tags);
+      console.log('与现有标签合并后:', uniqueTags);
+    }
+    if (data.variables && Array.isArray(data.variables)) {
+      const combinedVariables = [...variables, ...data.variables];
+      const uniqueVariables = combinedVariables.filter((variable, index, array) => array.indexOf(variable) === index);
+      setVariables(uniqueVariables);
+      setValue('input_variables', uniqueVariables);
+    }
+    if (data.compatibleModels && Array.isArray(data.compatibleModels)) {
+      const combinedModels = [...models, ...data.compatibleModels];
+      const uniqueModels = combinedModels.filter((model, index, array) => array.indexOf(model) === index);
+      setModels(uniqueModels);
+      setValue('compatible_models', uniqueModels);
+    }
+    if (data.version) {
+      // 将string版本号转换为number
+      const versionNumber = parseFloat(data.version);
+      if (!isNaN(versionNumber)) {
+        setValue('version', versionNumber);
+      }
+    }
+    if (data.suggestedTitle && !watch('name')) {
+      setValue('name', data.suggestedTitle);
+    }
+    if (data.description && !watch('description')) {
+      setValue('description', data.description);
+    }
+  };
 
   // 获取分类数据 - 异步但不阻塞页面显示
   useEffect(() => {
@@ -372,10 +458,43 @@ function CreatePromptPage() {
                 transition={{ delay: 1.3 }}
                 className="space-y-4"
               >
-                <label className="flex items-center text-sm font-medium text-gray-300">
-                  <CodeBracketIcon className="h-5 w-5 text-neon-cyan mr-2" />
-                  提示词内容 *
-                </label>
+                <div className="flex items-center justify-between mb-3">
+                  <label className="flex items-center text-sm font-medium text-gray-300">
+                    <CodeBracketIcon className="h-5 w-5 text-neon-cyan mr-2" />
+                    提示词内容 *
+                  </label>
+                  
+                  {/* AI分析按钮组 */}
+                  <div className="flex items-center gap-2">
+                    <AIAnalyzeButton
+                      content={watch('content') || ''}
+                      onAnalysisComplete={handleAIAnalysis}
+                      variant="full"
+                    />
+                    <AIAnalyzeButton
+                      content={watch('content') || ''}
+                      onAnalysisComplete={(result) => {
+                        if (result.category) {
+                          const mappedCategory = matchCategory(result.category, categories);
+                          setValue('category', mappedCategory);
+                        }
+                      }}
+                      variant="classify"
+                    />
+                    <AIAnalyzeButton
+                      content={watch('content') || ''}
+                      onAnalysisComplete={(result) => {
+                        if (result.variables) {
+                          const combinedVariables = [...variables, ...result.variables];
+                          const uniqueVariables = combinedVariables.filter((variable, index, array) => array.indexOf(variable) === index);
+                          setVariables(uniqueVariables);
+                          setValue('input_variables', uniqueVariables);
+                        }
+                      }}
+                      variant="variables"
+                    />
+                  </div>
+                </div>
                 
                 <div className="relative">
                   <textarea
@@ -386,14 +505,27 @@ function CreatePromptPage() {
                     onChange={detectVariables}
                   />
                   
-                  {/* AI分析按钮 */}
-                  <div className="absolute top-4 right-4">
-                    {/* AI分析功能暂时禁用 */}
+                  <div className="absolute top-3 right-3 text-xs text-gray-500">
+                    使用 {`{{变量名}}`} 定义变量
                   </div>
                 </div>
                 
                 {errors.content && (
                   <p className="text-neon-red text-sm mt-1">{errors.content.message}</p>
+                )}
+                
+                {/* AI分析结果显示 */}
+                {showAiAnalysis && aiAnalysisResult && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="mt-4"
+                  >
+                    <AIAnalysisResultDisplay
+                      result={aiAnalysisResult}
+                      onApplyResults={applyAIResults}
+                    />
+                  </motion.div>
                 )}
               </motion.div>
 
