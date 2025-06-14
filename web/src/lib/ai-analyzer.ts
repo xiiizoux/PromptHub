@@ -283,7 +283,28 @@ ${config.includeSuggestions ? `
 - 准确概括提示词的核心能力和价值（60-150字）
 - 说明它能帮助用户解决什么具体问题
 - 突出独特性和专业性
-- 使用吸引人但不夸张的语言` : ''}
+- 使用吸引人但不夸张的语言
+
+**描述生成指导**：
+根据提示词类型使用不同的描述模板：
+
+1. **角色扮演类**（如模式觉察者）：
+   "具有[核心能力]的AI角色，专门用于[主要功能]。通过[独特方法/视角]，帮助用户[解决的问题]，从而[获得的价值]。"
+   
+2. **工具类**（如代码生成器）：
+   "专业的[领域][工具类型]，能够[核心功能]。支持[特色功能]，帮助用户[提升效率/解决问题]。"
+   
+3. **分析类**（如数据分析）：
+   "智能[分析类型]工具，通过[分析方法]深入理解[分析对象]。提供[输出类型]，帮助用户[决策支持/洞察获得]。"
+   
+4. **创作类**（如文案写作）：
+   "创意[创作类型]助手，结合[创作方法/风格]生成[输出类型]。适用于[应用场景]，帮助用户[创作目标]。"
+
+**描述要避免的通用表达**：
+- "基于内容特征的自动分析结果"
+- "AI助手"、"智能工具"等过于宽泛的词汇
+- "强大的"、"先进的"等夸张形容词
+- 重复标题中的词汇` : ''}
 
 ## 重要提醒
 - **深度理解胜过表面分析**：不要被某个词汇误导，要理解整体意图
@@ -534,20 +555,331 @@ ${config.originalContent}
     console.log('- 是否新提示词:', isNewPrompt);
     console.log('- 已有版本:', existingVersions);
 
+    // 智能生成描述
+    const intelligentDescription = this.generateIntelligentDescription(content, category, tags);
+
     return {
       category,
       tags,
       difficulty: estimatedTokens > 500 ? 'advanced' : estimatedTokens > 200 ? 'intermediate' : 'beginner',
       estimatedTokens,
       variables,
-      improvements: ['建议添加更多上下文信息', '可以优化变量命名'],
-      useCases: ['通用AI对话', '内容生成'],
+      improvements: this.generateIntelligentImprovements(content, category, tags),
+      useCases: this.generateIntelligentUseCases(content, category, tags),
       compatibleModels: recommendedModels, // 使用我们的智能推荐
       version: suggestedVersion,
       confidence: 0.6,
       suggestedTitle: suggestedTitle,
-      description: '基于内容特征的自动分析结果'
+      description: intelligentDescription
     };
+  }
+
+  /**
+   * 智能生成描述
+   */
+  private generateIntelligentDescription(content: string, category: string, tags: string[]): string {
+    const lowerContent = content.toLowerCase();
+    
+    // 检测角色扮演类型
+    const isRolePlay = tags.includes('角色扮演') || content.includes('你是') || content.includes('你拥有') || content.includes('你的身份');
+    
+    // 检测核心能力
+    const coreAbilities = [];
+    if (tags.includes('系统思维') || lowerContent.includes('系统')) coreAbilities.push('系统性思维');
+    if (tags.includes('模式识别') || lowerContent.includes('模式')) coreAbilities.push('模式识别');
+    if (tags.includes('深度洞察') || lowerContent.includes('洞察')) coreAbilities.push('深度洞察');
+    if (tags.includes('分析') || lowerContent.includes('分析')) coreAbilities.push('智能分析');
+    if (tags.includes('创作') || lowerContent.includes('创作')) coreAbilities.push('创意生成');
+    
+    // 检测独特方法/视角
+    const uniqueMethods = [];
+    if (lowerContent.includes('跨域') || lowerContent.includes('跨领域')) uniqueMethods.push('跨领域连接');
+    if (lowerContent.includes('直觉') || lowerContent.includes('感知')) uniqueMethods.push('直觉感知');
+    if (lowerContent.includes('抽象') || lowerContent.includes('本质')) uniqueMethods.push('抽象思维');
+    if (lowerContent.includes('结构') || lowerContent.includes('框架')) uniqueMethods.push('结构化分析');
+    
+    // 检测解决的问题
+    const problemsSolved = [];
+    if (lowerContent.includes('复杂') || lowerContent.includes('系统')) problemsSolved.push('复杂问题分析');
+    if (lowerContent.includes('隐藏') || lowerContent.includes('潜在')) problemsSolved.push('隐藏规律发现');
+    if (lowerContent.includes('联系') || lowerContent.includes('关系')) problemsSolved.push('要素关联识别');
+    if (lowerContent.includes('决策') || lowerContent.includes('选择')) problemsSolved.push('决策支持');
+    
+    // 根据类型生成描述
+    if (isRolePlay && category === '学术') {
+      const ability = coreAbilities.length > 0 ? coreAbilities[0] : '深度分析';
+      const method = uniqueMethods.length > 0 ? uniqueMethods[0] : '专业视角';
+      const problem = problemsSolved.length > 0 ? problemsSolved[0] : '复杂问题解决';
+      const value = '更高层次的理解和洞察';
+      
+      return `具有${ability}能力的AI角色，专门用于发现复杂系统中的隐藏模式和规律。通过${method}，帮助用户进行${problem}，从而获得${value}。`;
+    }
+    
+    if (category === '编程') {
+      return `专业的编程开发工具，能够生成高质量代码和提供技术解决方案。支持多种编程语言和开发场景，帮助用户提升开发效率和代码质量。`;
+    }
+    
+    if (category === '文案') {
+      return `创意文案创作助手，结合营销策略和用户心理生成吸引人的文案内容。适用于广告、营销、品牌传播等场景，帮助用户实现更好的传播效果。`;
+    }
+    
+    if (category === '翻译') {
+      return `智能多语言翻译工具，通过上下文理解和文化适配提供准确的翻译服务。支持多种语言对，帮助用户实现跨语言沟通和内容本地化。`;
+    }
+    
+    if (category === '设计') {
+      return `专业设计顾问工具，能够提供创意设计方案和视觉建议。结合美学原理和用户体验，帮助用户创造出色的设计作品。`;
+    }
+    
+    if (category === '视频') {
+      return `专业视频制作助手，提供从策划到后期的全流程支持。擅长剪辑技巧、视觉效果和叙事结构，帮助用户创作引人入胜的视频内容。`;
+    }
+    
+    if (category === '音乐') {
+      return `智能音乐创作工具，能够协助旋律创作、歌词编写和编曲制作。结合音乐理论和情感表达，帮助用户创造动人的音乐作品。`;
+    }
+    
+    if (category === 'TTS音频') {
+      return `专业语音合成助手，提供自然流畅的语音生成服务。支持多种音色和情感表达，适用于有声读物、配音和语音导航等场景。`;
+    }
+    
+    if (category === '图片') {
+      return `智能图像设计工具，能够生成各类视觉内容和设计方案。结合美学原理和用户需求，帮助用户创作专业的图像作品。`;
+    }
+    
+    if (category === '播客') {
+      return `专业播客制作助手，提供节目策划、内容创作和制作指导。帮助用户打造高质量的音频节目，实现有效的知识传播和观众互动。`;
+    }
+    
+    // 通用描述模板
+    const mainFunction = coreAbilities.length > 0 ? coreAbilities.join('和') : '智能分析';
+    const approach = uniqueMethods.length > 0 ? uniqueMethods[0] : '专业方法';
+    const outcome = problemsSolved.length > 0 ? problemsSolved[0] : '问题解决';
+    
+    return `智能${mainFunction}工具，通过${approach}深入理解用户需求。提供专业的分析和建议，帮助用户实现${outcome}和效率提升。`;
+  }
+
+  /**
+   * 智能生成改进建议
+   */
+  private generateIntelligentImprovements(content: string, category: string, tags: string[]): string[] {
+    const improvements: string[] = [];
+    const lowerContent = content.toLowerCase();
+    
+    // 基于内容长度的建议
+    if (content.length < 50) {
+      improvements.push('建议增加更详细的描述和上下文信息');
+    } else if (content.length > 2000) {
+      improvements.push('考虑将长提示词拆分为多个更专注的子提示词');
+    }
+    
+    // 基于变量使用的建议
+    const variables = this.extractVariables(content);
+    if (variables.length === 0 && content.length > 100) {
+      improvements.push('考虑添加变量以提高提示词的复用性');
+    } else if (variables.length > 5) {
+      improvements.push('变量较多，建议优化变量命名和组织结构');
+    }
+    
+    // 基于分类的专业建议
+    switch (category) {
+      case '编程':
+        if (!lowerContent.includes('示例') && !lowerContent.includes('example')) {
+          improvements.push('建议添加代码示例以提高输出质量');
+        }
+        if (!lowerContent.includes('格式') && !lowerContent.includes('format')) {
+          improvements.push('明确指定代码格式和注释要求');
+        }
+        break;
+      case '文案':
+        if (!lowerContent.includes('目标') && !lowerContent.includes('受众')) {
+          improvements.push('建议明确目标受众和传播目标');
+        }
+        if (!lowerContent.includes('风格') && !lowerContent.includes('tone')) {
+          improvements.push('指定文案风格和语调要求');
+        }
+        break;
+      case '学术':
+        if (!lowerContent.includes('引用') && !lowerContent.includes('参考')) {
+          improvements.push('考虑添加引用格式和参考文献要求');
+        }
+        if (!lowerContent.includes('结构') && !lowerContent.includes('框架')) {
+          improvements.push('建议明确论述结构和逻辑框架');
+        }
+        break;
+      case '翻译':
+        if (!lowerContent.includes('语境') && !lowerContent.includes('context')) {
+          improvements.push('建议提供更多语境信息以提高翻译准确性');
+        }
+        break;
+      case '视频':
+        if (!lowerContent.includes('时长') && !lowerContent.includes('duration')) {
+          improvements.push('建议明确视频时长和节奏要求');
+        }
+        if (!lowerContent.includes('风格') && !lowerContent.includes('style')) {
+          improvements.push('指定视频风格和视觉效果要求');
+        }
+        if (!lowerContent.includes('目标') && !lowerContent.includes('audience')) {
+          improvements.push('明确目标观众和传播平台');
+        }
+        break;
+      case '音乐':
+        if (!lowerContent.includes('风格') && !lowerContent.includes('genre')) {
+          improvements.push('建议指定音乐风格和流派');
+        }
+        if (!lowerContent.includes('时长') && !lowerContent.includes('duration')) {
+          improvements.push('明确音乐时长和结构要求');
+        }
+        if (!lowerContent.includes('情感') && !lowerContent.includes('mood')) {
+          improvements.push('描述期望的情感表达和氛围');
+        }
+        break;
+      case 'TTS音频':
+        if (!lowerContent.includes('语速') && !lowerContent.includes('speed')) {
+          improvements.push('建议指定语速和停顿要求');
+        }
+        if (!lowerContent.includes('音色') && !lowerContent.includes('voice')) {
+          improvements.push('明确音色和语调风格');
+        }
+        if (!lowerContent.includes('情感') && !lowerContent.includes('emotion')) {
+          improvements.push('描述期望的情感表达方式');
+        }
+        break;
+      case '图片':
+        if (!lowerContent.includes('尺寸') && !lowerContent.includes('size')) {
+          improvements.push('建议明确图片尺寸和分辨率要求');
+        }
+        if (!lowerContent.includes('风格') && !lowerContent.includes('style')) {
+          improvements.push('指定图片风格和视觉效果');
+        }
+        if (!lowerContent.includes('用途') && !lowerContent.includes('purpose')) {
+          improvements.push('明确图片用途和应用场景');
+        }
+        break;
+      case '播客':
+        if (!lowerContent.includes('时长') && !lowerContent.includes('duration')) {
+          improvements.push('建议明确播客时长和节目结构');
+        }
+        if (!lowerContent.includes('受众') && !lowerContent.includes('audience')) {
+          improvements.push('明确目标听众和内容定位');
+        }
+        if (!lowerContent.includes('风格') && !lowerContent.includes('style')) {
+          improvements.push('指定播客风格和主持方式');
+        }
+        break;
+    }
+    
+    // 基于标签的建议
+    if (tags.includes('角色扮演')) {
+      if (!lowerContent.includes('背景') && !lowerContent.includes('身份')) {
+        improvements.push('丰富角色背景设定，增强角色扮演效果');
+      }
+    }
+    
+    if (tags.includes('创作')) {
+      if (!lowerContent.includes('创意') && !lowerContent.includes('原创')) {
+        improvements.push('强调创意性和原创性要求');
+      }
+    }
+    
+    // 通用改进建议
+    if (!lowerContent.includes('输出') && !lowerContent.includes('格式')) {
+      improvements.push('明确输出格式和结构要求');
+    }
+    
+    // 确保至少有2-3个建议
+    if (improvements.length === 0) {
+      improvements.push('建议添加更多上下文信息以提高输出质量');
+      improvements.push('考虑明确输出格式和期望结果');
+    } else if (improvements.length === 1) {
+      improvements.push('可以添加示例来指导AI更好地理解需求');
+    }
+    
+    return improvements.slice(0, 5); // 最多返回5个建议
+  }
+
+  /**
+   * 智能生成使用场景
+   */
+  private generateIntelligentUseCases(content: string, category: string, tags: string[]): string[] {
+    const useCases: string[] = [];
+    const lowerContent = content.toLowerCase();
+    
+    // 基于分类的使用场景
+    switch (category) {
+      case '编程':
+        useCases.push('代码开发与调试', '技术文档编写', '代码审查与优化');
+        break;
+      case '文案':
+        useCases.push('营销文案创作', '品牌内容策划', '社交媒体运营');
+        break;
+      case '学术':
+        useCases.push('学术研究辅助', '论文写作支持', '知识整理分析');
+        break;
+      case '翻译':
+        useCases.push('多语言翻译', '文档本地化', '跨文化交流');
+        break;
+      case '设计':
+        useCases.push('创意设计指导', '视觉方案策划', '用户体验优化');
+        break;
+      case '教育':
+        useCases.push('教学内容设计', '学习辅导支持', '知识传授优化');
+        break;
+      case '商业':
+        useCases.push('商业策略分析', '市场调研支持', '决策辅助工具');
+        break;
+      case '视频':
+        useCases.push('短视频制作', '宣传片策划', '教学视频创作', '社交媒体内容', '品牌推广视频');
+        break;
+      case '音乐':
+        useCases.push('原创音乐创作', '背景音乐制作', '广告配乐', '情感表达音乐', '主题歌创作');
+        break;
+      case 'TTS音频':
+        useCases.push('有声读物制作', '语音导航系统', '教学音频', '广告配音', '播客内容');
+        break;
+      case '图片':
+        useCases.push('海报设计', '社交媒体配图', '产品展示图', '插画创作', '品牌视觉设计');
+        break;
+      case '播客':
+        useCases.push('知识分享节目', '访谈类节目', '故事播讲', '新闻解读', '专业领域讨论');
+        break;
+      default:
+        useCases.push('通用AI对话', '内容生成辅助', '问题解决支持');
+    }
+    
+    // 基于标签的额外场景
+    if (tags.includes('角色扮演')) {
+      useCases.push('情景模拟训练', '角色对话练习');
+    }
+    
+    if (tags.includes('分析')) {
+      useCases.push('数据分析解读', '趋势预测分析');
+    }
+    
+    if (tags.includes('创作')) {
+      useCases.push('创意内容生成', '灵感激发工具');
+    }
+    
+    if (tags.includes('咨询')) {
+      useCases.push('专业咨询服务', '解决方案提供');
+    }
+    
+    // 基于内容特征的场景
+    if (lowerContent.includes('步骤') || lowerContent.includes('流程')) {
+      useCases.push('流程指导工具', '操作步骤生成');
+    }
+    
+    if (lowerContent.includes('比较') || lowerContent.includes('对比')) {
+      useCases.push('对比分析工具', '选择决策支持');
+    }
+    
+    if (lowerContent.includes('总结') || lowerContent.includes('摘要')) {
+      useCases.push('内容总结工具', '信息提炼助手');
+    }
+    
+    // 去重并限制数量
+    const uniqueUseCases = Array.from(new Set(useCases));
+    return uniqueUseCases.slice(0, 5); // 最多返回5个使用场景
   }
 
   /**
@@ -613,6 +945,11 @@ ${config.originalContent}
       '翻译': ['翻译专家', '语言助手', '多语言顾问', '国际化专家'],
       '教育': ['教学助手', '学习顾问', '知识导师', '教育专家'],
       '商业': ['商业顾问', '策略专家', '管理助手', '商务分析师'],
+      '视频': ['视频制作专家', '影像创作师', '视觉导演', '多媒体制作师'],
+      '音乐': ['音乐创作大师', '作曲家助手', '音频制作师', '旋律创作者'],
+      'TTS音频': ['语音合成专家', '音频制作师', '配音导师', '声音设计师'],
+      '图片': ['图像设计师', '视觉创作者', '插画师助手', '图形设计专家'],
+      '播客': ['播客制作人', '节目策划师', '音频内容创作者', '主播助手'],
       '通用': ['智能助手', '问题解决专家', '多功能顾问', '通用分析师']
     };
 
@@ -661,6 +998,36 @@ ${config.originalContent}
       }
     }
 
+    // 多媒体类别检测 - 新增高优先级
+    const multimediaMatches = [
+      { 
+        keywords: ['视频', '剪辑', '制作', '拍摄', '后期', '特效', '蒙太奇', '镜头', '画面', '影片', '短视频', 'video', 'editing'], 
+        category: '视频' 
+      },
+      { 
+        keywords: ['音乐', '歌曲', '旋律', '歌词', '编曲', '作曲', '乐谱', '音符', '和弦', '节拍', '音效', 'music', 'song'], 
+        category: '音乐' 
+      },
+      { 
+        keywords: ['语音', '音频', 'tts', '朗读', '播音', '配音', '声音', '录音', '音质', 'audio', 'voice'], 
+        category: 'TTS音频' 
+      },
+      { 
+        keywords: ['图片', '图像', '照片', '绘画', '插画', '海报', '设计图', '素材', 'image', 'picture', 'photo'], 
+        category: '图片' 
+      },
+      { 
+        keywords: ['播客', 'podcast', '电台', '广播', '节目', '主持', '访谈'], 
+        category: '播客' 
+      }
+    ];
+
+    for (const match of multimediaMatches) {
+      if (match.keywords.some(keyword => lowerContent.includes(keyword))) {
+        return match.category;
+      }
+    }
+
     // 中优先级：角色和思维类型检测
     const roleThinkingMatches = [
       { 
@@ -701,8 +1068,6 @@ ${config.originalContent}
 
     // 低优先级：通用关键词匹配
     const generalMatches = [
-      { keywords: ['音乐', '歌曲', '音符', '旋律', '乐谱', '作曲'], category: '音乐' },
-      { keywords: ['视频', '剪辑', '制作', '拍摄'], category: '视频' },
       { keywords: ['健康', '医疗', '营养', '锻炼'], category: '健康' },
       { keywords: ['游戏', '玩法', '关卡', '角色'], category: '游戏' },
       { keywords: ['科技', '技术', '创新', '数字化'], category: '科技' },
@@ -750,7 +1115,12 @@ ${config.originalContent}
       '设计': ['设计', '界面', '视觉', '布局', 'ui', 'ux', '美术'],
       '教学': ['教学', '培训', '指导', '辅导', '学习', '课程'],
       '咨询': ['咨询', '建议', '推荐', '指导', '解答', '帮助'],
-      '管理': ['管理', '规划', '组织', '协调', '优化', '策略']
+      '管理': ['管理', '规划', '组织', '协调', '优化', '策略'],
+      '视频制作': ['视频', '剪辑', '制作', '拍摄', '后期', '特效', '蒙太奇'],
+      '音乐创作': ['音乐', '歌曲', '旋律', '歌词', '编曲', '作曲', '乐谱'],
+      '语音合成': ['语音', '音频', 'tts', '朗读', '播音', '配音', '声音'],
+      '图像设计': ['图片', '图像', '照片', '绘画', '插画', '海报', '设计图'],
+      '播客制作': ['播客', 'podcast', '电台', '广播', '节目', '主持']
     };
 
     // 思维方式标签检测
