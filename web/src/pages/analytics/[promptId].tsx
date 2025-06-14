@@ -20,6 +20,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { getPromptDetails, getPromptPerformance, getPerformanceReport } from '@/lib/api';
 import { PromptDetails, PromptPerformance } from '@/types';
+import QualityAnalysisPanel from '@/components/QualityAnalysisPanel';
 
 interface PromptAnalyticsPageProps {
   prompt: PromptDetails;
@@ -606,7 +607,16 @@ export default function PromptAnalyticsPage({ prompt, performance, report }: Pro
             </div>
           </motion.div>
           
-          {/* 优化建议 */}
+          {/* 质量分析 */}
+          <motion.div 
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 6.0 }}
+          >
+            <QualityAnalysisPanel promptId={prompt.id} className="mb-8" />
+          </motion.div>
+
+          {/* 传统性能数据 */}
           <motion.div 
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
@@ -620,7 +630,7 @@ export default function PromptAnalyticsPage({ prompt, performance, report }: Pro
                     <SparklesIcon className="h-5 w-5 text-neon-green" />
                   </div>
                 </div>
-                优化建议
+                传统性能数据与建议
               </h2>
             </div>
             <div className="p-8">

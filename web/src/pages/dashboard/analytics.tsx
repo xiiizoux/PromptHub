@@ -236,7 +236,9 @@ const AnalyticsPage: NextPage = () => {
                   <div className="flex items-center gap-3 p-4 bg-neon-cyan/10 rounded-lg border border-neon-cyan/20">
                     <DocumentTextIcon className="h-8 w-8 text-neon-cyan" />
                     <div>
-                      <div className="text-2xl font-bold text-white">4.8</div>
+                      <div className="text-2xl font-bold text-white">
+                        {selectedPromptId ? '--' : '4.8'}
+                      </div>
                       <div className="text-sm text-gray-400">平均评分</div>
                     </div>
                   </div>
@@ -244,7 +246,9 @@ const AnalyticsPage: NextPage = () => {
                   <div className="flex items-center gap-3 p-4 bg-neon-yellow/10 rounded-lg border border-neon-yellow/20">
                     <CpuChipIcon className="h-8 w-8 text-neon-yellow" />
                     <div>
-                      <div className="text-2xl font-bold text-white">456ms</div>
+                      <div className="text-2xl font-bold text-white">
+                        {selectedPromptId ? '--' : '456ms'}
+                      </div>
                       <div className="text-sm text-gray-400">平均响应时间</div>
                     </div>
                   </div>

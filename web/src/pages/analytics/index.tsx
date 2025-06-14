@@ -97,7 +97,7 @@ export default function AnalyticsPage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.4 }}
             >
-              深入洞察提示词性能数据，驱动AI优化决策
+              基于多维度评价体系，深入分析提示词质量，驱动AI优化决策
             </motion.p>
           </motion.div>
 
@@ -145,7 +145,7 @@ export default function AnalyticsPage() {
                 animate={{ opacity: [0.5, 1, 0.5] }}
                 transition={{ duration: 2, repeat: Infinity }}
               >
-                正在加载分析数据...
+                正在加载质量分析数据...
               </motion.p>
             </motion.div>
           ) : (
@@ -227,7 +227,7 @@ export default function AnalyticsPage() {
                         <ChartBarIcon className="h-5 w-5 text-neon-purple" />
                       </div>
                     </div>
-                    提示词性能排名
+                    提示词质量排名
                   </h2>
                 </div>
                 <div className="overflow-x-auto">
@@ -324,7 +324,7 @@ export default function AnalyticsPage() {
                             <div className="text-gray-400">
                               <ChartBarIcon className="mx-auto h-12 w-12 text-gray-500 mb-4" />
                               <h3 className="text-lg font-medium text-white mb-2">暂无数据</h3>
-                              <p>当前没有可用的性能分析数据</p>
+                              <p>当前没有可用的质量分析数据</p>
                             </div>
                           </td>
                         </tr>

@@ -494,52 +494,149 @@ export const submitPromptFeedback = async (feedback: Omit<PromptFeedback, 'creat
 // 获取提示词性能数据
 export const getPromptPerformance = async (promptId: string): Promise<PromptPerformance> => {
   try {
-    // 暂时返回模拟数据，因为性能追踪功能需要MCP服务器
-    console.log(`获取提示词 ${promptId} 性能数据 - 返回模拟数据`);
+    console.log(`获取提示词 ${promptId} 性能数据`);
+    
+    // 尝试从API获取真实数据
+    const response = await api.get(`/performance/${promptId}`);
+    
+    if (response.data.success && response.data.data) {
+      const performanceData = response.data.data.performance;
+      
+      // 如果有真实数据，转换格式并返回
+      if (performanceData && performanceData.length > 0) {
+        const latestPerformance = performanceData[0];
+        return {
+          prompt_id: promptId,
+          total_usage: latestPerformance.usageCount || 0,
+          success_rate: 0.95, // 默认成功率
+          average_rating: latestPerformance.avgRating || 0,
+          feedback_count: latestPerformance.feedbackCount || 0,
+          average_latency: latestPerformance.avgLatencyMs || 0,
+          token_stats: {
+            total_input: (latestPerformance.avgInputTokens || 0) * (latestPerformance.usageCount || 0),
+            total_output: (latestPerformance.avgOutputTokens || 0) * (latestPerformance.usageCount || 0),
+            input_avg: latestPerformance.avgInputTokens || 0,
+            output_avg: latestPerformance.avgOutputTokens || 0
+          },
+          version_distribution: {
+            [`${latestPerformance.promptVersion || 1}.0`]: latestPerformance.usageCount || 0
+          }
+        };
+      }
+    }
+    
+    // 如果没有真实数据，返回默认值
+    console.log(`提示词 ${promptId} 暂无性能数据，返回默认值`);
     return {
       prompt_id: promptId,
-      total_usage: 156,
-      success_rate: 0.94,
-      average_rating: 4.2,
-      feedback_count: 23,
-      average_latency: 1250,
+      total_usage: 0,
+      success_rate: 0,
+      average_rating: 0,
+      feedback_count: 0,
+      average_latency: 0,
       token_stats: {
-        total_input: 12450,
-        total_output: 8930,
-        input_avg: 79.8,
-        output_avg: 57.2
+        total_input: 0,
+        total_output: 0,
+        input_avg: 0,
+        output_avg: 0
       },
-      version_distribution: {
-        '1.0': 89,
-        '2.0': 67
-      }
+      version_distribution: {}
     };
   } catch (error) {
     console.error(`获取提示词 ${promptId} 性能数据失败:`, error);
-    throw error;
+    
+    // 出错时返回默认值
+    return {
+      prompt_id: promptId,
+      total_usage: 0,
+      success_rate: 0,
+      average_rating: 0,
+      feedback_count: 0,
+      average_latency: 0,
+      token_stats: {
+        total_input: 0,
+        total_output: 0,
+        input_avg: 0,
+        output_avg: 0
+      },
+      version_distribution: {}
+    };
   }
 };
 
 // 获取性能报告
 export const getPerformanceReport = async (promptId: string): Promise<any> => {
   try {
-    // 暂时返回模拟数据，因为性能追踪功能需要MCP服务器
-    console.log(`获取提示词 ${promptId} 性能报告 - 返回模拟数据`);
+    console.log(`获取提示词 ${promptId} 性能报告`);
+    
+    // 尝试从API获取真实数据
+    const response = await api.get(`/performance/${promptId}/report`);
+    
+    if (response.data.success && response.data.data && response.data.data.report) {
+      const report = response.data.data.report;
+      return {
+        suggestions: report.optimizationSuggestions || [
+          '暂无优化建议，请增加使用量以获得更准确的性能分析'
+        ],
+        insights: {
+          most_common_issues: report.feedbackThemes ? Object.keys(report.feedbackThemes) : [],
+          best_performing_versions: report.versionComparison ? 
+            report.versionComparison
+              .sort((a: any, b: any) => (b.avgRating || 0) - (a.avgRating || 0))
+              .slice(0, 3)
+              .map((v: any) => `${v.promptVersion}.0`) : [],
+          recommended_models: ['gpt-4', 'gpt-3.5-turbo'] // 默认推荐模型
+        },
+        performance: report.performance,
+        prompt: report.prompt
+      };
+    }
+    
+    // 如果没有真实数据，返回默认值
+    console.log(`提示词 ${promptId} 暂无性能报告数据，返回默认值`);
     return {
       suggestions: [
-        '考虑优化提示词的结构，使其更加清晰和具体',
-        '添加更多的示例来提高输出质量',
-        '考虑针对不同模型调整提示词内容',
-        '收集更多用户反馈以进一步优化'
+        '该提示词暂无使用数据，无法生成优化建议',
+        '建议开始使用该提示词并收集用户反馈',
+        '考虑添加更多示例来提高输出质量'
       ],
       insights: {
-        most_common_issues: ['输出格式不一致', '回答过于简短'],
-        best_performing_versions: ['2.0'],
-        recommended_models: ['gpt-4']
+        most_common_issues: [],
+        best_performing_versions: [],
+        recommended_models: ['gpt-4', 'gpt-3.5-turbo']
       }
     };
   } catch (error) {
     console.error(`获取提示词 ${promptId} 性能报告失败:`, error);
+    
+    // 出错时返回默认值
+    return {
+      suggestions: [
+        '无法获取性能数据，请稍后重试',
+        '如果问题持续，请联系技术支持'
+      ],
+      insights: {
+        most_common_issues: [],
+        best_performing_versions: [],
+        recommended_models: []
+      }
+    };
+  }
+};
+
+// 获取提示词质量分析
+export const getPromptQualityAnalysis = async (promptId: string): Promise<any> => {
+  try {
+    console.log(`获取提示词 ${promptId} 质量分析`);
+    const response = await api.get(`/quality/analyze/${promptId}`);
+    
+    if (response.data.success) {
+      return response.data.data;
+    } else {
+      throw new Error(response.data.message || '获取质量分析失败');
+    }
+  } catch (error) {
+    console.error(`获取提示词 ${promptId} 质量分析失败:`, error);
     throw error;
   }
 };

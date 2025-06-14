@@ -635,14 +635,14 @@ export default function PromptDetailsPage({ prompt }: PromptDetailsPageProps) {
                 
                 {/* 操作按钮 */}
                 <div className="pt-4 border-t border-neon-cyan/20">
-                  <button 
-                    onClick={() => alert('性能分析功能开发中...')}
-                    className="w-full btn-secondary flex items-center justify-center disabled:opacity-50"
-                    title="性能分析功能开发中"
+                  <Link 
+                    href={`/analytics/${prompt.id}`}
+                    className="w-full btn-secondary flex items-center justify-center group hover:bg-neon-purple/20 hover:border-neon-purple/50 transition-all duration-300"
+                    title="查看详细性能分析"
                   >
-                    <ChartBarIcon className="h-5 w-5 mr-2" />
-                    性能分析
-                  </button>
+                    <ChartBarIcon className="h-5 w-5 mr-2 group-hover:text-neon-purple transition-colors duration-300" />
+                    <span className="group-hover:text-neon-purple transition-colors duration-300">性能分析</span>
+                  </Link>
                 </div>
               </div>
             </motion.div>
