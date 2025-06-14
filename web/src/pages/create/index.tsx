@@ -476,7 +476,12 @@ function CreatePromptPage() {
                   <input
                     {...register('version')}
                     type="text"
-                    defaultValue="1.0"
+                    value={(() => {
+                      const version = watch('version') ?? 1.0;
+                      const numVersion = Number(version);
+                      return isNaN(numVersion) ? String(version) : numVersion.toFixed(1);
+                    })()}
+                    onChange={e => setValue('version', e.target.value as any)}
                     className="input-primary w-full"
                   />
                 </div>
