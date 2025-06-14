@@ -52,10 +52,14 @@ function CreatePromptPage() {
   // AI分析状态
   const [aiAnalysisResult, setAiAnalysisResult] = useState<AIAnalysisResult | null>(null);
   const [showAiAnalysis, setShowAiAnalysis] = useState(false);
+  
+  // 数据加载状态
+  const [categoriesLoading, setCategoriesLoading] = useState(false);
+  const [tagsLoading, setTagsLoading] = useState(false);
 
-  // 智能分类映射函数
-  const matchCategory = (aiCategory: string, availableCategories: string[]): string => {
-    if (!aiCategory) return '通用';
+  // 智能分类映射函数 - 改进安全性，与编辑页面保持一致
+  function matchCategory(aiCategory: string, availableCategories: string[]): string | null {
+    if (!aiCategory) return null;
     
     // 1. 精确匹配
     if (availableCategories.includes(aiCategory)) {
@@ -64,28 +68,32 @@ function CreatePromptPage() {
     
     // 2. 忽略大小写匹配
     const lowerAiCategory = aiCategory.toLowerCase();
-    const match = availableCategories.find(cat => cat.toLowerCase() === lowerAiCategory);
+    let match = availableCategories.find(cat => cat.toLowerCase() === lowerAiCategory);
     if (match) return match;
     
     // 3. 包含匹配
-    const containsMatch = availableCategories.find(cat => 
-      aiCategory.includes(cat) || cat.includes(aiCategory)
-    );
-    if (containsMatch) return containsMatch;
+    match = availableCategories.find(cat => aiCategory.includes(cat) || cat.includes(aiCategory));
+    if (match) return match;
     
-    // 4. 如果都不匹配，返回通用
-    return '通用';
-  };
+    // 如果都不匹配，返回null，让调用者决定是否使用默认值
+    return null;
+  }
 
-  // AI分析处理函数
+  // AI分析处理函数 - 更新以确保正确的分类映射，与编辑页面保持一致
   const handleAIAnalysis = (result: Partial<AIAnalysisResult>) => {
     console.log('收到AI分析结果:', result);
     
+    // 将结果设置到状态中
     if (result as AIAnalysisResult) {
       // 映射分类到可用分类
       if (result.category) {
         const mappedCategory = matchCategory(result.category, categories);
-        result.category = mappedCategory;
+        if (mappedCategory) {
+          result.category = mappedCategory;
+        } else {
+          // 如果没有匹配的分类，使用通用分类
+          result.category = '通用';
+        }
       }
       
       setAiAnalysisResult(result as AIAnalysisResult);
@@ -102,12 +110,21 @@ function CreatePromptPage() {
     };
   };
 
-  // 应用AI分析结果
+  // 应用AI分析结果 - 增强功能，与编辑页面保持一致
   const applyAIResults = (data: Partial<AIAnalysisResult>) => {
+    console.log('应用AI分析结果:', data);
+    
     if (data.category) {
-      const mappedCategory = matchCategory(data.category, categories);
-      setValue('category', mappedCategory);
+      const mapped = matchCategory(data.category, categories);
+      if (mapped) {
+        data.category = mapped;
+      } else {
+        data.category = '通用';
+      }
+      setValue('category', data.category);
     }
+    
+    // 应用标签 - 与现有标签合并
     if (data.tags && Array.isArray(data.tags)) {
       const combinedTags = [...tags, ...data.tags];
       const uniqueTags = combinedTags.filter((tag, index, array) => array.indexOf(tag) === index);
@@ -118,27 +135,34 @@ function CreatePromptPage() {
       console.log('AI分析建议的标签:', data.tags);
       console.log('与现有标签合并后:', uniqueTags);
     }
+    
+    // 应用变量 - 与现有变量合并
     if (data.variables && Array.isArray(data.variables)) {
       const combinedVariables = [...variables, ...data.variables];
       const uniqueVariables = combinedVariables.filter((variable, index, array) => array.indexOf(variable) === index);
       setVariables(uniqueVariables);
       setValue('input_variables', uniqueVariables);
     }
+    
+    // 应用兼容模型 - 与现有模型合并
     if (data.compatibleModels && Array.isArray(data.compatibleModels)) {
       const combinedModels = [...models, ...data.compatibleModels];
       const uniqueModels = combinedModels.filter((model, index, array) => array.indexOf(model) === index);
       setModels(uniqueModels);
       setValue('compatible_models', uniqueModels);
     }
-    if (data.version) {
-      setValue('version', parseFloat(data.version) || 0.1);
+
+    // 应用建议标题 - 只在当前标题为空时应用
+    if (data.suggestedTitle && !watch('name')) {
+      setValue('name', data.suggestedTitle);
     }
-    if (data.suggestedTitle) {
-      setValue('title', data.suggestedTitle);
-    }
-    if (data.description) {
+
+    // 应用描述 - 只在当前描述为空时应用
+    if (data.description && !watch('description')) {
       setValue('description', data.description);
     }
+    
+    // 应用版本
     if (data.version) {
       // 将string版本号转换为number
       const versionNumber = parseFloat(data.version);
@@ -146,17 +170,12 @@ function CreatePromptPage() {
         setValue('version', versionNumber);
       }
     }
-    if (data.suggestedTitle && !watch('name')) {
-      setValue('name', data.suggestedTitle);
-    }
-    if (data.description && !watch('description')) {
-      setValue('description', data.description);
-    }
   };
 
   // 获取分类数据 - 异步但不阻塞页面显示
   useEffect(() => {
     const fetchCategories = async () => {
+      setCategoriesLoading(true);
       try {
         console.log('开始获取类别数据...');
         const data = await getCategories();
@@ -167,6 +186,8 @@ function CreatePromptPage() {
       } catch (err) {
         console.error('获取分类失败:', err);
         // 保持默认分类
+      } finally {
+        setCategoriesLoading(false);
       }
     };
     
@@ -176,6 +197,7 @@ function CreatePromptPage() {
   // 获取标签数据 - 异步但不阻塞页面显示
   useEffect(() => {
     const fetchTags = async () => {
+      setTagsLoading(true);
       try {
         const data = await getTags();
         if (data && data.length > 0) {
@@ -184,6 +206,8 @@ function CreatePromptPage() {
       } catch (err) {
         console.error('获取标签失败:', err);
         // 保持默认标签
+      } finally {
+        setTagsLoading(false);
       }
     };
     fetchTags();
@@ -476,34 +500,19 @@ function CreatePromptPage() {
                     提示词内容 *
                   </label>
                   
-                  {/* AI分析按钮组 */}
+                  {/* AI分析按钮组 - 与编辑页面保持一致 */}
                   <div className="flex items-center gap-2">
                     <AIAnalyzeButton
                       content={watch('content') || ''}
-                      onAnalysisComplete={handleAIAnalysis}
+                      onAnalysisComplete={(result) => {
+                        if (result.suggestedTitle) setValue('name', result.suggestedTitle);
+                        if (result.category) setValue('category', result.category);
+                        if (result.description) setValue('description', result.description);
+                        if (result.tags) setValue('tags', result.tags);
+                        if (result.variables) setValue('input_variables', result.variables);
+                        handleAIAnalysis(result);
+                      }}
                       variant="full"
-                    />
-                    <AIAnalyzeButton
-                      content={watch('content') || ''}
-                      onAnalysisComplete={(result) => {
-                        if (result.category) {
-                          const mappedCategory = matchCategory(result.category, categories);
-                          setValue('category', mappedCategory);
-                        }
-                      }}
-                      variant="classify"
-                    />
-                    <AIAnalyzeButton
-                      content={watch('content') || ''}
-                      onAnalysisComplete={(result) => {
-                        if (result.variables) {
-                          const combinedVariables = [...variables, ...result.variables];
-                          const uniqueVariables = combinedVariables.filter((variable, index, array) => array.indexOf(variable) === index);
-                          setVariables(uniqueVariables);
-                          setValue('input_variables', uniqueVariables);
-                        }
-                      }}
-                      variant="variables"
                     />
                   </div>
                 </div>
@@ -526,19 +535,31 @@ function CreatePromptPage() {
                   <p className="text-neon-red text-sm mt-1">{errors.content.message}</p>
                 )}
                 
-                {/* AI分析结果显示 */}
-                {showAiAnalysis && aiAnalysisResult && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="mt-4"
-                  >
-                    <AIAnalysisResultDisplay
-                      result={aiAnalysisResult}
-                      onApplyResults={applyAIResults}
-                    />
-                  </motion.div>
-                )}
+                {/* AI分析结果显示 - 与编辑页面保持一致 */}
+                <AnimatePresence>
+                  {showAiAnalysis && aiAnalysisResult && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 20, height: 0 }}
+                      animate={{ opacity: 1, y: 0, height: 'auto' }}
+                      exit={{ opacity: 0, y: -20, height: 0 }}
+                      className="mt-4"
+                    >
+                      <div className="relative">
+                        <AIAnalysisResultDisplay
+                          result={aiAnalysisResult}
+                          onApplyResults={applyAIResults}
+                        />
+                        <button
+                          onClick={() => setShowAiAnalysis(false)}
+                          className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors"
+                          title="关闭AI分析结果"
+                        >
+                          <XMarkIcon className="h-5 w-5" />
+                        </button>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </motion.div>
 
               {/* 变量管理 */}
