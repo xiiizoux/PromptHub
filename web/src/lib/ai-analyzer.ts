@@ -208,8 +208,8 @@ class AIAnalyzer {
 7. 置信度（confidence）- 分析结果的置信度（0-1）
 ${config.includeImprovements ? `8. 改进建议（improvements）- 提供3-5个具体的优化建议` : ''}
 ${config.includeSuggestions ? `9. 使用场景（useCases）- 列出3-5个典型应用场景
-10. 标题建议（suggestedTitle）- 建议一个简洁明确的标题
-11. 描述建议（description）- 建议一个清晰的描述` : ''}
+10. 标题建议（suggestedTitle）- 建议一个简洁明确的标题（10-30字）
+11. 描述建议（description）- 生成简洁准确的描述（50-150字），突出核心功能和特点，避免过于技术性的语言` : ''}
 
 重要提醒：
 - 分类必须严格从上述21个预设分类中选择一个
