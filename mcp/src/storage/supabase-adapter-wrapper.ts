@@ -6,9 +6,8 @@
  */
 
 // 导入MCP服务的类型定义
-import { StorageAdapter, Prompt, PromptVersion, User, AuthResponse, PromptFilters, PaginatedResponse, ApiKey, Comment } from '../types.js';
+import { StorageAdapter, Prompt, PromptVersion, User, AuthResponse, PromptFilters, PaginatedResponse, ApiKey } from '../types.js';
 // import { extendedSupabaseAdapter as supabaseAdapterInstance } from '../../../supabase/index.js';
-import { SocialStorageExtensions } from './stub-social-adapter.js';
 
 // 临时的虚拟supabase适配器，用于编译通过
 const supabaseAdapterInstance = {
@@ -50,15 +49,11 @@ const supabaseAdapterInstance = {
 /**
  * 包装共享的Supabase适配器，确保类型兼容性
  * 添加了错误处理和日志能力
- * 继承SocialStorageExtensions以实现社交功能相关的存根方法
  */
-export class SupabaseAdapter extends SocialStorageExtensions implements StorageAdapter {
+export class SupabaseAdapter implements StorageAdapter {
   private connectionVerified: boolean = false;
   
   constructor() {
-    // 调用父类构造函数
-    super();
-    
     // 在创建适配器时验证连接
     this.verifyConnection().catch(err => {
       console.error('警告: Supabase连接验证失败:', err.message);
@@ -261,12 +256,5 @@ export class SupabaseAdapter extends SocialStorageExtensions implements StorageA
     }
   }
   
-  // 获取单条评论
-  async getComment(commentId: string): Promise<Comment | null> {
-    try {
-      return await supabaseAdapterInstance.getComment(commentId);
-    } catch (error) {
-      return this.handleError<Comment | null>('getComment', error, null);
-    }
-  }
+
 }

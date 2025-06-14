@@ -9,8 +9,38 @@ import {
   PromptFilters
 } from '../types.js';
 import { performanceTools, performanceToolHandlers } from '../performance/performance-tools.js';
-import { getMcpServerInfo } from './mcp-info.js';
+// MCP服务器信息内联定义
+const getMcpServerInfo = () => ({
+  name: 'MCP Prompt Server',
+  version: '1.0.0',
+  description: 'AI自动提取和添加提示词的MCP服务器',
+  protocolVersion: '1.0.0',
+  vendor: 'MCP 团队',
+  capabilities: [
+    'prompt_management',
+    'version_control',
+    'performance_analysis',
+    'intelligent_ai_tools',
+    'enhanced_search'
+  ]
+});
 import { authenticateRequest, optionalAuthMiddleware } from './auth-middleware.js';
+import { 
+  intelligentPromptSelectionTool,
+  intelligentPromptStorageTool,
+  externalAIAnalysisTool,
+  handleIntelligentPromptSelection,
+  handleIntelligentPromptStorage,
+  handleExternalAIAnalysis
+} from '../tools/intelligent-tools.js';
+import {
+  enhancedSearchTool,
+  promptSelectionTool,
+  quickAccessTool,
+  handleEnhancedSearch,
+  handlePromptSelection,
+  handleQuickAccess
+} from '../tools/enhanced-search-tools.js';
 
 // 创建路由器
 const router = express.Router();
@@ -274,6 +304,16 @@ router.get('/tools', optionalAuthMiddleware, (req, res) => {
       parameters: {},
     },
     
+    // 智能AI工具 - 支持第三方客户端AI分析
+    intelligentPromptSelectionTool,
+    intelligentPromptStorageTool,
+    externalAIAnalysisTool,
+    
+    // 增强搜索和展示工具
+    enhancedSearchTool,
+    promptSelectionTool,
+    quickAccessTool,
+    
     // 性能分析工具
     {
       name: 'track_prompt_usage',
@@ -516,6 +556,29 @@ router.post('/tools/:name/invoke', optionalAuthMiddleware, async (req, res) => {
       case 'get_ab_test_results':
         result = await performanceToolHandlers.get_ab_test_results(params, req);
         break;
+      
+      // 智能AI工具处理
+      case 'intelligent_prompt_selection':
+        result = await handleIntelligentPromptSelection(params);
+        break;
+      case 'intelligent_prompt_storage':
+        result = await handleIntelligentPromptStorage(params);
+        break;
+      case 'analyze_prompt_with_external_ai':
+        result = await handleExternalAIAnalysis(params);
+        break;
+      
+      // 增强搜索和展示工具处理
+      case 'enhanced_search_prompts':
+        result = await handleEnhancedSearch(params, req?.user?.id);
+        break;
+      case 'select_prompt_by_index':
+        result = await handlePromptSelection(params, req?.user?.id);
+        break;
+      case 'quick_access_prompts':
+        result = await handleQuickAccess(params, req?.user?.id);
+        break;
+        
       default:
         throw new Error(`未知工具: ${name}`);
     }
@@ -687,10 +750,43 @@ async function handleSearchPrompts(params: any, req?: express.Request) {
   const includePublic = params.includePublic !== false;
   const prompts = await storage.searchPrompts(params.query, req?.user?.id, includePublic);
 
+  // 格式化搜索结果，提供清晰的展示
+  const formattedResults = prompts.map((prompt, index) => ({
+    index: index,
+    name: prompt.name,
+    description: prompt.description,
+    category: prompt.category,
+    tags: prompt.tags || [],
+    isPublic: prompt.is_public,
+    isOwner: prompt.user_id === req?.user?.id,
+    version: prompt.version || 1.0,
+    difficulty: prompt.difficulty || 'intermediate',
+    preview: prompt.messages?.[0]?.content?.text?.substring(0, 150) + '...' || prompt.description,
+    createdAt: prompt.created_at,
+    updatedAt: prompt.updated_at
+  }));
+
+  const response = {
+    success: true,
+    query: params.query,
+    summary: {
+      totalFound: prompts.length,
+      includePublic: includePublic,
+      includePrivate: !!req?.user?.id,
+      userAuthenticated: !!req?.user?.id
+    },
+    results: formattedResults,
+    instructions: {
+      selectPrompt: '使用 get_prompt_details 工具获取完整提示词内容，参数：{"name": "提示词名称"}',
+      enhancedSearch: '使用 enhanced_search_prompts 工具进行更高级的搜索和选择',
+      quickAccess: '使用 quick_access_prompts 工具快速访问分类和热门内容'
+    }
+  };
+
   return {
     content: {
       type: 'text',
-      text: JSON.stringify({ prompts }, null, 2),
+      text: JSON.stringify(response, null, 2),
     },
   };
 }
