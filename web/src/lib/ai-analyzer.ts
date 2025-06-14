@@ -212,6 +212,9 @@ ${content}
   private recommendCompatibleModels(category: string, content: string): string[] {
     const recommendations: string[] = [];
     
+    // 从预设的MODEL_TAGS中获取模型ID
+    const availableModels = MODEL_TAGS.map(tag => tag.id);
+    
     // 基于分类推荐
     switch (category) {
       case '编程':
@@ -236,6 +239,13 @@ ${content}
       case '播客':
       case '音乐':
         recommendations.push('audio-generation', 'audio-tts');
+        break;
+      case '学术':
+        recommendations.push('llm-large', 'reasoning-specialized');
+        break;
+      case '健康':
+      case '科技':
+        recommendations.push('llm-large', 'reasoning-specialized');
         break;
       default:
         recommendations.push('llm-large', 'llm-medium');
@@ -278,14 +288,26 @@ ${content}
         recommendations.push('reasoning-specialized');
       }
     }
-    
-    // 确保至少有一个推荐
-    if (recommendations.length === 0) {
-      recommendations.push('llm-large');
+
+    // 检测多模态相关内容
+    if (lowerContent.includes('视觉') || lowerContent.includes('看图') || 
+        lowerContent.includes('图片分析') || lowerContent.includes('多模态')) {
+      if (!recommendations.includes('multimodal-vision')) {
+        recommendations.push('multimodal-vision');
+      }
     }
     
-    // 限制推荐数量
-    return recommendations.slice(0, 4);
+    // 过滤掉不在预设模型列表中的推荐
+    const validRecommendations = recommendations.filter(model => availableModels.includes(model));
+    
+    // 确保至少有一个推荐，如果没有有效推荐则使用默认模型
+    if (validRecommendations.length === 0) {
+      validRecommendations.push('llm-large');
+    }
+    
+    // 限制推荐数量并去重
+    const uniqueRecommendations = Array.from(new Set(validRecommendations));
+    return uniqueRecommendations.slice(0, 4);
   }
 
   /**
@@ -634,11 +656,65 @@ ${content}
   /**
    * 建议版本号
    */
-  suggestVersion(content: string, existingVersions: string[] = []): string {
+  suggestVersion(content: string, existingVersions: string[] = [], currentVersion?: string, isNewPrompt: boolean = false): string {
     const complexity = this.calculateComplexity(content);
     const variables = this.extractVariables(content);
     
-    // 基于复杂度建议版本号
+    // 新提示词从0.1开始
+    if (isNewPrompt) {
+      let baseVersion = '0.1';
+      
+      if (complexity > 0.7 || variables.length > 5) {
+        baseVersion = '0.3';
+      } else if (complexity > 0.5 || variables.length > 2) {
+        baseVersion = '0.2';
+      }
+
+      // 确保版本号不重复
+      let version = baseVersion;
+      let counter = 1;
+      while (existingVersions.includes(version)) {
+        const [major, minor] = baseVersion.split('.');
+        version = `${major}.${parseInt(minor) + counter}`;
+        counter++;
+      }
+
+      return version;
+    }
+
+    // 现有提示词版本必须大于等于当前版本
+    if (currentVersion) {
+      const [currentMajor, currentMinor] = currentVersion.split('.').map(Number);
+      let suggestedMajor = currentMajor;
+      let suggestedMinor = currentMinor;
+
+      // 基于复杂度和变量数量决定版本增量
+      if (complexity > 0.7 || variables.length > 5) {
+        // 大幅改动，建议升级主版本
+        suggestedMajor = currentMajor + 1;
+        suggestedMinor = 0;
+      } else if (complexity > 0.5 || variables.length > 2) {
+        // 中等改动，建议升级次版本
+        suggestedMinor = currentMinor + 1;
+      } else {
+        // 小幅改动，建议升级小版本
+        suggestedMinor = currentMinor + 1;
+      }
+
+      let baseVersion = `${suggestedMajor}.${suggestedMinor}`;
+      
+      // 确保版本号不重复
+      let version = baseVersion;
+      let counter = 1;
+      while (existingVersions.includes(version)) {
+        version = `${suggestedMajor}.${suggestedMinor + counter}`;
+        counter++;
+      }
+
+      return version;
+    }
+
+    // 如果没有当前版本信息，按照旧逻辑处理
     let baseVersion = '1.0';
     
     if (complexity > 0.7 || variables.length > 5) {

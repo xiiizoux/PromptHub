@@ -1041,4 +1041,178 @@ export class SupabaseAdapter extends SocialStorageExtensions implements StorageA
       return null;
     }
   }
+
+  // ========= 社交互动方法实现 =========
+
+  // 创建社交互动（点赞、收藏、分享）
+  async createSocialInteraction(userId: string, promptId: string, type: string): Promise<any> {
+    try {
+      const { data, error } = await this.supabase
+        .from('social_interactions')
+        .insert([{
+          user_id: userId,
+          prompt_id: promptId,
+          type: type,
+          created_at: new Date().toISOString()
+        }])
+        .select()
+        .single();
+
+      if (error) {
+        throw new Error(`创建社交互动失败: ${error.message}`);
+      }
+
+      return data;
+    } catch (err) {
+      console.error('创建社交互动时出错:', err);
+      throw err;
+    }
+  }
+
+  // 删除社交互动
+  async removeSocialInteraction(userId: string, promptId: string, type: string): Promise<boolean> {
+    try {
+      const { error } = await this.supabase
+        .from('social_interactions')
+        .delete()
+        .eq('user_id', userId)
+        .eq('prompt_id', promptId)
+        .eq('type', type);
+
+      if (error) {
+        throw new Error(`删除社交互动失败: ${error.message}`);
+      }
+
+      return true;
+    } catch (err) {
+      console.error('删除社交互动时出错:', err);
+      return false;
+    }
+  }
+
+  // 获取提示词的互动数据
+  async getPromptInteractions(promptId: string, type?: string, userId?: string): Promise<{
+    likes: number;
+    bookmarks: number;
+    shares: number;
+    userInteraction?: {
+      liked: boolean;
+      bookmarked: boolean;
+      shared: boolean;
+    }
+  }> {
+    try {
+      // 获取所有互动数据
+      const { data: allInteractions, error } = await this.supabase
+        .from('social_interactions')
+        .select('type, user_id')
+        .eq('prompt_id', promptId);
+
+      if (error) {
+        throw new Error(`获取互动数据失败: ${error.message}`);
+      }
+
+      // 统计各类互动数量
+      const likes = allInteractions?.filter(i => i.type === 'like').length || 0;
+      const bookmarks = allInteractions?.filter(i => i.type === 'bookmark').length || 0;
+      const shares = allInteractions?.filter(i => i.type === 'share').length || 0;
+
+      // 如果提供了用户ID，获取用户的互动状态
+      let userInteraction = undefined;
+      if (userId) {
+        const userInteractions = allInteractions?.filter(i => i.user_id === userId) || [];
+        userInteraction = {
+          liked: userInteractions.some(i => i.type === 'like'),
+          bookmarked: userInteractions.some(i => i.type === 'bookmark'),
+          shared: userInteractions.some(i => i.type === 'share')
+        };
+      }
+
+      return {
+        likes,
+        bookmarks,
+        shares,
+        userInteraction
+      };
+    } catch (err) {
+      console.error('获取提示词互动数据时出错:', err);
+      return {
+        likes: 0,
+        bookmarks: 0,
+        shares: 0,
+        userInteraction: userId ? {
+          liked: false,
+          bookmarked: false,
+          shared: false
+        } : undefined
+      };
+    }
+  }
+
+  // 创建评论
+  async createComment(userId: string, promptId: string, content: string, parentId?: string): Promise<Comment> {
+    try {
+      const { data, error } = await this.supabase
+        .from('comments')
+        .insert([{
+          user_id: userId,
+          prompt_id: promptId,
+          content: content,
+          parent_id: parentId || null,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        }])
+        .select()
+        .single();
+
+      if (error) {
+        throw new Error(`创建评论失败: ${error.message}`);
+      }
+
+      return data as Comment;
+    } catch (err) {
+      console.error('创建评论时出错:', err);
+      throw err;
+    }
+  }
+
+  // 获取提示词的评论
+  async getPromptComments(promptId: string, page: number = 1, pageSize: number = 20): Promise<any> {
+    try {
+      const from = (page - 1) * pageSize;
+      const to = from + pageSize - 1;
+
+      const { data, error, count } = await this.supabase
+        .from('comments')
+        .select('*, user:users(id, email, display_name)', { count: 'exact' })
+        .eq('prompt_id', promptId)
+        .is('parent_id', null)  // 只获取顶级评论
+        .order('created_at', { ascending: false })
+        .range(from, to);
+
+      if (error) {
+        throw new Error(`获取评论失败: ${error.message}`);
+      }
+
+      const total = count || 0;
+      const totalPages = Math.ceil(total / pageSize);
+
+      return {
+        data: data || [],
+        total,
+        page,
+        pageSize,
+        totalPages
+      };
+    } catch (err) {
+      console.error('获取提示词评论时出错:', err);
+      return {
+        data: [],
+        total: 0,
+        page: 1,
+        pageSize: 20,
+        totalPages: 0
+      };
+    }
+  }
 }

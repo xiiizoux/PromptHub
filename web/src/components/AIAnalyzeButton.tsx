@@ -182,9 +182,12 @@ export const AIAnalysisResultDisplay: React.FC<AIAnalysisResultDisplayProps> = (
         category: result.category,
         tags: result.tags,
         version: result.version,
-        variables: result.variables
+        variables: result.variables,
+        compatibleModels: result.compatibleModels,
+        suggestedTitle: result.suggestedTitle,
+        description: result.description
       });
-      setAppliedFields(new Set(['category', 'tags', 'version', 'variables']));
+      setAppliedFields(new Set(['category', 'tags', 'version', 'variables', 'compatibleModels', 'suggestedTitle', 'description']));
     }
   };
 
@@ -271,17 +274,42 @@ export const AIAnalysisResultDisplay: React.FC<AIAnalysisResultDisplayProps> = (
             </button>
           </div>
           <div className="flex flex-wrap gap-2">
-            {result.variables.length > 0 ? (
+            {result.variables && result.variables.length > 0 ? (
               result.variables.map((variable, index) => (
                 <span key={index} className="bg-green-100 text-green-800 px-2 py-1 rounded text-sm font-mono">
                   {`{{${variable}}}`}
                 </span>
               ))
             ) : (
-              <span className="text-gray-500 text-sm">无变量</span>
+              <span className="text-gray-500 text-sm italic">无变量</span>
             )}
           </div>
         </div>
+
+        {/* 兼容模型 */}
+        {result.compatibleModels && result.compatibleModels.length > 0 && (
+          <div className="mt-4">
+            <div className="bg-white rounded-lg p-4 border border-gray-200">
+              <div className="flex items-center justify-between mb-2">
+                <h4 className="font-medium text-gray-700">🔧 兼容模型</h4>
+                <button
+                  onClick={() => applyField('compatibleModels', result.compatibleModels)}
+                  disabled={appliedFields.has('compatibleModels')}
+                  className="text-sm text-blue-600 hover:text-blue-800 disabled:text-gray-400"
+                >
+                  {appliedFields.has('compatibleModels') ? '✅ 已应用' : '应用'}
+                </button>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {result.compatibleModels.map((model, index) => (
+                  <span key={index} className="bg-purple-100 text-purple-800 px-2 py-1 rounded text-sm">
+                    {model}
+                  </span>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* 详细信息 */}

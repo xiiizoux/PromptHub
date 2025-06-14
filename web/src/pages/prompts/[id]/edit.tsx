@@ -488,6 +488,8 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
       } else {
         data.category = '通用';
       }
+      setValue('category', data.category);
+      setHasUnsavedChanges(true);
     }
     
     // 应用标签
@@ -497,11 +499,18 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
       setHasUnsavedChanges(true);
     }
     
-    // 应用版本
+    // 应用版本 - 确保版本号大于等于当前版本
     if (data.version) {
       let versionNum = 1;
       if (typeof data.version === 'number') versionNum = data.version;
-      else if (typeof data.version === 'string') versionNum = parseInt(data.version, 10) || 1;
+      else if (typeof data.version === 'string') versionNum = parseFloat(data.version) || 1;
+      
+      // 确保新版本不小于当前版本
+      const currentVersion = watch('version') || 1;
+      if (versionNum < currentVersion) {
+        versionNum = currentVersion + 0.1;
+      }
+      
       setValue('version', versionNum);
       setHasUnsavedChanges(true);
     }
@@ -517,6 +526,18 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
     if (data.compatibleModels && Array.isArray(data.compatibleModels)) {
       setModels(data.compatibleModels);
       setValue('compatible_models', data.compatibleModels);
+      setHasUnsavedChanges(true);
+    }
+
+    // 应用建议标题
+    if (data.suggestedTitle) {
+      setValue('name', data.suggestedTitle);
+      setHasUnsavedChanges(true);
+    }
+
+    // 应用描述
+    if (data.description) {
+      setValue('description', data.description);
       setHasUnsavedChanges(true);
     }
   };

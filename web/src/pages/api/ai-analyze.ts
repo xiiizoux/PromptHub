@@ -45,8 +45,8 @@ export default async function handler(
 
       case 'suggest_version':
         // 建议版本号
-        const { existingVersions = [] } = req.body;
-        const version = aiAnalyzer.suggestVersion(content, existingVersions);
+        const { existingVersions = [], currentVersion, isNewPrompt = false } = req.body;
+        const version = aiAnalyzer.suggestVersion(content, existingVersions, currentVersion, isNewPrompt);
         return res.status(200).json({ success: true, data: { version } });
 
       case 'extract_variables':

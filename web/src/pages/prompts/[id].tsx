@@ -48,6 +48,7 @@ import { getPromptDetails, trackPromptUsage } from '@/lib/api';
 import { PromptDetails, PromptExample, PromptVersion } from '@/types';
 import { MODEL_TAGS, getModelTypeLabel } from '@/constants/ai-models';
 import { RatingSystem } from '@/components/RatingSystem';
+import PromptInteractions from '@/components/social/PromptInteractions';
 
 interface PromptDetailsPageProps {
   prompt: PromptDetails;
@@ -439,9 +440,20 @@ export default function PromptDetailsPage({ prompt }: PromptDetailsPageProps) {
                 <div className="flex items-center space-x-3 ml-6">
                   <motion.button
                     type="button"
+                    onClick={() => {
+                      // 简单的分享功能：复制当前页面链接
+                      const shareUrl = window.location.href;
+                      navigator.clipboard.writeText(shareUrl).then(() => {
+                        // 这里可以添加toast提示
+                        alert('链接已复制到剪贴板！');
+                      }).catch(() => {
+                        alert('复制失败，请手动复制地址栏链接');
+                      });
+                    }}
                     className="p-3 glass rounded-xl border border-neon-cyan/30 text-neon-cyan hover:border-neon-cyan/50 hover:text-white transition-colors"
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
+                    title="分享这个提示词"
                   >
                     <ShareIcon className="h-5 w-5" />
                   </motion.button>
@@ -548,6 +560,15 @@ export default function PromptDetailsPage({ prompt }: PromptDetailsPageProps) {
                   </motion.div>
                 )}
               </div>
+            </motion.div>
+
+            {/* 社交互动组件 */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: 0.25 }}
+            >
+              <PromptInteractions promptId={prompt.id} />
             </motion.div>
 
             {/* 评分和评论系统 */}

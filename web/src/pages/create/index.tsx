@@ -122,6 +122,15 @@ function CreatePromptPage() {
       setValue('compatible_models', uniqueModels);
     }
     if (data.version) {
+      setValue('version', parseFloat(data.version) || 0.1);
+    }
+    if (data.suggestedTitle) {
+      setValue('title', data.suggestedTitle);
+    }
+    if (data.description) {
+      setValue('description', data.description);
+    }
+    if (data.version) {
       // 将string版本号转换为number
       const versionNumber = parseFloat(data.version);
       if (!isNaN(versionNumber)) {
