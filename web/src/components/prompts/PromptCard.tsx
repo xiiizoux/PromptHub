@@ -11,7 +11,24 @@ import {
   TagIcon,
   ClockIcon,
   UserIcon,
-  FireIcon
+  FireIcon,
+  BookOpenIcon,
+  BriefcaseIcon,
+  PencilIcon,
+  SwatchIcon,
+  PaintBrushIcon,
+  AcademicCapIcon,
+  HeartIcon,
+  PuzzlePieceIcon,
+  HomeIcon,
+  ChartBarIcon,
+  FolderIcon,
+  LanguageIcon,
+  VideoCameraIcon,
+  MicrophoneIcon,
+  MusicalNoteIcon,
+  HeartIcon as HealthIcon,
+  CpuChipIcon
 } from '@heroicons/react/24/outline';
 import { StarIcon as StarSolidIcon } from '@heroicons/react/24/solid';
 import { InteractionButtons } from '@/components/BookmarkButton';
@@ -41,10 +58,47 @@ const PromptCard: React.FC<PromptCardProps> = ({ prompt }) => {
   // 辅助函数：格式化分类名称和颜色
   const getCategoryStyle = (category?: string) => {
     const categoryMap: Record<string, { name: string; color: string; icon: any }> = {
-      coding: { name: '编程', color: 'from-neon-cyan to-neon-cyan-dark', icon: CodeBracketIcon },
-      writing: { name: '写作', color: 'from-neon-pink to-neon-yellow', icon: DocumentTextIcon },
-      analysis: { name: '分析', color: 'from-neon-yellow to-neon-green', icon: SparklesIcon },
-      default: { name: '其他', color: 'from-gray-600 to-gray-700', icon: TagIcon }
+      // 基础分类
+      '全部': { name: '全部', color: 'from-neon-purple to-neon-blue', icon: SparklesIcon },
+      '通用': { name: '通用', color: 'from-neon-purple to-neon-blue', icon: SparklesIcon },
+      
+      // 专业和学术
+      '学术': { name: '学术', color: 'from-neon-blue to-neon-cyan', icon: AcademicCapIcon },
+      '职业': { name: '职业', color: 'from-neon-green to-neon-yellow', icon: BriefcaseIcon },
+      
+      // 创作和内容
+      '文案': { name: '文案', color: 'from-neon-pink to-neon-yellow', icon: PencilIcon },
+      '设计': { name: '设计', color: 'from-neon-yellow to-neon-orange', icon: SwatchIcon },
+      '绘画': { name: '绘画', color: 'from-neon-orange to-neon-red', icon: PaintBrushIcon },
+      
+      // 教育和情感
+      '教育': { name: '教育', color: 'from-neon-green to-neon-cyan', icon: BookOpenIcon },
+      '情感': { name: '情感', color: 'from-neon-pink to-neon-purple', icon: HeartIcon },
+      
+      // 娱乐和游戏
+      '娱乐': { name: '娱乐', color: 'from-neon-yellow to-neon-green', icon: SparklesIcon },
+      '游戏': { name: '游戏', color: 'from-neon-purple to-neon-pink', icon: PuzzlePieceIcon },
+      
+      // 生活和商业
+      '生活': { name: '生活', color: 'from-neon-green to-neon-blue', icon: HomeIcon },
+      '商业': { name: '商业', color: 'from-neon-red to-neon-orange', icon: ChartBarIcon },
+      '办公': { name: '办公', color: 'from-neon-blue to-neon-purple', icon: FolderIcon },
+      
+      // 技术分类
+      '编程': { name: '编程', color: 'from-neon-cyan to-neon-cyan-dark', icon: CodeBracketIcon },
+      '翻译': { name: '翻译', color: 'from-neon-blue to-neon-cyan', icon: LanguageIcon },
+      
+      // 多媒体
+      '视频': { name: '视频', color: 'from-neon-red to-neon-pink', icon: VideoCameraIcon },
+      '播客': { name: '播客', color: 'from-neon-orange to-neon-yellow', icon: MicrophoneIcon },
+      '音乐': { name: '音乐', color: 'from-neon-purple to-neon-blue', icon: MusicalNoteIcon },
+      
+      // 专业领域
+      '健康': { name: '健康', color: 'from-neon-green to-neon-cyan', icon: HealthIcon },
+      '科技': { name: '科技', color: 'from-neon-cyan to-neon-blue', icon: CpuChipIcon },
+      
+      // 默认分类 - 用于未分类的提示词
+      'default': { name: '未分类', color: 'from-gray-600 to-gray-700', icon: TagIcon }
     };
     
     const categoryInfo = categoryMap[category || 'default'] || categoryMap.default;

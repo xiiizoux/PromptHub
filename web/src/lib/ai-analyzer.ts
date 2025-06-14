@@ -4,6 +4,7 @@
  */
 
 import axios from 'axios';
+import { MODEL_TAGS, ModelCapability, getModelTagsByCapability } from '@/constants/ai-models';
 
 // AI分析结果接口
 export interface AIAnalysisResult {
@@ -179,6 +180,9 @@ ${content}
    * 验证和格式化分析结果
    */
   private validateAndFormatResult(result: any, originalContent: string): AIAnalysisResult {
+    // 智能推荐兼容模型
+    const recommendedModels = this.recommendCompatibleModels(result.category, originalContent);
+    
     // 确保所有必需字段存在
     const validated: AIAnalysisResult = {
       category: result.category || '通用',
@@ -190,8 +194,8 @@ ${content}
       variables: Array.isArray(result.variables) ? result.variables : this.extractVariables(originalContent),
       improvements: Array.isArray(result.improvements) ? result.improvements : [],
       useCases: Array.isArray(result.useCases) ? result.useCases : [],
-      compatibleModels: Array.isArray(result.compatibleModels) 
-        ? result.compatibleModels : ['gpt-4', 'gpt-3.5-turbo'],
+      compatibleModels: Array.isArray(result.compatibleModels) && result.compatibleModels.length > 0
+        ? result.compatibleModels : recommendedModels,
       version: result.version || '1.0',
       confidence: typeof result.confidence === 'number' 
         ? Math.max(0, Math.min(1, result.confidence)) : 0.8,
@@ -200,6 +204,88 @@ ${content}
     };
 
     return validated;
+  }
+
+  /**
+   * 基于分类和内容推荐兼容模型
+   */
+  private recommendCompatibleModels(category: string, content: string): string[] {
+    const recommendations: string[] = [];
+    
+    // 基于分类推荐
+    switch (category) {
+      case '编程':
+        recommendations.push('code-specialized', 'llm-large');
+        break;
+      case '文案':
+      case '创意写作':
+        recommendations.push('llm-large', 'llm-medium');
+        break;
+      case '翻译':
+        recommendations.push('translation-specialized', 'llm-large');
+        break;
+      case '设计':
+        recommendations.push('image-generation', 'multimodal-vision');
+        break;
+      case '绘画':
+        recommendations.push('image-generation');
+        break;
+      case '视频':
+        recommendations.push('video-generation', 'multimodal-vision');
+        break;
+      case '播客':
+      case '音乐':
+        recommendations.push('audio-generation', 'audio-tts');
+        break;
+      default:
+        recommendations.push('llm-large', 'llm-medium');
+    }
+    
+    // 基于内容特征推荐
+    const lowerContent = content.toLowerCase();
+    
+    // 检测图像相关内容
+    if (lowerContent.includes('图片') || lowerContent.includes('图像') || 
+        lowerContent.includes('画') || lowerContent.includes('设计')) {
+      if (!recommendations.includes('image-generation')) {
+        recommendations.push('image-generation');
+      }
+      if (!recommendations.includes('multimodal-vision')) {
+        recommendations.push('multimodal-vision');
+      }
+    }
+    
+    // 检测音频相关内容
+    if (lowerContent.includes('音频') || lowerContent.includes('语音') || 
+        lowerContent.includes('音乐') || lowerContent.includes('录音')) {
+      if (!recommendations.includes('audio-generation')) {
+        recommendations.push('audio-generation');
+      }
+    }
+    
+    // 检测代码相关内容
+    if (lowerContent.includes('代码') || lowerContent.includes('编程') || 
+        lowerContent.includes('函数') || lowerContent.includes('算法')) {
+      if (!recommendations.includes('code-specialized')) {
+        recommendations.push('code-specialized');
+      }
+    }
+    
+    // 检测推理相关内容
+    if (lowerContent.includes('推理') || lowerContent.includes('逻辑') || 
+        lowerContent.includes('数学') || lowerContent.includes('计算')) {
+      if (!recommendations.includes('reasoning-specialized')) {
+        recommendations.push('reasoning-specialized');
+      }
+    }
+    
+    // 确保至少有一个推荐
+    if (recommendations.length === 0) {
+      recommendations.push('llm-large');
+    }
+    
+    // 限制推荐数量
+    return recommendations.slice(0, 4);
   }
 
   /**

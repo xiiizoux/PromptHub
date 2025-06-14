@@ -19,11 +19,35 @@ import {
   BoltIcon,
   FireIcon,
   EyeIcon,
-  ShareIcon
+  ShareIcon,
+  StarIcon,
+  CalendarIcon,
+  PlayIcon,
+  StopIcon,
+  CheckIcon,
+  XMarkIcon,
+  BookOpenIcon,
+  BriefcaseIcon,
+  PencilIcon,
+  SwatchIcon,
+  PaintBrushIcon,
+  AcademicCapIcon,
+  HeartIcon,
+  PuzzlePieceIcon,
+  HomeIcon,
+  FolderIcon,
+  LanguageIcon,
+  VideoCameraIcon,
+  MicrophoneIcon,
+  MusicalNoteIcon,
+  HeartIcon as HealthIcon,
+  CpuChipIcon
 } from '@heroicons/react/24/outline';
-import { StarIcon } from '@heroicons/react/24/solid';
+import { StarIcon as SolidStarIcon } from '@heroicons/react/24/solid';
 import { getPromptDetails, trackPromptUsage } from '@/lib/api';
 import { PromptDetails, PromptExample, PromptVersion } from '@/types';
+import { MODEL_TAGS, getModelTypeLabel } from '@/constants/ai-models';
+import { RatingSystem } from '@/components/RatingSystem';
 
 interface PromptDetailsPageProps {
   prompt: PromptDetails;
@@ -37,14 +61,29 @@ export default function PromptDetailsPage({ prompt }: PromptDetailsPageProps) {
   
   // 从prompt数据中获取完整的内容
   const getFullContent = () => {
-    // 优先从messages获取内容
-    if (prompt.messages && prompt.messages.length > 0) {
-      return prompt.messages.map(msg => msg.content).join('\n\n');
-    }
-    // 回退到content字段
-    if (prompt.content) {
+    // 首先尝试从content字段获取（API兼容性）
+    if (prompt.content && typeof prompt.content === 'string') {
       return prompt.content;
     }
+    
+    // 然后从messages获取内容
+    if (prompt.messages && Array.isArray(prompt.messages) && prompt.messages.length > 0) {
+      return prompt.messages.map((msg: any) => {
+        // 处理不同的消息内容格式
+        if (typeof msg.content === 'string') {
+          return msg.content;
+        } else if (msg.content && typeof msg.content === 'object') {
+          // 处理 {type: 'text', text: '...'} 格式
+          if (msg.content.text && typeof msg.content.text === 'string') {
+            return msg.content.text;
+          }
+          // 处理其他对象格式，转换为JSON字符串
+          return JSON.stringify(msg.content);
+        }
+        return '';
+      }).filter(content => content.trim()).join('\n\n');
+    }
+    
     return '';
   };
 
@@ -64,6 +103,17 @@ export default function PromptDetailsPage({ prompt }: PromptDetailsPageProps) {
   const allVariables = prompt.input_variables && prompt.input_variables.length > 0 
     ? prompt.input_variables 
     : extractVariablesFromText(fullContent);
+
+  // 添加调试输出
+  useEffect(() => {
+    console.log('=== 提示词详情页面调试信息 ===');
+    console.log('原始prompt数据:', prompt);
+    console.log('提取的内容:', fullContent);
+    console.log('提取的变量:', allVariables);
+    console.log('prompt.messages:', prompt.messages);
+    console.log('prompt.content:', prompt.content);
+    console.log('prompt.input_variables:', prompt.input_variables);
+  }, []);
 
   // 状态管理
   const [variableValues, setVariableValues] = useState<Record<string, string>>(() => {
@@ -140,19 +190,53 @@ export default function PromptDetailsPage({ prompt }: PromptDetailsPageProps) {
 
   // 获取分类样式和图标
   const getCategoryInfo = (category?: string) => {
-    // 分类映射表
+    // 分类映射表 - 支持完整的21个分类
     const categoryMap: Record<string, { color: string; icon: any }> = {
+      // 基础分类
+      '全部': { color: 'from-neon-purple to-neon-blue', icon: SparklesIcon },
+      '通用': { color: 'from-neon-purple to-neon-blue', icon: SparklesIcon },
+      
+      // 专业和学术
+      '学术': { color: 'from-neon-blue to-neon-cyan', icon: AcademicCapIcon },
+      '职业': { color: 'from-neon-green to-neon-yellow', icon: BriefcaseIcon },
+      
+      // 创作和内容
+      '文案': { color: 'from-neon-pink to-neon-yellow', icon: PencilIcon },
+      '设计': { color: 'from-neon-yellow to-neon-orange', icon: SwatchIcon },
+      '绘画': { color: 'from-neon-orange to-neon-red', icon: PaintBrushIcon },
+      
+      // 教育和情感
+      '教育': { color: 'from-neon-green to-neon-cyan', icon: BookOpenIcon },
+      '情感': { color: 'from-neon-pink to-neon-purple', icon: HeartIcon },
+      
+      // 娱乐和游戏
+      '娱乐': { color: 'from-neon-yellow to-neon-green', icon: SparklesIcon },
+      '游戏': { color: 'from-neon-purple to-neon-pink', icon: PuzzlePieceIcon },
+      
+      // 生活和商业
+      '生活': { color: 'from-neon-green to-neon-blue', icon: HomeIcon },
+      '商业': { color: 'from-neon-red to-neon-orange', icon: ChartBarIcon },
+      '办公': { color: 'from-neon-blue to-neon-purple', icon: FolderIcon },
+      
+      // 技术分类
       '编程': { color: 'from-neon-cyan to-neon-cyan-dark', icon: CodeBracketIcon },
+      '翻译': { color: 'from-neon-blue to-neon-cyan', icon: LanguageIcon },
+      
+      // 多媒体
+      '视频': { color: 'from-neon-red to-neon-pink', icon: VideoCameraIcon },
+      '播客': { color: 'from-neon-orange to-neon-yellow', icon: MicrophoneIcon },
+      '音乐': { color: 'from-neon-purple to-neon-blue', icon: MusicalNoteIcon },
+      
+      // 专业领域
+      '健康': { color: 'from-neon-green to-neon-cyan', icon: HealthIcon },
+      '科技': { color: 'from-neon-cyan to-neon-blue', icon: CpuChipIcon },
+      
+      // 兼容旧分类名称
       '代码': { color: 'from-neon-cyan to-neon-cyan-dark', icon: CodeBracketIcon },
       '创意写作': { color: 'from-neon-pink to-neon-yellow', icon: DocumentTextIcon },
       '写作': { color: 'from-neon-pink to-neon-yellow', icon: DocumentTextIcon },
-      '文案': { color: 'from-neon-pink to-neon-yellow', icon: DocumentTextIcon },
       '数据分析': { color: 'from-neon-yellow to-neon-green', icon: SparklesIcon },
       '分析': { color: 'from-neon-yellow to-neon-green', icon: SparklesIcon },
-      '通用': { color: 'from-neon-purple to-neon-blue', icon: SparklesIcon },
-      '教育': { color: 'from-neon-green to-neon-yellow', icon: DocumentTextIcon },
-      '商业': { color: 'from-neon-red to-neon-orange', icon: ChartBarIcon },
-      '翻译': { color: 'from-neon-blue to-neon-cyan', icon: DocumentTextIcon },
     };
     
     const info = categoryMap[category || ''] || { 
@@ -161,7 +245,7 @@ export default function PromptDetailsPage({ prompt }: PromptDetailsPageProps) {
     };
     
     return {
-      name: category || '其他',
+      name: category || '未分类',
       ...info
     };
   };
@@ -173,7 +257,7 @@ export default function PromptDetailsPage({ prompt }: PromptDetailsPageProps) {
     
     for (let i = 1; i <= 5; i++) {
       stars.push(
-        <StarIcon 
+        <SolidStarIcon 
           key={i} 
           className={`h-5 w-5 ${i <= ratingValue ? 'text-neon-yellow' : 'text-gray-600'}`} 
         />
@@ -268,6 +352,26 @@ export default function PromptDetailsPage({ prompt }: PromptDetailsPageProps) {
 
   const categoryInfo = getCategoryInfo(prompt.category);
   const CategoryIcon = categoryInfo.icon;
+
+  // 获取模型显示信息
+  const getModelDisplayInfo = (modelId: string) => {
+    const tag = MODEL_TAGS.find(t => t.id === modelId);
+    if (tag) {
+      return {
+        name: tag.name,
+        color: tag.color,
+        type: getModelTypeLabel(tag.type),
+        description: tag.description
+      };
+    }
+    // 自定义模型
+    return {
+      name: modelId,
+      color: 'text-gray-400',
+      type: '自定义模型',
+      description: '用户添加的自定义模型'
+    };
+  };
 
   return (
     <div className="min-h-screen relative">
@@ -445,6 +549,15 @@ export default function PromptDetailsPage({ prompt }: PromptDetailsPageProps) {
                 )}
               </div>
             </motion.div>
+
+            {/* 评分和评论系统 */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: 0.3 }}
+            >
+              <RatingSystem promptId={prompt.id} className="mb-8" />
+            </motion.div>
           </div>
           
           {/* 右侧信息栏 */}
@@ -475,27 +588,39 @@ export default function PromptDetailsPage({ prompt }: PromptDetailsPageProps) {
                       兼容模型
                     </h4>
                     <div className="space-y-2">
-                      {prompt.compatible_models.map(model => (
-                        <span 
-                          key={model}
-                          className="block px-3 py-2 rounded-lg text-sm glass border border-neon-green/30 text-neon-green"
-                        >
-                          {model}
-                        </span>
-                      ))}
+                      {prompt.compatible_models.map(modelId => {
+                        const modelInfo = getModelDisplayInfo(modelId);
+                        return (
+                          <div
+                            key={modelId}
+                            className="p-3 rounded-lg glass border border-neon-green/30 group hover:border-neon-green/50 transition-colors"
+                          >
+                            <div className={`font-medium ${modelInfo.color} mb-1`}>
+                              {modelInfo.name}
+                            </div>
+                            <div className="text-xs text-gray-400">
+                              {modelInfo.type}
+                            </div>
+                            <div className="text-xs text-gray-500 mt-1">
+                              {modelInfo.description}
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 )}
                 
                 {/* 操作按钮 */}
                 <div className="pt-4 border-t border-neon-cyan/20">
-                  <Link 
-                    href={`/analytics/${prompt.id}`}
-                    className="w-full btn-secondary flex items-center justify-center"
+                  <button 
+                    onClick={() => alert('性能分析功能开发中...')}
+                    className="w-full btn-secondary flex items-center justify-center disabled:opacity-50"
+                    title="性能分析功能开发中"
                   >
                     <ChartBarIcon className="h-5 w-5 mr-2" />
                     性能分析
-                  </Link>
+                  </button>
                 </div>
               </div>
             </motion.div>

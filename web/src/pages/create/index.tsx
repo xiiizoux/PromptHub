@@ -25,9 +25,7 @@ import {
 import { AIAnalyzeButton, AIAnalysisResultDisplay } from '@/components/AIAnalyzeButton';
 import { AIAnalysisResult } from '@/lib/ai-analyzer';
 import { useAuth } from '@/contexts/AuthContext';
-
-// 预设模型选项
-const MODEL_OPTIONS = ['GPT-4', 'GPT-3.5', 'Claude-2', 'Claude-Instant', 'Gemini-Pro', 'Llama-2', 'Mistral-7B'];
+import { ModelSelector } from '@/components/ModelSelector';
 
 // 扩展类型，添加messages字段和其他数据库中的字段
 type PromptFormData = Omit<PromptDetails, 'created_at' | 'updated_at'> & {
@@ -240,14 +238,10 @@ function CreatePromptPage() {
     setValue('tags', newTags);
   };
 
-  // 切换模型选择
-  const toggleModel = (model: string) => {
-    const newModels = models.includes(model)
-      ? models.filter(m => m !== model)
-      : [...models, model];
-    
-    setModels(newModels);
-    setValue('compatible_models', newModels);
+  // 切换模型选择 - 更新为兼容新的模型选择器
+  const handleModelChange = (models: string[]) => {
+    setModels(models);
+    setValue('compatible_models', models);
   };
 
   // 表单提交
@@ -690,24 +684,15 @@ function CreatePromptPage() {
                   兼容模型
                 </label>
                 
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                  {MODEL_OPTIONS.map((model) => (
-                    <motion.button
-                      key={model}
-                      type="button"
-                      onClick={() => toggleModel(model)}
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      className={`p-3 rounded-xl border transition-all duration-300 ${
-                        models.includes(model)
-                          ? 'bg-neon-cyan/20 text-neon-cyan border-neon-cyan/50 shadow-neon-sm'
-                          : 'bg-dark-bg-secondary/50 text-gray-400 border-gray-600 hover:border-neon-cyan hover:text-neon-cyan'
-                      }`}
-                    >
-                      {model}
-                    </motion.button>
-                  ))}
-                </div>
+                <ModelSelector
+                  selectedModels={models}
+                  onChange={handleModelChange}
+                  placeholder="选择或添加兼容的AI模型..."
+                />
+                
+                <p className="text-xs text-gray-500">
+                  选择此提示词兼容的AI模型类型，支持文本、图像、音频、视频等多种模型
+                </p>
               </motion.div>
 
               {/* 公开/私有选项 */}
