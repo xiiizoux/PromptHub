@@ -67,18 +67,18 @@ class AIAnalyzer {
    * 主要分析函数 - 分析提示词并返回结构化结果
    */
   async analyzePrompt(
-    content: string, 
+    content: string,
     config: Partial<AnalysisConfig> = {},
-    existingTags: string[] = [], // 新增参数：系统中已存在的标签
-    currentVersion?: string, // 新增参数：当前版本
-    isNewPrompt: boolean = false, // 新增参数：是否为新提示词
-    existingVersions: string[] = [] // 新增参数：已存在的版本
+    existingTags: string[] = [],
+    currentVersion?: string,
+    isNewPrompt: boolean = false,
+    existingVersions: string[] = []
   ): Promise<AIAnalysisResult> {
     if (!this.apiKey) {
-      throw new Error('OpenAI API key not configured');
+      throw new Error('AI分析服务未配置API密钥，请联系管理员配置');
     }
 
-    const defaultConfig: AnalysisConfig = {
+    const finalConfig: AnalysisConfig = {
       includeImprovements: true,
       includeSuggestions: true,
       language: 'zh',
@@ -86,21 +86,17 @@ class AIAnalyzer {
       ...config
     };
 
-    const systemPrompt = this.buildSystemPrompt(defaultConfig, existingTags);
-    const userPrompt = this.buildUserPrompt(content, defaultConfig);
-
     try {
       const response = await axios.post(
         `${this.baseURL}/chat/completions`,
         {
           model: this.fullAnalysisModel,
           messages: [
-            { role: 'system', content: systemPrompt },
-            { role: 'user', content: userPrompt }
+            { role: 'system', content: this.buildSystemPrompt(finalConfig, existingTags) },
+            { role: 'user', content: this.buildUserPrompt(content, finalConfig) }
           ],
           temperature: 0.3,
-          max_tokens: 2000,
-          response_format: { type: 'json_object' }
+          max_tokens: 2000
         },
         {
           headers: {
@@ -110,27 +106,44 @@ class AIAnalyzer {
         }
       );
 
-      const result = JSON.parse(response.data.choices[0].message.content);
-      
-      // 对标签进行智能合并处理
-      if (result.tags && existingTags.length > 0) {
-        result.tags = this.mergeTagsIntelligently(result.tags, existingTags);
+      // 验证响应格式
+      if (!response.data || !response.data.choices || !Array.isArray(response.data.choices) || response.data.choices.length === 0) {
+        console.error('AI API返回格式异常:', response.data);
+        throw new Error('AI服务返回格式异常，请重试');
       }
+
+      const choice = response.data.choices[0];
+      if (!choice || !choice.message || !choice.message.content) {
+        console.error('AI API返回内容为空:', choice);
+        throw new Error('AI服务返回内容为空，请重试');
+      }
+
+      const result = choice.message.content;
       
-      return this.validateAndFormatResult(result, content, currentVersion, isNewPrompt, existingVersions);
+      try {
+        const parsedResult = JSON.parse(result);
+        return this.validateAndFormatResult(parsedResult, content, currentVersion, isNewPrompt, existingVersions);
+      } catch (parseError) {
+        console.error('AI返回结果解析失败:', parseError);
+        console.error('原始返回内容:', result);
+        throw new Error('AI分析结果格式错误，请重试');
+      }
 
     } catch (error: any) {
-      console.error('AI analysis failed:', error);
+      console.error('AI分析失败:', error);
       
-      // 如果API调用失败，返回基础分析结果
-      const fallbackResult = this.getFallbackAnalysis(content, currentVersion, isNewPrompt, existingVersions);
-      
-      // 对后备结果也进行标签合并
-      if (fallbackResult.tags && existingTags.length > 0) {
-        fallbackResult.tags = this.mergeTagsIntelligently(fallbackResult.tags, existingTags);
+      // 提供具体的错误信息
+      if (error.response?.status === 401) {
+        throw new Error('AI服务认证失败，请检查API密钥配置');
+      } else if (error.response?.status === 429) {
+        throw new Error('AI服务请求频率过高，请稍后重试');
+      } else if (error.response?.status >= 500) {
+        throw new Error('AI服务暂时不可用，请稍后重试');
+      } else if (error.message?.includes('timeout')) {
+        throw new Error('AI分析超时，请重试');
+      } else {
+        throw new Error(`AI分析失败: ${error.message || '未知错误'}，请重试`);
       }
-      
-      return fallbackResult;
     }
   }
 
@@ -190,137 +203,54 @@ class AIAnalyzer {
 4. **版本号建议**：轻微变化+0.1，中等变化+0.5，重大变化+1.0` 
       : '';
     
-    return `你是一个专业的AI提示词分析专家，擅长深度理解和分析各种类型的提示词内容。请仔细分析用户提供的提示词，并返回JSON格式的分析结果。${incrementalAnalysisHint}
+    return `你是一个专业的AI提示词分析专家。请根据提供的提示词内容，生成合适的分类、标签、标题、描述等分析结果。${incrementalAnalysisHint}
 
-## 分析方法论
-在进行分析时，请遵循以下步骤：
-1. **核心功能识别**：这个提示词的主要目的是什么？它要解决什么问题？
-2. **使用场景判断**：用户在什么情况下会使用这个提示词？
-3. **能力层次评估**：这个提示词展现了什么样的AI能力需求？
-4. **风格特征识别**：是技术性的、创意性的、还是哲学性的？
+## 分析任务
 
-## 具体分析要求
+请根据提供的提示词内容，理解其核心功能和用途，然后生成以下分析结果：
 
 ### 1. 分类（category）
-必须从以下21个预设分类中选择最合适的一个：
-选项：${categories.join('、')}
-
-**分类判断准则**：
-- 不要被表面词汇误导，要理解内容的本质功能
-- 如果提示词包含角色设定+思维方法，通常属于"学术"或"通用"
-- 如果包含创作指导，属于"文案"或"创意写作"
-- 如果包含代码或技术内容，属于"编程"
-- 如果只是比喻性地提到某个领域（如音乐、绘画），不代表属于该分类
+请根据提示词的主要功能和用途，从以下分类中选择最合适的一个：
+${categories.join('、')}
 
 ### 2. 兼容模型（compatibleModels）
-从以下预设模型中选择1-3个最适合的：
-选项：${modelOptionsText}
-说明：返回模型ID数组格式，根据提示词的复杂度和能力需求选择
+请根据提示词的复杂度和能力需求，从以下模型中选择1-3个最适合的：
+${modelOptionsText}
+返回格式：模型ID数组，如 ["llm-large", "reasoning-specialized"]
 
 ### 3. 标签（tags）
-提取3-8个精准标签，体现提示词的核心特征。请按照以下标签分类体系进行提取：
+请提取3-8个能够准确描述提示词特征的标签，包括：
+- 功能类型（如：分析、创作、翻译、编程等）
+- 应用场景（如：办公、学习、研究等）
+- 特色功能（如：角色扮演、深度分析等）
 
-**功能类标签**（必选1-3个）：
-- 核心能力：分析、创作、翻译、编程、设计、教学、咨询、管理
-- 思维方式：逻辑推理、创意思维、系统思维、批判思维、模式识别
-- 处理类型：文本处理、数据分析、内容生成、问题解决、决策支持
-
-**角色类标签**（可选1-2个）：
-- 专业角色：专家、顾问、助手、导师、分析师、创作者
-- 领域角色：技术专家、商业顾问、学术研究者、创意总监
-
-**应用场景标签**（必选1-2个）：
-- 工作场景：办公、研究、教学、咨询、创作、开发
-- 使用目的：学习、工作、娱乐、研究、创新、效率提升
-
-**特色标签**（可选1-2个）：
-- 交互方式：角色扮演、对话式、引导式、结构化
-- 输出特点：深度分析、创意输出、系统性、个性化
-
-**标签提取原则**：
-1. **本质优先**：基于提示词的真实功能，而非表面词汇
-2. **层次分明**：从抽象到具体，从核心到辅助
-3. **用户视角**：考虑用户搜索和使用习惯
-4. **避免重复**：不要使用意思相近的标签
-5. **精准表达**：使用准确、专业但易懂的词汇
-
-**特殊情况处理**：
-- 哲学性/抽象性提示词：优先使用"哲学思考"、"深度洞察"、"抽象思维"
-- 角色扮演类：必须包含"角色扮演"标签
-- 复合功能类：选择最主要的2-3个功能标签
-- 创新性提示词：可以创建新标签，但要确保准确性
-
-${existingTagsHint}
-
-### 4. 其他基础字段
+### 4. 其他字段
 - 难度级别（difficulty）：beginner/intermediate/advanced
 - 变量提取（variables）：找出所有{{变量名}}格式的变量
 - 预估token数（estimatedTokens）：预估处理所需token数量
 - 置信度（confidence）：分析结果的置信度（0-1）
 
-### 5. 增强分析字段
-${config.includeImprovements ? `
-**改进建议（improvements）**：
-- 分析提示词的不足之处
-- 提供3-5个具体的优化建议
-- 重点关注清晰度、完整性、可操作性` : ''}
-
 ${config.includeSuggestions ? `
-**使用场景（useCases）**：
-- 基于提示词的真实功能，列出3-5个典型应用场景
-- 要具体、实际、有价值
+### 5. 建议内容
+- **标题建议（suggestedTitle）**：请根据提示词的核心价值生成一个准确、吸引人的标题（10-25字）
+- **描述建议（description）**：请概括提示词的核心能力和价值（60-150字），说明它能帮助用户解决什么问题
+- **使用场景（useCases）**：请列出3-5个典型的应用场景` : ''}
 
-**标题建议（suggestedTitle）**：
-- 深度理解提示词的核心价值和独特性
-- 生成一个准确、吸引人的标题（10-25字）
-- 要体现功能而非简单描述，如：
-  * "系统性思维模式分析专家"
-  * "跨领域模式识别助手" 
-  * "深度洞察与规律发现者"
-- 避免：过于通用的词汇（如"AI助手"、"生成器"）
+${config.includeImprovements ? `
+- **改进建议（improvements）**：请提供3-5个具体的优化建议，帮助提升提示词的效果` : ''}
 
-**描述建议（description）**：
-- 准确概括提示词的核心能力和价值（60-150字）
-- 说明它能帮助用户解决什么具体问题
-- 突出独特性和专业性
-- 使用吸引人但不夸张的语言
+${existingTagsHint}
 
-**描述生成指导**：
-根据提示词类型使用不同的描述模板：
-
-1. **角色扮演类**（如模式觉察者）：
-   "具有[核心能力]的AI角色，专门用于[主要功能]。通过[独特方法/视角]，帮助用户[解决的问题]，从而[获得的价值]。"
-   
-2. **工具类**（如代码生成器）：
-   "专业的[领域][工具类型]，能够[核心功能]。支持[特色功能]，帮助用户[提升效率/解决问题]。"
-   
-3. **分析类**（如数据分析）：
-   "智能[分析类型]工具，通过[分析方法]深入理解[分析对象]。提供[输出类型]，帮助用户[决策支持/洞察获得]。"
-   
-4. **创作类**（如文案写作）：
-   "创意[创作类型]助手，结合[创作方法/风格]生成[输出类型]。适用于[应用场景]，帮助用户[创作目标]。"
-
-**描述要避免的通用表达**：
-- "基于内容特征的自动分析结果"
-- "AI助手"、"智能工具"等过于宽泛的词汇
-- "强大的"、"先进的"等夸张形容词
-- 重复标题中的词汇` : ''}
-
-## 重要提醒
-- **深度理解胜过表面分析**：不要被某个词汇误导，要理解整体意图
-- **功能导向分类**：按照提示词的实际功能分类，而非表面主题
-- **准确性第一**：宁可保守也不要过度解读
-- **专业性表达**：使用专业但易懂的语言
-- 分类必须严格从上述21个预设分类中选择一个
-- 兼容模型必须从预设选项中选择1-3个，返回ID数组格式
-- 不要返回版本号（version），版本由系统自动生成
+## 分析要求
+- 请仔细理解提示词的实际功能，而不是被表面词汇误导
+- 如果提示词中的某些词汇是比喻性使用，请根据实际功能进行分类
 - 请用${language}回复，返回有效的JSON格式
 
 ## 返回格式示例
 {
   "category": "学术",
   "compatibleModels": ["llm-large", "reasoning-specialized"],
-  "tags": ["模式识别", "系统思维", "角色扮演", "分析", "洞察", "哲学思考"],
+  "tags": ["模式识别", "系统思维", "角色扮演", "分析", "洞察"],
   "difficulty": "advanced",
   "variables": [],
   "estimatedTokens": 300,
@@ -328,7 +258,7 @@ ${config.includeSuggestions ? `
   "improvements": ["可以增加具体应用示例", "建议明确输出格式"],
   "useCases": ["复杂问题分析", "系统性思维训练", "创新思维启发"],
   "suggestedTitle": "跨域模式识别思维专家",
-  "description": "具有深度洞察能力的AI角色，专门用于发现复杂系统中的隐藏模式和规律。通过独特的觉察视角，帮助用户在看似无关的事物间建立联系，识别递归结构和韵律节奏，从而获得更高层次的系统性理解。"
+  "description": "具有深度洞察能力的AI角色，专门用于发现复杂系统中的隐藏模式和规律。通过独特的觉察视角，帮助用户在看似无关的事物间建立联系，从而获得更高层次的系统性理解。"
 }`;
   }
 
@@ -426,7 +356,7 @@ ${config.originalContent}
   }
 
   /**
-   * 基于分类和内容推荐兼容模型
+   * 推荐兼容的模型
    */
   private recommendCompatibleModels(category: string, content: string): string[] {
     const recommendations: string[] = [];
@@ -527,51 +457,6 @@ ${config.originalContent}
     // 限制推荐数量并去重
     const uniqueRecommendations = Array.from(new Set(validRecommendations));
     return uniqueRecommendations.slice(0, 4);
-  }
-
-  /**
-   * 后备分析方案（当API调用失败时）
-   */
-  private getFallbackAnalysis(content: string, currentVersion?: string, isNewPrompt: boolean = false, existingVersions: string[] = []): AIAnalysisResult {
-    const variables = this.extractVariables(content);
-    const estimatedTokens = Math.ceil(content.length / 4);
-    
-    // 基于关键词的简单分类
-    const category = this.detectCategoryByKeywords(content);
-    const tags = this.extractTagsByKeywords(content);
-    const recommendedModels = this.recommendCompatibleModels(category, content);
-    const suggestedVersion = this.suggestVersion(content, existingVersions, currentVersion, isNewPrompt);
-
-    // 智能生成标题
-    const suggestedTitle = this.generateIntelligentTitle(content, category);
-
-    // 调试日志
-    console.log('🔍 后备分析调试信息:');
-    console.log('- 分类:', category);
-    console.log('- 推荐模型:', recommendedModels);
-    console.log('- 建议版本:', suggestedVersion);
-    console.log('- 建议标题:', suggestedTitle);
-    console.log('- 当前版本:', currentVersion);
-    console.log('- 是否新提示词:', isNewPrompt);
-    console.log('- 已有版本:', existingVersions);
-
-    // 智能生成描述
-    const intelligentDescription = this.generateIntelligentDescription(content, category, tags);
-
-    return {
-      category,
-      tags,
-      difficulty: estimatedTokens > 500 ? 'advanced' : estimatedTokens > 200 ? 'intermediate' : 'beginner',
-      estimatedTokens,
-      variables,
-      improvements: this.generateIntelligentImprovements(content, category, tags),
-      useCases: this.generateIntelligentUseCases(content, category, tags),
-      compatibleModels: recommendedModels, // 使用我们的智能推荐
-      version: suggestedVersion,
-      confidence: 0.6,
-      suggestedTitle: suggestedTitle,
-      description: intelligentDescription
-    };
   }
 
   /**
@@ -980,126 +865,6 @@ ${config.originalContent}
   }
 
   /**
-   * 基于关键词检测分类
-   */
-  private detectCategoryByKeywords(content: string): string {
-    const lowerContent = content.toLowerCase();
-    
-    // 高优先级：精确匹配专业领域
-    const preciseMatches = [
-      { keywords: ['import ', 'function ', 'class ', 'def ', 'const ', 'let ', 'var ', '```'], category: '编程' },
-      { keywords: ['translate', '翻译', '英文', '中文', '日文', '法文', '德文'], category: '翻译' },
-      { keywords: ['论文', '研究', 'research', 'academic', '学术', '引用', 'citation'], category: '学术' },
-    ];
-
-    for (const match of preciseMatches) {
-      if (match.keywords.some(keyword => content.includes(keyword))) {
-        return match.category;
-      }
-    }
-
-    // 多媒体类别检测 - 新增高优先级
-    const multimediaMatches = [
-      { 
-        keywords: ['视频', '剪辑', '制作', '拍摄', '后期', '特效', '蒙太奇', '镜头', '画面', '影片', '短视频', 'video', 'editing'], 
-        category: '视频' 
-      },
-      { 
-        keywords: ['音乐', '歌曲', '旋律', '歌词', '编曲', '作曲', '乐谱', '音符', '和弦', '节拍', '音效', 'music', 'song'], 
-        category: '音乐' 
-      },
-      { 
-        keywords: ['语音', '音频', 'tts', '朗读', '播音', '配音', '声音', '录音', '音质', 'audio', 'voice'], 
-        category: 'TTS音频' 
-      },
-      { 
-        keywords: ['图片', '图像', '照片', '绘画', '插画', '海报', '设计图', '素材', 'image', 'picture', 'photo'], 
-        category: '图片' 
-      },
-      { 
-        keywords: ['播客', 'podcast', '电台', '广播', '节目', '主持', '访谈'], 
-        category: '播客' 
-      }
-    ];
-
-    for (const match of multimediaMatches) {
-      if (match.keywords.some(keyword => lowerContent.includes(keyword))) {
-        return match.category;
-      }
-    }
-
-    // 中优先级：角色和思维类型检测
-    const roleThinkingMatches = [
-      { 
-        keywords: ['模式', '系统', '洞察', '分析', '思维', '觉察', '规律', '结构', '逻辑推理'],
-        roleKeywords: ['专家', '分析师', '顾问', '助手', '者'],
-        category: '学术'
-      },
-      {
-        keywords: ['角色', '扮演', '你是', '你的身份', '你拥有', '你活着就是为了'],
-        category: '通用'
-      },
-      {
-        keywords: ['创作', '写作', '文案', '故事', '小说', '诗歌', '剧本'],
-        category: '文案'
-      },
-      {
-        keywords: ['设计', '界面', 'UI', 'UX', '布局', '视觉'],
-        category: '设计'
-      },
-      {
-        keywords: ['教学', '学习', '教育', '培训', '课程', '指导'],
-        category: '教育'
-      },
-      {
-        keywords: ['商业', '营销', '销售', '市场', '策略', '管理'],
-        category: '商业'
-      }
-    ];
-
-    for (const match of roleThinkingMatches) {
-      const hasMainKeywords = match.keywords.some(keyword => lowerContent.includes(keyword));
-      const hasRoleKeywords = !match.roleKeywords || match.roleKeywords.some(keyword => lowerContent.includes(keyword));
-      
-      if (hasMainKeywords && hasRoleKeywords) {
-        return match.category;
-      }
-    }
-
-    // 低优先级：通用关键词匹配
-    const generalMatches = [
-      { keywords: ['健康', '医疗', '营养', '锻炼'], category: '健康' },
-      { keywords: ['游戏', '玩法', '关卡', '角色'], category: '游戏' },
-      { keywords: ['科技', '技术', '创新', '数字化'], category: '科技' },
-    ];
-
-    for (const match of generalMatches) {
-      if (match.keywords.some(keyword => lowerContent.includes(keyword))) {
-        return match.category;
-      }
-    }
-
-    // 特殊逻辑：如果是比喻性使用而非真实功能，返回通用
-    if (this.isMetaphoricalUsage(content)) {
-      return '通用';
-    }
-
-    return '通用';
-  }
-
-  /**
-   * 判断是否为比喻性使用
-   */
-  private isMetaphoricalUsage(content: string): boolean {
-    const metaphorIndicators = [
-      '像', '如同', '仿佛', '犹如', '比如', '例如',
-      '当别人看见', '当别人听见', '就像', '如同一位'
-    ];
-    
-    return metaphorIndicators.some(indicator => content.includes(indicator));
-  }
-
-  /**
    * 基于关键词提取标签
    */
   private extractTagsByKeywords(content: string): string[] {
@@ -1212,14 +977,10 @@ ${config.originalContent}
    */
   async quickClassify(content: string): Promise<string> {
     if (!this.apiKey) {
-      return this.detectCategoryByKeywords(content);
+      return '通用'; // 没有API密钥时返回默认分类
     }
 
     try {
-      const categories = [
-        '全部', '通用', '学术', '职业', '文案', '设计', '绘画', '教育', '情感', '娱乐', '游戏', '生活', '商业', '办公', '编程', '翻译', '视频', '播客', '音乐', '健康', '科技'
-      ];
-      
       const response = await axios.post(
         `${this.baseURL}/chat/completions`,
         {
@@ -1227,12 +988,17 @@ ${config.originalContent}
           messages: [
             { 
               role: 'system', 
-              content: `你是一个提示词分类专家。请将提示词分类到以下21个预设分类之一：${categories.join('、')}。只返回分类名称，不要其他内容。如果不确定，请选择"通用"。` 
+              content: `你是一个AI提示词分类专家。请根据提示词内容，从以下分类中选择最合适的一个：
+全部、通用、学术、职业、文案、设计、绘画、教育、情感、娱乐、游戏、生活、商业、办公、编程、翻译、视频、播客、音乐、健康、科技
+
+请仔细理解提示词的实际功能，而不是被表面词汇误导。如果提示词中的某些词汇是比喻性使用，请根据实际功能进行分类。
+
+只返回分类名称，不要其他内容。` 
             },
             { role: 'user', content: `请为以下提示词分类：\n\n${content}` }
           ],
           temperature: 0.1,
-          max_tokens: 20
+          max_tokens: 50
         },
         {
           headers: {
@@ -1242,19 +1008,22 @@ ${config.originalContent}
         }
       );
 
-      const aiCategory = response.data.choices[0].message.content.trim();
+      const result = response.data.choices[0].message.content.trim();
       
-      // 验证AI返回的分类是否在预设列表中
-      if (categories.includes(aiCategory)) {
-        return aiCategory;
+      // 验证返回的分类是否在预设列表中
+      const validCategories = [
+        '全部', '通用', '学术', '职业', '文案', '设计', '绘画', '教育', '情感', '娱乐', '游戏', '生活', '商业', '办公', '编程', '翻译', '视频', '播客', '音乐', '健康', '科技'
+      ];
+      
+      if (validCategories.includes(result)) {
+        return result;
       } else {
-        // 如果AI返回的分类不在预设列表中，使用关键词检测
-        console.warn(`AI返回了无效分类: ${aiCategory}，使用关键词检测`);
-        return this.detectCategoryByKeywords(content);
+        return '通用'; // 如果AI返回的分类不在预设列表中，返回默认分类
       }
+
     } catch (error) {
       console.error('Quick classify failed:', error);
-      return this.detectCategoryByKeywords(content);
+      return '通用'; // API调用失败时返回默认分类
     }
   }
 
@@ -1391,15 +1160,10 @@ ${config.originalContent}
    */
   async extractTags(content: string, existingTags: string[] = []): Promise<string[]> {
     if (!this.apiKey) {
-      const fallbackTags = this.extractTagsByKeywords(content);
-      return this.mergeTagsIntelligently(fallbackTags, existingTags);
+      return this.extractTagsByKeywords(content); // 没有API密钥时使用基础关键词提取
     }
 
     try {
-      const existingTagsHint = existingTags.length > 0 
-        ? `\n\n请优先使用以下已有标签（如果相关）：${existingTags.slice(0, 15).join('、')}` 
-        : '';
-        
       const response = await axios.post(
         `${this.baseURL}/chat/completions`,
         {
@@ -1407,11 +1171,20 @@ ${config.originalContent}
           messages: [
             { 
               role: 'system', 
-              content: `你是一个标签提取专家。请为提示词提取3-6个最相关的标签。用逗号分隔，只返回标签列表。优先使用已有标签，避免创建重复或相似的标签。${existingTagsHint}` 
+              content: `你是一个AI提示词标签提取专家。请为提示词提取3-8个准确的标签，标签应该体现提示词的核心特征。
+
+请提取以下类型的标签：
+- 功能类型（如：分析、创作、翻译、编程等）
+- 应用场景（如：办公、学习、研究等）
+- 特色功能（如：角色扮演、深度分析等）
+
+请仔细理解提示词的实际功能，而不是被表面词汇误导。
+
+返回格式：用逗号分隔的标签列表，如：分析,角色扮演,学术研究` 
             },
             { role: 'user', content: `请为以下提示词提取标签：\n\n${content}` }
           ],
-          temperature: 0.2,
+          temperature: 0.3,
           max_tokens: 100
         },
         {
@@ -1422,15 +1195,19 @@ ${config.originalContent}
         }
       );
 
-      const tagsText = response.data.choices[0].message.content.trim();
-      const aiTags = tagsText.split(',').map((tag: string) => tag.trim()).filter((tag: string) => tag.length > 0);
+      const result = response.data.choices[0].message.content.trim();
+      const aiTags = result.split(',').map((tag: string) => tag.trim()).filter((tag: string) => tag.length > 0);
       
-      // 智能合并标签
-      return this.mergeTagsIntelligently(aiTags, existingTags);
+      // 与现有标签智能合并
+      if (existingTags.length > 0) {
+        return this.mergeTagsIntelligently(aiTags, existingTags);
+      }
+      
+      return aiTags.slice(0, 8); // 最多返回8个标签
+
     } catch (error) {
-      console.error('Tag extraction failed:', error);
-      const fallbackTags = this.extractTagsByKeywords(content);
-      return this.mergeTagsIntelligently(fallbackTags, existingTags);
+      console.error('AI tag extraction failed:', error);
+      return this.extractTagsByKeywords(content); // API调用失败时使用基础关键词提取
     }
   }
 
