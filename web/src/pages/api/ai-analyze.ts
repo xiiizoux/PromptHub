@@ -29,8 +29,35 @@ export default async function handler(
     // 根据action执行不同的分析功能
     switch (action) {
       case 'full_analyze':
-        // 完整分析 - 传递已有标签
-        const fullResult = await aiAnalyzer.analyzePrompt(content, config, existingTags);
+        // 完整分析 - 传递已有标签和版本信息
+        const { 
+          currentVersion: fullAnalysisCurrentVersion, 
+          isNewPrompt: fullAnalysisIsNewPrompt = false, 
+          existingVersions: fullAnalysisExistingVersions = [] 
+        } = req.body;
+        
+        // 添加调试日志
+        console.log('🚀 API full_analyze 调试:');
+        console.log('- 内容长度:', content.length);
+        console.log('- 当前版本:', fullAnalysisCurrentVersion);
+        console.log('- 是否新提示词:', fullAnalysisIsNewPrompt);
+        console.log('- 已有版本:', fullAnalysisExistingVersions);
+        
+        const fullResult = await aiAnalyzer.analyzePrompt(
+          content, 
+          config, 
+          existingTags, 
+          fullAnalysisCurrentVersion, 
+          fullAnalysisIsNewPrompt, 
+          fullAnalysisExistingVersions
+        );
+        
+        console.log('🎯 API返回结果:', {
+          version: fullResult.version,
+          compatibleModels: fullResult.compatibleModels,
+          variables: fullResult.variables
+        });
+        
         return res.status(200).json({ success: true, data: fullResult });
 
       case 'quick_classify':

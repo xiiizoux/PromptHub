@@ -63,7 +63,10 @@ class AIAnalyzer {
   async analyzePrompt(
     content: string, 
     config: Partial<AnalysisConfig> = {},
-    existingTags: string[] = [] // 新增参数：系统中已存在的标签
+    existingTags: string[] = [], // 新增参数：系统中已存在的标签
+    currentVersion?: string, // 新增参数：当前版本
+    isNewPrompt: boolean = false, // 新增参数：是否为新提示词
+    existingVersions: string[] = [] // 新增参数：已存在的版本
   ): Promise<AIAnalysisResult> {
     if (!this.apiKey) {
       throw new Error('OpenAI API key not configured');
@@ -108,13 +111,13 @@ class AIAnalyzer {
         result.tags = this.mergeTagsIntelligently(result.tags, existingTags);
       }
       
-      return this.validateAndFormatResult(result, content);
+      return this.validateAndFormatResult(result, content, currentVersion, isNewPrompt, existingVersions);
 
     } catch (error: any) {
       console.error('AI analysis failed:', error);
       
       // 如果API调用失败，返回基础分析结果
-      const fallbackResult = this.getFallbackAnalysis(content);
+      const fallbackResult = this.getFallbackAnalysis(content, currentVersion, isNewPrompt, existingVersions);
       
       // 对后备结果也进行标签合并
       if (fallbackResult.tags && existingTags.length > 0) {
@@ -130,10 +133,24 @@ class AIAnalyzer {
    */
   private buildSystemPrompt(config: AnalysisConfig, existingTags: string[] = []): string {
     const language = config.language === 'zh' ? '中文' : 'English';
+    
     // 21个预设分类（与数据库categories表完全一致）
     const categories = [
       '全部', '通用', '学术', '职业', '文案', '设计', '绘画', '教育', '情感', '娱乐', '游戏', '生活', '商业', '办公', '编程', '翻译', '视频', '播客', '音乐', '健康', '科技'
     ];
+    
+    // 预设的兼容模型选项（从MODEL_TAGS中获取）
+    const compatibleModelOptions = MODEL_TAGS.map(tag => ({
+      id: tag.id,
+      name: tag.name,
+      description: tag.description,
+      type: tag.type
+    }));
+    
+    // 构建模型选项字符串
+    const modelOptionsText = compatibleModelOptions.map(model => 
+      `${model.id}(${model.name})`
+    ).join('、');
     
     // 构建已有标签提示
     const existingTagsHint = existingTags.length > 0 
@@ -143,24 +160,45 @@ class AIAnalyzer {
     return `你是一个专业的AI提示词分析专家。请分析用户提供的提示词，并返回JSON格式的分析结果。
 
 分析要求：
-1. 分类（category）- 必须从以下21个预设分类中选择最合适的一个，严格返回下列分类名称，不要自由发挥或创造新分类：${categories.join('、')}
-2. 标签（tags）- 提取3-8个相关标签，体现提示词的核心特征
-3. 难度级别（difficulty）- beginner/intermediate/advanced
-4. 变量提取（variables）- 找出所有{{变量名}}格式的变量
-5. 兼容模型（compatibleModels）- 推荐适合的AI模型
-6. 版本建议（version）- 基于复杂度建议版本号（1.0, 1.1, 2.0等）
-7. 预估token数（estimatedTokens）- 预估处理所需token数量
-8. 置信度（confidence）- 分析结果的置信度（0-1）
-${config.includeImprovements ? `9. 改进建议（improvements）- 提供3-5个具体的优化建议` : ''}
-${config.includeSuggestions ? `10. 使用场景（useCases）- 列出3-5个典型应用场景
-11. 标题建议（suggestedTitle）- 建议一个简洁明确的标题
-12. 描述建议（description）- 建议一个清晰的描述` : ''}
+1. 分类（category）- 必须从以下21个预设分类中选择最合适的一个，严格返回下列分类名称：
+   选项：${categories.join('、')}
+   说明：只能选择其中一个，不要自由发挥或创造新分类。如果不确定，请选择"通用"。
+
+2. 兼容模型（compatibleModels）- 必须从以下预设模型中选择1-3个最适合的模型：
+   选项：${modelOptionsText}
+   说明：返回模型ID数组（如：["llm-large", "code-specialized"]），不要创造新的模型名称。
+
+3. 标签（tags）- 提取3-8个相关标签，体现提示词的核心特征
+4. 难度级别（difficulty）- beginner/intermediate/advanced
+5. 变量提取（variables）- 找出所有{{变量名}}格式的变量
+6. 预估token数（estimatedTokens）- 预估处理所需token数量
+7. 置信度（confidence）- 分析结果的置信度（0-1）
+${config.includeImprovements ? `8. 改进建议（improvements）- 提供3-5个具体的优化建议` : ''}
+${config.includeSuggestions ? `9. 使用场景（useCases）- 列出3-5个典型应用场景
+10. 标题建议（suggestedTitle）- 建议一个简洁明确的标题
+11. 描述建议（description）- 建议一个清晰的描述` : ''}
 
 重要提醒：
-- 分类必须严格从上述21个预设分类中选择，不要使用"创意写作"、"数据分析"等不在列表中的分类
-- 如果不确定分类，请选择"通用"
+- 分类必须严格从上述21个预设分类中选择一个
+- 兼容模型必须从上述预设模型选项中选择1-3个，返回ID数组格式
 - 标签优先使用已有标签，只有在确实需要时才创建新标签${existingTagsHint}
-- 请用${language}回复，返回有效的JSON格式，确保所有字段都存在。`;
+- 不要返回版本号（version），版本由系统自动生成
+- 请用${language}回复，返回有效的JSON格式，确保所有字段都存在。
+
+返回格式示例：
+{
+  "category": "编程",
+  "compatibleModels": ["code-specialized", "llm-large"],
+  "tags": ["JavaScript", "代码生成", "编程助手"],
+  "difficulty": "intermediate",
+  "variables": ["变量名1", "变量名2"],
+  "estimatedTokens": 200,
+  "confidence": 0.85,
+  "improvements": ["建议1", "建议2"],
+  "useCases": ["场景1", "场景2"],
+  "suggestedTitle": "建议标题",
+  "description": "建议描述"
+}`;
   }
 
   /**
@@ -179,9 +217,38 @@ ${content}
   /**
    * 验证和格式化分析结果
    */
-  private validateAndFormatResult(result: any, originalContent: string): AIAnalysisResult {
-    // 智能推荐兼容模型
-    const recommendedModels = this.recommendCompatibleModels(result.category, originalContent);
+  private validateAndFormatResult(result: any, originalContent: string, currentVersion?: string, isNewPrompt: boolean = false, existingVersions: string[] = []): AIAnalysisResult {
+    // 获取有效的预设模型ID列表
+    const validModelIds = MODEL_TAGS.map(tag => tag.id);
+    
+    // 验证AI返回的兼容模型
+    let finalCompatibleModels: string[] = [];
+    if (Array.isArray(result.compatibleModels)) {
+      // 过滤出有效的模型ID
+      finalCompatibleModels = result.compatibleModels.filter((model: string) => 
+        validModelIds.includes(model)
+      );
+    }
+    
+    // 如果AI没有返回有效模型或返回的模型无效，则使用智能推荐
+    if (finalCompatibleModels.length === 0) {
+      finalCompatibleModels = this.recommendCompatibleModels(result.category || '通用', originalContent);
+      console.log('⚠️ AI返回的模型无效，使用智能推荐:', finalCompatibleModels);
+    } else {
+      console.log('✅ 使用AI返回的有效模型:', finalCompatibleModels);
+    }
+    
+    // 生成版本建议
+    const suggestedVersion = this.suggestVersion(originalContent, existingVersions, currentVersion, isNewPrompt);
+    
+    // 添加调试日志
+    console.log('🔧 validateAndFormatResult 调试:');
+    console.log('- AI返回的版本:', result.version);
+    console.log('- 我们建议的版本:', suggestedVersion);
+    console.log('- AI返回的模型:', result.compatibleModels);
+    console.log('- 最终使用的模型:', finalCompatibleModels);
+    console.log('- 当前版本:', currentVersion);
+    console.log('- 是否新提示词:', isNewPrompt);
     
     // 确保所有必需字段存在
     const validated: AIAnalysisResult = {
@@ -194,14 +261,19 @@ ${content}
       variables: Array.isArray(result.variables) ? result.variables : this.extractVariables(originalContent),
       improvements: Array.isArray(result.improvements) ? result.improvements : [],
       useCases: Array.isArray(result.useCases) ? result.useCases : [],
-      compatibleModels: Array.isArray(result.compatibleModels) && result.compatibleModels.length > 0
-        ? result.compatibleModels : recommendedModels,
-      version: result.version || '1.0',
+      compatibleModels: finalCompatibleModels, // 使用验证后的模型列表
+      version: suggestedVersion, // 始终使用我们的版本建议，不使用AI返回的版本
       confidence: typeof result.confidence === 'number' 
         ? Math.max(0, Math.min(1, result.confidence)) : 0.8,
       suggestedTitle: result.suggestedTitle || '',
       description: result.description || ''
     };
+
+    console.log('✅ 最终验证结果:', {
+      version: validated.version,
+      compatibleModels: validated.compatibleModels,
+      category: validated.category
+    });
 
     return validated;
   }
@@ -313,13 +385,24 @@ ${content}
   /**
    * 后备分析方案（当API调用失败时）
    */
-  private getFallbackAnalysis(content: string): AIAnalysisResult {
+  private getFallbackAnalysis(content: string, currentVersion?: string, isNewPrompt: boolean = false, existingVersions: string[] = []): AIAnalysisResult {
     const variables = this.extractVariables(content);
     const estimatedTokens = Math.ceil(content.length / 4);
     
     // 基于关键词的简单分类
     const category = this.detectCategoryByKeywords(content);
     const tags = this.extractTagsByKeywords(content);
+    const recommendedModels = this.recommendCompatibleModels(category, content);
+    const suggestedVersion = this.suggestVersion(content, existingVersions, currentVersion, isNewPrompt);
+
+    // 调试日志
+    console.log('🔍 后备分析调试信息:');
+    console.log('- 分类:', category);
+    console.log('- 推荐模型:', recommendedModels);
+    console.log('- 建议版本:', suggestedVersion);
+    console.log('- 当前版本:', currentVersion);
+    console.log('- 是否新提示词:', isNewPrompt);
+    console.log('- 已有版本:', existingVersions);
 
     return {
       category,
@@ -329,8 +412,8 @@ ${content}
       variables,
       improvements: ['建议添加更多上下文信息', '可以优化变量命名'],
       useCases: ['通用AI对话', '内容生成'],
-      compatibleModels: ['gpt-4', 'gpt-3.5-turbo', 'claude-3'],
-      version: variables.length > 3 ? '1.1' : '1.0',
+      compatibleModels: recommendedModels, // 使用我们的智能推荐
+      version: suggestedVersion,
       confidence: 0.6,
       suggestedTitle: content.length > 50 ? content.substring(0, 50) + '...' : content,
       description: '基于内容特征的自动分析结果'

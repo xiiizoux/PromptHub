@@ -7,6 +7,9 @@ interface AIAnalyzeButtonProps {
   disabled?: boolean;
   variant?: 'full' | 'classify' | 'tags' | 'variables';
   className?: string;
+  currentVersion?: string;
+  isNewPrompt?: boolean;
+  existingVersions?: string[];
 }
 
 export const AIAnalyzeButton: React.FC<AIAnalyzeButtonProps> = ({
@@ -14,7 +17,10 @@ export const AIAnalyzeButton: React.FC<AIAnalyzeButtonProps> = ({
   onAnalysisComplete,
   disabled = false,
   variant = 'full',
-  className = ''
+  className = '',
+  currentVersion,
+  isNewPrompt,
+  existingVersions
 }) => {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [error, setError] = useState<string | null>(null);

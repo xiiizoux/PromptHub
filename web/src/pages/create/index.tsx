@@ -93,6 +93,15 @@ function CreatePromptPage() {
     }
   };
 
+  // 为AI分析按钮提供额外配置
+  const getAIAnalysisConfig = () => {
+    return {
+      isNewPrompt: true, // 创建页面总是新提示词
+      existingVersions: [], // 新提示词没有现有版本
+      currentVersion: undefined // 新提示词没有当前版本
+    };
+  };
+
   // 应用AI分析结果
   const applyAIResults = (data: Partial<AIAnalysisResult>) => {
     if (data.category) {
