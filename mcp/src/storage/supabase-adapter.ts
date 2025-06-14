@@ -284,7 +284,7 @@ export class SupabaseAdapter implements StorageAdapter {
         messages: prompt.messages,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
-        version: 1,
+        version: prompt.version ? Number(prompt.version) : 1.0, // 支持小数版本号
         is_public: prompt.is_public !== undefined ? prompt.is_public : false,
         user_id: prompt.user_id
       };
@@ -308,7 +308,7 @@ export class SupabaseAdapter implements StorageAdapter {
       // 创建初始版本
       await this.createPromptVersion({
         prompt_id: createdPrompt.id,
-        version: 1,
+        version: createdPrompt.version || 1.0, // 使用创建的提示词的版本号
         messages: prompt.messages,
         description: prompt.description,
         category: prompt.category || '通用',
@@ -337,10 +337,14 @@ export class SupabaseAdapter implements StorageAdapter {
       }
       
       // 准备更新数据
+      // 版本号递增 - 支持小数版本号
+      const currentVersion = existingPrompt.version || 1.0;
+      const newVersion = Math.round((currentVersion + 0.1) * 10) / 10;
+      
       const updateData = {
         ...prompt,
         updated_at: new Date().toISOString(),
-        version: (existingPrompt.version || 1) + 1 // 版本号递增
+        version: newVersion
       };
 
       // 更新提示词
@@ -363,7 +367,7 @@ export class SupabaseAdapter implements StorageAdapter {
       // 创建新版本记录
       await this.createPromptVersion({
         prompt_id: updatedPrompt.id,
-        version: updatedPrompt.version || 1,
+        version: updatedPrompt.version || 1.0, // 使用更新后的版本号
         messages: prompt.messages || existingPrompt.messages,
         description: prompt.description || existingPrompt.description,
         category: prompt.category || existingPrompt.category,

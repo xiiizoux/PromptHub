@@ -162,7 +162,7 @@ export default function PromptDetailsPage({ prompt }: PromptDetailsPageProps) {
         try {
           await trackPromptUsage({
             prompt_id: prompt.id,
-            version: parseInt(selectedVersion) || 1,
+            version: parseFloat(selectedVersion) || 1.0,
             input_tokens: processedContent.length / 4, // 粗略估算
             output_tokens: 0,
             latency: 0,

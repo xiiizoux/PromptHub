@@ -101,7 +101,7 @@ router.post('/feedback', async (req, res) => {
 router.get('/:promptId', async (req, res) => {
   try {
     const { promptId } = req.params;
-    const version = req.query.version ? parseInt(req.query.version as string) : undefined;
+    const version = req.query.version ? parseFloat(req.query.version as string) : undefined;
     
     if (!promptId) {
       return res.status(400).json({

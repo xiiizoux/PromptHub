@@ -837,7 +837,7 @@ async function handleGetPromptVersion(params: any, req?: express.Request) {
   }
 
   // 获取特定版本
-  const versionNum = typeof params.version === 'string' ? parseInt(params.version) : params.version;
+  const versionNum = typeof params.version === 'string' ? parseFloat(params.version) : params.version;
   const versionData = await storage.getPromptVersion(prompt.id, versionNum, req?.user?.id);
   if (!versionData) {
     throw new Error(`版本 ${versionNum} 未找到: ${params.name}`);
@@ -869,7 +869,7 @@ async function handleRestorePromptVersion(params: any, req?: express.Request) {
   }
 
   // 恢复到特定版本
-  const versionNum = typeof params.version === 'string' ? parseInt(params.version) : params.version;
+  const versionNum = typeof params.version === 'string' ? parseFloat(params.version) : params.version;
   const restoredPrompt = await storage.restorePromptVersion(prompt.id, versionNum, req?.user?.id);
 
   return {

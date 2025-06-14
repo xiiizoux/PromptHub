@@ -534,7 +534,7 @@ ${content}
       let counter = 1;
       while (existingVersions.includes(version)) {
         const [major, minor] = baseVersion.split('.');
-        version = `${major}.${parseInt(minor) + counter}`;
+        version = `${major}.${parseFloat(minor) + (counter * 0.1)}`;
         counter++;
       }
 
