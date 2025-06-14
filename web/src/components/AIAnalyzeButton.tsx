@@ -364,7 +364,7 @@ export const AIAnalysisResultDisplay: React.FC<AIAnalysisResultDisplayProps> = (
 
         {/* 建议描述 */}
         {result.description && (
-          <div className="bg-white rounded-lg p-4 border border-gray-200 md:col-span-2 lg:col-span-3">
+          <div className="bg-white rounded-lg p-4 border border-gray-200">
             <div className="flex items-center justify-between mb-2">
               <h4 className="font-medium text-gray-700">📋 建议描述</h4>
               <button
@@ -375,7 +375,9 @@ export const AIAnalysisResultDisplay: React.FC<AIAnalysisResultDisplayProps> = (
                 {appliedFields.has('description') ? '✅ 已应用' : '应用'}
               </button>
             </div>
-            <p className="text-gray-700 text-sm leading-relaxed">{result.description}</p>
+            <p className="text-gray-700 text-sm leading-relaxed line-clamp-3">
+              {result.description.length > 120 ? result.description.substring(0, 120) + '...' : result.description}
+            </p>
           </div>
         )}
 

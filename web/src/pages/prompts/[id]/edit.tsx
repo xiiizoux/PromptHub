@@ -990,7 +990,11 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
                     <input
                       {...register('version')}
                       type="text"
-                      value={String(watch('version') ?? '')}
+                      value={(() => {
+                        const version = watch('version') ?? '';
+                        const numVersion = Number(version);
+                        return isNaN(numVersion) ? String(version) : numVersion.toFixed(1);
+                      })()}
                       onChange={e => setValue('version', e.target.value as any)}
                       className="input-primary w-full"
                     />

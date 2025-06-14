@@ -365,6 +365,9 @@ ${content}
     const recommendedModels = this.recommendCompatibleModels(category, content);
     const suggestedVersion = this.suggestVersion(content, existingVersions, currentVersion, isNewPrompt);
 
+    // 智能生成标题
+    const suggestedTitle = this.generateIntelligentTitle(content, category);
+
     return {
       category,
       tags,
@@ -376,9 +379,89 @@ ${content}
       compatibleModels: recommendedModels,
       version: suggestedVersion,
       confidence: 0.6,
-      suggestedTitle: content.length > 50 ? content.substring(0, 50) + '...' : content,
+      suggestedTitle: suggestedTitle,
       description: '基于内容特征的自动分析结果'
     };
+  }
+
+  /**
+   * 智能生成标题（当AI不可用时）
+   */
+  private generateIntelligentTitle(content: string, category: string): string {
+    // 清理内容，移除多余空格和换行
+    const cleanContent = content.replace(/\s+/g, ' ').trim();
+    
+    // 基于分类的标题模板
+    const titleTemplates: { [key: string]: string[] } = {
+      '编程': ['代码{功能}助手', '{功能}开发工具', '编程{功能}生成器'],
+      '文案': ['{功能}文案生成器', '智能{功能}助手', '{功能}创作工具'],
+      '翻译': ['{功能}翻译助手', '多语言{功能}工具', '{功能}语言转换器'],
+      '创意写作': ['{功能}创作助手', '智能{功能}工具', '{功能}写作生成器'],
+      '学术': ['{功能}学术助手', '学术{功能}工具', '{功能}研究助手'],
+      '商业': ['{功能}商业助手', '企业{功能}工具', '{功能}分析助手'],
+      '教育': ['{功能}教学助手', '教育{功能}工具', '{功能}学习助手'],
+      '设计': ['{功能}设计助手', '创意{功能}工具', '{功能}设计生成器'],
+    };
+
+    // 提取关键功能词
+    const keywords = this.extractKeywords(cleanContent);
+    const mainKeyword = keywords[0] || '智能';
+
+    // 获取分类对应的模板
+    const templates = titleTemplates[category] || ['{功能}AI助手'];
+    const template = templates[0]; // 使用第一个模板
+
+    // 替换模板中的功能占位符
+    let title = template.replace('{功能}', mainKeyword);
+
+    // 确保标题长度合适
+    if (title.length > 20) {
+      title = mainKeyword + 'AI助手';
+    }
+    if (title.length < 5) {
+      title = '智能AI助手';
+    }
+
+    return title;
+  }
+
+  /**
+   * 从内容中提取关键词
+   */
+  private extractKeywords(content: string): string[] {
+    const keywords: string[] = [];
+    
+    // 常见功能关键词
+    const functionKeywords = [
+      '写作', '翻译', '编程', '代码', '分析', '总结', '创作', '生成', '优化', '润色',
+      '回复', '客服', '营销', '文案', '邮件', '报告', '简历', '方案', '策划', '设计',
+      '教学', '学习', '培训', '答疑', '解释', '指导', '建议', '推荐', '评估', '审核'
+    ];
+
+    // 查找内容中的功能关键词
+    for (const keyword of functionKeywords) {
+      if (content.includes(keyword)) {
+        keywords.push(keyword);
+        if (keywords.length >= 3) break; // 最多提取3个关键词
+      }
+    }
+
+    // 如果没有找到功能关键词，尝试从句子结构中提取
+    if (keywords.length === 0) {
+      const sentences = content.split(/[。！？.!?]/);
+      for (const sentence of sentences) {
+        if (sentence.length > 10 && sentence.length < 50) {
+          // 提取动词
+          const verbs = sentence.match(/[\u4e00-\u9fa5]{2,4}(助手|工具|器|生成|创建|编写|制作)/g);
+          if (verbs && verbs.length > 0) {
+            keywords.push(verbs[0].replace(/(助手|工具|器|生成|创建|编写|制作)$/, ''));
+            break;
+          }
+        }
+      }
+    }
+
+    return keywords.length > 0 ? keywords : ['智能'];
   }
 
   /**

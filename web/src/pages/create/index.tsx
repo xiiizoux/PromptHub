@@ -169,7 +169,7 @@ function CreatePromptPage() {
     // 应用版本
     if (data.version) {
       // 将string版本号转换为number
-      const versionNumber = parseFloat(data.version);
+      const versionNumber = parseFloat(data.version.toString());
       if (!isNaN(versionNumber)) {
         setValue('version', versionNumber);
       }

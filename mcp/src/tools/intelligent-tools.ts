@@ -535,10 +535,16 @@ async function processExternalAnalysis(externalAnalysis: ExternalAIAnalysis, con
   // 估算token数
   const estimatedTokens = Math.ceil(content.length / 4);
   
+  // 智能生成标题（如果外部分析没有提供好的标题）
+  let suggestedTitle = externalAnalysis.suggestedTitle;
+  if (!suggestedTitle || suggestedTitle.length > 50 || suggestedTitle === content.substring(0, 30) + '...') {
+    suggestedTitle = generateIntelligentTitle(content, externalAnalysis.category || '通用');
+  }
+  
   return {
     category: externalAnalysis.category || '通用',
     tags: externalAnalysis.tags || ['AI', '提示词'],
-    suggestedTitle: externalAnalysis.suggestedTitle || content.substring(0, 30) + '...',
+    suggestedTitle: suggestedTitle,
     description: externalAnalysis.description || '通过外部AI分析创建',
     difficulty: externalAnalysis.difficulty || 'intermediate',
     estimatedTokens: estimatedTokens,
@@ -549,6 +555,55 @@ async function processExternalAnalysis(externalAnalysis: ExternalAIAnalysis, con
     version: externalAnalysis.version || '0.1',
     confidence: externalAnalysis.confidence || 0.8
   };
+}
+
+/**
+ * 智能生成标题
+ */
+function generateIntelligentTitle(content: string, category: string): string {
+  // 清理内容
+  const cleanContent = content.replace(/\s+/g, ' ').trim();
+  
+  // 基于分类的标题模板
+  const titleTemplates: { [key: string]: string[] } = {
+    '编程': ['代码{功能}助手', '{功能}开发工具'],
+    '文案': ['{功能}文案生成器', '智能{功能}助手'],
+    '翻译': ['{功能}翻译助手', '多语言{功能}工具'],
+    '学术': ['{功能}学术助手', '学术{功能}工具'],
+    '商业': ['{功能}商业助手', '企业{功能}工具'],
+    '教育': ['{功能}教学助手', '教育{功能}工具'],
+  };
+
+  // 提取关键功能词
+  const functionKeywords = [
+    '写作', '翻译', '编程', '代码', '分析', '总结', '创作', '生成', '优化', '润色',
+    '回复', '客服', '营销', '文案', '邮件', '报告', '简历', '方案', '策划', '设计'
+  ];
+
+  let mainKeyword = '智能';
+  for (const keyword of functionKeywords) {
+    if (cleanContent.includes(keyword)) {
+      mainKeyword = keyword;
+      break;
+    }
+  }
+
+  // 获取分类对应的模板
+  const templates = titleTemplates[category] || ['{功能}AI助手'];
+  const template = templates[0];
+
+  // 生成标题
+  let title = template.replace('{功能}', mainKeyword);
+  
+  // 确保标题长度合适
+  if (title.length > 20) {
+    title = mainKeyword + 'AI助手';
+  }
+  if (title.length < 5) {
+    title = '智能AI助手';
+  }
+
+  return title;
 }
 
 /**
