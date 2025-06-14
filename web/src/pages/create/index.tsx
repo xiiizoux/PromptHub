@@ -527,11 +527,8 @@ function CreatePromptPage() {
                     <AIAnalyzeButton
                       content={currentContent || watch('content') || ''}
                       onAnalysisComplete={(result) => {
-                        if (result.suggestedTitle) setValue('name', result.suggestedTitle);
-                        if (result.category) setValue('category', result.category);
-                        if (result.description) setValue('description', result.description);
-                        if (result.tags) setValue('tags', result.tags);
-                        if (result.variables) setValue('input_variables', result.variables);
+                        // 只显示AI分析结果，不自动应用到表单
+                        // 让用户手动选择应用哪些建议
                         handleAIAnalysis(result);
                       }}
                       variant="full"

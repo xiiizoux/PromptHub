@@ -237,16 +237,20 @@ export const AIAnalysisResultDisplay: React.FC<AIAnalysisResultDisplayProps> = (
 
   const applyAllResults = () => {
     if (onApplyResults) {
-      onApplyResults({
-        category: result.category,
-        tags: result.tags,
-        version: result.version,
-        variables: result.variables,
-        compatibleModels: result.compatibleModels,
-        suggestedTitle: result.suggestedTitle,
-        description: result.description
-      });
-      setAppliedFields(new Set(['category', 'tags', 'version', 'variables', 'compatibleModels', 'suggestedTitle', 'description']));
+      // 添加确认对话框
+      const confirmMessage = "确定要应用全部AI分析结果吗？这将会替换当前表单中的相关字段内容。";
+      if (window.confirm(confirmMessage)) {
+        onApplyResults({
+          category: result.category,
+          tags: result.tags,
+          version: result.version,
+          variables: result.variables,
+          compatibleModels: result.compatibleModels,
+          suggestedTitle: result.suggestedTitle,
+          description: result.description
+        });
+        setAppliedFields(new Set(['category', 'tags', 'version', 'variables', 'compatibleModels', 'suggestedTitle', 'description']));
+      }
     }
   };
 
@@ -254,7 +258,7 @@ export const AIAnalysisResultDisplay: React.FC<AIAnalysisResultDisplayProps> = (
     <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-xl p-6 border border-blue-200">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
-          🤖 AI分析结果
+          🤖 AI分析建议
           <span className="text-sm bg-green-100 text-green-700 px-2 py-1 rounded-full">
             置信度 {Math.round(result.confidence * 100)}%
           </span>
@@ -263,8 +267,15 @@ export const AIAnalysisResultDisplay: React.FC<AIAnalysisResultDisplayProps> = (
           onClick={applyAllResults}
           className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
         >
-          应用全部结果
+          应用全部建议
         </button>
+      </div>
+
+      {/* 使用提示 */}
+      <div className="mb-4 p-3 bg-blue-50 border-l-4 border-blue-400 rounded-r-lg">
+        <p className="text-sm text-blue-700">
+          💡 <strong>提示：</strong>这些是AI分析的建议，您可以选择性地应用这些建议到表单中。点击各项的"应用"按钮可单独应用某项建议。
+        </p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

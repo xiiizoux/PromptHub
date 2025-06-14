@@ -55,15 +55,36 @@ const addResponseInterceptor = (client: AxiosInstance) => {
   client.interceptors.response.use(
     (response) => response,
     (error) => {
-      // 处理401未授权错误
+      // 处理401未授权错误，但要避免过于激进的清除认证
       if (error.response?.status === 401) {
-        // 清除认证信息
-        localStorage.removeItem('auth_token');
-        localStorage.removeItem('user');
+        // 获取请求的URL路径，避免在某些特定API调用失败时清除认证
+        const requestUrl = error.config?.url || '';
         
-        // 如果不是登录页面，重定向到登录页
-        if (typeof window !== 'undefined' && !window.location.pathname.includes('/auth/signin')) {
-          window.location.href = '/auth/signin';
+        // 只有在关键认证路径失败时才清除认证信息
+        const shouldClearAuth = 
+          requestUrl.includes('/auth/') || 
+          requestUrl.includes('/user') ||
+          (error.response?.data?.error && 
+           (error.response.data.error.includes('令牌') || 
+            error.response.data.error.includes('token') ||
+            error.response.data.error.includes('未登录')));
+        
+        if (shouldClearAuth) {
+          console.warn('认证失败，清除认证信息:', requestUrl);
+          
+          // 清除认证信息
+          localStorage.removeItem('auth_token');
+          localStorage.removeItem('user');
+          
+          // 如果不是登录页面，重定向到登录页
+          if (typeof window !== 'undefined' && !window.location.pathname.includes('/auth/signin')) {
+            // 延迟重定向，避免在正常操作中意外跳转
+            setTimeout(() => {
+              window.location.href = '/auth/signin';
+            }, 1000);
+          }
+        } else {
+          console.warn('API请求401错误，但不清除认证:', requestUrl, error.response?.data);
         }
       }
       

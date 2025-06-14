@@ -48,21 +48,35 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event: any, session: any) => {
             if (!mounted) return;
             
-            console.log('Auth state change:', event, session?.user?.id);
+            console.log('认证状态变化:', { event, hasSession: !!session, userId: session?.user?.id });
             
             try {
               if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
                 if (session?.user) {
+                  console.log('处理登录或令牌刷新');
                   await ensureUserInDatabase(session.user);
+                } else {
+                  console.warn('登录事件但没有用户会话');
                 }
               } else if (event === 'SIGNED_OUT') {
+                console.log('处理登出事件');
                 if (mounted) {
                   setUser(null);
                   setIsAuthenticated(false);
                 }
+              } else if (event === 'USER_UPDATED') {
+                console.log('用户信息更新事件');
+                // 用户信息更新，但不需要清除认证状态
+              } else {
+                console.log('其他认证事件:', event);
               }
             } catch (err) {
               console.error('处理认证状态变化时出错:', err);
+              // 不要在错误时清除认证状态，除非确实是登出事件
+              if (event === 'SIGNED_OUT') {
+                setUser(null);
+                setIsAuthenticated(false);
+              }
             }
           });
 
@@ -393,19 +407,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsLoading(true);
     
     try {
+      console.log('用户主动登出...');
+      
       // 使用Supabase登出
       const { error } = await supabase.auth.signOut();
       
       if (error) {
+        console.error('Supabase登出失败:', error);
         throw error;
       }
+      
+      console.log('Supabase登出成功');
       
       // 清除应用状态
       setUser(null);
       setIsAuthenticated(false);
+      
+      console.log('应用状态已清除');
     } catch (err: any) {
       console.error('登出失败:', err);
       setError(err.message || '登出失败，请稍后再试');
+      
+      // 即使登出失败，也清除本地状态以确保安全
+      setUser(null);
+      setIsAuthenticated(false);
     } finally {
       setIsLoading(false);
     }
