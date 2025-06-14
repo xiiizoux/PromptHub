@@ -148,12 +148,17 @@ function CreatePromptPage() {
       setValue('input_variables', uniqueVariables);
     }
     
-    // 应用兼容模型 - 与现有模型合并
+    // 应用兼容模型 - 修复字段名不匹配问题
     if (data.compatibleModels && Array.isArray(data.compatibleModels)) {
       const combinedModels = [...models, ...data.compatibleModels];
       const uniqueModels = combinedModels.filter((model, index, array) => array.indexOf(model) === index);
       setModels(uniqueModels);
-      setValue('compatible_models', uniqueModels);
+      setValue('compatible_models', uniqueModels); // 使用正确的字段名
+      console.log('兼容模型更新:', { 
+        原有模型: models, 
+        AI建议模型: data.compatibleModels, 
+        合并后模型: uniqueModels 
+      });
     }
 
     // 应用建议标题 - 只在当前标题为空时应用
@@ -403,11 +408,83 @@ function CreatePromptPage() {
             className="glass rounded-3xl border border-neon-cyan/20 shadow-2xl p-8"
           >
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
-              {/* 基本信息 */}
+              {/* 提示词内容 - 移到最上面突出显示 */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.8 }}
+                className="space-y-4"
+              >
+                <div className="flex items-center justify-between mb-3">
+                  <label className="flex items-center text-lg font-semibold text-gray-200">
+                    <CodeBracketIcon className="h-6 w-6 text-neon-cyan mr-3" />
+                    提示词内容 *
+                    <span className="ml-2 text-sm font-normal text-gray-400">核心内容区域</span>
+                  </label>
+                  
+                  {/* AI分析按钮组 - 突出显示 */}
+                  <div className="flex items-center gap-2">
+                    <AIAnalyzeButton
+                      content={currentContent || watch('content') || ''}
+                      onAnalysisComplete={(result) => {
+                        // 显示AI分析结果，用户可以选择应用
+                        handleAIAnalysis(result);
+                      }}
+                      variant="full"
+                    />
+                  </div>
+                </div>
+                
+                <div className="relative">
+                  <textarea
+                    {...register('content', { required: '请输入提示词内容' })}
+                    rows={12}
+                    placeholder="在这里编写您的提示词内容。您可以使用 {{变量名}} 来定义动态变量..."
+                    className="input-primary w-full font-mono text-sm resize-none"
+                    onChange={detectVariables}
+                  />
+                  
+                  <div className="absolute top-3 right-3 text-xs text-gray-500">
+                    使用 {`{{变量名}}`} 定义变量
+                  </div>
+                </div>
+                
+                {errors.content && (
+                  <p className="text-neon-red text-sm mt-1">{errors.content.message}</p>
+                )}
+                
+                {/* AI分析结果显示 - 紧跟在内容下方 */}
+                <AnimatePresence>
+                  {showAiAnalysis && aiAnalysisResult && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 20, height: 0 }}
+                      animate={{ opacity: 1, y: 0, height: 'auto' }}
+                      exit={{ opacity: 0, y: -20, height: 0 }}
+                      className="mt-4"
+                    >
+                      <div className="relative">
+                        <AIAnalysisResultDisplay
+                          result={aiAnalysisResult}
+                          onApplyResults={applyAIResults}
+                        />
+                        <button
+                          onClick={() => setShowAiAnalysis(false)}
+                          className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors"
+                          title="关闭AI分析结果"
+                        >
+                          <XMarkIcon className="h-5 w-5" />
+                        </button>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </motion.div>
+
+              {/* 基本信息 */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 1.0 }}
                 className="grid grid-cols-1 lg:grid-cols-2 gap-8"
               >
                 <div className="space-y-2">
@@ -444,7 +521,7 @@ function CreatePromptPage() {
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 1 }}
+                transition={{ delay: 1.2 }}
                 className="grid grid-cols-1 lg:grid-cols-2 gap-8"
               >
                 <div className="space-y-2">
@@ -491,7 +568,7 @@ function CreatePromptPage() {
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 1.2 }}
+                transition={{ delay: 1.4 }}
                 className="space-y-2"
               >
                 <label className="flex items-center text-sm font-medium text-gray-300 mb-3">
@@ -509,83 +586,11 @@ function CreatePromptPage() {
                 )}
               </motion.div>
 
-              {/* 提示词内容 */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 1.3 }}
-                className="space-y-4"
-              >
-                <div className="flex items-center justify-between mb-3">
-                  <label className="flex items-center text-sm font-medium text-gray-300">
-                    <CodeBracketIcon className="h-5 w-5 text-neon-cyan mr-2" />
-                    提示词内容 *
-                  </label>
-                  
-                  {/* AI分析按钮组 - 修复版本，使用双重内容监听 */}
-                  <div className="flex items-center gap-2">
-                    <AIAnalyzeButton
-                      content={currentContent || watch('content') || ''}
-                      onAnalysisComplete={(result) => {
-                        // 只显示AI分析结果，不自动应用到表单
-                        // 让用户手动选择应用哪些建议
-                        handleAIAnalysis(result);
-                      }}
-                      variant="full"
-                    />
-                  </div>
-                </div>
-                
-                <div className="relative">
-                  <textarea
-                    {...register('content', { required: '请输入提示词内容' })}
-                    rows={10}
-                    placeholder="在这里编写您的提示词内容。您可以使用 {{变量名}} 来定义动态变量..."
-                    className="input-primary w-full font-mono text-sm resize-none"
-                    onChange={detectVariables}
-                  />
-                  
-                  <div className="absolute top-3 right-3 text-xs text-gray-500">
-                    使用 {`{{变量名}}`} 定义变量
-                  </div>
-                </div>
-                
-                {errors.content && (
-                  <p className="text-neon-red text-sm mt-1">{errors.content.message}</p>
-                )}
-                
-                {/* AI分析结果显示 - 与编辑页面保持一致 */}
-                <AnimatePresence>
-                  {showAiAnalysis && aiAnalysisResult && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 20, height: 0 }}
-                      animate={{ opacity: 1, y: 0, height: 'auto' }}
-                      exit={{ opacity: 0, y: -20, height: 0 }}
-                      className="mt-4"
-                    >
-                      <div className="relative">
-                        <AIAnalysisResultDisplay
-                          result={aiAnalysisResult}
-                          onApplyResults={applyAIResults}
-                        />
-                        <button
-                          onClick={() => setShowAiAnalysis(false)}
-                          className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors"
-                          title="关闭AI分析结果"
-                        >
-                          <XMarkIcon className="h-5 w-5" />
-                        </button>
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </motion.div>
-
               {/* 变量管理 */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 1.4 }}
+                transition={{ delay: 1.6 }}
                 className="space-y-4"
               >
                 <label className="flex items-center text-sm font-medium text-gray-300">
@@ -648,7 +653,7 @@ function CreatePromptPage() {
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 1.5 }}
+                transition={{ delay: 1.8 }}
                 className="space-y-4"
               >
                 <label className="flex items-center text-sm font-medium text-gray-300">
@@ -734,7 +739,7 @@ function CreatePromptPage() {
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 2 }}
+                transition={{ delay: 1.8 }}
                 className="space-y-4"
               >
                 <label className="flex items-center text-sm font-medium text-gray-300">

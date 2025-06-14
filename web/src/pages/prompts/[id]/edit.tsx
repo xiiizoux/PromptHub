@@ -650,6 +650,11 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
         setValue('compatible_models', mergedModels);
         setHasUnsavedChanges(true);
         console.log(`兼容模型合并: ${models.length} -> ${mergedModels.length}个模型`);
+        console.log('兼容模型详情:', { 
+          原有: models, 
+          AI建议: data.compatibleModels, 
+          合并后: mergedModels 
+        });
       }
     }
 
@@ -953,11 +958,89 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
           >
           
             <form onSubmit={handleSubmit(onSubmit as any)} className="space-y-8">
-              {/* 基本信息 */}
+              {/* 提示词内容 - 移到最上面突出显示 */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.8 }}
+                className="space-y-4"
+              >
+                <div className="flex items-center justify-between mb-3">
+                  <label className="flex items-center text-lg font-semibold text-gray-200">
+                    <SparklesIcon className="h-6 w-6 text-neon-cyan mr-3" />
+                    提示词内容 *
+                    <span className="ml-2 text-sm font-normal text-gray-400">核心内容区域</span>
+                  </label>
+                  
+                  {/* AI分析按钮组 - 突出显示 */}
+                  <div className="flex items-center gap-2">
+                    <AIAnalyzeButton
+                      content={currentContent || watch('content') || ''}
+                      onAnalysisComplete={(result) => {
+                        handleAIAnalysis(result);
+                      }}
+                      variant="full"
+                      currentVersion={watch('version')?.toString() || safePromptData.version?.toString()}
+                      isNewPrompt={false}
+                      existingVersions={[safePromptData.version?.toString() || '1.0']}
+                      originalContent={safePromptData.content}
+                      existingCategory={watch('category') || safePromptData.category}
+                      existingTags={tags}
+                      existingModels={models}
+                    />
+                  </div>
+                </div>
+                
+                <div className="relative">
+                  <textarea
+                    {...register('content', { required: '请输入提示词内容' })}
+                    rows={10}
+                    placeholder="在这里输入您的提示词内容。使用 {{变量名}} 来定义可替换的变量..."
+                    className="input-primary w-full resize-none font-mono"
+                    onChange={(e) => {
+                      detectVariables(e);
+                    }}
+                  />
+                  <div className="absolute top-3 right-3 text-xs text-gray-500">
+                    使用 {`{{变量名}}`} 定义变量
+                  </div>
+                </div>
+                {errors.content && (
+                  <p className="text-neon-red text-sm mt-1">{errors.content.message}</p>
+                )}
+                
+                {/* AI分析结果显示 - 紧跟在内容下方 */}
+                <AnimatePresence>
+                  {showAiAnalysis && aiAnalysisResult && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 20, height: 0 }}
+                      animate={{ opacity: 1, y: 0, height: 'auto' }}
+                      exit={{ opacity: 0, y: -20, height: 0 }}
+                      className="mt-4"
+                    >
+                      <div className="relative">
+                        <AIAnalysisResultDisplay
+                          result={aiAnalysisResult}
+                          onApplyResults={applyAIResults}
+                        />
+                        <button
+                          onClick={() => setShowAiAnalysis(false)}
+                          className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors"
+                          title="关闭AI分析结果"
+                        >
+                          <XMarkIcon className="h-5 w-5" />
+                        </button>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </motion.div>
+
+              {/* 基本信息 */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 1.0 }}
                 className="grid grid-cols-1 lg:grid-cols-2 gap-8"
               >
                 <div className="space-y-2">
@@ -1036,7 +1119,7 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 1 }}
+                transition={{ delay: 1.2 }}
                 className="grid grid-cols-1 lg:grid-cols-2 gap-8"
               >
                 <div className="space-y-2">
@@ -1118,52 +1201,12 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
                   <input
                     {...register('author')}
                     type="text"
-                    placeholder={user?.username || "您的名字"}
+                    placeholder="作者名称"
                     className="input-primary w-full"
-                    disabled={!checkFieldPermission('author', permissionCheck)}
                   />
-                  {!checkFieldPermission('author', permissionCheck) && (
-                    <p className="text-xs text-gray-500">
-                      只有创建者和管理员可以修改作者信息
-                    </p>
-                  )}
-                </div>
-              </motion.div>
-
-              {/* 公开/私有选项 */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 1.1 }}
-                className="flex items-center justify-between p-4 border border-neon-cyan/20 rounded-xl bg-dark-bg-secondary"
-              >
-                <div className="flex items-center">
-                  <div className="mr-3 text-neon-cyan">
-                    {watch('is_public') ? (
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064" />
-                      </svg>
-                    ) : (
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                      </svg>
-                    )}
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-medium text-gray-300">{watch('is_public') ? '公开分享' : '私人提示词'}</h3>
-                    <p className="text-gray-400 text-sm">{watch('is_public') ? '所有人可以查看和使用您的提示词（访问权限）' : '只有您自己可以访问此提示词'}</p>
-                  </div>
-                </div>
-                <div className="flex items-center">
-                  <label className="relative inline-flex items-center cursor-pointer">
-                    <input
-                      type="checkbox"
-                      className="sr-only peer"
-                      {...register('is_public')}
-                      disabled={!checkFieldPermission('is_public', permissionCheck)}
-                    />
-                    <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-neon-cyan rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-neon-cyan"></div>
-                  </label>
+                  <p className="text-xs text-gray-500">
+                    提示词作者信息，可选填写
+                  </p>
                 </div>
               </motion.div>
 
@@ -1171,7 +1214,7 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 1.2 }}
+                transition={{ delay: 1.4 }}
                 className="space-y-2"
               >
                 <label className="flex items-center text-sm font-medium text-gray-300 mb-3">
@@ -1187,83 +1230,6 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
                 {errors.description && (
                   <p className="text-neon-red text-sm mt-1">{errors.description.message}</p>
                 )}
-              </motion.div>
-
-              {/* 提示词内容 */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 1.4 }}
-                className="space-y-2"
-              >
-                <div className="flex items-center justify-between mb-3">
-                  <label className="flex items-center text-sm font-medium text-gray-300">
-                    <SparklesIcon className="h-5 w-5 text-neon-cyan mr-2" />
-                    提示词内容 *
-                  </label>
-                  
-                  {/* AI分析按钮组 - 增强版，支持增量分析 */}
-                  <div className="flex items-center gap-2">
-                    <AIAnalyzeButton
-                      content={currentContent || watch('content') || ''}
-                      onAnalysisComplete={(result) => {
-                        handleAIAnalysis(result);
-                      }}
-                      variant="full"
-                      currentVersion={watch('version')?.toString() || safePromptData.version?.toString()}
-                      isNewPrompt={false}
-                      existingVersions={[safePromptData.version?.toString() || '1.0']}
-                      originalContent={safePromptData.content}
-                      existingCategory={watch('category') || safePromptData.category}
-                      existingTags={tags}
-                      existingModels={models}
-                    />
-                  </div>
-                </div>
-                
-                <div className="relative">
-                  <textarea
-                    {...register('content', { required: '请输入提示词内容' })}
-                    rows={8}
-                    placeholder="在这里输入您的提示词内容。使用 {{变量名}} 来定义可替换的变量..."
-                    className="input-primary w-full resize-none font-mono"
-                    onChange={(e) => {
-                      detectVariables(e);
-                    }}
-                  />
-                  <div className="absolute top-3 right-3 text-xs text-gray-500">
-                    使用 {`{{变量名}}`} 定义变量
-                  </div>
-                </div>
-                {errors.content && (
-                  <p className="text-neon-red text-sm mt-1">{errors.content.message}</p>
-                )}
-                
-                {/* AI分析结果显示 */}
-                <AnimatePresence>
-                  {showAiAnalysis && aiAnalysisResult && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 20, height: 0 }}
-                      animate={{ opacity: 1, y: 0, height: 'auto' }}
-                      exit={{ opacity: 0, y: -20, height: 0 }}
-                      className="mt-4"
-                    >
-                      <div className="relative">
-                        <AIAnalysisResultDisplay
-                          result={aiAnalysisResult}
-                          onApplyResults={applyAIResults}
-                        />
-                        <button
-                          onClick={() => setShowAiAnalysis(false)}
-                          className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors"
-                          title="关闭AI分析结果"
-                        >
-                          <XMarkIcon className="h-5 w-5" />
-                        </button>
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
               </motion.div>
 
               {/* 变量管理 */}
@@ -1423,7 +1389,7 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 2 }}
+                transition={{ delay: 2.0 }}
                 className="space-y-4"
               >
                 <label className="flex items-center text-sm font-medium text-gray-300">
@@ -1446,7 +1412,7 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 2.1 }}
+                transition={{ delay: 2.2 }}
                 className="space-y-4"
               >
                 <label className="flex items-center text-sm font-medium text-gray-300">
@@ -1508,7 +1474,7 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 2.2 }}
+                transition={{ delay: 2.4 }}
                 className="flex justify-end space-x-4 pt-8"
               >
                 <Link href={`/prompts/${prompt.id}`}>

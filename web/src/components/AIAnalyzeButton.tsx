@@ -166,6 +166,7 @@ export const AIAnalyzeButton: React.FC<AIAnalyzeButtonProps> = ({
   return (
     <div className="relative">
       <button
+        type="button"
         onClick={handleAnalyze}
         disabled={isButtonDisabled}
         className={`
@@ -205,6 +206,7 @@ export const AIAnalyzeButton: React.FC<AIAnalyzeButtonProps> = ({
             </div>
           </div>
           <button
+            type="button"
             onClick={() => setError(null)}
             className="absolute top-1 right-1 text-red-400 hover:text-red-600"
           >
@@ -255,178 +257,328 @@ export const AIAnalysisResultDisplay: React.FC<AIAnalysisResultDisplayProps> = (
   };
 
   return (
-    <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-xl p-6 border border-blue-200">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
-          🤖 AI分析建议
-          <span className="text-sm bg-green-100 text-green-700 px-2 py-1 rounded-full">
-            置信度 {Math.round(result.confidence * 100)}%
-          </span>
-        </h3>
+    <div className="relative bg-gradient-to-br from-dark-bg-primary via-dark-bg-secondary to-dark-bg-primary rounded-2xl p-6 border border-neon-cyan/30 shadow-2xl backdrop-blur-sm">
+      {/* 背景装饰效果 */}
+      <div className="absolute inset-0 bg-gradient-to-r from-neon-blue/5 via-neon-purple/5 to-neon-cyan/5 rounded-2xl"></div>
+      <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-neon-cyan via-neon-purple to-neon-pink rounded-t-2xl"></div>
+      
+      {/* 标题区域 */}
+      <div className="relative flex items-center justify-between mb-6">
+        <div className="flex items-center gap-3">
+          <div className="relative">
+            <div className="w-10 h-10 bg-gradient-to-br from-neon-cyan to-neon-blue rounded-lg flex items-center justify-center shadow-lg shadow-neon-cyan/25">
+              <span className="text-xl">🤖</span>
+            </div>
+            <div className="absolute -top-1 -right-1 w-4 h-4 bg-neon-green rounded-full animate-pulse shadow-lg shadow-neon-green/50"></div>
+          </div>
+          <div>
+            <h3 className="text-xl font-bold bg-gradient-to-r from-neon-cyan to-neon-purple bg-clip-text text-transparent">
+              AI 智能分析
+            </h3>
+            <div className="flex items-center gap-2 mt-1">
+              <span className="text-xs text-gray-400">NEURAL ANALYSIS</span>
+              <div className="px-2 py-1 bg-neon-green/20 border border-neon-green/30 rounded-full">
+                <span className="text-xs font-mono text-neon-green">
+                  置信度 {Math.round(result.confidence * 100)}%
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+        
         <button
+          type="button"
           onClick={applyAllResults}
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+          className="group relative px-6 py-3 bg-gradient-to-r from-neon-purple to-neon-pink rounded-lg font-medium text-white shadow-lg shadow-neon-purple/25 hover:shadow-neon-purple/40 transition-all duration-300 hover:scale-105 border border-neon-purple/30"
         >
-          应用全部建议
+          <span className="relative z-10">应用全部建议</span>
+          <div className="absolute inset-0 bg-gradient-to-r from-neon-purple/20 to-neon-pink/20 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
         </button>
       </div>
 
-      {/* 使用提示 */}
-      <div className="mb-4 p-3 bg-blue-50 border-l-4 border-blue-400 rounded-r-lg">
-        <p className="text-sm text-blue-700">
-          💡 <strong>提示：</strong>这些是AI分析的建议，您可以选择性地应用这些建议到表单中。点击各项的"应用"按钮可单独应用某项建议。
-        </p>
+      {/* 使用提示 - 赛博风格 */}
+      <div className="relative mb-6 p-4 bg-gradient-to-r from-neon-blue/10 to-neon-cyan/10 border border-neon-cyan/20 rounded-xl backdrop-blur-sm">
+        <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-neon-cyan to-neon-blue rounded-l-xl"></div>
+        <div className="flex items-start gap-3">
+          <div className="w-6 h-6 bg-neon-cyan/20 rounded-full flex items-center justify-center mt-0.5">
+            <span className="text-neon-cyan text-sm">💡</span>
+          </div>
+          <div>
+            <p className="text-sm text-gray-300 leading-relaxed">
+              <span className="text-neon-cyan font-semibold">智能建议系统：</span>
+              以下是AI神经网络分析的优化建议，您可以选择性地应用这些建议到表单中。点击各项的"应用"按钮可单独应用某项建议。
+            </p>
+          </div>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      {/* 分析结果网格 - 赛博风格卡片 */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
         {/* 分类 */}
-        <div className="bg-white rounded-lg p-4 border border-gray-200">
-          <div className="flex items-center justify-between mb-2">
-            <h4 className="font-medium text-gray-700">🏷️ 智能分类</h4>
-            <button
-              onClick={() => applyField('category', result.category)}
-              disabled={appliedFields.has('category')}
-              className="text-sm text-blue-600 hover:text-blue-800 disabled:text-gray-400"
-            >
-              {appliedFields.has('category') ? '✅ 已应用' : '应用'}
-            </button>
+        <div className="group relative bg-gradient-to-br from-dark-bg-secondary/80 to-dark-bg-primary/80 rounded-xl p-4 border border-neon-cyan/20 hover:border-neon-cyan/40 transition-all duration-300 backdrop-blur-sm">
+          <div className="absolute inset-0 bg-gradient-to-br from-neon-cyan/5 to-transparent rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+          <div className="relative">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 bg-neon-cyan/20 rounded-lg flex items-center justify-center">
+                  <span className="text-neon-cyan">🏷️</span>
+                </div>
+                <h4 className="font-semibold text-gray-200">智能分类</h4>
+              </div>
+              <button
+                type="button"
+                onClick={() => applyField('category', result.category)}
+                disabled={appliedFields.has('category')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 ${
+                  appliedFields.has('category')
+                    ? 'bg-neon-green/20 text-neon-green border border-neon-green/30'
+                    : 'bg-neon-cyan/20 text-neon-cyan border border-neon-cyan/30 hover:bg-neon-cyan/30 hover:shadow-lg hover:shadow-neon-cyan/25'
+                }`}
+              >
+                {appliedFields.has('category') ? '✅ 已应用' : '应用'}
+              </button>
+            </div>
+            <div className="bg-gradient-to-r from-neon-cyan/20 to-neon-blue/20 rounded-lg p-3 border border-neon-cyan/10">
+              <p className="text-lg font-bold text-neon-cyan">{result.category}</p>
+            </div>
           </div>
-          <p className="text-lg font-semibold text-blue-600">{result.category}</p>
         </div>
 
         {/* 标签 */}
-        <div className="bg-white rounded-lg p-4 border border-gray-200">
-          <div className="flex items-center justify-between mb-2">
-            <h4 className="font-medium text-gray-700">🔖 智能标签</h4>
-            <button
-              onClick={() => applyField('tags', result.tags)}
-              disabled={appliedFields.has('tags')}
-              className="text-sm text-blue-600 hover:text-blue-800 disabled:text-gray-400"
-            >
-              {appliedFields.has('tags') ? '✅ 已应用' : '应用'}
-            </button>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {result.tags.map((tag, index) => (
-              <span key={index} className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm">
-                {tag}
-              </span>
-            ))}
+        <div className="group relative bg-gradient-to-br from-dark-bg-secondary/80 to-dark-bg-primary/80 rounded-xl p-4 border border-neon-purple/20 hover:border-neon-purple/40 transition-all duration-300 backdrop-blur-sm">
+          <div className="absolute inset-0 bg-gradient-to-br from-neon-purple/5 to-transparent rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+          <div className="relative">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 bg-neon-purple/20 rounded-lg flex items-center justify-center">
+                  <span className="text-neon-purple">🔖</span>
+                </div>
+                <h4 className="font-semibold text-gray-200">智能标签</h4>
+              </div>
+              <button
+                type="button"
+                onClick={() => applyField('tags', result.tags)}
+                disabled={appliedFields.has('tags')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 ${
+                  appliedFields.has('tags')
+                    ? 'bg-neon-green/20 text-neon-green border border-neon-green/30'
+                    : 'bg-neon-purple/20 text-neon-purple border border-neon-purple/30 hover:bg-neon-purple/30 hover:shadow-lg hover:shadow-neon-purple/25'
+                }`}
+              >
+                {appliedFields.has('tags') ? '✅ 已应用' : '应用'}
+              </button>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {result.tags.map((tag, index) => (
+                <span 
+                  key={index} 
+                  className="px-2 py-1 bg-gradient-to-r from-neon-purple/20 to-neon-pink/20 text-neon-purple border border-neon-purple/20 rounded-md text-xs font-mono"
+                >
+                  #{tag}
+                </span>
+              ))}
+            </div>
           </div>
         </div>
 
         {/* 版本建议 */}
-        <div className="bg-white rounded-lg p-4 border border-gray-200">
-          <div className="flex items-center justify-between mb-2">
-            <h4 className="font-medium text-gray-700">📋 版本建议</h4>
-            <button
-              onClick={() => applyField('version', result.version)}
-              disabled={appliedFields.has('version')}
-              className="text-sm text-blue-600 hover:text-blue-800 disabled:text-gray-400"
-            >
-              {appliedFields.has('version') ? '✅ 已应用' : '应用'}
-            </button>
+        <div className="group relative bg-gradient-to-br from-dark-bg-secondary/80 to-dark-bg-primary/80 rounded-xl p-4 border border-neon-pink/20 hover:border-neon-pink/40 transition-all duration-300 backdrop-blur-sm">
+          <div className="absolute inset-0 bg-gradient-to-br from-neon-pink/5 to-transparent rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+          <div className="relative">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 bg-neon-pink/20 rounded-lg flex items-center justify-center">
+                  <span className="text-neon-pink">📋</span>
+                </div>
+                <h4 className="font-semibold text-gray-200">版本建议</h4>
+              </div>
+              <button
+                type="button"
+                onClick={() => applyField('version', result.version)}
+                disabled={appliedFields.has('version')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 ${
+                  appliedFields.has('version')
+                    ? 'bg-neon-green/20 text-neon-green border border-neon-green/30'
+                    : 'bg-neon-pink/20 text-neon-pink border border-neon-pink/30 hover:bg-neon-pink/30 hover:shadow-lg hover:shadow-neon-pink/25'
+                }`}
+              >
+                {appliedFields.has('version') ? '✅ 已应用' : '应用'}
+              </button>
+            </div>
+            <div className="bg-gradient-to-r from-neon-pink/20 to-neon-purple/20 rounded-lg p-3 border border-neon-pink/10">
+              <p className="text-lg font-bold text-neon-pink font-mono">v{Number(result.version).toFixed(1)}</p>
+              <p className="text-xs text-gray-400 mt-1">难度: <span className="text-neon-yellow">{result.difficulty}</span></p>
+            </div>
           </div>
-          <p className="text-lg font-semibold text-purple-600">v{Number(result.version).toFixed(1)}</p>
-          <p className="text-sm text-gray-600 mt-1">难度: {result.difficulty}</p>
         </div>
 
         {/* 变量 */}
-        <div className="bg-white rounded-lg p-4 border border-gray-200">
-          <div className="flex items-center justify-between mb-2">
-            <h4 className="font-medium text-gray-700">📝 提取变量</h4>
-            <button
-              onClick={() => applyField('variables', result.variables)}
-              disabled={appliedFields.has('variables')}
-              className="text-sm text-blue-600 hover:text-blue-800 disabled:text-gray-400"
-            >
-              {appliedFields.has('variables') ? '✅ 已应用' : '应用'}
-            </button>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {result.variables && result.variables.length > 0 ? (
-              result.variables.map((variable, index) => (
-                <span key={index} className="bg-green-100 text-green-800 px-2 py-1 rounded text-sm font-mono">
-                  {`{{${variable}}}`}
-                </span>
-              ))
-            ) : (
-              <span className="text-gray-500 text-sm italic">无变量</span>
-            )}
+        <div className="group relative bg-gradient-to-br from-dark-bg-secondary/80 to-dark-bg-primary/80 rounded-xl p-4 border border-neon-green/20 hover:border-neon-green/40 transition-all duration-300 backdrop-blur-sm">
+          <div className="absolute inset-0 bg-gradient-to-br from-neon-green/5 to-transparent rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+          <div className="relative">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 bg-neon-green/20 rounded-lg flex items-center justify-center">
+                  <span className="text-neon-green">📝</span>
+                </div>
+                <h4 className="font-semibold text-gray-200">提取变量</h4>
+              </div>
+              <button
+                type="button"
+                onClick={() => applyField('variables', result.variables)}
+                disabled={appliedFields.has('variables')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 ${
+                  appliedFields.has('variables')
+                    ? 'bg-neon-green/20 text-neon-green border border-neon-green/30'
+                    : 'bg-neon-green/20 text-neon-green border border-neon-green/30 hover:bg-neon-green/30 hover:shadow-lg hover:shadow-neon-green/25'
+                }`}
+              >
+                {appliedFields.has('variables') ? '✅ 已应用' : '应用'}
+              </button>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {result.variables && result.variables.length > 0 ? (
+                result.variables.map((variable, index) => (
+                  <span 
+                    key={index} 
+                    className="px-2 py-1 bg-gradient-to-r from-neon-green/20 to-neon-cyan/20 text-neon-green border border-neon-green/20 rounded-md text-xs font-mono"
+                  >
+                    {`{{${variable}}}`}
+                  </span>
+                ))
+              ) : (
+                <span className="text-gray-500 text-xs italic">无变量检测</span>
+              )}
+            </div>
           </div>
         </div>
 
         {/* 建议标题 */}
         {result.suggestedTitle && (
-          <div className="bg-white rounded-lg p-4 border border-gray-200">
-            <div className="flex items-center justify-between mb-2">
-              <h4 className="font-medium text-gray-700">💡 建议标题</h4>
-              <button
-                onClick={() => applyField('suggestedTitle', result.suggestedTitle)}
-                disabled={appliedFields.has('suggestedTitle')}
-                className="text-sm text-blue-600 hover:text-blue-800 disabled:text-gray-400"
-              >
-                {appliedFields.has('suggestedTitle') ? '✅ 已应用' : '应用'}
-              </button>
+          <div className="group relative bg-gradient-to-br from-dark-bg-secondary/80 to-dark-bg-primary/80 rounded-xl p-4 border border-neon-yellow/20 hover:border-neon-yellow/40 transition-all duration-300 backdrop-blur-sm">
+            <div className="absolute inset-0 bg-gradient-to-br from-neon-yellow/5 to-transparent rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+            <div className="relative">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 bg-neon-yellow/20 rounded-lg flex items-center justify-center">
+                    <span className="text-neon-yellow">💡</span>
+                  </div>
+                  <h4 className="font-semibold text-gray-200">建议标题</h4>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => applyField('suggestedTitle', result.suggestedTitle)}
+                  disabled={appliedFields.has('suggestedTitle')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 ${
+                    appliedFields.has('suggestedTitle')
+                      ? 'bg-neon-green/20 text-neon-green border border-neon-green/30'
+                      : 'bg-neon-yellow/20 text-neon-yellow border border-neon-yellow/30 hover:bg-neon-yellow/30 hover:shadow-lg hover:shadow-neon-yellow/25'
+                  }`}
+                >
+                  {appliedFields.has('suggestedTitle') ? '✅ 已应用' : '应用'}
+                </button>
+              </div>
+              <div className="bg-gradient-to-r from-neon-yellow/10 to-neon-orange/10 rounded-lg p-3 border border-neon-yellow/10">
+                <p className="text-gray-200 font-medium text-sm leading-relaxed">{result.suggestedTitle}</p>
+              </div>
             </div>
-            <p className="text-gray-800 font-medium">{result.suggestedTitle}</p>
           </div>
         )}
 
         {/* 建议描述 */}
         {result.description && (
-          <div className="bg-white rounded-lg p-4 border border-gray-200">
-            <div className="flex items-center justify-between mb-2">
-              <h4 className="font-medium text-gray-700">📋 建议描述</h4>
-              <button
-                onClick={() => applyField('description', result.description)}
-                disabled={appliedFields.has('description')}
-                className="text-sm text-blue-600 hover:text-blue-800 disabled:text-gray-400"
-              >
-                {appliedFields.has('description') ? '✅ 已应用' : '应用'}
-              </button>
+          <div className="group relative bg-gradient-to-br from-dark-bg-secondary/80 to-dark-bg-primary/80 rounded-xl p-4 border border-neon-orange/20 hover:border-neon-orange/40 transition-all duration-300 backdrop-blur-sm">
+            <div className="absolute inset-0 bg-gradient-to-br from-neon-orange/5 to-transparent rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+            <div className="relative">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 bg-neon-orange/20 rounded-lg flex items-center justify-center">
+                    <span className="text-neon-orange">📋</span>
+                  </div>
+                  <h4 className="font-semibold text-gray-200">建议描述</h4>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => applyField('description', result.description)}
+                  disabled={appliedFields.has('description')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 ${
+                    appliedFields.has('description')
+                      ? 'bg-neon-green/20 text-neon-green border border-neon-green/30'
+                      : 'bg-neon-orange/20 text-neon-orange border border-neon-orange/30 hover:bg-neon-orange/30 hover:shadow-lg hover:shadow-neon-orange/25'
+                  }`}
+                >
+                  {appliedFields.has('description') ? '✅ 已应用' : '应用'}
+                </button>
+              </div>
+              <div className="bg-gradient-to-r from-neon-orange/10 to-neon-red/10 rounded-lg p-3 border border-neon-orange/10">
+                <p className="text-gray-300 text-sm leading-relaxed line-clamp-3">
+                  {result.description.length > 120 ? result.description.substring(0, 120) + '...' : result.description}
+                </p>
+              </div>
             </div>
-            <p className="text-gray-700 text-sm leading-relaxed line-clamp-3">
-              {result.description.length > 120 ? result.description.substring(0, 120) + '...' : result.description}
-            </p>
           </div>
         )}
 
         {/* 兼容模型 */}
         {result.compatibleModels && result.compatibleModels.length > 0 && (
-          <div className="bg-white rounded-lg p-4 border border-gray-200">
-            <div className="flex items-center justify-between mb-2">
-              <h4 className="font-medium text-gray-700">🔧 兼容模型</h4>
-              <button
-                onClick={() => applyField('compatibleModels', result.compatibleModels)}
-                disabled={appliedFields.has('compatibleModels')}
-                className="text-sm text-blue-600 hover:text-blue-800 disabled:text-gray-400"
-              >
-                {appliedFields.has('compatibleModels') ? '✅ 已应用' : '应用'}
-              </button>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {result.compatibleModels.map((model, index) => (
-                <span key={index} className="bg-purple-100 text-purple-800 px-2 py-1 rounded text-sm">
-                  {model}
-                </span>
-              ))}
+          <div className="group relative bg-gradient-to-br from-dark-bg-secondary/80 to-dark-bg-primary/80 rounded-xl p-4 border border-neon-red/20 hover:border-neon-red/40 transition-all duration-300 backdrop-blur-sm">
+            <div className="absolute inset-0 bg-gradient-to-br from-neon-red/5 to-transparent rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+            <div className="relative">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 bg-neon-red/20 rounded-lg flex items-center justify-center">
+                    <span className="text-neon-red">🔧</span>
+                  </div>
+                  <h4 className="font-semibold text-gray-200">兼容模型</h4>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => applyField('compatibleModels', result.compatibleModels)}
+                  disabled={appliedFields.has('compatibleModels')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 ${
+                    appliedFields.has('compatibleModels')
+                      ? 'bg-neon-green/20 text-neon-green border border-neon-green/30'
+                      : 'bg-neon-red/20 text-neon-red border border-neon-red/30 hover:bg-neon-red/30 hover:shadow-lg hover:shadow-neon-red/25'
+                  }`}
+                >
+                  {appliedFields.has('compatibleModels') ? '✅ 已应用' : '应用'}
+                </button>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {result.compatibleModels.map((model, index) => (
+                  <span 
+                    key={index} 
+                    className="px-2 py-1 bg-gradient-to-r from-neon-red/20 to-neon-pink/20 text-neon-red border border-neon-red/20 rounded-md text-xs font-mono"
+                  >
+                    {model}
+                  </span>
+                ))}
+              </div>
             </div>
           </div>
         )}
       </div>
 
-      {/* 详细信息 */}
+      {/* 详细信息 - 赛博风格 */}
       {(result.improvements?.length > 0 || result.useCases?.length > 0) && (
-        <div className="mt-4 pt-4 border-t border-gray-200">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="relative mt-6 pt-6">
+          <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-neon-cyan/30 to-transparent"></div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* 改进建议 */}
             {result.improvements?.length > 0 && (
-              <div>
-                <h4 className="font-medium text-gray-700 mb-2">💡 改进建议</h4>
-                <ul className="text-sm space-y-1">
+              <div className="bg-gradient-to-br from-dark-bg-secondary/50 to-dark-bg-primary/50 rounded-xl p-4 border border-neon-blue/20 backdrop-blur-sm">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="w-6 h-6 bg-neon-blue/20 rounded-lg flex items-center justify-center">
+                    <span className="text-neon-blue text-sm">💡</span>
+                  </div>
+                  <h4 className="font-semibold text-neon-blue">优化建议</h4>
+                </div>
+                <ul className="space-y-2">
                   {result.improvements.map((improvement, index) => (
-                    <li key={index} className="text-gray-600">• {improvement}</li>
+                    <li key={index} className="flex items-start gap-2 text-sm text-gray-300">
+                      <span className="text-neon-blue mt-1">▸</span>
+                      <span>{improvement}</span>
+                    </li>
                   ))}
                 </ul>
               </div>
@@ -434,11 +586,19 @@ export const AIAnalysisResultDisplay: React.FC<AIAnalysisResultDisplayProps> = (
 
             {/* 使用场景 */}
             {result.useCases?.length > 0 && (
-              <div>
-                <h4 className="font-medium text-gray-700 mb-2">🎯 使用场景</h4>
-                <ul className="text-sm space-y-1">
+              <div className="bg-gradient-to-br from-dark-bg-secondary/50 to-dark-bg-primary/50 rounded-xl p-4 border border-neon-purple/20 backdrop-blur-sm">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="w-6 h-6 bg-neon-purple/20 rounded-lg flex items-center justify-center">
+                    <span className="text-neon-purple text-sm">🎯</span>
+                  </div>
+                  <h4 className="font-semibold text-neon-purple">应用场景</h4>
+                </div>
+                <ul className="space-y-2">
                   {result.useCases.map((useCase, index) => (
-                    <li key={index} className="text-gray-600">• {useCase}</li>
+                    <li key={index} className="flex items-start gap-2 text-sm text-gray-300">
+                      <span className="text-neon-purple mt-1">▸</span>
+                      <span>{useCase}</span>
+                    </li>
                   ))}
                 </ul>
               </div>
@@ -447,11 +607,17 @@ export const AIAnalysisResultDisplay: React.FC<AIAnalysisResultDisplayProps> = (
         </div>
       )}
 
-      {/* 预估信息 */}
-      <div className="mt-4 pt-4 border-t border-gray-200 text-sm text-gray-600">
-        <div className="flex items-center justify-between">
-          <span>预估Token数: {result.estimatedTokens}</span>
-          <span>兼容模型: {result.compatibleModels?.join(', ')}</span>
+      {/* 底部状态栏 - 赛博风格 */}
+      <div className="relative mt-6 pt-4">
+        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-neon-cyan/30 to-transparent"></div>
+        <div className="flex items-center justify-center">
+          <div className="flex items-center gap-4 px-4 py-2 bg-gradient-to-r from-dark-bg-secondary/80 to-dark-bg-primary/80 rounded-full border border-neon-cyan/20">
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 bg-neon-green rounded-full animate-pulse"></div>
+              <span className="text-xs font-mono text-gray-400">TOKEN ESTIMATE</span>
+            </div>
+            <span className="text-sm font-mono text-neon-cyan">{result.estimatedTokens}</span>
+          </div>
         </div>
       </div>
     </div>
