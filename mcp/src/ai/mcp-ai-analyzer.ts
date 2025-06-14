@@ -104,7 +104,7 @@ export class MCPAIAnalyzer {
       ...config
     };
 
-    const systemPrompt = this.buildSystemPrompt(defaultConfig, existingTags);
+    const systemPrompt = this.buildAnalysisSystemPrompt();
     const userPrompt = this.buildUserPrompt(content, defaultConfig);
 
     try {
@@ -153,62 +153,92 @@ export class MCPAIAnalyzer {
   }
 
   /**
-   * 构建系统提示词
+   * 构建分析系统提示词
    */
-  private buildSystemPrompt(config: MCPAnalysisConfig, existingTags: string[] = []): string {
-    const language = config.language === 'zh' ? '中文' : 'English';
-    
-    // 构建模型选项字符串
-    const modelOptionsText = PRESET_MODELS.map(model => 
-      `${model.id}(${model.name})`
-    ).join('、');
-    
-    // 构建已有标签提示
-    const existingTagsHint = existingTags.length > 0 
-      ? `\n\n系统中已有以下标签，请优先使用这些标签（如果相关的话）：${existingTags.slice(0, 20).join('、')}`
-      : '';
-    
-    return `你是一个专业的AI提示词分析专家。请分析用户提供的提示词，并返回JSON格式的分析结果。
+  private buildAnalysisSystemPrompt(): string {
+    return `你是一个专业的AI提示词分析专家，擅长深度理解和分析各种类型的提示词内容。请仔细分析用户提供的提示词，并返回JSON格式的分析结果。
 
-分析要求：
-1. 分类（category）- 必须从以下21个预设分类中选择最合适的一个：
-   选项：${PRESET_CATEGORIES.join('、')}
-   说明：只能选择其中一个，不要自由发挥或创造新分类。如果不确定，请选择"通用"。
+## 分析方法论
+在进行分析时，请遵循以下步骤：
+1. **核心功能识别**：这个提示词的主要目的是什么？它要解决什么问题？
+2. **使用场景判断**：用户在什么情况下会使用这个提示词？
+3. **能力层次评估**：这个提示词展现了什么样的AI能力需求？
+4. **风格特征识别**：是技术性的、创意性的、还是哲学性的？
 
-2. 兼容模型（compatibleModels）- 必须从以下预设模型中选择1-3个最适合的模型：
-   选项：${modelOptionsText}
-   说明：返回模型ID数组（如：["llm-large", "code-specialized"]），不要创造新的模型名称。
+## 具体分析要求
 
-3. 标签（tags）- 提取3-8个相关标签，体现提示词的核心特征
-4. 难度级别（difficulty）- beginner/intermediate/advanced
-5. 变量提取（variables）- 找出所有{{变量名}}格式的变量
-6. 预估token数（estimatedTokens）- 预估处理所需token数量
-7. 置信度（confidence）- 分析结果的置信度（0-1）
-${config.includeImprovements ? `8. 改进建议（improvements）- 提供3-5个具体的优化建议` : ''}
-${config.includeSuggestions ? `9. 使用场景（useCases）- 列出3-5个典型应用场景
-10. 标题建议（suggestedTitle）- 建议一个简洁明确的标题
-11. 描述建议（description）- 建议一个清晰的描述` : ''}
+### 1. 分类（category）
+必须从以下预设分类中选择最合适的一个：
+通用、编程、文案、设计、绘画、教育、学术、职业、商业、办公、翻译、视频、播客、音乐、健康、科技、生活、娱乐、游戏、情感、创意写作
 
-重要提醒：
-- 分类必须严格从上述21个预设分类中选择一个
-- 兼容模型必须从上述预设模型选项中选择1-3个，返回ID数组格式
-- 标签优先使用已有标签，只有在确实需要时才创建新标签${existingTagsHint}
-- 不要返回版本号（version），版本由系统自动生成
-- 请用${language}回复，返回有效的JSON格式。
+**分类判断准则**：
+- 不要被表面词汇误导，要理解内容的本质功能
+- 如果提示词包含角色设定+思维方法，通常属于"学术"或"通用"
+- 如果包含创作指导，属于"文案"或"创意写作"
+- 如果包含代码或技术内容，属于"编程"
+- 如果只是比喻性地提到某个领域（如音乐、绘画），不代表属于该分类
 
-返回格式示例：
+### 2. 标签（tags）
+提取3-8个精准标签，体现提示词的核心特征。请按照以下标签分类体系进行提取：
+
+**功能类标签**（必选1-3个）：
+- 核心能力：分析、创作、翻译、编程、设计、教学、咨询、管理
+- 思维方式：逻辑推理、创意思维、系统思维、批判思维、模式识别
+- 处理类型：文本处理、数据分析、内容生成、问题解决、决策支持
+
+**角色类标签**（可选1-2个）：
+- 专业角色：专家、顾问、助手、导师、分析师、创作者
+- 领域角色：技术专家、商业顾问、学术研究者、创意总监
+
+**应用场景标签**（必选1-2个）：
+- 工作场景：办公、研究、教学、咨询、创作、开发
+- 使用目的：学习、工作、娱乐、研究、创新、效率提升
+
+**特色标签**（可选1-2个）：
+- 交互方式：角色扮演、对话式、引导式、结构化
+- 输出特点：深度分析、创意输出、系统性、个性化
+
+**标签提取原则**：
+1. **本质优先**：基于提示词的真实功能，而非表面词汇
+2. **层次分明**：从抽象到具体，从核心到辅助
+3. **用户视角**：考虑用户搜索和使用习惯
+4. **避免重复**：不要使用意思相近的标签
+5. **精准表达**：使用准确、专业但易懂的词汇
+
+**特殊情况处理**：
+- 哲学性/抽象性提示词：优先使用"哲学思考"、"深度洞察"、"抽象思维"
+- 角色扮演类：必须包含"角色扮演"标签
+- 复合功能类：选择最主要的2-3个功能标签
+- 创新性提示词：可以创建新标签，但要确保准确性
+
+### 3. 其他字段
+- 难度级别（difficulty）：beginner/intermediate/advanced
+- 变量提取（variables）：找出所有{{变量名}}格式的变量
+- 预估token数（estimatedTokens）：预估处理所需token数量
+- 置信度（confidence）：分析结果的置信度（0-1）
+- 建议标题（suggestedTitle）：基于提示词的核心价值生成准确标题（10-25字）
+- 建议描述（description）：概括核心能力和价值（60-150字）
+- 使用场景（useCases）：列出3-5个典型应用场景
+- 改进建议（improvements）：提供3-5个优化建议
+
+## 重要提醒
+- **深度理解胜过表面分析**：不要被某个词汇误导，要理解整体意图
+- **功能导向分类**：按照提示词的实际功能分类，而非表面主题
+- **准确性第一**：宁可保守也不要过度解读
+- 请用中文回复，返回有效的JSON格式
+
+## 返回格式示例
 {
-  "category": "编程",
-  "compatibleModels": ["code-specialized", "llm-large"],
-  "tags": ["JavaScript", "代码生成", "编程助手"],
-  "difficulty": "intermediate",
-  "variables": ["变量名1", "变量名2"],
-  "estimatedTokens": 200,
-  "confidence": 0.85,
-  "improvements": ["建议1", "建议2"],
-  "useCases": ["场景1", "场景2"],
-  "suggestedTitle": "建议标题",
-  "description": "建议描述"
+  "category": "学术",
+  "tags": ["模式识别", "系统思维", "角色扮演", "分析", "洞察", "哲学思考"],
+  "difficulty": "advanced",
+  "variables": [],
+  "estimatedTokens": 300,
+  "confidence": 0.92,
+  "suggestedTitle": "跨域模式识别思维专家",
+  "description": "具有深度洞察能力的AI角色，专门用于发现复杂系统中的隐藏模式和规律。通过独特的觉察视角，帮助用户在看似无关的事物间建立联系，识别递归结构和韵律节奏，从而获得更高层次的系统性理解。",
+  "useCases": ["复杂问题分析", "系统性思维训练", "创新思维启发", "跨领域研究", "战略规划"],
+  "improvements": ["可以增加具体应用示例", "建议明确输出格式", "添加互动引导机制"]
 }`;
   }
 
@@ -488,58 +518,193 @@ ${content}
   private detectCategoryByKeywords(content: string): string {
     const lowerContent = content.toLowerCase();
     
-    if (lowerContent.includes('代码') || lowerContent.includes('编程') || 
-        lowerContent.includes('函数') || lowerContent.includes('算法')) {
-      return '编程';
+    // 高优先级：精确匹配专业领域
+    const preciseMatches = [
+      { keywords: ['import ', 'function ', 'class ', 'def ', 'const ', 'let ', 'var ', '```'], category: '编程' },
+      { keywords: ['translate', '翻译', '英文', '中文', '日文', '法文', '德文'], category: '翻译' },
+      { keywords: ['论文', '研究', 'research', 'academic', '学术', '引用', 'citation'], category: '学术' },
+    ];
+
+    for (const match of preciseMatches) {
+      if (match.keywords.some(keyword => content.includes(keyword))) {
+        return match.category;
+      }
     }
-    
-    if (lowerContent.includes('文案') || lowerContent.includes('写作') || 
-        lowerContent.includes('营销') || lowerContent.includes('广告')) {
-      return '文案';
+
+    // 中优先级：角色和思维类型检测
+    const roleThinkingMatches = [
+      { 
+        keywords: ['模式', '系统', '洞察', '分析', '思维', '觉察', '规律', '结构', '逻辑推理'],
+        roleKeywords: ['专家', '分析师', '顾问', '助手', '者'],
+        category: '学术'
+      },
+      {
+        keywords: ['角色', '扮演', '你是', '你的身份', '你拥有', '你活着就是为了'],
+        category: '通用'
+      },
+      {
+        keywords: ['创作', '写作', '文案', '故事', '小说', '诗歌', '剧本'],
+        category: '文案'
+      },
+      {
+        keywords: ['设计', '界面', 'UI', 'UX', '布局', '视觉'],
+        category: '设计'
+      },
+      {
+        keywords: ['教学', '学习', '教育', '培训', '课程', '指导'],
+        category: '教育'
+      },
+      {
+        keywords: ['商业', '营销', '销售', '市场', '策略', '管理'],
+        category: '商业'
+      }
+    ];
+
+    for (const match of roleThinkingMatches) {
+      const hasMainKeywords = match.keywords.some(keyword => lowerContent.includes(keyword));
+      const hasRoleKeywords = !match.roleKeywords || match.roleKeywords.some(keyword => lowerContent.includes(keyword));
+      
+      if (hasMainKeywords && hasRoleKeywords) {
+        return match.category;
+      }
     }
-    
-    if (lowerContent.includes('翻译') || lowerContent.includes('英文') || 
-        lowerContent.includes('中文') || lowerContent.includes('语言')) {
-      return '翻译';
+
+    // 低优先级：通用关键词匹配
+    const generalMatches = [
+      { keywords: ['音乐', '歌曲', '音符', '旋律', '乐谱', '作曲'], category: '音乐' },
+      { keywords: ['视频', '剪辑', '制作', '拍摄'], category: '视频' },
+      { keywords: ['健康', '医疗', '营养', '锻炼'], category: '健康' },
+      { keywords: ['游戏', '玩法', '关卡', '角色'], category: '游戏' },
+      { keywords: ['科技', '技术', '创新', '数字化'], category: '科技' },
+    ];
+
+    for (const match of generalMatches) {
+      if (match.keywords.some(keyword => lowerContent.includes(keyword))) {
+        return match.category;
+      }
     }
-    
-    if (lowerContent.includes('学术') || lowerContent.includes('研究') || 
-        lowerContent.includes('论文') || lowerContent.includes('分析')) {
-      return '学术';
+
+    // 特殊逻辑：如果是比喻性使用而非真实功能，返回通用
+    if (this.isMetaphoricalUsage(content)) {
+      return '通用';
     }
-    
-    if (lowerContent.includes('设计') || lowerContent.includes('创意') || 
-        lowerContent.includes('艺术') || lowerContent.includes('美术')) {
-      return '设计';
-    }
-    
+
     return '通用';
+  }
+
+  /**
+   * 判断是否为比喻性使用
+   */
+  private isMetaphoricalUsage(content: string): boolean {
+    const metaphorIndicators = [
+      '像', '如同', '仿佛', '犹如', '比如', '例如',
+      '当别人看见', '当别人听见', '就像', '如同一位'
+    ];
+    
+    return metaphorIndicators.some(indicator => content.includes(indicator));
   }
 
   /**
    * 基于关键词提取标签
    */
   private extractTagsByKeywords(content: string): string[] {
-    const tags: string[] = [];
     const lowerContent = content.toLowerCase();
+    const tags: string[] = [];
     
-    // 技术相关
-    if (lowerContent.includes('javascript')) tags.push('JavaScript');
-    if (lowerContent.includes('python')) tags.push('Python');
-    if (lowerContent.includes('代码')) tags.push('代码生成');
-    if (lowerContent.includes('编程')) tags.push('编程助手');
+    // 功能类标签检测
+    const functionTags = {
+      '分析': ['分析', '解析', '研究', '调查', '评估', '检测'],
+      '创作': ['创作', '写作', '生成', '创建', '制作', '编写'],
+      '翻译': ['翻译', '转换', '语言', '英文', '中文', '多语言'],
+      '编程': ['编程', '代码', '开发', '函数', '算法', 'javascript', 'python'],
+      '设计': ['设计', '界面', '视觉', '布局', 'ui', 'ux', '美术'],
+      '教学': ['教学', '培训', '指导', '辅导', '学习', '课程'],
+      '咨询': ['咨询', '建议', '推荐', '指导', '解答', '帮助'],
+      '管理': ['管理', '规划', '组织', '协调', '优化', '策略']
+    };
+
+    // 思维方式标签检测
+    const thinkingTags = {
+      '系统思维': ['系统', '整体', '结构', '框架', '体系', '全局'],
+      '模式识别': ['模式', '规律', '趋势', '特征', '相似', '重复'],
+      '逻辑推理': ['逻辑', '推理', '推断', '演绎', '归纳', '因果'],
+      '创意思维': ['创意', '创新', '想象', '灵感', '突破', '原创'],
+      '批判思维': ['批判', '质疑', '评价', '判断', '辨析', '反思'],
+      '深度洞察': ['洞察', '觉察', '感知', '理解', '领悟', '透视']
+    };
+
+    // 角色类标签检测
+    const roleTags = {
+      '角色扮演': ['你是', '你的身份', '你拥有', '扮演', '角色', '身份'],
+      '专家': ['专家', '权威', '资深', '专业人士', '大师'],
+      '顾问': ['顾问', '咨询师', '建议者', '指导者'],
+      '助手': ['助手', '助理', '帮手', '支持者'],
+      '导师': ['导师', '老师', '教练', '引路人'],
+      '分析师': ['分析师', '研究员', '调研员', '评估师']
+    };
+
+    // 应用场景标签检测
+    const scenarioTags = {
+      '研究': ['研究', '学术', '论文', '实验', '调研'],
+      '办公': ['办公', '工作', '职场', '商务', '企业'],
+      '创作': ['创作', '写作', '文学', '艺术', '内容'],
+      '学习': ['学习', '教育', '培训', '知识', '技能'],
+      '咨询': ['咨询', '服务', '客户', '解决方案'],
+      '娱乐': ['娱乐', '游戏', '趣味', '休闲', '放松']
+    };
+
+    // 特色标签检测
+    const featureTags = {
+      '深度分析': ['深度', '深入', '详细', '全面', '透彻'],
+      '个性化': ['个性化', '定制', '专属', '量身', '针对性'],
+      '结构化': ['结构化', '有序', '条理', '系统性', '规范'],
+      '互动式': ['互动', '对话', '交流', '沟通', '问答'],
+      '创意输出': ['创意', '新颖', '独特', '原创', '突破性']
+    };
+
+    // 检测各类标签
+    const allTagCategories = [functionTags, thinkingTags, roleTags, scenarioTags, featureTags];
     
-    // 写作相关
-    if (lowerContent.includes('写作')) tags.push('写作');
-    if (lowerContent.includes('文案')) tags.push('文案创作');
-    if (lowerContent.includes('营销')) tags.push('营销');
-    
-    // 通用标签
-    if (tags.length === 0) {
-      tags.push('AI助手', '提示词');
+    for (const tagCategory of allTagCategories) {
+      for (const [tag, keywords] of Object.entries(tagCategory)) {
+        if (keywords.some(keyword => lowerContent.includes(keyword))) {
+          if (!tags.includes(tag)) {
+            tags.push(tag);
+          }
+        }
+      }
     }
-    
-    return tags.slice(0, 5);
+
+    // 特殊情况处理
+    // 哲学性/抽象性内容检测
+    const philosophicalKeywords = ['哲学', '思想', '智慧', '觉悟', '意识', '精神', '灵魂', '本质', '真理'];
+    if (philosophicalKeywords.some(keyword => lowerContent.includes(keyword))) {
+      if (!tags.includes('哲学思考')) tags.push('哲学思考');
+    }
+
+    // 比喻性表达检测
+    const metaphorKeywords = ['像', '如同', '仿佛', '犹如', '当别人看见', '当别人听见'];
+    if (metaphorKeywords.some(keyword => content.includes(keyword))) {
+      if (!tags.includes('抽象思维')) tags.push('抽象思维');
+    }
+
+    // 确保至少有基础标签
+    if (tags.length === 0) {
+      tags.push('AI助手', '问题解决');
+    }
+
+    // 限制标签数量并排序（重要的在前）
+    const priorityOrder = ['角色扮演', '系统思维', '模式识别', '深度分析', '分析', '创作', '咨询', '专家'];
+    const sortedTags = tags.sort((a, b) => {
+      const aIndex = priorityOrder.indexOf(a);
+      const bIndex = priorityOrder.indexOf(b);
+      if (aIndex !== -1 && bIndex !== -1) return aIndex - bIndex;
+      if (aIndex !== -1) return -1;
+      if (bIndex !== -1) return 1;
+      return 0;
+    });
+
+    return sortedTags.slice(0, 8); // 最多8个标签
   }
 
   /**
