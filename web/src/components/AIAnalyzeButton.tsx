@@ -267,7 +267,7 @@ export const AIAnalysisResultDisplay: React.FC<AIAnalysisResultDisplayProps> = (
         </button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {/* 分类 */}
         <div className="bg-white rounded-lg p-4 border border-gray-200">
           <div className="flex items-center justify-between mb-2">
@@ -316,7 +316,7 @@ export const AIAnalysisResultDisplay: React.FC<AIAnalysisResultDisplayProps> = (
               {appliedFields.has('version') ? '✅ 已应用' : '应用'}
             </button>
           </div>
-          <p className="text-lg font-semibold text-purple-600">v{result.version}</p>
+          <p className="text-lg font-semibold text-purple-600">v{Number(result.version).toFixed(1)}</p>
           <p className="text-sm text-gray-600 mt-1">难度: {result.difficulty}</p>
         </div>
 
@@ -345,27 +345,59 @@ export const AIAnalysisResultDisplay: React.FC<AIAnalysisResultDisplayProps> = (
           </div>
         </div>
 
+        {/* 建议标题 */}
+        {result.suggestedTitle && (
+          <div className="bg-white rounded-lg p-4 border border-gray-200">
+            <div className="flex items-center justify-between mb-2">
+              <h4 className="font-medium text-gray-700">💡 建议标题</h4>
+              <button
+                onClick={() => applyField('suggestedTitle', result.suggestedTitle)}
+                disabled={appliedFields.has('suggestedTitle')}
+                className="text-sm text-blue-600 hover:text-blue-800 disabled:text-gray-400"
+              >
+                {appliedFields.has('suggestedTitle') ? '✅ 已应用' : '应用'}
+              </button>
+            </div>
+            <p className="text-gray-800 font-medium">{result.suggestedTitle}</p>
+          </div>
+        )}
+
+        {/* 建议描述 */}
+        {result.description && (
+          <div className="bg-white rounded-lg p-4 border border-gray-200 md:col-span-2 lg:col-span-3">
+            <div className="flex items-center justify-between mb-2">
+              <h4 className="font-medium text-gray-700">📋 建议描述</h4>
+              <button
+                onClick={() => applyField('description', result.description)}
+                disabled={appliedFields.has('description')}
+                className="text-sm text-blue-600 hover:text-blue-800 disabled:text-gray-400"
+              >
+                {appliedFields.has('description') ? '✅ 已应用' : '应用'}
+              </button>
+            </div>
+            <p className="text-gray-700 text-sm leading-relaxed">{result.description}</p>
+          </div>
+        )}
+
         {/* 兼容模型 */}
         {result.compatibleModels && result.compatibleModels.length > 0 && (
-          <div className="mt-4">
-            <div className="bg-white rounded-lg p-4 border border-gray-200">
-              <div className="flex items-center justify-between mb-2">
-                <h4 className="font-medium text-gray-700">🔧 兼容模型</h4>
-                <button
-                  onClick={() => applyField('compatibleModels', result.compatibleModels)}
-                  disabled={appliedFields.has('compatibleModels')}
-                  className="text-sm text-blue-600 hover:text-blue-800 disabled:text-gray-400"
-                >
-                  {appliedFields.has('compatibleModels') ? '✅ 已应用' : '应用'}
-                </button>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {result.compatibleModels.map((model, index) => (
-                  <span key={index} className="bg-purple-100 text-purple-800 px-2 py-1 rounded text-sm">
-                    {model}
-                  </span>
-                ))}
-              </div>
+          <div className="bg-white rounded-lg p-4 border border-gray-200">
+            <div className="flex items-center justify-between mb-2">
+              <h4 className="font-medium text-gray-700">🔧 兼容模型</h4>
+              <button
+                onClick={() => applyField('compatibleModels', result.compatibleModels)}
+                disabled={appliedFields.has('compatibleModels')}
+                className="text-sm text-blue-600 hover:text-blue-800 disabled:text-gray-400"
+              >
+                {appliedFields.has('compatibleModels') ? '✅ 已应用' : '应用'}
+              </button>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {result.compatibleModels.map((model, index) => (
+                <span key={index} className="bg-purple-100 text-purple-800 px-2 py-1 rounded text-sm">
+                  {model}
+                </span>
+              ))}
             </div>
           </div>
         )}

@@ -807,7 +807,7 @@ ${config.originalContent}
       let counter = 1;
       while (existingVersions.includes(version)) {
         const [major, minor] = baseVersion.split('.');
-        version = `${major}.${parseFloat(minor) + (counter * 0.1)}`;
+        version = `${major}.${(parseFloat(minor) + (counter * 0.1)).toFixed(1)}`;
         counter++;
       }
 
@@ -839,7 +839,7 @@ ${config.originalContent}
       let version = baseVersion;
       let counter = 1;
       while (existingVersions.includes(version)) {
-        version = `${suggestedMajor}.${suggestedMinor + counter}`;
+        version = `${suggestedMajor}.${(suggestedMinor + counter).toFixed(1)}`;
         counter++;
       }
 
@@ -858,13 +858,13 @@ ${config.originalContent}
     }
 
     // 确保版本号不重复
-          let version = baseVersion;
-      let counter = 1;
-      while (existingVersions.includes(version)) {
-        const [major, minor] = baseVersion.split('.');
-        version = `${major}.${parseFloat(minor) + (counter * 0.1)}`;
-        counter++;
-      }
+    let version = baseVersion;
+    let counter = 1;
+    while (existingVersions.includes(version)) {
+      const [major, minor] = baseVersion.split('.');
+      version = `${major}.${(parseFloat(minor) + (counter * 0.1)).toFixed(1)}`;
+      counter++;
+    }
 
     return version;
   }
