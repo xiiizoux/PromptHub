@@ -26,6 +26,7 @@ import { AIAnalyzeButton, AIAnalysisResultDisplay } from '@/components/AIAnalyze
 import { AIAnalysisResult } from '@/lib/ai-analyzer';
 import { useAuth } from '@/contexts/AuthContext';
 import { ModelSelector } from '@/components/ModelSelector';
+import { formatVersionDisplay } from '@/lib/version-utils';
 
 // 扩展类型，添加messages字段和其他数据库中的字段
 type PromptFormData = Omit<PromptDetails, 'created_at' | 'updated_at'> & {
@@ -219,7 +220,7 @@ function CreatePromptPage() {
       description: '',
       content: '',  // 会被转换为messages JSONB格式
       category: '通用', // 与数据库默认值保持一致
-      version: 1,  // 改为整数类型，与数据库保持一致
+      version: 1.0,  // 默认版本1.0，支持小数格式
       is_public: false, // 默认非公开，与数据库默认值保持一致
       allow_collaboration: false, // 默认不允许协作编辑
       edit_permission: 'owner_only', // 默认仅所有者可编辑
@@ -296,7 +297,7 @@ function CreatePromptPage() {
       // 构建完整的数据对象
       const promptData = {
         ...data,
-        version: Number(data.version) || 1,
+        version: Number(data.version) || 1.0,
         author: data.author || user?.username || '未知作者',
         input_variables: variables,
         tags,

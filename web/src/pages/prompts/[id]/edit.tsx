@@ -39,7 +39,8 @@ import {
   suggestNextVersion,
   formatVersionFromInt,
   parseVersionToInt,
-  getVersionValidationMessage
+  getVersionValidationMessage,
+  formatVersionDisplay
 } from '@/lib/version-utils';
 // @ts-ignore
 import { pinyin } from 'pinyin-pro';
@@ -886,7 +887,7 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
                     <p className="text-neon-red text-sm mt-1">{errors.version.message}</p>
                   )}
                   <p className="text-xs text-gray-500">
-                    当前版本：{formatVersionFromInt(currentVersionFormatted)}，新版本必须是大于当前版本的数字（支持一位小数）
+                    当前版本：{formatVersionDisplay(currentVersionFormatted)}，新版本必须是大于当前版本的数字（支持一位小数）
                   </p>
                 </div>
               </motion.div>

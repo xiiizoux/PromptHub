@@ -63,6 +63,21 @@ export const formatVersionFromInt = (version: number): string => {
   return version.toFixed(1);
 };
 
+// 通用版本号显示格式化函数 - 统一显示为小数格式
+export const formatVersionDisplay = (version: string | number | undefined): string => {
+  if (version === undefined || version === null) {
+    return '1.0';
+  }
+  
+  const numVersion = typeof version === 'number' ? version : parseFloat(version.toString());
+  
+  if (isNaN(numVersion)) {
+    return '1.0';
+  }
+  
+  return numVersion.toFixed(1);
+};
+
 // 解析版本号为数字 - 保持小数精度，确保一位小数格式
 export const parseVersionToInt = (version: string | number): number => {
   if (typeof version === 'number') {

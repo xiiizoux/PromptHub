@@ -2,6 +2,7 @@ import React from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { PromptInfo } from '@/types';
+import { formatVersionDisplay } from '@/lib/version-utils';
 import { 
   StarIcon, 
   DocumentTextIcon, 
@@ -219,7 +220,7 @@ const PromptCard: React.FC<PromptCardProps> = ({ prompt }) => {
                 </div>
                 <div className="flex items-center space-x-1">
                   <DocumentTextIcon className="h-3 w-3" />
-                  <span>v{prompt.version || '1.0'}</span>
+                  <span>v{formatVersionDisplay(prompt.version)}</span>
                 </div>
               </div>
               <div className="flex items-center space-x-1">

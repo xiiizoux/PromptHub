@@ -47,6 +47,7 @@ import { StarIcon as SolidStarIcon } from '@heroicons/react/24/solid';
 import { getPromptDetails, trackPromptUsage } from '@/lib/api';
 import { PromptDetails, PromptExample, PromptVersion } from '@/types';
 import { MODEL_TAGS, getModelTypeLabel } from '@/constants/ai-models';
+import { formatVersionDisplay } from '@/lib/version-utils';
 import { RatingSystem } from '@/components/RatingSystem';
 import PromptInteractions from '@/components/social/PromptInteractions';
 
@@ -492,7 +493,7 @@ export default function PromptDetailsPage({ prompt }: PromptDetailsPageProps) {
                 {prompt.version && (
                   <div className="flex items-center">
                     <BoltIcon className="h-4 w-4 mr-2" />
-                    版本 {prompt.version}
+                    版本 {formatVersionDisplay(prompt.version)}
                   </div>
                 )}
                 {prompt.rating !== undefined && (
