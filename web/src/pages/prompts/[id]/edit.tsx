@@ -211,6 +211,16 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
   const [permissionCheck, setPermissionCheck] = useState<PermissionCheck | null>(null);
   const [aiAnalysisResult, setAiAnalysisResult] = useState<AIAnalysisResult | null>(null);
   const [showAiAnalysis, setShowAiAnalysis] = useState(false);
+  
+  // 添加实时内容监听状态 - 用于修复AI按钮问题
+  const [currentContent, setCurrentContent] = useState(safePromptData.content);
+  
+  // 添加分类建议状态
+  const [categorySuggestion, setCategorySuggestion] = useState<{
+    suggested: string;
+    current: string;
+    confidence: string;
+  } | null>(null);
 
   // 获取分类数据
   useEffect(() => {
@@ -270,6 +280,16 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
       edit_permission: safePromptData.edit_permission,
     }
   });
+
+  // 监听表单内容变化，确保AI按钮能够正确获取内容 - 修复AI按钮问题
+  useEffect(() => {
+    const subscription = watch((value, { name }) => {
+      if (name === 'content') {
+        setCurrentContent(value.content || '');
+      }
+    });
+    return () => subscription.unsubscribe();
+  }, [watch]);
 
   // 分类加载后自动匹配（编辑场景） - 移动到useForm之后
   useEffect(() => {
@@ -375,9 +395,12 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
   // 监听提示词内容以提取变量
   const promptContent = watch('content');
 
-  // 自动检测变量
+  // 自动检测变量 - 增强版，同时更新内容状态
   const detectVariables = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const content = e.target.value;
+    // 实时更新内容状态以确保AI按钮能够监听到变化
+    setCurrentContent(content);
+    
     if (!content) return;
     
     // 修复正则表达式以正确匹配 {{variable}} 格式
@@ -456,7 +479,7 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
     return null;
   }
 
-  // AI分析处理函数 - 更新以确保正确的分类映射
+  // AI分析处理函数 - 增强版，支持增量分析和智能版本管理
   const handleAIAnalysis = (result: Partial<AIAnalysisResult>) => {
     console.log('收到AI分析结果:', result);
     
@@ -473,73 +496,186 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
         }
       }
       
+      // 智能版本号建议 - 基于内容变化程度
+      const currentVersion = watch('version') || safePromptData.version || 1.0;
+      const originalContent = safePromptData.content || '';
+      const newContent = currentContent || '';
+      
+      // 计算内容变化程度
+      const contentChangeRatio = calculateContentChangeRatio(originalContent, newContent);
+      let suggestedVersion = currentVersion;
+      
+      if (contentChangeRatio > 0.6) {
+        // 重大变化：版本号增加1.0
+        suggestedVersion = Math.floor(currentVersion) + 1.0;
+      } else if (contentChangeRatio > 0.3) {
+        // 中等变化：版本号增加0.5
+        suggestedVersion = Math.floor(currentVersion) + 0.5;
+      } else if (contentChangeRatio > 0.1) {
+        // 轻微变化：版本号增加0.1
+        suggestedVersion = Math.round((currentVersion + 0.1) * 10) / 10;
+      }
+      // 如果变化很小（<0.1），保持原版本号
+      
+      result.version = suggestedVersion.toString();
+      
+      console.log('智能版本分析:', {
+        原版本: currentVersion,
+        内容变化比: contentChangeRatio,
+        建议版本: suggestedVersion,
+        变化程度: contentChangeRatio > 0.6 ? '重大' : contentChangeRatio > 0.3 ? '中等' : contentChangeRatio > 0.1 ? '轻微' : '微小'
+      });
+      
       setAiAnalysisResult(result as AIAnalysisResult);
       setShowAiAnalysis(true);
     }
   };
 
-  // 应用AI分析结果
+  // 计算内容变化比例的辅助函数
+  const calculateContentChangeRatio = (originalContent: string, newContent: string): number => {
+    if (!originalContent && !newContent) return 0;
+    if (!originalContent) return 1;
+    if (!newContent) return 1;
+    
+    // 简单的字符差异比较
+    const maxLength = Math.max(originalContent.length, newContent.length);
+    const minLength = Math.min(originalContent.length, newContent.length);
+    
+    // 计算共同字符数
+    let commonChars = 0;
+    const shorter = originalContent.length < newContent.length ? originalContent : newContent;
+    const longer = originalContent.length >= newContent.length ? originalContent : newContent;
+    
+    for (let i = 0; i < shorter.length; i++) {
+      if (shorter[i] === longer[i]) {
+        commonChars++;
+      }
+    }
+    
+    // 计算变化比例
+    const changeRatio = 1 - (commonChars / maxLength);
+    return Math.min(1, Math.max(0, changeRatio));
+  };
+
+  // 应用AI分析结果 - 增强版，支持智能合并现有参数
   const applyAIResults = (data: Partial<AIAnalysisResult>) => {
     console.log('应用AI分析结果:', data);
     
+    // 获取当前表单值用于智能合并
+    const currentValues = watch();
+    const originalContent = safePromptData.content || '';
+    const newContent = currentContent || '';
+    const contentChangeRatio = calculateContentChangeRatio(originalContent, newContent);
+    
+    console.log('智能合并分析:', {
+      内容变化比: contentChangeRatio,
+      当前分类: currentValues.category,
+      AI建议分类: data.category,
+      当前标签: tags,
+      AI建议标签: data.tags
+    });
+
+    // 智能分类建议 - 基于内容性质判断，而非变化程度
     if (data.category) {
       const mapped = matchCategory(data.category, categories);
-      if (mapped) {
-        data.category = mapped;
-      } else {
-        data.category = '通用';
+      if (mapped && mapped !== currentValues.category) {
+        // 显示分类建议，让用户决定是否应用
+        const confidenceLevel = contentChangeRatio > 0.6 ? '高' : contentChangeRatio > 0.3 ? '中' : '低';
+        setCategorySuggestion({
+          suggested: mapped,
+          current: currentValues.category || '未知',
+          confidence: confidenceLevel
+        });
+        console.log(`AI分类建议: ${currentValues.category} -> ${mapped} (置信度: ${confidenceLevel})`);
+      } else if (mapped === currentValues.category) {
+        // 清除建议，AI确认当前分类合适
+        setCategorySuggestion(null);
+        console.log(`分类验证: AI确认当前分类"${currentValues.category}"是合适的`);
       }
-      setValue('category', data.category);
-      setHasUnsavedChanges(true);
     }
     
-    // 应用标签
+    // 智能应用标签 - 合并现有标签和新建议标签
     if (data.tags && Array.isArray(data.tags)) {
-      setTags(data.tags);
-      setValue('tags', data.tags);
-      setHasUnsavedChanges(true);
+      let finalTags = [...tags]; // 保留现有标签
+      
+      if (contentChangeRatio > 0.3) {
+        // 内容有较大变化时，合并新标签
+        const newTags = data.tags.filter(tag => !finalTags.includes(tag));
+        finalTags = [...finalTags, ...newTags];
+      } else {
+        // 内容变化较小时，只添加相关性很高的标签
+        const relevantTags = data.tags.filter(tag => 
+          !finalTags.includes(tag) && 
+          (tag.includes('优化') || tag.includes('改进') || tag.includes('增强'))
+        );
+        finalTags = [...finalTags, ...relevantTags];
+      }
+      
+      if (finalTags.length !== tags.length) {
+        setTags(finalTags);
+        setValue('tags', finalTags);
+        setHasUnsavedChanges(true);
+        console.log(`标签合并: ${tags.length} -> ${finalTags.length}个标签`);
+      }
     }
     
-    // 应用版本 - 确保版本号大于等于当前版本
+    // 应用版本 - 使用智能建议的版本号
     if (data.version) {
       let versionNum = 1;
       if (typeof data.version === 'number') versionNum = data.version;
       else if (typeof data.version === 'string') versionNum = parseFloat(data.version) || 1;
       
-      // 确保新版本不小于当前版本
-      const currentVersion = watch('version') || 1;
-      if (versionNum < currentVersion) {
-        versionNum = currentVersion + 0.1;
-      }
-      
       setValue('version', versionNum);
       setHasUnsavedChanges(true);
+      console.log(`版本更新: ${currentValues.version} -> ${versionNum}`);
     }
     
-    // 应用变量
+    // 智能应用变量 - 合并现有变量和新检测变量
     if (data.variables && Array.isArray(data.variables)) {
-      setVariables(data.variables);
-      setValue('input_variables', data.variables);
-      setHasUnsavedChanges(true);
+      const mergedVariables = Array.from(new Set([...variables, ...data.variables]));
+      if (mergedVariables.length !== variables.length) {
+        setVariables(mergedVariables);
+        setValue('input_variables', mergedVariables);
+        setHasUnsavedChanges(true);
+        console.log(`变量合并: ${variables.length} -> ${mergedVariables.length}个变量`);
+      }
     }
     
-    // 应用兼容模型
-    if (data.compatibleModels && Array.isArray(data.compatibleModels)) {
-      setModels(data.compatibleModels);
-      setValue('compatible_models', data.compatibleModels);
-      setHasUnsavedChanges(true);
+    // 智能应用兼容模型 - 仅在内容有较大变化时才更改模型兼容性
+    if (data.compatibleModels && Array.isArray(data.compatibleModels) && contentChangeRatio > 0.4) {
+      // 合并现有模型和新建议模型
+      const mergedModels = Array.from(new Set([...models, ...data.compatibleModels]));
+      if (mergedModels.length !== models.length) {
+        setModels(mergedModels);
+        setValue('compatible_models', mergedModels);
+        setHasUnsavedChanges(true);
+        console.log(`兼容模型合并: ${models.length} -> ${mergedModels.length}个模型`);
+      }
     }
 
-    // 应用建议标题
-    if (data.suggestedTitle) {
+    // 应用建议标题 - 仅在标题为空或内容有重大变化时
+    if (data.suggestedTitle && (!currentValues.name || contentChangeRatio > 0.5)) {
       setValue('name', data.suggestedTitle);
       setHasUnsavedChanges(true);
+      console.log(`标题更新: ${currentValues.name} -> ${data.suggestedTitle}`);
     }
 
-    // 应用描述
+    // 智能应用描述 - 基于内容变化程度和现有描述情况
     if (data.description) {
-      setValue('description', data.description);
-      setHasUnsavedChanges(true);
+      if (!currentValues.description) {
+        // 如果原本没有描述，直接应用
+        setValue('description', data.description);
+        setHasUnsavedChanges(true);
+        console.log(`描述新增: ${data.description.substring(0, 50)}...`);
+      } else if (contentChangeRatio > 0.3) {
+        // 内容有较大变化时，更新描述
+        setValue('description', data.description);
+        setHasUnsavedChanges(true);
+        console.log(`描述更新 (变化${(contentChangeRatio * 100).toFixed(1)}%): ${currentValues.description.substring(0, 30)}... -> ${data.description.substring(0, 30)}...`);
+      } else {
+        // 变化较小时，保持原描述
+        console.log(`描述保持: 内容变化较小(${(contentChangeRatio * 100).toFixed(1)}%)，保持原描述`);
+      }
     }
   };
 
@@ -921,6 +1057,53 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
                   {errors.category && (
                     <p className="text-neon-red text-sm mt-1">{errors.category.message}</p>
                   )}
+                  
+                  {/* 分类建议提示 */}
+                  <AnimatePresence>
+                    {categorySuggestion && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -10, height: 0 }}
+                        animate={{ opacity: 1, y: 0, height: 'auto' }}
+                        exit={{ opacity: 0, y: -10, height: 0 }}
+                        className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg"
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center text-sm">
+                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 mr-2">
+                              AI建议
+                            </span>
+                            <span className="text-gray-700">
+                              建议将分类从 
+                              <span className="font-medium text-blue-600 mx-1">"{categorySuggestion.current}"</span>
+                              更改为 
+                              <span className="font-medium text-green-600 mx-1">"{categorySuggestion.suggested}"</span>
+                              <span className="text-xs text-gray-500">(置信度: {categorySuggestion.confidence})</span>
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setValue('category', categorySuggestion.suggested);
+                                setHasUnsavedChanges(true);
+                                setCategorySuggestion(null);
+                              }}
+                              className="text-xs bg-green-600 text-white px-2 py-1 rounded hover:bg-green-700 transition-colors"
+                            >
+                              应用
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setCategorySuggestion(null)}
+                              className="text-xs bg-gray-500 text-white px-2 py-1 rounded hover:bg-gray-600 transition-colors"
+                            >
+                              忽略
+                            </button>
+                          </div>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
 
                 <div className="space-y-2">
@@ -1015,19 +1198,21 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
                     提示词内容 *
                   </label>
                   
-                  {/* AI分析按钮组 */}
+                  {/* AI分析按钮组 - 增强版，支持增量分析 */}
                   <div className="flex items-center gap-2">
                     <AIAnalyzeButton
-                      content={watch('content') || ''}
+                      content={currentContent || watch('content') || ''}
                       onAnalysisComplete={(result) => {
-                        if (result.suggestedTitle) setValue('name', result.suggestedTitle);
-                        if (result.category) setValue('category', result.category);
-                        if (result.description) setValue('description', result.description);
-                        if (result.tags) setValue('tags', result.tags);
-                        if (result.variables) setValue('input_variables', result.variables);
                         handleAIAnalysis(result);
                       }}
                       variant="full"
+                      currentVersion={watch('version')?.toString() || safePromptData.version?.toString()}
+                      isNewPrompt={false}
+                      existingVersions={[safePromptData.version?.toString() || '1.0']}
+                      originalContent={safePromptData.content}
+                      existingCategory={watch('category') || safePromptData.category}
+                      existingTags={tags}
+                      existingModels={models}
                     />
                   </div>
                 </div>

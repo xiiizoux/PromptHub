@@ -58,6 +58,9 @@ function CreatePromptPage() {
   const [categoriesLoading, setCategoriesLoading] = useState(false);
   const [tagsLoading, setTagsLoading] = useState(false);
 
+  // 添加实时内容监听状态
+  const [currentContent, setCurrentContent] = useState('');
+
   // 智能分类映射函数 - 改进安全性，与编辑页面保持一致
   function matchCategory(aiCategory: string, availableCategories: string[]): string | null {
     if (!aiCategory) return null;
@@ -231,9 +234,22 @@ function CreatePromptPage() {
     }
   });
 
-  // 自动检测变量
+  // 监听表单内容变化，确保AI按钮能够正确获取内容
+  useEffect(() => {
+    const subscription = watch((value, { name }) => {
+      if (name === 'content') {
+        setCurrentContent(value.content || '');
+      }
+    });
+    return () => subscription.unsubscribe();
+  }, [watch]);
+
+  // 自动检测变量 - 增强版，同时更新内容状态
   const detectVariables = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const content = e.target.value;
+    // 实时更新内容状态以确保AI按钮能够监听到变化
+    setCurrentContent(content);
+    
     if (!content) return;
     const regex = /\{\{([a-zA-Z0-9_]+)\}\}/g;
     const matches = content.match(regex);
@@ -501,10 +517,10 @@ function CreatePromptPage() {
                     提示词内容 *
                   </label>
                   
-                  {/* AI分析按钮组 - 与编辑页面保持一致 */}
+                  {/* AI分析按钮组 - 修复版本，使用双重内容监听 */}
                   <div className="flex items-center gap-2">
                     <AIAnalyzeButton
-                      content={watch('content') || ''}
+                      content={currentContent || watch('content') || ''}
                       onAnalysisComplete={(result) => {
                         if (result.suggestedTitle) setValue('name', result.suggestedTitle);
                         if (result.category) setValue('category', result.category);

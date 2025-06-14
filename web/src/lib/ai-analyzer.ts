@@ -28,6 +28,12 @@ interface AnalysisConfig {
   includeSuggestions: boolean;
   language: 'zh' | 'en';
   strictMode: boolean;
+  // 增量分析支持
+  incrementalAnalysis?: boolean;
+  originalContent?: string;
+  existingCategory?: string;
+  existingTags?: string[];
+  existingModels?: string[];
 }
 
 class AIAnalyzer {
@@ -129,7 +135,7 @@ class AIAnalyzer {
   }
 
   /**
-   * 构建系统提示词
+   * 构建系统提示词 - 支持增量分析
    */
   private buildSystemPrompt(config: AnalysisConfig, existingTags: string[] = []): string {
     const language = config.language === 'zh' ? '中文' : 'English';
@@ -156,8 +162,35 @@ class AIAnalyzer {
     const existingTagsHint = existingTags.length > 0 
       ? `\n\n系统中已有以下标签，请优先使用这些标签（如果相关的话）：${existingTags.slice(0, 20).join('、')}`
       : '';
+
+    // 构建增量分析提示
+    const incrementalAnalysisHint = config.incrementalAnalysis 
+      ? `\n\n【增量分析模式】
+这是对现有提示词的修改分析，请考虑以下现有参数：
+- 原始分类：${config.existingCategory || '未知'}
+- 现有标签：${config.existingTags?.join('、') || '无'}
+- 兼容模型：${config.existingModels?.join('、') || '无'}
+
+分析策略：
+1. **分类判断**：基于提示词的实际功能和用途判断分类，而不是基于修改程度
+   - 健康类提示词即使修改90%，只要功能还是健康相关，就应保持健康分类
+   - 只有当提示词的核心功能发生根本性改变时，才建议更换分类
+   - 如果现有分类不准确，可以建议更合适的分类
+
+2. **标签策略**：
+   - 保留现有的相关标签
+   - 根据内容变化添加新的合适标签
+   - 移除明显不再适用的标签
+
+3. **描述更新**：根据内容变化程度调整描述详细程度
+   - 轻微变化：保持原描述或微调
+   - 中等变化：适当更新描述
+   - 重大变化：重新撰写描述
+
+4. **版本号建议**：轻微变化+0.1，中等变化+0.5，重大变化+1.0` 
+      : '';
     
-    return `你是一个专业的AI提示词分析专家。请分析用户提供的提示词，并返回JSON格式的分析结果。
+    return `你是一个专业的AI提示词分析专家。请分析用户提供的提示词，并返回JSON格式的分析结果。${incrementalAnalysisHint}
 
 分析要求：
 1. 分类（category）- 必须从以下21个预设分类中选择最合适的一个，严格返回下列分类名称：
@@ -202,16 +235,32 @@ ${config.includeSuggestions ? `9. 使用场景（useCases）- 列出3-5个典型
   }
 
   /**
-   * 构建用户提示词
+   * 构建用户提示词 - 支持增量分析
    */
   private buildUserPrompt(content: string, config: AnalysisConfig): string {
-    return `请分析以下提示词：
+    let prompt = `请分析以下提示词：
 
 \`\`\`
 ${content}
+\`\`\``;
+
+    // 如果是增量分析，提供原始内容比较
+    if (config.incrementalAnalysis && config.originalContent) {
+      prompt += `
+
+【原始内容】（用于比较分析）：
+\`\`\`
+${config.originalContent}
 \`\`\`
 
+请比较新旧内容，评估变化程度，并根据变化程度决定是否需要更新分类、标签、兼容模型等参数。`;
+    }
+
+    prompt += `
+
 请返回JSON格式的分析结果，包含所有必需字段。确保JSON格式正确且可解析。`;
+
+    return prompt;
   }
 
   /**

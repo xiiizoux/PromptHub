@@ -10,6 +10,11 @@ interface AIAnalyzeButtonProps {
   currentVersion?: string;
   isNewPrompt?: boolean;
   existingVersions?: string[];
+  // 增量分析支持
+  originalContent?: string;
+  existingCategory?: string;
+  existingTags?: string[];
+  existingModels?: string[];
 }
 
 export const AIAnalyzeButton: React.FC<AIAnalyzeButtonProps> = ({
@@ -20,7 +25,11 @@ export const AIAnalyzeButton: React.FC<AIAnalyzeButtonProps> = ({
   className = '',
   currentVersion,
   isNewPrompt,
-  existingVersions
+  existingVersions,
+  originalContent,
+  existingCategory,
+  existingTags,
+  existingModels
 }) => {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -50,8 +59,24 @@ export const AIAnalyzeButton: React.FC<AIAnalyzeButtonProps> = ({
 
   const config = buttonConfig[variant];
 
+  // 改进的内容检测逻辑
+  const hasValidContent = content && typeof content === 'string' && content.trim().length > 0;
+  const isButtonDisabled = disabled || isAnalyzing || !hasValidContent;
+
+  // 调试信息 (仅在开发环境显示)
+  if (process.env.NODE_ENV === 'development') {
+    console.log('AIAnalyzeButton Debug:', {
+      content: content ? `"${content.substring(0, 50)}..."` : 'null/undefined',
+      contentLength: content?.length || 0,
+      hasValidContent,
+      isButtonDisabled,
+      disabled,
+      isAnalyzing
+    });
+  }
+
   const handleAnalyze = async () => {
-    if (!content?.trim()) {
+    if (!hasValidContent) {
       setError('请先输入提示词内容');
       return;
     }
@@ -60,20 +85,44 @@ export const AIAnalyzeButton: React.FC<AIAnalyzeButtonProps> = ({
     setError(null);
 
     try {
+      // 准备请求体，支持增量分析
+      const requestBody: any = {
+        content: content.trim(),
+        action: config.action,
+        config: {
+          language: 'zh',
+          includeImprovements: variant === 'full',
+          includeSuggestions: variant === 'full'
+        }
+      };
+
+      // 如果是编辑模式，添加增量分析参数
+      if (!isNewPrompt && variant === 'full') {
+        requestBody.currentVersion = currentVersion;
+        requestBody.isNewPrompt = isNewPrompt;
+        requestBody.existingVersions = existingVersions;
+        
+        // 传递现有参数用于增量分析
+        requestBody.originalContent = originalContent || '';
+        requestBody.existingCategory = existingCategory || '';
+        requestBody.existingTags = existingTags || [];
+        requestBody.existingModels = existingModels || [];
+        
+        console.log('🔍 增量分析参数:', {
+          原始内容长度: originalContent?.length || 0,
+          当前内容长度: content.length,
+          现有分类: existingCategory,
+          现有标签数量: existingTags?.length || 0,
+          现有模型数量: existingModels?.length || 0
+        });
+      }
+
       const response = await fetch('/api/ai-analyze', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({
-          content: content.trim(),
-          action: config.action,
-          config: {
-            language: 'zh',
-            includeImprovements: variant === 'full',
-            includeSuggestions: variant === 'full'
-          }
-        })
+        body: JSON.stringify(requestBody)
       });
 
       const result = await response.json();
@@ -118,17 +167,17 @@ export const AIAnalyzeButton: React.FC<AIAnalyzeButtonProps> = ({
     <div className="relative">
       <button
         onClick={handleAnalyze}
-        disabled={disabled || isAnalyzing || !content?.trim()}
+        disabled={isButtonDisabled}
         className={`
           inline-flex items-center gap-2 px-4 py-2 rounded-lg font-medium
           transition-all duration-200 min-w-[120px] justify-center
-          ${disabled || isAnalyzing || !content?.trim()
-            ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-            : 'bg-gradient-to-r from-blue-500 to-purple-600 text-white hover:from-blue-600 hover:to-purple-700 hover:shadow-lg hover:scale-105'
+          ${isButtonDisabled
+            ? 'bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-300'
+            : 'bg-gradient-to-r from-blue-500 to-purple-600 text-white hover:from-blue-600 hover:to-purple-700 hover:shadow-lg hover:scale-105 border border-blue-500'
           }
           ${className}
         `}
-        title={config.description}
+        title={hasValidContent ? config.description : '请先输入提示词内容后再进行分析'}
       >
         {isAnalyzing ? (
           <>
@@ -138,6 +187,10 @@ export const AIAnalyzeButton: React.FC<AIAnalyzeButtonProps> = ({
         ) : (
           <>
             <span>{config.text}</span>
+            {/* 调试提示 - 仅开发环境 */}
+            {process.env.NODE_ENV === 'development' && !hasValidContent && (
+              <span className="text-xs text-red-300 ml-1">[无内容]</span>
+            )}
           </>
         )}
       </button>

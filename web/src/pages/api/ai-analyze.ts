@@ -29,33 +29,53 @@ export default async function handler(
     // 根据action执行不同的分析功能
     switch (action) {
       case 'full_analyze':
-        // 完整分析 - 传递已有标签和版本信息
+        // 完整分析 - 传递已有标签和版本信息，支持增量分析
         const { 
           currentVersion: fullAnalysisCurrentVersion, 
           isNewPrompt: fullAnalysisIsNewPrompt = false, 
-          existingVersions: fullAnalysisExistingVersions = [] 
+          existingVersions: fullAnalysisExistingVersions = [],
+          originalContent,
+          existingCategory,
+          existingTags: promptExistingTags,
+          existingModels
         } = req.body;
         
         // 添加调试日志
-        console.log('🚀 API full_analyze 调试:');
+        console.log('🚀 API full_analyze 调试 (增量分析):');
         console.log('- 内容长度:', content.length);
         console.log('- 当前版本:', fullAnalysisCurrentVersion);
         console.log('- 是否新提示词:', fullAnalysisIsNewPrompt);
         console.log('- 已有版本:', fullAnalysisExistingVersions);
+        console.log('- 原始内容长度:', originalContent?.length || 0);
+        console.log('- 现有分类:', existingCategory);
+        console.log('- 现有标签:', promptExistingTags);
+        console.log('- 现有模型:', existingModels);
+        
+        // 增强配置，包含现有参数信息
+        const enhancedConfig = {
+          ...config,
+          incrementalAnalysis: !fullAnalysisIsNewPrompt,
+          originalContent: originalContent || '',
+          existingCategory: existingCategory || '',
+          existingTags: promptExistingTags || [],
+          existingModels: existingModels || []
+        };
         
         const fullResult = await aiAnalyzer.analyzePrompt(
           content, 
-          config, 
+          enhancedConfig, 
           existingTags, 
           fullAnalysisCurrentVersion, 
           fullAnalysisIsNewPrompt, 
           fullAnalysisExistingVersions
         );
         
-        console.log('🎯 API返回结果:', {
+        console.log('🎯 API返回结果 (增量分析):', {
           version: fullResult.version,
           compatibleModels: fullResult.compatibleModels,
-          variables: fullResult.variables
+          variables: fullResult.variables,
+          category: fullResult.category,
+          tags: fullResult.tags
         });
         
         return res.status(200).json({ success: true, data: fullResult });
