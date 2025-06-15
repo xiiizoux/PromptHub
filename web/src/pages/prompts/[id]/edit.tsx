@@ -45,6 +45,7 @@ import {
 // @ts-ignore
 import { pinyin } from 'pinyin-pro';
 import { ModelSelector } from '@/components/ModelSelector';
+import SmartWritingAssistant from '@/components/SmartWritingAssistant';
 
 type PromptFormData = Omit<PromptDetails, 'created_at' | 'updated_at'> & {
   is_public?: boolean;
@@ -214,6 +215,9 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
   
   // 添加实时内容监听状态 - 用于修复AI按钮问题
   const [currentContent, setCurrentContent] = useState(safePromptData.content);
+  
+  // 移动端智能助手显示状态
+  const [showMobileAssistant, setShowMobileAssistant] = useState(false);
   
   // 添加分类建议状态
   const [categorySuggestion, setCategorySuggestion] = useState<{
@@ -523,8 +527,6 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
       setShowAiAnalysis(true);
     }
   };
-
-
 
   // 应用AI分析结果 - 与创建页面保持一致
   const applyAIResults = (data: Partial<AIAnalysisResult>) => {
@@ -859,13 +861,13 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
           )}
 
           {/* 页面标题 */}
-          <motion.div
+          <motion.div 
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
             className="mb-12 text-center"
           >
-            <motion.h1
+            <motion.h1 
               className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-neon-cyan via-neon-purple to-neon-pink bg-clip-text text-transparent mb-6"
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -873,25 +875,73 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
             >
               编辑提示词
             </motion.h1>
-            <motion.p
+            <motion.p 
               className="text-xl text-gray-400 max-w-3xl mx-auto leading-relaxed"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.4 }}
             >
-              编辑 "{prompt.name}" 的详细信息。所有带 * 的字段为必填项。
+              完善您的智能提示词，让AI更好地理解您的需求
             </motion.p>
           </motion.div>
           
-          {/* 表单容器 */}
+          {/* 移动端智能助手（可折叠） */}
           <motion.div
-            initial={{ opacity: 0, y: 30 }}
+            initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.6 }}
-            className="glass rounded-3xl border border-neon-cyan/20 shadow-2xl p-8"
+            transition={{ duration: 0.6, delay: 0.4 }}
+            className="xl:hidden mb-6"
           >
+            <button
+              onClick={() => setShowMobileAssistant(!showMobileAssistant)}
+              className="w-full flex items-center justify-between p-4 glass rounded-2xl border border-neon-purple/20 hover:border-neon-purple/40 transition-all"
+            >
+              <div className="flex items-center gap-3">
+                <SparklesIcon className="h-6 w-6 text-neon-purple" />
+                <span className="text-white font-semibold">智能写作助手</span>
+              </div>
+              <ChevronLeftIcon 
+                className={`h-5 w-5 text-gray-400 transition-transform ${
+                  showMobileAssistant ? 'rotate-90' : '-rotate-90'
+                }`} 
+              />
+            </button>
+            
+            <AnimatePresence>
+              {showMobileAssistant && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="mt-4 glass rounded-2xl border border-neon-purple/20 p-4"
+                >
+                  <SmartWritingAssistant
+                    content={currentContent || watch('content') || ''}
+                    onContentChange={(newContent) => {
+                      setValue('content', newContent);
+                      setCurrentContent(newContent);
+                    }}
+                    onAnalysisComplete={handleAIAnalysis}
+                    category={watch('category')}
+                    tags={tags}
+                    className="max-h-96 overflow-y-auto"
+                  />
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </motion.div>
+
+          {/* 双栏布局容器 */}
+          <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+            {/* 主表单区域 */}
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.6 }}
+              className="xl:col-span-2 glass rounded-3xl border border-neon-cyan/20 shadow-2xl p-8"
+            >
           
-            <form onSubmit={handleSubmit(onSubmit as any)} className="space-y-8">
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
               {/* 提示词内容 - 移到最上面突出显示 */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
@@ -901,7 +951,7 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
               >
                 <div className="flex items-center justify-between mb-3">
                   <label className="flex items-center text-lg font-semibold text-gray-200">
-                    <SparklesIcon className="h-6 w-6 text-neon-cyan mr-3" />
+                    <CodeBracketIcon className="h-6 w-6 text-neon-cyan mr-3" />
                     提示词内容 *
                     <span className="ml-2 text-sm font-normal text-gray-400">核心内容区域</span>
                   </label>
@@ -911,6 +961,7 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
                     <AIAnalyzeButton
                       content={currentContent || watch('content') || ''}
                       onAnalysisComplete={(result) => {
+                        // 显示AI分析结果，用户可以选择应用
                         handleAIAnalysis(result);
                       }}
                       variant="full"
@@ -921,17 +972,17 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
                 <div className="relative">
                   <textarea
                     {...register('content', { required: '请输入提示词内容' })}
-                    rows={10}
-                    placeholder="在这里输入您的提示词内容。使用 {{变量名}} 来定义可替换的变量..."
-                    className="input-primary w-full resize-none font-mono"
-                    onChange={(e) => {
-                      detectVariables(e);
-                    }}
+                    rows={12}
+                    placeholder="在这里编写您的提示词内容。您可以使用 {{变量名}} 来定义动态变量..."
+                    className="input-primary w-full font-mono text-sm resize-none"
+                    onChange={detectVariables}
                   />
+                  
                   <div className="absolute top-3 right-3 text-xs text-gray-500">
                     使用 {`{{变量名}}`} 定义变量
                   </div>
                 </div>
+                
                 {errors.content && (
                   <p className="text-neon-red text-sm mt-1">{errors.content.message}</p>
                 )}
@@ -976,73 +1027,31 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
                     提示词名称 *
                   </label>
                   <input
-                    {...register('name', {
-                      required: '提示词名称是必填的'
-                    })}
+                    {...register('name', { required: '请输入提示词名称' })}
                     type="text"
-                    placeholder="输入提示词名称"
+                    placeholder="为您的提示词起个响亮的名字"
                     className="input-primary w-full"
                   />
                   {errors.name && (
                     <p className="text-neon-red text-sm mt-1">{errors.name.message}</p>
                   )}
-                  <p className="text-xs text-gray-500">
-                    提示词显示名称，可以随时修改
-                  </p>
                 </div>
 
                 <div className="space-y-2">
                   <label className="flex items-center text-sm font-medium text-gray-300 mb-3">
-                    <CodeBracketIcon className="h-5 w-5 text-neon-purple mr-2" />
-                    版本 *
+                    <UserIcon className="h-5 w-5 text-neon-purple mr-2" />
+                    作者
                   </label>
-                  <div className="flex items-center space-x-2">
-                    <input
-                      {...register('version')}
-                      type="text"
-                      value={(() => {
-                        const version = watch('version') ?? '';
-                        const numVersion = Number(version);
-                        return isNaN(numVersion) ? String(version) : numVersion.toFixed(1);
-                      })()}
-                      onChange={e => setValue('version', e.target.value as any)}
-                      className="input-primary w-full"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const currentVersion = watch('version') || currentVersionFormatted;
-                        const suggested = suggestNextVersion(currentVersion, 'minor');
-                        setValue('version', suggested);
-                      }}
-                      className="btn-secondary text-sm px-3 py-1"
-                      title="小版本更新 (+0.1)"
-                    >
-                      +0.1
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const currentVersion = watch('version') || currentVersionFormatted;
-                        const suggested = suggestNextVersion(currentVersion, 'major');
-                        setValue('version', suggested);
-                      }}
-                      className="btn-secondary text-sm px-3 py-1"
-                      title="大版本更新 (+1.0)"
-                    >
-                      +1.0
-                    </button>
-                  </div>
-                  {errors.version && (
-                    <p className="text-neon-red text-sm mt-1">{errors.version.message}</p>
-                  )}
-                  <p className="text-xs text-gray-500">
-                    当前版本：{formatVersionDisplay(currentVersionFormatted)}，新版本必须是大于当前版本的数字（支持一位小数）
-                  </p>
+                  <input
+                    {...register('author')}
+                    type="text"
+                    placeholder={user?.username || "您的名字"}
+                    className="input-primary w-full"
+                  />
                 </div>
               </motion.div>
 
-              {/* 分类和作者 */}
+              {/* 分类和版本 */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -1057,14 +1066,11 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
                   <select
                     {...register('category', { required: '请选择分类' })}
                     className="input-primary w-full"
-                    value={watch('category') || ''}
-                    onChange={e => setValue('category', e.target.value)}
-                    disabled={categoriesLoading}
                   >
                     <option value="">选择分类</option>
-                    {categories.map((cat) => (
-                      <option key={cat} value={cat}>
-                        {cat}
+                    {categories.map((category) => (
+                      <option key={category} value={category}>
+                        {category}
                       </option>
                     ))}
                   </select>
@@ -1492,6 +1498,27 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
               </motion.div>
             </form>
           </motion.div>
+          
+          {/* 智能写作助手侧边栏 */}
+          <motion.div
+            initial={{ opacity: 0, x: 30 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.8, delay: 0.8 }}
+            className="hidden xl:block glass rounded-3xl border border-neon-purple/20 shadow-2xl p-6"
+          >
+            <SmartWritingAssistant
+              content={currentContent || watch('content') || ''}
+              onContentChange={(newContent) => {
+                setValue('content', newContent);
+                setCurrentContent(newContent);
+              }}
+              onAnalysisComplete={handleAIAnalysis}
+              category={watch('category')}
+              tags={tags}
+              className="h-full"
+            />
+          </motion.div>
+        </div>
         </div>
       </div>
     </div>
