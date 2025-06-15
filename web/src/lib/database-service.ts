@@ -475,6 +475,8 @@ export class DatabaseService {
     subcategory?: string;
     difficulty?: string;
     featured?: boolean;
+    premium?: boolean;
+    official?: boolean;
     is_active?: boolean;
     search?: string;
     limit?: number;
@@ -500,6 +502,14 @@ export class DatabaseService {
 
       if (filters?.featured !== undefined) {
         query = query.eq('is_featured', filters.featured);
+      }
+
+      if (filters?.premium !== undefined) {
+        query = query.eq('is_premium', filters.premium);
+      }
+
+      if (filters?.official !== undefined) {
+        query = query.eq('is_official', filters.official);
       }
 
       if (filters?.search) {

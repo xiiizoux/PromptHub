@@ -38,25 +38,20 @@ async function handleGetTemplates(
       offset = '0'
     } = req.query;
 
-    const filters: TemplateFilters = {
-      category: category as string,
-      subcategory: subcategory as string,
-      difficulty: difficulty as 'beginner' | 'intermediate' | 'advanced',
-      featured: featured === 'true',
-      premium: premium === 'true',
-      official: official === 'true',
-      search: search as string,
-      limit: parseInt(limit as string, 10),
-      offset: parseInt(offset as string, 10)
-    };
+    const filters: TemplateFilters = {};
 
-    // 清理undefined值
-    Object.keys(filters).forEach(key => {
-      const filterKey = key as keyof TemplateFilters;
-      if (filters[filterKey] === undefined || filters[filterKey] === '') {
-        delete filters[filterKey];
-      }
-    });
+    // 只有明确传递的参数才添加到过滤条件中
+    if (category) filters.category = category as string;
+    if (subcategory) filters.subcategory = subcategory as string;
+    if (difficulty) filters.difficulty = difficulty as 'beginner' | 'intermediate' | 'advanced';
+    if (featured !== undefined) filters.featured = featured === 'true';
+    if (premium !== undefined) filters.premium = premium === 'true';
+    if (official !== undefined) filters.official = official === 'true';
+    if (search) filters.search = search as string;
+    
+    // 分页参数
+    filters.limit = parseInt(limit as string, 10);
+    filters.offset = parseInt(offset as string, 10);
 
     const templates = await databaseService.getTemplates(filters);
 
