@@ -12,6 +12,7 @@ import {
 import { AIAnalyzeButton } from './AIAnalyzeButton';
 import { PromptOptimizer } from './PromptOptimizer';
 import { AIAnalysisResult } from '@/lib/ai-analyzer';
+import SimpleTemplateTest from './SimpleTemplateTest';
 
 interface SmartWritingAssistantProps {
   content: string;
@@ -30,7 +31,7 @@ interface WritingStep {
   suggestions: string[];
 }
 
-export const SmartWritingAssistant: React.FC<SmartWritingAssistantProps> = ({
+const SmartWritingAssistant: React.FC<SmartWritingAssistantProps> = ({
   content,
   onContentChange,
   onAnalysisComplete,
@@ -335,7 +336,7 @@ export const SmartWritingAssistant: React.FC<SmartWritingAssistantProps> = ({
             className="space-y-6"
           >
             <h3 className="text-lg font-semibold text-white mb-4">📋 快速模板</h3>
-            <QuickTemplates onApplyTemplate={applyTemplate} category={category} />
+            <SimpleTemplateTest onApplyTemplate={applyTemplate} category={category} />
           </motion.div>
         )}
 
