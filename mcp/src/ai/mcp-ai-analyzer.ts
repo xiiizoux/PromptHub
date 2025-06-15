@@ -364,44 +364,42 @@ ${content}
     const complexity = this.calculateComplexity(content);
     const variables = this.extractVariables(content);
     
-    // 新提示词从0.1开始
+    // 新提示词从1.0开始
     if (isNewPrompt) {
-      let baseVersion = '0.1';
-      
-      if (complexity > 0.7 || variables.length > 5) {
-        baseVersion = '0.3';
-      } else if (complexity > 0.5 || variables.length > 2) {
-        baseVersion = '0.2';
-      }
+      let baseVersion = '1.0';
 
       // 确保版本号不重复
       let version = baseVersion;
       let counter = 1;
       while (existingVersions.includes(version)) {
         const [major, minor] = baseVersion.split('.');
-        version = `${major}.${parseFloat(minor) + (counter * 0.1)}`;
+        version = `${major}.${(parseFloat(minor) + (counter * 0.1)).toFixed(1)}`;
         counter++;
       }
 
       return version;
     }
 
-    // 现有提示词版本必须大于等于当前版本
+    // 现有提示词版本必须大于当前版本，默认+0.1
     if (currentVersion) {
-      const [currentMajor, currentMinor] = currentVersion.split('.').map(Number);
-      let suggestedMajor = currentMajor;
-      let suggestedMinor = currentMinor + 1;
+      const currentNum = parseFloat(currentVersion);
+      const suggestedNum = Math.round((currentNum + 0.1) * 10) / 10; // 默认+0.1
 
-      // 基于复杂度决定版本增量
+      // 基于复杂度决定是否需要更大的版本增量
+      let finalVersion = suggestedNum;
       if (complexity > 0.7 || variables.length > 5) {
-        suggestedMajor = currentMajor + 1;
-        suggestedMinor = 0;
+        // 大幅改动，建议升级主版本
+        const major = Math.floor(currentNum);
+        finalVersion = major + 1.0;
+      } else if (complexity > 0.5 || variables.length > 2) {
+        // 中等改动，建议升级次版本更多  
+        finalVersion = Math.round((currentNum + 0.2) * 10) / 10;
       }
 
-      let version = `${suggestedMajor}.${suggestedMinor}`;
+      let version = finalVersion.toFixed(1);
       let counter = 1;
       while (existingVersions.includes(version)) {
-        version = `${suggestedMajor}.${suggestedMinor + counter}`;
+        version = (finalVersion + (counter * 0.1)).toFixed(1);
         counter++;
       }
 

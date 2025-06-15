@@ -300,7 +300,7 @@ export class DatabaseService {
       }] : promptData.messages,
       is_public: promptData.is_public,
       user_id: promptData.user_id,
-      version: promptData.version ? Number(promptData.version) : 1.0 // 确保版本号为数字类型
+      version: promptData.version ? Number(promptData.version) : 1.0 // 新建提示词默认版本为1.0
     };
 
     return await this.adapter.createPrompt(prompt);
@@ -339,7 +339,7 @@ export class DatabaseService {
         }];
       }
 
-      // 增加版本号 - 支持小数版本号
+      // 版本号处理 - 编辑时默认+0.1（支持小数版本号）
       const currentVersion = existingPrompt.version || 1.0;
       updateData.version = Math.round((currentVersion + 0.1) * 10) / 10;
       updateData.updated_at = new Date().toISOString();

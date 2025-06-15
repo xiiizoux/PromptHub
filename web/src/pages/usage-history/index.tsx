@@ -14,6 +14,7 @@ import Link from 'next/link';
 import { formatDistanceToNow } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
 import toast from 'react-hot-toast';
+import { formatVersionDisplay } from '@/lib/version-utils';
 
 const UsageHistoryPage: React.FC = () => {
   const { user } = useAuth();
@@ -290,7 +291,7 @@ const UsageHistoryPage: React.FC = () => {
                             </span>
                           )}
                           <span className="px-2 py-1 bg-gray-800/50 text-gray-300 text-xs rounded-full">
-                            v{record.prompt_version}
+                            v{formatVersionDisplay(record.prompt_version)}
                           </span>
                         </div>
 

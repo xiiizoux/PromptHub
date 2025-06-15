@@ -21,6 +21,7 @@ import {
 import { getPromptDetails, getPromptPerformance, getPerformanceReport } from '@/lib/api';
 import { PromptDetails, PromptPerformance } from '@/types';
 import QualityAnalysisPanel from '@/components/QualityAnalysisPanel';
+import { formatVersionDisplay } from '@/lib/version-utils';
 
 interface PromptAnalyticsPageProps {
   prompt: PromptDetails;
@@ -155,7 +156,7 @@ export default function PromptAnalyticsPage({ prompt, performance, report }: Pro
                 {prompt.version && (
                   <div className="flex items-center text-gray-400 group">
                     <SparklesIcon className="h-4 w-4 mr-2 text-neon-yellow group-hover:text-neon-green transition-colors duration-300" />
-                    <span>v{prompt.version}</span>
+                    <span>v{formatVersionDisplay(prompt.version)}</span>
                   </div>
                 )}
               </motion.div>
@@ -454,7 +455,7 @@ export default function PromptAnalyticsPage({ prompt, performance, report }: Pro
                             index % 4 === 1 ? 'bg-neon-purple shadow-neon-purple' : 
                             index % 4 === 2 ? 'bg-neon-pink shadow-neon-pink' : 'bg-neon-green shadow-neon-green'
                           } shadow-md`}></span>
-                          v{version}
+                          v{formatVersionDisplay(version)}
                         </span>
                         <div className="text-right">
                           <div className="text-lg font-bold text-white">

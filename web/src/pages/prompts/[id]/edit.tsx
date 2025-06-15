@@ -504,12 +504,19 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
         }
       }
       
-      // 简化版本建议 - 默认+0.1
+      // 版本建议逻辑 - 新建提示词默认为1.0，编辑时默认+0.1
       const currentVersion = watch('version') || safePromptData.version || 1.0;
       if (!result.version) {
-        const suggestedVersion = Math.round((currentVersion + 0.1) * 10) / 10;
-        result.version = suggestedVersion.toString();
-        console.log(`版本建议: ${currentVersion} -> ${suggestedVersion}`);
+        // 如果是新建提示词，默认版本为1.0
+        const isNewVersion = currentVersion === 1.0 && !prompt?.id;
+        if (isNewVersion) {
+          result.version = '1.0';
+        } else {
+          // 编辑现有提示词，默认+0.1
+          const suggestedVersion = Math.round((currentVersion + 0.1) * 10) / 10;
+          result.version = suggestedVersion.toString();
+        }
+        console.log(`版本建议: ${currentVersion} -> ${result.version}`);
       }
       
       setAiAnalysisResult(result as AIAnalysisResult);

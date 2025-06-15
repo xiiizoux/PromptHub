@@ -1218,16 +1218,10 @@ ${config.originalContent}
     const complexity = this.calculateComplexity(content);
     const variables = this.extractVariables(content);
     
-    // 新提示词从0.1开始
+    // 新提示词从1.0开始
     if (isNewPrompt) {
-      let baseVersion = '0.1';
+      let baseVersion = '1.0';
       
-      if (complexity > 0.7 || variables.length > 5) {
-        baseVersion = '0.3';
-      } else if (complexity > 0.5 || variables.length > 2) {
-        baseVersion = '0.2';
-      }
-
       // 确保版本号不重复
       let version = baseVersion;
       let counter = 1;
@@ -1240,49 +1234,35 @@ ${config.originalContent}
       return version;
     }
 
-    // 现有提示词版本必须大于等于当前版本
+    // 现有提示词版本必须大于当前版本，默认+0.1
     if (currentVersion) {
-      const [currentMajor, currentMinor] = currentVersion.split('.').map(Number);
-      let suggestedMajor = currentMajor;
-      let suggestedMinor = currentMinor;
-
-      // 基于复杂度和变量数量决定版本增量
+      const currentNum = parseFloat(currentVersion);
+      const suggestedNum = Math.round((currentNum + 0.1) * 10) / 10; // 默认+0.1
+      
+      // 基于复杂度决定是否需要更大的版本增量
+      let finalVersion = suggestedNum;
       if (complexity > 0.7 || variables.length > 5) {
         // 大幅改动，建议升级主版本
-        suggestedMajor = currentMajor + 1;
-        suggestedMinor = 0;
+        const major = Math.floor(currentNum);
+        finalVersion = major + 1.0;
       } else if (complexity > 0.5 || variables.length > 2) {
-        // 中等改动，建议升级次版本
-        suggestedMinor = currentMinor + 1;
-      } else {
-        // 小幅改动，建议升级小版本
-        suggestedMinor = currentMinor + 1;
+        // 中等改动，建议升级次版本更多
+        finalVersion = Math.round((currentNum + 0.2) * 10) / 10;
       }
 
-      let baseVersion = `${suggestedMajor}.${suggestedMinor}`;
-      
-      // 确保版本号不重复
-      let version = baseVersion;
+      let version = finalVersion.toFixed(1);
       let counter = 1;
       while (existingVersions.includes(version)) {
-        version = `${suggestedMajor}.${(suggestedMinor + counter).toFixed(1)}`;
+        version = (finalVersion + (counter * 0.1)).toFixed(1);
         counter++;
       }
 
       return version;
     }
 
-    // 如果没有当前版本信息，按照旧逻辑处理
+    // 如果没有当前版本信息，默认为1.0
     let baseVersion = '1.0';
     
-    if (complexity > 0.7 || variables.length > 5) {
-      baseVersion = '2.0';
-    } else if (complexity > 0.5 || variables.length > 2) {
-      baseVersion = '1.5';
-    } else if (variables.length > 0) {
-      baseVersion = '1.1';
-    }
-
     // 确保版本号不重复
     let version = baseVersion;
     let counter = 1;

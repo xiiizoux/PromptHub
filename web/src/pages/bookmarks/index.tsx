@@ -9,6 +9,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
 import { BookmarkButton } from '@/components/BookmarkButton';
 import toast from 'react-hot-toast';
+import { formatVersionDisplay } from '@/lib/version-utils';
 
 const BookmarksPage: React.FC = () => {
   const { user } = useAuth();
@@ -232,7 +233,7 @@ const BookmarksPage: React.FC = () => {
                   {/* 底部信息 */}
                   <div className="flex items-center justify-between text-xs text-gray-500">
                     <span>by {bookmark.author || '匿名'}</span>
-                    <span>v{bookmark.version}</span>
+                    <span>v{formatVersionDisplay(bookmark.version)}</span>
                   </div>
                 </motion.div>
               ))}

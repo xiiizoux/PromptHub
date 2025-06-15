@@ -101,6 +101,12 @@ function CreatePromptPage() {
         }
       }
       
+      // 新建提示词版本号处理 - 默认为1.0
+      if (!result.version) {
+        result.version = '1.0';
+        console.log('新建提示词版本建议: 1.0');
+      }
+      
       setAiAnalysisResult(result as AIAnalysisResult);
       setShowAiAnalysis(true);
     }

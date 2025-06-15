@@ -284,7 +284,7 @@ export class SupabaseAdapter implements StorageAdapter {
         messages: prompt.messages,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
-        version: prompt.version ? Number(prompt.version) : 1.0, // 支持小数版本号
+        version: prompt.version ? Number(prompt.version) : 1.0, // 新建提示词默认版本为1.0
         is_public: prompt.is_public !== undefined ? prompt.is_public : false,
         user_id: prompt.user_id
       };
@@ -337,7 +337,7 @@ export class SupabaseAdapter implements StorageAdapter {
       }
       
       // 准备更新数据
-      // 版本号递增 - 支持小数版本号
+      // 版本号递增 - 编辑时默认+0.1（支持小数版本号）
       const currentVersion = existingPrompt.version || 1.0;
       const newVersion = Math.round((currentVersion + 0.1) * 10) / 10;
       

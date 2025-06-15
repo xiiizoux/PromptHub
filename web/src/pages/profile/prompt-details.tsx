@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 import { ChevronLeftIcon, PencilIcon, TrashIcon, ClipboardIcon, CheckIcon } from '@heroicons/react/24/outline';
+import { formatVersionDisplay } from '@/lib/version-utils';
 import { useAuth } from '@/contexts/AuthContext';
 
 const PromptDetails = () => {
@@ -174,7 +175,7 @@ const PromptDetails = () => {
               {prompt.category}
             </span>
             <span className="px-3 py-1 rounded-full text-sm bg-neon-cyan/20 text-neon-cyan border border-neon-cyan/30">
-              v{prompt.version || '1.0'}
+              v{formatVersionDisplay(prompt.version)}
             </span>
           </div>
           

@@ -314,7 +314,7 @@ export default function PromptDetailsPage({ prompt }: PromptDetailsPageProps) {
         >
           {prompt.versions.map((version) => (
             <option key={version.version} value={version.version}>
-              v{version.version} {version.notes ? `- ${version.notes}` : ''}
+              v{formatVersionDisplay(version.version)} {version.notes ? `- ${version.notes}` : ''}
             </option>
           ))}
         </select>
