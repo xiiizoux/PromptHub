@@ -657,14 +657,7 @@ export const getMcpTools = async (): Promise<any> => {
   return response.data;
 };
 
-// 社交互动 API (收藏、点赞、分享)
-export interface SocialInteraction {
-  id: string;
-  prompt_id: string;
-  user_id: string;
-  type: 'like' | 'bookmark' | 'share';
-  created_at: string;
-}
+// 移除社交功能接口定义 - MCP服务专注于提示词管理
 
 export async function toggleBookmark(promptId: string): Promise<{ bookmarked: boolean }> {
   const response = await api.post('/prompts/bookmark', { promptId });
@@ -701,20 +694,7 @@ export async function getUserBookmarks(): Promise<PromptDetails[]> {
   return response.json();
 }
 
-export async function getPromptInteractions(promptId: string): Promise<{
-  likes: number;
-  bookmarks: number;
-  userLiked: boolean;
-  userBookmarked: boolean;
-}> {
-  const response = await api.get(`/prompts/interactions?promptId=${promptId}`);
-
-  if (!response.data.success) {
-    throw new Error('获取互动信息失败');
-  }
-
-  return response.data;
-}
+// 移除社交互动相关函数 - MCP服务专注于提示词管理
 
 // 使用历史记录 API
 export interface UsageRecord {

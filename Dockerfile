@@ -12,15 +12,18 @@ ENV NODE_ENV=production \
     FRONTEND_PORT=9011 \
     TRANSPORT_TYPE=sse
 
-# 安装系统依赖
-RUN apk add --no-cache \
+# 更新包索引并安装系统依赖
+RUN apk update && apk add --no-cache \
+    build-base \
     cairo-dev \
     jpeg-dev \
     pango-dev \
     giflib-dev \
     python3 \
+    python3-dev \
     make \
-    g++
+    g++ \
+    git
 
 # 复制package.json文件
 COPY package*.json ./

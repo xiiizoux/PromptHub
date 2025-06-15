@@ -17,21 +17,7 @@ export interface PromptDetails extends Prompt {
   author?: string;
 }
 
-// 社交功能相关接口
-export interface Comment {
-  id: string;
-  content: string;
-  user_id: string;
-  prompt_id: string;
-  parent_id?: string;
-  created_at: string;
-  updated_at?: string;
-  user?: {
-    username: string;
-    display_name?: string;
-  };
-  replies?: Comment[];
-}
+// 移除社交功能相关接口 - MCP服务专注于提示词管理
 
 export interface Interaction {
   id: string;
@@ -390,37 +376,8 @@ export class DatabaseService {
     }
   }
 
-  // ===== 社交功能 =====
-
-  /**
-   * 添加评论
-   */
-  async addComment(promptId: string, content: string, userId: string, parentId?: string): Promise<Comment> {
-    try {
-      const { data, error } = await this.adapter.supabase
-        .from('comments')
-        .insert({
-          content,
-          user_id: userId,
-          prompt_id: promptId,
-          parent_id: parentId,
-          created_at: new Date().toISOString()
-        })
-        .select(`          *,
-          user:users(username, display_name)
-        `)
-        .single();
-
-      if (error) {
-        throw new Error(`添加评论失败: ${error.message}`);
-      }
-
-      return data as Comment;
-    } catch (error) {
-      console.error('添加评论失败:', error);
-      throw error;
-    }
-  }
+  // ===== 基础功能 =====
+  // 移除社交功能，MCP服务专注于提示词管理
 
   /**
    * 获取评论列表
@@ -508,111 +465,7 @@ export class DatabaseService {
     }
   }
 
-  /**
-   * 添加互动（点赞、收藏等）
-   */
-  async addInteraction(promptId: string, type: 'like' | 'dislike' | 'bookmark' | 'share', userId: string): Promise<boolean> {
-    try {
-      // 检查是否已存在相同的互动
-      const { data: existing } = await this.adapter.supabase
-        .from('interactions')
-        .select('id')
-        .eq('prompt_id', promptId)
-        .eq('user_id', userId)
-        .eq('type', type)
-        .single();
 
-      if (existing) {
-        return true; // 已存在，视为成功
-      }
-
-      const { error } = await this.adapter.supabase
-        .from('interactions')
-        .insert({
-          prompt_id: promptId,
-          user_id: userId,
-          type,
-          created_at: new Date().toISOString()
-        });
-
-      return !error;
-    } catch (error) {
-      console.error('添加互动失败:', error);
-      return false;
-    }
-  }
-
-  /**
-   * 移除互动
-   */
-  async removeInteraction(promptId: string, type: 'like' | 'dislike' | 'bookmark' | 'share', userId: string): Promise<boolean> {
-    try {
-      const { error } = await this.adapter.supabase
-        .from('interactions')
-        .delete()
-        .eq('prompt_id', promptId)
-        .eq('user_id', userId)
-        .eq('type', type);
-
-      return !error;
-    } catch (error) {
-      console.error('移除互动失败:', error);
-      return false;
-    }
-  }
-
-  /**
-   * 获取互动统计
-   */
-  async getInteractionStats(promptId: string, userId?: string): Promise<any> {
-    try {
-      // 获取各类型互动数量
-      const { data: stats, error } = await this.adapter.supabase
-        .from('interactions')
-        .select('type')
-        .eq('prompt_id', promptId);
-
-      if (error) {
-        throw new Error(`获取互动统计失败: ${error.message}`);
-      }
-
-      const statsMap = {
-        like: 0,
-        dislike: 0,
-        bookmark: 0,
-        share: 0
-      };
-
-      stats?.forEach(item => {
-        if (item.type in statsMap) {
-          statsMap[item.type as keyof typeof statsMap]++;
-        }
-      });
-
-      // 获取用户的互动状态
-      let userInteractions: string[] = [];
-      if (userId) {
-        const { data: userStats } = await this.adapter.supabase
-          .from('interactions')
-          .select('type')
-          .eq('prompt_id', promptId)
-          .eq('user_id', userId);
-
-        userInteractions = userStats?.map(item => item.type) || [];
-      }
-
-      return {
-        stats: statsMap,
-        userInteractions
-      };
-    } catch (error) {
-      console.error('获取互动统计失败:', error);
-      return {
-        stats: { like: 0, dislike: 0, bookmark: 0, share: 0 },
-        userInteractions: []
-      };
-    }
-  }
 
   // ===== 辅助方法 =====
 

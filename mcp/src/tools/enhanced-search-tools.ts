@@ -353,12 +353,11 @@ export async function handlePromptSelection(params: any, userId?: string): Promi
 
     // 添加使用统计
     if (include_usage_stats) {
-      // 这里可以添加使用统计逻辑
+      // 基本统计信息（不包含社交功能）
       response.stats = {
         views: 0,
         uses: 0,
-        likes: 0,
-        forks: 0
+        versions: response.versions?.length || 1
       };
     }
 
@@ -428,10 +427,15 @@ export async function handleQuickAccess(params: any, userId?: string): Promise<M
         response.prompts = formatSearchResults(recentPrompts.data, 'summary', true, userId);
         break;
 
-      case 'favorites':
-        // 这里可以实现收藏功能
-        response.message = '收藏功能正在开发中';
-        response.prompts = [];
+      case 'my_prompts':
+        // 用户自己的提示词
+        const myPrompts = await storage.getPrompts({ 
+          sortBy: 'latest', 
+          pageSize: limit,
+          userId: userId,
+          isPublic: false 
+        });
+        response.prompts = formatSearchResults(myPrompts.data, 'summary', true, userId);
         break;
 
       default:

@@ -130,44 +130,7 @@ export namespace McpApi {
   }
 }
 
-// 社交API端点
-export namespace SocialApi {
-  // 关注相关
-  export interface UserFollowRequest {
-    followingId: string;
-  }
-  export type UserFollowResponse = ApiResponse<{ success: boolean }>;
-  
-  // 点赞、收藏等互动
-  export interface InteractionRequest {
-    promptId: string;
-    type: 'like' | 'bookmark' | 'share';
-  }
-  export type InteractionResponse = ApiResponse<{ success: boolean }>;
-  
-  // 评论相关
-  export interface CommentRequest {
-    promptId: string;
-    content: string;
-    parentId?: string;
-  }
-  export type CommentResponse = ApiResponse<any>;
-  
-  // 话题相关
-  export interface TopicRequest {
-    title: string;
-    description?: string;
-  }
-  export type TopicResponse = ApiResponse<any>;
-  
-  // 话题帖子
-  export interface TopicPostRequest {
-    topicId: string;
-    title: string;
-    content: string;
-  }
-  export type TopicPostResponse = ApiResponse<any>;
-}
+// 移除社交API端点定义 - MCP服务专注于提示词管理
 
 // 通知API端点
 export namespace NotificationApi {
