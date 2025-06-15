@@ -388,19 +388,31 @@ const QuickTemplates: React.FC<{
         params.append('category', category);
       }
 
+      console.log('QuickTemplates: 开始获取模板...', `/api/templates?${params}`);
       const response = await fetch(`/api/templates?${params}`);
+      console.log('QuickTemplates: API响应状态:', response.status, response.statusText);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      
       const result = await response.json();
+      console.log('QuickTemplates: API响应数据:', result);
 
-      if (result.data) {
+      if (result.data && Array.isArray(result.data)) {
         const formattedTemplates = result.data.map((template: any) => ({
           name: template.title,
           category: template.category_info?.display_name || template.category,
           template: template.content
         }));
+        console.log('QuickTemplates: 格式化后的模板:', formattedTemplates);
         setTemplates(formattedTemplates);
+      } else {
+        console.warn('QuickTemplates: API返回数据格式不正确:', result);
+        setTemplates([]);
       }
     } catch (error) {
-      console.error('获取模板失败:', error);
+      console.error('QuickTemplates: 获取模板失败:', error);
       // 保留一些默认模板作为后备
       setTemplates([
         {
@@ -443,9 +455,13 @@ const QuickTemplates: React.FC<{
     );
   }
 
+  console.log('QuickTemplates: 渲染模板数量:', templates.length);
+  
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-      {templates.map((template, index) => (
+    <div className="space-y-4">
+      <div className="text-white text-sm">快速模板 ({templates.length}个)</div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {templates.map((template, index) => (
         <motion.div
           key={index}
           initial={{ opacity: 0, scale: 0.9 }}
@@ -468,6 +484,7 @@ const QuickTemplates: React.FC<{
           </button>
         </motion.div>
       ))}
+      </div>
     </div>
   );
 };
