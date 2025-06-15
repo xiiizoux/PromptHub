@@ -369,11 +369,44 @@ const QuickTemplates: React.FC<{
   onApplyTemplate: (template: string) => void;
   category?: string;
 }> = ({ onApplyTemplate, category }) => {
-  const templates = [
-    {
-      name: '专业分析师',
-      category: '分析',
-      template: `你是一位专业的{{领域}}分析师，拥有丰富的行业经验和敏锐的洞察力。
+  const [templates, setTemplates] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchTemplates();
+  }, [category]);
+
+  const fetchTemplates = async () => {
+    try {
+      setLoading(true);
+      const params = new URLSearchParams({
+        featured: 'true',
+        limit: '4'
+      });
+      
+      if (category) {
+        params.append('category', category);
+      }
+
+      const response = await fetch(`/api/templates?${params}`);
+      const result = await response.json();
+
+      if (result.data) {
+        const formattedTemplates = result.data.map((template: any) => ({
+          name: template.title,
+          category: template.category_info?.display_name || template.category,
+          template: template.content
+        }));
+        setTemplates(formattedTemplates);
+      }
+    } catch (error) {
+      console.error('获取模板失败:', error);
+      // 保留一些默认模板作为后备
+      setTemplates([
+        {
+          name: '专业分析师',
+          category: '分析',
+          template: `你是一位专业的{{领域}}分析师，拥有丰富的行业经验和敏锐的洞察力。
 
 请对以下内容进行深入分析：
 {{分析对象}}
@@ -381,87 +414,34 @@ const QuickTemplates: React.FC<{
 分析要求：
 1. 从多个角度进行全面分析
 2. 提供具体的数据和事实支撑
-3. 给出可行的建议和解决方案
-
-输出格式：
-## 现状分析
-[详细分析当前情况]
-
-## 问题识别
-[指出关键问题]
-
-## 解决方案
-[提供具体建议]
-
-## 总结
-[简要总结要点]`
-    },
-    {
-      name: '创作助手',
-      category: '创作',
-      template: `你是一位富有创意的{{类型}}创作者，擅长{{风格}}风格的内容创作。
-
-创作任务：{{具体需求}}
-
-创作要求：
-- 目标受众：{{受众群体}}
-- 内容长度：{{长度要求}}
-- 风格调性：{{风格要求}}
-- 特殊要求：{{其他要求}}
-
-请创作出既有创意又实用的内容，确保符合以上所有要求。`
-    },
-    {
-      name: '问题解决专家',
-      category: '解决',
-      template: `你是一位经验丰富的问题解决专家，善于分析复杂问题并提供系统性解决方案。
-
-问题描述：{{问题详情}}
-
-请按照以下步骤帮我解决：
-
-1. **问题分析**
-   - 问题的根本原因是什么？
-   - 涉及哪些关键因素？
-
-2. **解决方案**
-   - 提供3-5个可行的解决方案
-   - 分析每个方案的优缺点
-
-3. **实施建议**
-   - 推荐最佳方案
-   - 提供具体的实施步骤
-
-4. **风险预警**
-   - 可能遇到的风险
-   - 应对措施`
-    },
-    {
-      name: '学习指导师',
-      category: '教育',
-      template: `你是一位专业的{{学科}}学习指导师，擅长根据学习者的水平制定个性化学习方案。
-
-学习需求：
-- 学习主题：{{主题}}
-- 当前水平：{{水平描述}}
-- 学习目标：{{目标}}
-- 可用时间：{{时间安排}}
-
-请为我制定一个系统的学习计划：
-
-## 📚 学习路径
-[详细的学习步骤]
-
-## 📝 学习资源
-[推荐的学习材料]
-
-## ⏰ 时间安排
-[具体的时间规划]
-
-## 🎯 检验标准
-[学习效果评估方法]`
+3. 给出可行的建议和解决方案`
+        }
+      ]);
+    } finally {
+      setLoading(false);
     }
-  ];
+  };
+
+  if (loading) {
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {[1, 2, 3, 4].map((index) => (
+          <div
+            key={index}
+            className="p-4 bg-dark-bg-secondary/30 rounded-lg border border-gray-600/30 animate-pulse"
+          >
+            <div className="flex items-center justify-between mb-2">
+              <div className="h-4 bg-gray-600 rounded w-1/3"></div>
+              <div className="h-5 bg-neon-cyan/20 rounded w-16"></div>
+            </div>
+            <div className="h-3 bg-gray-600 rounded w-full mb-1"></div>
+            <div className="h-3 bg-gray-600 rounded w-3/4 mb-3"></div>
+            <div className="h-3 bg-neon-cyan/20 rounded w-24"></div>
+          </div>
+        ))}
+      </div>
+    );
+  }
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

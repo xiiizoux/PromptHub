@@ -6,6 +6,7 @@
  */
 
 import { SupabaseAdapter, Prompt, PromptFilters, PaginatedResponse, User } from './supabase-adapter';
+import type { PromptTemplate, TemplateCategory } from '@/types';
 
 // 扩展的提示词详情接口
 export interface PromptDetails extends Prompt {
@@ -467,7 +468,209 @@ export class DatabaseService {
     }
   }
 
+  // ===== 模板相关方法 =====
 
+  async getTemplates(filters?: {
+    category?: string;
+    subcategory?: string;
+    difficulty?: string;
+    featured?: boolean;
+    is_active?: boolean;
+    search?: string;
+    limit?: number;
+    offset?: number;
+  }): Promise<PromptTemplate[]> {
+    try {
+      let query = this.adapter.supabase
+        .from('prompt_templates')
+        .select(`
+          *,
+          template_categories!inner(name, display_name, icon, color)
+        `)
+        .eq('is_active', filters?.is_active ?? true);
+
+      if (filters?.category) {
+        query = query.eq('category', filters.category);
+      }
+
+      if (filters?.subcategory) {
+        query = query.eq('subcategory', filters.subcategory);
+      }
+
+      if (filters?.difficulty) {
+        query = query.eq('difficulty', filters.difficulty);
+      }
+
+      if (filters?.featured !== undefined) {
+        query = query.eq('is_featured', filters.featured);
+      }
+
+      if (filters?.search) {
+        query = query.or(`title.ilike.%${filters.search}%,description.ilike.%${filters.search}%,tags.cs.{${filters.search}}`);
+      }
+
+      if (filters?.limit) {
+        query = query.limit(filters.limit);
+      }
+
+      if (filters?.offset) {
+        query = query.range(filters.offset, (filters.offset + (filters?.limit || 10)) - 1);
+      }
+
+      query = query.order('sort_order', { ascending: true })
+                   .order('created_at', { ascending: false });
+
+      const { data, error } = await query;
+
+      if (error) {
+        console.error('获取模板失败:', error);
+        throw new Error('获取模板失败');
+      }
+
+      return data?.map(template => this.transformTemplateData(template)) || [];
+    } catch (error) {
+      console.error('获取模板失败:', error);
+      return [];
+    }
+  }
+
+  async getTemplateById(id: string): Promise<PromptTemplate | null> {
+    try {
+      const { data, error } = await this.adapter.supabase
+        .from('prompt_templates')
+        .select(`
+          *,
+          template_categories!inner(name, display_name, icon, color)
+        `)
+        .eq('id', id)
+        .eq('is_active', true)
+        .single();
+
+      if (error) {
+        console.error('获取模板详情失败:', error);
+        return null;
+      }
+
+      return data ? this.transformTemplateData(data) : null;
+    } catch (error) {
+      console.error('获取模板详情失败:', error);
+      return null;
+    }
+  }
+
+  async getTemplateCategories(): Promise<TemplateCategory[]> {
+    try {
+      const { data, error } = await this.adapter.supabase
+        .from('template_categories')
+        .select('*')
+        .eq('is_active', true)
+        .order('sort_order', { ascending: true });
+
+      if (error) {
+        console.error('获取模板分类失败:', error);
+        throw new Error('获取模板分类失败');
+      }
+
+      return data || [];
+    } catch (error) {
+      console.error('获取模板分类失败:', error);
+      return [];
+    }
+  }
+
+  async incrementTemplateUsage(templateId: string, userId?: string): Promise<void> {
+    try {
+      // 增加使用次数
+      await this.adapter.supabase
+        .rpc('increment_template_usage', { template_id: templateId });
+
+      // 记录使用统计
+      if (userId) {
+        await this.adapter.supabase
+          .from('template_usage_stats')
+          .insert({
+            template_id: templateId,
+            user_id: userId,
+            used_at: new Date().toISOString()
+          });
+      }
+    } catch (error) {
+      console.error('更新模板使用统计失败:', error);
+    }
+  }
+
+  async rateTemplate(templateId: string, userId: string, rating: number, comment?: string): Promise<void> {
+    try {
+      await this.adapter.supabase
+        .from('template_ratings')
+        .upsert({
+          template_id: templateId,
+          user_id: userId,
+          rating,
+          comment,
+          updated_at: new Date().toISOString()
+        });
+
+      // 更新模板平均评分
+      await this.updateTemplateRating(templateId);
+    } catch (error) {
+      console.error('评分模板失败:', error);
+      throw new Error('评分模板失败');
+    }
+  }
+
+  private async updateTemplateRating(templateId: string): Promise<void> {
+    try {
+      const { data, error } = await this.adapter.supabase
+        .from('template_ratings')
+        .select('rating')
+        .eq('template_id', templateId);
+
+      if (error || !data || data.length === 0) return;
+
+      const averageRating = data.reduce((sum, r) => sum + r.rating, 0) / data.length;
+
+      await this.adapter.supabase
+        .from('prompt_templates')
+        .update({ rating: Number(averageRating.toFixed(2)) })
+        .eq('id', templateId);
+    } catch (error) {
+      console.error('更新模板评分失败:', error);
+    }
+  }
+
+  private transformTemplateData(data: any): PromptTemplate {
+    return {
+      id: data.id,
+      name: data.name,
+      title: data.title,
+      description: data.description,
+      content: data.content,
+      category: data.category,
+      subcategory: data.subcategory,
+      tags: data.tags || [],
+      difficulty: data.difficulty,
+      variables: data.variables || [],
+      fields: data.fields || [],
+      author: data.author,
+      likes: data.likes || 0,
+      usage_count: data.usage_count || 0,
+      rating: data.rating || 0,
+      estimated_time: data.estimated_time,
+      language: data.language || 'zh-CN',
+      is_featured: data.is_featured || false,
+      is_premium: data.is_premium || false,
+      is_official: data.is_official || false,
+      created_at: data.created_at,
+      updated_at: data.updated_at,
+      category_info: data.template_categories ? {
+        name: data.template_categories.name,
+        display_name: data.template_categories.display_name,
+        icon: data.template_categories.icon,
+        color: data.template_categories.color
+      } : undefined
+    };
+  }
 
   // ===== 辅助方法 =====
 

@@ -236,3 +236,120 @@ export interface Category {
   sort_order?: number;
   is_active?: boolean;
 }
+
+/**
+ * 模板相关类型定义
+ */
+
+// 模板分类
+export interface TemplateCategory {
+  id: string;
+  name: string;
+  display_name: string;
+  description?: string;
+  icon?: string;
+  color?: string;
+  sort_order: number;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+// 提示词模板
+export interface PromptTemplate {
+  id: string;
+  name: string;
+  title: string;
+  description: string;
+  content: string;
+  category: string;
+  subcategory?: string;
+  tags: string[];
+  difficulty: 'beginner' | 'intermediate' | 'advanced';
+  variables: TemplateVariable[];
+  fields: TemplateField[];
+  author?: string;
+  likes: number;
+  usage_count: number;
+  rating: number;
+  estimated_time?: string;
+  language: string;
+  is_featured: boolean;
+  is_premium: boolean;
+  is_official: boolean;
+  is_active?: boolean;
+  sort_order?: number;
+  created_at: string;
+  updated_at?: string;
+  created_by?: string;
+  updated_by?: string;
+  category_info?: {
+    name: string;
+    display_name: string;
+    icon?: string;
+    color?: string;
+  };
+}
+
+// 模板变量定义
+export interface TemplateVariable {
+  name: string;
+  type: 'text' | 'textarea' | 'select' | 'number' | 'boolean';
+  description: string;
+  required: boolean;
+  options?: string[];
+  default?: string;
+}
+
+// 模板字段定义（用于动态表单）
+export interface TemplateField {
+  key: string;
+  label: string;
+  type: 'text' | 'textarea' | 'select' | 'number' | 'boolean';
+  placeholder?: string;
+  required: boolean;
+  options?: string[];
+  example?: string;
+  validation?: {
+    min?: number;
+    max?: number;
+    pattern?: string;
+  };
+}
+
+// 模板使用统计
+export interface TemplateUsageStats {
+  id: string;
+  template_id: string;
+  user_id?: string;
+  session_id?: string;
+  used_at: string;
+  variables_used?: Record<string, any>;
+  satisfaction_rating?: number;
+  feedback?: string;
+  created_at: string;
+}
+
+// 模板评分
+export interface TemplateRating {
+  id: string;
+  template_id: string;
+  user_id: string;
+  rating: number;
+  comment?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+// 模板过滤条件
+export interface TemplateFilters {
+  category?: string;
+  subcategory?: string;
+  difficulty?: string;
+  featured?: boolean;
+  premium?: boolean;
+  official?: boolean;
+  search?: string;
+  limit?: number;
+  offset?: number;
+}
