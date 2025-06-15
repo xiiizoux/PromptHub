@@ -119,6 +119,7 @@ const DocsPage: React.FC = () => {
                 </p>
                 <div className="space-y-3">
                   {[
+                    { href: "/docs/api-integration", text: "API集成指南" },
                     { href: "/docs/api/authentication", text: "认证与授权" },
                     { href: "/docs/api/prompts", text: "提示词API" },
                     { href: "/docs/api/performance", text: "性能分析API" }
@@ -207,6 +208,8 @@ const DocsPage: React.FC = () => {
                 </p>
                 <div className="space-y-3">
                   {[
+                    { href: "/docs/basic-features", text: "基础功能详解" },
+                    { href: "/docs/mcp-integration", text: "MCP集成指南" },
                     { href: "/docs/advanced/versioning", text: "提示词版本控制" },
                     { href: "/docs/advanced/performance-tracking", text: "性能追踪与分析" },
                     { href: "/docs/advanced/integration", text: "与其他系统集成" }
