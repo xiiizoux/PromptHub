@@ -1,4 +1,4 @@
-# 🤖 AI智能分析功能
+# 🤖 AI功能完整指南
 
 ## 功能概述
 
@@ -108,7 +108,7 @@ curl -X POST /api/ai-analyze \
 
 ```bash
 # .env文件中添加
-OPENAI_API_KEY=sk-your-openai-api-key-here
+OPENAI_API_KEY=sk-your-openai-api-key
 
 # OpenAI兼容API配置 (支持自定义端点)
 OPENAI_API_BASE_URL=https://api.openai.com/v1
@@ -317,4 +317,215 @@ A: 可以，AI分析仅提供建议，用户可以选择性应用或手动修改
 A: 目前支持单个提示词分析，批量分析功能正在开发中。
 
 ### Q: 如何提高分析质量？
-A: 提供完整、清晰的提示词内容可以显著提高分析质量。 
+A: 提供完整、清晰的提示词内容可以显著提高分析质量。
+
+## 🔧 AI工具集成指南
+
+### 连接到MCP Prompt Server
+
+#### 方法1：通过MCP配置
+
+如果您的AI工具支持MCP协议，可以使用以下配置连接到Prompt Server：
+
+```json
+{
+  "mcpServers": {
+    "prompt-server": {
+      "command": "node",
+      "args": [
+        "/path/to/mcp-prompt-server/dist/src/index.js"
+      ],
+      "env": {
+        "PORT": "9010",
+        "API_KEY": "your-api-key",
+        "STORAGE_TYPE": "file",
+        "FORCE_LOCAL_STORAGE": "true"
+      }
+    }
+  }
+}
+```
+
+#### 方法2：通过HTTP API
+
+如果您的AI工具不支持MCP协议，可以直接通过HTTP API进行集成。
+
+**基础URL**: `http://localhost:9010/api`
+
+**身份验证**: 在请求头中添加API密钥：
+```
+x-api-key: your-api-key
+```
+
+### 实现提示词搜索功能
+
+当用户输入"搜索提示词[关键词]"时，您的AI工具应该：
+
+1. 提取关键词
+2. 调用MCP Prompt Server的搜索API
+3. 将结果展示给用户
+
+```javascript
+async function searchPrompts(query) {
+  const response = await fetch(`http://localhost:9010/api/prompts/search/${encodeURIComponent(query)}`, {
+    method: 'GET',
+    headers: {
+      'x-api-key': 'your-api-key'
+    }
+  });
+  
+  const data = await response.json();
+  
+  if (data.success && data.data.prompts.length > 0) {
+    return data.data.prompts;
+  } else {
+    return [];
+  }
+}
+```
+
+### 实现提示词保存功能
+
+```javascript
+async function savePrompt(name, content, category = 'General', tags = []) {
+  const messages = [
+    {
+      role: 'system',
+      content: {
+        type: 'text',
+        text: content
+      }
+    }
+  ];
+  
+  const promptData = {
+    name,
+    description: `Prompt for ${name}`,
+    category,
+    tags,
+    messages
+  };
+  
+  const response = await fetch('http://localhost:9010/api/prompts', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': 'your-api-key'
+    },
+    body: JSON.stringify(promptData)
+  });
+  
+  return await response.json();
+}
+```
+
+## 📚 AI工具使用示例
+
+### 1. Claude Desktop 集成
+
+```json
+{
+  "mcpServers": {
+    "prompt-server": {
+      "command": "node",
+      "args": ["/path/to/prompthub/mcp/dist/src/index.js"],
+      "env": {
+        "STORAGE_TYPE": "file",
+        "FORCE_LOCAL_STORAGE": "true"
+      }
+    }
+  }
+}
+```
+
+### 2. VSCode扩展集成
+
+```typescript
+// 扩展配置
+const config = {
+  serverUrl: 'http://localhost:9010',
+  apiKey: 'your-api-key'
+};
+
+// 搜索提示词
+async function searchPrompts(query: string) {
+  const response = await fetch(`${config.serverUrl}/api/prompts/search/${encodeURIComponent(query)}`, {
+    headers: { 'x-api-key': config.apiKey }
+  });
+  return await response.json();
+}
+```
+
+### 3. 浏览器插件集成
+
+```javascript
+// 内容脚本
+class PromptHubPlugin {
+  constructor() {
+    this.serverUrl = 'http://localhost:9010';
+    this.apiKey = 'your-api-key';
+  }
+  
+  async insertPrompt(name) {
+    const response = await fetch(`${this.serverUrl}/api/prompts/${encodeURIComponent(name)}`, {
+      headers: { 'x-api-key': this.apiKey }
+    });
+    
+    const data = await response.json();
+    if (data.success) {
+      // 插入到当前页面的输入框
+      const activeElement = document.activeElement;
+      if (activeElement && activeElement.tagName === 'TEXTAREA') {
+        activeElement.value = data.data.prompt.messages[0].content.text;
+      }
+    }
+  }
+}
+```
+
+### 4. Python脚本集成
+
+```python
+import requests
+import json
+
+class PromptHubPlugin:
+    def __init__(self, server_url='http://localhost:9010', api_key='your-api-key'):
+        self.server_url = server_url
+        self.api_key = api_key
+        self.headers = {'x-api-key': api_key}
+    
+    def search_prompts(self, query):
+        """搜索提示词"""
+        url = f"{self.server_url}/api/prompts/search/{query}"
+        response = requests.get(url, headers=self.headers)
+        return response.json()
+    
+    def get_prompt(self, name):
+        """获取单个提示词"""
+        url = f"{self.server_url}/api/prompts/{name}"
+        response = requests.get(url, headers=self.headers)
+        return response.json()
+    
+    def save_prompt(self, name, content, category='General', tags=[]):
+        """保存提示词"""
+        data = {
+            'name': name,
+            'description': f'Prompt for {name}',
+            'category': category,
+            'tags': tags,
+            'messages': [
+                {
+                    'role': 'system',
+                    'content': {'type': 'text', 'text': content}
+                }
+            ]
+        }
+        
+        response = requests.post(
+            f"{self.server_url}/api/prompts",
+            headers={**self.headers, 'Content-Type': 'application/json'},
+            data=json.dumps(data)
+        )
+        return response.json()
+``` 

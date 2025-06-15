@@ -15,25 +15,148 @@
 
 ## 项目架构
 
-PromptHub采用前后端分离的架构设计：
+PromptHub由三个主要部分组成：
+
+1. **前端 (`/web`)**: Next.js应用，处理用户界面和交互
+2. **后端 (`/mcp`)**: MCP服务器，提供API和提示词管理功能
+3. **数据库 (`/supabase`)**: Supabase配置和SQL脚本
+
+### 完整项目结构
 
 ```
 PromptHub/
 ├── mcp/                      # MCP服务目录
 │   ├── src/                  # MCP服务源代码
+│   │   ├── api/              # API路由
+│   │   ├── storage/          # 存储层
+│   │   ├── performance/      # 性能追踪
+│   │   └── tools/            # 工具和插件
 │   ├── tests/                # 测试目录
 │   └── package.json          # MCP服务依赖和脚本
 ├── web/                      # Web应用目录
 │   ├── src/                  # Web应用源代码
 │   │   ├── components/       # React组件
+│   │   │   ├── layout/       # 布局组件
+│   │   │   ├── prompts/      # 提示词组件
+│   │   │   └── auth/         # 认证组件
 │   │   ├── pages/            # Next.js页面
+│   │   │   ├── auth/         # 认证页面
+│   │   │   ├── prompts/      # 提示词管理页面
+│   │   │   ├── profile/      # 用户资料页面
+│   │   │   ├── analytics/    # 分析页面
+│   │   │   └── docs/         # 文档页面
 │   │   ├── lib/              # 工具函数和API客户端
+│   │   ├── contexts/         # React上下文
 │   │   └── hooks/            # 自定义React Hooks
+│   ├── database/             # 数据库相关文件
 │   └── package.json          # Web应用依赖和脚本
+├── supabase/                 # 数据库配置
+│   ├── migrations/           # 数据库迁移文件
+│   ├── lib/                  # Supabase工具库
+│   ├── schema.sql            # 数据库架构定义
+│   └── package.json          # Supabase共享模块依赖
 ├── docs/                     # 详细文档
+├── scripts/                  # 辅助脚本
+├── docker/                   # Docker配置
 ├── .env                      # 环境变量文件（统一配置）
+├── build.sh                  # 项目构建脚本
+├── start.sh                  # 启动脚本
+├── stop.sh                   # 停止脚本
 └── package.json              # 项目根目录依赖和脚本
 ```
+
+### 核心组件详解
+
+#### 前端 (web)
+
+##### 布局组件 (`/web/src/components/layout/`)
+
+| 文件 | 功能描述 |
+|------|----------|
+| `Layout.tsx` | 主布局组件，包含Navbar和Footer |
+| `Navbar.tsx` | 导航栏组件，处理导航和用户菜单 |
+| `Footer.tsx` | 页脚组件，包含链接和版权信息 |
+
+##### 提示词组件 (`/web/src/components/prompts/`)
+
+| 文件 | 功能描述 |
+|------|----------|
+| `PromptCard.tsx` | 提示词卡片组件，展示提示词概要信息 |
+| `PromptFilters.tsx` | 提示词筛选组件，用于搜索和过滤提示词 |
+
+##### 页面组件
+
+| 目录 | 功能描述 |
+|------|----------|
+| `/pages/auth/` | 认证页面（登录、注册） |
+| `/pages/prompts/` | 提示词管理页面 |
+| `/pages/profile/` | 用户资料和API密钥管理 |
+| `/pages/analytics/` | 性能分析页面 |
+
+##### 上下文与状态管理
+
+| 文件 | 功能描述 |
+|------|----------|
+| `/contexts/AuthContext.tsx` | 认证上下文，管理用户登录状态 |
+
+#### 后端 (mcp)
+
+##### API路由
+
+| 文件 | 功能描述 |
+|------|----------|
+| `/mcp/src/api/mcp-router.ts` | MCP路由器，处理提示词请求 |
+| `/mcp/src/api/api-keys-router.ts` | API密钥管理路由 |
+| `/mcp/src/api/auth-middleware.ts` | 认证中间件 |
+
+##### 存储层
+
+| 文件 | 功能描述 |
+|------|----------|
+| `/mcp/src/storage/storage-factory.ts` | 存储工厂，创建存储适配器 |
+| `/mcp/src/storage/supabase-adapter.ts` | Supabase存储适配器 |
+
+##### 性能追踪
+
+| 文件 | 功能描述 |
+|------|----------|
+| `/mcp/src/performance/performance-tracker.ts` | 性能追踪实现 |
+| `/mcp/src/performance/performance-routes.ts` | 性能相关API路由 |
+
+#### 数据库 (supabase)
+
+##### 数据库表及关键字段
+
+**用户和认证相关**
+
+| 表名 | 描述 | 关键字段 |
+|------|----------|----------|
+| `users` | 用户信息和认证数据 | `id`, `email`, `display_name`, `created_at` |
+| `api_keys` | 存储API密钥 | `id`, `user_id`, `name`, `key_hash`, `expires_at` |
+
+**提示词核心相关**
+
+| 表名 | 描述 | 关键字段 |
+|------|----------|----------|
+| `prompts` | 提示词主表 | `id`, `name`, `description`, `category`, `tags`, `messages`, `version`, `is_public`, `user_id` |
+| `prompt_versions` | 提示词版本历史 | `id`, `prompt_id`, `version`, `messages`, `user_id`, `created_at` |
+| `categories` | 提示词分类信息 | `id`, `name`, `description` |
+
+**性能和使用统计**
+
+| 表名 | 描述 | 关键字段 |
+|------|----------|----------|
+| `prompt_usage` | 提示词使用记录 | `id`, `prompt_id`, `prompt_version`, `user_id`, `input_tokens`, `output_tokens`, `latency_ms`, `created_at` |
+| `prompt_performance` | 提示词性能汇总 | `id`, `prompt_id`, `prompt_version`, `usage_count`, `avg_rating`, `avg_latency_ms`, `avg_input_tokens`, `avg_output_tokens` |
+| `prompt_feedback` | 用户反馈和评分 | `id`, `usage_id`, `rating`, `feedback_text`, `user_id` |
+
+**协作和管理**
+
+| 表名 | 描述 | 关键字段 |
+|------|----------|----------|
+| `prompt_ab_tests` | A/B测试配置 | `id`, `name`, `prompt_id`, `version_a`, `version_b`, `metric`, `status`, `result` |
+| `prompt_collaborators` | 提示词协作者 | `id`, `prompt_id`, `user_id`, `permission_level` |
+| `prompt_audit_logs` | 变更审计记录 | `id`, `prompt_id`, `user_id`, `action`, `changes`, `created_at` |
 
 ### 架构原则
 
