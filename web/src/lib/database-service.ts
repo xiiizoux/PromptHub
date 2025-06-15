@@ -534,7 +534,15 @@ export class DatabaseService {
         throw new Error('获取模板失败');
       }
 
-      return data?.map(template => this.transformTemplateData(template)) || [];
+      if (!data || data.length === 0) {
+        return [];
+      }
+
+      // 获取所有分类信息
+      const categories = await this.getTemplateCategories();
+      const categoryMap = new Map(categories.map(cat => [cat.name, cat]));
+
+      return data.map(template => this.transformTemplateData(template, categoryMap.get(template.category)));
     } catch (error) {
       console.error('获取模板失败:', error);
       return [];
@@ -555,7 +563,13 @@ export class DatabaseService {
         return null;
       }
 
-      return data ? this.transformTemplateData(data) : null;
+      if (!data) return null;
+
+      // 获取分类信息
+      const categories = await this.getTemplateCategories();
+      const categoryInfo = categories.find(cat => cat.name === data.category);
+
+      return this.transformTemplateData(data, categoryInfo);
     } catch (error) {
       console.error('获取模板详情失败:', error);
       return null;
@@ -643,7 +657,7 @@ export class DatabaseService {
     }
   }
 
-  private transformTemplateData(data: any): PromptTemplate {
+  private transformTemplateData(data: any, categoryInfo?: TemplateCategory): PromptTemplate {
     return {
       id: data.id,
       name: data.name,
@@ -666,7 +680,13 @@ export class DatabaseService {
       is_premium: data.is_premium || false,
       is_official: data.is_official || false,
       created_at: data.created_at,
-      updated_at: data.updated_at
+      updated_at: data.updated_at,
+      category_info: categoryInfo ? {
+        name: categoryInfo.name,
+        display_name: categoryInfo.display_name,
+        icon: categoryInfo.icon,
+        color: categoryInfo.color
+      } : undefined
     };
   }
 
