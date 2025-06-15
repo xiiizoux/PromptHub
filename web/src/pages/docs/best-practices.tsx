@@ -1,345 +1,412 @@
 import React from 'react';
 import Link from 'next/link';
-import { ChevronLeftIcon } from '@heroicons/react/24/outline';
+import { LightBulbIcon, ShieldCheckIcon, RocketLaunchIcon, ChatBubbleLeftRightIcon, CogIcon, StarIcon } from '@heroicons/react/24/outline';
+import DocLayout from '@/components/DocLayout';
+import { DocSection, DocGrid, DocCard, DocCodeBlock, DocList, DocHighlight } from '@/components/DocContent';
 
 const BestPracticesPage: React.FC = () => {
+  const goodPromptExample = `你是一位经验丰富的{{role}}，专门从事{{domain}}领域的工作。
+
+任务目标：
+为{{target_audience}}设计一个完整的{{deliverable}}，重点关注以下方面：
+
+1. **核心要求**：
+   - {{requirement_1}}
+   - {{requirement_2}}
+   - {{requirement_3}}
+
+2. **质量标准**：
+   - 专业性：符合行业标准和最佳实践
+   - 可用性：易于理解和实施
+   - 完整性：涵盖所有必要的要素
+
+3. **输出格式**：
+   请按照以下结构组织你的回答：
+   - 概述（2-3句话）
+   - 详细方案（分步骤说明）
+   - 实施建议（具体操作步骤）
+   - 潜在风险和解决方案
+
+请确保你的回答基于实际经验，提供具体、可操作的建议。`;
+
+  const badPromptExample = `帮我写个东西`;
+
+  const principles = [
+    {
+      title: "明确具体",
+      description: "提供清晰、具体的指令和上下文",
+      icon: <LightBulbIcon className="h-6 w-6" />,
+      color: "cyan" as const,
+      tips: [
+        { title: "明确角色", description: "定义 AI 应该扮演的具体角色" },
+        { title: "详细需求", description: "提供具体的任务要求和期望" },
+        { title: "上下文信息", description: "包含相关的背景信息和约束条件" }
+      ]
+    },
+    {
+      title: "结构化设计",
+      description: "使用清晰的结构组织提示词内容",
+      icon: <CogIcon className="h-6 w-6" />,
+      color: "purple" as const,
+      tips: [
+        { title: "分层组织", description: "使用标题和列表组织内容" },
+        { title: "步骤化", description: "将复杂任务分解为具体步骤" },
+        { title: "格式要求", description: "明确指定输出格式和样式" }
+      ]
+    },
+    {
+      title: "迭代优化",
+      description: "通过测试和反馈持续改进提示词",
+      icon: <RocketLaunchIcon className="h-6 w-6" />,
+      color: "pink" as const,
+      tips: [
+        { title: "A/B 测试", description: "比较不同版本的效果" },
+        { title: "收集反馈", description: "记录使用效果和改进点" },
+        { title: "版本管理", description: "跟踪变更历史和效果对比" }
+      ]
+    }
+  ];
+
+  const antiPatterns = [
+    {
+      title: "过于宽泛",
+      description: "避免模糊不清的指令",
+      example: "帮我写点什么",
+      solution: "明确指定写作类型、目标受众和具体要求"
+    },
+    {
+      title: "缺乏上下文",
+      description: "没有提供足够的背景信息",
+      example: "翻译这个",
+      solution: "提供原文语言、目标语言、专业领域和语境"
+    },
+    {
+      title: "指令冲突",
+      description: "包含相互矛盾的要求",
+      example: "要详细但要简洁",
+      solution: "明确优先级或分别处理不同需求"
+    },
+    {
+      title: "忽视约束",
+      description: "没有考虑实际限制条件",
+      example: "生成10000字的内容",
+      solution: "考虑模型输出限制，合理设置长度要求"
+    }
+  ];
+
+  const categories = [
+    {
+      title: "创意写作",
+      icon: <ChatBubbleLeftRightIcon className="h-6 w-6" />,
+      color: "cyan" as const,
+      practices: [
+        "提供清晰的写作风格指导",
+        "定义目标受众和语调",
+        "包含具体的内容要求",
+        "设置合适的长度限制"
+      ]
+    },
+    {
+      title: "数据分析",
+      icon: <CogIcon className="h-6 w-6" />,
+      color: "purple" as const,
+      practices: [
+        "明确数据来源和格式",
+        "指定分析方法和指标",
+        "定义输出格式要求",
+        "包含解释和建议"
+      ]
+    },
+    {
+      title: "代码生成",
+      icon: <StarIcon className="h-6 w-6" />,
+      color: "pink" as const,
+      practices: [
+        "指定编程语言和版本",
+        "描述功能需求和约束",
+        "要求代码注释和文档",
+        "包含错误处理机制"
+      ]
+    },
+    {
+      title: "教育培训",
+      icon: <LightBulbIcon className="h-6 w-6" />,
+      color: "green" as const,
+      practices: [
+        "明确学习对象和水平",
+        "设计渐进式学习路径",
+        "包含实例和练习",
+        "提供评估标准"
+      ]
+    }
+  ];
+
   return (
-    <div className="bg-gray-50 min-h-screen py-8">
-      <div className="container-custom">
-        {/* 返回按钮 */}
-        <div className="mb-6">
-          <Link href="/docs" className="inline-flex items-center text-sm font-medium text-primary-600 hover:text-primary-700">
-            <ChevronLeftIcon className="h-5 w-5 mr-1" />
-            返回文档首页
-          </Link>
-        </div>
-
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">提示词最佳实践</h1>
-          <p className="mt-2 text-gray-600">
-            学习如何设计高效、可靠的提示词，提高AI模型输出的质量和一致性
+    <DocLayout
+      title="最佳实践指南"
+      description="掌握高质量提示词设计的核心原则和实用技巧，提升 AI 交互效果和工作效率"
+      breadcrumbs={[
+        { name: "文档", href: "/docs" },
+        { name: "最佳实践", href: "/docs/best-practices" }
+      ]}
+    >
+      {/* 核心原则 */}
+      <DocSection title="核心原则" delay={0.1}>
+        <div className="space-y-8">
+          <p className="text-dark-text-secondary leading-relaxed">
+            优秀的提示词遵循一些基本原则，这些原则能够显著提升 AI 的响应质量和准确性。
           </p>
+          
+          <DocGrid cols={3}>
+            {principles.map((principle, index) => (
+              <DocCard 
+                key={index}
+                title={principle.title}
+                description={principle.description}
+                icon={principle.icon}
+                color={principle.color}
+              >
+                <div className="mt-4 space-y-3">
+                  {principle.tips.map((tip, tipIndex) => (
+                    <div key={tipIndex} className="border-l-2 border-neon-cyan/30 pl-3">
+                      <h5 className="text-sm font-medium text-white">{tip.title}</h5>
+                      <p className="text-xs text-dark-text-tertiary">{tip.description}</p>
+                    </div>
+                  ))}
+                </div>
+              </DocCard>
+            ))}
+          </DocGrid>
         </div>
+      </DocSection>
 
-        {/* 提示词结构指南 */}
-        <div className="bg-white shadow-sm rounded-lg overflow-hidden mb-8">
-          <div className="p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">提示词结构指南</h2>
+      {/* 对比示例 */}
+      <DocSection title="对比示例" delay={0.2}>
+        <div className="space-y-8">
+          <p className="text-dark-text-secondary leading-relaxed">
+            通过对比优秀和糟糕的提示词示例，直观了解最佳实践的应用效果。
+          </p>
+          
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div>
+              <h4 className="text-lg font-semibold text-red-400 mb-4 flex items-center">
+                <span className="w-3 h-3 bg-red-400 rounded-full mr-3"></span>
+                避免的做法
+              </h4>
+              <DocCodeBlock 
+                code={badPromptExample}
+                title="模糊不清的提示词"
+                language="text"
+              />
+              <DocHighlight type="warning" className="mt-4">
+                <h5 className="font-semibold mb-2">问题分析</h5>
+                <ul className="text-sm space-y-1">
+                  <li>• 没有明确的任务目标</li>
+                  <li>• 缺乏必要的上下文信息</li>
+                  <li>• 没有指定输出格式或要求</li>
+                  <li>• AI 无法理解用户的真实需求</li>
+                </ul>
+              </DocHighlight>
+            </div>
             
-            <div className="space-y-6">
-              <div>
-                <h3 className="text-lg font-medium text-gray-900">明确角色和目标</h3>
-                <p className="mt-2 text-gray-600">
-                  在提示词开始时明确定义模型应该扮演的角色和需要完成的目标。这为模型提供了上下文框架，帮助它生成更符合期望的回答。
-                </p>
-                <div className="mt-3 bg-gray-50 rounded-lg p-4">
-                  <h4 className="text-sm font-medium text-gray-700">示例:</h4>
-                  <pre className="mt-2 bg-gray-800 text-white p-3 rounded-md overflow-auto text-sm">
-                    <code>
-{`你是一位经验丰富的法律顾问，专攻知识产权法。
-你的任务是分析以下案例，并提供关于潜在版权侵权的专业意见。
-请确保你的回答包含相关法律条款的引用和类似案例的参考。`}
-                    </code>
-                  </pre>
-                </div>
-              </div>
-              
-              <div>
-                <h3 className="text-lg font-medium text-gray-900">使用清晰的格式和结构</h3>
-                <p className="mt-2 text-gray-600">
-                  使用清晰的格式来组织你的提示词，包括分段、项目符号和明确的章节。这不仅使提示词更易于阅读和理解，也引导模型以类似的结构回应。
-                </p>
-                <div className="mt-3 bg-gray-50 rounded-lg p-4">
-                  <h4 className="text-sm font-medium text-gray-700">示例:</h4>
-                  <pre className="mt-2 bg-gray-800 text-white p-3 rounded-md overflow-auto text-sm">
-                    <code>
-{`分析以下产品描述，并提供详细的市场营销建议。请按照以下结构组织你的回答：
-
-1. 目标受众分析
-   - 主要人口统计特征
-   - 潜在痛点和需求
-
-2. 价值主张
-   - 核心优势
-   - 差异化因素
-
-3. 营销渠道建议
-   - 线上渠道
-   - 线下渠道
-
-4. 信息传达策略
-   - 关键信息点
-   - 推荐的口号和标语`}
-                    </code>
-                  </pre>
-                </div>
-              </div>
-              
-              <div>
-                <h3 className="text-lg font-medium text-gray-900">包含输入变量</h3>
-                <p className="mt-2 text-gray-600">
-                  使用模板变量使提示词更加灵活和可重用。在MCP Prompt Server中，变量使用双大括号表示，如<code className="bg-gray-200 px-1 py-0.5 rounded">{'{{variable_name}}'}</code>。
-                </p>
-                <div className="mt-3 bg-gray-50 rounded-lg p-4">
-                  <h4 className="text-sm font-medium text-gray-700">示例:</h4>
-                  <pre className="mt-2 bg-gray-800 text-white p-3 rounded-md overflow-auto text-sm">
-                    <code>
-{`你是一位资深的{{industry}}专家。请分析以下{{document_type}}并提供你的专业见解：
-
-{{content}}
-
-请特别关注以下方面：
-1. {{aspect_1}}
-2. {{aspect_2}}
-3. {{aspect_3}}`}
-                    </code>
-                  </pre>
-                </div>
-              </div>
+            <div>
+              <h4 className="text-lg font-semibold text-green-400 mb-4 flex items-center">
+                <span className="w-3 h-3 bg-green-400 rounded-full mr-3"></span>
+                推荐的做法
+              </h4>
+              <DocCodeBlock 
+                code={goodPromptExample}
+                title="结构化的专业提示词"
+                language="text"
+              />
+              <DocHighlight type="success" className="mt-4">
+                <h5 className="font-semibold mb-2">优势分析</h5>
+                <ul className="text-sm space-y-1">
+                  <li>• 明确定义角色和专业领域</li>
+                  <li>• 提供具体的任务要求</li>
+                  <li>• 包含清晰的输出格式</li>
+                  <li>• 设置质量标准和约束条件</li>
+                </ul>
+              </DocHighlight>
             </div>
           </div>
         </div>
+      </DocSection>
 
-        {/* 有效示例的重要性 */}
-        <div className="bg-white shadow-sm rounded-lg overflow-hidden mb-8">
-          <div className="p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">添加有效示例</h2>
+      {/* 常见误区 */}
+      <DocSection title="常见误区" delay={0.3}>
+        <div className="space-y-6">
+          <p className="text-dark-text-secondary leading-relaxed">
+            了解并避免这些常见的提示词设计误区，能够有效提升提示词的质量和效果。
+          </p>
+          
+          <DocGrid cols={2}>
+            {antiPatterns.map((pattern, index) => (
+              <DocCard 
+                key={index}
+                title={pattern.title}
+                description={pattern.description}
+                color={index % 2 === 0 ? 'red' : 'orange'}
+              >
+                <div className="mt-4 space-y-3">
+                  <div className="bg-red-900/20 border border-red-500/30 rounded-lg p-3">
+                    <h5 className="text-sm font-medium text-red-400 mb-1">错误示例</h5>
+                    <p className="text-xs text-red-300">"{pattern.example}"</p>
+                  </div>
+                  <div className="bg-green-900/20 border border-green-500/30 rounded-lg p-3">
+                    <h5 className="text-sm font-medium text-green-400 mb-1">改进方案</h5>
+                    <p className="text-xs text-green-300">{pattern.solution}</p>
+                  </div>
+                </div>
+              </DocCard>
+            ))}
+          </DocGrid>
+        </div>
+      </DocSection>
+
+      {/* 分类指南 */}
+      <DocSection title="分类指南" delay={0.4}>
+        <div className="space-y-8">
+          <p className="text-dark-text-secondary leading-relaxed">
+            不同类型的任务需要采用不同的提示词设计策略，以下是主要应用场景的最佳实践。
+          </p>
+          
+          <DocGrid cols={4}>
+            {categories.map((category, index) => (
+              <DocCard 
+                key={index}
+                title={category.title}
+                description=""
+                icon={category.icon}
+                color={category.color}
+              >
+                <DocList 
+                  items={category.practices.map(practice => ({ 
+                    title: practice, 
+                    description: "" 
+                  }))}
+                  className="mt-4"
+                />
+              </DocCard>
+            ))}
+          </DocGrid>
+        </div>
+      </DocSection>
+
+      {/* 测试与优化 */}
+      <DocSection title="测试与优化" delay={0.5}>
+        <div className="space-y-8">
+          <p className="text-dark-text-secondary leading-relaxed">
+            持续测试和优化是提升提示词质量的关键环节，建立系统性的评估和改进流程。
+          </p>
+          
+          <DocGrid cols={3}>
+            <DocCard 
+              title="效果评估"
+              description="建立客观的评估标准"
+              icon={<ShieldCheckIcon className="h-6 w-6" />}
+              color="cyan"
+            >
+              <DocList 
+                items={[
+                  { title: "准确性评分", description: "回答的正确程度" },
+                  { title: "相关性评分", description: "与需求的匹配度" },
+                  { title: "完整性评分", description: "信息的全面性" },
+                  { title: "可用性评分", description: "实际应用价值" }
+                ]}
+                className="mt-4"
+              />
+            </DocCard>
             
-            <div className="space-y-6">
+            <DocCard 
+              title: "数据收集"
+              description="系统性收集使用数据"
+              icon={<CogIcon className="h-6 w-6" />}
+              color="purple"
+            >
+              <DocList 
+                items={[
+                  { title: "响应时间", description: "AI 处理速度" },
+                  { title: "用户满意度", description: "使用体验评价" },
+                  { title: "错误率统计", description: "失败案例分析" },
+                  { title: "改进建议", description: "用户反馈收集" }
+                ]}
+                className="mt-4"
+              />
+            </DocCard>
+            
+            <DocCard 
+              title="迭代改进"
+              description="基于数据进行优化"
+              icon={<RocketLaunchIcon className="h-6 w-6" />}
+              color="pink"
+            >
+              <DocList 
+                items={[
+                  { title: "版本对比", description: "A/B 测试分析" },
+                  { title: "增量改进", description: "小步快跑优化" },
+                  { title: "回归测试", description: "确保改进有效" },
+                  { title: "文档更新", description: "记录最佳配置" }
+                ]}
+                className="mt-4"
+              />
+            </DocCard>
+          </DocGrid>
+          
+          <DocHighlight type="info">
+            <h4 className="font-semibold mb-3">优化建议</h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
               <div>
-                <h3 className="text-lg font-medium text-gray-900">少样本学习的威力</h3>
-                <p className="mt-2 text-gray-600">
-                  通过在提示词中包含少量高质量的示例，可以显著提高模型的输出质量和一致性。这种技术被称为"少样本学习"(few-shot learning)，
-                  它向模型展示了你期望的输出格式和风格。
-                </p>
+                <h5 className="font-medium mb-2">短期优化</h5>
+                <ul className="space-y-1">
+                  <li>• 调整措辞和表达方式</li>
+                  <li>• 优化结构和组织方式</li>
+                  <li>• 补充关键上下文信息</li>
+                </ul>
               </div>
-              
               <div>
-                <h3 className="text-lg font-medium text-gray-900">有效示例的特点</h3>
-                <div className="mt-2 space-y-2">
-                  <div className="flex items-start">
-                    <div className="flex-shrink-0 h-5 w-5 text-green-500">✓</div>
-                    <p className="ml-2 text-gray-600">代表性：示例应该涵盖预期用例的典型场景</p>
-                  </div>
-                  <div className="flex items-start">
-                    <div className="flex-shrink-0 h-5 w-5 text-green-500">✓</div>
-                    <p className="ml-2 text-gray-600">多样性：提供不同类型的示例以涵盖各种可能的情况</p>
-                  </div>
-                  <div className="flex items-start">
-                    <div className="flex-shrink-0 h-5 w-5 text-green-500">✓</div>
-                    <p className="ml-2 text-gray-600">清晰性：示例应该清晰地显示输入和预期输出之间的关系</p>
-                  </div>
-                  <div className="flex items-start">
-                    <div className="flex-shrink-0 h-5 w-5 text-green-500">✓</div>
-                    <p className="ml-2 text-gray-600">格式一致：所有示例应遵循相同的格式和结构</p>
-                  </div>
-                </div>
-              </div>
-              
-              <div>
-                <h3 className="text-lg font-medium text-gray-900">示例实践</h3>
-                <div className="mt-3 bg-gray-50 rounded-lg p-4">
-                  <h4 className="text-sm font-medium text-gray-700">产品分类提示词示例:</h4>
-                  <pre className="mt-2 bg-gray-800 text-white p-3 rounded-md overflow-auto text-sm">
-                    <code>
-{`将给定的产品描述分类到最合适的类别中。使用以下类别之一：电子产品、服装、家居用品、健康与美容、玩具与游戏、食品与饮料。
-
-示例:
-
-输入: "Apple iPhone 13, 128GB, 5G智能手机，超视网膜XDR显示屏"
-输出: 电子产品
-
-输入: "100%纯棉T恤，圆领，短袖，适合日常穿着"
-输出: 服装
-
-输入: "有机红茶，20袋装，富含抗氧化剂"
-输出: 食品与饮料
-
-现在，请对以下产品进行分类:
-{{product_description}}`}
-                    </code>
-                  </pre>
-                </div>
+                <h5 className="font-medium mb-2">长期优化</h5>
+                <ul className="space-y-1">
+                  <li>• 建立标准化模板</li>
+                  <li>• 开发评估工具</li>
+                  <li>• 构建知识库</li>
+                </ul>
               </div>
             </div>
+          </DocHighlight>
+        </div>
+      </DocSection>
+
+      {/* 进阶学习 */}
+      <DocSection title="进阶学习" delay={0.6}>
+        <div className="space-y-6">
+          <p className="text-dark-text-secondary leading-relaxed">
+            掌握基础后，继续探索更多高级技巧和专业资源，提升提示词设计技能。
+          </p>
+          
+          <div className="flex flex-wrap gap-4">
+            <Link 
+              href="/docs/templates" 
+              className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-neon-cyan to-neon-purple text-white rounded-xl font-medium shadow-neon hover:shadow-neon-lg transition-all duration-300"
+            >
+              浏览模板库
+            </Link>
+            <Link 
+              href="/docs/examples-library" 
+              className="inline-flex items-center px-6 py-3 border border-neon-cyan text-neon-cyan rounded-xl font-medium hover:bg-neon-cyan/10 transition-all duration-300"
+            >
+              查看示例库
+            </Link>
+            <Link 
+              href="/community" 
+              className="inline-flex items-center px-6 py-3 border border-neon-purple text-neon-purple rounded-xl font-medium hover:bg-neon-purple/10 transition-all duration-300"
+            >
+              加入社区讨论
+            </Link>
           </div>
         </div>
-
-        {/* 提示词优化技巧 */}
-        <div className="bg-white shadow-sm rounded-lg overflow-hidden mb-8">
-          <div className="p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">提示词优化技巧</h2>
-            
-            <div className="space-y-6">
-              <div>
-                <h3 className="text-lg font-medium text-gray-900">迭代测试与改进</h3>
-                <p className="mt-2 text-gray-600">
-                  提示词工程是一个迭代过程。创建初始版本后，应该进行测试，分析结果，并基于性能不断改进提示词。
-                  MCP Prompt Server的性能追踪功能可以帮助你监控提示词的效果并发现优化机会。
-                </p>
-              </div>
-              
-              <div>
-                <h3 className="text-lg font-medium text-gray-900">常见优化策略</h3>
-                <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="bg-gray-50 p-4 rounded-lg">
-                    <h4 className="text-md font-medium text-gray-900">1. 增加具体性</h4>
-                    <p className="mt-1 text-sm text-gray-600">
-                      使用具体、明确的指令代替模糊的请求。指定预期输出的长度、格式、风格和详细程度。
-                    </p>
-                    <div className="mt-2">
-                      <span className="inline-block px-2 py-1 text-xs font-medium bg-red-100 text-red-800 rounded-md">× 避免</span>
-                      <p className="mt-1 text-sm text-gray-600">"写一篇关于气候变化的文章"</p>
-                    </div>
-                    <div className="mt-2">
-                      <span className="inline-block px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-md">✓ 推荐</span>
-                      <p className="mt-1 text-sm text-gray-600">"写一篇800字的科普文章，解释气候变化对海洋生态系统的三大影响，使用通俗易懂的语言面向高中生读者"</p>
-                    </div>
-                  </div>
-                  
-                  <div className="bg-gray-50 p-4 rounded-lg">
-                    <h4 className="text-md font-medium text-gray-900">2. 设置约束条件</h4>
-                    <p className="mt-1 text-sm text-gray-600">
-                      明确指出不应该包含的内容或需要避免的方向，这有助于模型更好地理解任务边界。
-                    </p>
-                    <div className="mt-2">
-                      <span className="inline-block px-2 py-1 text-xs font-medium bg-red-100 text-red-800 rounded-md">× 避免</span>
-                      <p className="mt-1 text-sm text-gray-600">"给我一个创业想法"</p>
-                    </div>
-                    <div className="mt-2">
-                      <span className="inline-block px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-md">✓ 推荐</span>
-                      <p className="mt-1 text-sm text-gray-600">"给我一个低成本启动的B2B SaaS创业想法。该想法应该解决远程工作团队面临的问题，不需要大量前期技术开发，并且有明确的变现路径。请避免已经饱和的市场，如项目管理或视频会议。"</p>
-                    </div>
-                  </div>
-                  
-                  <div className="bg-gray-50 p-4 rounded-lg">
-                    <h4 className="text-md font-medium text-gray-900">3. 使用"思考链"(Chain-of-Thought)</h4>
-                    <p className="mt-1 text-sm text-gray-600">
-                      引导模型一步步地思考问题，这对于复杂推理任务特别有效。
-                    </p>
-                    <div className="mt-2">
-                      <span className="inline-block px-2 py-1 text-xs font-medium bg-red-100 text-red-800 rounded-md">× 避免</span>
-                      <p className="mt-1 text-sm text-gray-600">"分析这家公司的财务状况"</p>
-                    </div>
-                    <div className="mt-2">
-                      <span className="inline-block px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-md">✓ 推荐</span>
-                      <p className="mt-1 text-sm text-gray-600">"分析这家公司的财务状况。请按以下步骤进行：1)先评估流动性比率，判断短期偿债能力；2)分析资产负债结构和长期偿债能力；3)评估盈利能力和收入增长趋势；4)最后，基于以上分析，给出对公司财务健康状况的综合评价。"</p>
-                    </div>
-                  </div>
-                  
-                  <div className="bg-gray-50 p-4 rounded-lg">
-                    <h4 className="text-md font-medium text-gray-900">4. 分解复杂任务</h4>
-                    <p className="mt-1 text-sm text-gray-600">
-                      将复杂任务分解为更小、更容易管理的子任务，这样模型可以更好地处理每个部分。
-                    </p>
-                    <div className="mt-2">
-                      <span className="inline-block px-2 py-1 text-xs font-medium bg-red-100 text-red-800 rounded-md">× 避免</span>
-                      <p className="mt-1 text-sm text-gray-600">"为我的电子商务网站创建一个完整的营销计划"</p>
-                    </div>
-                    <div className="mt-2">
-                      <span className="inline-block px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-md">✓ 推荐</span>
-                      <p className="mt-1 text-sm text-gray-600">"我需要为我的电子商务网站创建营销计划。让我们分步骤进行：首先，仅关注目标受众分析和客户画像。基于我销售的是&lbrace;&lbrace;product_type&rbrace;&rbrace;，请帮我确定2-3个关键客户群体及其特征。"</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              
-              <div>
-                <h3 className="text-lg font-medium text-gray-900">不同场景的优化提示</h3>
-                <div className="mt-4 space-y-4">
-                  <div className="bg-gray-50 p-4 rounded-lg">
-                    <h4 className="text-md font-medium text-gray-900">创意生成任务</h4>
-                    <p className="mt-1 text-sm text-gray-600">
-                      为创意任务提供一些限制和结构，但也要留出足够的空间让模型发挥创造力。指定风格、长度、主题等约束，同时明确创意的目标和受众。
-                    </p>
-                  </div>
-                  
-                  <div className="bg-gray-50 p-4 rounded-lg">
-                    <h4 className="text-md font-medium text-gray-900">数据分析任务</h4>
-                    <p className="mt-1 text-sm text-gray-600">
-                      清晰地定义要分析的数据格式，需要关注的指标，以及预期的分析深度。要求模型分步骤展示其分析过程，并明确最终结论应该回答的关键问题。
-                    </p>
-                  </div>
-                  
-                  <div className="bg-gray-50 p-4 rounded-lg">
-                    <h4 className="text-md font-medium text-gray-900">客户服务任务</h4>
-                    <p className="mt-1 text-sm text-gray-600">
-                      强调回答的语气和风格（如专业、友好、简洁等），并提供处理常见问题的标准流程。包含处理敏感情况或复杂问题时的升级策略。
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* 常见错误与解决方案 */}
-        <div className="bg-white shadow-sm rounded-lg overflow-hidden">
-          <div className="p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">常见错误与解决方案</h2>
-            
-            <div className="space-y-4">
-              <div className="border-l-4 border-red-400 pl-4 py-2">
-                <h3 className="text-md font-medium text-gray-900">过于模糊的指令</h3>
-                <p className="mt-1 text-sm text-gray-600">
-                  <span className="font-medium">问题：</span>模型不确定你想要什么，可能生成泛泛而谈或离题的回答。
-                </p>
-                <p className="mt-1 text-sm text-gray-600">
-                  <span className="font-medium">解决方案：</span>使用具体、明确的指令，指定所需输出的确切格式、内容和长度。
-                </p>
-              </div>
-              
-              <div className="border-l-4 border-red-400 pl-4 py-2">
-                <h3 className="text-md font-medium text-gray-900">过长或复杂的提示词</h3>
-                <p className="mt-1 text-sm text-gray-600">
-                  <span className="font-medium">问题：</span>模型可能无法处理所有信息，导致关键指令被忽略或回答不完整。
-                </p>
-                <p className="mt-1 text-sm text-gray-600">
-                  <span className="font-medium">解决方案：</span>分解为更小的任务，使用清晰的结构和格式化，突出关键指令。
-                </p>
-              </div>
-              
-              <div className="border-l-4 border-red-400 pl-4 py-2">
-                <h3 className="text-md font-medium text-gray-900">缺乏上下文</h3>
-                <p className="mt-1 text-sm text-gray-600">
-                  <span className="font-medium">问题：</span>模型没有足够的背景信息来生成准确、相关的回答。
-                </p>
-                <p className="mt-1 text-sm text-gray-600">
-                  <span className="font-medium">解决方案：</span>提供必要的背景信息和上下文，但要避免不相关的细节。
-                </p>
-              </div>
-              
-              <div className="border-l-4 border-red-400 pl-4 py-2">
-                <h3 className="text-md font-medium text-gray-900">变量使用不当</h3>
-                <p className="mt-1 text-sm text-gray-600">
-                  <span className="font-medium">问题：</span>模板变量定义不清或缺少默认值，导致使用时出错。
-                </p>
-                <p className="mt-1 text-sm text-gray-600">
-                  <span className="font-medium">解决方案：</span>明确定义所有变量，提供清晰的描述和示例值，必要时设置默认值。
-                </p>
-              </div>
-            </div>
-
-            <div className="mt-8 p-4 bg-blue-50 rounded-lg">
-              <h3 className="text-md font-medium text-blue-900 mb-2">提示词测试清单</h3>
-              <p className="text-sm text-blue-800 mb-3">
-                在将提示词添加到生产环境之前，请确保检查以下几点：
-              </p>
-              <ul className="list-disc pl-5 space-y-1 text-sm text-blue-800">
-                <li>提示词是否清晰说明了模型的角色和任务？</li>
-                <li>是否包含了足够具体的指令？</li>
-                <li>变量是否已明确定义并有示例？</li>
-                <li>是否测试了多种输入场景？</li>
-                <li>提示词是否过于冗长或复杂？</li>
-                <li>是否有不必要的重复或冗余信息？</li>
-                <li>是否包含了足够的示例（少样本学习）？</li>
-                <li>是否为模型提供了评估或改进其回答的方法？</li>
-              </ul>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+      </DocSection>
+    </DocLayout>
   );
 };
 
