@@ -180,7 +180,7 @@ const ExamplesLibraryPage: React.FC = () => {
     {
       title: "客户服务",
       icon: <ChatBubbleLeftRightIcon className="h-6 w-6" />,
-      color: "orange" as const,
+      color: "purple" as const,
       count: 12,
       description: "客户支持、问题解答、服务咨询"
     }

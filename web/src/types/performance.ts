@@ -9,28 +9,32 @@ export interface QualityDimension {
 
 // 提示词质量评价结果
 export interface PromptQualityAnalysis {
-  promptId: string;
-  overallScore: number; // 总体质量分数 0-100
-  level: 'excellent' | 'good' | 'fair' | 'poor'; // 质量等级
+  overallScore: number;
+  level: 'excellent' | 'good' | 'fair' | 'poor';
   dimensions: {
-    clarity: QualityDimension; // 清晰度
-    completeness: QualityDimension; // 完整性
-    professionalism: QualityDimension; // 专业性
-    actionability: QualityDimension; // 可操作性
-    creativity: QualityDimension; // 创新性
-    universality: QualityDimension; // 通用性
-    safety: QualityDimension; // 安全性
+    [key: string]: {
+      name: string;
+      score: number;
+      description: string;
+    };
   };
-  strengths: string[]; // 优势
-  weaknesses: string[]; // 劣势
-  recommendations: string[]; // 改进建议
+  strengths: string[];
+  weaknesses: string[];
+  recommendations: string[];
   comparisonWithCategory: {
-    categoryAverage: number;
     ranking: number;
     totalInCategory: number;
+    percentile: number;
   };
-  lastAnalyzed: string;
-  analysisVersion: string;
+  historicalData?: {
+    date: string;
+    score: number;
+  }[];
+  metadata: {
+    analysisDate: string;
+    modelVersion: string;
+    confidence: number;
+  };
 }
 
 // 批量质量分析结果
@@ -70,4 +74,61 @@ export interface QualityAnalysisConfig {
     fair: number;
   };
   analysisMode: 'comprehensive' | 'quick' | 'expert';
+}
+
+export interface PerformanceMetrics {
+  responseTime: number;
+  accuracy: number;
+  relevance: number;
+  coherence: number;
+  creativity: number;
+  safety: number;
+}
+
+export interface PerformanceTrend {
+  date: string;
+  metrics: PerformanceMetrics;
+  userFeedback?: number;
+  category?: string;
+}
+
+export interface QualityInsight {
+  type: 'strength' | 'weakness' | 'suggestion' | 'warning';
+  title: string;
+  description: string;
+  priority: 'high' | 'medium' | 'low';
+  actionable: boolean;
+  category: string;
+}
+
+export interface PerformanceComparison {
+  current: PromptQualityAnalysis;
+  baseline: PromptQualityAnalysis;
+  improvement: {
+    [key: string]: {
+      change: number;
+      direction: 'up' | 'down' | 'stable';
+      significance: 'high' | 'medium' | 'low';
+    };
+  };
+}
+
+export interface CategoryBenchmark {
+  category: string;
+  averageScore: number;
+  topPercentileScore: number;
+  sampleSize: number;
+  lastUpdated: string;
+}
+
+export interface UserPerformanceProfile {
+  userId: string;
+  overallRating: number;
+  specialties: string[];
+  weakAreas: string[];
+  improvementTrend: 'improving' | 'stable' | 'declining';
+  totalPrompts: number;
+  averageQuality: number;
+  bestCategory: string;
+  joinDate: string;
 } 

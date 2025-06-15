@@ -28,6 +28,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { ModelSelector } from '@/components/ModelSelector';
 import { formatVersionDisplay } from '@/lib/version-utils';
 import { withAuth } from '@/contexts/AuthContext';
+import SmartWritingAssistant from '@/components/SmartWritingAssistant';
 
 // 扩展类型，添加messages字段和其他数据库中的字段
 type PromptFormData = Omit<PromptDetails, 'created_at' | 'updated_at'> & {
@@ -61,6 +62,9 @@ function CreatePromptPage() {
 
   // 添加实时内容监听状态
   const [currentContent, setCurrentContent] = useState('');
+  
+  // 移动端智能助手显示状态
+  const [showMobileAssistant, setShowMobileAssistant] = useState(false);
 
   // 智能分类映射函数 - 改进安全性，与编辑页面保持一致
   function matchCategory(aiCategory: string, availableCategories: string[]): string | null {
@@ -409,13 +413,61 @@ function CreatePromptPage() {
             </motion.p>
           </motion.div>
           
-          {/* 表单容器 */}
+          {/* 移动端智能助手（可折叠） */}
           <motion.div
-            initial={{ opacity: 0, y: 30 }}
+            initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.6 }}
-            className="glass rounded-3xl border border-neon-cyan/20 shadow-2xl p-8"
+            transition={{ duration: 0.6, delay: 0.4 }}
+            className="xl:hidden mb-6"
           >
+            <button
+              onClick={() => setShowMobileAssistant(!showMobileAssistant)}
+              className="w-full flex items-center justify-between p-4 glass rounded-2xl border border-neon-purple/20 hover:border-neon-purple/40 transition-all"
+            >
+              <div className="flex items-center gap-3">
+                <SparklesIcon className="h-6 w-6 text-neon-purple" />
+                <span className="text-white font-semibold">智能写作助手</span>
+              </div>
+              <ChevronLeftIcon 
+                className={`h-5 w-5 text-gray-400 transition-transform ${
+                  showMobileAssistant ? 'rotate-90' : '-rotate-90'
+                }`} 
+              />
+            </button>
+            
+            <AnimatePresence>
+              {showMobileAssistant && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="mt-4 glass rounded-2xl border border-neon-purple/20 p-4"
+                >
+                  <SmartWritingAssistant
+                    content={currentContent || watch('content') || ''}
+                    onContentChange={(newContent) => {
+                      setValue('content', newContent);
+                      setCurrentContent(newContent);
+                    }}
+                    onAnalysisComplete={handleAIAnalysis}
+                    category={watch('category')}
+                    tags={tags}
+                    className="max-h-96 overflow-y-auto"
+                  />
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </motion.div>
+
+          {/* 双栏布局容器 */}
+          <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+            {/* 主表单区域 */}
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.6 }}
+              className="xl:col-span-2 glass rounded-3xl border border-neon-cyan/20 shadow-2xl p-8"
+            >
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
               {/* 提示词内容 - 移到最上面突出显示 */}
               <motion.div
@@ -895,6 +947,27 @@ function CreatePromptPage() {
               </motion.div>
             </form>
           </motion.div>
+          
+          {/* 智能写作助手侧边栏 */}
+          <motion.div
+            initial={{ opacity: 0, x: 30 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.8, delay: 0.8 }}
+            className="hidden xl:block glass rounded-3xl border border-neon-purple/20 shadow-2xl p-6"
+          >
+            <SmartWritingAssistant
+              content={currentContent || watch('content') || ''}
+              onContentChange={(newContent) => {
+                setValue('content', newContent);
+                setCurrentContent(newContent);
+              }}
+              onAnalysisComplete={handleAIAnalysis}
+              category={watch('category')}
+              tags={tags}
+              className="h-full"
+            />
+          </motion.div>
+        </div>
         </div>
       </div>
     </div>

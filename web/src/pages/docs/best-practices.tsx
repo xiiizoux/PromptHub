@@ -246,7 +246,7 @@ const BestPracticesPage: React.FC = () => {
                 key={index}
                 title={pattern.title}
                 description={pattern.description}
-                color={index % 2 === 0 ? 'red' : 'orange'}
+                color={index % 2 === 0 ? 'cyan' : 'purple'}
               >
                 <div className="mt-4 space-y-3">
                   <div className="bg-red-900/20 border border-red-500/30 rounded-lg p-3">
@@ -319,7 +319,7 @@ const BestPracticesPage: React.FC = () => {
             </DocCard>
             
             <DocCard 
-              title: "数据收集"
+              title="数据收集"
               description="系统性收集使用数据"
               icon={<CogIcon className="h-6 w-6" />}
               color="purple"

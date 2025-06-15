@@ -3,7 +3,7 @@ import { supabase } from '@/lib/supabase';
 import { User } from '@/types';
 
 // 定义认证上下文的类型
-interface AuthContextType {
+export interface AuthContextType {
   user: User | null;
   isLoading: boolean;
   loading: boolean; // 添加loading属性作为isLoading的别名
@@ -16,6 +16,7 @@ interface AuthContextType {
   getToken: () => Promise<string | null>; // 获取当前用户的访问令牌
   checkAuth: () => Promise<boolean>;
   isAuthenticated: boolean;
+  updateProfile: (data: Partial<User>) => Promise<void>;
 }
 
 // 创建认证上下文
@@ -625,7 +626,46 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     signOut: logout, // 添加别名，与logout相同
     getToken,
     checkAuth,
-    isAuthenticated
+    isAuthenticated,
+    updateProfile: async (data: Partial<User>) => {
+      if (!mounted.current) return;
+      
+      setIsLoading(true);
+      setError(null);
+      
+      try {
+        // 更新用户数据
+        const updatedUser = { ...user, ...data };
+        
+        // 更新Supabase
+        const { data: supaData, error: supaError } = await supabase
+          .from('users')
+          .update(updatedUser)
+          .eq('id', updatedUser.id);
+        
+        if (supaError) {
+          throw supaError;
+        }
+        
+        // 更新本地状态
+        if (mounted.current) {
+          setUser(updatedUser);
+          setIsAuthenticated(true);
+          setError(null);
+        }
+      } catch (err: any) {
+        console.error('更新用户信息失败:', err);
+        const errorMessage = err.message || '更新用户信息失败，请稍后再试';
+        if (mounted.current) {
+          setError(errorMessage);
+        }
+        throw new Error(errorMessage);
+      } finally {
+        if (mounted.current) {
+          setIsLoading(false);
+        }
+      }
+    }
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

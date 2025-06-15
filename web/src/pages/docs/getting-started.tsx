@@ -8,7 +8,7 @@ import { DocSection, DocGrid, DocCard, DocCodeBlock, DocList, DocHighlight } fro
 const GettingStartedPage: React.FC = () => {
   const quickStartItems = [
     {
-      title: "点击"创建提示词"按钮",
+      title: "点击「创建提示词」按钮",
       description: "开始创建您的第一个提示词"
     },
     {
@@ -28,7 +28,7 @@ const GettingStartedPage: React.FC = () => {
       description: "选择适合的AI模型"
     },
     {
-      title: "点击"保存"完成创建",
+      title: "点击「保存」完成创建",
       description: "提示词即可使用"
     }
   ];
