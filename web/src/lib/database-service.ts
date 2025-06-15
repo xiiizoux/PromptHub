@@ -483,10 +483,7 @@ export class DatabaseService {
     try {
       let query = this.adapter.supabase
         .from('prompt_templates')
-        .select(`
-          *,
-          template_categories!inner(name, display_name, icon, color)
-        `)
+        .select('*')
         .eq('is_active', filters?.is_active ?? true);
 
       if (filters?.category) {
@@ -538,10 +535,7 @@ export class DatabaseService {
     try {
       const { data, error } = await this.adapter.supabase
         .from('prompt_templates')
-        .select(`
-          *,
-          template_categories!inner(name, display_name, icon, color)
-        `)
+        .select('*')
         .eq('id', id)
         .eq('is_active', true)
         .single();
@@ -662,13 +656,7 @@ export class DatabaseService {
       is_premium: data.is_premium || false,
       is_official: data.is_official || false,
       created_at: data.created_at,
-      updated_at: data.updated_at,
-      category_info: data.template_categories ? {
-        name: data.template_categories.name,
-        display_name: data.template_categories.display_name,
-        icon: data.template_categories.icon,
-        color: data.template_categories.color
-      } : undefined
+      updated_at: data.updated_at
     };
   }
 
