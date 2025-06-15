@@ -1,5 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
+import { ProtectedLink } from '@/components/ProtectedLink';
 import { ChevronLeftIcon, SparklesIcon, ChatBubbleLeftRightIcon, DocumentDuplicateIcon, CodeBracketIcon } from '@heroicons/react/24/outline';
 
 const ExamplesLibraryPage: React.FC = () => {
