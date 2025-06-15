@@ -239,20 +239,17 @@ export const AIAnalysisResultDisplay: React.FC<AIAnalysisResultDisplayProps> = (
 
   const applyAllResults = () => {
     if (onApplyResults) {
-      // 添加确认对话框
-      const confirmMessage = "确定要应用全部AI分析结果吗？这将会替换当前表单中的相关字段内容。";
-      if (window.confirm(confirmMessage)) {
-        onApplyResults({
-          category: result.category,
-          tags: result.tags,
-          version: result.version,
-          variables: result.variables,
-          compatibleModels: result.compatibleModels,
-          suggestedTitle: result.suggestedTitle,
-          description: result.description
-        });
-        setAppliedFields(new Set(['category', 'tags', 'version', 'variables', 'compatibleModels', 'suggestedTitle', 'description']));
-      }
+      // 直接应用全部结果，不显示确认对话框
+      onApplyResults({
+        category: result.category,
+        tags: result.tags,
+        version: result.version,
+        variables: result.variables,
+        compatibleModels: result.compatibleModels,
+        suggestedTitle: result.suggestedTitle,
+        description: result.description
+      });
+      setAppliedFields(new Set(['category', 'tags', 'version', 'variables', 'compatibleModels', 'suggestedTitle', 'description']));
     }
   };
 

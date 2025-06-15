@@ -479,7 +479,15 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
     return null;
   }
 
-  // AI分析处理函数 - 增强版，支持增量分析和智能版本管理
+  // 为AI分析按钮提供配置（保持与创建页面一致的结构）
+  const getAIAnalysisConfig = () => {
+    return {
+      isNewPrompt: false, // 编辑页面不是新提示词
+      existingVersions: [], // 不再使用版本比较
+      currentVersion: undefined // 不再使用当前版本比较
+    };
+  };
+
   const handleAIAnalysis = (result: Partial<AIAnalysisResult>) => {
     console.log('收到AI分析结果:', result);
     
@@ -496,127 +504,58 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
         }
       }
       
-      // 智能版本号建议 - 基于内容变化程度
+      // 简化版本建议 - 默认+0.1
       const currentVersion = watch('version') || safePromptData.version || 1.0;
-      const originalContent = safePromptData.content || '';
-      const newContent = currentContent || '';
-      
-      // 计算内容变化程度
-      const contentChangeRatio = calculateContentChangeRatio(originalContent, newContent);
-      let suggestedVersion = currentVersion;
-      
-      if (contentChangeRatio > 0.6) {
-        // 重大变化：版本号增加1.0
-        suggestedVersion = Math.floor(currentVersion) + 1.0;
-      } else if (contentChangeRatio > 0.3) {
-        // 中等变化：版本号增加0.5
-        suggestedVersion = Math.floor(currentVersion) + 0.5;
-      } else if (contentChangeRatio > 0.1) {
-        // 轻微变化：版本号增加0.1
-        suggestedVersion = Math.round((currentVersion + 0.1) * 10) / 10;
+      if (!result.version) {
+        const suggestedVersion = Math.round((currentVersion + 0.1) * 10) / 10;
+        result.version = suggestedVersion.toString();
+        console.log(`版本建议: ${currentVersion} -> ${suggestedVersion}`);
       }
-      // 如果变化很小（<0.1），保持原版本号
-      
-      result.version = suggestedVersion.toString();
-      
-      console.log('智能版本分析:', {
-        原版本: currentVersion,
-        内容变化比: contentChangeRatio,
-        建议版本: suggestedVersion,
-        变化程度: contentChangeRatio > 0.6 ? '重大' : contentChangeRatio > 0.3 ? '中等' : contentChangeRatio > 0.1 ? '轻微' : '微小'
-      });
       
       setAiAnalysisResult(result as AIAnalysisResult);
       setShowAiAnalysis(true);
     }
   };
 
-  // 计算内容变化比例的辅助函数
-  const calculateContentChangeRatio = (originalContent: string, newContent: string): number => {
-    if (!originalContent && !newContent) return 0;
-    if (!originalContent) return 1;
-    if (!newContent) return 1;
-    
-    // 简单的字符差异比较
-    const maxLength = Math.max(originalContent.length, newContent.length);
-    const minLength = Math.min(originalContent.length, newContent.length);
-    
-    // 计算共同字符数
-    let commonChars = 0;
-    const shorter = originalContent.length < newContent.length ? originalContent : newContent;
-    const longer = originalContent.length >= newContent.length ? originalContent : newContent;
-    
-    for (let i = 0; i < shorter.length; i++) {
-      if (shorter[i] === longer[i]) {
-        commonChars++;
-      }
-    }
-    
-    // 计算变化比例
-    const changeRatio = 1 - (commonChars / maxLength);
-    return Math.min(1, Math.max(0, changeRatio));
-  };
 
-  // 应用AI分析结果 - 增强版，支持智能合并现有参数
+
+  // 应用AI分析结果 - 与创建页面保持一致
   const applyAIResults = (data: Partial<AIAnalysisResult>) => {
     console.log('应用AI分析结果:', data);
     
-    // 获取当前表单值用于智能合并
+    // 获取当前表单值用于记录
     const currentValues = watch();
-    const originalContent = safePromptData.content || '';
-    const newContent = currentContent || '';
-    const contentChangeRatio = calculateContentChangeRatio(originalContent, newContent);
     
-    console.log('智能合并分析:', {
-      内容变化比: contentChangeRatio,
+    console.log('AI分析应用:', {
       当前分类: currentValues.category,
       AI建议分类: data.category,
       当前标签: tags,
       AI建议标签: data.tags
     });
 
-    // 智能分类建议 - 基于内容性质判断，而非变化程度
+    // 智能分类建议 - 直接应用，不显示建议提示
     if (data.category) {
       const mapped = matchCategory(data.category, categories);
-      if (mapped && mapped !== currentValues.category) {
-        // 显示分类建议，让用户决定是否应用
-        const confidenceLevel = contentChangeRatio > 0.6 ? '高' : contentChangeRatio > 0.3 ? '中' : '低';
-        setCategorySuggestion({
-          suggested: mapped,
-          current: currentValues.category || '未知',
-          confidence: confidenceLevel
-        });
-        console.log(`AI分类建议: ${currentValues.category} -> ${mapped} (置信度: ${confidenceLevel})`);
-      } else if (mapped === currentValues.category) {
-        // 清除建议，AI确认当前分类合适
+      if (mapped) {
+        setValue('category', mapped);
+        setHasUnsavedChanges(true);
+        console.log(`AI分类应用: ${currentValues.category} -> ${mapped}`);
+        // 清除任何分类建议
         setCategorySuggestion(null);
-        console.log(`分类验证: AI确认当前分类"${currentValues.category}"是合适的`);
       }
     }
     
-    // 智能应用标签 - 合并现有标签和新建议标签
+    // 智能应用标签 - 直接应用AI建议的标签
     if (data.tags && Array.isArray(data.tags)) {
-      let finalTags = [...tags]; // 保留现有标签
-      
-      if (contentChangeRatio > 0.3) {
-        // 内容有较大变化时，合并新标签
-        const newTags = data.tags.filter(tag => !finalTags.includes(tag));
-        finalTags = [...finalTags, ...newTags];
-      } else {
-        // 内容变化较小时，只添加相关性很高的标签
-        const relevantTags = data.tags.filter(tag => 
-          !finalTags.includes(tag) && 
-          (tag.includes('优化') || tag.includes('改进') || tag.includes('增强'))
-        );
-        finalTags = [...finalTags, ...relevantTags];
-      }
-      
-      if (finalTags.length !== tags.length) {
-        setTags(finalTags);
-        setValue('tags', finalTags);
-        setHasUnsavedChanges(true);
-        console.log(`标签合并: ${tags.length} -> ${finalTags.length}个标签`);
-      }
+      setTags(data.tags);
+      setValue('tags', data.tags);
+      setHasUnsavedChanges(true);
+      console.log(`AI标签应用: ${tags.length} -> ${data.tags.length}个标签`);
+      console.log('标签详情:', { 
+        原有: tags, 
+        AI建议: data.tags, 
+        最终应用: data.tags 
+      });
     }
     
     // 应用版本 - 使用智能建议的版本号
@@ -630,57 +569,45 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
       console.log(`版本更新: ${currentValues.version} -> ${versionNum}`);
     }
     
-    // 智能应用变量 - 合并现有变量和新检测变量
+    // 智能应用变量 - 直接应用AI建议的变量
     if (data.variables && Array.isArray(data.variables)) {
-      const mergedVariables = Array.from(new Set([...variables, ...data.variables]));
-      if (mergedVariables.length !== variables.length) {
-        setVariables(mergedVariables);
-        setValue('input_variables', mergedVariables);
-        setHasUnsavedChanges(true);
-        console.log(`变量合并: ${variables.length} -> ${mergedVariables.length}个变量`);
-      }
+      setVariables(data.variables);
+      setValue('input_variables', data.variables);
+      setHasUnsavedChanges(true);
+      console.log(`AI变量应用: ${variables.length} -> ${data.variables.length}个变量`);
+      console.log('变量详情:', { 
+        原有: variables, 
+        AI建议: data.variables, 
+        最终应用: data.variables 
+      });
     }
     
-    // 智能应用兼容模型 - 仅在内容有较大变化时才更改模型兼容性
-    if (data.compatibleModels && Array.isArray(data.compatibleModels) && contentChangeRatio > 0.4) {
-      // 合并现有模型和新建议模型
-      const mergedModels = Array.from(new Set([...models, ...data.compatibleModels]));
-      if (mergedModels.length !== models.length) {
-        setModels(mergedModels);
-        setValue('compatible_models', mergedModels);
-        setHasUnsavedChanges(true);
-        console.log(`兼容模型合并: ${models.length} -> ${mergedModels.length}个模型`);
-        console.log('兼容模型详情:', { 
-          原有: models, 
-          AI建议: data.compatibleModels, 
-          合并后: mergedModels 
-        });
-      }
+    // 智能应用兼容模型 - 直接应用AI建议的模型
+    if (data.compatibleModels && Array.isArray(data.compatibleModels)) {
+      // 使用AI建议的模型列表，而不是合并
+      setModels(data.compatibleModels);
+      setValue('compatible_models', data.compatibleModels);
+      setHasUnsavedChanges(true);
+      console.log(`兼容模型应用: ${models.length} -> ${data.compatibleModels.length}个模型`);
+      console.log('兼容模型详情:', { 
+        原有: models, 
+        AI建议: data.compatibleModels, 
+        最终应用: data.compatibleModels 
+      });
     }
 
-    // 应用建议标题 - 仅在标题为空或内容有重大变化时
-    if (data.suggestedTitle && (!currentValues.name || contentChangeRatio > 0.5)) {
+    // 应用建议标题 - 直接应用AI建议的标题
+    if (data.suggestedTitle) {
       setValue('name', data.suggestedTitle);
       setHasUnsavedChanges(true);
-      console.log(`标题更新: ${currentValues.name} -> ${data.suggestedTitle}`);
+      console.log(`AI标题应用: ${currentValues.name} -> ${data.suggestedTitle}`);
     }
 
-    // 智能应用描述 - 基于内容变化程度和现有描述情况
+    // 应用建议描述 - 直接应用AI建议的描述
     if (data.description) {
-      if (!currentValues.description) {
-        // 如果原本没有描述，直接应用
-        setValue('description', data.description);
-        setHasUnsavedChanges(true);
-        console.log(`描述新增: ${data.description.substring(0, 50)}...`);
-      } else if (contentChangeRatio > 0.3) {
-        // 内容有较大变化时，更新描述
-        setValue('description', data.description);
-        setHasUnsavedChanges(true);
-        console.log(`描述更新 (变化${(contentChangeRatio * 100).toFixed(1)}%): ${currentValues.description.substring(0, 30)}... -> ${data.description.substring(0, 30)}...`);
-      } else {
-        // 变化较小时，保持原描述
-        console.log(`描述保持: 内容变化较小(${(contentChangeRatio * 100).toFixed(1)}%)，保持原描述`);
-      }
+      setValue('description', data.description);
+      setHasUnsavedChanges(true);
+      console.log(`AI描述应用: ${data.description.substring(0, 50)}...`);
     }
   };
 
@@ -980,13 +907,6 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
                         handleAIAnalysis(result);
                       }}
                       variant="full"
-                      currentVersion={watch('version')?.toString() || safePromptData.version?.toString()}
-                      isNewPrompt={false}
-                      existingVersions={[safePromptData.version?.toString() || '1.0']}
-                      originalContent={safePromptData.content}
-                      existingCategory={watch('category') || safePromptData.category}
-                      existingTags={tags}
-                      existingModels={models}
                     />
                   </div>
                 </div>

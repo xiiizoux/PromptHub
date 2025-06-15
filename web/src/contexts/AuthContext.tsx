@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { User } from '@/types';
 
@@ -27,26 +27,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const mounted = useRef(true);
+  const authInitialized = useRef(false);
 
   // 初始化时检查认证状态
   useEffect(() => {
-    let mounted = true;
+    let authSubscription: any = null;
     
     const initAuth = async () => {
       try {
         // 只在客户端执行认证检查
-        if (typeof window !== 'undefined' && mounted) {
+        if (typeof window !== 'undefined' && mounted.current && !authInitialized.current) {
           console.log('初始化认证状态检查...');
-          // 添加延迟确保DOM完全加载
-          setTimeout(async () => {
-            if (mounted) {
-              await checkAuth();
-            }
-          }, 100);
+          authInitialized.current = true;
+          
+          // 立即检查当前认证状态，不延迟
+          await checkAuth();
           
           // 监听认证状态变化
           const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event: any, session: any) => {
-            if (!mounted) return;
+            if (!mounted.current) return;
             
             console.log('认证状态变化:', { event, hasSession: !!session, userId: session?.user?.id });
             
@@ -60,9 +60,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 }
               } else if (event === 'SIGNED_OUT') {
                 console.log('处理登出事件');
-                if (mounted) {
+                if (mounted.current) {
                   setUser(null);
                   setIsAuthenticated(false);
+                  setError(null);
+                  
+                  // 清除可能存在的错误token
+                  try {
+                    localStorage.removeItem('prompthub-auth-token');
+                  } catch (e) {
+                    console.warn('清除localStorage失败:', e);
+                  }
                 }
               } else if (event === 'USER_UPDATED') {
                 console.log('用户信息更新事件');
@@ -72,30 +80,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               }
             } catch (err) {
               console.error('处理认证状态变化时出错:', err);
-              // 不要在错误时清除认证状态，除非确实是登出事件
-              if (event === 'SIGNED_OUT') {
+              // 只在登出事件时清除认证状态
+              if (event === 'SIGNED_OUT' && mounted.current) {
                 setUser(null);
                 setIsAuthenticated(false);
+                setError(null);
               }
             }
           });
 
-          return () => {
-            mounted = false;
-            subscription.unsubscribe();
-          };
+          authSubscription = subscription;
         } else {
-          console.log('服务器端，跳过认证初始化');
+          console.log('服务器端或已初始化，跳过认证初始化');
         }
       } catch (error) {
         console.error('认证初始化失败:', error);
-        if (mounted) {
+        if (mounted.current) {
           setUser(null);
           setIsAuthenticated(false);
+          setError('认证初始化失败');
         }
       } finally {
         // 确保loading状态被设置为false
-        if (mounted) {
+        if (mounted.current) {
           setIsLoading(false);
         }
       }
@@ -104,12 +111,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     initAuth();
     
     return () => {
-      mounted = false;
+      mounted.current = false;
+      if (authSubscription) {
+        authSubscription.unsubscribe();
+      }
     };
   }, []);
 
   // 确保用户数据在数据库中
   const ensureUserInDatabase = async (authUser: any) => {
+    if (!mounted.current) return;
+    
     try {
       // 检查用户是否已存在于users表
       const { data: existingUser, error: fetchError } = await supabase
@@ -165,8 +177,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         created_at: finalUserData.created_at || new Date().toISOString()
       };
 
-      setUser(appUser);
-      setIsAuthenticated(true);
+      if (mounted.current) {
+        setUser(appUser);
+        setIsAuthenticated(true);
+        setError(null);
+      }
     } catch (err) {
       console.error('确保用户数据同步失败:', err);
     }
@@ -183,32 +198,83 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return false;
       }
       
-      // 获取当前会话状态
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      // 获取当前会话状态，添加超时处理
+      const sessionPromise = supabase.auth.getSession();
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('会话检查超时')), 10000)
+      );
+      
+      const { data: { session }, error: sessionError } = await Promise.race([
+        sessionPromise,
+        timeoutPromise
+      ]) as any;
       
       if (sessionError) {
         console.error('获取会话失败:', sessionError);
-        setUser(null);
-        setIsAuthenticated(false);
+        if (mounted.current) {
+          setUser(null);
+          setIsAuthenticated(false);
+        }
         return false;
       }
       
       if (!session || !session.user) {
         console.log('无有效会话或用户');
-        setUser(null);
-        setIsAuthenticated(false);
+        if (mounted.current) {
+          setUser(null);
+          setIsAuthenticated(false);
+        }
         return false;
       }
       
       console.log('找到会话，用户ID:', session.user.id);
       
-      // 获取用户信息
-      const { data: { user: supaUser }, error: userError } = await supabase.auth.getUser();
+      // 检查会话是否过期
+      const now = Math.floor(Date.now() / 1000);
+      if (session.expires_at && session.expires_at < now) {
+        console.log('会话已过期，尝试刷新...');
+        
+        try {
+          const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
+          
+          if (refreshError || !refreshData.session) {
+            console.error('刷新会话失败:', refreshError);
+            if (mounted.current) {
+              setUser(null);
+              setIsAuthenticated(false);
+            }
+            return false;
+          }
+          
+          console.log('会话刷新成功');
+          // 使用刷新后的会话继续
+        } catch (refreshErr) {
+          console.error('刷新会话异常:', refreshErr);
+          if (mounted.current) {
+            setUser(null);
+            setIsAuthenticated(false);
+          }
+          return false;
+        }
+      }
+      
+      // 获取用户信息，添加超时处理
+      const userPromise = supabase.auth.getUser();
+      const userTimeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('用户信息获取超时')), 5000)
+      );
+      
+      const { data: { user: supaUser }, error: userError } = await Promise.race([
+        userPromise,
+        userTimeoutPromise
+      ]) as any;
       
       if (userError || !supaUser) {
         console.error('获取用户信息失败:', userError);
-        setUser(null);
-        setIsAuthenticated(false);
+        if (mounted.current) {
+          setUser(null);
+          setIsAuthenticated(false);
+        }
         return false;
       }
       
@@ -258,19 +324,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       };
       
       console.log('设置用户状态:', appUser);
-      setUser(appUser);
-      setIsAuthenticated(true);
+      if (mounted.current) {
+        setUser(appUser);
+        setIsAuthenticated(true);
+        setError(null);
+      }
       return true;
     } catch (err: any) {
       console.error('认证检查失败:', err);
-      setUser(null);
-      setIsAuthenticated(false);
+      if (mounted.current) {
+        setUser(null);
+        setIsAuthenticated(false);
+        if (err.message.includes('超时')) {
+          setError('网络连接超时，请检查网络后重试');
+        }
+      }
       return false;
     }
   };
 
   // 登录
   const login = async (email: string, password: string, remember = false): Promise<void> => {
+    if (!mounted.current) return;
+    
     setIsLoading(true);
     setError(null);
     
@@ -285,38 +361,34 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         throw error;
       }
       
-      if (data.user) {
-        // 从数据库获取完整的用户信息
-        const { data: userData, error: userError } = await supabase
-          .from('users')
-          .select('*')
-          .eq('id', data.user.id)
-          .single();
+      if (data.user && data.session) {
+        console.log('登录成功，用户ID:', data.user.id);
         
-        const appUser: User = {
-          id: data.user.id,
-          username: userData?.display_name || data.user.email?.split('@')[0] || '',
-          email: data.user.email || '',
-          role: userData?.role || 'user',
-          created_at: data.user.created_at || new Date().toISOString()
-        };
+        // 等待用户数据同步完成
+        await ensureUserInDatabase(data.user);
         
-        setUser(appUser);
-        setIsAuthenticated(true);
+        console.log('登录流程完成');
       } else {
-        throw new Error('登录失败：未能获取用户信息');
+        throw new Error('登录失败：未能获取用户信息或会话');
       }
     } catch (err: any) {
       console.error('登录失败:', err);
-      setError(err.message || '登录失败，请检查您的凭据');
-      throw err;
+      const errorMessage = err.message || '登录失败，请检查您的凭据';
+      if (mounted.current) {
+        setError(errorMessage);
+      }
+      throw new Error(errorMessage);
     } finally {
-      setIsLoading(false);
+      if (mounted.current) {
+        setIsLoading(false);
+      }
     }
   };
 
   // 注册
   const register = async (username: string, email: string, password: string): Promise<void> => {
+    if (!mounted.current) return;
+    
     setIsLoading(true);
     setError(null);
     
@@ -328,7 +400,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         options: {
           data: {
             username,
-            full_name: username
+            full_name: username,
+            display_name: username
           }
         }
       });
@@ -347,30 +420,39 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               email: email,
               display_name: username,
               role: 'user',
-              created_at: data.user.created_at
+              created_at: data.user.created_at || new Date().toISOString()
             });
             
           if (insertError && insertError.code !== '23505') { // 23505 是重复键错误
             console.error('创建用户记录失败:', insertError);
+          } else {
+            console.log('用户记录创建成功');
           }
         } catch (insertErr) {
           console.error('插入用户数据时出错:', insertErr);
         }
       }
       
-      // 注册成功，但可能需要邮箱验证
+      console.log('注册成功，等待邮箱验证');
       return;
     } catch (err: any) {
       console.error('注册失败:', err);
-      setError(err.message || '注册失败，请稍后再试');
-      throw err;
+      const errorMessage = err.message || '注册失败，请稍后再试';
+      if (mounted.current) {
+        setError(errorMessage);
+      }
+      throw new Error(errorMessage);
     } finally {
-      setIsLoading(false);
+      if (mounted.current) {
+        setIsLoading(false);
+      }
     }
   };
 
   // Google OAuth登录
   const loginWithGoogle = async (): Promise<void> => {
+    if (!mounted.current) return;
+    
     setIsLoading(true);
     setError(null);
     
@@ -391,52 +473,83 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         throw error;
       }
       
+      console.log('Google OAuth重定向已启动');
       // OAuth重定向会自动处理，所以这里不需要进一步处理
       // 用户数据同步将在onAuthStateChange回调中处理
     } catch (err: any) {
       console.error('Google登录失败:', err);
-      setError(err.message || 'Google登录失败，请稍后再试');
-      throw err;
+      const errorMessage = err.message || 'Google登录失败，请稍后再试';
+      if (mounted.current) {
+        setError(errorMessage);
+      }
+      throw new Error(errorMessage);
     } finally {
-      setIsLoading(false);
+      if (mounted.current) {
+        setIsLoading(false);
+      }
     }
   };
 
   // 登出
   const logout = async (): Promise<void> => {
+    if (!mounted.current) return;
+    
     setIsLoading(true);
     
     try {
       console.log('用户主动登出...');
+      
+      // 先清除本地状态
+      setUser(null);
+      setIsAuthenticated(false);
+      setError(null);
       
       // 使用Supabase登出
       const { error } = await supabase.auth.signOut();
       
       if (error) {
         console.error('Supabase登出失败:', error);
-        throw error;
+        // 即使Supabase登出失败，也不要抛出错误，因为本地状态已经清除
+      } else {
+        console.log('Supabase登出成功');
       }
       
-      console.log('Supabase登出成功');
+      // 清理本地存储
+      try {
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('prompthub-auth-token');
+          localStorage.removeItem('auth_token');
+          localStorage.removeItem('user');
+          
+          // 清理所有supabase相关的keys
+          Object.keys(localStorage).forEach(key => {
+            if (key.includes('supabase') || key.includes('auth-token')) {
+              localStorage.removeItem(key);
+            }
+          });
+        }
+      } catch (storageErr) {
+        console.warn('清理localStorage失败:', storageErr);
+      }
       
-      // 清除应用状态
-      setUser(null);
-      setIsAuthenticated(false);
-      
-      console.log('应用状态已清除');
+      console.log('登出流程完成');
     } catch (err: any) {
-      console.error('登出失败:', err);
-      setError(err.message || '登出失败，请稍后再试');
+      console.error('登出过程出错:', err);
       
-      // 即使登出失败，也清除本地状态以确保安全
-      setUser(null);
-      setIsAuthenticated(false);
+      // 即使出错，也要确保本地状态被清除
+      if (mounted.current) {
+        setUser(null);
+        setIsAuthenticated(false);
+        setError(null);
+      }
     } finally {
-      setIsLoading(false);
+      if (mounted.current) {
+        setIsLoading(false);
+      }
     }
   };
 
-  // 获取当前用户的访问令牌 - 简化版
+  // 获取当前用户的访问令牌 - 增强版
   const getToken = async (): Promise<string | null> => {
     try {
       // 仅在客户端执行
@@ -444,8 +557,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return null;
       }
 
-      // 直接从当前用户中获取会话
-      const { data } = await supabase.auth.getSession();
+      // 添加超时处理
+      const sessionPromise = supabase.auth.getSession();
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('获取令牌超时')), 5000)
+      );
+      
+      const { data, error } = await Promise.race([
+        sessionPromise,
+        timeoutPromise
+      ]) as any;
+      
+      if (error) {
+        console.error('获取会话失败:', error);
+        return null;
+      }
+      
       const session = data?.session;
 
       // 如果没有有效会话，返回null
@@ -453,10 +580,34 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         console.warn('无法获取用户会话');
         return null;
       }
+      
+      // 检查令牌是否即将过期（提前5分钟检查）
+      const now = Math.floor(Date.now() / 1000);
+      const expiresAt = session.expires_at || 0;
+      const timeUntilExpiry = expiresAt - now;
+      
+      if (timeUntilExpiry < 300) { // 5分钟 = 300秒
+        console.log('令牌即将过期，尝试刷新...');
+        try {
+          const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
+          
+          if (refreshError) {
+            console.error('刷新令牌失败:', refreshError);
+            return session.access_token; // 返回原令牌
+          }
+          
+          if (refreshData.session) {
+            console.log('令牌刷新成功');
+            return refreshData.session.access_token;
+          }
+        } catch (refreshErr) {
+          console.error('刷新令牌异常:', refreshErr);
+        }
+      }
 
       // 返回访问令牌
       return session.access_token;
-    } catch (err) {
+    } catch (err: any) {
       console.error('获取令牌时出错:', err);
       return null;
     }
@@ -489,21 +640,46 @@ export const useAuth = (): AuthContextType => {
   return context;
 };
 
-// 保护路由的高阶组件
+// 保护路由的高阶组件 - 增强版
 export const withAuth = <P extends object>(Component: React.ComponentType<P>): React.FC<P> => {
   const AuthComponent: React.FC<P> = (props) => {
     const { isAuthenticated, isLoading } = useAuth();
     const [mounted, setMounted] = useState(false);
     const [redirecting, setRedirecting] = useState(false);
+    const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
     useEffect(() => {
       setMounted(true);
-    }, []);
+      
+      // 设置一个兜底超时，防止无限等待
+      timeoutRef.current = setTimeout(() => {
+        if (!isAuthenticated && !redirecting) {
+          console.warn('认证检查超时，强制重定向到登录页');
+          setRedirecting(true);
+          
+          if (typeof window !== 'undefined') {
+            const currentUrl = window.location.pathname + window.location.search;
+            window.location.href = `/auth/login?returnUrl=${encodeURIComponent(currentUrl)}`;
+          }
+        }
+      }, 15000); // 15秒超时
+      
+      return () => {
+        if (timeoutRef.current) {
+          clearTimeout(timeoutRef.current);
+        }
+      };
+    }, [isAuthenticated, redirecting]);
 
     useEffect(() => {
       // 只在客户端挂载完成后执行路由重定向
       if (mounted && !isLoading && !isAuthenticated && !redirecting) {
         setRedirecting(true);
+        
+        // 清除超时定时器
+        if (timeoutRef.current) {
+          clearTimeout(timeoutRef.current);
+        }
         
         // 使用Next.js动态导入router避免SSR问题
         import('next/router').then(({ default: Router }) => {
@@ -527,59 +703,34 @@ export const withAuth = <P extends object>(Component: React.ComponentType<P>): R
       return null;
     }
 
-    // 正在加载认证状态时，显示cyberpunk风格的加载界面
+    // 正在加载认证状态时，显示加载界面
     if (isLoading) {
       return (
-        <div className="min-h-screen bg-dark-bg-primary flex items-center justify-center relative overflow-hidden">
-          {/* 背景装饰 */}
-          <div className="absolute inset-0">
-            <div className="absolute top-1/4 -right-48 w-96 h-96 bg-gradient-to-br from-neon-cyan/20 to-neon-purple/20 rounded-full blur-3xl"></div>
-            <div className="absolute bottom-1/4 -left-48 w-96 h-96 bg-gradient-to-tr from-neon-pink/20 to-neon-purple/20 rounded-full blur-3xl"></div>
-          </div>
-          
-          {/* 加载内容 */}
-          <div className="relative z-10 text-center">
-            {/* 旋转的加载图标 */}
-            <div className="relative mx-auto mb-8">
-              <div className="w-16 h-16 border-4 border-neon-cyan/30 rounded-full animate-spin">
-                <div className="absolute top-0 left-0 w-full h-full border-4 border-transparent border-t-neon-cyan rounded-full animate-pulse"></div>
-              </div>
-              <div className="absolute inset-0 w-16 h-16 border-4 border-neon-purple/20 rounded-full animate-ping"></div>
-            </div>
-            
-            {/* 加载文本 */}
-            <div className="space-y-2">
-              <h3 className="text-xl font-bold gradient-text">验证身份中</h3>
-              <p className="text-gray-400 text-sm">正在连接到服务器...</p>
-            </div>
-            
-            {/* 装饰线条 */}
-            <div className="mt-8 flex justify-center space-x-1">
-              {[0, 1, 2].map((i) => (
-                <div
-                  key={i}
-                  className="w-2 h-2 bg-neon-cyan rounded-full animate-pulse"
-                  style={{ animationDelay: `${i * 0.2}s` }}
-                ></div>
-              ))}
-            </div>
+        <div className="min-h-screen bg-dark-bg-primary flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-neon-cyan mx-auto mb-4"></div>
+            <p className="text-gray-400">正在验证身份...</p>
           </div>
         </div>
       );
     }
 
-    // 用户未认证，返回null等待重定向
-    if (!isAuthenticated) {
-      return null;
+    // 如果已认证，渲染组件
+    if (isAuthenticated) {
+      return <Component {...props} />;
     }
 
-    // 认证通过，渲染原始组件
-    return <Component {...props} />;
+    // 其他情况显示加载状态
+    return (
+      <div className="min-h-screen bg-dark-bg-primary flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-neon-cyan mx-auto mb-4"></div>
+          <p className="text-gray-400">正在跳转到登录页...</p>
+        </div>
+      </div>
+    );
   };
 
-  // 设置组件显示名称
-  const displayName = Component.displayName || Component.name || 'Component';
-  AuthComponent.displayName = `withAuth(${displayName})`;
-
+  AuthComponent.displayName = `withAuth(${Component.displayName || Component.name})`;
   return AuthComponent;
 };

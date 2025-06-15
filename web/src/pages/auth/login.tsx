@@ -33,20 +33,59 @@ export default function LoginPage() {
   
   // 检查用户是否已经登录，如果是则重定向到目标页面
   useEffect(() => {
+    let checkTimeout: NodeJS.Timeout;
+    
     const checkSession = async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session) {
-          handlePostLoginRedirect(router);
+        console.log('检查现有会话...');
+        
+        // 添加超时处理，避免无限等待
+        const sessionPromise = supabase.auth.getSession();
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('会话检查超时')), 8000)
+        );
+        
+        const { data: { session }, error } = await Promise.race([
+          sessionPromise,
+          timeoutPromise
+        ]) as any;
+        
+        if (error) {
+          console.error('检查会话失败:', error);
+          return;
         }
-      } catch (err) {
-        console.error('检查会话失败:', err);
+        
+        if (session && session.user) {
+          console.log('发现已登录会话，重定向...');
+          handlePostLoginRedirect(router);
+        } else {
+          console.log('无现有会话，显示登录表单');
+        }
+      } catch (err: any) {
+        console.error('检查会话异常:', err);
+        // 即使检查失败，也要显示登录表单
+        if (err.message.includes('超时')) {
+          console.warn('会话检查超时，显示登录表单');
+        }
       } finally {
+        // 确保在任何情况下都会结束初始化状态
         setInitializing(false);
       }
     };
     
+    // 设置一个兜底的超时，确保不会无限等待
+    checkTimeout = setTimeout(() => {
+      console.warn('会话检查超时，强制结束初始化');
+      setInitializing(false);
+    }, 10000);
+    
     checkSession();
+    
+    return () => {
+      if (checkTimeout) {
+        clearTimeout(checkTimeout);
+      }
+    };
   }, [router]);
 
   // 如果还在初始化，显示加载界面
@@ -388,12 +427,12 @@ export default function LoginPage() {
             </motion.div>
           </motion.form>
 
-          {/* 注册链接 */}
+          {/* 注册链接和问题排查 */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 1.4 }}
-            className="p-8 pt-0 text-center"
+            className="p-8 pt-0 text-center space-y-4"
           >
             <p className="text-gray-400">
               还没有账户?{' '}
@@ -404,6 +443,20 @@ export default function LoginPage() {
                 立即注册
               </Link>
             </p>
+            
+            {/* 添加故障排查链接 */}
+            <div className="border-t border-dark-border pt-4">
+              <p className="text-gray-500 text-sm mb-2">登录遇到问题？</p>
+              <Link 
+                href="/auth/clear-auth"
+                className="inline-flex items-center text-orange-400 hover:text-orange-300 transition-colors duration-300 text-sm"
+              >
+                <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 15.5c-.77.833.192 2.5 1.732 2.5z" />
+                </svg>
+                解决登录卡死问题
+              </Link>
+            </div>
           </motion.div>
         </motion.div>
       </div>

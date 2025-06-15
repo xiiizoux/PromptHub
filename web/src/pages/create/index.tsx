@@ -118,46 +118,48 @@ function CreatePromptPage() {
   const applyAIResults = (data: Partial<AIAnalysisResult>) => {
     console.log('应用AI分析结果:', data);
     
+    // 应用分类 - 直接应用AI建议的分类，与编辑页面保持一致
     if (data.category) {
       const mapped = matchCategory(data.category, categories);
       if (mapped) {
-        data.category = mapped;
+        setValue('category', mapped);
+        console.log(`AI分类应用: -> ${mapped}`);
       } else {
-        data.category = '通用';
+        setValue('category', '通用');
+        console.log(`AI分类应用: -> 通用 (默认)`);
       }
-      setValue('category', data.category);
     }
     
-    // 应用标签 - 与现有标签合并
+    // 应用标签 - 直接应用AI建议的标签，与编辑页面保持一致
     if (data.tags && Array.isArray(data.tags)) {
-      const combinedTags = [...tags, ...data.tags];
-      const uniqueTags = combinedTags.filter((tag, index, array) => array.indexOf(tag) === index);
-      setTags(uniqueTags);
-      setValue('tags', uniqueTags);
-      
-      // 显示标签合并提示
-      console.log('AI分析建议的标签:', data.tags);
-      console.log('与现有标签合并后:', uniqueTags);
+      setTags(data.tags);
+      setValue('tags', data.tags);
+      console.log('AI标签应用:', { 
+        原有标签: tags, 
+        AI建议标签: data.tags, 
+        最终应用: data.tags 
+      });
     }
     
-    // 应用变量 - 与现有变量合并
+    // 应用变量 - 直接应用AI建议的变量，与编辑页面保持一致
     if (data.variables && Array.isArray(data.variables)) {
-      const combinedVariables = [...variables, ...data.variables];
-      const uniqueVariables = combinedVariables.filter((variable, index, array) => array.indexOf(variable) === index);
-      setVariables(uniqueVariables);
-      setValue('input_variables', uniqueVariables);
+      setVariables(data.variables);
+      setValue('input_variables', data.variables);
+      console.log('AI变量应用:', { 
+        原有变量: variables, 
+        AI建议变量: data.variables, 
+        最终应用: data.variables 
+      });
     }
     
-    // 应用兼容模型 - 修复字段名不匹配问题
+    // 应用兼容模型 - 直接应用AI建议的模型，与编辑页面保持一致
     if (data.compatibleModels && Array.isArray(data.compatibleModels)) {
-      const combinedModels = [...models, ...data.compatibleModels];
-      const uniqueModels = combinedModels.filter((model, index, array) => array.indexOf(model) === index);
-      setModels(uniqueModels);
-      setValue('compatible_models', uniqueModels); // 使用正确的字段名
-      console.log('兼容模型更新:', { 
+      setModels(data.compatibleModels);
+      setValue('compatible_models', data.compatibleModels);
+      console.log('兼容模型应用:', { 
         原有模型: models, 
         AI建议模型: data.compatibleModels, 
-        合并后模型: uniqueModels 
+        最终应用: data.compatibleModels 
       });
     }
 
