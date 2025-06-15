@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth, withAuth } from '@/contexts/AuthContext';
 import { getCategories, getTags } from '@/lib/api';
 
 const DirectCreatePage: React.FC = () => {
@@ -246,7 +246,7 @@ const DirectCreatePage: React.FC = () => {
   );
 };
 
-export default DirectCreatePage;
+export default withAuth(DirectCreatePage);
 
 // 添加getServerSideProps防止静态生成
 export async function getServerSideProps() {

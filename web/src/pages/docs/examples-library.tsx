@@ -458,10 +458,10 @@ class User(db.Model):
                 <p className="text-sm text-gray-600">深入了解示例设计方法</p>
               </Link>
               
-              <Link href="/create" className="block p-4 border border-gray-200 rounded-lg hover:border-primary-300 hover:shadow-md transition-all">
+              <ProtectedLink href="/create" className="block p-4 border border-gray-200 rounded-lg hover:border-primary-300 hover:shadow-md transition-all">
                 <h3 className="font-medium text-gray-900 mb-2">开始创建</h3>
                 <p className="text-sm text-gray-600">基于示例创建您的提示词</p>
-              </Link>
+              </ProtectedLink>
             </div>
           </div>
         </div>

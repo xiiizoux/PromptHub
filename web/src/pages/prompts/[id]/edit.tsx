@@ -24,7 +24,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { AIAnalyzeButton, AIAnalysisResultDisplay } from '@/components/AIAnalyzeButton';
 import { AIAnalysisResult } from '@/lib/ai-analyzer';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth, withAuth } from '@/contexts/AuthContext';
 import { 
   checkEditPermission, 
   checkFieldPermission,
@@ -1448,7 +1448,7 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
   );
 }
 
-export default EditPromptPage;
+export default withAuth(EditPromptPage);
 
 export const getServerSideProps: GetServerSideProps = async (context) => {
   const { id } = context.params!;

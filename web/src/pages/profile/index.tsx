@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth, withAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import Link from 'next/link';
+import { ProtectedLink, ProtectedButton } from '@/components/ProtectedLink';
 import { 
   UserIcon, 
   KeyIcon, 
@@ -1372,16 +1373,16 @@ const ProfilePage = () => {
                     <h2 className="text-2xl font-bold text-white">我的提示词</h2>
                     <p className="text-gray-400 mt-1">创建和管理您的提示词</p>
                   </div>
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    className="btn-primary flex items-center space-x-2"
-                  >
-                    <Link href="/create" className="flex items-center space-x-2">
+                  <ProtectedLink href="/create" className="btn-primary flex items-center space-x-2">
+                    <motion.div
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      className="flex items-center space-x-2"
+                    >
                       <PlusIcon className="h-5 w-5" />
                       <span>创建提示词</span>
-                    </Link>
-                  </motion.button>
+                    </motion.div>
+                  </ProtectedLink>
                 </div>
 
                 {/* 提示词列表 */}
@@ -1669,13 +1670,13 @@ const ProfilePage = () => {
                     <p className="text-gray-300 mb-4">
                       导出包括您的提示词、收藏夹、使用历史和评分评论在内的所有数据。
                     </p>
-                    <button
+                    <ProtectedButton
                       onClick={handleExportData}
                       className="btn-primary w-full flex items-center justify-center space-x-2"
                     >
                       <ArrowUpTrayIcon className="h-5 w-5" />
                       <span>导出数据</span>
-                    </button>
+                    </ProtectedButton>
                   </div>
 
                   {/* 下载JSON模板 */}
@@ -1724,7 +1725,7 @@ const ProfilePage = () => {
                         className="block w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-neon-purple/20 file:text-neon-purple hover:file:bg-neon-purple/30 file:cursor-pointer"
                       />
                       {importFile && (
-                        <button
+                        <ProtectedButton
                           onClick={() => handleImportData(importFile)}
                           disabled={loading}
                           className="btn-secondary w-full flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -1740,7 +1741,7 @@ const ProfilePage = () => {
                               <span>导入 {importFile.name}</span>
                             </>
                           )}
-                        </button>
+                        </ProtectedButton>
                       )}
                     </div>
                     {exportData && (

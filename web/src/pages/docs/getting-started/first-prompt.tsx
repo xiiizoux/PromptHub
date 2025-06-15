@@ -1,5 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
+import { ProtectedLink } from '@/components/ProtectedLink';
 import { ChevronLeftIcon } from '@heroicons/react/24/outline';
 
 const FirstPromptPage: React.FC = () => {
@@ -44,9 +45,9 @@ const FirstPromptPage: React.FC = () => {
               登录后，点击导航栏中的"创建提示词"按钮，或者访问创建页面：
             </p>
             <div className="bg-gray-50 p-4 rounded-lg mb-4">
-              <Link href="/create" className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700">
+              <ProtectedLink href="/create" className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700">
                 前往创建页面
-              </Link>
+              </ProtectedLink>
             </div>
           </div>
         </div>

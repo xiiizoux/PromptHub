@@ -27,6 +27,7 @@ import { AIAnalysisResult } from '@/lib/ai-analyzer';
 import { useAuth } from '@/contexts/AuthContext';
 import { ModelSelector } from '@/components/ModelSelector';
 import { formatVersionDisplay } from '@/lib/version-utils';
+import { withAuth } from '@/contexts/AuthContext';
 
 // 扩展类型，添加messages字段和其他数据库中的字段
 type PromptFormData = Omit<PromptDetails, 'created_at' | 'updated_at'> & {
@@ -894,4 +895,4 @@ function CreatePromptPage() {
   );
 }
 
-export default CreatePromptPage; 
+export default withAuth(CreatePromptPage); 

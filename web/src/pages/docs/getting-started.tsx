@@ -1,5 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
+import { ProtectedLink } from '@/components/ProtectedLink';
 import { ChevronLeftIcon } from '@heroicons/react/24/outline';
 
 const GettingStartedPage: React.FC = () => {
@@ -153,9 +154,9 @@ const GettingStartedPage: React.FC = () => {
                   </ol>
                 </div>
                 <div className="mt-4">
-                  <Link href="/prompts/create" className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700">
+                  <ProtectedLink href="/create" className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700">
                     创建提示词
-                  </Link>
+                  </ProtectedLink>
                 </div>
               </div>
             </div>

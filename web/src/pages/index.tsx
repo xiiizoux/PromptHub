@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { ProtectedLink } from '@/components/ProtectedLink';
 import { motion } from 'framer-motion';
 import { useInView } from 'react-intersection-observer';
 import dynamic from 'next/dynamic';
@@ -133,10 +134,10 @@ export default function Home({ featuredPrompts }: HomeProps) {
               <span>开始探索</span>
               <ArrowRightIcon className="h-5 w-5 ml-2 group-hover:translate-x-1 transition-transform" />
             </Link>
-            <Link href="/create" className="btn-secondary">
+            <ProtectedLink href="/create" className="btn-secondary">
               <CommandLineIcon className="h-5 w-5 mr-2" />
               <span>创建提示词</span>
-            </Link>
+            </ProtectedLink>
           </motion.div>
           
           {/* 统计数据 */}
