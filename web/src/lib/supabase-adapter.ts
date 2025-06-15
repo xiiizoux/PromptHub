@@ -36,6 +36,7 @@ export interface Prompt {
   version?: number;
   created_at: string;
   updated_at?: string;
+  compatible_models?: string[];
 }
 
 export interface PromptFilters {

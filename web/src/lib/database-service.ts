@@ -247,7 +247,7 @@ export class DatabaseService {
         // 扩展字段
         content: content,
         input_variables: this.extractInputVariables(content),
-        compatible_models: ['gpt-4', 'gpt-3.5-turbo', 'claude-3'], // 默认兼容模型
+        compatible_models: prompt.compatible_models || ['gpt-4', 'gpt-3.5-turbo', 'claude-3'], // 从数据库读取，否则使用默认兼容模型
         allow_collaboration: Boolean(prompt.is_public), // 基于是否公开来设置
         edit_permission: 'owner_only' as const, // 修复：改为前端期望的值
         author: authorName
@@ -286,7 +286,8 @@ export class DatabaseService {
       }] : promptData.messages,
       is_public: promptData.is_public,
       user_id: promptData.user_id,
-      version: promptData.version ? Number(promptData.version) : 1.0 // 新建提示词默认版本为1.0
+      version: promptData.version ? Number(promptData.version) : 1.0, // 新建提示词默认版本为1.0
+      compatible_models: promptData.compatible_models // 添加兼容模型字段
     };
 
     return await this.adapter.createPrompt(prompt);
@@ -316,6 +317,7 @@ export class DatabaseService {
       if (promptData.category !== undefined) updateData.category = promptData.category;
       if (promptData.tags !== undefined) updateData.tags = promptData.tags;
       if (promptData.is_public !== undefined) updateData.is_public = promptData.is_public;
+      if (promptData.compatible_models !== undefined) updateData.compatible_models = promptData.compatible_models;
       
       // 处理content字段，转换为messages格式
       if (promptData.content !== undefined) {

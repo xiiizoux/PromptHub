@@ -632,6 +632,58 @@ export default function PromptDetailsPage({ prompt }: PromptDetailsPageProps) {
                     </div>
                   </div>
                 )}
+
+                {/* 使用示例 */}
+                {prompt.examples && prompt.examples.length > 0 && (
+                  <div className="pt-4 border-t border-neon-cyan/20">
+                    <h4 className="text-sm font-medium text-gray-300 mb-3 flex items-center">
+                      <DocumentTextIcon className="h-4 w-4 mr-2 text-neon-purple" />
+                      使用示例
+                    </h4>
+                    <div className="space-y-3">
+                      {prompt.examples.map((example, index) => (
+                        <div
+                          key={index}
+                          className="p-3 rounded-lg glass border border-neon-purple/30 group hover:border-neon-purple/50 transition-colors"
+                        >
+                          {example.description && (
+                            <div className="text-xs text-gray-400 mb-2">
+                              {example.description}
+                            </div>
+                          )}
+                          <div className="text-xs text-neon-purple font-medium mb-1">输入:</div>
+                          <div className="text-xs text-gray-300 mb-2 font-mono">
+                            {JSON.stringify(example.input, null, 2)}
+                          </div>
+                          <div className="text-xs text-neon-green font-medium mb-1">输出:</div>
+                          <div className="text-xs text-gray-200 font-mono">
+                            {example.output}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* 标签 */}
+                {prompt.tags && prompt.tags.length > 0 && (
+                  <div className="pt-4 border-t border-neon-cyan/20">
+                    <h4 className="text-sm font-medium text-gray-300 mb-3 flex items-center">
+                      <TagIcon className="h-4 w-4 mr-2 text-neon-cyan" />
+                      标签
+                    </h4>
+                    <div className="flex flex-wrap gap-2">
+                      {prompt.tags.map((tag, index) => (
+                        <span
+                          key={index}
+                          className="px-2 py-1 text-xs rounded-md bg-neon-cyan/10 text-neon-cyan border border-neon-cyan/20"
+                        >
+                          #{tag}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
                 
                 {/* 操作按钮 */}
                 <div className="pt-4 border-t border-neon-cyan/20">

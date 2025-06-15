@@ -302,6 +302,7 @@ async function updatePrompt(req: NextApiRequest, res: NextApiResponse, id: strin
     if (is_public !== undefined) updateData.is_public = Boolean(is_public);
     if (allow_collaboration !== undefined) updateData.allow_collaboration = Boolean(allow_collaboration);
     if (edit_permission !== undefined) updateData.edit_permission = edit_permission;
+    if (compatible_models !== undefined) updateData.compatible_models = compatible_models;
 
     // 处理分类（支持category_id和category两种方式）
     if (category_id !== undefined) {
