@@ -249,7 +249,7 @@ const SmartWritingAssistant: React.FC<SmartWritingAssistantProps> = ({
                     )}
                   </div>
                   <div className="flex-1">
-                    <h4 className={`font-medium mb-1 ${step.completed ? 'text-green-300' : 'text-white'}`}>
+                    <h4 className={`text-sm font-medium mb-1 ${step.completed ? 'text-green-300' : 'text-white'}`}>
                       {step.title}
                     </h4>
                     <p className="text-sm text-gray-400 mb-3">{step.description}</p>
@@ -297,7 +297,7 @@ const SmartWritingAssistant: React.FC<SmartWritingAssistantProps> = ({
             </div>
             
             <div className="bg-dark-bg-secondary/30 rounded-lg p-4 space-y-4">
-              <h4 className="font-medium text-white">实时分析结果</h4>
+              <h4 className="text-sm font-medium text-white">实时分析结果</h4>
               {realTimeAnalysis ? (
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
@@ -496,7 +496,7 @@ const QuickTemplates: React.FC<{
           onClick={() => onApplyTemplate(template.template)}
         >
           <div className="flex items-center justify-between mb-2">
-            <h4 className="font-medium text-white">{template.name}</h4>
+            <h4 className="text-sm font-medium text-white">{template.name}</h4>
             <span className="text-xs px-2 py-1 bg-neon-cyan/20 text-neon-cyan rounded">
               {template.category}
             </span>
