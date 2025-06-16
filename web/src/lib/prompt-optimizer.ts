@@ -370,14 +370,49 @@ export async function optimizePrompt(
   requirements?: string,
   type: OptimizationRequest['type'] = 'general'
 ): Promise<OptimizationResult | null> {
-  const optimizer = await createPromptOptimizer();
-  if (!optimizer) return null;
+  try {
+    // 通过API路由调用，而不是直接调用OpenAI
+    const response = await fetch('/api/ai/optimize', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        prompt,
+        requirements,
+        type
+      })
+    });
 
-  return optimizer.optimizePrompt({
-    prompt,
-    type,
-    requirements
-  });
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || `API请求失败: ${response.status}`);
+    }
+
+    const data = await response.json();
+    
+    if (!data.success) {
+      throw new Error(data.error || '优化失败');
+    }
+
+    // 构造返回结果
+    const optimizedPrompt = data.data.optimized;
+    const score = calculateScore(optimizedPrompt);
+    
+    return {
+      optimizedPrompt,
+      improvements: [
+        '通过AI分析优化了提示词结构',
+        '增强了指令的清晰性和具体性',
+        '改善了提示词的逻辑组织'
+      ],
+      score,
+      suggestions: generateSuggestions(prompt)
+    };
+  } catch (error) {
+    console.error('优化失败:', error);
+    throw error;
+  }
 }
 
 export async function iteratePrompt(
@@ -386,20 +421,66 @@ export async function iteratePrompt(
   requirements: string,
   type: IterationRequest['type'] = 'refine'
 ): Promise<string | null> {
-  const optimizer = await createPromptOptimizer();
-  if (!optimizer) return null;
+  try {
+    // 通过API路由调用迭代优化
+    const response = await fetch('/api/ai/iterate', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        originalPrompt,
+        currentPrompt,
+        requirements,
+        type
+      })
+    });
 
-  return optimizer.iteratePrompt({
-    originalPrompt,
-    currentPrompt,
-    requirements,
-    type
-  });
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || `API请求失败: ${response.status}`);
+    }
+
+    const data = await response.json();
+    
+    if (!data.success) {
+      throw new Error(data.error || '迭代失败');
+    }
+
+    return data.data.optimized;
+  } catch (error) {
+    console.error('迭代失败:', error);
+    throw error;
+  }
 }
 
 export async function analyzePrompt(prompt: string): Promise<OptimizationResult['score'] | null> {
-  const optimizer = await createPromptOptimizer();
-  if (!optimizer) return null;
+  try {
+    // 通过API路由调用分析
+    const response = await fetch('/api/ai/analyze', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        prompt
+      })
+    });
 
-  return optimizer.analyzePrompt(prompt);
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || `API请求失败: ${response.status}`);
+    }
+
+    const data = await response.json();
+    
+    if (!data.success) {
+      throw new Error(data.error || '分析失败');
+    }
+
+    return data.data.score;
+  } catch (error) {
+    console.error('分析失败:', error);
+    return calculateScore(prompt);
+  }
 } 

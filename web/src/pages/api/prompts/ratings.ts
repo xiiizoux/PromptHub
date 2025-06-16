@@ -26,15 +26,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const pageSizeNum = parseInt(pageSize as string, 10);
     const offset = (pageNum - 1) * pageSizeNum;
 
-    // 获取评分列表
+    // 获取评分列表 - 使用正确的表名和字段名
     const { data: ratings, error: ratingsError } = await supabase
-      .from('prompt_feedback')
+      .from('prompt_ratings')
       .select(`
         id,
         rating,
-        feedback_text,
+        comment,
         created_at,
         updated_at,
+        user_id,
         users (
           display_name,
           email
@@ -50,13 +51,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     // 获取总数
     const { count } = await supabase
-      .from('prompt_feedback')
+      .from('prompt_ratings')
       .select('*', { count: 'exact', head: true })
       .eq('prompt_id', promptId);
 
     // 计算平均评分
     const { data: avgData } = await supabase
-      .from('prompt_feedback')
+      .from('prompt_ratings')
       .select('rating')
       .eq('prompt_id', promptId);
 
@@ -76,7 +77,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       prompt_id: promptId,
       user_id: item.user_id,
       rating: item.rating,
-      comment: item.feedback_text,
+      comment: item.comment,
       created_at: item.created_at,
       updated_at: item.updated_at || item.created_at,
       user: {

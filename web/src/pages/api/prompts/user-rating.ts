@@ -33,13 +33,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(401).json({ error: '无效的授权token' });
     }
 
-    // 获取用户评分
+    // 获取用户评分 - 使用正确的表名和字段名
     const { data: rating, error } = await supabase
-      .from('prompt_feedback')
+      .from('prompt_ratings')
       .select(`
         id,
         rating,
-        feedback_text,
+        comment,
         created_at,
         updated_at
       `)
@@ -64,7 +64,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       prompt_id: promptId,
       user_id: user.id,
       rating: rating.rating,
-      comment: rating.feedback_text,
+      comment: rating.comment,
       created_at: rating.created_at,
       updated_at: rating.updated_at || rating.created_at,
       user: {

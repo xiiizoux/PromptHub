@@ -35,7 +35,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
       // 检查是否已经评分过
       const { data: existingRating, error: checkError } = await supabase
-        .from('prompt_feedback')
+        .from('prompt_ratings')
         .select('id')
         .eq('prompt_id', promptId)
         .eq('user_id', user.id)
@@ -48,10 +48,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       if (existingRating) {
         // 更新现有评分
         const { error: updateError } = await supabase
-          .from('prompt_feedback')
+          .from('prompt_ratings')
           .update({
             rating,
-            feedback_text: comment || null,
+            comment: comment || null,
             updated_at: new Date().toISOString()
           })
           .eq('prompt_id', promptId)
@@ -61,13 +61,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       } else {
         // 创建新评分
         const { error: insertError } = await supabase
-          .from('prompt_feedback')
+          .from('prompt_ratings')
           .insert({
             prompt_id: promptId,
             user_id: user.id,
             rating,
-            feedback_text: comment || null,
-            categories: []
+            comment: comment || null
           });
 
         if (insertError) throw insertError;
@@ -83,10 +82,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
 
       const { error: updateError } = await supabase
-        .from('prompt_feedback')
+        .from('prompt_ratings')
         .update({
           rating,
-          feedback_text: comment || null,
+          comment: comment || null,
           updated_at: new Date().toISOString()
         })
         .eq('prompt_id', promptId)
@@ -98,7 +97,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     } else if (req.method === 'DELETE') {
       // 删除评分
       const { error: deleteError } = await supabase
-        .from('prompt_feedback')
+        .from('prompt_ratings')
         .delete()
         .eq('prompt_id', promptId)
         .eq('user_id', user.id);

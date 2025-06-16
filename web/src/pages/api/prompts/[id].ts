@@ -129,13 +129,13 @@ async function getPrompt(req: NextApiRequest, res: NextApiResponse, id: string) 
     }
 
     // 获取评分统计
+    let averageRating = 0;
+    let ratingCount = 0;
+    
     const { data: ratingStats } = await supabase
       .from('prompt_ratings')
       .select('rating')
       .eq('prompt_id', prompt.id);
-
-    let averageRating = 0;
-    let ratingCount = 0;
 
     if (ratingStats && ratingStats.length > 0) {
       const totalRating = ratingStats.reduce((sum, r) => sum + r.rating, 0);
