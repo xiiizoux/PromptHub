@@ -393,7 +393,7 @@ function generateReadyToUseFormat(content: string, prompt: Prompt, targetAI: str
   format += `• 难度: ${prompt.difficulty || '中等'}\n`;
   
   if (prompt.variables?.length) {
-    format += `• 可变参数: ${prompt.variables.map(v => v.name).join(', ')}\n`;
+    format += `• 可变参数: ${prompt.variables.join(', ')}\n`;
   }
   
   format += `\n💡 使用建议:\n`;
@@ -416,7 +416,7 @@ function extractAction(text: string): string {
   };
   
   for (const [chinese, english] of Object.entries(actionMap)) {
-    if (text.includes(chinese)) return english;
+    if (text.includes(chinese)) return english as string;
   }
   
   return 'general';
@@ -432,7 +432,7 @@ function extractDomain(text: string): string {
   };
   
   for (const [keyword, domain] of Object.entries(domainMap)) {
-    if (text.includes(keyword)) return domain;
+    if (text.includes(keyword)) return domain as string;
   }
   
   return 'general';
@@ -633,7 +633,7 @@ function formatSmartSuggestions(suggestions: any[], contextAnalysis: any): strin
   return format;
 }
 
-async function generateTrendingView(interest: string, userId?: string): string {
+async function generateTrendingView(interest: string, userId?: string): Promise<string> {
   try {
     const trending = await storage.getPrompts({ sortBy: 'popular', pageSize: 8, isPublic: true });
     
@@ -653,7 +653,7 @@ async function generateTrendingView(interest: string, userId?: string): string {
   }
 }
 
-async function generateNewPromptsView(interest: string, userId?: string): string {
+async function generateNewPromptsView(interest: string, userId?: string): Promise<string> {
   try {
     const newPrompts = await storage.getPrompts({ sortBy: 'latest', pageSize: 6, isPublic: true });
     
@@ -672,7 +672,7 @@ async function generateNewPromptsView(interest: string, userId?: string): string
   }
 }
 
-async function generateCategoriesView(userId?: string): string {
+async function generateCategoriesView(userId?: string): Promise<string> {
   const categories = [
     { name: '商业', icon: '💼', desc: '商务邮件、销售文案、商业计划' },
     { name: '技术', icon: '💻', desc: '代码分析、技术文档、问题排查' },
@@ -693,7 +693,7 @@ async function generateCategoriesView(userId?: string): string {
   return view;
 }
 
-async function generateCombosView(interest: string, userId?: string): string {
+async function generateCombosView(interest: string, userId?: string): Promise<string> {
   const combos = [
     { name: '邮件写作套装', prompts: ['商务邮件模板', '道歉邮件', '感谢邮件'] },
     { name: '代码分析工具包', prompts: ['代码审查', '性能分析', '错误诊断'] },
