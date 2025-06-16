@@ -459,13 +459,14 @@ function CreatePromptPage() {
             </AnimatePresence>
           </motion.div>
 
-          {/* 主表单区域 */}
-          <div className="space-y-8">
+          {/* 双栏布局容器 */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* 主表单区域 */}
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.6 }}
-              className="glass rounded-3xl border border-neon-cyan/20 shadow-2xl p-8"
+              className="lg:col-span-2 glass rounded-3xl border border-neon-cyan/20 shadow-2xl p-8"
             >
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
               {/* 提示词内容 - 移到最上面突出显示 */}
@@ -947,13 +948,13 @@ function CreatePromptPage() {
             </form>
           </motion.div>
           
-            {/* 智能写作助手区域 */}
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.8 }}
-              className="glass rounded-3xl border border-neon-purple/20 shadow-2xl p-6"
-            >
+          {/* 智能写作助手侧边栏 */}
+          <motion.div
+            initial={{ opacity: 0, x: 30 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.8, delay: 0.8 }}
+            className="glass rounded-3xl border border-neon-purple/20 shadow-2xl p-6"
+          >
             <SmartWritingAssistant
               content={currentContent || watch('content') || ''}
               onContentChange={(newContent) => {
