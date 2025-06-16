@@ -334,8 +334,8 @@ export const AIAnalysisResultDisplay: React.FC<AIAnalysisResultDisplayProps> = (
                   {appliedFields.has('suggestedTitle') ? '✅ 已应用' : '应用'}
                 </button>
               </div>
-              <div className="bg-gradient-to-r from-neon-yellow/10 to-neon-orange/10 rounded-md p-2 border border-neon-yellow/10">
-                <p className="text-gray-200 font-medium text-xs leading-relaxed">{result.suggestedTitle}</p>
+              <div className="bg-gradient-to-r from-dark-bg-secondary/60 to-dark-bg-primary/60 rounded-md p-3 border border-neon-yellow/30 backdrop-blur-sm">
+                <p className="text-gray-100 font-medium text-sm leading-relaxed">{result.suggestedTitle}</p>
               </div>
             </div>
           </div>
@@ -365,8 +365,8 @@ export const AIAnalysisResultDisplay: React.FC<AIAnalysisResultDisplayProps> = (
                   {appliedFields.has('description') ? '✅ 已应用' : '应用'}
                 </button>
               </div>
-              <div className="bg-gradient-to-r from-neon-orange/10 to-neon-red/10 rounded-md p-2 border border-neon-orange/10">
-                <p className="text-gray-300 text-xs leading-relaxed line-clamp-2">
+              <div className="bg-gradient-to-r from-dark-bg-secondary/60 to-dark-bg-primary/60 rounded-md p-3 border border-neon-orange/30 backdrop-blur-sm">
+                <p className="text-gray-200 text-sm leading-relaxed line-clamp-2">
                   {result.description.length > 80 ? result.description.substring(0, 80) + '...' : result.description}
                 </p>
               </div>
@@ -397,9 +397,9 @@ export const AIAnalysisResultDisplay: React.FC<AIAnalysisResultDisplayProps> = (
                 {appliedFields.has('version') ? '✅ 已应用' : '应用'}
               </button>
             </div>
-            <div className="bg-gradient-to-r from-neon-pink/20 to-neon-purple/20 rounded-md p-2 border border-neon-pink/10 flex items-center justify-between">
-              <p className="text-sm font-bold text-neon-pink font-mono">v{Number(result.version).toFixed(1)}</p>
-              <p className="text-xs text-gray-400">难度: <span className="text-neon-yellow">{result.difficulty}</span></p>
+            <div className="bg-gradient-to-r from-dark-bg-secondary/60 to-dark-bg-primary/60 rounded-md p-3 border border-neon-pink/30 backdrop-blur-sm flex items-center justify-between">
+              <p className="text-base font-bold text-neon-pink font-mono">v{Number(result.version).toFixed(1)}</p>
+              <p className="text-sm text-gray-300">难度: <span className="text-neon-yellow font-medium">{result.difficulty}</span></p>
             </div>
           </div>
         </div>
@@ -427,8 +427,8 @@ export const AIAnalysisResultDisplay: React.FC<AIAnalysisResultDisplayProps> = (
                 {appliedFields.has('category') ? '✅ 已应用' : '应用'}
               </button>
             </div>
-            <div className="bg-gradient-to-r from-neon-cyan/20 to-neon-blue/20 rounded-md p-2 border border-neon-cyan/10">
-              <p className="text-sm font-bold text-neon-cyan">{result.category}</p>
+            <div className="bg-gradient-to-r from-dark-bg-secondary/60 to-dark-bg-primary/60 rounded-md p-3 border border-neon-cyan/30 backdrop-blur-sm">
+              <p className="text-base font-bold text-neon-cyan">{result.category}</p>
             </div>
           </div>
         </div>
@@ -460,7 +460,7 @@ export const AIAnalysisResultDisplay: React.FC<AIAnalysisResultDisplayProps> = (
               {result.tags.map((tag, index) => (
                 <span 
                   key={index} 
-                  className="px-1.5 py-0.5 bg-gradient-to-r from-neon-purple/20 to-neon-pink/20 text-neon-purple border border-neon-purple/20 rounded text-xs font-mono"
+                  className="px-2 py-1 bg-gradient-to-r from-neon-purple/30 to-neon-pink/30 text-neon-purple border border-neon-purple/40 rounded-md text-sm font-mono hover:bg-neon-purple/40 transition-colors"
                 >
                   #{tag}
                 </span>
@@ -497,7 +497,7 @@ export const AIAnalysisResultDisplay: React.FC<AIAnalysisResultDisplayProps> = (
                 result.variables.map((variable, index) => (
                   <span 
                     key={index} 
-                    className="px-1.5 py-0.5 bg-gradient-to-r from-neon-green/20 to-neon-cyan/20 text-neon-green border border-neon-green/20 rounded text-xs font-mono"
+                    className="px-2 py-1 bg-gradient-to-r from-neon-green/30 to-neon-cyan/30 text-neon-green border border-neon-green/40 rounded-md text-sm font-mono hover:bg-neon-green/40 transition-colors"
                   >
                     {`{{${variable}}}`}
                   </span>
@@ -537,7 +537,7 @@ export const AIAnalysisResultDisplay: React.FC<AIAnalysisResultDisplayProps> = (
                 {result.compatibleModels.map((model, index) => (
                   <span 
                     key={index} 
-                    className="px-1.5 py-0.5 bg-gradient-to-r from-neon-red/20 to-neon-pink/20 text-neon-red border border-neon-red/20 rounded text-xs font-mono"
+                    className="px-2 py-1 bg-gradient-to-r from-neon-red/30 to-neon-pink/30 text-neon-red border border-neon-red/40 rounded-md text-sm font-mono hover:bg-neon-red/40 transition-colors"
                   >
                     {model}
                   </span>
@@ -555,18 +555,18 @@ export const AIAnalysisResultDisplay: React.FC<AIAnalysisResultDisplayProps> = (
           <div className="space-y-2">
             {/* 改进建议 */}
             {result.improvements?.length > 0 && (
-              <div className="bg-gradient-to-br from-dark-bg-secondary/50 to-dark-bg-primary/50 rounded-lg p-2 border border-neon-blue/20 backdrop-blur-sm">
-                <div className="flex items-center gap-1.5 mb-2">
-                  <div className="w-4 h-4 bg-neon-blue/20 rounded-md flex items-center justify-center">
-                    <span className="text-neon-blue text-xs">💡</span>
+              <div className="bg-gradient-to-br from-dark-bg-secondary/70 to-dark-bg-primary/70 rounded-lg p-3 border border-violet-400/40 backdrop-blur-sm hover:border-violet-400/60 transition-all duration-300">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="w-5 h-5 bg-violet-400/25 rounded-md flex items-center justify-center">
+                    <span className="text-violet-400 text-sm">💡</span>
                   </div>
-                  <h4 className="text-xs font-semibold text-neon-blue">优化建议</h4>
+                  <h4 className="text-sm font-semibold text-violet-400">优化建议</h4>
                 </div>
-                <ul className="space-y-1">
+                <ul className="space-y-2">
                   {result.improvements.slice(0, 3).map((improvement, index) => (
-                    <li key={index} className="flex items-start gap-1.5 text-xs text-gray-300">
-                      <span className="text-neon-blue mt-0.5">▸</span>
-                      <span className="line-clamp-2">{improvement}</span>
+                    <li key={index} className="flex items-start gap-2 text-sm text-gray-200">
+                      <span className="text-violet-400 mt-0.5 font-bold">▸</span>
+                      <span className="line-clamp-2 leading-relaxed">{improvement}</span>
                     </li>
                   ))}
                 </ul>
@@ -575,18 +575,18 @@ export const AIAnalysisResultDisplay: React.FC<AIAnalysisResultDisplayProps> = (
 
             {/* 使用场景 */}
             {result.useCases?.length > 0 && (
-              <div className="bg-gradient-to-br from-dark-bg-secondary/50 to-dark-bg-primary/50 rounded-lg p-2 border border-neon-green/20 backdrop-blur-sm">
-                <div className="flex items-center gap-1.5 mb-2">
-                  <div className="w-4 h-4 bg-neon-green/20 rounded-md flex items-center justify-center">
-                    <span className="text-neon-green text-xs">🎯</span>
+              <div className="bg-gradient-to-br from-dark-bg-secondary/70 to-dark-bg-primary/70 rounded-lg p-3 border border-emerald-400/40 backdrop-blur-sm hover:border-emerald-400/60 transition-all duration-300">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="w-5 h-5 bg-emerald-400/25 rounded-md flex items-center justify-center">
+                    <span className="text-emerald-400 text-sm">🎯</span>
                   </div>
-                  <h4 className="text-xs font-semibold text-neon-green">应用场景</h4>
+                  <h4 className="text-sm font-semibold text-emerald-400">应用场景</h4>
                 </div>
-                <ul className="space-y-1">
+                <ul className="space-y-2">
                   {result.useCases.slice(0, 3).map((useCase, index) => (
-                    <li key={index} className="flex items-start gap-1.5 text-xs text-gray-300">
-                      <span className="text-neon-green mt-0.5">▸</span>
-                      <span className="line-clamp-1">{useCase}</span>
+                    <li key={index} className="flex items-start gap-2 text-sm text-gray-200">
+                      <span className="text-emerald-400 mt-0.5 font-bold">▸</span>
+                      <span className="line-clamp-1 leading-relaxed">{useCase}</span>
                     </li>
                   ))}
                 </ul>
