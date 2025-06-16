@@ -311,145 +311,6 @@ export const AIAnalysisResultDisplay: React.FC<AIAnalysisResultDisplayProps> = (
 
       {/* 分析结果网格 - 赛博风格卡片 */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-        {/* 分类 */}
-        <div className="group relative bg-gradient-to-br from-dark-bg-secondary/80 to-dark-bg-primary/80 rounded-xl p-4 border border-neon-cyan/20 hover:border-neon-cyan/40 transition-all duration-300 backdrop-blur-sm">
-          <div className="absolute inset-0 bg-gradient-to-br from-neon-cyan/5 to-transparent rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-          <div className="relative">
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 bg-neon-cyan/20 rounded-lg flex items-center justify-center">
-                  <span className="text-neon-cyan">🏷️</span>
-                </div>
-                <h4 className="font-semibold text-gray-200">智能分类</h4>
-              </div>
-              <button
-                type="button"
-                onClick={() => applyField('category', result.category)}
-                disabled={appliedFields.has('category')}
-                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 ${
-                  appliedFields.has('category')
-                    ? 'bg-neon-green/20 text-neon-green border border-neon-green/30'
-                    : 'bg-neon-cyan/20 text-neon-cyan border border-neon-cyan/30 hover:bg-neon-cyan/30 hover:shadow-lg hover:shadow-neon-cyan/25'
-                }`}
-              >
-                {appliedFields.has('category') ? '✅ 已应用' : '应用'}
-              </button>
-            </div>
-            <div className="bg-gradient-to-r from-neon-cyan/20 to-neon-blue/20 rounded-lg p-3 border border-neon-cyan/10">
-              <p className="text-lg font-bold text-neon-cyan">{result.category}</p>
-            </div>
-          </div>
-        </div>
-
-        {/* 标签 */}
-        <div className="group relative bg-gradient-to-br from-dark-bg-secondary/80 to-dark-bg-primary/80 rounded-xl p-4 border border-neon-purple/20 hover:border-neon-purple/40 transition-all duration-300 backdrop-blur-sm">
-          <div className="absolute inset-0 bg-gradient-to-br from-neon-purple/5 to-transparent rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-          <div className="relative">
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 bg-neon-purple/20 rounded-lg flex items-center justify-center">
-                  <span className="text-neon-purple">🔖</span>
-                </div>
-                <h4 className="font-semibold text-gray-200">智能标签</h4>
-              </div>
-              <button
-                type="button"
-                onClick={() => applyField('tags', result.tags)}
-                disabled={appliedFields.has('tags')}
-                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 ${
-                  appliedFields.has('tags')
-                    ? 'bg-neon-green/20 text-neon-green border border-neon-green/30'
-                    : 'bg-neon-purple/20 text-neon-purple border border-neon-purple/30 hover:bg-neon-purple/30 hover:shadow-lg hover:shadow-neon-purple/25'
-                }`}
-              >
-                {appliedFields.has('tags') ? '✅ 已应用' : '应用'}
-              </button>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {result.tags.map((tag, index) => (
-                <span 
-                  key={index} 
-                  className="px-2 py-1 bg-gradient-to-r from-neon-purple/20 to-neon-pink/20 text-neon-purple border border-neon-purple/20 rounded-md text-xs font-mono"
-                >
-                  #{tag}
-                </span>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* 版本建议 */}
-        <div className="group relative bg-gradient-to-br from-dark-bg-secondary/80 to-dark-bg-primary/80 rounded-xl p-4 border border-neon-pink/20 hover:border-neon-pink/40 transition-all duration-300 backdrop-blur-sm">
-          <div className="absolute inset-0 bg-gradient-to-br from-neon-pink/5 to-transparent rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-          <div className="relative">
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 bg-neon-pink/20 rounded-lg flex items-center justify-center">
-                  <span className="text-neon-pink">📋</span>
-                </div>
-                <h4 className="font-semibold text-gray-200">版本建议</h4>
-              </div>
-              <button
-                type="button"
-                onClick={() => applyField('version', result.version)}
-                disabled={appliedFields.has('version')}
-                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 ${
-                  appliedFields.has('version')
-                    ? 'bg-neon-green/20 text-neon-green border border-neon-green/30'
-                    : 'bg-neon-pink/20 text-neon-pink border border-neon-pink/30 hover:bg-neon-pink/30 hover:shadow-lg hover:shadow-neon-pink/25'
-                }`}
-              >
-                {appliedFields.has('version') ? '✅ 已应用' : '应用'}
-              </button>
-            </div>
-            <div className="bg-gradient-to-r from-neon-pink/20 to-neon-purple/20 rounded-lg p-3 border border-neon-pink/10">
-              <p className="text-lg font-bold text-neon-pink font-mono">v{Number(result.version).toFixed(1)}</p>
-              <p className="text-xs text-gray-400 mt-1">难度: <span className="text-neon-yellow">{result.difficulty}</span></p>
-            </div>
-          </div>
-        </div>
-
-        {/* 变量 */}
-        <div className="group relative bg-gradient-to-br from-dark-bg-secondary/80 to-dark-bg-primary/80 rounded-xl p-4 border border-neon-green/20 hover:border-neon-green/40 transition-all duration-300 backdrop-blur-sm">
-          <div className="absolute inset-0 bg-gradient-to-br from-neon-green/5 to-transparent rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-          <div className="relative">
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 bg-neon-green/20 rounded-lg flex items-center justify-center">
-                  <span className="text-neon-green">📝</span>
-                </div>
-                <h4 className="font-semibold text-gray-200">提取变量</h4>
-              </div>
-              <button
-                type="button"
-                onClick={() => applyField('variables', result.variables)}
-                disabled={appliedFields.has('variables')}
-                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 ${
-                  appliedFields.has('variables')
-                    ? 'bg-neon-green/20 text-neon-green border border-neon-green/30'
-                    : 'bg-neon-green/20 text-neon-green border border-neon-green/30 hover:bg-neon-green/30 hover:shadow-lg hover:shadow-neon-green/25'
-                }`}
-              >
-                {appliedFields.has('variables') ? '✅ 已应用' : '应用'}
-              </button>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {result.variables && result.variables.length > 0 ? (
-                result.variables.map((variable, index) => (
-                  <span 
-                    key={index} 
-                    className="px-2 py-1 bg-gradient-to-r from-neon-green/20 to-neon-cyan/20 text-neon-green border border-neon-green/20 rounded-md text-xs font-mono"
-                  >
-                    {`{{${variable}}}`}
-                  </span>
-                ))
-              ) : (
-                <span className="text-gray-500 text-xs italic">无变量检测</span>
-              )}
-            </div>
-          </div>
-        </div>
-
         {/* 建议标题 */}
         {result.suggestedTitle && (
           <div className="group relative bg-gradient-to-br from-dark-bg-secondary/80 to-dark-bg-primary/80 rounded-xl p-4 border border-neon-yellow/20 hover:border-neon-yellow/40 transition-all duration-300 backdrop-blur-sm">
@@ -460,7 +321,7 @@ export const AIAnalysisResultDisplay: React.FC<AIAnalysisResultDisplayProps> = (
                   <div className="w-8 h-8 bg-neon-yellow/20 rounded-lg flex items-center justify-center">
                     <span className="text-neon-yellow">💡</span>
                   </div>
-                  <h4 className="font-semibold text-gray-200">建议标题</h4>
+                  <h4 className="text-sm font-semibold text-gray-200">建议标题</h4>
                 </div>
                 <button
                   type="button"
@@ -492,7 +353,7 @@ export const AIAnalysisResultDisplay: React.FC<AIAnalysisResultDisplayProps> = (
                   <div className="w-8 h-8 bg-neon-orange/20 rounded-lg flex items-center justify-center">
                     <span className="text-neon-orange">📋</span>
                   </div>
-                  <h4 className="font-semibold text-gray-200">建议描述</h4>
+                  <h4 className="text-sm font-semibold text-gray-200">建议描述</h4>
                 </div>
                 <button
                   type="button"
@@ -516,6 +377,145 @@ export const AIAnalysisResultDisplay: React.FC<AIAnalysisResultDisplayProps> = (
           </div>
         )}
 
+        {/* 版本建议 */}
+        <div className="group relative bg-gradient-to-br from-dark-bg-secondary/80 to-dark-bg-primary/80 rounded-xl p-4 border border-neon-pink/20 hover:border-neon-pink/40 transition-all duration-300 backdrop-blur-sm">
+          <div className="absolute inset-0 bg-gradient-to-br from-neon-pink/5 to-transparent rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+          <div className="relative">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 bg-neon-pink/20 rounded-lg flex items-center justify-center">
+                  <span className="text-neon-pink">📋</span>
+                </div>
+                <h4 className="text-sm font-semibold text-gray-200">版本建议</h4>
+              </div>
+              <button
+                type="button"
+                onClick={() => applyField('version', result.version)}
+                disabled={appliedFields.has('version')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 ${
+                  appliedFields.has('version')
+                    ? 'bg-neon-green/20 text-neon-green border border-neon-green/30'
+                    : 'bg-neon-pink/20 text-neon-pink border border-neon-pink/30 hover:bg-neon-pink/30 hover:shadow-lg hover:shadow-neon-pink/25'
+                }`}
+              >
+                {appliedFields.has('version') ? '✅ 已应用' : '应用'}
+              </button>
+            </div>
+            <div className="bg-gradient-to-r from-neon-pink/20 to-neon-purple/20 rounded-lg p-3 border border-neon-pink/10">
+              <p className="text-lg font-bold text-neon-pink font-mono">v{Number(result.version).toFixed(1)}</p>
+              <p className="text-xs text-gray-400 mt-1">难度: <span className="text-neon-yellow">{result.difficulty}</span></p>
+            </div>
+          </div>
+        </div>
+
+        {/* 智能分类 */}
+        <div className="group relative bg-gradient-to-br from-dark-bg-secondary/80 to-dark-bg-primary/80 rounded-xl p-4 border border-neon-cyan/20 hover:border-neon-cyan/40 transition-all duration-300 backdrop-blur-sm">
+          <div className="absolute inset-0 bg-gradient-to-br from-neon-cyan/5 to-transparent rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+          <div className="relative">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 bg-neon-cyan/20 rounded-lg flex items-center justify-center">
+                  <span className="text-neon-cyan">🏷️</span>
+                </div>
+                <h4 className="text-sm font-semibold text-gray-200">智能分类</h4>
+              </div>
+              <button
+                type="button"
+                onClick={() => applyField('category', result.category)}
+                disabled={appliedFields.has('category')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 ${
+                  appliedFields.has('category')
+                    ? 'bg-neon-green/20 text-neon-green border border-neon-green/30'
+                    : 'bg-neon-cyan/20 text-neon-cyan border border-neon-cyan/30 hover:bg-neon-cyan/30 hover:shadow-lg hover:shadow-neon-cyan/25'
+                }`}
+              >
+                {appliedFields.has('category') ? '✅ 已应用' : '应用'}
+              </button>
+            </div>
+            <div className="bg-gradient-to-r from-neon-cyan/20 to-neon-blue/20 rounded-lg p-3 border border-neon-cyan/10">
+              <p className="text-lg font-bold text-neon-cyan">{result.category}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* 智能标签 */}
+        <div className="group relative bg-gradient-to-br from-dark-bg-secondary/80 to-dark-bg-primary/80 rounded-xl p-4 border border-neon-purple/20 hover:border-neon-purple/40 transition-all duration-300 backdrop-blur-sm">
+          <div className="absolute inset-0 bg-gradient-to-br from-neon-purple/5 to-transparent rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+          <div className="relative">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 bg-neon-purple/20 rounded-lg flex items-center justify-center">
+                  <span className="text-neon-purple">🔖</span>
+                </div>
+                <h4 className="text-sm font-semibold text-gray-200">智能标签</h4>
+              </div>
+              <button
+                type="button"
+                onClick={() => applyField('tags', result.tags)}
+                disabled={appliedFields.has('tags')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 ${
+                  appliedFields.has('tags')
+                    ? 'bg-neon-green/20 text-neon-green border border-neon-green/30'
+                    : 'bg-neon-purple/20 text-neon-purple border border-neon-purple/30 hover:bg-neon-purple/30 hover:shadow-lg hover:shadow-neon-purple/25'
+                }`}
+              >
+                {appliedFields.has('tags') ? '✅ 已应用' : '应用'}
+              </button>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {result.tags.map((tag, index) => (
+                <span 
+                  key={index} 
+                  className="px-2 py-1 bg-gradient-to-r from-neon-purple/20 to-neon-pink/20 text-neon-purple border border-neon-purple/20 rounded-md text-xs font-mono"
+                >
+                  #{tag}
+                </span>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* 提取变量 */}
+        <div className="group relative bg-gradient-to-br from-dark-bg-secondary/80 to-dark-bg-primary/80 rounded-xl p-4 border border-neon-green/20 hover:border-neon-green/40 transition-all duration-300 backdrop-blur-sm">
+          <div className="absolute inset-0 bg-gradient-to-br from-neon-green/5 to-transparent rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+          <div className="relative">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 bg-neon-green/20 rounded-lg flex items-center justify-center">
+                  <span className="text-neon-green">📝</span>
+                </div>
+                <h4 className="text-sm font-semibold text-gray-200">提取变量</h4>
+              </div>
+              <button
+                type="button"
+                onClick={() => applyField('variables', result.variables)}
+                disabled={appliedFields.has('variables')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 ${
+                  appliedFields.has('variables')
+                    ? 'bg-neon-green/20 text-neon-green border border-neon-green/30'
+                    : 'bg-neon-green/20 text-neon-green border border-neon-green/30 hover:bg-neon-green/30 hover:shadow-lg hover:shadow-neon-green/25'
+                }`}
+              >
+                {appliedFields.has('variables') ? '✅ 已应用' : '应用'}
+              </button>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {result.variables && result.variables.length > 0 ? (
+                result.variables.map((variable, index) => (
+                  <span 
+                    key={index} 
+                    className="px-2 py-1 bg-gradient-to-r from-neon-green/20 to-neon-cyan/20 text-neon-green border border-neon-green/20 rounded-md text-xs font-mono"
+                  >
+                    {`{{${variable}}}`}
+                  </span>
+                ))
+              ) : (
+                <span className="text-gray-500 text-xs italic">无变量检测</span>
+              )}
+            </div>
+          </div>
+        </div>
+
         {/* 兼容模型 */}
         {result.compatibleModels && result.compatibleModels.length > 0 && (
           <div className="group relative bg-gradient-to-br from-dark-bg-secondary/80 to-dark-bg-primary/80 rounded-xl p-4 border border-neon-red/20 hover:border-neon-red/40 transition-all duration-300 backdrop-blur-sm">
@@ -526,7 +526,7 @@ export const AIAnalysisResultDisplay: React.FC<AIAnalysisResultDisplayProps> = (
                   <div className="w-8 h-8 bg-neon-red/20 rounded-lg flex items-center justify-center">
                     <span className="text-neon-red">🔧</span>
                   </div>
-                  <h4 className="font-semibold text-gray-200">兼容模型</h4>
+                  <h4 className="text-sm font-semibold text-gray-200">兼容模型</h4>
                 </div>
                 <button
                   type="button"
