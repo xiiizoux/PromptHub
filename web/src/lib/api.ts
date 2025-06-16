@@ -75,13 +75,12 @@ export const getCategories = async (): Promise<string[]> => {
       return categories;
     }
     
-    console.log('API返回空数据或不成功，使用默认分类');
-    // 如果API返回空数据或失败，返回默认分类
-    return ['通用', '创意写作', '代码辅助', '数据分析', '营销', '学术研究', '教育'];
+    // API返回空数据或不成功时，抛出错误而不是使用备用数据
+    throw new Error('API返回空数据或请求不成功');
   } catch (error) {
     console.error('获取分类失败:', error);
-    // 发生错误时也返回默认分类
-    return ['通用', '创意写作', '代码辅助', '数据分析', '营销', '学术研究', '教育'];
+    // 直接抛出错误，不使用备用机制
+    throw new Error(`获取分类失败: ${error instanceof Error ? error.message : '未知错误'}`);
   }
 };
 

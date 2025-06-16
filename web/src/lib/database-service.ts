@@ -122,57 +122,14 @@ export class DatabaseService {
         }
       }
 
-      // 最后的兜底方案：返回默认分类对象
-      console.log('使用默认分类兜底方案');
-      const defaultCategories = [
-        { name: '通用', sort_order: 1 },
-        { name: '编程', sort_order: 2 },
-        { name: '创意写作', sort_order: 3 },
-        { name: '数据分析', sort_order: 4 },
-        { name: '营销推广', sort_order: 5 },
-        { name: '学术研究', sort_order: 6 },
-        { name: '教育培训', sort_order: 7 },
-        { name: '商务办公', sort_order: 8 },
-        { name: '内容翻译', sort_order: 9 },
-        { name: '问答助手', sort_order: 10 }
-      ];
-      
-      return defaultCategories.map((cat) => ({
-        id: undefined,
-        name: cat.name,
-        name_en: undefined,
-        alias: undefined,
-        description: undefined,
-        sort_order: cat.sort_order,
-        is_active: true
-      }));
+      // 所有方案都失败时，抛出错误
+      console.log('所有获取分类的方案都失败');
+      throw new Error('无法从数据库获取分类数据');
       
     } catch (error) {
       console.error('获取分类失败:', error);
-      
-      // 发生错误时返回默认分类对象
-      const defaultCategories = [
-        { name: '通用', sort_order: 1 },
-        { name: '编程', sort_order: 2 },
-        { name: '创意写作', sort_order: 3 },
-        { name: '数据分析', sort_order: 4 },
-        { name: '营销推广', sort_order: 5 },
-        { name: '学术研究', sort_order: 6 },
-        { name: '教育培训', sort_order: 7 },
-        { name: '商务办公', sort_order: 8 },
-        { name: '内容翻译', sort_order: 9 },
-        { name: '问答助手', sort_order: 10 }
-      ];
-      
-      return defaultCategories.map((cat) => ({
-        id: undefined,
-        name: cat.name,
-        name_en: undefined,
-        alias: undefined,
-        description: undefined,
-        sort_order: cat.sort_order,
-        is_active: true
-      }));
+      // 直接抛出错误，不使用备用机制
+      throw new Error(`获取分类失败: ${error instanceof Error ? error.message : '未知错误'}`);
     }
   }
 

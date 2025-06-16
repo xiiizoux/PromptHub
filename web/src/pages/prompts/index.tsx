@@ -51,7 +51,8 @@ export default function PromptsPage() {
         }
       } catch (err) {
         console.error('获取分类失败:', err);
-        setCategories(['全部']);
+        // 不设置备用数据，让错误状态显示
+        setError('无法加载分类数据，请刷新页面重试');
       }
     };
 
