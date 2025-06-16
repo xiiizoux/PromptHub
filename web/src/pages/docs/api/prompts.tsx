@@ -1,67 +1,167 @@
 import React from 'react';
 import Link from 'next/link';
-import { ChevronLeftIcon } from '@heroicons/react/24/outline';
+import { ChevronLeftIcon, CommandLineIcon, CubeIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
+import { motion } from 'framer-motion';
 
-const PromptsApiPage: React.FC = () => {
+const PromptsAPIPage: React.FC = () => {
   return (
-    <div className="bg-gray-50 min-h-screen py-8">
-      <div className="container-custom">
-        {/* 返回按钮 */}
-        <div className="mb-6">
-          <Link href="/docs/api" className="inline-flex items-center text-sm font-medium text-primary-600 hover:text-primary-700">
-            <ChevronLeftIcon className="h-5 w-5 mr-1" />
-            返回API参考
-          </Link>
-        </div>
+    <div className="min-h-screen bg-dark-bg-primary relative overflow-hidden">
+      {/* 背景网格效果 */}
+      <div className="fixed inset-0 bg-grid-pattern opacity-10 pointer-events-none"></div>
+      
+      {/* 背景装饰元素 */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-1/4 -right-48 w-96 h-96 bg-gradient-to-br from-neon-cyan/20 to-neon-purple/20 rounded-full blur-3xl animate-pulse-slow"></div>
+        <div className="absolute bottom-1/4 -left-48 w-96 h-96 bg-gradient-to-tr from-neon-pink/20 to-neon-purple/20 rounded-full blur-3xl animate-pulse-slow"></div>
+        <div className="absolute top-3/4 right-1/4 w-64 h-64 bg-gradient-to-br from-neon-yellow/10 to-neon-green/10 rounded-full blur-2xl"></div>
+      </div>
 
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">提示词 API</h1>
-          <p className="mt-2 text-gray-600">
-            完整的提示词管理API文档，包括创建、查询、更新和删除操作
-          </p>
-        </div>
+      <div className="relative z-10 py-8">
+        <div className="container-custom">
+          {/* 返回按钮 */}
+          <motion.div 
+            className="mb-8"
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            <Link href="/docs/api" className="inline-flex items-center text-sm font-medium text-neon-cyan hover:text-white transition-colors group">
+              <ChevronLeftIcon className="h-5 w-5 mr-2 group-hover:-translate-x-1 transition-transform" />
+              返回API参考
+            </Link>
+          </motion.div>
 
-        {/* API概述 */}
-        <div className="bg-white shadow-sm rounded-lg overflow-hidden mb-8">
-          <div className="p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">API 概述</h2>
-            <p className="text-gray-600 mb-4">
-              提示词API提供了完整的CRUD操作，支持批量操作、高级搜索和性能分析。所有API都需要适当的认证。
+          {/* 页面标题 */}
+          <motion.div 
+            className="mb-12"
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+          >
+            <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-neon-cyan via-neon-purple to-neon-pink bg-clip-text text-transparent mb-4">
+              提示词 API
+            </h1>
+            <p className="text-xl text-gray-400 max-w-3xl leading-relaxed">
+              全面的提示词管理API，支持创建、查询、更新和删除操作
+            </p>
+          </motion.div>
+
+          {/* API概览 */}
+          <motion.div 
+            className="glass rounded-2xl p-8 border border-neon-cyan/30 mb-8 hover:border-neon-cyan/50 transition-all duration-300"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+          >
+            <h2 className="text-2xl font-semibold bg-gradient-to-r from-neon-cyan to-neon-purple bg-clip-text text-transparent mb-6">
+              API概览
+            </h2>
+            <p className="text-gray-300 mb-8 leading-relaxed">
+              提示词API提供完整的CRUD操作，支持批量处理、高级搜索和版本管理等功能。
             </p>
             
-            <div className="bg-gray-50 p-4 rounded-lg">
-              <h3 className="text-lg font-medium text-gray-900 mb-2">基础URL</h3>
-              <code className="bg-gray-800 text-white px-3 py-1 rounded">https://api.prompthub.com/v1</code>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <motion.div 
+                className="cyber-card p-6 text-center"
+                whileHover={{ scale: 1.05 }}
+                transition={{ duration: 0.2 }}
+              >
+                <MagnifyingGlassIcon className="h-8 w-8 text-neon-green mx-auto mb-3" />
+                <h3 className="text-lg font-semibold text-neon-green mb-2">查询</h3>
+                <p className="text-gray-400 text-sm">搜索和获取提示词</p>
+              </motion.div>
+              
+              <motion.div 
+                className="cyber-card p-6 text-center"
+                whileHover={{ scale: 1.05 }}
+                transition={{ duration: 0.2 }}
+              >
+                <CubeIcon className="h-8 w-8 text-neon-blue mx-auto mb-3" />
+                <h3 className="text-lg font-semibold text-neon-blue mb-2">创建</h3>
+                <p className="text-gray-400 text-sm">添加新的提示词</p>
+              </motion.div>
+              
+              <motion.div 
+                className="cyber-card p-6 text-center"
+                whileHover={{ scale: 1.05 }}
+                transition={{ duration: 0.2 }}
+              >
+                <CommandLineIcon className="h-8 w-8 text-neon-purple mx-auto mb-3" />
+                <h3 className="text-lg font-semibold text-neon-purple mb-2">更新</h3>
+                <p className="text-gray-400 text-sm">修改现有提示词</p>
+              </motion.div>
+              
+              <motion.div 
+                className="cyber-card p-6 text-center"
+                whileHover={{ scale: 1.05 }}
+                transition={{ duration: 0.2 }}
+              >
+                <CommandLineIcon className="h-8 w-8 text-neon-pink mx-auto mb-3" />
+                <h3 className="text-lg font-semibold text-neon-pink mb-2">管理</h3>
+                <p className="text-gray-400 text-sm">删除和批量操作</p>
+              </motion.div>
             </div>
-          </div>
-        </div>
+          </motion.div>
 
-        {/* 获取提示词列表 */}
-        <div className="bg-white shadow-sm rounded-lg overflow-hidden mb-8">
-          <div className="p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">获取提示词列表</h2>
+          {/* 获取提示词列表 */}
+          <motion.div 
+            className="glass rounded-2xl p-8 border border-neon-green/30 mb-8 hover:border-neon-green/50 transition-all duration-300"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.4 }}
+          >
+            <h2 className="text-2xl font-semibold bg-gradient-to-r from-neon-green to-neon-cyan bg-clip-text text-transparent mb-8">
+              获取提示词列表
+            </h2>
             
             <div className="space-y-6">
+              <div className="flex items-center space-x-4">
+                <span className="px-3 py-1 bg-neon-green/20 border border-neon-green/30 rounded-full text-sm text-neon-green font-mono">GET</span>
+                <code className="text-neon-cyan font-mono">/api/prompts</code>
+              </div>
+              
               <div>
-                <h3 className="text-lg font-medium text-gray-900 mb-3">请求</h3>
-                <pre className="bg-gray-800 text-white p-4 rounded-lg overflow-auto text-sm">
-{`GET /prompts
-
-# 查询参数
-?page=1              # 页码，默认为1
-&limit=20            # 每页数量，默认20，最大100
-&category=编程       # 按类别筛选
-&tags=javascript,ai  # 按标签筛选，逗号分隔
-&search=代码审查     # 关键词搜索
-&public=true         # 只显示公开提示词
-&sort=created_at     # 排序字段：created_at, updated_at, name, usage_count
-&order=desc          # 排序方向：asc, desc`}
-                </pre>
+                <h3 className="text-xl font-semibold text-white mb-4">查询参数</h3>
+                <div className="overflow-hidden rounded-xl border border-neon-green/20">
+                  <div className="bg-gradient-to-r from-neon-green/10 to-neon-cyan/10 px-6 py-3 border-b border-neon-green/20">
+                    <div className="grid grid-cols-4 gap-4 font-semibold text-white text-sm">
+                      <div>参数</div>
+                      <div>类型</div>
+                      <div>必需</div>
+                      <div>说明</div>
+                    </div>
+                  </div>
+                  <div className="bg-dark-bg-secondary/50 backdrop-blur-sm">
+                    {[
+                      { name: 'page', type: 'number', required: false, desc: '页码，默认1' },
+                      { name: 'limit', type: 'number', required: false, desc: '每页数量，默认20' },
+                      { name: 'category', type: 'string', required: false, desc: '分类筛选' },
+                      { name: 'tags', type: 'string[]', required: false, desc: '标签筛选' },
+                      { name: 'search', type: 'string', required: false, desc: '搜索关键词' },
+                      { name: 'is_public', type: 'boolean', required: false, desc: '是否公开' }
+                    ].map((param, index) => (
+                      <div key={param.name} className="px-6 py-3 border-b border-neon-green/10 hover:bg-neon-green/5 transition-colors">
+                        <div className="grid grid-cols-4 gap-4 text-gray-300 text-sm">
+                          <div className="font-mono text-neon-cyan">{param.name}</div>
+                          <div className="text-neon-purple">{param.type}</div>
+                          <div className={param.required ? 'text-neon-red' : 'text-gray-500'}>
+                            {param.required ? '是' : '否'}
+                          </div>
+                          <div>{param.desc}</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
 
               <div>
-                <h3 className="text-lg font-medium text-gray-900 mb-3">响应</h3>
-                <pre className="bg-gray-800 text-white p-4 rounded-lg overflow-auto text-sm">
+                <h3 className="text-xl font-semibold text-white mb-4">响应示例</h3>
+                <div className="bg-dark-bg-secondary rounded-xl border border-neon-green/20 overflow-hidden">
+                  <div className="px-6 py-3 bg-gradient-to-r from-neon-green/10 to-transparent border-b border-neon-green/20">
+                    <span className="text-neon-green text-sm font-mono">JSON Response</span>
+                  </div>
+                  <pre className="p-6 text-green-400 font-mono text-sm overflow-auto">
 {`{
   "success": true,
   "data": {
@@ -70,451 +170,366 @@ const PromptsApiPage: React.FC = () => {
         "id": "prompt-123",
         "name": "code-reviewer",
         "description": "专业的代码审查助手",
-        "content": "你是一个经验丰富的代码审查员...",
         "category": "编程",
         "tags": ["代码", "审查", "质量"],
+        "content": "你是一个专业的代码审查员...",
         "is_public": true,
-        "created_by": "user-456",
-        "created_at": "2024-01-01T00:00:00Z",
-        "updated_at": "2024-01-01T00:00:00Z",
+        "author": {
+          "id": "user-456",
+          "name": "开发者"
+        },
+        "created_at": "2024-01-15T10:30:00Z",
+        "updated_at": "2024-01-15T10:30:00Z",
         "usage_count": 150,
-        "rating": 4.8,
-        "version": "1.2.0"
+        "rating": 4.8
       }
     ],
     "pagination": {
-      "page": 1,
-      "limit": 20,
-      "total": 100,
-      "pages": 5
+      "current_page": 1,
+      "total_pages": 5,
+      "total_count": 98,
+      "per_page": 20
     }
   }
 }`}
-                </pre>
+                  </pre>
+                </div>
               </div>
             </div>
-          </div>
-        </div>
+          </motion.div>
 
-        {/* 获取单个提示词 */}
-        <div className="bg-white shadow-sm rounded-lg overflow-hidden mb-8">
-          <div className="p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">获取单个提示词</h2>
+          {/* 获取单个提示词 */}
+          <motion.div 
+            className="glass rounded-2xl p-8 border border-neon-blue/30 mb-8 hover:border-neon-blue/50 transition-all duration-300"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.6 }}
+          >
+            <h2 className="text-2xl font-semibold bg-gradient-to-r from-neon-blue to-neon-purple bg-clip-text text-transparent mb-8">
+              获取单个提示词
+            </h2>
             
             <div className="space-y-6">
+              <div className="flex items-center space-x-4">
+                <span className="px-3 py-1 bg-neon-green/20 border border-neon-green/30 rounded-full text-sm text-neon-green font-mono">GET</span>
+                <code className="text-neon-cyan font-mono">/api/prompts/:id</code>
+              </div>
+              
               <div>
-                <h3 className="text-lg font-medium text-gray-900 mb-3">请求</h3>
-                <pre className="bg-gray-800 text-white p-4 rounded-lg overflow-auto text-sm">
-{`GET /prompts/{id}
-
-# 路径参数
-{id}  # 提示词ID或名称
-
-# 查询参数
-?include_stats=true    # 包含使用统计
-?include_versions=true # 包含版本历史`}
-                </pre>
+                <h3 className="text-xl font-semibold text-white mb-4">路径参数</h3>
+                <div className="cyber-card p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <span className="font-mono text-neon-cyan">id</span>
+                      <span className="text-gray-400 ml-2">提示词的唯一标识符</span>
+                    </div>
+                    <span className="text-neon-purple">string</span>
+                  </div>
+                </div>
               </div>
 
               <div>
-                <h3 className="text-lg font-medium text-gray-900 mb-3">响应</h3>
-                <pre className="bg-gray-800 text-white p-4 rounded-lg overflow-auto text-sm">
+                <h3 className="text-xl font-semibold text-white mb-4">响应示例</h3>
+                <div className="bg-dark-bg-secondary rounded-xl border border-neon-blue/20 overflow-hidden">
+                  <div className="px-6 py-3 bg-gradient-to-r from-neon-blue/10 to-transparent border-b border-neon-blue/20">
+                    <span className="text-neon-blue text-sm font-mono">JSON Response</span>
+                  </div>
+                  <pre className="p-6 text-green-400 font-mono text-sm overflow-auto">
 {`{
   "success": true,
   "data": {
     "id": "prompt-123",
     "name": "code-reviewer",
     "description": "专业的代码审查助手",
-    "content": "你是一个经验丰富的代码审查员...",
     "category": "编程",
     "tags": ["代码", "审查", "质量"],
+    "content": "你是一个专业的代码审查员，具有多年的软件开发经验...",
     "is_public": true,
-    "created_by": "user-456",
-    "created_at": "2024-01-01T00:00:00Z",
-    "updated_at": "2024-01-01T00:00:00Z",
-    "version": "1.2.0",
-    "stats": {
-      "usage_count": 150,
-      "rating": 4.8,
-      "avg_response_time": 1.2,
-      "success_rate": 0.95
+    "author": {
+      "id": "user-456",
+      "name": "开发者",
+      "avatar": "https://example.com/avatar.jpg"
     },
+    "created_at": "2024-01-15T10:30:00Z",
+    "updated_at": "2024-01-15T10:30:00Z",
+    "usage_count": 150,
+    "rating": 4.8,
+    "version": "1.2.0",
     "versions": [
       {
         "version": "1.2.0",
-        "created_at": "2024-01-01T00:00:00Z",
-        "changes": "优化了输出格式"
+        "created_at": "2024-01-15T10:30:00Z",
+        "changes": "优化了代码审查逻辑"
       },
       {
         "version": "1.1.0",
-        "created_at": "2023-12-01T00:00:00Z",
-        "changes": "添加了错误处理"
+        "created_at": "2024-01-10T14:20:00Z",
+        "changes": "添加了安全检查功能"
       }
     ]
   }
 }`}
-                </pre>
+                  </pre>
+                </div>
               </div>
             </div>
-          </div>
-        </div>
+          </motion.div>
 
-        {/* 创建提示词 */}
-        <div className="bg-white shadow-sm rounded-lg overflow-hidden mb-8">
-          <div className="p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">创建提示词</h2>
+          {/* 创建提示词 */}
+          <motion.div 
+            className="glass rounded-2xl p-8 border border-neon-purple/30 mb-8 hover:border-neon-purple/50 transition-all duration-300"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.8 }}
+          >
+            <h2 className="text-2xl font-semibold bg-gradient-to-r from-neon-purple to-neon-pink bg-clip-text text-transparent mb-8">
+              创建提示词
+            </h2>
             
             <div className="space-y-6">
+              <div className="flex items-center space-x-4">
+                <span className="px-3 py-1 bg-neon-blue/20 border border-neon-blue/30 rounded-full text-sm text-neon-blue font-mono">POST</span>
+                <code className="text-neon-cyan font-mono">/api/prompts</code>
+              </div>
+              
               <div>
-                <h3 className="text-lg font-medium text-gray-900 mb-3">请求</h3>
-                <pre className="bg-gray-800 text-white p-4 rounded-lg overflow-auto text-sm">
-{`POST /prompts
-Content-Type: application/json
-
-{
+                <h3 className="text-xl font-semibold text-white mb-4">请求体</h3>
+                <div className="bg-dark-bg-secondary rounded-xl border border-neon-purple/20 overflow-hidden">
+                  <div className="px-6 py-3 bg-gradient-to-r from-neon-purple/10 to-transparent border-b border-neon-purple/20">
+                    <span className="text-neon-purple text-sm font-mono">JSON Request Body</span>
+                  </div>
+                  <pre className="p-6 text-green-400 font-mono text-sm overflow-auto">
+{`{
   "name": "email-writer",
   "description": "专业的邮件写作助手",
-  "content": "你是一个专业的邮件写作助手...",
   "category": "文案",
   "tags": ["邮件", "写作", "商务"],
-  "is_public": false,
+  "content": "你是一个专业的邮件写作专家，擅长撰写各种类型的商务邮件...",
+  "is_public": true,
   "variables": [
     {
-      "name": "recipient",
+      "name": "recipient_name",
       "description": "收件人姓名",
       "type": "string",
       "required": true
     },
     {
-      "name": "tone",
-      "description": "邮件语调",
-      "type": "string",
-      "default": "正式",
-      "options": ["正式", "友好", "紧急"]
+      "name": "email_type",
+      "description": "邮件类型",
+      "type": "enum",
+      "options": ["感谢", "邀请", "跟进", "道歉"],
+      "required": true
     }
   ]
 }`}
-                </pre>
+                  </pre>
+                </div>
               </div>
 
               <div>
-                <h3 className="text-lg font-medium text-gray-900 mb-3">响应</h3>
-                <pre className="bg-gray-800 text-white p-4 rounded-lg overflow-auto text-sm">
+                <h3 className="text-xl font-semibold text-white mb-4">响应示例</h3>
+                <div className="bg-dark-bg-secondary rounded-xl border border-neon-purple/20 overflow-hidden">
+                  <div className="px-6 py-3 bg-gradient-to-r from-neon-purple/10 to-transparent border-b border-neon-purple/20">
+                    <span className="text-neon-purple text-sm font-mono">JSON Response</span>
+                  </div>
+                  <pre className="p-6 text-green-400 font-mono text-sm overflow-auto">
 {`{
   "success": true,
   "data": {
     "id": "prompt-789",
     "name": "email-writer",
     "description": "专业的邮件写作助手",
-    "content": "你是一个专业的邮件写作助手...",
     "category": "文案",
     "tags": ["邮件", "写作", "商务"],
-    "is_public": false,
-    "created_by": "user-456",
-    "created_at": "2024-01-01T12:00:00Z",
-    "updated_at": "2024-01-01T12:00:00Z",
+    "content": "你是一个专业的邮件写作专家...",
+    "is_public": true,
+    "author": {
+      "id": "user-456",
+      "name": "开发者"
+    },
+    "created_at": "2024-01-16T09:15:00Z",
+    "updated_at": "2024-01-16T09:15:00Z",
+    "usage_count": 0,
+    "rating": 0,
     "version": "1.0.0"
-  }
+  },
+  "message": "提示词创建成功"
 }`}
-                </pre>
+                  </pre>
+                </div>
               </div>
             </div>
-          </div>
-        </div>
+          </motion.div>
 
-        {/* 更新提示词 */}
-        <div className="bg-white shadow-sm rounded-lg overflow-hidden mb-8">
-          <div className="p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">更新提示词</h2>
+          {/* 更新提示词 */}
+          <motion.div 
+            className="glass rounded-2xl p-8 border border-neon-pink/30 mb-8 hover:border-neon-pink/50 transition-all duration-300"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 1.0 }}
+          >
+            <h2 className="text-2xl font-semibold bg-gradient-to-r from-neon-pink to-neon-cyan bg-clip-text text-transparent mb-8">
+              更新提示词
+            </h2>
             
             <div className="space-y-6">
-              <div>
-                <h3 className="text-lg font-medium text-gray-900 mb-3">请求</h3>
-                <pre className="bg-gray-800 text-white p-4 rounded-lg overflow-auto text-sm">
-{`PUT /prompts/{id}
-Content-Type: application/json
-
-{
-  "description": "更新后的描述",
-  "content": "更新后的提示词内容...",
-  "tags": ["邮件", "写作", "商务", "AI"],
-  "version_notes": "添加了新的变量支持"
-}`}
-                </pre>
+              <div className="flex items-center space-x-4">
+                <span className="px-3 py-1 bg-neon-yellow/20 border border-neon-yellow/30 rounded-full text-sm text-neon-yellow font-mono">PUT</span>
+                <code className="text-neon-cyan font-mono">/api/prompts/:id</code>
+              </div>
+              
+              <div className="bg-gradient-to-r from-neon-yellow/20 to-neon-orange/20 border border-neon-yellow/30 rounded-xl p-6">
+                <div className="flex items-start space-x-3">
+                  <div className="flex-shrink-0 w-6 h-6 rounded-full bg-neon-yellow/30 flex items-center justify-center">
+                    <span className="text-neon-yellow text-sm">⚠️</span>
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-neon-yellow mb-2">版本控制</h4>
+                    <p className="text-gray-300 text-sm">
+                      更新提示词会创建新版本，原版本会被保留以支持版本回退。
+                    </p>
+                  </div>
+                </div>
               </div>
 
               <div>
-                <h3 className="text-lg font-medium text-gray-900 mb-3">响应</h3>
-                <pre className="bg-gray-800 text-white p-4 rounded-lg overflow-auto text-sm">
+                <h3 className="text-xl font-semibold text-white mb-4">请求体示例</h3>
+                <div className="bg-dark-bg-secondary rounded-xl border border-neon-pink/20 overflow-hidden">
+                  <div className="px-6 py-3 bg-gradient-to-r from-neon-pink/10 to-transparent border-b border-neon-pink/20">
+                    <span className="text-neon-pink text-sm font-mono">JSON Request Body</span>
+                  </div>
+                  <pre className="p-6 text-green-400 font-mono text-sm overflow-auto">
+{`{
+  "description": "增强版专业邮件写作助手",
+  "content": "你是一个专业的邮件写作专家，具有多年的商务沟通经验...",
+  "tags": ["邮件", "写作", "商务", "AI助手"],
+  "version_notes": "添加了更多邮件模板和优化了语言风格"
+}`}
+                  </pre>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* 删除提示词 */}
+          <motion.div 
+            className="glass rounded-2xl p-8 border border-neon-red/30 mb-8 hover:border-neon-red/50 transition-all duration-300"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 1.2 }}
+          >
+            <h2 className="text-2xl font-semibold bg-gradient-to-r from-neon-red to-neon-pink bg-clip-text text-transparent mb-8">
+              删除提示词
+            </h2>
+            
+            <div className="space-y-6">
+              <div className="flex items-center space-x-4">
+                <span className="px-3 py-1 bg-neon-red/20 border border-neon-red/30 rounded-full text-sm text-neon-red font-mono">DELETE</span>
+                <code className="text-neon-cyan font-mono">/api/prompts/:id</code>
+              </div>
+              
+              <div className="bg-gradient-to-r from-neon-red/20 to-neon-pink/20 border border-neon-red/30 rounded-xl p-6">
+                <div className="flex items-start space-x-3">
+                  <div className="flex-shrink-0 w-6 h-6 rounded-full bg-neon-red/30 flex items-center justify-center">
+                    <span className="text-neon-red text-sm">🚨</span>
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-neon-red mb-2">危险操作</h4>
+                    <p className="text-gray-300 text-sm">
+                      删除操作不可逆，请确保您有足够的权限执行此操作。
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <h3 className="text-xl font-semibold text-white mb-4">响应示例</h3>
+                <div className="bg-dark-bg-secondary rounded-xl border border-neon-red/20 overflow-hidden">
+                  <div className="px-6 py-3 bg-gradient-to-r from-neon-red/10 to-transparent border-b border-neon-red/20">
+                    <span className="text-neon-red text-sm font-mono">JSON Response</span>
+                  </div>
+                  <pre className="p-6 text-green-400 font-mono text-sm overflow-auto">
 {`{
   "success": true,
+  "message": "提示词已成功删除",
   "data": {
-    "id": "prompt-789",
-    "name": "email-writer",
-    "description": "更新后的描述",
-    "content": "更新后的提示词内容...",
-    "updated_at": "2024-01-01T13:00:00Z",
-    "version": "1.1.0",
-    "previous_version": "1.0.0"
+    "deleted_id": "prompt-789",
+    "deleted_at": "2024-01-16T15:30:00Z"
   }
 }`}
-                </pre>
+                  </pre>
+                </div>
               </div>
             </div>
-          </div>
-        </div>
+          </motion.div>
 
-        {/* 删除提示词 */}
-        <div className="bg-white shadow-sm rounded-lg overflow-hidden mb-8">
-          <div className="p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">删除提示词</h2>
+          {/* 错误响应 */}
+          <motion.div 
+            className="glass rounded-2xl p-8 border border-neon-orange/30 mb-8 hover:border-neon-orange/50 transition-all duration-300"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 1.4 }}
+          >
+            <h2 className="text-2xl font-semibold bg-gradient-to-r from-neon-orange to-neon-red bg-clip-text text-transparent mb-8">
+              错误响应
+            </h2>
             
             <div className="space-y-6">
-              <div>
-                <h3 className="text-lg font-medium text-gray-900 mb-3">请求</h3>
-                <pre className="bg-gray-800 text-white p-4 rounded-lg overflow-auto text-sm">
-{`DELETE /prompts/{id}
-
-# 查询参数
-?force=false  # 是否强制删除（跳过软删除）`}
-                </pre>
-              </div>
-
-              <div>
-                <h3 className="text-lg font-medium text-gray-900 mb-3">响应</h3>
-                <pre className="bg-gray-800 text-white p-4 rounded-lg overflow-auto text-sm">
-{`{
-  "success": true,
-  "data": {
-    "id": "prompt-789",
-    "deleted_at": "2024-01-01T14:00:00Z",
-    "message": "提示词已成功删除"
-  }
-}`}
-                </pre>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* 批量操作 */}
-        <div className="bg-white shadow-sm rounded-lg overflow-hidden mb-8">
-          <div className="p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">批量操作</h2>
-            
-            <div className="space-y-6">
-              <div>
-                <h3 className="text-lg font-medium text-gray-900 mb-3">批量获取</h3>
-                <pre className="bg-gray-800 text-white p-4 rounded-lg overflow-auto text-sm">
-{`POST /prompts/batch
-Content-Type: application/json
-
-{
-  "ids": ["prompt-123", "prompt-456", "prompt-789"],
-  "include_stats": true
-}`}
-                </pre>
-              </div>
-
-              <div>
-                <h3 className="text-lg font-medium text-gray-900 mb-3">批量更新标签</h3>
-                <pre className="bg-gray-800 text-white p-4 rounded-lg overflow-auto text-sm">
-{`PUT /prompts/batch/tags
-Content-Type: application/json
-
-{
-  "ids": ["prompt-123", "prompt-456"],
-  "action": "add",  # add, remove, replace
-  "tags": ["新标签", "批量更新"]
-}`}
-                </pre>
-              </div>
-
-              <div>
-                <h3 className="text-lg font-medium text-gray-900 mb-3">批量删除</h3>
-                <pre className="bg-gray-800 text-white p-4 rounded-lg overflow-auto text-sm">
-{`DELETE /prompts/batch
-Content-Type: application/json
-
-{
-  "ids": ["prompt-123", "prompt-456"],
-  "force": false
-}`}
-                </pre>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* 错误响应 */}
-        <div className="bg-white shadow-sm rounded-lg overflow-hidden mb-8">
-          <div className="p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">错误响应</h2>
-            
-            <div className="space-y-4">
-              <div>
-                <h3 className="text-lg font-medium text-gray-900 mb-2">400 Bad Request</h3>
-                <pre className="bg-gray-800 text-white p-3 rounded-lg text-sm">
+              <p className="text-gray-300 leading-relaxed">
+                当API请求失败时，会返回标准的错误响应格式：
+              </p>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <h3 className="text-lg font-semibold text-neon-orange mb-4">常见错误码</h3>
+                  <div className="space-y-3">
+                    {[
+                      { code: '400', desc: 'Bad Request - 请求参数错误' },
+                      { code: '401', desc: 'Unauthorized - 认证失败' },
+                      { code: '403', desc: 'Forbidden - 权限不足' },
+                      { code: '404', desc: 'Not Found - 资源不存在' },
+                      { code: '422', desc: 'Validation Error - 数据验证失败' },
+                      { code: '500', desc: 'Internal Server Error - 服务器内部错误' }
+                    ].map((error) => (
+                      <div key={error.code} className="cyber-card p-4">
+                        <div className="flex items-center justify-between">
+                          <span className="font-mono text-neon-red">{error.code}</span>
+                          <span className="text-gray-400 text-sm">{error.desc}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                
+                <div>
+                  <h3 className="text-lg font-semibold text-neon-orange mb-4">错误响应格式</h3>
+                  <div className="bg-dark-bg-secondary rounded-xl border border-neon-orange/20 overflow-hidden">
+                    <div className="px-6 py-3 bg-gradient-to-r from-neon-orange/10 to-transparent border-b border-neon-orange/20">
+                      <span className="text-neon-orange text-sm font-mono">Error Response</span>
+                    </div>
+                    <pre className="p-6 text-red-400 font-mono text-sm overflow-auto">
 {`{
   "success": false,
   "error": {
     "code": "VALIDATION_ERROR",
-    "message": "请求参数验证失败",
+    "message": "提示词名称不能为空",
     "details": {
-      "name": ["名称不能为空"],
-      "content": ["内容长度不能超过10000字符"]
+      "field": "name",
+      "rule": "required"
     }
-  }
+  },
+  "request_id": "req_123456789"
 }`}
-                </pre>
-              </div>
-
-              <div>
-                <h3 className="text-lg font-medium text-gray-900 mb-2">404 Not Found</h3>
-                <pre className="bg-gray-800 text-white p-3 rounded-lg text-sm">
-{`{
-  "success": false,
-  "error": {
-    "code": "PROMPT_NOT_FOUND",
-    "message": "指定的提示词不存在"
-  }
-}`}
-                </pre>
-              </div>
-
-              <div>
-                <h3 className="text-lg font-medium text-gray-900 mb-2">409 Conflict</h3>
-                <pre className="bg-gray-800 text-white p-3 rounded-lg text-sm">
-{`{
-  "success": false,
-  "error": {
-    "code": "PROMPT_NAME_EXISTS",
-    "message": "提示词名称已存在",
-    "suggestion": "请使用不同的名称或更新现有提示词"
-  }
-}`}
-                </pre>
+                    </pre>
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
-        </div>
-
-        {/* 最佳实践 */}
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-8">
-          <h2 className="text-xl font-semibold text-blue-900 mb-4">💡 API 使用最佳实践</h2>
-          <ul className="space-y-2 text-blue-800">
-            <li>• 使用分页避免一次性获取大量数据</li>
-            <li>• 合理使用缓存减少API调用次数</li>
-            <li>• 实施重试机制处理临时错误</li>
-            <li>• 使用批量操作提高效率</li>
-            <li>• 监控API使用量避免超出限制</li>
-            <li>• 在更新操作中包含版本说明</li>
-          </ul>
-        </div>
-
-        {/* 代码示例 */}
-        <div className="bg-white shadow-sm rounded-lg overflow-hidden">
-          <div className="p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">代码示例</h2>
-            
-            <div className="space-y-6">
-              <div>
-                <h3 className="text-lg font-medium text-gray-900 mb-3">JavaScript/Node.js</h3>
-                <pre className="bg-gray-800 text-white p-4 rounded-lg overflow-auto text-sm">
-{`// 获取提示词列表
-async function getPrompts(filters = {}) {
-  const params = new URLSearchParams(filters);
-  const response = await fetch(\`https://api.prompthub.com/v1/prompts?\${params}\`, {
-    headers: {
-      'Authorization': \`Bearer \${apiKey}\`,
-      'Content-Type': 'application/json'
-    }
-  });
-  
-  if (!response.ok) {
-    throw new Error(\`API Error: \${response.status}\`);
-  }
-  
-  return await response.json();
-}
-
-// 创建新提示词
-async function createPrompt(promptData) {
-  const response = await fetch('https://api.prompthub.com/v1/prompts', {
-    method: 'POST',
-    headers: {
-      'Authorization': \`Bearer \${apiKey}\`,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify(promptData)
-  });
-  
-  return await response.json();
-}
-
-// 使用示例
-const prompts = await getPrompts({ category: '编程', limit: 10 });
-console.log(\`找到 \${prompts.data.pagination.total} 个提示词\`);`}
-                </pre>
-              </div>
-
-              <div>
-                <h3 className="text-lg font-medium text-gray-900 mb-3">Python</h3>
-                <pre className="bg-gray-800 text-white p-4 rounded-lg overflow-auto text-sm">
-{`import requests
-import json
-
-class PromptHubAPI:
-    def __init__(self, api_key, base_url="https://api.prompthub.com/v1"):
-        self.api_key = api_key
-        self.base_url = base_url
-        self.headers = {
-            'Authorization': f'Bearer {api_key}',
-            'Content-Type': 'application/json'
-        }
-    
-    def get_prompts(self, **filters):
-        """获取提示词列表"""
-        response = requests.get(
-            f"{self.base_url}/prompts",
-            headers=self.headers,
-            params=filters
-        )
-        response.raise_for_status()
-        return response.json()
-    
-    def create_prompt(self, prompt_data):
-        """创建新提示词"""
-        response = requests.post(
-            f"{self.base_url}/prompts",
-            headers=self.headers,
-            json=prompt_data
-        )
-        response.raise_for_status()
-        return response.json()
-    
-    def update_prompt(self, prompt_id, updates):
-        """更新提示词"""
-        response = requests.put(
-            f"{self.base_url}/prompts/{prompt_id}",
-            headers=self.headers,
-            json=updates
-        )
-        response.raise_for_status()
-        return response.json()
-
-# 使用示例
-api = PromptHubAPI('your-api-key')
-prompts = api.get_prompts(category='编程', limit=10)
-print(f"找到 {prompts['data']['pagination']['total']} 个提示词")`}
-                </pre>
-              </div>
-            </div>
-          </div>
+          </motion.div>
         </div>
       </div>
     </div>
   );
 };
 
-export default PromptsApiPage; 
+export default PromptsAPIPage; 

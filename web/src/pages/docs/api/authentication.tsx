@@ -1,130 +1,210 @@
 import React from 'react';
 import Link from 'next/link';
 import { ChevronLeftIcon } from '@heroicons/react/24/outline';
+import { motion } from 'framer-motion';
 
 const AuthenticationPage: React.FC = () => {
   return (
-    <div className="bg-gray-50 min-h-screen py-8">
-      <div className="container-custom">
-        {/* 返回按钮 */}
-        <div className="mb-6">
-          <Link href="/docs/api" className="inline-flex items-center text-sm font-medium text-primary-600 hover:text-primary-700">
-            <ChevronLeftIcon className="h-5 w-5 mr-1" />
-            返回API参考
-          </Link>
-        </div>
+    <div className="min-h-screen bg-dark-bg-primary relative overflow-hidden">
+      {/* 背景网格效果 */}
+      <div className="fixed inset-0 bg-grid-pattern opacity-10 pointer-events-none"></div>
+      
+      {/* 背景装饰元素 */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-1/4 -right-48 w-96 h-96 bg-gradient-to-br from-neon-cyan/20 to-neon-purple/20 rounded-full blur-3xl animate-pulse-slow"></div>
+        <div className="absolute bottom-1/4 -left-48 w-96 h-96 bg-gradient-to-tr from-neon-pink/20 to-neon-purple/20 rounded-full blur-3xl animate-pulse-slow"></div>
+        <div className="absolute top-3/4 right-1/4 w-64 h-64 bg-gradient-to-br from-neon-yellow/10 to-neon-green/10 rounded-full blur-2xl"></div>
+      </div>
 
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">认证与授权</h1>
-          <p className="mt-2 text-gray-600">
-            了解如何安全地访问 Prompt Hub API
-          </p>
-        </div>
+      <div className="relative z-10 py-8">
+        <div className="container-custom">
+          {/* 返回按钮 */}
+          <motion.div 
+            className="mb-8"
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            <Link href="/docs/api" className="inline-flex items-center text-sm font-medium text-neon-cyan hover:text-white transition-colors group">
+              <ChevronLeftIcon className="h-5 w-5 mr-2 group-hover:-translate-x-1 transition-transform" />
+              返回API参考
+            </Link>
+          </motion.div>
 
-        {/* 认证方式概述 */}
-        <div className="bg-white shadow-sm rounded-lg overflow-hidden mb-8">
-          <div className="p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">认证方式概述</h2>
-            <p className="text-gray-600 mb-4">
+          {/* 页面标题 */}
+          <motion.div 
+            className="mb-12"
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+          >
+            <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-neon-cyan via-neon-purple to-neon-pink bg-clip-text text-transparent mb-4">
+              认证与授权
+            </h1>
+            <p className="text-xl text-gray-400 max-w-3xl">
+              了解如何安全地访问 Prompt Hub API，保护您的数据和资源
+            </p>
+          </motion.div>
+
+          {/* 认证方式概述 */}
+          <motion.div 
+            className="glass rounded-2xl p-8 border border-neon-cyan/30 mb-8 hover:border-neon-cyan/50 transition-all duration-300"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+          >
+            <h2 className="text-2xl font-semibold bg-gradient-to-r from-neon-cyan to-neon-purple bg-clip-text text-transparent mb-6">
+              认证方式概述
+            </h2>
+            <p className="text-gray-300 mb-8 leading-relaxed">
               Prompt Hub API 支持多种认证方式，确保您的数据安全和访问控制。
             </p>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="border border-gray-200 rounded-lg p-4">
-                <h3 className="text-lg font-medium text-gray-900 mb-2">API 密钥认证</h3>
-                <p className="text-gray-600 text-sm mb-3">
-                  适用于服务器端应用和自动化脚本
-                </p>
-                <ul className="text-sm text-gray-600 space-y-1">
-                  <li>• 简单易用</li>
-                  <li>• 适合后端服务</li>
-                  <li>• 支持多种传递方式</li>
-                </ul>
-              </div>
+              <motion.div 
+                className="cyber-card group"
+                whileHover={{ scale: 1.02 }}
+                transition={{ duration: 0.2 }}
+              >
+                <div className="p-6">
+                  <h3 className="text-xl font-semibold text-neon-cyan mb-3 neon-glow">🔑 API 密钥认证</h3>
+                  <p className="text-gray-400 text-sm mb-4">
+                    适用于服务器端应用和自动化脚本
+                  </p>
+                  <ul className="text-sm text-gray-300 space-y-2">
+                    <li className="flex items-center"><span className="text-neon-green mr-2">•</span> 简单易用</li>
+                    <li className="flex items-center"><span className="text-neon-green mr-2">•</span> 适合后端服务</li>
+                    <li className="flex items-center"><span className="text-neon-green mr-2">•</span> 支持多种传递方式</li>
+                  </ul>
+                </div>
+              </motion.div>
               
-              <div className="border border-gray-200 rounded-lg p-4">
-                <h3 className="text-lg font-medium text-gray-900 mb-2">JWT Token 认证</h3>
-                <p className="text-gray-600 text-sm mb-3">
-                  适用于前端应用和用户会话管理
-                </p>
-                <ul className="text-sm text-gray-600 space-y-1">
-                  <li>• 安全性高</li>
-                  <li>• 支持用户权限</li>
-                  <li>• 自动过期机制</li>
-                </ul>
-              </div>
+              <motion.div 
+                className="cyber-card group"
+                whileHover={{ scale: 1.02 }}
+                transition={{ duration: 0.2 }}
+              >
+                <div className="p-6">
+                  <h3 className="text-xl font-semibold text-neon-pink mb-3 neon-glow">🛡️ JWT Token 认证</h3>
+                  <p className="text-gray-400 text-sm mb-4">
+                    适用于前端应用和用户会话管理
+                  </p>
+                  <ul className="text-sm text-gray-300 space-y-2">
+                    <li className="flex items-center"><span className="text-neon-green mr-2">•</span> 安全性高</li>
+                    <li className="flex items-center"><span className="text-neon-green mr-2">•</span> 支持用户权限</li>
+                    <li className="flex items-center"><span className="text-neon-green mr-2">•</span> 自动过期机制</li>
+                  </ul>
+                </div>
+              </motion.div>
             </div>
-          </div>
-        </div>
+          </motion.div>
 
-        {/* API 密钥认证 */}
-        <div className="bg-white shadow-sm rounded-lg overflow-hidden mb-8">
-          <div className="p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">API 密钥认证</h2>
+          {/* API 密钥认证 */}
+          <motion.div 
+            className="glass rounded-2xl p-8 border border-neon-purple/30 mb-8 hover:border-neon-purple/50 transition-all duration-300"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.4 }}
+          >
+            <h2 className="text-2xl font-semibold bg-gradient-to-r from-neon-purple to-neon-pink bg-clip-text text-transparent mb-6">
+              API 密钥认证
+            </h2>
             
-            <div className="space-y-6">
+            <div className="space-y-8">
               <div>
-                <h3 className="text-lg font-medium text-gray-900 mb-3">获取 API 密钥</h3>
-                <p className="text-gray-600 mb-4">
+                <h3 className="text-xl font-semibold text-white mb-4">获取 API 密钥</h3>
+                <p className="text-gray-300 mb-6 leading-relaxed">
                   登录 Prompt Hub 后，在用户设置页面可以生成和管理您的 API 密钥。
                 </p>
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                  <p className="text-blue-800 text-sm">
-                    <strong>安全提示：</strong> 请妥善保管您的 API 密钥，不要在客户端代码中暴露，避免提交到版本控制系统。
-                  </p>
+                <div className="bg-gradient-to-r from-neon-blue/20 to-neon-cyan/20 border border-neon-cyan/30 rounded-xl p-6 backdrop-blur-sm">
+                  <div className="flex items-start space-x-3">
+                    <div className="flex-shrink-0 w-6 h-6 rounded-full bg-neon-cyan/30 flex items-center justify-center">
+                      <span className="text-neon-cyan text-sm">⚠️</span>
+                    </div>
+                    <div>
+                      <p className="text-neon-cyan font-semibold text-sm mb-1">安全提示</p>
+                      <p className="text-gray-300 text-sm leading-relaxed">
+                        请妥善保管您的 API 密钥，不要在客户端代码中暴露，避免提交到版本控制系统。
+                      </p>
+                    </div>
+                  </div>
                 </div>
               </div>
 
               <div>
-                <h3 className="text-lg font-medium text-gray-900 mb-3">使用方式</h3>
-                <p className="text-gray-600 mb-4">
+                <h3 className="text-xl font-semibold text-white mb-4">使用方式</h3>
+                <p className="text-gray-300 mb-6 leading-relaxed">
                   API 密钥可以通过以下三种方式传递：
                 </p>
                 
-                <div className="space-y-4">
+                <div className="space-y-6">
                   <div>
-                    <h4 className="text-md font-medium text-gray-900 mb-2">1. 请求头 (推荐)</h4>
-                    <pre className="bg-gray-800 text-white p-4 rounded-lg overflow-auto text-sm">
+                    <h4 className="text-lg font-semibold text-neon-cyan mb-3">1. 请求头 (推荐)</h4>
+                    <div className="bg-dark-bg-secondary rounded-xl border border-neon-cyan/20 overflow-hidden">
+                      <div className="px-4 py-2 bg-gradient-to-r from-neon-cyan/10 to-transparent border-b border-neon-cyan/20">
+                        <span className="text-neon-cyan text-sm font-mono">CURL</span>
+                      </div>
+                      <pre className="p-4 text-green-400 font-mono text-sm overflow-auto">
 {`curl -H "x-api-key: your-api-key-here" \\
      https://api.prompthub.com/v1/prompts`}
-                    </pre>
+                      </pre>
+                    </div>
                   </div>
 
                   <div>
-                    <h4 className="text-md font-medium text-gray-900 mb-2">2. Authorization 头</h4>
-                    <pre className="bg-gray-800 text-white p-4 rounded-lg overflow-auto text-sm">
+                    <h4 className="text-lg font-semibold text-neon-purple mb-3">2. Authorization 头</h4>
+                    <div className="bg-dark-bg-secondary rounded-xl border border-neon-purple/20 overflow-hidden">
+                      <div className="px-4 py-2 bg-gradient-to-r from-neon-purple/10 to-transparent border-b border-neon-purple/20">
+                        <span className="text-neon-purple text-sm font-mono">CURL</span>
+                      </div>
+                      <pre className="p-4 text-green-400 font-mono text-sm overflow-auto">
 {`curl -H "Authorization: Bearer your-api-key-here" \\
      https://api.prompthub.com/v1/prompts`}
-                    </pre>
+                      </pre>
+                    </div>
                   </div>
 
                   <div>
-                    <h4 className="text-md font-medium text-gray-900 mb-2">3. 查询参数 (不推荐)</h4>
-                    <pre className="bg-gray-800 text-white p-4 rounded-lg overflow-auto text-sm">
+                    <h4 className="text-lg font-semibold text-neon-pink mb-3">3. 查询参数 (不推荐)</h4>
+                    <div className="bg-dark-bg-secondary rounded-xl border border-neon-pink/20 overflow-hidden">
+                      <div className="px-4 py-2 bg-gradient-to-r from-neon-pink/10 to-transparent border-b border-neon-pink/20">
+                        <span className="text-neon-pink text-sm font-mono">CURL</span>
+                      </div>
+                      <pre className="p-4 text-green-400 font-mono text-sm overflow-auto">
 {`curl "https://api.prompthub.com/v1/prompts?api_key=your-api-key-here"`}
-                    </pre>
-                    <p className="text-sm text-gray-600 mt-2">
+                      </pre>
+                    </div>
+                    <p className="text-gray-400 text-sm mt-3">
                       注意：查询参数方式可能会在日志中暴露密钥，仅在测试时使用。
                     </p>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
-        </div>
+          </motion.div>
 
-        {/* JWT Token 认证 */}
-        <div className="bg-white shadow-sm rounded-lg overflow-hidden mb-8">
-          <div className="p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">JWT Token 认证</h2>
+          {/* JWT Token 认证 */}
+          <motion.div 
+            className="glass rounded-2xl p-8 border border-neon-pink/30 mb-8 hover:border-neon-pink/50 transition-all duration-300"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.6 }}
+          >
+            <h2 className="text-2xl font-semibold bg-gradient-to-r from-neon-pink to-neon-cyan bg-clip-text text-transparent mb-6">
+              JWT Token 认证
+            </h2>
             
-            <div className="space-y-6">
+            <div className="space-y-8">
               <div>
-                <h3 className="text-lg font-medium text-gray-900 mb-3">获取 JWT Token</h3>
-                <p className="text-gray-600 mb-4">
+                <h3 className="text-xl font-semibold text-white mb-4">获取 JWT Token</h3>
+                <p className="text-gray-300 mb-6 leading-relaxed">
                   通过用户登录接口获取 JWT Token：
                 </p>
-                <pre className="bg-gray-800 text-white p-4 rounded-lg overflow-auto text-sm">
+                <div className="bg-dark-bg-secondary rounded-xl border border-neon-green/20 overflow-hidden">
+                  <div className="px-4 py-2 bg-gradient-to-r from-neon-green/10 to-transparent border-b border-neon-green/20">
+                    <span className="text-neon-green text-sm font-mono">JSON</span>
+                  </div>
+                  <pre className="p-4 text-green-400 font-mono text-sm overflow-auto">
 {`POST /auth/login
 Content-Type: application/json
 
@@ -146,26 +226,36 @@ Content-Type: application/json
     "expires_at": "2024-01-01T00:00:00Z"
   }
 }`}
-                </pre>
+                  </pre>
+                </div>
               </div>
 
               <div>
-                <h3 className="text-lg font-medium text-gray-900 mb-3">使用 JWT Token</h3>
-                <p className="text-gray-600 mb-4">
+                <h3 className="text-xl font-semibold text-white mb-4">使用 JWT Token</h3>
+                <p className="text-gray-300 mb-6 leading-relaxed">
                   在请求头中包含 JWT Token：
                 </p>
-                <pre className="bg-gray-800 text-white p-4 rounded-lg overflow-auto text-sm">
+                <div className="bg-dark-bg-secondary rounded-xl border border-neon-cyan/20 overflow-hidden">
+                  <div className="px-4 py-2 bg-gradient-to-r from-neon-cyan/10 to-transparent border-b border-neon-cyan/20">
+                    <span className="text-neon-cyan text-sm font-mono">CURL</span>
+                  </div>
+                  <pre className="p-4 text-green-400 font-mono text-sm overflow-auto">
 {`curl -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." \\
      https://api.prompthub.com/v1/prompts`}
-                </pre>
+                  </pre>
+                </div>
               </div>
 
               <div>
-                <h3 className="text-lg font-medium text-gray-900 mb-3">Token 刷新</h3>
-                <p className="text-gray-600 mb-4">
+                <h3 className="text-xl font-semibold text-white mb-4">Token 刷新</h3>
+                <p className="text-gray-300 mb-6 leading-relaxed">
                   当 Token 即将过期时，可以使用刷新接口获取新的 Token：
                 </p>
-                <pre className="bg-gray-800 text-white p-4 rounded-lg overflow-auto text-sm">
+                <div className="bg-dark-bg-secondary rounded-xl border border-neon-purple/20 overflow-hidden">
+                  <div className="px-4 py-2 bg-gradient-to-r from-neon-purple/10 to-transparent border-b border-neon-purple/20">
+                    <span className="text-neon-purple text-sm font-mono">JSON</span>
+                  </div>
+                  <pre className="p-4 text-green-400 font-mono text-sm overflow-auto">
 {`POST /auth/refresh
 Authorization: Bearer your-current-token
 
@@ -177,205 +267,76 @@ Authorization: Bearer your-current-token
     "expires_at": "2024-01-02T00:00:00Z"
   }
 }`}
-                </pre>
+                  </pre>
+                </div>
               </div>
             </div>
-          </div>
-        </div>
+          </motion.div>
 
-        {/* 权限和作用域 */}
-        <div className="bg-white shadow-sm rounded-lg overflow-hidden mb-8">
-          <div className="p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">权限和作用域</h2>
+          {/* 权限和作用域 */}
+          <motion.div 
+            className="glass rounded-2xl p-8 border border-neon-green/30 mb-8 hover:border-neon-green/50 transition-all duration-300"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.8 }}
+          >
+            <h2 className="text-2xl font-semibold bg-gradient-to-r from-neon-green to-neon-cyan bg-clip-text text-transparent mb-6">
+              权限和作用域
+            </h2>
             
-            <div className="space-y-4">
-              <p className="text-gray-600">
+            <div className="space-y-6">
+              <p className="text-gray-300 leading-relaxed">
                 不同的认证方式具有不同的权限级别：
               </p>
               
-              <div className="overflow-hidden">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">操作</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">API 密钥</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">JWT Token</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">说明</th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    <tr>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">查看公开提示词</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-green-600">✓</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-green-600">✓</td>
-                      <td className="px-6 py-4 text-sm text-gray-500">所有认证方式都支持</td>
-                    </tr>
-                    <tr>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">查看私有提示词</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-green-600">✓</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-green-600">✓</td>
-                      <td className="px-6 py-4 text-sm text-gray-500">仅限所有者</td>
-                    </tr>
-                    <tr>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">创建提示词</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-green-600">✓</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-green-600">✓</td>
-                      <td className="px-6 py-4 text-sm text-gray-500">需要有效认证</td>
-                    </tr>
-                    <tr>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">修改提示词</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-green-600">✓</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-green-600">✓</td>
-                      <td className="px-6 py-4 text-sm text-gray-500">仅限所有者</td>
-                    </tr>
-                    <tr>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">删除提示词</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-green-600">✓</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-green-600">✓</td>
-                      <td className="px-6 py-4 text-sm text-gray-500">仅限所有者</td>
-                    </tr>
-                    <tr>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">管理用户设置</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-red-600">✗</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-green-600">✓</td>
-                      <td className="px-6 py-4 text-sm text-gray-500">仅 JWT Token</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* 错误处理 */}
-        <div className="bg-white shadow-sm rounded-lg overflow-hidden mb-8">
-          <div className="p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">认证错误处理</h2>
-            
-            <div className="space-y-4">
-              <p className="text-gray-600 mb-4">
-                当认证失败时，API 会返回相应的错误代码和信息：
-              </p>
-              
-              <div className="space-y-4">
-                <div>
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">401 Unauthorized</h3>
-                  <pre className="bg-gray-800 text-white p-3 rounded-lg text-sm">
-{`{
-  "success": false,
-  "error": {
-    "code": "UNAUTHORIZED",
-    "message": "Invalid or missing authentication credentials"
-  }
-}`}
-                  </pre>
-                  <p className="text-sm text-gray-600 mt-2">
-                    原因：API 密钥无效、JWT Token 过期或格式错误
-                  </p>
+              <div className="overflow-hidden rounded-xl border border-neon-cyan/20">
+                <div className="bg-gradient-to-r from-neon-cyan/10 to-neon-purple/10 px-6 py-3 border-b border-neon-cyan/20">
+                  <div className="grid grid-cols-3 gap-4 font-semibold text-white">
+                    <div>操作</div>
+                    <div className="text-center">API 密钥</div>
+                    <div className="text-center">JWT Token</div>
+                  </div>
                 </div>
-
-                <div>
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">403 Forbidden</h3>
-                  <pre className="bg-gray-800 text-white p-3 rounded-lg text-sm">
-{`{
-  "success": false,
-  "error": {
-    "code": "FORBIDDEN",
-    "message": "Insufficient permissions to access this resource"
-  }
-}`}
-                  </pre>
-                  <p className="text-sm text-gray-600 mt-2">
-                    原因：认证成功但权限不足，如尝试访问他人的私有提示词
-                  </p>
-                </div>
-
-                <div>
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">429 Too Many Requests</h3>
-                  <pre className="bg-gray-800 text-white p-3 rounded-lg text-sm">
-{`{
-  "success": false,
-  "error": {
-    "code": "RATE_LIMIT_EXCEEDED",
-    "message": "API rate limit exceeded",
-    "retry_after": 60
-  }
-}`}
-                  </pre>
-                  <p className="text-sm text-gray-600 mt-2">
-                    原因：超出 API 调用频率限制
-                  </p>
+                <div className="bg-dark-bg-secondary/50 backdrop-blur-sm">
+                  <div className="px-6 py-3 border-b border-neon-cyan/10 hover:bg-neon-cyan/5 transition-colors">
+                    <div className="grid grid-cols-3 gap-4 text-gray-300">
+                      <div>读取公开提示词</div>
+                      <div className="text-center text-neon-green">✓</div>
+                      <div className="text-center text-neon-green">✓</div>
+                    </div>
+                  </div>
+                  <div className="px-6 py-3 border-b border-neon-cyan/10 hover:bg-neon-cyan/5 transition-colors">
+                    <div className="grid grid-cols-3 gap-4 text-gray-300">
+                      <div>读取私有提示词</div>
+                      <div className="text-center text-neon-green">✓</div>
+                      <div className="text-center text-neon-green">✓</div>
+                    </div>
+                  </div>
+                  <div className="px-6 py-3 border-b border-neon-cyan/10 hover:bg-neon-cyan/5 transition-colors">
+                    <div className="grid grid-cols-3 gap-4 text-gray-300">
+                      <div>创建提示词</div>
+                      <div className="text-center text-neon-green">✓</div>
+                      <div className="text-center text-neon-green">✓</div>
+                    </div>
+                  </div>
+                  <div className="px-6 py-3 border-b border-neon-cyan/10 hover:bg-neon-cyan/5 transition-colors">
+                    <div className="grid grid-cols-3 gap-4 text-gray-300">
+                      <div>修改提示词</div>
+                      <div className="text-center text-neon-green">✓</div>
+                      <div className="text-center text-neon-green">✓</div>
+                    </div>
+                  </div>
+                  <div className="px-6 py-3 hover:bg-neon-cyan/5 transition-colors">
+                    <div className="grid grid-cols-3 gap-4 text-gray-300">
+                      <div>删除提示词</div>
+                      <div className="text-center text-neon-red">✗</div>
+                      <div className="text-center text-neon-green">✓</div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        </div>
-
-        {/* 最佳实践 */}
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-8">
-          <h2 className="text-xl font-semibold text-blue-900 mb-4">🔒 安全最佳实践</h2>
-          <ul className="space-y-2 text-blue-800">
-            <li>• 定期轮换 API 密钥</li>
-            <li>• 使用环境变量存储敏感信息</li>
-            <li>• 实施适当的错误处理和重试机制</li>
-            <li>• 监控 API 使用情况和异常访问</li>
-            <li>• 在生产环境中使用 HTTPS</li>
-            <li>• 设置合理的 Token 过期时间</li>
-          </ul>
-        </div>
-
-        {/* 代码示例 */}
-        <div className="bg-white shadow-sm rounded-lg overflow-hidden">
-          <div className="p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">代码示例</h2>
-            
-            <div className="space-y-6">
-              <div>
-                <h3 className="text-lg font-medium text-gray-900 mb-3">JavaScript/Node.js</h3>
-                <pre className="bg-gray-800 text-white p-4 rounded-lg overflow-auto text-sm">
-{`// 使用 API 密钥
-const response = await fetch('https://api.prompthub.com/v1/prompts', {
-  headers: {
-    'x-api-key': process.env.PROMPTHUB_API_KEY,
-    'Content-Type': 'application/json'
-  }
-});
-
-// 使用 JWT Token
-const response = await fetch('https://api.prompthub.com/v1/prompts', {
-  headers: {
-    'Authorization': \`Bearer \${jwtToken}\`,
-    'Content-Type': 'application/json'
-  }
-});`}
-                </pre>
-              </div>
-
-              <div>
-                <h3 className="text-lg font-medium text-gray-900 mb-3">Python</h3>
-                <pre className="bg-gray-800 text-white p-4 rounded-lg overflow-auto text-sm">
-{`import requests
-import os
-
-# 使用 API 密钥
-headers = {
-    'x-api-key': os.getenv('PROMPTHUB_API_KEY'),
-    'Content-Type': 'application/json'
-}
-
-response = requests.get('https://api.prompthub.com/v1/prompts', headers=headers)
-
-# 使用 JWT Token
-headers = {
-    'Authorization': f'Bearer {jwt_token}',
-    'Content-Type': 'application/json'
-}
-
-response = requests.get('https://api.prompthub.com/v1/prompts', headers=headers)`}
-                </pre>
-              </div>
-            </div>
-          </div>
+          </motion.div>
         </div>
       </div>
     </div>

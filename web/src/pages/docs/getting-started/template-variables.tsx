@@ -1,158 +1,275 @@
 import React from 'react';
 import Link from 'next/link';
-import { ChevronLeftIcon } from '@heroicons/react/24/outline';
+import { ChevronLeftIcon, CubeIcon, CodeBracketIcon, ListBulletIcon, DocumentTextIcon, SparklesIcon, ClipboardDocumentIcon } from '@heroicons/react/24/outline';
+import { motion } from 'framer-motion';
 
 const TemplateVariablesPage: React.FC = () => {
   return (
-    <div className="bg-gray-50 min-h-screen py-8">
-      <div className="container-custom">
-        {/* 返回按钮 */}
-        <div className="mb-6">
-          <Link href="/docs/getting-started" className="inline-flex items-center text-sm font-medium text-primary-600 hover:text-primary-700">
-            <ChevronLeftIcon className="h-5 w-5 mr-1" />
-            返回入门指南
-          </Link>
-        </div>
+    <div className="min-h-screen bg-dark-bg-primary relative overflow-hidden">
+      {/* 背景网格效果 */}
+      <div className="fixed inset-0 bg-grid-pattern opacity-10 pointer-events-none"></div>
+      
+      {/* 背景装饰元素 */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-1/4 -right-48 w-96 h-96 bg-gradient-to-br from-neon-cyan/20 to-neon-purple/20 rounded-full blur-3xl animate-pulse-slow"></div>
+        <div className="absolute bottom-1/4 -left-48 w-96 h-96 bg-gradient-to-tr from-neon-pink/20 to-neon-purple/20 rounded-full blur-3xl animate-pulse-slow"></div>
+        <div className="absolute top-3/4 right-1/4 w-64 h-64 bg-gradient-to-br from-neon-yellow/10 to-neon-green/10 rounded-full blur-2xl"></div>
+      </div>
 
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">使用模板变量</h1>
-          <p className="mt-2 text-gray-600">
-            学习如何使用模板变量让您的提示词更加灵活和可重用
-          </p>
-        </div>
+      <div className="relative z-10 py-8">
+        <div className="container-custom">
+          {/* 返回按钮 */}
+          <motion.div 
+            className="mb-8"
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            <Link href="/docs/getting-started" className="inline-flex items-center text-sm font-medium text-neon-cyan hover:text-white transition-colors group">
+              <ChevronLeftIcon className="h-5 w-5 mr-2 group-hover:-translate-x-1 transition-transform" />
+              返回入门指南
+            </Link>
+          </motion.div>
 
-        {/* 什么是模板变量 */}
-        <div className="bg-white shadow-sm rounded-lg overflow-hidden mb-8">
-          <div className="p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">什么是模板变量？</h2>
-            <p className="text-gray-600 mb-4">
+          {/* 页面标题 */}
+          <motion.div 
+            className="mb-12"
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+          >
+            <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-neon-cyan via-neon-purple to-neon-pink bg-clip-text text-transparent mb-4">
+              使用模板变量
+            </h1>
+            <p className="text-xl text-gray-400 max-w-3xl leading-relaxed">
+              学习如何使用模板变量让您的提示词更加灵活和可重用
+            </p>
+          </motion.div>
+
+          {/* 什么是模板变量 */}
+          <motion.div 
+            className="glass rounded-2xl p-8 border border-neon-cyan/30 mb-8 hover:border-neon-cyan/50 transition-all duration-300"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+          >
+            <h2 className="text-2xl font-semibold bg-gradient-to-r from-neon-cyan to-neon-purple bg-clip-text text-transparent mb-6 flex items-center">
+              <CubeIcon className="h-8 w-8 text-neon-cyan mr-3" />
+              什么是模板变量？
+            </h2>
+            <p className="text-gray-300 mb-6 leading-relaxed">
               模板变量是提示词中的占位符，可以在使用时动态替换为具体的值。这使得一个提示词可以适用于多种不同的场景和输入。
             </p>
-            <div className="bg-gray-50 p-4 rounded-lg">
-              <h3 className="text-md font-medium text-gray-900 mb-2">示例</h3>
-              <p className="text-sm text-gray-700 mb-2">不使用变量的提示词：</p>
-              <pre className="bg-gray-800 text-white p-3 rounded text-sm mb-3">
-                请帮我写一封关于产品发布的邮件
-              </pre>
-              <p className="text-sm text-gray-700 mb-2">使用变量的提示词：</p>
-              <pre className="bg-gray-800 text-white p-3 rounded text-sm">
-                请帮我写一封关于{`{topic}`}的{`{email_type}`}
-              </pre>
+            <div className="bg-gradient-to-r from-neon-purple/10 to-neon-cyan/10 border border-neon-purple/30 rounded-xl p-6">
+              <h3 className="text-lg font-semibold text-white mb-4 flex items-center">
+                <SparklesIcon className="h-6 w-6 text-neon-purple mr-2" />
+                示例对比
+              </h3>
+              <div className="space-y-4">
+                <div>
+                  <p className="text-sm text-neon-red font-medium mb-2">❌ 不使用变量的提示词：</p>
+                  <div className="bg-dark-bg-secondary rounded-lg border-l-4 border-neon-red p-4">
+                    <code className="text-gray-300 text-sm">
+                      请帮我写一封关于产品发布的邮件
+                    </code>
+                  </div>
+                </div>
+                <div>
+                  <p className="text-sm text-neon-green font-medium mb-2">✅ 使用变量的提示词：</p>
+                  <div className="bg-dark-bg-secondary rounded-lg border-l-4 border-neon-green p-4">
+                    <code className="text-gray-300 text-sm">
+                      请帮我写一封关于<span className="text-neon-cyan font-semibold">{`{topic}`}</span>的<span className="text-neon-purple font-semibold">{`{email_type}`}</span>
+                    </code>
+                  </div>
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
+          </motion.div>
 
-        {/* 变量语法 */}
-        <div className="bg-white shadow-sm rounded-lg overflow-hidden mb-8">
-          <div className="p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">变量语法</h2>
-            <p className="text-gray-600 mb-4">
+          {/* 变量语法 */}
+          <motion.div 
+            className="glass rounded-2xl p-8 border border-neon-purple/30 mb-8 hover:border-neon-purple/50 transition-all duration-300"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.4 }}
+          >
+            <h2 className="text-2xl font-semibold bg-gradient-to-r from-neon-purple to-neon-pink bg-clip-text text-transparent mb-6 flex items-center">
+              <CodeBracketIcon className="h-8 w-8 text-neon-purple mr-3" />
+              变量语法
+            </h2>
+            <p className="text-gray-300 mb-6 leading-relaxed">
               Prompt Hub 支持多种变量语法格式：
             </p>
             
-            <div className="space-y-4">
+            <div className="space-y-6">
               <div>
-                <h3 className="text-lg font-medium text-gray-900">基本语法</h3>
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-sm font-medium text-gray-700 mb-2">花括号语法：</p>
-                      <code className="bg-gray-800 text-white px-2 py-1 rounded text-sm">{`{variable_name}`}</code>
+                <h3 className="text-xl font-semibold text-white mb-4">基本语法</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <motion.div 
+                    className="cyber-card p-6"
+                    whileHover={{ scale: 1.02 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <p className="text-sm font-medium text-neon-cyan mb-3">花括号语法：</p>
+                    <div className="bg-dark-bg-secondary rounded-lg p-3 border border-neon-cyan/20">
+                      <code className="text-neon-cyan font-mono">{`{variable_name}`}</code>
                     </div>
-                    <div>
-                      <p className="text-sm font-medium text-gray-700 mb-2">双花括号语法：</p>
-                      <code className="bg-gray-800 text-white px-2 py-1 rounded text-sm">{`{{variable_name}}`}</code>
+                  </motion.div>
+                  <motion.div 
+                    className="cyber-card p-6"
+                    whileHover={{ scale: 1.02 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <p className="text-sm font-medium text-neon-purple mb-3">双花括号语法：</p>
+                    <div className="bg-dark-bg-secondary rounded-lg p-3 border border-neon-purple/20">
+                      <code className="text-neon-purple font-mono">{`{{variable_name}}`}</code>
                     </div>
-                  </div>
+                  </motion.div>
                 </div>
               </div>
 
               <div>
-                <h3 className="text-lg font-medium text-gray-900">变量命名规则</h3>
-                <ul className="list-disc list-inside space-y-1 text-gray-600">
-                  <li>只能包含字母、数字和下划线</li>
-                  <li>必须以字母开头</li>
-                  <li>建议使用描述性的名称，如 <code className="bg-gray-200 px-1 rounded">user_name</code>、<code className="bg-gray-200 px-1 rounded">product_type</code></li>
-                  <li>避免使用保留关键字</li>
-                </ul>
+                <h3 className="text-xl font-semibold text-white mb-4">变量命名规则</h3>
+                <div className="bg-gradient-to-r from-neon-cyan/10 to-neon-purple/10 border border-neon-cyan/30 rounded-xl p-6">
+                  <ul className="space-y-2 text-gray-300">
+                    <li className="flex items-center">
+                      <span className="w-2 h-2 bg-neon-cyan rounded-full mr-3 flex-shrink-0"></span>
+                      只能包含字母、数字和下划线
+                    </li>
+                    <li className="flex items-center">
+                      <span className="w-2 h-2 bg-neon-purple rounded-full mr-3 flex-shrink-0"></span>
+                      必须以字母开头
+                    </li>
+                    <li className="flex items-center">
+                      <span className="w-2 h-2 bg-neon-pink rounded-full mr-3 flex-shrink-0"></span>
+                      建议使用描述性的名称，如 <code className="bg-dark-bg-secondary px-2 py-1 rounded text-neon-cyan">user_name</code>、<code className="bg-dark-bg-secondary px-2 py-1 rounded text-neon-purple">product_type</code>
+                    </li>
+                    <li className="flex items-center">
+                      <span className="w-2 h-2 bg-neon-yellow rounded-full mr-3 flex-shrink-0"></span>
+                      避免使用保留关键字
+                    </li>
+                  </ul>
+                </div>
               </div>
             </div>
-          </div>
-        </div>
+          </motion.div>
 
-        {/* 常用变量类型 */}
-        <div className="bg-white shadow-sm rounded-lg overflow-hidden mb-8">
-          <div className="p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">常用变量类型</h2>
+          {/* 常用变量类型 */}
+          <motion.div 
+            className="glass rounded-2xl p-8 border border-neon-pink/30 mb-8 hover:border-neon-pink/50 transition-all duration-300"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.6 }}
+          >
+            <h2 className="text-2xl font-semibold bg-gradient-to-r from-neon-pink to-neon-cyan bg-clip-text text-transparent mb-6 flex items-center">
+              <ListBulletIcon className="h-8 w-8 text-neon-pink mr-3" />
+              常用变量类型
+            </h2>
             
-            <div className="space-y-6">
-              <div>
-                <h3 className="text-lg font-medium text-gray-900">文本变量</h3>
-                <p className="text-gray-600 mb-2">用于替换文本内容</p>
-                <div className="bg-gray-50 p-3 rounded-lg">
-                  <pre className="text-sm text-gray-700">
-{`你是一个专业的{role}，请帮助用户解决{problem_type}相关的问题。
+            <div className="space-y-8">
+              <motion.div
+                whileHover={{ scale: 1.01 }}
+                transition={{ duration: 0.2 }}
+              >
+                <h3 className="text-xl font-semibold text-white mb-4 flex items-center">
+                  <DocumentTextIcon className="h-6 w-6 text-neon-cyan mr-2" />
+                  文本变量
+                </h3>
+                <p className="text-gray-300 mb-4">用于替换文本内容</p>
+                <div className="bg-dark-bg-secondary rounded-xl border border-neon-cyan/20 p-6">
+                  <div className="text-sm text-gray-300 mb-2">
+                    <span className="bg-neon-cyan/20 text-neon-cyan px-2 py-1 rounded text-xs font-semibold">TEXT</span>
+                  </div>
+                  <pre className="text-sm text-gray-300 leading-relaxed">
+{`你是一个专业的`}<span className="text-neon-cyan font-semibold">{`{role}`}</span>{`，请帮助用户解决`}<span className="text-neon-purple font-semibold">{`{problem_type}`}</span>{`相关的问题。
 
-用户问题：{user_question}
+用户问题：`}<span className="text-neon-pink font-semibold">{`{user_question}`}</span>{`
 
 请提供详细的解答。`}
                   </pre>
                 </div>
-              </div>
+              </motion.div>
 
-              <div>
-                <h3 className="text-lg font-medium text-gray-900">列表变量</h3>
-                <p className="text-gray-600 mb-2">用于处理多个项目或选项</p>
-                <div className="bg-gray-50 p-3 rounded-lg">
-                  <pre className="text-sm text-gray-700">
-{`请分析以下{analysis_type}：
+              <motion.div
+                whileHover={{ scale: 1.01 }}
+                transition={{ duration: 0.2 }}
+              >
+                <h3 className="text-xl font-semibold text-white mb-4 flex items-center">
+                  <ListBulletIcon className="h-6 w-6 text-neon-purple mr-2" />
+                  列表变量
+                </h3>
+                <p className="text-gray-300 mb-4">用于处理多个项目或选项</p>
+                <div className="bg-dark-bg-secondary rounded-xl border border-neon-purple/20 p-6">
+                  <div className="text-sm text-gray-300 mb-2">
+                    <span className="bg-neon-purple/20 text-neon-purple px-2 py-1 rounded text-xs font-semibold">LIST</span>
+                  </div>
+                  <pre className="text-sm text-gray-300 leading-relaxed">
+{`请分析以下`}<span className="text-neon-cyan font-semibold">{`{analysis_type}`}</span>{`：
 
 项目列表：
-{item_list}
+`}<span className="text-neon-purple font-semibold">{`{item_list}`}</span>{`
 
-分析要求：{requirements}`}
+分析要求：`}<span className="text-neon-pink font-semibold">{`{requirements}`}</span>
                   </pre>
                 </div>
-              </div>
+              </motion.div>
 
-              <div>
-                <h3 className="text-lg font-medium text-gray-900">格式变量</h3>
-                <p className="text-gray-600 mb-2">用于指定输出格式</p>
-                <div className="bg-gray-50 p-3 rounded-lg">
-                  <pre className="text-sm text-gray-700">
-{`请将以下内容转换为{output_format}格式：
+              <motion.div
+                whileHover={{ scale: 1.01 }}
+                transition={{ duration: 0.2 }}
+              >
+                <h3 className="text-xl font-semibold text-white mb-4 flex items-center">
+                  <ClipboardDocumentIcon className="h-6 w-6 text-neon-pink mr-2" />
+                  格式变量
+                </h3>
+                <p className="text-gray-300 mb-4">用于指定输出格式</p>
+                <div className="bg-dark-bg-secondary rounded-xl border border-neon-pink/20 p-6">
+                  <div className="text-sm text-gray-300 mb-2">
+                    <span className="bg-neon-pink/20 text-neon-pink px-2 py-1 rounded text-xs font-semibold">FORMAT</span>
+                  </div>
+                  <pre className="text-sm text-gray-300 leading-relaxed">
+{`请将以下内容转换为`}<span className="text-neon-cyan font-semibold">{`{output_format}`}</span>{`格式：
 
-原始内容：{input_content}
+原始内容：`}<span className="text-neon-purple font-semibold">{`{input_content}`}</span>{`
 
-输出要求：{format_requirements}`}
+输出要求：`}<span className="text-neon-pink font-semibold">{`{format_requirements}`}</span>
                   </pre>
                 </div>
-              </div>
+              </motion.div>
             </div>
-          </div>
-        </div>
+          </motion.div>
 
-        {/* 实际应用示例 */}
-        <div className="bg-white shadow-sm rounded-lg overflow-hidden mb-8">
-          <div className="p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">实际应用示例</h2>
+          {/* 实际应用示例 */}
+          <motion.div 
+            className="glass rounded-2xl p-8 border border-neon-green/30 mb-8 hover:border-neon-green/50 transition-all duration-300"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.8 }}
+          >
+            <h2 className="text-2xl font-semibold bg-gradient-to-r from-neon-green to-neon-cyan bg-clip-text text-transparent mb-6 flex items-center">
+              <SparklesIcon className="h-8 w-8 text-neon-green mr-3" />
+              实际应用示例
+            </h2>
             
-            <div className="space-y-6">
+            <div className="space-y-8">
               <div>
-                <h3 className="text-lg font-medium text-gray-900">邮件写作助手</h3>
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <pre className="text-sm text-gray-700 whitespace-pre-wrap">
+                <h3 className="text-xl font-semibold text-white mb-4">📧 邮件写作助手</h3>
+                <div className="bg-dark-bg-secondary rounded-xl border border-neon-cyan/20 p-6">
+                  <div className="text-sm text-gray-300 mb-4">
+                    <span className="bg-neon-cyan/20 text-neon-cyan px-2 py-1 rounded text-xs font-semibold">EMAIL ASSISTANT</span>
+                  </div>
+                  <pre className="text-sm text-gray-300 leading-relaxed whitespace-pre-wrap">
 {`你是一个专业的邮件写作助手。
 
-请帮我写一封{email_type}邮件，内容如下：
+请帮我写一封`}<span className="text-neon-cyan font-semibold">{`{email_type}`}</span>{`邮件，内容如下：
 
-收件人：{recipient}
-主题：{subject}
-主要内容：{main_content}
-语调：{tone}
+收件人：`}<span className="text-neon-purple font-semibold">{`{recipient}`}</span>{`
+主题：`}<span className="text-neon-pink font-semibold">{`{subject}`}</span>{`
+主要内容：`}<span className="text-neon-yellow font-semibold">{`{main_content}`}</span>{`
+语调：`}<span className="text-neon-green font-semibold">{`{tone}`}</span>{`
 
 请确保邮件：
-1. 语言{tone}且专业
+1. 语言`}<span className="text-neon-green font-semibold">{`{tone}`}</span>{`且专业
 2. 结构清晰
 3. 包含适当的开头和结尾
 4. 长度适中
@@ -162,31 +279,49 @@ const TemplateVariablesPage: React.FC = () => {
 正文：[邮件正文]`}
                   </pre>
                 </div>
-                <div className="mt-3">
-                  <p className="text-sm text-gray-600"><strong>变量说明：</strong></p>
-                  <ul className="text-sm text-gray-600 list-disc list-inside mt-1">
-                    <li><code>email_type</code>: 商务、感谢、道歉等</li>
-                    <li><code>recipient</code>: 收件人姓名或称呼</li>
-                    <li><code>subject</code>: 邮件主题</li>
-                    <li><code>main_content</code>: 主要内容要点</li>
-                    <li><code>tone</code>: 正式、友好、紧急等</li>
-                  </ul>
+                <div className="mt-4">
+                  <p className="text-sm text-gray-300 font-semibold mb-2">🔧 变量说明：</p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div className="flex items-center text-sm text-gray-400">
+                      <code className="bg-neon-cyan/20 text-neon-cyan px-2 py-1 rounded mr-2">email_type</code>
+                      商务、感谢、道歉等
+                    </div>
+                    <div className="flex items-center text-sm text-gray-400">
+                      <code className="bg-neon-purple/20 text-neon-purple px-2 py-1 rounded mr-2">recipient</code>
+                      收件人姓名或称呼
+                    </div>
+                    <div className="flex items-center text-sm text-gray-400">
+                      <code className="bg-neon-pink/20 text-neon-pink px-2 py-1 rounded mr-2">subject</code>
+                      邮件主题
+                    </div>
+                    <div className="flex items-center text-sm text-gray-400">
+                      <code className="bg-neon-yellow/20 text-neon-yellow px-2 py-1 rounded mr-2">main_content</code>
+                      主要内容要点
+                    </div>
+                    <div className="flex items-center text-sm text-gray-400">
+                      <code className="bg-neon-green/20 text-neon-green px-2 py-1 rounded mr-2">tone</code>
+                      正式、友好、紧急等
+                    </div>
+                  </div>
                 </div>
               </div>
 
               <div>
-                <h3 className="text-lg font-medium text-gray-900">代码审查助手</h3>
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <pre className="text-sm text-gray-700 whitespace-pre-wrap">
-{`你是一个经验丰富的{programming_language}开发者和代码审查员。
+                <h3 className="text-xl font-semibold text-white mb-4">🔍 代码审查助手</h3>
+                <div className="bg-dark-bg-secondary rounded-xl border border-neon-purple/20 p-6">
+                  <div className="text-sm text-gray-300 mb-4">
+                    <span className="bg-neon-purple/20 text-neon-purple px-2 py-1 rounded text-xs font-semibold">CODE REVIEWER</span>
+                  </div>
+                  <pre className="text-sm text-gray-300 leading-relaxed whitespace-pre-wrap">
+{`你是一个经验丰富的`}<span className="text-neon-cyan font-semibold">{`{programming_language}`}</span>{`开发者和代码审查员。
 
-请审查以下{code_type}代码：
+请审查以下`}<span className="text-neon-purple font-semibold">{`{code_type}`}</span>{`代码：
 
-\`\`\`{programming_language}
-{code_content}
+\`\`\``}<span className="text-neon-cyan font-semibold">{`{programming_language}`}</span>{`
+`}<span className="text-neon-pink font-semibold">{`{code_content}`}</span>{`
 \`\`\`
 
-审查重点：{review_focus}
+审查重点：`}<span className="text-neon-yellow font-semibold">{`{review_focus}`}</span>{`
 
 请提供：
 1. 代码质量评估
@@ -197,124 +332,12 @@ const TemplateVariablesPage: React.FC = () => {
 
 输出格式：
 ## 总体评价
-[整体评价]
-
-## 发现的问题
-[问题列表]
-
-## 改进建议
-[具体建议]
-
-## 优化后的代码
-[如果需要重写，提供优化版本]`}
-                  </pre>
-                </div>
-                <div className="mt-3">
-                  <p className="text-sm text-gray-600"><strong>变量说明：</strong></p>
-                  <ul className="text-sm text-gray-600 list-disc list-inside mt-1">
-                    <li><code>programming_language</code>: JavaScript、Python、Java等</li>
-                    <li><code>code_type</code>: 函数、类、模块等</li>
-                    <li><code>code_content</code>: 要审查的代码</li>
-                    <li><code>review_focus</code>: 性能、安全性、可读性等</li>
-                  </ul>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* 最佳实践 */}
-        <div className="bg-white shadow-sm rounded-lg overflow-hidden mb-8">
-          <div className="p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">变量使用最佳实践</h2>
-            
-            <div className="space-y-4">
-              <div>
-                <h3 className="text-lg font-medium text-gray-900">1. 使用描述性名称</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-sm font-medium text-red-600 mb-2">❌ 不好的命名：</p>
-                                         <code className="bg-red-50 text-red-800 px-2 py-1 rounded text-sm">{`{x}, {data}, {input}`}</code>
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-green-600 mb-2">✅ 好的命名：</p>
-                                         <code className="bg-green-50 text-green-800 px-2 py-1 rounded text-sm">{`{user_name}, {product_description}, {target_audience}`}</code>
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <h3 className="text-lg font-medium text-gray-900">2. 提供默认值</h3>
-                <p className="text-gray-600 mb-2">为变量提供合理的默认值或示例：</p>
-                <div className="bg-gray-50 p-3 rounded-lg">
-                  <pre className="text-sm text-gray-700">
-{`请分析{product_name}（例如：iPhone 15）的市场表现`}
+[整体评价]`}
                   </pre>
                 </div>
               </div>
-
-              <div>
-                <h3 className="text-lg font-medium text-gray-900">3. 添加变量说明</h3>
-                <p className="text-gray-600 mb-2">在提示词描述中说明每个变量的用途：</p>
-                <div className="bg-gray-50 p-3 rounded-lg">
-                  <p className="text-sm text-gray-700">
-                    <strong>变量说明：</strong><br/>
-                    • <code>topic</code>: 要分析的主题或产品名称<br/>
-                    • <code>analysis_type</code>: 分析类型（市场分析、竞品分析等）<br/>
-                    • <code>target_audience</code>: 目标受众群体
-                  </p>
-                </div>
-              </div>
-
-              <div>
-                <h3 className="text-lg font-medium text-gray-900">4. 保持一致性</h3>
-                <p className="text-gray-600">在同一个提示词中，相同含义的变量使用相同的名称。</p>
-              </div>
             </div>
-          </div>
-        </div>
-
-        {/* 高级技巧 */}
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-8">
-          <h2 className="text-xl font-semibold text-blue-900 mb-4">🚀 高级技巧</h2>
-          <div className="space-y-3 text-blue-800">
-            <div>
-              <h3 className="font-medium">条件变量</h3>
-              <p className="text-sm">使用条件逻辑来处理可选变量：</p>
-              <code className="bg-blue-100 px-2 py-1 rounded text-sm">{`{if additional_requirements}额外要求：{additional_requirements}{endif}`}</code>
-            </div>
-            <div>
-              <h3 className="font-medium">嵌套变量</h3>
-              <p className="text-sm">在复杂场景中使用嵌套结构：</p>
-              <code className="bg-blue-100 px-2 py-1 rounded text-sm">{`{user.name}的{user.role}经验`}</code>
-            </div>
-            <div>
-              <h3 className="font-medium">变量验证</h3>
-              <p className="text-sm">在提示词中包含变量格式验证：</p>
-                             <code className="bg-blue-100 px-2 py-1 rounded text-sm">{`确保{email}是有效的邮箱格式`}</code>
-            </div>
-          </div>
-        </div>
-
-        {/* 下一步 */}
-        <div className="bg-white shadow-sm rounded-lg overflow-hidden">
-          <div className="p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">下一步</h2>
-            <p className="text-gray-600 mb-4">
-              现在您已经掌握了模板变量的使用方法，可以继续学习：
-            </p>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Link href="/docs/best-practices" className="block p-4 bg-gray-50 rounded-lg hover:bg-gray-100">
-                <h3 className="text-md font-medium text-gray-900 mb-1">提示词最佳实践</h3>
-                <p className="text-sm text-gray-600">学习更多提示词设计技巧和优化方法</p>
-              </Link>
-              
-              <Link href="/docs/advanced/versioning" className="block p-4 bg-gray-50 rounded-lg hover:bg-gray-100">
-                <h3 className="text-md font-medium text-gray-900 mb-1">版本控制</h3>
-                <p className="text-sm text-gray-600">了解如何管理提示词的不同版本</p>
-              </Link>
-            </div>
-          </div>
+          </motion.div>
         </div>
       </div>
     </div>
