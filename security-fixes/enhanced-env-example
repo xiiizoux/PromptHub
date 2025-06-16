@@ -1,0 +1,265 @@
+# ========================================
+# PromptHub 安全环境变量配置
+# ========================================
+# 重要提示：
+# 1. 复制此文件为 .env 并填入真实的配置值
+# 2. 永远不要将 .env 文件提交到版本控制系统
+# 3. 在生产环境中使用强密钥，避免使用默认值
+# 4. 定期更换密钥以增强安全性
+
+# ========================================
+# 基础服务配置
+# ========================================
+# 后端API服务器端口
+PORT=9010
+
+# 前端服务器端口
+FRONTEND_PORT=9011
+
+# 运行环境 (development|production|test)
+NODE_ENV=production
+
+# 传输类型配置 (stdio|sse)
+TRANSPORT_TYPE=sse
+
+# ========================================
+# 安全密钥配置 (必须在生产环境中更改)
+# ========================================
+# API 身份验证密钥 - 至少32位随机字符串
+# 生成命令: openssl rand -hex 32
+API_KEY=请使用openssl_rand_-hex_32生成强密钥
+
+# MCP 服务器密钥 - 用于MCP协议连接
+# 生成命令: openssl rand -hex 32
+SERVER_KEY=请使用openssl_rand_-hex_32生成强密钥
+
+# JWT密钥 - 用于用户会话令牌签名，至少64位
+# 生成命令: openssl rand -hex 64
+JWT_SECRET=请使用openssl_rand_-hex_64生成强密钥
+
+# JWT令牌过期时间 (建议生产环境设为2h或更短)
+JWT_EXPIRES_IN=2h
+
+# API密钥加密密钥 - 用于加密存储的API密钥
+# 生成命令: openssl rand -hex 32
+ENCRYPTION_KEY=请使用openssl_rand_-hex_32生成强密钥
+
+# ========================================
+# 数据库配置 (Supabase)
+# ========================================
+# 存储类型 (supabase|file|postgresql|mysql)
+STORAGE_TYPE=supabase
+
+# Supabase项目URL
+SUPABASE_URL=https://your-project-id.supabase.co
+
+# Supabase匿名密钥 (公开密钥，用于客户端)
+SUPABASE_ANON_KEY=your-supabase-anon-key
+
+# Supabase服务角色密钥 (私密密钥，仅后端使用)
+SUPABASE_SERVICE_ROLE_KEY=your-supabase-service-role-key
+
+# 前端需要的Supabase配置 (需要NEXT_PUBLIC_前缀)
+NEXT_PUBLIC_SUPABASE_URL=https://your-project-id.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
+
+# ========================================
+# 第三方服务认证
+# ========================================
+# Google OAuth 配置 (用于用户登录)
+NEXT_PUBLIC_GOOGLE_CLIENT_ID=your-google-client-id.apps.googleusercontent.com
+GOOGLE_CLIENT_SECRET=your-google-client-secret
+
+# OpenAI API配置 (用于AI分析功能)
+OPENAI_API_KEY=sk-your-openai-api-key-here
+
+# OpenAI兼容API配置 (支持自定义端点)
+OPENAI_API_BASE_URL=https://api.openai.com/v1
+
+# AI模型配置
+AI_MODEL_FULL_ANALYSIS=gpt-4
+AI_MODEL_QUICK_TASKS=gpt-3.5-turbo
+
+# ========================================
+# 安全配置
+# ========================================
+# 允许的CORS源域 (生产环境必须配置)
+ALLOWED_ORIGINS=https://yourdomain.com,https://www.yourdomain.com,https://api.yourdomain.com
+
+# 是否允许无origin的请求 (移动应用等)
+ALLOW_NO_ORIGIN=false
+
+# 速率限制配置
+RATE_LIMIT_ENABLED=true
+RATE_LIMIT_WINDOW_MS=60000
+RATE_LIMIT_MAX_REQUESTS=100
+
+# IP白名单 (用于管理接口，逗号分隔)
+ADMIN_IP_WHITELIST=127.0.0.1,::1
+
+# 会话安全配置
+SESSION_SECURE=true
+SESSION_SAME_SITE=strict
+SESSION_HTTP_ONLY=true
+
+# ========================================
+# 服务器URL配置
+# ========================================
+# 对外访问的基础URL
+BASE_URL=https://yourdomain.com
+
+# API服务器URL (内部通信)
+API_URL=http://localhost:9010
+BACKEND_URL=http://localhost:9010
+MCP_URL=http://localhost:9010
+
+# 前端应用URL
+FRONTEND_URL=https://yourdomain.com
+
+# ========================================
+# 文件存储配置 (当使用file存储时)
+# ========================================
+# 文件存储路径
+STORAGE_PATH=./data
+
+# 上传文件配置
+UPLOAD_MAX_SIZE=10485760  # 10MB in bytes
+UPLOAD_ALLOWED_TYPES=application/json,text/plain,text/csv
+
+# ========================================
+# 日志和监控配置
+# ========================================
+# 日志级别 (error|warn|info|debug)
+LOG_LEVEL=info
+
+# 是否启用安全日志
+SECURITY_LOGGING=true
+
+# 日志文件路径
+LOG_FILE_PATH=./logs
+
+# 是否启用性能监控
+PERFORMANCE_MONITORING=true
+
+# ========================================
+# Redis配置 (用于会话存储和缓存)
+# ========================================
+# Redis连接URL (可选，用于分布式部署)
+REDIS_URL=redis://localhost:6379
+
+# Redis密码
+REDIS_PASSWORD=your-redis-password
+
+# ========================================
+# 邮件服务配置 (用于通知)
+# ========================================
+# SMTP服务器配置
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_SECURE=false
+SMTP_USER=your-email@gmail.com
+SMTP_PASS=your-app-password
+
+# 发件人信息
+EMAIL_FROM=noreply@yourdomain.com
+EMAIL_FROM_NAME=PromptHub
+
+# ========================================
+# 监控和报警配置
+# ========================================
+# Sentry DSN (错误监控)
+SENTRY_DSN=https://your-sentry-dsn@sentry.io/project-id
+
+# 健康检查配置
+HEALTH_CHECK_ENABLED=true
+HEALTH_CHECK_INTERVAL=30
+
+# ========================================
+# Docker和部署配置
+# ========================================
+# Docker Compose相关
+COMPOSE_BAKE=true
+COMPOSE_PROJECT_NAME=prompthub
+
+# 容器内存限制
+NODE_OPTIONS=--max-old-space-size=4096
+
+# ========================================
+# 开发环境特定配置
+# ========================================
+# 是否启用调试模式
+DEBUG=false
+
+# 是否启用热重载
+HOT_RELOAD=false
+
+# 是否跳过SSL验证 (仅开发环境)
+NODE_TLS_REJECT_UNAUTHORIZED=1
+
+# ========================================
+# 生产环境检查
+# ========================================
+# 生产环境必须设置的变量验证
+# 如果以下变量使用默认值，系统将发出警告或拒绝启动
+
+# 密钥验证模式
+REQUIRE_STRONG_KEYS=true
+
+# 强制HTTPS
+FORCE_HTTPS=true
+
+# 启用安全头
+SECURITY_HEADERS=true
+
+# ========================================
+# 备份和恢复配置
+# ========================================
+# 数据库备份配置
+BACKUP_ENABLED=true
+BACKUP_SCHEDULE=0 2 * * *  # 每天凌晨2点
+BACKUP_RETENTION_DAYS=30
+
+# 备份存储位置
+BACKUP_STORAGE_PATH=./backups
+
+# ========================================
+# 特性开关
+# ========================================
+# 是否启用用户注册
+ENABLE_USER_REGISTRATION=true
+
+# 是否启用AI分析功能
+ENABLE_AI_ANALYSIS=true
+
+# 是否启用文件上传
+ENABLE_FILE_UPLOAD=true
+
+# 是否启用协作功能
+ENABLE_COLLABORATION=true
+
+# ========================================
+# 法律合规配置
+# ========================================
+# 隐私政策URL
+PRIVACY_POLICY_URL=https://yourdomain.com/privacy
+
+# 服务条款URL
+TERMS_OF_SERVICE_URL=https://yourdomain.com/terms
+
+# 数据保留期限 (天)
+DATA_RETENTION_DAYS=365
+
+# GDPR合规模式
+GDPR_COMPLIANCE=true
+
+# ========================================
+# 安全提示
+# ========================================
+# 1. 定期更换所有密钥 (建议每90天)
+# 2. 使用强密码策略
+# 3. 启用两因素认证
+# 4. 监控异常访问模式
+# 5. 定期备份数据
+# 6. 保持依赖项更新
+# 7. 使用HTTPS加密传输
+# 8. 实施最小权限原则 
