@@ -7,11 +7,13 @@ import {
   ExclamationTriangleIcon,
   ArrowRightIcon,
   ClipboardDocumentIcon,
-  BeakerIcon
+  BeakerIcon,
+  XMarkIcon
 } from '@heroicons/react/24/outline';
 import { AIAnalyzeButton } from './AIAnalyzeButton';
 import { PromptOptimizer } from './PromptOptimizer';
 import { AIAnalysisResult } from '@/lib/ai-analyzer';
+import { AIAnalysisResultDisplay } from './AIAnalyzeButton';
 
 interface SmartWritingAssistantProps {
   content: string;
@@ -44,6 +46,10 @@ const SmartWritingAssistant: React.FC<SmartWritingAssistantProps> = ({
   const [writingSteps, setWritingSteps] = useState<WritingStep[]>([]);
   const [qualityScore, setQualityScore] = useState<number | null>(null);
   const [realTimeAnalysis, setRealTimeAnalysis] = useState<any>(null);
+  
+  // AI分析结果状态管理
+  const [aiAnalysisResult, setAiAnalysisResult] = useState<AIAnalysisResult | null>(null);
+  const [showAiAnalysisResult, setShowAiAnalysisResult] = useState(false);
 
   // 初始化写作指导步骤
   useEffect(() => {
@@ -153,6 +159,36 @@ const SmartWritingAssistant: React.FC<SmartWritingAssistantProps> = ({
 
   const handleOptimizationComplete = (optimizedContent: string) => {
     onContentChange(optimizedContent);
+  };
+
+  // 处理AI分析完成
+  const handleAIAnalysisComplete = (result: Partial<AIAnalysisResult>) => {
+    console.log('SmartWritingAssistant 收到AI分析结果:', result);
+    
+    if (result as AIAnalysisResult) {
+      setAiAnalysisResult(result as AIAnalysisResult);
+      setShowAiAnalysisResult(true);
+      
+      // 自动切换到智能分析标签页显示结果
+      setActiveTab('analysis');
+      
+      // 如果父组件有回调，也调用它
+      if (onAnalysisComplete) {
+        onAnalysisComplete(result);
+      }
+    }
+  };
+
+  // 应用AI分析结果（传递给父组件处理）
+  const handleApplyAIResults = (data: Partial<AIAnalysisResult>) => {
+    console.log('应用AI分析结果:', data);
+    
+    if (onAnalysisComplete) {
+      onAnalysisComplete(data);
+    }
+    
+    // 隐藏分析结果
+    setShowAiAnalysisResult(false);
   };
 
   const tabs = [
@@ -290,7 +326,7 @@ const SmartWritingAssistant: React.FC<SmartWritingAssistantProps> = ({
               <h3 className="text-base font-semibold text-white">🔍 智能分析</h3>
               <AIAnalyzeButton
                 content={content}
-                onAnalysisComplete={onAnalysisComplete || (() => {})}
+                onAnalysisComplete={handleAIAnalysisComplete}
                 variant="full"
                 className="text-sm"
               />
@@ -325,6 +361,37 @@ const SmartWritingAssistant: React.FC<SmartWritingAssistantProps> = ({
                 <p className="text-gray-400 text-sm">开始输入内容以获得实时分析...</p>
               )}
             </div>
+            
+            {/* AI智能分析结果显示 */}
+            <AnimatePresence>
+              {showAiAnalysisResult && aiAnalysisResult && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20, height: 0 }}
+                  animate={{ opacity: 1, y: 0, height: 'auto' }}
+                  exit={{ opacity: 0, y: -20, height: 0 }}
+                  className="space-y-4"
+                >
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-sm font-medium text-white">🤖 AI分析结果</h4>
+                    <button
+                      type="button"
+                      onClick={() => setShowAiAnalysisResult(false)}
+                      className="text-gray-400 hover:text-gray-600 transition-colors"
+                      title="关闭AI分析结果"
+                    >
+                      <XMarkIcon className="h-4 w-4" />
+                    </button>
+                  </div>
+                  
+                  <div className="bg-dark-bg-secondary/30 rounded-lg p-4">
+                    <AIAnalysisResultDisplay
+                      result={aiAnalysisResult}
+                      onApplyResults={handleApplyAIResults}
+                    />
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </motion.div>
         )}
 

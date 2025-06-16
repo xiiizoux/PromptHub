@@ -492,42 +492,6 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
     };
   };
 
-  const handleAIAnalysis = (result: Partial<AIAnalysisResult>) => {
-    console.log('收到AI分析结果:', result);
-    
-    // 将结果设置到状态中
-    if (result as AIAnalysisResult) {
-      // 映射分类到可用分类
-      if (result.category) {
-        const mappedCategory = matchCategory(result.category, categories);
-        if (mappedCategory) {
-          result.category = mappedCategory;
-        } else {
-          // 如果没有匹配的分类，使用通用分类
-          result.category = '通用';
-        }
-      }
-      
-      // 版本建议逻辑 - 新建提示词默认为1.0，编辑时默认+0.1
-      const currentVersion = watch('version') || safePromptData.version || 1.0;
-      if (!result.version) {
-        // 如果是新建提示词，默认版本为1.0
-        const isNewVersion = currentVersion === 1.0 && !prompt?.id;
-        if (isNewVersion) {
-          result.version = '1.0';
-        } else {
-          // 编辑现有提示词，默认+0.1
-          const suggestedVersion = Math.round((currentVersion + 0.1) * 10) / 10;
-          result.version = suggestedVersion.toString();
-        }
-        console.log(`版本建议: ${currentVersion} -> ${result.version}`);
-      }
-      
-      setAiAnalysisResult(result as AIAnalysisResult);
-      setShowAiAnalysis(true);
-    }
-  };
-
   // 应用AI分析结果 - 与创建页面保持一致
   const applyAIResults = (data: Partial<AIAnalysisResult>) => {
     console.log('应用AI分析结果:', data);
@@ -921,7 +885,7 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
                       setValue('content', newContent);
                       setCurrentContent(newContent);
                     }}
-                    onAnalysisComplete={handleAIAnalysis}
+                    onAnalysisComplete={applyAIResults}
                     category={watch('category')}
                     tags={tags}
                     className="max-h-96 overflow-y-auto"
@@ -956,16 +920,9 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
                     <span className="ml-2 text-sm font-normal text-gray-400">核心内容区域</span>
                   </label>
                   
-                  {/* AI分析按钮组 - 突出显示 */}
-                  <div className="flex items-center gap-2">
-                    <AIAnalyzeButton
-                      content={currentContent || watch('content') || ''}
-                      onAnalysisComplete={(result) => {
-                        // 显示AI分析结果，用户可以选择应用
-                        handleAIAnalysis(result);
-                      }}
-                      variant="full"
-                    />
+                  {/* 提示用户使用右侧栏的智能功能 */}
+                  <div className="text-sm text-gray-400">
+                    💡 使用右侧智能助手进行分析和优化
                   </div>
                 </div>
                 
@@ -987,32 +944,7 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
                   <p className="text-neon-red text-sm mt-1">{errors.content.message}</p>
                 )}
                 
-                {/* AI分析结果显示 - 紧跟在内容下方 */}
-                <AnimatePresence>
-                  {showAiAnalysis && aiAnalysisResult && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 20, height: 0 }}
-                      animate={{ opacity: 1, y: 0, height: 'auto' }}
-                      exit={{ opacity: 0, y: -20, height: 0 }}
-                      className="mt-4"
-                    >
-                      <div className="relative">
-                        <AIAnalysisResultDisplay
-                          result={aiAnalysisResult}
-                          onApplyResults={applyAIResults}
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setShowAiAnalysis(false)}
-                          className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors"
-                          title="关闭AI分析结果"
-                        >
-                          <XMarkIcon className="h-5 w-5" />
-                        </button>
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+
               </motion.div>
 
               {/* 基本信息 */}
@@ -1513,7 +1445,7 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
                 setValue('content', newContent);
                 setCurrentContent(newContent);
               }}
-              onAnalysisComplete={handleAIAnalysis}
+              onAnalysisComplete={applyAIResults}
               category={watch('category')}
               tags={tags}
               className="h-full"

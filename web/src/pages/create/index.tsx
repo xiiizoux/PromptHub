@@ -52,9 +52,6 @@ function CreatePromptPage() {
   const [suggestedTags, setSuggestedTags] = useState<string[]>([
     'GPT-4', 'GPT-3.5', 'Claude', 'Gemini', '初学者', '高级', '长文本', '结构化输出', '翻译', '润色'
   ]);
-  // AI分析状态
-  const [aiAnalysisResult, setAiAnalysisResult] = useState<AIAnalysisResult | null>(null);
-  const [showAiAnalysis, setShowAiAnalysis] = useState(false);
   
   // 数据加载状态
   const [categoriesLoading, setCategoriesLoading] = useState(false);
@@ -87,43 +84,6 @@ function CreatePromptPage() {
     // 如果都不匹配，返回null，让调用者决定是否使用默认值
     return null;
   }
-
-  // AI分析处理函数 - 更新以确保正确的分类映射，与编辑页面保持一致
-  const handleAIAnalysis = (result: Partial<AIAnalysisResult>) => {
-    console.log('收到AI分析结果:', result);
-    
-    // 将结果设置到状态中
-    if (result as AIAnalysisResult) {
-      // 映射分类到可用分类
-      if (result.category) {
-        const mappedCategory = matchCategory(result.category, categories);
-        if (mappedCategory) {
-          result.category = mappedCategory;
-        } else {
-          // 如果没有匹配的分类，使用通用分类
-          result.category = '通用';
-        }
-      }
-      
-      // 新建提示词版本号处理 - 默认为1.0
-      if (!result.version) {
-        result.version = '1.0';
-        console.log('新建提示词版本建议: 1.0');
-      }
-      
-      setAiAnalysisResult(result as AIAnalysisResult);
-      setShowAiAnalysis(true);
-    }
-  };
-
-  // 为AI分析按钮提供额外配置
-  const getAIAnalysisConfig = () => {
-    return {
-      isNewPrompt: true, // 创建页面总是新提示词
-      existingVersions: [], // 新提示词没有现有版本
-      currentVersion: undefined // 新提示词没有当前版本
-    };
-  };
 
   // 应用AI分析结果 - 增强功能，与编辑页面保持一致
   const applyAIResults = (data: Partial<AIAnalysisResult>) => {
@@ -449,7 +409,7 @@ function CreatePromptPage() {
                       setValue('content', newContent);
                       setCurrentContent(newContent);
                     }}
-                    onAnalysisComplete={handleAIAnalysis}
+                    onAnalysisComplete={applyAIResults}
                     category={watch('category')}
                     tags={tags}
                     className="max-h-96 overflow-y-auto"
@@ -483,16 +443,9 @@ function CreatePromptPage() {
                     <span className="ml-2 text-sm font-normal text-gray-400">核心内容区域</span>
                   </label>
                   
-                  {/* AI分析按钮组 - 突出显示 */}
-                  <div className="flex items-center gap-2">
-                    <AIAnalyzeButton
-                      content={currentContent || watch('content') || ''}
-                      onAnalysisComplete={(result) => {
-                        // 显示AI分析结果，用户可以选择应用
-                        handleAIAnalysis(result);
-                      }}
-                      variant="full"
-                    />
+                  {/* 提示用户使用右侧栏的智能功能 */}
+                  <div className="text-sm text-gray-400">
+                    💡 使用右侧智能助手进行分析和优化
                   </div>
                 </div>
                 
@@ -514,32 +467,7 @@ function CreatePromptPage() {
                   <p className="text-neon-red text-sm mt-1">{errors.content.message}</p>
                 )}
                 
-                {/* AI分析结果显示 - 紧跟在内容下方 */}
-                <AnimatePresence>
-                  {showAiAnalysis && aiAnalysisResult && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 20, height: 0 }}
-                      animate={{ opacity: 1, y: 0, height: 'auto' }}
-                      exit={{ opacity: 0, y: -20, height: 0 }}
-                      className="mt-4"
-                    >
-                      <div className="relative">
-                        <AIAnalysisResultDisplay
-                          result={aiAnalysisResult}
-                          onApplyResults={applyAIResults}
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setShowAiAnalysis(false)}
-                          className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors"
-                          title="关闭AI分析结果"
-                        >
-                          <XMarkIcon className="h-5 w-5" />
-                        </button>
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+
               </motion.div>
 
               {/* 基本信息 */}
@@ -962,7 +890,7 @@ function CreatePromptPage() {
                 setValue('content', newContent);
                 setCurrentContent(newContent);
               }}
-              onAnalysisComplete={handleAIAnalysis}
+              onAnalysisComplete={applyAIResults}
               category={watch('category')}
               tags={tags}
               className="h-full"
