@@ -173,8 +173,8 @@ export const AIAnalyzeButton: React.FC<AIAnalyzeButtonProps> = ({
           inline-flex items-center gap-2 px-4 py-2 rounded-lg font-medium
           transition-all duration-200 min-w-[120px] justify-center
           ${isButtonDisabled
-            ? 'bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-300'
-            : 'bg-gradient-to-r from-blue-500 to-purple-600 text-white hover:from-blue-600 hover:to-purple-700 hover:shadow-lg hover:scale-105 border border-blue-500'
+            ? 'bg-dark-bg-secondary/50 text-gray-500 cursor-not-allowed border border-gray-600/50'
+            : 'bg-gradient-to-r from-neon-blue/80 to-neon-purple/80 text-white hover:from-neon-blue hover:to-neon-purple hover:shadow-lg hover:shadow-neon-blue/25 hover:scale-105 border border-neon-blue/50'
           }
           ${className}
         `}
@@ -182,7 +182,7 @@ export const AIAnalyzeButton: React.FC<AIAnalyzeButtonProps> = ({
       >
         {isAnalyzing ? (
           <>
-            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            <div className="w-4 h-4 border-2 border-neon-cyan border-t-transparent rounded-full animate-spin" />
             <span>分析中...</span>
           </>
         ) : (
@@ -197,18 +197,18 @@ export const AIAnalyzeButton: React.FC<AIAnalyzeButtonProps> = ({
       </button>
 
       {error && (
-        <div className="absolute top-full left-0 mt-2 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm max-w-xs z-10">
+        <div className="absolute top-full left-0 mt-2 p-3 bg-dark-bg-secondary/90 border border-neon-red/40 rounded-lg text-red-300 text-sm max-w-xs z-10 backdrop-blur-sm">
           <div className="flex items-start gap-2">
-            <span className="text-red-500">⚠️</span>
+            <span className="text-neon-red">⚠️</span>
             <div>
-              <p className="font-medium">分析失败</p>
+              <p className="font-medium text-neon-red">分析失败</p>
               <p className="mt-1">{error}</p>
             </div>
           </div>
           <button
             type="button"
             onClick={() => setError(null)}
-            className="absolute top-1 right-1 text-red-400 hover:text-red-600"
+            className="absolute top-1 right-1 text-gray-400 hover:text-neon-red transition-colors"
           >
             ✕
           </button>
