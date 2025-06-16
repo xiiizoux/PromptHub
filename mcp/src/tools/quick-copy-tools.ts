@@ -4,7 +4,20 @@
  */
 
 import { StorageFactory } from '../storage/storage-factory.js';
-import { ToolDescription, ToolParameter, MCPToolResponse, Prompt } from '../types.js';
+import { ToolDescription, ToolParameter, MCPToolResponse, Prompt, PromptVariable } from '../types.js';
+
+// 类型守卫函数
+function isPromptVariable(variable: string | PromptVariable): variable is PromptVariable {
+  return typeof variable === 'object' && variable !== null && 'name' in variable;
+}
+
+function getVariableName(variable: string | PromptVariable): string {
+  return isPromptVariable(variable) ? variable.name : variable;
+}
+
+function getVariableDescription(variable: string | PromptVariable): string {
+  return isPromptVariable(variable) ? (variable.description || '需要替换的变量') : '需要替换的变量';
+}
 
 const storage = StorageFactory.getStorage();
 
@@ -248,7 +261,7 @@ export async function handlePromptPreview(params: any, userId?: string): Promise
 async function getPromptById(idOrName: string, userId?: string): Promise<Prompt | null> {
   try {
     // 先尝试按ID查找
-    let prompt = await storage.getPromptById(idOrName, userId);
+    let prompt = storage.getPromptById ? await storage.getPromptById(idOrName, userId) : await storage.getPrompt(idOrName, userId);
     
     // 如果没找到，尝试按名称搜索
     if (!prompt) {
@@ -311,7 +324,9 @@ function formatAsPlain(prompt: Prompt, content: string, includeVariables: boolea
   if (includeVariables && prompt.variables?.length) {
     output += `🔧 变量说明：\n`;
     prompt.variables.forEach(variable => {
-      output += `  • ${variable.name}: ${variable.description}\n`;
+      const varName = getVariableName(variable);
+      const varDesc = getVariableDescription(variable);
+      output += `  • ${varName}: ${varDesc}\n`;
     });
     output += '\n';
   }
@@ -346,7 +361,9 @@ function formatAsMarkdown(prompt: Prompt, content: string, includeVariables: boo
   if (includeVariables && prompt.variables?.length) {
     output += `## 变量说明\n\n`;
     prompt.variables.forEach(variable => {
-      output += `- **${variable.name}**: ${variable.description}\n`;
+      const varName = getVariableName(variable);
+      const varDesc = getVariableDescription(variable);
+      output += `- **${varName}**: ${varDesc}\n`;
     });
     output += '\n';
   }
@@ -391,7 +408,8 @@ function formatAsTemplate(prompt: Prompt, content: string, includeVariables: boo
   if (includeVariables && prompt.variables?.length) {
     output += `{{variables}}\n`;
     prompt.variables.forEach(variable => {
-      output += `${variable.name}={{${variable.name}}}\n`;
+      const varName = getVariableName(variable);
+      output += `${varName}={{${varName}}}\n`;
     });
   }
   
@@ -529,7 +547,7 @@ function generateUsageTips(prompt: Prompt, targetModel?: string): string {
   let tips = '💡 使用建议：\n';
   
   if (prompt.variables?.length) {
-    tips += `• 请确保替换所有变量：${prompt.variables.map(v => v.name).join(', ')}\n`;
+    tips += `• 请确保替换所有变量：${prompt.variables.join(', ')}\n`;
   }
   
   if (prompt.difficulty === 'advanced') {

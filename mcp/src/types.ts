@@ -6,6 +6,13 @@ export interface PromptMessage {
   };
 }
 
+export interface PromptVariable {
+  name: string;
+  description?: string;
+  type?: string;
+  default?: string;
+}
+
 export interface Prompt {
   id?: string;
   name: string;
@@ -25,6 +32,13 @@ export interface Prompt {
   improvements?: string[]; // 新增：改进建议
   use_cases?: string[]; // 新增：使用场景
   estimated_tokens?: number; // 新增：预估token数
+  content?: string; // 新增：原始内容
+  usage_count?: number; // 新增：使用次数
+  examples?: Array<{
+    input: string;
+    output: string;
+    description?: string;
+  }>; // 新增：示例
 }
 
 export interface PromptVersion {
@@ -123,7 +137,8 @@ export interface StorageAdapter {
   
   // 获取所有标签
   getTags(): Promise<string[]>;
-  getPromptsByCategory(category: string, userId?: string, includePublic?: boolean): Promise<Prompt[]>;
+  getPromptsByCategory(category: string, userId?: string, includePublic?: boolean, limit?: number): Promise<Prompt[]>;
+  getPromptById?(idOrName: string, userId?: string): Promise<Prompt | null>;
   
   // 版本控制相关
   getPromptVersions(promptId: string, userId?: string): Promise<PromptVersion[]>;
@@ -160,6 +175,10 @@ export interface MCPToolResponse {
     type: 'text';
     text: string;
   }>;
+  success?: boolean; // 新增：支持成功标识
+  error?: {
+    message: string;
+  }; // 新增：支持错误信息
 }
 
 // MCP 工具类型定义

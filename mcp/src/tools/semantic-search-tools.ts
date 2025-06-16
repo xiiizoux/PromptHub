@@ -105,21 +105,29 @@ export async function handleSemanticSearch(params: any, userId?: string): Promis
 
     // 4. 构建响应
     return {
-      success: true,
-      data: {
-        results: rankedResults.slice(0, 8), // 限制最佳结果
-        analysis: analyzedIntent,
-        search_strategy: '语义理解 + 多维度匹配',
-        confidence_scores: rankedResults.map(r => r.confidence),
-        recommendations: generateUsageRecommendations(rankedResults, context)
-      }
+      content: [{
+        type: 'text',
+        text: JSON.stringify({
+          success: true,
+          results: rankedResults.slice(0, 8), // 限制最佳结果
+          analysis: analyzedIntent,
+          search_strategy: '语义理解 + 多维度匹配',
+          confidence_scores: rankedResults.map(r => r.confidence),
+          recommendations: generateUsageRecommendations(rankedResults, context)
+        }, null, 2)
+      }]
     };
 
   } catch (error) {
     console.error('[语义搜索] 错误:', error);
     return {
-      success: false,
-      error: '语义搜索失败'
+      content: [{
+        type: 'text',
+        text: JSON.stringify({
+          success: false,
+          error: '语义搜索失败'
+        })
+      }]
     };
   }
 }

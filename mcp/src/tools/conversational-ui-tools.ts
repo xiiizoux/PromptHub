@@ -292,8 +292,8 @@ function generateDirectUseFormat(prompt: Prompt, vars: any): string {
   
   // 简化的提示信息
   if (prompt.variables?.length && Object.keys(vars).length === 0) {
-    response += `🔧 支持自定义变量: ${prompt.variables.map(v => v.name).join(', ')}\n`;
-    response += `💡 示例: use("${prompt.name}", {"${prompt.variables[0].name}": "你的值"})\n`;
+    response += `🔧 支持自定义变量: ${prompt.variables.join(', ')}\n`;
+    response += `💡 示例: use("${prompt.name}", {"${prompt.variables[0]}": "你的值"})\n`;
   }
   
   response += `\n✅ 直接复制上面的内容到AI对话框即可使用`;
