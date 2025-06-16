@@ -39,6 +39,8 @@ const SmartWritingAssistant: React.FC<SmartWritingAssistantProps> = ({
   tags
 }) => {
   const [activeTab, setActiveTab] = useState<'guide' | 'analysis' | 'templates' | 'optimizer'>('guide');
+  
+  console.log('SmartWritingAssistant: 组件渲染，props:', { content: content?.length, category, tags });
   const [writingSteps, setWritingSteps] = useState<WritingStep[]>([]);
   const [qualityScore, setQualityScore] = useState<number | null>(null);
   const [realTimeAnalysis, setRealTimeAnalysis] = useState<any>(null);
@@ -335,7 +337,10 @@ const SmartWritingAssistant: React.FC<SmartWritingAssistantProps> = ({
             className="space-y-6"
           >
             <h3 className="text-lg font-semibold text-white mb-4">📋 快速模板</h3>
-            <QuickTemplates onApplyTemplate={applyTemplate} category={category} />
+            <div>
+              <p className="text-xs text-gray-400 mb-2">调试信息: activeTab={activeTab}, category={category}</p>
+              <QuickTemplates onApplyTemplate={applyTemplate} category={category} />
+            </div>
           </motion.div>
         )}
 
@@ -371,53 +376,115 @@ const QuickTemplates: React.FC<{
 }> = ({ onApplyTemplate, category }) => {
   const [templates, setTemplates] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  
+  console.log('QuickTemplates: 组件初始化，category:', category);
 
   useEffect(() => {
+    console.log('QuickTemplates: useEffect触发，category:', category);
     fetchTemplates();
   }, [category]);
 
   const fetchTemplates = async () => {
     try {
       setLoading(true);
+      console.log('QuickTemplates: 开始获取模板，当前状态:', { loading, templatesLength: templates.length, category });
+      
+      // 首先尝试不带category参数获取featured模板
       const params = new URLSearchParams({
         featured: 'true',
         limit: '4'
       });
-      
-      if (category) {
-        params.append('category', category);
-      }
 
-      console.log('QuickTemplates: 开始获取模板...', `/api/templates?${params}`);
-      const response = await fetch(`/api/templates?${params}`);
+      const url = `/api/templates?${params}`;
+      console.log('QuickTemplates: 请求URL:', url);
+      
+      const response = await fetch(url);
       console.log('QuickTemplates: API响应状态:', response.status, response.statusText);
       
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
       
-      const result = await response.json();
-      console.log('QuickTemplates: API响应数据:', result);
+      const responseText = await response.text();
+      console.log('QuickTemplates: 原始响应文本长度:', responseText.length);
+      
+      let result;
+      try {
+        result = JSON.parse(responseText);
+      } catch (parseError) {
+        console.error('QuickTemplates: JSON解析失败:', parseError);
+        throw new Error('响应不是有效的JSON格式');
+      }
+      
+      console.log('QuickTemplates: 解析后的数据:', result);
+      console.log('QuickTemplates: result.data类型:', typeof result.data, 'isArray:', Array.isArray(result.data), 'length:', result.data?.length);
 
-      if (result.data && Array.isArray(result.data)) {
-        const formattedTemplates = result.data.map((template: any) => ({
-          name: template.title,
-          category: template.category_info?.display_name || template.category,
-          template: template.content
-        }));
+      if (result.data && Array.isArray(result.data) && result.data.length > 0) {
+        console.log('QuickTemplates: 原始模板数据:', result.data);
+        
+        const formattedTemplates = result.data.map((template: any, index: number) => {
+          console.log(`QuickTemplates: 格式化模板 ${index}:`, {
+            title: template.title,
+            category: template.category,
+            category_info: template.category_info,
+            content_length: template.content?.length
+          });
+          
+          return {
+            name: template.title,
+            category: template.category_info?.display_name || template.category,
+            template: template.content
+          };
+        });
+        
         console.log('QuickTemplates: 格式化后的模板:', formattedTemplates);
+        console.log('QuickTemplates: 设置模板数量:', formattedTemplates.length);
+        
         setTemplates(formattedTemplates);
+        
+        // 验证状态是否正确设置
+        setTimeout(() => {
+          console.log('QuickTemplates: 状态设置后验证，templates.length:', templates.length);
+        }, 100);
+        
       } else {
-        console.warn('QuickTemplates: API返回数据格式不正确:', result);
-        setTemplates([]);
+        console.warn('QuickTemplates: API返回空数据或格式不正确:', {
+          hasData: !!result.data,
+          dataType: typeof result.data,
+          isArray: Array.isArray(result.data),
+          length: result.data?.length,
+          result
+        });
+        
+        // 设置默认模板作为后备
+        const fallbackTemplates = [
+          {
+            name: '专业分析师',
+            category: '分析研究',
+            template: `你是一位专业的{{领域}}分析师，拥有丰富的行业经验和敏锐的洞察力。
+
+请对以下内容进行深入分析：
+{{分析对象}}
+
+分析要求：
+1. 从多个角度进行全面分析
+2. 提供具体的数据和事实支撑
+3. 给出可行的建议和解决方案`
+          }
+        ];
+        
+        console.log('QuickTemplates: 设置后备模板:', fallbackTemplates);
+        setTemplates(fallbackTemplates);
       }
     } catch (error) {
       console.error('QuickTemplates: 获取模板失败:', error);
-      // 保留一些默认模板作为后备
-      setTemplates([
+      console.error('QuickTemplates: 错误堆栈:', error instanceof Error ? error.stack : 'No stack');
+      
+      // 设置默认模板作为后备
+      const fallbackTemplates = [
         {
           name: '专业分析师',
-          category: '分析',
+          category: '分析研究',
           template: `你是一位专业的{{领域}}分析师，拥有丰富的行业经验和敏锐的洞察力。
 
 请对以下内容进行深入分析：
@@ -428,8 +495,12 @@ const QuickTemplates: React.FC<{
 2. 提供具体的数据和事实支撑
 3. 给出可行的建议和解决方案`
         }
-      ]);
+      ];
+      
+      console.log('QuickTemplates: 设置后备模板:', fallbackTemplates);
+      setTemplates(fallbackTemplates);
     } finally {
+      console.log('QuickTemplates: 请求完成，设置loading为false');
       setLoading(false);
     }
   };
