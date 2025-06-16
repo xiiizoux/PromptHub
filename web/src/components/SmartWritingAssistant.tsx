@@ -383,12 +383,10 @@ const SmartWritingAssistant: React.FC<SmartWritingAssistantProps> = ({
                     </button>
                   </div>
                   
-                  <div className="bg-dark-bg-secondary/30 rounded-lg p-4">
-                    <AIAnalysisResultDisplay
-                      result={aiAnalysisResult}
-                      onApplyResults={handleApplyAIResults}
-                    />
-                  </div>
+                  <AIAnalysisResultDisplay
+                    result={aiAnalysisResult}
+                    onApplyResults={handleApplyAIResults}
+                  />
                 </motion.div>
               )}
             </AnimatePresence>
