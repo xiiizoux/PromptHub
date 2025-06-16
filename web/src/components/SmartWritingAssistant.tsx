@@ -611,19 +611,30 @@ const QuickTemplates: React.FC<{
     return (
       <div className="space-y-4">
         <div className="h-10 bg-gray-600/30 rounded-lg animate-pulse"></div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="space-y-3">
           {[1, 2, 3, 4].map((index) => (
             <div
               key={index}
-              className="p-4 bg-dark-bg-secondary/30 rounded-lg border border-gray-600/30 animate-pulse"
+              className="p-4 bg-gradient-to-r from-dark-bg-secondary/40 to-dark-bg-secondary/20 rounded-xl border border-gray-600/30 animate-pulse"
             >
-              <div className="flex items-center justify-between mb-2">
-                <div className="h-4 bg-gray-600 rounded w-1/3"></div>
-                <div className="h-5 bg-neon-cyan/20 rounded w-16"></div>
+              <div className="flex items-start justify-between mb-3">
+                <div className="flex-1 pr-3">
+                  <div className="h-4 bg-gray-600 rounded w-2/3 mb-1"></div>
+                  <div className="h-3 bg-gray-600 rounded w-1/2"></div>
+                </div>
+                <div className="h-5 bg-neon-cyan/20 rounded-full w-16"></div>
               </div>
-              <div className="h-3 bg-gray-600 rounded w-full mb-1"></div>
-              <div className="h-3 bg-gray-600 rounded w-3/4 mb-3"></div>
-              <div className="h-3 bg-neon-cyan/20 rounded w-24"></div>
+              <div className="mb-3">
+                <div className="h-3 bg-gray-600 rounded w-full mb-1"></div>
+                <div className="h-3 bg-gray-600 rounded w-4/5"></div>
+              </div>
+              <div className="flex items-center justify-between">
+                <div className="flex gap-1">
+                  <div className="h-5 bg-gray-600 rounded w-12"></div>
+                  <div className="h-5 bg-gray-600 rounded w-10"></div>
+                </div>
+                <div className="h-3 bg-neon-cyan/20 rounded w-8"></div>
+              </div>
             </div>
           ))}
         </div>
@@ -709,54 +720,75 @@ const QuickTemplates: React.FC<{
           )}
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="space-y-3">
           {templates.map((template, index) => (
             <motion.div
               key={`${template.name}-${index}`}
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: index * 0.1 }}
-              className="p-4 bg-dark-bg-secondary/30 rounded-lg border border-gray-600/30 hover:border-neon-cyan/30 transition-all cursor-pointer group"
-              onClick={() => onApplyTemplate(template.template)}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.05 }}
+              className="relative group"
             >
-              <div className="flex items-center justify-between mb-2">
-                <h4 className="text-sm font-medium text-white group-hover:text-neon-cyan transition-colors">
-                  {template.name}
-                </h4>
-                <span className="text-xs px-2 py-1 bg-neon-cyan/20 text-neon-cyan rounded">
-                  {template.category}
-                </span>
-              </div>
-              
-              {template.description && (
-                <p className="text-xs text-gray-500 mb-2 line-clamp-1">
-                  {template.description}
-                </p>
-              )}
-              
-              <p className="text-sm text-gray-400 mb-3 line-clamp-2">
-                {template.template.substring(0, 100)}...
-              </p>
-              
-              {template.tags && template.tags.length > 0 && (
-                <div className="flex flex-wrap gap-1 mb-3">
-                  {template.tags.slice(0, 3).map((tag: string, tagIndex: number) => (
-                    <span
-                      key={tagIndex}
-                      className="text-xs px-2 py-1 bg-gray-700/50 text-gray-300 rounded"
-                    >
-                      {tag}
-                    </span>
-                  ))}
-                  {template.tags.length > 3 && (
-                    <span className="text-xs text-gray-500">+{template.tags.length - 3}</span>
-                  )}
+              <motion.div
+                whileHover={{ scale: 1.02 }}
+                className="p-4 bg-gradient-to-r from-dark-bg-secondary/40 to-dark-bg-secondary/20 rounded-xl border border-gray-600/30 hover:border-neon-cyan/50 transition-all duration-300 cursor-pointer backdrop-blur-sm"
+                onClick={() => onApplyTemplate(template.template)}
+              >
+                {/* 顶部标题行 */}
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex-1 pr-3">
+                    <h4 className="text-sm font-semibold text-white group-hover:text-neon-cyan transition-colors mb-1">
+                      {template.name}
+                    </h4>
+                    {template.description && (
+                      <p className="text-xs text-gray-400 line-clamp-1">
+                        {template.description}
+                      </p>
+                    )}
+                  </div>
+                  <span className="text-xs px-2 py-1 bg-neon-cyan/20 text-neon-cyan rounded-full font-medium whitespace-nowrap">
+                    {template.category}
+                  </span>
                 </div>
-              )}
-              
-              <button className="text-xs text-neon-cyan group-hover:text-neon-cyan/80 transition-colors">
-                点击应用模板 →
-              </button>
+                
+                {/* 内容预览 */}
+                <div className="mb-3">
+                  <p className="text-sm text-gray-300 mb-2 line-clamp-2 leading-relaxed">
+                    {template.template.substring(0, 120)}...
+                  </p>
+                </div>
+                
+                {/* 标签和操作区域 */}
+                <div className="flex items-center justify-between">
+                  {template.tags && template.tags.length > 0 ? (
+                    <div className="flex flex-wrap gap-1 flex-1">
+                      {template.tags.slice(0, 2).map((tag: string, tagIndex: number) => (
+                        <span
+                          key={tagIndex}
+                          className="text-xs px-2 py-1 bg-gray-700/60 text-gray-300 rounded-md"
+                        >
+                          {tag}
+                        </span>
+                      ))}
+                      {template.tags.length > 2 && (
+                        <span className="text-xs text-gray-500">+{template.tags.length - 2}</span>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="flex-1"></div>
+                  )}
+                  
+                  <div className="flex items-center text-xs text-neon-cyan group-hover:text-neon-cyan/80 transition-colors ml-3">
+                    <span className="mr-1">应用</span>
+                    <svg className="w-3 h-3 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </div>
+                </div>
+                
+                {/* 悬停效果 */}
+                <div className="absolute inset-0 bg-gradient-to-r from-neon-cyan/5 to-neon-purple/5 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+              </motion.div>
             </motion.div>
           ))}
         </div>
