@@ -529,6 +529,7 @@ function CreatePromptPage() {
                           onApplyResults={applyAIResults}
                         />
                         <button
+                          type="button"
                           onClick={() => setShowAiAnalysis(false)}
                           className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors"
                           title="关闭AI分析结果"
