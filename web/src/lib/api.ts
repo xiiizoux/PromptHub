@@ -181,7 +181,7 @@ export const getPrompts = async (filters?: PromptFilters): Promise<PaginatedResp
 };
 
 // 获取提示词详情
-export const getPromptDetails = async (name: string): Promise<PromptDetails> => {
+export const getPromptDetails = async (identifier: string): Promise<PromptDetails> => {
   try {
     // 在服务端渲染时使用完整URL，在客户端使用相对路径
     const baseUrl = typeof window === 'undefined' 
@@ -232,13 +232,13 @@ export const getPromptDetails = async (name: string): Promise<PromptDetails> => 
       }
     }
 
-    console.log('获取提示词详情:', name, '用户ID:', userId || '未登录');
+    console.log('获取提示词详情:', identifier, '用户ID:', userId || '未登录');
     
     // 在服务器端渲染时使用完整URL，在客户端使用默认的api实例
     let response;
     if (typeof window === 'undefined') {
       // 服务器端：使用完整URL调用
-      response = await axios.get(`${baseUrl}/api/prompts/${encodeURIComponent(name)}`, {
+      response = await axios.get(`${baseUrl}/api/prompts/${encodeURIComponent(identifier)}`, {
         headers: {
           'Content-Type': 'application/json',
           ...(userId ? { 'user-id': userId } : {}),
@@ -247,7 +247,7 @@ export const getPromptDetails = async (name: string): Promise<PromptDetails> => 
       });
     } else {
       // 客户端：使用相对路径
-      response = await api.get(`/prompts/${encodeURIComponent(name)}`, {
+      response = await api.get(`/prompts/${encodeURIComponent(identifier)}`, {
         headers: {
           ...(userId ? { 'user-id': userId } : {}),
           ...(userToken ? { 'Authorization': `Bearer ${userToken}` } : {})
@@ -261,7 +261,7 @@ export const getPromptDetails = async (name: string): Promise<PromptDetails> => 
     
     return response.data.prompt as PromptDetails;
   } catch (error) {
-    console.error(`获取提示词 ${name} 详情失败:`, error);
+    console.error(`获取提示词 ${identifier} 详情失败:`, error);
     throw error;
   }
 };

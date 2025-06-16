@@ -20,11 +20,12 @@ export default function AnalyticsPage() {
         const promptList = response.data || [];
         setPrompts(promptList);
         
-        // 获取每个提示词的性能数据
-        const performancePromises = promptList.map(prompt => 
-          getPromptPerformance(prompt.name)
-            .then(data => ({ id: prompt.name, data }))
-            .catch(() => ({ id: prompt.name, data: null }))
+        // 获取每个提示词的性能数据（只处理有ID的提示词）
+        const promptsWithId = promptList.filter(prompt => prompt.id);
+        const performancePromises = promptsWithId.map(prompt => 
+          getPromptPerformance(prompt.id!)
+            .then(data => ({ id: prompt.id!, data }))
+            .catch(() => ({ id: prompt.id!, data: null }))
         );
         
         const performanceResults = await Promise.all(performancePromises);
@@ -255,11 +256,11 @@ export default function AnalyticsPage() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-dark-border">
-                      {prompts.map((prompt, index) => {
-                        const performance = performanceData[prompt.name];
+                      {prompts.filter(prompt => prompt.id).map((prompt, index) => {
+                        const performance = performanceData[prompt.id!];
                         return (
                           <motion.tr 
-                            key={prompt.name}
+                            key={prompt.id}
                             initial={{ opacity: 0, x: -20 }}
                             animate={{ opacity: 1, x: 0 }}
                             transition={{ duration: 0.6, delay: 1.6 + index * 0.1 }}
@@ -307,7 +308,7 @@ export default function AnalyticsPage() {
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm">
                               <Link 
-                                href={`/analytics/${prompt.name}`} 
+                                href={`/analytics/${prompt.id}`} 
                                 className="inline-flex items-center text-neon-cyan hover:text-neon-purple transition-colors duration-300 group"
                               >
                                 <span>详情</span>
