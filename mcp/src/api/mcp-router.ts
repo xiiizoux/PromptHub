@@ -34,6 +34,14 @@ import {
   handleExternalAIAnalysis
 } from '../tools/intelligent-tools.js';
 import {
+  quickStoreTool,
+  smartStoreTool,
+  analyzeAndStoreTool,
+  handleQuickStore,
+  handleSmartStore,
+  handleAnalyzeAndStore
+} from '../tools/auto-storage-tools.js';
+import {
   enhancedSearchTool,
   promptSelectionTool,
   quickAccessTool,
@@ -309,6 +317,11 @@ router.get('/tools', optionalAuthMiddleware, (req, res) => {
     intelligentPromptStorageTool,
     externalAIAnalysisTool,
     
+    // 自动存储工具 - 简化的提示词存储体验
+    quickStoreTool,
+    smartStoreTool,
+    analyzeAndStoreTool,
+    
     // 增强搜索和展示工具
     enhancedSearchTool,
     promptSelectionTool,
@@ -566,6 +579,17 @@ router.post('/tools/:name/invoke', optionalAuthMiddleware, async (req, res) => {
         break;
       case 'analyze_prompt_with_external_ai':
         result = await handleExternalAIAnalysis(params);
+        break;
+      
+      // 自动存储工具处理
+      case 'quick_store':
+        result = await handleQuickStore(params);
+        break;
+      case 'smart_store':
+        result = await handleSmartStore(params);
+        break;
+      case 'analyze_and_store':
+        result = await handleAnalyzeAndStore(params);
         break;
       
       // 增强搜索和展示工具处理
