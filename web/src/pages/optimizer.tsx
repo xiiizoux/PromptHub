@@ -156,7 +156,7 @@ const OptimizerPage: React.FC = () => {
                 >
                   {isSaving ? (
                     <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent" />
+                      <div className="animate-spin rounded-full h-4 w-4 border-2 border-neon-cyan border-t-transparent" />
                       <span>保存中...</span>
                     </>
                   ) : (

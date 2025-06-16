@@ -194,7 +194,7 @@ export default function ClearAuthPage() {
                   >
                     {isClearing ? (
                       <div className="flex items-center">
-                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-neon-cyan mr-2"></div>
                         清理中...
                       </div>
                     ) : (
