@@ -437,19 +437,26 @@ const QuickTemplates: React.FC<{
   category?: string;
 }> = ({ onApplyTemplate, category }) => {
   const [templates, setTemplates] = useState<any[]>([]);
+  const [allTemplates, setAllTemplates] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isSearching, setIsSearching] = useState(false);
   
   useEffect(() => {
     fetchTemplates();
   }, [category]);
 
+  useEffect(() => {
+    handleSearch();
+  }, [searchQuery, allTemplates]);
+
   const fetchTemplates = async () => {
     try {
       setLoading(true);
-      // 获取featured模板
+      // 获取更多模板用于搜索
       const params = new URLSearchParams({
         featured: 'true',
-        limit: '4'
+        limit: searchQuery ? '20' : '4'  // 如果有搜索词，获取更多模板
       });
 
       const url = `/api/templates?${params}`;
@@ -465,10 +472,15 @@ const QuickTemplates: React.FC<{
         const formattedTemplates = result.data.map((template: any) => ({
           name: template.title,
           category: template.category_info?.display_name || template.category,
-          template: template.content
+          template: template.content,
+          tags: template.tags || [],
+          description: template.description || ''
         }));
         
-        setTemplates(formattedTemplates);
+        setAllTemplates(formattedTemplates);
+        if (!searchQuery) {
+          setTemplates(formattedTemplates.slice(0, 4)); // 默认显示4个
+        }
         
       } else {
         console.warn('QuickTemplates: API返回空数据或格式不正确:', {
@@ -492,10 +504,13 @@ const QuickTemplates: React.FC<{
 分析要求：
 1. 从多个角度进行全面分析
 2. 提供具体的数据和事实支撑
-3. 给出可行的建议和解决方案`
+3. 给出可行的建议和解决方案`,
+            tags: ['分析', '专业', '研究'],
+            description: '专业的分析师模板，适用于各种分析场景'
           }
         ];
         
+        setAllTemplates(fallbackTemplates);
         setTemplates(fallbackTemplates);
       }
     } catch (error) {
@@ -514,67 +529,238 @@ const QuickTemplates: React.FC<{
 分析要求：
 1. 从多个角度进行全面分析
 2. 提供具体的数据和事实支撑
-3. 给出可行的建议和解决方案`
+3. 给出可行的建议和解决方案`,
+          tags: ['分析', '专业', '研究'],
+          description: '专业的分析师模板，适用于各种分析场景'
         }
       ];
       
+      setAllTemplates(fallbackTemplates);
       setTemplates(fallbackTemplates);
     } finally {
       setLoading(false);
     }
   };
 
+  const handleSearch = async () => {
+    if (!searchQuery.trim()) {
+      // 如果搜索词为空，显示默认的精选模板
+      setTemplates(allTemplates.slice(0, 4));
+      setIsSearching(false);
+      return;
+    }
+
+    setIsSearching(true);
+    
+    try {
+      // 调用API进行搜索
+      const params = new URLSearchParams({
+        search: searchQuery,
+        limit: '12'
+      });
+
+      const url = `/api/templates?${params}`;
+      const response = await fetch(url);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      
+      const result = await response.json();
+
+      if (result.data && Array.isArray(result.data)) {
+        const formattedTemplates = result.data.map((template: any) => ({
+          name: template.title,
+          category: template.category_info?.display_name || template.category,
+          template: template.content,
+          tags: template.tags || [],
+          description: template.description || ''
+        }));
+        
+        setTemplates(formattedTemplates);
+      } else {
+        // 本地搜索作为后备
+        const filtered = allTemplates.filter(template =>
+          template.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          template.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          template.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          template.tags.some((tag: string) => tag.toLowerCase().includes(searchQuery.toLowerCase()))
+        );
+        setTemplates(filtered);
+      }
+    } catch (error) {
+      console.error('QuickTemplates: 搜索失败:', error);
+      // 使用本地搜索作为后备
+      const filtered = allTemplates.filter(template =>
+        template.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        template.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        template.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        template.tags.some((tag: string) => tag.toLowerCase().includes(searchQuery.toLowerCase()))
+      );
+      setTemplates(filtered);
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  const clearSearch = () => {
+    setSearchQuery('');
+  };
+
   if (loading) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {[1, 2, 3, 4].map((index) => (
-          <div
-            key={index}
-            className="p-4 bg-dark-bg-secondary/30 rounded-lg border border-gray-600/30 animate-pulse"
-          >
-            <div className="flex items-center justify-between mb-2">
-              <div className="h-4 bg-gray-600 rounded w-1/3"></div>
-              <div className="h-5 bg-neon-cyan/20 rounded w-16"></div>
+      <div className="space-y-4">
+        <div className="h-10 bg-gray-600/30 rounded-lg animate-pulse"></div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {[1, 2, 3, 4].map((index) => (
+            <div
+              key={index}
+              className="p-4 bg-dark-bg-secondary/30 rounded-lg border border-gray-600/30 animate-pulse"
+            >
+              <div className="flex items-center justify-between mb-2">
+                <div className="h-4 bg-gray-600 rounded w-1/3"></div>
+                <div className="h-5 bg-neon-cyan/20 rounded w-16"></div>
+              </div>
+              <div className="h-3 bg-gray-600 rounded w-full mb-1"></div>
+              <div className="h-3 bg-gray-600 rounded w-3/4 mb-3"></div>
+              <div className="h-3 bg-neon-cyan/20 rounded w-24"></div>
             </div>
-            <div className="h-3 bg-gray-600 rounded w-full mb-1"></div>
-            <div className="h-3 bg-gray-600 rounded w-3/4 mb-3"></div>
-            <div className="h-3 bg-neon-cyan/20 rounded w-24"></div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
     );
   }
 
-
-  
   return (
     <div className="space-y-4">
-      <div className="text-white text-sm">快速模板 ({templates.length}个)</div>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {templates.map((template, index) => (
-        <motion.div
-          key={index}
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: index * 0.1 }}
-          className="p-4 bg-dark-bg-secondary/30 rounded-lg border border-gray-600/30 hover:border-neon-cyan/30 transition-all cursor-pointer"
-          onClick={() => onApplyTemplate(template.template)}
-        >
-          <div className="flex items-center justify-between mb-2">
-            <h4 className="text-sm font-medium text-white">{template.name}</h4>
-            <span className="text-xs px-2 py-1 bg-neon-cyan/20 text-neon-cyan rounded">
-              {template.category}
-            </span>
-          </div>
-          <p className="text-sm text-gray-400 mb-3">
-            {template.template.substring(0, 100)}...
-          </p>
-          <button className="text-xs text-neon-cyan hover:text-neon-cyan/80 transition-colors">
-            点击应用模板 →
+      {/* 搜索框 */}
+      <div className="relative">
+        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+          <svg
+            className="h-4 w-4 text-gray-400"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+            />
+          </svg>
+        </div>
+        <input
+          type="text"
+          placeholder="搜索模板..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="w-full pl-10 pr-10 py-2 bg-dark-bg-secondary/50 border border-gray-600/30 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-neon-cyan/50 focus:border-neon-cyan/50 transition-all text-sm"
+        />
+        {searchQuery && (
+          <button
+            onClick={clearSearch}
+            className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-white transition-colors"
+          >
+            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
           </button>
-        </motion.div>
-      ))}
+        )}
+        {isSearching && (
+          <div className="absolute inset-y-0 right-8 flex items-center">
+            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-neon-cyan"></div>
+          </div>
+        )}
       </div>
+
+      {/* 模板计数和状态 */}
+      <div className="flex items-center justify-between">
+        <div className="text-white text-sm">
+          {searchQuery ? (
+            <span>搜索结果 ({templates.length}个)</span>
+          ) : (
+            <span>快速模板 ({templates.length}个)</span>
+          )}
+        </div>
+        {searchQuery && (
+          <button
+            onClick={clearSearch}
+            className="text-xs text-neon-cyan hover:text-neon-cyan/80 transition-colors"
+          >
+            清除搜索
+          </button>
+        )}
+      </div>
+
+      {/* 模板网格 */}
+      {templates.length === 0 && !loading ? (
+        <div className="text-center py-8">
+          <div className="text-gray-400 mb-2">
+            {searchQuery ? '未找到匹配的模板' : '暂无可用模板'}
+          </div>
+          {searchQuery && (
+            <button
+              onClick={clearSearch}
+              className="text-sm text-neon-cyan hover:text-neon-cyan/80 transition-colors"
+            >
+              查看所有模板
+            </button>
+          )}
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {templates.map((template, index) => (
+            <motion.div
+              key={`${template.name}-${index}`}
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: index * 0.1 }}
+              className="p-4 bg-dark-bg-secondary/30 rounded-lg border border-gray-600/30 hover:border-neon-cyan/30 transition-all cursor-pointer group"
+              onClick={() => onApplyTemplate(template.template)}
+            >
+              <div className="flex items-center justify-between mb-2">
+                <h4 className="text-sm font-medium text-white group-hover:text-neon-cyan transition-colors">
+                  {template.name}
+                </h4>
+                <span className="text-xs px-2 py-1 bg-neon-cyan/20 text-neon-cyan rounded">
+                  {template.category}
+                </span>
+              </div>
+              
+              {template.description && (
+                <p className="text-xs text-gray-500 mb-2 line-clamp-1">
+                  {template.description}
+                </p>
+              )}
+              
+              <p className="text-sm text-gray-400 mb-3 line-clamp-2">
+                {template.template.substring(0, 100)}...
+              </p>
+              
+              {template.tags && template.tags.length > 0 && (
+                <div className="flex flex-wrap gap-1 mb-3">
+                  {template.tags.slice(0, 3).map((tag: string, tagIndex: number) => (
+                    <span
+                      key={tagIndex}
+                      className="text-xs px-2 py-1 bg-gray-700/50 text-gray-300 rounded"
+                    >
+                      {tag}
+                    </span>
+                  ))}
+                  {template.tags.length > 3 && (
+                    <span className="text-xs text-gray-500">+{template.tags.length - 3}</span>
+                  )}
+                </div>
+              )}
+              
+              <button className="text-xs text-neon-cyan group-hover:text-neon-cyan/80 transition-colors">
+                点击应用模板 →
+              </button>
+            </motion.div>
+          ))}
+        </div>
+      )}
     </div>
   );
 };
