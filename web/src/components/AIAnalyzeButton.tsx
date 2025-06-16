@@ -321,7 +321,7 @@ export const AIAnalysisResultDisplay: React.FC<AIAnalysisResultDisplayProps> = (
                   <div className="w-8 h-8 bg-neon-yellow/20 rounded-lg flex items-center justify-center">
                     <span className="text-neon-yellow">💡</span>
                   </div>
-                  <h4 className="text-sm font-semibold text-gray-200">建议标题</h4>
+                  <h4 className="font-semibold text-gray-200">建议标题</h4>
                 </div>
                 <button
                   type="button"
@@ -353,7 +353,7 @@ export const AIAnalysisResultDisplay: React.FC<AIAnalysisResultDisplayProps> = (
                   <div className="w-8 h-8 bg-neon-orange/20 rounded-lg flex items-center justify-center">
                     <span className="text-neon-orange">📋</span>
                   </div>
-                  <h4 className="text-sm font-semibold text-gray-200">建议描述</h4>
+                  <h4 className="font-semibold text-gray-200">建议描述</h4>
                 </div>
                 <button
                   type="button"
@@ -386,7 +386,7 @@ export const AIAnalysisResultDisplay: React.FC<AIAnalysisResultDisplayProps> = (
                 <div className="w-8 h-8 bg-neon-pink/20 rounded-lg flex items-center justify-center">
                   <span className="text-neon-pink">📋</span>
                 </div>
-                <h4 className="text-sm font-semibold text-gray-200">版本建议</h4>
+                <h4 className="font-semibold text-gray-200">版本建议</h4>
               </div>
               <button
                 type="button"
@@ -417,7 +417,7 @@ export const AIAnalysisResultDisplay: React.FC<AIAnalysisResultDisplayProps> = (
                 <div className="w-8 h-8 bg-neon-cyan/20 rounded-lg flex items-center justify-center">
                   <span className="text-neon-cyan">🏷️</span>
                 </div>
-                <h4 className="text-sm font-semibold text-gray-200">智能分类</h4>
+                                 <h4 className="font-semibold text-gray-200">智能分类</h4>
               </div>
               <button
                 type="button"
@@ -447,7 +447,7 @@ export const AIAnalysisResultDisplay: React.FC<AIAnalysisResultDisplayProps> = (
                 <div className="w-8 h-8 bg-neon-purple/20 rounded-lg flex items-center justify-center">
                   <span className="text-neon-purple">🔖</span>
                 </div>
-                <h4 className="text-sm font-semibold text-gray-200">智能标签</h4>
+                                 <h4 className="font-semibold text-gray-200">智能标签</h4>
               </div>
               <button
                 type="button"
@@ -484,7 +484,7 @@ export const AIAnalysisResultDisplay: React.FC<AIAnalysisResultDisplayProps> = (
                 <div className="w-8 h-8 bg-neon-green/20 rounded-lg flex items-center justify-center">
                   <span className="text-neon-green">📝</span>
                 </div>
-                <h4 className="text-sm font-semibold text-gray-200">提取变量</h4>
+                                 <h4 className="font-semibold text-gray-200">提取变量</h4>
               </div>
               <button
                 type="button"
@@ -526,7 +526,7 @@ export const AIAnalysisResultDisplay: React.FC<AIAnalysisResultDisplayProps> = (
                   <div className="w-8 h-8 bg-neon-red/20 rounded-lg flex items-center justify-center">
                     <span className="text-neon-red">🔧</span>
                   </div>
-                  <h4 className="text-sm font-semibold text-gray-200">兼容模型</h4>
+                                     <h4 className="font-semibold text-gray-200">兼容模型</h4>
                 </div>
                 <button
                   type="button"
@@ -568,7 +568,7 @@ export const AIAnalysisResultDisplay: React.FC<AIAnalysisResultDisplayProps> = (
                   <div className="w-6 h-6 bg-neon-blue/20 rounded-lg flex items-center justify-center">
                     <span className="text-neon-blue text-sm">💡</span>
                   </div>
-                  <h4 className="font-semibold text-neon-blue">优化建议</h4>
+                  <h4 className="text-sm font-semibold text-neon-blue">优化建议</h4>
                 </div>
                 <ul className="space-y-2">
                   {result.improvements.map((improvement, index) => (
@@ -588,7 +588,7 @@ export const AIAnalysisResultDisplay: React.FC<AIAnalysisResultDisplayProps> = (
                   <div className="w-6 h-6 bg-neon-purple/20 rounded-lg flex items-center justify-center">
                     <span className="text-neon-purple text-sm">🎯</span>
                   </div>
-                  <h4 className="font-semibold text-neon-purple">应用场景</h4>
+                  <h4 className="text-sm font-semibold text-neon-purple">应用场景</h4>
                 </div>
                 <ul className="space-y-2">
                   {result.useCases.map((useCase, index) => (
