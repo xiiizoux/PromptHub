@@ -227,7 +227,7 @@ const SmartWritingAssistant: React.FC<SmartWritingAssistantProps> = ({
             exit={{ opacity: 0, x: 20 }}
             className="space-y-4"
           >
-            <h3 className="text-lg font-semibold text-white mb-4">📝 写作步骤指导</h3>
+            <h3 className="text-base font-semibold text-white mb-4">📝 写作步骤指导</h3>
             {writingSteps.map((step, index) => (
               <motion.div
                 key={step.id}
@@ -287,7 +287,7 @@ const SmartWritingAssistant: React.FC<SmartWritingAssistantProps> = ({
             className="space-y-6"
           >
             <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-white">🔍 智能分析</h3>
+              <h3 className="text-base font-semibold text-white">🔍 智能分析</h3>
               <AIAnalyzeButton
                 content={content}
                 onAnalysisComplete={onAnalysisComplete || (() => {})}
@@ -336,7 +336,7 @@ const SmartWritingAssistant: React.FC<SmartWritingAssistantProps> = ({
             exit={{ opacity: 0, x: 20 }}
             className="space-y-6"
           >
-            <h3 className="text-lg font-semibold text-white mb-4">📋 快速模板</h3>
+            <h3 className="text-base font-semibold text-white mb-4">📋 快速模板</h3>
             <QuickTemplates onApplyTemplate={applyTemplate} category={category} />
           </motion.div>
         )}
@@ -349,7 +349,7 @@ const SmartWritingAssistant: React.FC<SmartWritingAssistantProps> = ({
             exit={{ opacity: 0, x: 20 }}
             className="space-y-6"
           >
-            <h3 className="text-lg font-semibold text-white mb-4">✨ 智能优化</h3>
+            <h3 className="text-base font-semibold text-white mb-4">✨ 智能优化</h3>
             {content ? (
               <PromptOptimizer
                 initialPrompt={content}
