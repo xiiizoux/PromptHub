@@ -42,45 +42,47 @@ const PromptFilters: React.FC<PromptFiltersProps> = ({
     }
   }, [tags]);
 
-  // 智能标签展示逻辑
+  // 智能标签展示逻辑 - 避免展开时重新排序
   const displayTags = useMemo(() => {
-    let availableTags = tags;
-    
-    // 如果有搜索查询，过滤标签
-    if (tagSearchQuery.trim()) {
-      availableTags = tags.filter(tag => 
-        tag.toLowerCase().includes(tagSearchQuery.toLowerCase())
-      );
-    }
-    
-    // 如果显示所有标签，返回过滤后的所有标签
-    if (showAllTags) {
-      return availableTags;
-    }
-    
-    // 默认展示逻辑：已选中标签 + 热门标签（限制显示数量）
     const selectedTags = filters.tags || [];
+    
+    // 如果有搜索查询，优先处理搜索
+    if (tagSearchQuery.trim()) {
+      const searchLower = tagSearchQuery.toLowerCase();
+      const filteredTags = tags.filter(tag => 
+        tag.toLowerCase().includes(searchLower)
+      );
+      
+      // 搜索时按相关性排序：已选中 > 完全匹配 > 包含匹配
+      const exactMatches = filteredTags.filter(tag => 
+        tag.toLowerCase() === searchLower && !selectedTags.includes(tag)
+      );
+      const partialMatches = filteredTags.filter(tag => 
+        tag.toLowerCase() !== searchLower && !selectedTags.includes(tag)
+      );
+      const selectedMatches = selectedTags.filter(tag =>
+        tag.toLowerCase().includes(searchLower)
+      );
+      
+      return [...selectedMatches, ...exactMatches, ...partialMatches];
+    }
+    
+    // 建立稳定的标签顺序：已选中 + 热门 + 其他（按原始顺序）
+    const unselectedTags = tags.filter(tag => !selectedTags.includes(tag));
+    const popularUnselected = popularTags.filter(tag => unselectedTags.includes(tag));
+    const otherUnselected = unselectedTags.filter(tag => !popularTags.includes(tag));
+    
+    // 建立完整的标签顺序（这个顺序在展开/收起时保持不变）
+    const fullOrderedTags = [...selectedTags, ...popularUnselected, ...otherUnselected];
+    
+    // 如果显示所有标签，返回完整顺序
+    if (showAllTags) {
+      return fullOrderedTags;
+    }
+    
+    // 默认模式：只显示前10个，但保持相同的顺序
     const maxDisplayTags = 10;
-    
-    // 确保已选中的标签都显示
-    const unselectedTags = availableTags.filter(tag => !selectedTags.includes(tag));
-    const remainingSlots = Math.max(0, maxDisplayTags - selectedTags.length);
-    
-    // 优先显示热门标签中未选中的
-    const priorityTags = popularTags.filter(tag => 
-      unselectedTags.includes(tag) && 
-      (tagSearchQuery ? tag.toLowerCase().includes(tagSearchQuery.toLowerCase()) : true)
-    );
-    
-    const remainingUnselected = unselectedTags.filter(tag => !priorityTags.includes(tag));
-    const tagsToShow = [
-      ...priorityTags.slice(0, remainingSlots),
-      ...remainingUnselected.slice(0, Math.max(0, remainingSlots - priorityTags.length))
-    ];
-    
-    return [...selectedTags, ...tagsToShow].filter(tag => 
-      tagSearchQuery ? tag.toLowerCase().includes(tagSearchQuery.toLowerCase()) : true
-    );
+    return fullOrderedTags.slice(0, maxDisplayTags);
   }, [tags, filters.tags, popularTags, showAllTags, tagSearchQuery]);
 
   // 计算未显示的标签数量
@@ -275,108 +277,155 @@ const PromptFilters: React.FC<PromptFiltersProps> = ({
                 )}
               </div>
 
-              {/* 标签搜索框（展开所有标签时显示） */}
-              <AnimatePresence>
-                {showAllTags && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: 'auto' }}
-                    exit={{ opacity: 0, height: 0 }}
-                    className="relative mb-3"
-                  >
-                    <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                      <MagnifyingGlassIcon className="w-4 h-4 text-neon-purple/60" />
-                    </div>
-                    <input
-                      type="text"
-                      placeholder="搜索标签..."
-                      value={tagSearchQuery}
-                      onChange={handleTagSearchChange}
-                      className="w-full pl-10 pr-3 py-2 text-sm bg-dark-bg-secondary/50 border border-dark-border rounded-lg text-white placeholder-gray-500 focus:border-neon-purple focus:ring-1 focus:ring-neon-purple transition-all duration-300"
-                    />
-                  </motion.div>
-                )}
-              </AnimatePresence>
-
-              {/* 标签列表 */}
-              <div className="flex flex-wrap gap-2">
-                <AnimatePresence mode="popLayout">
-                  {displayTags.map((tag, index) => (
+              {/* 标签搜索框（始终显示） */}
+              <motion.div
+                initial={{ opacity: 0, y: 5 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, delay: 0.6 }}
+                className="relative mb-4"
+              >
+                <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                  <MagnifyingGlassIcon className="w-4 h-4 text-neon-purple/60" />
+                </div>
+                <input
+                  type="text"
+                  placeholder="搜索标签..."
+                  value={tagSearchQuery}
+                  onChange={handleTagSearchChange}
+                  className="w-full pl-10 pr-3 py-2 text-sm bg-dark-bg-secondary/50 border border-dark-border rounded-lg text-white placeholder-gray-500 focus:border-neon-purple focus:ring-1 focus:ring-neon-purple transition-all duration-300"
+                />
+                <AnimatePresence>
+                  {tagSearchQuery && (
                     <motion.button
-                      key={tag}
-                      type="button"
-                      onClick={() => handleTagChange(tag)}
-                      layout
                       initial={{ opacity: 0, scale: 0.8 }}
                       animate={{ opacity: 1, scale: 1 }}
                       exit={{ opacity: 0, scale: 0.8 }}
-                      transition={{ duration: 0.4, delay: index * 0.02 }}
-                      whileHover={{ scale: 1.1, y: -1 }}
-                      whileTap={{ scale: 0.9 }}
-                      className={`inline-flex items-center px-3 py-2 rounded-lg text-xs font-medium transition-all duration-300 backdrop-blur-sm ${
-                        filters.tags?.includes(tag)
-                          ? 'bg-neon-purple/20 text-neon-purple border border-neon-purple/50 shadow-neon-sm'
-                          : 'bg-dark-bg-secondary/50 text-gray-400 border border-dark-border hover:bg-dark-card hover:border-neon-purple hover:text-neon-purple'
-                      }`}
+                      transition={{ duration: 0.15 }}
+                      onClick={() => setTagSearchQuery('')}
+                      className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-white transition-colors"
                     >
-                      {tag}
-                      {filters.tags?.includes(tag) && (
-                        <motion.div
-                          initial={{ opacity: 0, scale: 0 }}
+                      <XMarkIcon className="w-4 h-4" />
+                    </motion.button>
+                  )}
+                </AnimatePresence>
+              </motion.div>
+
+              {/* 标签列表容器 */}
+              <div className="min-h-[60px]"> {/* 固定最小高度，减少布局跳动 */}
+                <div className="flex flex-wrap gap-2">
+                  <AnimatePresence mode="popLayout">
+                    {displayTags.map((tag, index) => (
+                      <motion.button
+                        key={`tag-${tag}`} // 更稳定的key
+                        type="button"
+                        onClick={() => handleTagChange(tag)}
+                        layout
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ 
+                          opacity: 1, 
+                          scale: 1,
+                          transition: { duration: 0.25, delay: index * 0.015 } // 恢复适度的动画时长和延迟
+                        }}
+                        exit={{ 
+                          opacity: 0, 
+                          scale: 0.9,
+                          transition: { duration: 0.15 }
+                        }}
+                        whileHover={{ scale: 1.05, y: -1 }}
+                        whileTap={{ scale: 0.95 }}
+                        className={`inline-flex items-center px-3 py-2 rounded-lg text-xs font-medium transition-all duration-250 backdrop-blur-sm ${
+                          filters.tags?.includes(tag)
+                            ? 'bg-neon-purple/20 text-neon-purple border border-neon-purple/50 shadow-neon-sm'
+                            : 'bg-dark-bg-secondary/50 text-gray-400 border border-dark-border hover:bg-dark-card hover:border-neon-purple hover:text-neon-purple'
+                        }`}
+                      >
+                        {tag}
+                        {filters.tags?.includes(tag) && (
+                          <motion.div
+                                                      initial={{ opacity: 0, scale: 0 }}
                           animate={{ opacity: 1, scale: 1 }}
                           transition={{ duration: 0.2 }}
-                        >
-                          <XMarkIcon className="w-3 h-3 ml-1" />
-                        </motion.div>
-                      )}
-                    </motion.button>
-                  ))}
-                </AnimatePresence>
+                          >
+                            <XMarkIcon className="w-3 h-3 ml-1" />
+                          </motion.div>
+                        )}
+                      </motion.button>
+                    ))}
+                  </AnimatePresence>
 
-                {/* 更多标签按钮 */}
-                <AnimatePresence>
-                  {!showAllTags && hiddenTagsCount > 0 && !tagSearchQuery && (
-                    <motion.button
-                      initial={{ opacity: 0, scale: 0.8 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.8 }}
-                      onClick={toggleShowAllTags}
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      className="inline-flex items-center px-3 py-2 border border-dashed border-neon-purple/50 rounded-lg text-neon-purple hover:border-neon-purple hover:bg-neon-purple/10 transition-all duration-300 text-xs font-medium"
-                    >
-                      <ChevronDownIcon className="w-3 h-3 mr-1" />
-                      +{hiddenTagsCount} 更多标签
-                    </motion.button>
-                  )}
+                  {/* 更多标签按钮 */}
+                  <AnimatePresence>
+                    {!showAllTags && hiddenTagsCount > 0 && !tagSearchQuery && (
+                      <motion.button
+                        key="expand-button"
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ 
+                          opacity: 1, 
+                          scale: 1,
+                          transition: { duration: 0.25 }
+                        }}
+                        exit={{ 
+                          opacity: 0, 
+                          scale: 0.9,
+                          transition: { duration: 0.15 }
+                        }}
+                        onClick={toggleShowAllTags}
+                        whileHover={{ scale: 1.03 }}
+                        whileTap={{ scale: 0.97 }}
+                        className="inline-flex items-center px-3 py-2 border border-dashed border-neon-purple/50 rounded-lg text-neon-purple hover:border-neon-purple hover:bg-neon-purple/10 transition-all duration-250 text-xs font-medium"
+                      >
+                        <ChevronDownIcon className="w-3 h-3 mr-1" />
+                        +{hiddenTagsCount} 更多
+                      </motion.button>
+                    )}
 
-                  {showAllTags && (
-                    <motion.button
-                      initial={{ opacity: 0, scale: 0.8 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.8 }}
-                      onClick={toggleShowAllTags}
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      className="inline-flex items-center px-3 py-2 bg-neon-purple/20 border border-neon-purple rounded-lg text-neon-purple hover:bg-neon-purple/30 transition-all duration-300 text-xs font-medium"
-                    >
-                      <ChevronUpIcon className="w-3 h-3 mr-1" />
-                      收起标签
-                    </motion.button>
-                  )}
-                </AnimatePresence>
+                    {showAllTags && (
+                      <motion.button
+                        key="collapse-button"
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ 
+                          opacity: 1, 
+                          scale: 1,
+                          transition: { duration: 0.25 }
+                        }}
+                        exit={{ 
+                          opacity: 0, 
+                          scale: 0.9,
+                          transition: { duration: 0.15 }
+                        }}
+                        onClick={toggleShowAllTags}
+                        whileHover={{ scale: 1.03 }}
+                        whileTap={{ scale: 0.97 }}
+                        className="inline-flex items-center px-3 py-2 bg-neon-purple/20 border border-neon-purple rounded-lg text-neon-purple hover:bg-neon-purple/30 transition-all duration-250 text-xs font-medium"
+                      >
+                        <ChevronUpIcon className="w-3 h-3 mr-1" />
+                        收起
+                      </motion.button>
+                    )}
+                  </AnimatePresence>
+                </div>
+
+                {/* 标签搜索结果提示 */}
+                {tagSearchQuery && displayTags.length === 0 && (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.3 }}
+                    className="text-center py-6 text-gray-500 text-sm"
+                  >
+                    <div className="flex flex-col items-center gap-2">
+                      <MagnifyingGlassIcon className="w-8 h-8 text-gray-600" />
+                      <span>没有找到匹配 "{tagSearchQuery}" 的标签</span>
+                      <button
+                        onClick={() => setTagSearchQuery('')}
+                        className="text-neon-purple hover:text-white transition-colors text-xs"
+                      >
+                        清除搜索
+                      </button>
+                    </div>
+                  </motion.div>
+                )}
               </div>
-
-              {/* 标签搜索结果提示 */}
-              {tagSearchQuery && displayTags.length === 0 && (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="text-center py-4 text-gray-500 text-sm"
-                >
-                  没有找到匹配的标签
-                </motion.div>
-              )}
             </motion.div>
 
             {/* 排序方式 */}
