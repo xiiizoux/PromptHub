@@ -1,6 +1,8 @@
 import express from 'express';
 import type { Request, Response, NextFunction } from 'express';
-import { StorageFactory } from '../storage/storage-factory.js';
+import { storage } from '../shared/services.js';
+import { handleToolError } from '../shared/error-handler.js';
+import { ResponseFormatter } from '../shared/response-formatter.js';
 import { authenticateRequest } from './auth-middleware.js';
 import logger, { logApiKeyActivity } from '../utils/logger.js';
 
@@ -52,7 +54,6 @@ router.get('/', authenticateRequest, async (req: Request, res: Response, next: N
       });
     }
 
-    const storage = StorageFactory.getStorage();
     const apiKeys = await storage.listApiKeys(req.user.id);
     
     const requestMetadata = getRequestMetadata(req);
@@ -111,7 +112,6 @@ router.post('/', authenticateRequest, async (req: Request, res: Response, next: 
       daysToExpire = 30; // 默认30天
     }
 
-    const storage = StorageFactory.getStorage();
     const apiKey = await storage.generateApiKey(req.user.id, name.trim(), daysToExpire);
     
     // 记录创建API密钥的操作（不记录实际密钥，只记录相关信息）
@@ -171,7 +171,6 @@ router.delete('/:id', authenticateRequest, async (req: Request, res: Response, n
       });
     }
 
-    const storage = StorageFactory.getStorage();
     const success = await storage.deleteApiKey(req.user.id, keyId);
 
     if (!success) {

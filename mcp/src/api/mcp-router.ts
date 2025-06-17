@@ -1,6 +1,8 @@
 import express from 'express';
 import { config } from '../config.js';
-import { StorageFactory } from '../storage/storage-factory.js';
+import { storage } from '../shared/services.js';
+import { handleToolError, handleToolSuccess } from '../shared/error-handler.js';
+import { ResponseFormatter } from '../shared/response-formatter.js';
 import { 
   Prompt, 
   ToolDescription, 
@@ -52,7 +54,6 @@ import {
 
 // 创建路由器
 const router = express.Router();
-const storage: StorageAdapter = StorageFactory.getStorage();
 
 // MCP服务器信息端点
 router.get('/info', (req, res) => {

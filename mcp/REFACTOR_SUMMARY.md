@@ -27,7 +27,13 @@
 - ✅ `conversational-ui-tools.ts` - 使用共享服务
 - ✅ `mcp-optimization-tools.ts` - 使用共享服务
 
-### 5. 修复编译错误
+### 5. 中期重构实施（新增）
+- **新增 `src/shared/base-tool.ts`** - 工具基类，提供统一接口和通用功能
+- **新增 `src/shared/di-container.ts`** - 依赖注入容器，管理服务生命周期
+- **新增 `src/shared/response-formatter.ts`** - 统一响应格式化器
+- **新增 `src/tools/config-assistant.ts`** - 智能配置助手，对话式配置管理
+
+### 6. 修复编译错误
 - **更新 `storage-factory.ts`** - 修复删除包装器后的导入问题
 - **编译验证通过** - 所有重构文件编译成功
 

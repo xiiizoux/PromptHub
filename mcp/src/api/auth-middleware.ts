@@ -1,6 +1,6 @@
 import { config } from '../config.js';
 import type { Request, Response, NextFunction } from 'express';
-import { StorageFactory } from '../storage/storage-factory.js';
+import { storage } from '../shared/services.js';
 import { User } from '../types.js';
 
 // 扩展Express的Request类型以包含用户信息
@@ -21,8 +21,7 @@ declare global {
  */
 export const authenticateRequest = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
-    // 获取存储适配器
-    const storage = StorageFactory.getStorage();
+    // 使用共享存储适配器
     
     // 先检查API密钥
     const apiKey = getAuthValue(req, 'x-api-key') || getAuthValue(req, 'api_key');
@@ -106,8 +105,7 @@ export const publicAccessMiddleware = (req: Request, res: Response, next: NextFu
  */
 export const optionalAuthMiddleware = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
-    // 获取存储适配器
-    const storage = StorageFactory.getStorage();
+    // 使用共享存储适配器
     
     // 先检查API密钥
     const apiKey = getAuthValue(req, 'x-api-key') || getAuthValue(req, 'api_key');
