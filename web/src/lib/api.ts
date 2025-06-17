@@ -724,13 +724,18 @@ export interface PromptInteractions {
 
 export async function getPromptInteractions(promptId: string): Promise<PromptInteractions> {
   try {
-    // 暂时返回静态数据，避免API调用错误
-    console.warn('getPromptInteractions: 返回默认数据以避免错误');
+    const response = await api.get(`/social/interactions?promptId=${promptId}`);
+    
+    if (!response.data.success) {
+      throw new Error(response.data.message || '获取互动数据失败');
+    }
+    
+    const data = response.data.data;
     return {
-      likes: 0,
-      bookmarks: 0,
-      userLiked: false,
-      userBookmarked: false,
+      likes: data.likes || 0,
+      bookmarks: data.bookmarks || 0,
+      userLiked: data.userLiked || false,
+      userBookmarked: data.userBookmarked || false,
     };
   } catch (error: any) {
     console.error('获取提示词互动状态失败:', error);
@@ -746,9 +751,33 @@ export async function getPromptInteractions(promptId: string): Promise<PromptInt
 
 export async function toggleBookmark(promptId: string): Promise<{ bookmarked: boolean }> {
   try {
-    // 暂时返回静态响应，避免API错误
-    console.warn('toggleBookmark: 功能暂时禁用，返回默认响应');
-    return { bookmarked: false };
+    // 先获取当前状态
+    const currentState = await getPromptInteractions(promptId);
+    
+    if (currentState.userBookmarked) {
+      // 取消收藏
+      const response = await api.delete('/social/interactions', {
+        data: { promptId, type: 'bookmark' }
+      });
+      
+      if (!response.data.success) {
+        throw new Error(response.data.message || '取消收藏失败');
+      }
+      
+      return { bookmarked: false };
+    } else {
+      // 添加收藏
+      const response = await api.post('/social/interactions', {
+        promptId,
+        type: 'bookmark'
+      });
+      
+      if (!response.data.success) {
+        throw new Error(response.data.message || '收藏失败');
+      }
+      
+      return { bookmarked: true };
+    }
   } catch (error: any) {
     console.error('切换收藏状态失败:', error);
     throw new Error(error.message || '切换收藏状态失败');
@@ -757,9 +786,33 @@ export async function toggleBookmark(promptId: string): Promise<{ bookmarked: bo
 
 export async function toggleLike(promptId: string): Promise<{ liked: boolean }> {
   try {
-    // 暂时返回静态响应，避免API错误
-    console.warn('toggleLike: 功能暂时禁用，返回默认响应');
-    return { liked: false };
+    // 先获取当前状态
+    const currentState = await getPromptInteractions(promptId);
+    
+    if (currentState.userLiked) {
+      // 取消点赞
+      const response = await api.delete('/social/interactions', {
+        data: { promptId, type: 'like' }
+      });
+      
+      if (!response.data.success) {
+        throw new Error(response.data.message || '取消点赞失败');
+      }
+      
+      return { liked: false };
+    } else {
+      // 添加点赞
+      const response = await api.post('/social/interactions', {
+        promptId,
+        type: 'like'
+      });
+      
+      if (!response.data.success) {
+        throw new Error(response.data.message || '点赞失败');
+      }
+      
+      return { liked: true };
+    }
   } catch (error: any) {
     console.error('切换点赞状态失败:', error);
     throw new Error(error.message || '切换点赞状态失败');
@@ -956,8 +1009,18 @@ export async function getUserRating(promptId: string): Promise<Rating | null> {
     }
 
     return response.data.rating;
-  } catch (error) {
-    // 如果没有找到用户评分，返回null
+  } catch (error: any) {
+    // 处理不同类型的错误
+    if (error.response?.status === 401) {
+      console.warn('用户未登录，无法获取评分信息');
+      return null;
+    }
+    if (error.response?.status === 404) {
+      // 用户没有评分记录
+      return null;
+    }
+    
+    console.error('获取用户评分失败:', error);
     return null;
   }
 }
