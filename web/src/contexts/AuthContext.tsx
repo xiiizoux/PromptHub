@@ -141,9 +141,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const userData = {
           id: authUser.id,
           email: authUser.email,
-          display_name: authUser.user_metadata?.username || 
+          display_name: authUser.user_metadata?.display_name || 
                        authUser.user_metadata?.full_name || 
-                       authUser.email?.split('@')[0] || 'User',
+                       authUser.user_metadata?.username || 
+                       'User',
           role: 'user',
           created_at: authUser.created_at
         };
@@ -163,9 +164,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const finalUserData = existingUser || {
         id: authUser.id,
         email: authUser.email,
-        display_name: authUser.user_metadata?.username || 
+        display_name: authUser.user_metadata?.display_name || 
                      authUser.user_metadata?.full_name || 
-                     authUser.email?.split('@')[0] || 'User',
+                     authUser.user_metadata?.username || 
+                     'User',
         role: 'user',
         created_at: authUser.created_at || new Date().toISOString()
       };
@@ -315,12 +317,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         console.error('数据库查询异常:', dbErr);
       }
       
-      // 构建用户对象
+      // 构建用户对象 - 只使用Supabase Auth的用户信息确保一致性
+      const displayName = supaUser.user_metadata?.display_name || 
+                         supaUser.user_metadata?.full_name || 
+                         supaUser.user_metadata?.username || 
+                         'User';
+      
       const appUser: User = {
-        id: supaUser.id,
-        username: userData?.display_name || supaUser.user_metadata?.username || supaUser.email?.split('@')[0] || '',
+        id: supaUser.id || '',
+        username: displayName,
         email: supaUser.email || '',
-        role: userData?.role || 'user',
+        role: (userData?.role as 'user' | 'admin' | 'contributor') || 'user',
         created_at: userData?.created_at || supaUser.created_at || new Date().toISOString()
       };
       
@@ -628,14 +635,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     checkAuth,
     isAuthenticated,
     updateProfile: async (data: Partial<User>) => {
-      if (!mounted.current) return;
+      if (!mounted.current || !user) return;
       
       setIsLoading(true);
       setError(null);
       
       try {
         // 更新用户数据
-        const updatedUser = { ...user, ...data };
+        const updatedUser: User = { ...user, ...data };
         
         // 更新Supabase
         const { data: supaData, error: supaError } = await supabase
