@@ -23,7 +23,8 @@ const getMcpServerInfo = () => ({
     'version_control',
     'performance_analysis',
     'intelligent_ai_tools',
-    'enhanced_search'
+    'enhanced_search',
+    'unified_search_engine'
   ]
 });
 import { authenticateRequest, optionalAuthMiddleware } from './auth-middleware.js';
@@ -51,6 +52,12 @@ import {
   handlePromptSelection,
   handleQuickAccess
 } from '../tools/enhanced-search-tools.js';
+import {
+  unifiedSearchEngineToolDef,
+  quickSearchToolDef,
+  handleUnifiedSearch,
+  handleQuickSearch
+} from '../tools/unified-search-engine.js';
 
 // 创建路由器
 const router = express.Router();
@@ -328,6 +335,10 @@ router.get('/tools', optionalAuthMiddleware, (req, res) => {
     promptSelectionTool,
     quickAccessTool,
     
+    // 🔍 统一搜索引擎 - 整合所有搜索功能
+    unifiedSearchEngineToolDef,
+    quickSearchToolDef,
+    
     // 性能分析工具
     {
       name: 'track_prompt_usage',
@@ -602,6 +613,14 @@ router.post('/tools/:name/invoke', optionalAuthMiddleware, async (req, res) => {
         break;
       case 'quick_access_prompts':
         result = await handleQuickAccess(params, req?.user?.id);
+        break;
+      
+      // 🔍 统一搜索引擎处理
+      case 'unified_search':
+        result = await handleUnifiedSearch(params, req?.user?.id);
+        break;
+      case 'search':
+        result = await handleQuickSearch(params, req?.user?.id);
         break;
         
       default:
