@@ -30,7 +30,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   try {
     // 解析查询参数
-    const { search, category, tag } = req.query;
+    const { search, category, tag, sortBy } = req.query;
     
     // 获取请求中的用户ID（如果存在）
     const userId = req.headers['x-user-id'] as string;
@@ -76,6 +76,30 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // 添加标签过滤
     if (tag && typeof tag === 'string') {
       query = query.contains('tags', [tag]);
+    }
+    
+    // 添加排序
+    if (sortBy && typeof sortBy === 'string') {
+      switch (sortBy) {
+        case 'latest':
+          query = query.order('created_at', { ascending: false });
+          break;
+        case 'oldest':
+          query = query.order('created_at', { ascending: true });
+          break;
+        case 'name':
+          query = query.order('name', { ascending: true });
+          break;
+        case 'updated':
+          query = query.order('updated_at', { ascending: false });
+          break;
+        default:
+          // 默认按创建时间降序排列（最新的在前面）
+          query = query.order('created_at', { ascending: false });
+      }
+    } else {
+      // 如果没有指定排序，默认按创建时间降序排列（最新的在前面）
+      query = query.order('created_at', { ascending: false });
     }
     
     // 执行查询

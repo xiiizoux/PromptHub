@@ -402,3 +402,72 @@ code, pre, .font-mono {
     background-position: 100% 50%;
   }
 }
+
+/* 优化的布局工具类 - 提升空间利用率 */
+@layer utilities {
+  /* 紧凑的容器样式 */
+  .container-optimized {
+    @apply px-4 sm:px-6 lg:px-8 mx-auto;
+    max-width: 1200px; /* 减小最大宽度，避免内容过于分散 */
+  }
+  
+  /* 响应式垂直间距 */
+  .spacing-section {
+    @apply py-6 sm:py-8 md:py-10 lg:py-12;
+  }
+  
+  .spacing-content {
+    @apply py-4 sm:py-6 md:py-8;
+  }
+  
+  .spacing-element {
+    @apply py-2 sm:py-3 md:py-4;
+  }
+  
+  /* 网格布局优化 */
+  .prompt-grid {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  }
+  
+  @media (min-width: 640px) {
+    .prompt-grid {
+      gap: 1.25rem;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    }
+  }
+  
+  @media (min-width: 768px) {
+    .prompt-grid {
+      gap: 1.5rem;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    }
+  }
+  
+  @media (min-width: 1024px) {
+    .prompt-grid {
+      gap: 1.5rem;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    }
+  }
+  
+  /* 紧凑的卡片样式 */
+  .card-compact {
+    @apply glass rounded-xl p-4 sm:p-5 md:p-6 transition-all duration-300;
+  }
+  
+  .card-compact:hover {
+    transform: translateY(-3px);
+  }
+  
+  /* 减少不必要的空白 */
+  .no-bottom-spacing {
+    margin-bottom: 0 !important;
+    padding-bottom: 0 !important;
+  }
+  
+  .minimal-spacing {
+    @apply space-y-2 sm:space-y-3 md:space-y-4;
+  }
+}

@@ -130,6 +130,9 @@ export const getPrompts = async (filters?: PromptFilters): Promise<PaginatedResp
     if (filters?.tags && filters.tags.length > 0) {
       queryParams.append('tag', filters.tags[0]);
     }
+    if (filters?.sortBy) {
+      queryParams.append('sortBy', filters.sortBy);
+    }
 
     // 获取当前用户ID（如果有的话）
     let userId = null;

@@ -148,7 +148,7 @@ export default function PromptsPage() {
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="flex items-center justify-between p-6 bg-dark-card/30 backdrop-blur-md rounded-xl border border-dark-border shadow-xl"
+        className="flex items-center justify-between p-4 md:p-6 bg-dark-card/30 backdrop-blur-md rounded-xl border border-dark-border shadow-xl"
       >
         <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
           <div>
@@ -212,14 +212,14 @@ export default function PromptsPage() {
       {/* 背景网格效果 */}
       <div className="fixed inset-0 bg-grid-pattern opacity-10 pointer-events-none"></div>
       
-      <div className="relative z-10 py-16">
-        <div className="container-custom">
+      <div className="relative z-10 spacing-section">
+        <div className="container-optimized">
           {/* 如果组件未挂载，显示加载状态 */}
           {!mounted ? (
             <motion.div 
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="text-center py-20"
+              className="text-center spacing-content"
             >
               <div className="relative inline-block">
                 <div className="w-16 h-16 border-4 border-neon-cyan/30 border-t-neon-cyan rounded-full animate-spin"></div>
@@ -234,16 +234,16 @@ export default function PromptsPage() {
               </motion.p>
             </motion.div>
           ) : (
-            <>
+            <div className="minimal-spacing">
               {/* 页面标题 */}
               <motion.div 
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.8 }}
-                className="mb-12 text-center"
+                className="text-center"
               >
                 <motion.h1 
-                  className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-neon-cyan via-neon-purple to-neon-pink bg-clip-text text-transparent mb-6"
+                  className="text-4xl md:text-5xl lg:text-6xl font-bold bg-gradient-to-r from-neon-cyan via-neon-purple to-neon-pink bg-clip-text text-transparent mb-3 md:mb-4"
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ duration: 1, delay: 0.2 }}
@@ -251,7 +251,7 @@ export default function PromptsPage() {
                   探索提示词宇宙
                 </motion.h1>
                 <motion.p 
-                  className="text-xl text-gray-400 max-w-3xl mx-auto leading-relaxed"
+                  className="text-lg md:text-xl text-gray-400 max-w-3xl mx-auto leading-relaxed"
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.8, delay: 0.4 }}
@@ -279,9 +279,8 @@ export default function PromptsPage() {
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="mb-8"
                 >
-                  <div className="bg-red-500/20 border border-red-500/30 rounded-xl p-6 backdrop-blur-sm">
+                  <div className="bg-red-500/20 border border-red-500/30 rounded-xl p-4 md:p-6 backdrop-blur-sm">
                     <div className="flex items-center">
                       <div className="flex-shrink-0">
                         <svg className="h-5 w-5 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -318,7 +317,7 @@ export default function PromptsPage() {
                   <motion.div 
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    className="text-center py-20"
+                    className="text-center spacing-content"
                   >
                     <div className="relative inline-block">
                       <div className="w-16 h-16 border-4 border-neon-cyan/30 border-t-neon-cyan rounded-full animate-spin"></div>
@@ -339,25 +338,25 @@ export default function PromptsPage() {
                       <motion.div 
                         initial={{ opacity: 0, scale: 0.9 }}
                         animate={{ opacity: 1, scale: 1 }}
-                        className="text-center py-20"
+                        className="text-center spacing-content"
                       >
-                        <div className="bg-dark-card/50 backdrop-blur-md rounded-xl border border-dark-border p-12 shadow-xl">
-                          <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-to-r from-neon-cyan to-neon-purple p-0.5">
+                        <div className="bg-dark-card/50 backdrop-blur-md rounded-xl border border-dark-border p-6 md:p-8 shadow-xl">
+                          <div className="w-16 h-16 md:w-20 md:h-20 mx-auto mb-4 md:mb-6 rounded-full bg-gradient-to-r from-neon-cyan to-neon-purple p-0.5">
                             <div className="w-full h-full bg-dark-bg-primary rounded-full flex items-center justify-center">
-                              <svg className="w-8 h-8 text-neon-cyan" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <svg className="w-6 h-6 md:w-8 md:h-8 text-neon-cyan" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
                               </svg>
                             </div>
                           </div>
-                          <h3 className="text-2xl font-bold text-white mb-3">没有找到提示词</h3>
-                          <p className="text-gray-400 text-lg">尝试调整过滤条件或清除搜索关键词</p>
+                          <h3 className="text-xl md:text-2xl font-bold text-white mb-2">没有找到提示词</h3>
+                          <p className="text-gray-400 text-base md:text-lg">尝试调整过滤条件或清除搜索关键词</p>
                         </div>
                       </motion.div>
                     ) :
                       <>
                         {/* 提示词网格 */}
                         <motion.div 
-                          className="card-grid mb-12"
+                          className="prompt-grid"
                           initial={{ opacity: 0 }}
                           animate={{ opacity: 1 }}
                           transition={{ duration: 0.8, delay: 1 }}
@@ -384,6 +383,7 @@ export default function PromptsPage() {
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ duration: 0.8, delay: 1.5 }}
+                            className="no-bottom-spacing"
                           >
                             {renderPagination()}
                           </motion.div>
@@ -393,7 +393,7 @@ export default function PromptsPage() {
                   </>
                 }
               </motion.div>
-            </>
+            </div>
           )}
         </div>
       </div>

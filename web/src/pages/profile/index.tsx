@@ -26,7 +26,8 @@ import {
   ArrowUpTrayIcon,
   ArrowDownTrayIcon,
   ChartBarIcon,
-  QuestionMarkCircleIcon
+  QuestionMarkCircleIcon,
+  ShareIcon
 } from '@heroicons/react/24/outline';
 
 // 定义与适配器返回的API密钥兼容的接口
@@ -1450,10 +1451,10 @@ const ProfilePage = () => {
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: index * 0.1 }}
-                        className="glass rounded-2xl p-6 border border-neon-cyan/20 hover:border-neon-cyan/40 transition-all duration-300"
+                        className="glass rounded-2xl p-6 border border-neon-cyan/20 hover:border-neon-cyan/40 transition-all duration-300 relative"
                       >
-                        <div className="flex items-center justify-between">
-                          <div className="flex-1">
+                        <div className="flex flex-col h-full">
+                          <div className="flex-1 pb-12">
                             <div className="flex items-center space-x-3 mb-2">
                               <h3 className="text-lg font-semibold text-white">{prompt.name}</h3>
                               <span className={`px-2 py-1 text-xs rounded-full ${
@@ -1488,45 +1489,54 @@ const ProfilePage = () => {
                               </div>
                             )}
                             
-                            <div className="flex items-center space-x-4 text-sm text-gray-400 mb-4">
+                            <div className="flex items-center space-x-4 text-sm text-gray-400">
                               <span>创建于 {formatDate(prompt.created_at)}</span>
                               {prompt.updated_at && <span>最后更新 {formatDate(prompt.updated_at)}</span>}
                             </div>
-                            
-                            <div className="flex items-center space-x-2">
-                              <Link 
-                                href={`/prompts/${prompt.id}`}
-                                className="p-2 glass rounded-lg hover:bg-neon-cyan/10 transition-colors group"
-                                title="查看提示词详情"
-                              >
-                                <ArrowTopRightOnSquareIcon className="h-5 w-5 text-gray-400 group-hover:text-neon-cyan" />
-                              </Link>
-                              <Link
-                                href={`/prompts/${prompt.id}/edit`}
-                                className="p-2 glass rounded-lg hover:bg-neon-purple/10 transition-colors group"
-                                title="编辑提示词"
-                              >
-                                <PencilIcon className="h-5 w-5 text-gray-400 group-hover:text-neon-purple" />
-                              </Link>
-                              <button
-                                onClick={() => copyToClipboard(prompt.name, prompt.id)}
-                                className="p-2 glass rounded-lg hover:bg-neon-green/10 transition-colors group"
-                                title="复制提示词名称"
-                              >
-                                {copiedKey === prompt.id ? (
-                                  <CheckIcon className="h-5 w-5 text-neon-green" />
-                                ) : (
-                                  <ClipboardIcon className="h-5 w-5 text-gray-400 group-hover:text-neon-green" />
-                                )}
-                              </button>
-                              <button
-                                onClick={() => deletePrompt(prompt.id)}
-                                className="p-2 glass rounded-lg hover:bg-neon-red/10 transition-colors group"
-                                title="删除提示词"
-                              >
-                                <TrashIcon className="h-5 w-5 text-gray-400 group-hover:text-neon-red" />
-                              </button>
-                            </div>
+                          </div>
+                          
+                          {/* 操作按钮 - 移动到右下角 */}
+                          <div className="absolute bottom-4 right-4 flex items-center space-x-2">
+                            <button
+                              onClick={() => {
+                                // 简单的分享功能：复制当前页面链接
+                                const shareUrl = `${window.location.origin}/prompts/${prompt.id}`;
+                                navigator.clipboard.writeText(shareUrl).then(() => {
+                                  alert('分享链接已复制到剪贴板！');
+                                }).catch(() => {
+                                  alert('复制失败，请手动复制链接');
+                                });
+                              }}
+                              className="p-2 glass rounded-lg hover:bg-neon-blue/10 transition-colors group"
+                              title="分享提示词"
+                            >
+                              <ShareIcon className="h-4 w-4 text-gray-400 group-hover:text-neon-blue" />
+                            </button>
+                            <button
+                              onClick={() => copyToClipboard(prompt.name, prompt.id)}
+                              className="p-2 glass rounded-lg hover:bg-neon-green/10 transition-colors group"
+                              title="复制提示词名称"
+                            >
+                              {copiedKey === prompt.id ? (
+                                <CheckIcon className="h-4 w-4 text-neon-green" />
+                              ) : (
+                                <ClipboardIcon className="h-4 w-4 text-gray-400 group-hover:text-neon-green" />
+                              )}
+                            </button>
+                            <Link
+                              href={`/prompts/${prompt.id}/edit`}
+                              className="p-2 glass rounded-lg hover:bg-neon-purple/10 transition-colors group"
+                              title="编辑提示词"
+                            >
+                              <PencilIcon className="h-4 w-4 text-gray-400 group-hover:text-neon-purple" />
+                            </Link>
+                            <button
+                              onClick={() => deletePrompt(prompt.id)}
+                              className="p-2 glass rounded-lg hover:bg-neon-red/10 transition-colors group"
+                              title="删除提示词"
+                            >
+                              <TrashIcon className="h-4 w-4 text-gray-400 group-hover:text-neon-red" />
+                            </button>
                           </div>
                         </div>
                       </motion.div>

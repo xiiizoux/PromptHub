@@ -145,7 +145,7 @@ export interface PromptFilters {
   tags?: string[];
   search?: string;
   author?: string;
-  sortBy?: 'latest' | 'popular' | 'rating';
+  sortBy?: 'latest' | 'oldest' | 'name' | 'updated';
   model?: string;
   page?: number;
   pageSize?: number;

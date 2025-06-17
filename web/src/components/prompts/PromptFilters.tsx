@@ -48,7 +48,7 @@ const PromptFilters: React.FC<PromptFiltersProps> = ({
   const handleSortChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     onFilterChange({
       ...filters,
-      sortBy: e.target.value as 'latest' | 'popular' | 'rating',
+      sortBy: e.target.value as 'latest' | 'oldest' | 'name' | 'updated',
     });
   };
 
@@ -226,9 +226,10 @@ const PromptFilters: React.FC<PromptFiltersProps> = ({
                 whileFocus={{ scale: 1.02 }}
                 className="w-full px-4 py-3 bg-dark-bg-secondary/50 border border-dark-border rounded-xl text-white focus:border-neon-pink focus:ring-1 focus:ring-neon-pink focus:shadow-neon-sm transition-all duration-300 backdrop-blur-sm"
               >
-                <option value="latest" className="bg-dark-bg-secondary">最新</option>
-                <option value="popular" className="bg-dark-bg-secondary">最受欢迎</option>
-                <option value="rating" className="bg-dark-bg-secondary">最高评分</option>
+                <option value="latest" className="bg-dark-bg-secondary">最新创建</option>
+                <option value="updated" className="bg-dark-bg-secondary">最近更新</option>
+                <option value="oldest" className="bg-dark-bg-secondary">最早创建</option>
+                <option value="name" className="bg-dark-bg-secondary">名称排序</option>
               </motion.select>
             </motion.div>
           </div>
