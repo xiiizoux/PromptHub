@@ -42,44 +42,80 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     console.log('收藏夹API: 用户认证成功, user_id:', user.id);
 
-    // 获取用户收藏的提示词
-    const { data: bookmarkedPrompts, error } = await supabase
+    // 先获取用户收藏的提示词ID
+    const { data: bookmarkInteractions, error: bookmarkError } = await supabase
       .from('social_interactions')
-      .select(`
-        created_at,
-        prompts (
-          id,
-          name,
-          description,
-          category,
-          tags,
-          messages,
-          is_public,
-          created_at,
-          updated_at,
-          version,
-          user_id,
-          users (
-            display_name,
-            email
-          )
-        )
-      `)
+      .select('prompt_id, created_at')
       .eq('user_id', user.id)
       .eq('type', 'bookmark')
       .order('created_at', { ascending: false });
 
-    if (error) {
-      console.error('收藏夹API: 数据库查询错误:', error);
-      throw error;
+    if (bookmarkError) {
+      console.error('收藏夹API: 查询收藏关系错误:', bookmarkError);
+      throw bookmarkError;
     }
 
-    // 格式化数据
-    const formattedPrompts = bookmarkedPrompts?.map((item: any) => ({
-      ...item.prompts,
-      author: item.prompts?.users?.display_name || item.prompts?.users?.email || '匿名用户',
-      bookmarked_at: item.created_at
-    })) || [];
+    if (!bookmarkInteractions || bookmarkInteractions.length === 0) {
+      console.log('收藏夹API: 用户没有收藏任何提示词');
+      return res.status(200).json([]);
+    }
+
+    // 获取提示词详情
+    const promptIds = bookmarkInteractions.map(item => item.prompt_id);
+    const { data: prompts, error: promptsError } = await supabase
+      .from('prompts')
+      .select(`
+        id,
+        name,
+        description,
+        category,
+        tags,
+        messages,
+        is_public,
+        created_at,
+        updated_at,
+        version,
+        user_id
+      `)
+      .in('id', promptIds);
+
+    if (promptsError) {
+      console.error('收藏夹API: 查询提示词详情错误:', promptsError);
+      throw promptsError;
+    }
+
+    // 获取作者信息
+    const authorIds = Array.from(new Set(prompts?.map(p => p.user_id).filter(Boolean) || []));
+    let authorMap: Record<string, any> = {};
+    
+    if (authorIds.length > 0) {
+      const { data: authors } = await supabase
+        .from('users')
+        .select('id, display_name, email')
+        .in('id', authorIds);
+      
+              if (authors) {
+          authorMap = authors.reduce((acc: Record<string, any>, author: any) => {
+            if (author.id) {
+              acc[author.id] = author;
+            }
+            return acc;
+          }, {});
+        }
+    }
+
+    // 合并数据并格式化
+    const formattedPrompts = bookmarkInteractions.map((bookmark) => {
+      const prompt = prompts?.find(p => p.id === bookmark.prompt_id);
+      if (!prompt) return null;
+      
+      const author = prompt.user_id ? authorMap[prompt.user_id] : null;
+      return {
+        ...prompt,
+        author: author?.display_name || author?.email || '匿名用户',
+        bookmarked_at: bookmark.created_at
+      };
+    }).filter(Boolean);
 
     console.log('收藏夹API: 成功获取收藏列表, 数量:', formattedPrompts.length);
     res.status(200).json(formattedPrompts);

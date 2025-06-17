@@ -532,34 +532,62 @@ const ProfilePage = () => {
           process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
         );
 
+        // 先获取用户的所有评分
         const { data: ratingsData, error } = await supabase
           .from('prompt_feedback')
-          .select(`
-            id,
-            rating,
-            feedback_text,
-            created_at,
-            prompts (
-              name
-            )
-          `)
+          .select('id, rating, feedback_text, created_at, usage_id')
           .eq('user_id', user.id)
           .order('created_at', { ascending: false });
 
         if (error) {
           console.error('数据库查询评分失败:', error);
           setUserRatings([]);
-        } else {
-          const formattedRatings = (ratingsData || []).map((item: any) => ({
-            id: item.id,
-            prompt_name: item.prompts?.name || '未知提示词',
-            rating: item.rating,
-            review: item.feedback_text || '',
-            created_at: item.created_at
-          }));
-          setUserRatings(formattedRatings);
-          console.log('评分评论数据获取成功（数据库）:', formattedRatings.length);
+          return;
         }
+
+        // 如果有评分数据，获取对应的使用记录来找到prompt信息
+        let formattedRatings: any[] = [];
+        if (ratingsData && ratingsData.length > 0) {
+          const usageIds = ratingsData.map(r => r.usage_id).filter(Boolean);
+          
+          if (usageIds.length > 0) {
+            const { data: usageData } = await supabase
+              .from('prompt_usage')
+              .select('id, prompt_id')
+              .in('id', usageIds);
+
+            const promptIds = Array.from(new Set(usageData?.map(u => u.prompt_id).filter(Boolean) || []));
+            
+            if (promptIds.length > 0) {
+              const { data: promptsData } = await supabase
+                .from('prompts')
+                .select('id, name')
+                .in('id', promptIds);
+
+              const promptMap = promptsData?.reduce((acc: any, p: any) => {
+                acc[p.id] = p.name;
+                return acc;
+              }, {}) || {};
+
+              const usageMap = usageData?.reduce((acc: any, u: any) => {
+                acc[u.id] = u.prompt_id;
+                return acc;
+              }, {}) || {};
+
+              formattedRatings = ratingsData.map((item: any) => ({
+                id: item.id,
+                prompt_name: item.usage_id && usageMap[item.usage_id] ? 
+                  promptMap[usageMap[item.usage_id]] || '未知提示词' : '未知提示词',
+                rating: item.rating,
+                review: item.feedback_text || '',
+                created_at: item.created_at
+              }));
+            }
+          }
+        }
+
+        setUserRatings(formattedRatings);
+        console.log('评分评论数据获取成功（数据库）:', formattedRatings.length);
       }
     } catch (error) {
       console.error('获取评分评论失败:', error);
