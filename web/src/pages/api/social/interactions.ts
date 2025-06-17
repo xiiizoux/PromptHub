@@ -103,8 +103,12 @@ const createSocialExtensions = (supabase: any) => ({
     }
 
     return {
-      ...counts,
-      userInteraction
+      likes: counts.likes,
+      bookmarks: counts.bookmarks,
+      shares: counts.shares,
+      userLiked: userInteraction?.liked || false,
+      userBookmarked: userInteraction?.bookmarked || false,
+      userShared: userInteraction?.shared || false
     };
   }
 });

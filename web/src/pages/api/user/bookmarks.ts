@@ -15,18 +15,32 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const authHeader = req.headers.authorization;
     
     if (!authHeader) {
+      console.error('收藏夹API: 缺少Authorization头');
       return res.status(401).json({ error: '未授权访问' });
     }
 
     // 从Authorization header获取token
     const token = authHeader.replace('Bearer ', '');
     
+    if (!token || token === 'undefined' || token === 'null') {
+      console.error('收藏夹API: 无效的token格式:', token);
+      return res.status(401).json({ error: '无效的授权token' });
+    }
+
     // 验证用户token
     const { data: { user }, error: authError } = await supabase.auth.getUser(token);
     
-    if (authError || !user) {
-      return res.status(401).json({ error: '无效的授权token' });
+    if (authError) {
+      console.error('收藏夹API: Supabase认证错误:', authError);
+      return res.status(401).json({ error: '认证失败: ' + authError.message });
     }
+    
+    if (!user) {
+      console.error('收藏夹API: 用户不存在');
+      return res.status(401).json({ error: '用户不存在' });
+    }
+
+    console.log('收藏夹API: 用户认证成功, user_id:', user.id);
 
     // 获取用户收藏的提示词
     const { data: bookmarkedPrompts, error } = await supabase
@@ -56,6 +70,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       .order('created_at', { ascending: false });
 
     if (error) {
+      console.error('收藏夹API: 数据库查询错误:', error);
       throw error;
     }
 
@@ -66,9 +81,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       bookmarked_at: item.created_at
     })) || [];
 
+    console.log('收藏夹API: 成功获取收藏列表, 数量:', formattedPrompts.length);
     res.status(200).json(formattedPrompts);
   } catch (error: any) {
-    console.error('获取收藏列表失败:', error);
+    console.error('收藏夹API: 服务器错误:', error);
     res.status(500).json({ error: error.message || '服务器内部错误' });
   }
 } 

@@ -565,56 +565,75 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return null;
       }
 
-      // 添加超时处理
-      const sessionPromise = supabase.auth.getSession();
-      const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('获取令牌超时')), 5000)
-      );
+      // 优化超时处理，增加到10秒并添加重试逻辑
+      let attempts = 0;
+      const maxAttempts = 2;
       
-      const { data, error } = await Promise.race([
-        sessionPromise,
-        timeoutPromise
-      ]) as any;
-      
-      if (error) {
-        console.error('获取会话失败:', error);
-        return null;
-      }
-      
-      const session = data?.session;
-
-      // 如果没有有效会话，返回null
-      if (!session) {
-        console.warn('无法获取用户会话');
-        return null;
-      }
-      
-      // 检查令牌是否即将过期（提前5分钟检查）
-      const now = Math.floor(Date.now() / 1000);
-      const expiresAt = session.expires_at || 0;
-      const timeUntilExpiry = expiresAt - now;
-      
-      if (timeUntilExpiry < 300) { // 5分钟 = 300秒
-        console.log('令牌即将过期，尝试刷新...');
+      while (attempts < maxAttempts) {
         try {
-          const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
+          const sessionPromise = supabase.auth.getSession();
+          const timeoutPromise = new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('获取令牌超时')), 10000)
+          );
           
-          if (refreshError) {
-            console.error('刷新令牌失败:', refreshError);
-            return session.access_token; // 返回原令牌
+          const { data, error } = await Promise.race([
+            sessionPromise,
+            timeoutPromise
+          ]) as any;
+          
+          if (error) {
+            console.error('获取会话失败:', error);
+            attempts++;
+            if (attempts >= maxAttempts) return null;
+            continue;
           }
           
-          if (refreshData.session) {
-            console.log('令牌刷新成功');
-            return refreshData.session.access_token;
+          const session = data?.session;
+
+          // 如果没有有效会话，返回null
+          if (!session) {
+            console.warn('无法获取用户会话');
+            return null;
           }
-        } catch (refreshErr) {
-          console.error('刷新令牌异常:', refreshErr);
+          
+          // 检查令牌是否即将过期（提前5分钟检查）
+          const now = Math.floor(Date.now() / 1000);
+          const expiresAt = session.expires_at || 0;
+          const timeUntilExpiry = expiresAt - now;
+          
+          if (timeUntilExpiry < 300) { // 5分钟 = 300秒
+            console.log('令牌即将过期，尝试刷新...');
+            try {
+              const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
+              
+              if (refreshError) {
+                console.error('刷新令牌失败:', refreshError);
+                return session.access_token; // 返回原令牌
+              }
+              
+              if (refreshData.session) {
+                console.log('令牌刷新成功');
+                return refreshData.session.access_token;
+              }
+            } catch (refreshErr) {
+              console.error('刷新令牌异常:', refreshErr);
+            }
+          }
+
+          // 返回访问令牌
+          return session.access_token;
+        } catch (attemptError) {
+          console.error(`获取令牌尝试 ${attempts + 1} 失败:`, attemptError);
+          attempts++;
+          if (attempts >= maxAttempts) {
+            throw attemptError;
+          }
+          // 等待1秒后重试
+          await new Promise(resolve => setTimeout(resolve, 1000));
         }
       }
-
-      // 返回访问令牌
-      return session.access_token;
+      
+      return null;
     } catch (err: any) {
       console.error('获取令牌时出错:', err);
       return null;

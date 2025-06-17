@@ -375,18 +375,25 @@ const ProfilePage = () => {
   const fetchBookmarks = async () => {
     setBookmarksLoading(true);
     try {
-      if (!user?.id) return;
+      if (!user?.id) {
+        console.log('用户未登录，跳过获取收藏夹');
+        setBookmarks([]);
+        return;
+      }
       
       const token = await getToken();
       if (!token) {
-        console.error('无法获取认证令牌');
+        console.error('无法获取认证令牌，请重新登录');
         setBookmarks([]);
         return;
       }
 
+      console.log('开始获取收藏夹，用户ID:', user.id);
+
       const response = await fetch('/api/user/bookmarks', {
         headers: {
-          'Authorization': `Bearer ${token}`
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
         }
       });
 
@@ -395,11 +402,22 @@ const ProfilePage = () => {
         setBookmarks(data || []);
         console.log('收藏夹数据获取成功:', data?.length || 0);
       } else {
-        console.error('获取收藏夹失败:', response.status);
+        const errorData = await response.json().catch(() => ({}));
+        console.error('获取收藏夹失败:', {
+          status: response.status,
+          statusText: response.statusText,
+          error: errorData.error || '未知错误'
+        });
+        
+        // 如果是401错误，提示用户重新登录
+        if (response.status === 401) {
+          console.warn('认证已过期，请重新登录');
+        }
+        
         setBookmarks([]);
       }
     } catch (error) {
-      console.error('获取收藏夹失败:', error);
+      console.error('获取收藏夹网络错误:', error);
       setBookmarks([]);
     } finally {
       setBookmarksLoading(false);
