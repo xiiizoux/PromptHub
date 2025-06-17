@@ -47,6 +47,8 @@ PromptHub/
 - `docker-deployment.md` - Docker部署配置和说明
 - `database-structure.md` - 数据库设计和表结构
 - `security-guide.md` - 安全配置和最佳实践
+- `security-implementation.md` - 友好安全增强实施方案
+- `security-audit-fixes.md` - 安全审计报告与修复方案
 - `permission-management.md` - 权限管理系统设计
 
 ## 🚀 快速开始
@@ -113,6 +115,9 @@ MCP_PORT=9010
 
 # JWT配置
 JWT_SECRET=your-jwt-secret
+
+# 安全配置
+SECURITY_LEVEL=balanced  # loose/balanced/strict
 
 # Google OAuth（可选）
 GOOGLE_CLIENT_ID=your-google-client-id
@@ -190,6 +195,10 @@ docker-compose -f docker-compose.prod.yml up -d
 - **API参考**：[http://localhost:9011/docs/api-integration](http://localhost:9011/docs/api-integration)
 - **MCP集成**：[http://localhost:9011/docs/mcp-integration](http://localhost:9011/docs/mcp-integration)
 - **开发者指南**：[docs/developer-guide.md](docs/developer-guide.md)
+- **安全配置**：[docs/security-guide.md](docs/security-guide.md)
+- **安全实施方案**：[docs/security-implementation.md](docs/security-implementation.md)
+- **安全审计报告**：[docs/security-audit-fixes.md](docs/security-audit-fixes.md)
+- **安全使用指南**：[docs/security-usage-guide.md](docs/security-usage-guide.md)
 
 ## 🤝 贡献指南
 
