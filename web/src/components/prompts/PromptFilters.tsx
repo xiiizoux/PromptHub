@@ -324,7 +324,7 @@ const PromptFilters: React.FC<PromptFiltersProps> = ({
                         animate={{ 
                           opacity: 1, 
                           scale: 1,
-                          transition: { duration: 0.25, delay: index * 0.015 } // 恢复适度的动画时长和延迟
+                          transition: { duration: 0.4, delay: 0.6 + index * 0.03 } // 与类别动画保持一致
                         }}
                         exit={{ 
                           opacity: 0, 
@@ -333,7 +333,7 @@ const PromptFilters: React.FC<PromptFiltersProps> = ({
                         }}
                         whileHover={{ scale: 1.05, y: -1 }}
                         whileTap={{ scale: 0.95 }}
-                        className={`inline-flex items-center px-3 py-2 rounded-lg text-xs font-medium transition-all duration-250 backdrop-blur-sm ${
+                        className={`inline-flex items-center px-3 py-2 rounded-lg text-xs font-medium transition-all duration-300 backdrop-blur-sm ${
                           filters.tags?.includes(tag)
                             ? 'bg-neon-purple/20 text-neon-purple border border-neon-purple/50 shadow-neon-sm'
                             : 'bg-dark-bg-secondary/50 text-gray-400 border border-dark-border hover:bg-dark-card hover:border-neon-purple hover:text-neon-purple'
@@ -362,7 +362,7 @@ const PromptFilters: React.FC<PromptFiltersProps> = ({
                         animate={{ 
                           opacity: 1, 
                           scale: 1,
-                          transition: { duration: 0.25 }
+                          transition: { duration: 0.4 }
                         }}
                         exit={{ 
                           opacity: 0, 
@@ -370,9 +370,9 @@ const PromptFilters: React.FC<PromptFiltersProps> = ({
                           transition: { duration: 0.15 }
                         }}
                         onClick={toggleShowAllTags}
-                        whileHover={{ scale: 1.03 }}
-                        whileTap={{ scale: 0.97 }}
-                        className="inline-flex items-center px-3 py-2 border border-dashed border-neon-purple/50 rounded-lg text-neon-purple hover:border-neon-purple hover:bg-neon-purple/10 transition-all duration-250 text-xs font-medium"
+                        whileHover={{ scale: 1.05, y: -2 }}
+                        whileTap={{ scale: 0.95 }}
+                        className="inline-flex items-center px-3 py-2 border border-dashed border-neon-purple/50 rounded-lg text-neon-purple hover:border-neon-purple hover:bg-neon-purple/10 transition-all duration-300 text-xs font-medium"
                       >
                         <ChevronDownIcon className="w-3 h-3 mr-1" />
                         +{hiddenTagsCount} 更多
@@ -386,7 +386,7 @@ const PromptFilters: React.FC<PromptFiltersProps> = ({
                         animate={{ 
                           opacity: 1, 
                           scale: 1,
-                          transition: { duration: 0.25 }
+                          transition: { duration: 0.4 }
                         }}
                         exit={{ 
                           opacity: 0, 
@@ -394,9 +394,9 @@ const PromptFilters: React.FC<PromptFiltersProps> = ({
                           transition: { duration: 0.15 }
                         }}
                         onClick={toggleShowAllTags}
-                        whileHover={{ scale: 1.03 }}
-                        whileTap={{ scale: 0.97 }}
-                        className="inline-flex items-center px-3 py-2 bg-neon-purple/20 border border-neon-purple rounded-lg text-neon-purple hover:bg-neon-purple/30 transition-all duration-250 text-xs font-medium"
+                        whileHover={{ scale: 1.05, y: -2 }}
+                        whileTap={{ scale: 0.95 }}
+                        className="inline-flex items-center px-3 py-2 bg-neon-purple/20 border border-neon-purple rounded-lg text-neon-purple hover:bg-neon-purple/30 transition-all duration-300 text-xs font-medium"
                       >
                         <ChevronUpIcon className="w-3 h-3 mr-1" />
                         收起
