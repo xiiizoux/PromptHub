@@ -213,7 +213,7 @@ export default function PromptsPage() {
       <div className="fixed inset-0 bg-grid-pattern opacity-10 pointer-events-none"></div>
       
       <div className="relative z-10 spacing-section">
-        <div className="container-optimized">
+        <div className="container-custom">
           {/* 如果组件未挂载，显示加载状态 */}
           {!mounted ? (
             <motion.div 

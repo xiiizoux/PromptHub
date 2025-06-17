@@ -424,7 +424,7 @@ code, pre, .font-mono {
     @apply py-2 sm:py-3 md:py-4;
   }
   
-  /* 网格布局优化 */
+  /* 网格布局优化 - 全宽设计 */
   .prompt-grid {
     display: grid;
     gap: 1rem;
@@ -449,6 +449,13 @@ code, pre, .font-mono {
     .prompt-grid {
       gap: 1.5rem;
       grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    }
+  }
+  
+  @media (min-width: 1400px) {
+    .prompt-grid {
+      gap: 2rem;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
     }
   }
   
