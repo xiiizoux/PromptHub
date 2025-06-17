@@ -138,13 +138,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       // 如果用户不存在，创建用户记录
       if (!existingUser) {
+        // 生成用户名：从邮箱提取用户名部分，或使用元数据中的用户名
+        const emailUsername = authUser.email.split('@')[0];
+        const providedUsername = authUser.user_metadata?.username || 
+                               authUser.user_metadata?.preferred_username ||
+                               authUser.user_metadata?.name ||
+                               emailUsername;
+        
+        const displayName = authUser.user_metadata?.display_name || 
+                           authUser.user_metadata?.full_name || 
+                           authUser.user_metadata?.name ||
+                           providedUsername ||
+                           emailUsername;
+
         const userData = {
           id: authUser.id,
           email: authUser.email,
-          display_name: authUser.user_metadata?.display_name || 
-                       authUser.user_metadata?.full_name || 
-                       authUser.user_metadata?.username || 
-                       'User',
+          username: providedUsername,  // 添加username字段
+          display_name: displayName,
           role: 'user',
           created_at: authUser.created_at
         };
@@ -161,21 +172,35 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       // 更新本地用户状态
-      const finalUserData = existingUser || {
+      let finalUserData = existingUser;
+      
+      if (!existingUser) {
+        // 如果是新创建的用户，重新查询确保获得完整数据
+        const { data: newUserData } = await supabase
+          .from('users')
+          .select('*')
+          .eq('id', authUser.id)
+          .single();
+        finalUserData = newUserData;
+      }
+
+      finalUserData = finalUserData || {
         id: authUser.id,
         email: authUser.email,
+        username: authUser.email.split('@')[0],
         display_name: authUser.user_metadata?.display_name || 
                      authUser.user_metadata?.full_name || 
-                     authUser.user_metadata?.username || 
-                     'User',
+                     authUser.user_metadata?.name ||
+                     authUser.email.split('@')[0],
         role: 'user',
         created_at: authUser.created_at || new Date().toISOString()
       };
 
       const appUser: User = {
         id: finalUserData.id,
-        username: finalUserData.display_name,
+        username: finalUserData.username || finalUserData.display_name || finalUserData.email.split('@')[0],
         email: finalUserData.email,
+        display_name: finalUserData.display_name,
         role: finalUserData.role || 'user',
         created_at: finalUserData.created_at || new Date().toISOString()
       };
@@ -426,6 +451,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             .insert({
               id: data.user.id,
               email: email,
+              username: username,  // 添加username字段
               display_name: username,
               role: 'user',
               created_at: data.user.created_at || new Date().toISOString()
