@@ -14,8 +14,7 @@ pip install prompthub-mcp`;
   const configCode = `{
   "mcp": {
     "server": {
-      "host": "localhost",
-      "port": 9010,
+      "url": "https://mcp.prompt-hub.cc",
       "auth": {
         "type": "bearer",
         "token": "your-api-token"
@@ -31,14 +30,13 @@ pip install prompthub-mcp`;
   const nodeExample = `import { MCPClient } from '@prompthub/mcp-sdk';
 
 const client = new MCPClient({
-  host: 'localhost',
-  port: 9010,
+  url: 'https://mcp.prompt-hub.cc',
   auth: {
-    token: process.env.MCP_TOKEN
+    token: process.env.MCP_API_KEY
   }
 });
 
-// 连接到 MCP 服务器
+// 连接到远程 MCP 服务器
 await client.connect();
 
 // 调用工具
@@ -56,12 +54,11 @@ console.log(result);`;
 
 # 创建客户端
 client = MCPClient(
-    host="localhost",
-    port=9010,
-    auth_token=os.getenv("MCP_TOKEN")
+    url="https://mcp.prompt-hub.cc",
+    auth_token=os.getenv("MCP_API_KEY")
 )
 
-# 连接并调用
+# 连接并调用远程服务器
 async with client:
     result = await client.call_tool("generate_prompt", {
         "template": "user_prompt",
@@ -170,12 +167,25 @@ async with client:
       <DocSection title="快速开始" delay={0.3}>
         <div className="space-y-8">
           <p className="text-dark-text-secondary leading-relaxed">
-            按照以下步骤快速开始使用 MCP 集成功能。
+            按照以下步骤快速开始使用远程 MCP 服务器集成功能。
           </p>
 
           <div className="space-y-6">
             <div>
-              <h4 className="text-lg font-semibold text-white mb-4">1. 安装 SDK</h4>
+              <h4 className="text-lg font-semibold text-white mb-4">1. 获取 API 密钥</h4>
+              <DocHighlight type="info">
+                <h5 className="font-semibold mb-3">注册并获取访问权限</h5>
+                <ul className="space-y-2 text-sm">
+                  <li>• 访问 <strong>prompt-hub.cc</strong> 注册账户</li>
+                  <li>• 在用户面板中生成 API 密钥</li>
+                  <li>• 配置访问权限和使用限额</li>
+                  <li>• 记录您的 API 密钥用于客户端配置</li>
+                </ul>
+              </DocHighlight>
+            </div>
+
+            <div>
+              <h4 className="text-lg font-semibold text-white mb-4">2. 安装 SDK</h4>
               <DocCodeBlock 
                 code={installCode}
                 title="安装命令"
@@ -184,7 +194,7 @@ async with client:
             </div>
 
             <div>
-              <h4 className="text-lg font-semibold text-white mb-4">2. 配置连接</h4>
+              <h4 className="text-lg font-semibold text-white mb-4">3. 配置连接</h4>
               <DocCodeBlock 
                 code={configCode}
                 title="配置文件"
@@ -193,7 +203,7 @@ async with client:
             </div>
 
             <div>
-              <h4 className="text-lg font-semibold text-white mb-4">3. 初始化客户端</h4>
+              <h4 className="text-lg font-semibold text-white mb-4">4. 初始化客户端</h4>
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <DocCodeBlock 
                   code={nodeExample}
@@ -250,8 +260,96 @@ async with client:
         </div>
       </DocSection>
 
+      {/* 环境变量配置 */}
+      <DocSection title="环境变量配置" delay={0.5}>
+        <div className="space-y-6">
+          <p className="text-dark-text-secondary leading-relaxed">
+            为了安全地管理 API 密钥和配置信息，建议使用环境变量。
+          </p>
+          
+          <div className="space-y-4">
+            <DocHighlight type="warning">
+              <h4 className="font-semibold mb-3">环境变量设置</h4>
+              <div className="bg-dark-bg-primary rounded-lg p-4 space-y-3">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <code className="text-sm text-neon-cyan">MCP_API_KEY</code>
+                    <p className="text-xs text-gray-400 mt-1">您的 API 访问密钥</p>
+                  </div>
+                  <div>
+                    <code className="text-sm text-gray-300">your-secure-api-key</code>
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <code className="text-sm text-neon-cyan">MCP_SERVER_URL</code>
+                    <p className="text-xs text-gray-400 mt-1">MCP 服务器地址</p>
+                  </div>
+                  <div>
+                    <code className="text-sm text-gray-300">https://mcp.prompt-hub.cc</code>
+                  </div>
+                </div>
+              </div>
+            </DocHighlight>
+
+            <DocHighlight type="error">
+              <h4 className="font-semibold mb-3">安全提示</h4>
+              <ul className="space-y-2 text-sm">
+                <li>• 请不要在代码仓库中提交包含 API 密钥的文件</li>
+                <li>• 定期更换 API 密钥，特别是在怀疑泄露时</li>
+                <li>• 在生产环境中使用强密码和 HTTPS</li>
+                <li>• 限制 API 密钥的访问权限和使用范围</li>
+              </ul>
+            </DocHighlight>
+          </div>
+        </div>
+      </DocSection>
+
+      {/* 故障排除 */}
+      <DocSection title="常见问题与故障排除" delay={0.6}>
+        <div className="space-y-6">
+          <p className="text-dark-text-secondary leading-relaxed">
+            在集成过程中可能遇到的常见问题及解决方案。
+          </p>
+          
+          <DocGrid cols={2}>
+            <DocCard 
+              title="连接失败"
+              description="无法连接到 MCP 服务器"
+              icon={<ServerIcon className="h-6 w-6" />}
+              color="cyan"
+            >
+              <DocList 
+                items={[
+                  { title: "检查网络连接", description: "确保网络正常" },
+                  { title: "验证服务器地址", description: "确认 URL 正确" },
+                  { title: "检查防火墙设置", description: "允许相关端口" }
+                ]}
+                className="mt-4"
+              />
+            </DocCard>
+            
+            <DocCard 
+              title="认证失败"
+              description="API 密钥认证失败"
+              icon={<ShieldCheckIcon className="h-6 w-6" />}
+              color="purple"
+            >
+              <DocList 
+                items={[
+                  { title: "验证 API 密钥", description: "确认密钥正确" },
+                  { title: "检查权限", description: "确认访问权限" },
+                  { title: "更新密钥", description: "使用最新密钥" }
+                ]}
+                className="mt-4"
+              />
+            </DocCard>
+          </DocGrid>
+        </div>
+      </DocSection>
+
       {/* 架构说明 */}
-      <DocSection title="架构说明" delay={0.5}>
+      <DocSection title="架构说明" delay={0.7}>
         <div className="space-y-8">
           <p className="text-dark-text-secondary leading-relaxed">
             了解 MCP 集成的整体架构，帮助您更好地规划和实施集成方案。
@@ -323,7 +421,7 @@ async with client:
       </DocSection>
 
       {/* 下一步 */}
-      <DocSection title="下一步" delay={0.6}>
+      <DocSection title="下一步" delay={0.8}>
         <div className="space-y-6">
           <p className="text-dark-text-secondary leading-relaxed">
             完成基础集成后，您可以继续探索更多高级功能和最佳实践。

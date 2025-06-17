@@ -276,7 +276,7 @@ const DocsPage: React.FC = () => {
               </div>
 
               <Link 
-                href="/docs/integration/setup" 
+                href="/docs/mcp-integration" 
                 className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-neon-cyan to-neon-purple text-white rounded-xl font-medium shadow-neon hover:shadow-neon-lg transition-all duration-300 group"
               >
                 <RocketLaunchIcon className="h-5 w-5 mr-2 group-hover:rotate-12 transition-transform duration-300" />
