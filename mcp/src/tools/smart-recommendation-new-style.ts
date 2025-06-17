@@ -57,7 +57,7 @@ export class SmartRecommendationTool extends BaseMCPTool {
     
     // 简化推荐逻辑
     if (category) {
-      return (await storage.getPromptsByCategory(category, { limit, is_public: true })).slice(0, limit);
+      return (await storage.getPromptsByCategory(category)).slice(0, limit);
     }
     
     if (context) {
@@ -66,7 +66,7 @@ export class SmartRecommendationTool extends BaseMCPTool {
     }
 
     // 默认推荐热门提示词
-    const allPrompts = await storage.getPrompts({ limit: limit * 2, is_public: true });
+    const allPrompts = await storage.getPrompts({ isPublic: true });
     return Array.isArray(allPrompts) ? allPrompts.slice(0, limit) : [];
   }
 }

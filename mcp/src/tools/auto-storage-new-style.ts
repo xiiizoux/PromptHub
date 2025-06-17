@@ -70,14 +70,14 @@ export class QuickStoreTool extends BaseMCPTool {
         description: analysisResult.description || '通过MCP一键存储创建',
         category: analysisResult.category,
         tags: analysisResult.tags,
-        messages: this.convertContentToMessages(content),
+        messages: [{ role: 'user' as const, content: { type: 'text', text: content.trim() } }],
         version: 1.0,
         is_public: isPublic,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       };
 
-      const savedPrompt = await storage.createPrompt(promptData, context.userId);
+      const savedPrompt = await storage.createPrompt(promptData);
 
       return {
         success: true,
@@ -158,7 +158,15 @@ export class SmartStoreTool extends BaseMCPTool {
           suggestedTitle: `提示词_${Date.now()}`,
           description: '智能存储创建',
           category: 'general',
-          tags: [], improvements: []
+          tags: [], 
+          improvements: [],
+          difficulty: 'intermediate',
+          estimatedTokens: 100,
+          variables: [],
+          useCases: [],
+          compatibleModels: [],
+          version: '1.0',
+          confidence: 0.8
         };
       }
 

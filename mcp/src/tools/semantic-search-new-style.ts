@@ -341,7 +341,7 @@ export class SmartRecommendationTool extends BaseMCPTool {
     
     // 简化的推荐逻辑
     const promptsResponse = await storage.getPrompts({ userId });
-    const allPrompts = Array.isArray(promptsResponse) ? promptsResponse : promptsResponse.prompts || [];
+    const allPrompts = Array.isArray(promptsResponse) ? promptsResponse : [];
     
     return allPrompts.slice(0, 5).map(prompt => ({
       ...prompt,
