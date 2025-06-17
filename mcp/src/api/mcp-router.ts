@@ -981,7 +981,9 @@ async function handleGetPromptTemplate() {
         },
       },
     ],
-    is_public: false  // 默认为私有提示词
+    is_public: true,  // 默认为公开提示词，便于分享和发现
+    allow_collaboration: false, // 默认不允许协作编辑，保护创建者权益
+    edit_permission: 'owner_only' // 默认仅创建者可编辑
   };
   
   return {

@@ -285,7 +285,9 @@ export class SupabaseAdapter implements StorageAdapter {
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         version: prompt.version ? Number(prompt.version) : 1.0, // 新建提示词默认版本为1.0
-        is_public: prompt.is_public !== undefined ? prompt.is_public : false,
+        is_public: prompt.is_public !== undefined ? prompt.is_public : true, // 默认公开，便于分享和发现
+        allow_collaboration: prompt.allow_collaboration !== undefined ? prompt.allow_collaboration : false, // 默认不允许协作编辑，保护创建者权益
+        edit_permission: prompt.edit_permission || 'owner_only', // 默认仅创建者可编辑
         user_id: prompt.user_id
       };
       

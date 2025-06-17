@@ -125,7 +125,7 @@ function detectPrivacyPreference(content: string, title?: string): boolean {
     return true; // 设为公开
   }
   
-  // 默认公开
+  // 默认公开，便于分享和发现
   return true;
 }
 
@@ -196,6 +196,8 @@ export async function handleQuickStore(params: any): Promise<MCPToolResponse> {
       messages: convertContentToMessages(content),
       version: 1.0,
       is_public: isPublic,
+      allow_collaboration: false, // 默认不允许协作编辑，保护创建者权益
+      edit_permission: 'owner_only', // 默认仅创建者可编辑
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
     };
@@ -341,6 +343,8 @@ export async function handleSmartStore(params: any): Promise<MCPToolResponse> {
       messages: convertContentToMessages(content),
       version: parseFloat(analysisResult.version) || 1.0,
       is_public: isPublic,
+      allow_collaboration: false, // 默认不允许协作编辑，保护创建者权益
+      edit_permission: 'owner_only', // 默认仅创建者可编辑
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
     };
@@ -425,7 +429,9 @@ export async function handleAnalyzeAndStore(params: any): Promise<MCPToolRespons
         tags: analysis_result.tags || ['AI', '提示词'],
         messages: convertContentToMessages(content),
         version: parseFloat(analysis_result.version) || 1.0,
-        is_public: true, // 默认公开
+        is_public: true, // 默认公开，便于分享和发现
+        allow_collaboration: false, // 默认不允许协作编辑，保护创建者权益
+        edit_permission: 'owner_only', // 默认仅创建者可编辑
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       };
@@ -496,7 +502,9 @@ export async function handleAnalyzeAndStore(params: any): Promise<MCPToolRespons
       tags: analysisResult.tags,
       messages: convertContentToMessages(content),
       version: parseFloat(analysisResult.version) || 1.0,
-      is_public: true, // 默认公开
+      is_public: true, // 默认公开，便于分享和发现
+      allow_collaboration: false, // 默认不允许协作编辑，保护创建者权益
+      edit_permission: 'owner_only', // 默认仅创建者可编辑
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
     };

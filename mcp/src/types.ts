@@ -24,6 +24,8 @@ export interface Prompt {
   updated_at?: string;
   version?: number;
   is_public?: boolean;
+  allow_collaboration?: boolean; // 新增：是否允许协作编辑
+  edit_permission?: 'owner_only' | 'collaborators' | 'public'; // 新增：编辑权限级别
   user_id?: string;
   error?: string;  // 添加错误属性，用于存储错误信息
   difficulty?: 'beginner' | 'intermediate' | 'advanced'; // 新增：难度级别
