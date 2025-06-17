@@ -202,9 +202,9 @@ function CreatePromptPage() {
       content: '',  // 会被转换为messages JSONB格式
       category: '通用', // 与数据库默认值保持一致
       version: 1.0,  // 默认版本1.0，支持小数格式
-      is_public: false, // 默认非公开，与数据库默认值保持一致
-      allow_collaboration: false, // 默认不允许协作编辑
-      edit_permission: 'owner_only', // 默认仅所有者可编辑
+      is_public: true, // 默认公开，便于分享和发现
+      allow_collaboration: true, // 默认允许协作编辑，促进社区参与
+      edit_permission: 'public', // 默认公开编辑，与协作编辑保持一致
       template_format: 'text',
       input_variables: [],
       tags: [],
