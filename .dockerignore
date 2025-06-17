@@ -16,8 +16,10 @@ logs
 .env.development.local
 .env.test.local
 .env.production.local
-•cursorignore
+.cursorignore
 •cursorrules
+.cursor/
+.cursor/rules/
 
 # 版本控制
 .git

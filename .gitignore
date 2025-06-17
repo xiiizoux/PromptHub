@@ -30,7 +30,7 @@ mcp/build/
 docker-compose.yml
 
 # cursor相关文件和文件夹
-•cursorignore
+.cursorignore
 •cursorrules
 .cursor/
 .cursor/rules/
