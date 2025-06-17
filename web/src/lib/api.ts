@@ -105,6 +105,28 @@ export const getTags = async (): Promise<string[]> => {
   }
 };
 
+// 获取带使用频率的标签统计
+export const getTagsWithStats = async (): Promise<Array<{tag: string, count: number}>> => {
+  try {
+    const response = await api.get<any>('/tags?withStats=true');
+    console.log('标签统计API响应:', response.data);
+    
+    if (response.data.success && response.data.data && Array.isArray(response.data.data)) {
+      return response.data.data;
+    }
+    
+    console.log('API返回空统计数据，使用默认数据');
+    // 如果API返回空数据或失败，返回默认统计
+    const defaultTags = ['GPT-4', 'GPT-3.5', 'Claude', 'Gemini', '初学者', '高级', '长文本', '结构化输出', '翻译', '润色'];
+    return defaultTags.map((tag, index) => ({ tag, count: 10 - index }));
+  } catch (error) {
+    console.error('获取标签统计失败:', error);
+    // 发生错误时也返回默认统计
+    const defaultTags = ['GPT-4', 'GPT-3.5', 'Claude', 'Gemini', '初学者', '高级', '长文本', '结构化输出', '翻译', '润色'];
+    return defaultTags.map((tag, index) => ({ tag, count: 10 - index }));
+  }
+};
+
 // 获取所有提示词名称
 export const getPromptNames = async (): Promise<string[]> => {
   try {

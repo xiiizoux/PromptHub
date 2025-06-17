@@ -171,6 +171,45 @@ export class SupabaseAdapter {
     }
   }
 
+  /**
+   * 获取带使用频率的标签统计
+   */
+  async getTagsWithUsageStats(): Promise<Array<{tag: string, count: number}>> {
+    try {
+      const { data, error } = await this.supabase
+        .from('prompts')
+        .select('tags')
+        .eq('is_public', true); // 只统计公开的提示词
+
+      if (error) {
+        console.error('获取标签统计失败:', error);
+        return [];
+      }
+
+      // 统计每个标签的使用频率
+      const tagCounts = new Map<string, number>();
+      
+      data.forEach(item => {
+        const tags = item.tags || [];
+        tags.forEach((tag: any) => {
+          if (tag && typeof tag === 'string') {
+            tagCounts.set(tag, (tagCounts.get(tag) || 0) + 1);
+          }
+        });
+      });
+
+      // 转换为数组并按使用频率排序
+      const result = Array.from(tagCounts.entries())
+        .map(([tag, count]) => ({ tag, count }))
+        .sort((a, b) => b.count - a.count);
+
+      return result;
+    } catch (err) {
+      console.error('获取标签统计时出错:', err);
+      return [];
+    }
+  }
+
   async getPrompts(filters?: PromptFilters): Promise<PaginatedResponse<Prompt>> {
     try {
       const {

@@ -141,6 +141,13 @@ export class DatabaseService {
   }
 
   /**
+   * 获取带使用频率的标签统计
+   */
+  async getTagsWithUsageStats(): Promise<Array<{tag: string, count: number}>> {
+    return await this.adapter.getTagsWithUsageStats();
+  }
+
+  /**
    * 获取提示词列表
    */
   async getPrompts(filters?: PromptFilters): Promise<PaginatedResponse<Prompt>> {
