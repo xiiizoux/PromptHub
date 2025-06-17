@@ -6,7 +6,7 @@ import { NotificationApi } from '@/types/api';
 // 从环境变量中获取MCP服务器URL
 const MCP_SERVER_URL = process.env.MCP_SERVER_URL || 'http://localhost:9010';
 
-async function handler(req: NextApiRequest, res: NextApiResponse) {
+async function handler(req: NextApiRequest, res: NextApiResponse, userId: string) {
   try {
     const { method } = req;
     const authHeader = req.headers.authorization;
