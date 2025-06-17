@@ -190,14 +190,14 @@ export default function ContactPage() {
                 
                 <div className="space-y-8">
                   {[
-                    {
-                      icon: EnvelopeIcon,
-                      title: "邮箱",
-                      description: "我们通常在24小时内回复",
-                      link: "contact@prompthub.dev",
-                      href: "mailto:contact@prompthub.dev",
-                      gradient: "from-neon-cyan to-neon-purple"
-                    },
+                                         {
+                       icon: EnvelopeIcon,
+                       title: "邮箱",
+                       description: "我们通常在24小时内回复",
+                       link: "contact@prompt-hub.cc",
+                       href: "mailto:contact@prompt-hub.cc",
+                       gradient: "from-neon-cyan to-neon-purple"
+                     },
                     {
                       icon: ChatBubbleLeftRightIcon,
                       title: "GitHub讨论",
@@ -264,7 +264,7 @@ export default function ContactPage() {
                     {[
                       { href: "/docs", text: "查看文档" },
                       { href: "/docs/api-integration", text: "API参考" },
-                      { href: "/docs/getting-started", text: "快速开始" }
+                      { href: "/prompts", text: "快速开始" }
                     ].map((link, index) => (
                       <motion.div
                         key={link.href}

@@ -328,7 +328,7 @@ export default function AboutPage() {
                 </a>
                 
                 <Link
-                  href="/docs"
+                  href="/prompts"
                   className="inline-flex items-center px-6 py-3 bg-dark-bg-secondary border border-neon-purple text-neon-purple rounded-xl font-medium hover:bg-neon-purple/10 transition-all duration-300 group"
                 >
                   <CodeBracketIcon className="h-5 w-5 mr-2 group-hover:rotate-12 transition-transform duration-300" />
