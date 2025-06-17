@@ -3,10 +3,9 @@
  * 专为第三方AI客户端对话窗口设计的简洁高效呈现方式
  */
 
-import { StorageFactory } from '../storage/storage-factory.js';
+import { storage } from '../shared/services.js';
+import { handleToolError, handleToolSuccess } from '../shared/error-handler.js';
 import { ToolDescription, ToolParameter, MCPToolResponse, Prompt } from '../types.js';
-
-const storage = StorageFactory.getStorage();
 
 /**
  * 简洁搜索工具 - 优化对话界面呈现

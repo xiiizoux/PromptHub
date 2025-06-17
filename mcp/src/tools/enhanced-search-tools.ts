@@ -3,10 +3,9 @@
  * 提供清晰的用户界面和选择逻辑，支持公开和私有提示词搜索
  */
 
-import { StorageFactory } from '../storage/storage-factory.js';
+import { storage } from '../shared/services.js';
+import { handleToolError, handleToolSuccess } from '../shared/error-handler.js';
 import { ToolDescription, ToolParameter, MCPToolResponse, Prompt, StorageAdapter, PromptFilters } from '../types.js';
-
-const storage: StorageAdapter = StorageFactory.getStorage();
 
 /**
  * 增强搜索工具定义

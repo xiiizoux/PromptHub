@@ -3,10 +3,9 @@
  * 核心理念：方便、简洁、易用、精准
  */
 
-import { StorageFactory } from '../storage/storage-factory.js';
+import { storage } from '../shared/services.js';
+import { handleToolError, handleToolSuccess } from '../shared/error-handler.js';
 import { ToolDescription, ToolParameter, MCPToolResponse, Prompt } from '../types.js';
-
-const storage = StorageFactory.getStorage();
 
 /**
  * 🎯 一键智能搜索工具 - 核心功能

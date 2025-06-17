@@ -1,6 +1,6 @@
 import { StorageAdapter } from '../types.js';
-// 导入适配器包装器
-import { SupabaseAdapter } from './supabase-adapter-wrapper.js';
+// 导入主 Supabase 适配器
+import { SupabaseAdapter } from './supabase-adapter.js';
 // 导入配置
 import { config } from '../config.js';
 

@@ -3,7 +3,8 @@
  * 为第三方AI客户端提供便捷的提示词复制和格式化功能
  */
 
-import { StorageFactory } from '../storage/storage-factory.js';
+import { storage } from '../shared/services.js';
+import { handleToolError, handleToolSuccess } from '../shared/error-handler.js';
 import { ToolDescription, ToolParameter, MCPToolResponse, Prompt, PromptVariable } from '../types.js';
 
 // 类型守卫函数
@@ -19,7 +20,7 @@ function getVariableDescription(variable: string | PromptVariable): string {
   return isPromptVariable(variable) ? (variable.description || '需要替换的变量') : '需要替换的变量';
 }
 
-const storage = StorageFactory.getStorage();
+// 存储实例已从共享服务模块导入
 
 /**
  * 快速复制工具定义

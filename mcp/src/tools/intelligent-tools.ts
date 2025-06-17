@@ -3,13 +3,10 @@
  * 支持第三方客户端AI分析的智能提示词选择和存储功能
  */
 
-import { MCPAIAnalyzer, MCPAIAnalysisResult } from '../ai/mcp-ai-analyzer.js';
-import { StorageFactory } from '../storage/storage-factory.js';
+import { MCPAIAnalysisResult } from '../ai/mcp-ai-analyzer.js';
+import { storage, aiAnalyzer } from '../shared/services.js';
+import { handleToolError, handleToolSuccess, validateRequiredParams } from '../shared/error-handler.js';
 import { ToolDescription, ToolParameter, MCPToolResponse, Prompt, StorageAdapter } from '../types.js';
-
-// 存储适配器实例
-const storage: StorageAdapter = StorageFactory.getStorage();
-const aiAnalyzer = new MCPAIAnalyzer();
 
 // 智能选择匹配分数接口
 interface PromptMatchScore {
@@ -243,17 +240,7 @@ export async function handleIntelligentPromptSelection(params: any): Promise<MCP
     };
 
   } catch (error: any) {
-    console.error('[MCP智能选择] 错误:', error);
-    return {
-      content: [{
-        type: 'text',
-        text: JSON.stringify({
-          success: false,
-          error: error.message,
-          fallback: '建议使用基础搜索功能：search_prompts'
-        })
-      }]
-    };
+    return handleToolError('智能选择', error, '智能选择执行失败，建议使用基础搜索功能');
   }
 }
 
@@ -378,22 +365,7 @@ export async function handleIntelligentPromptStorage(params: any): Promise<MCPTo
     };
 
   } catch (error: any) {
-    console.error('[MCP智能存储] 错误:', error);
-    return {
-      content: [{
-        type: 'text',
-        text: JSON.stringify({
-          success: false,
-          error: error.message,
-          fallback: '请尝试使用基础创建功能：create_prompt',
-          troubleshooting: [
-            '检查提示词内容是否有效',
-            '确认外部分析结果格式正确',
-            '验证数据库连接状态'
-          ]
-        })
-      }]
-    };
+    return handleToolError('智能存储', error, '智能存储失败，请尝试使用基础创建功能');
   }
 }
 
@@ -445,16 +417,7 @@ export async function handleExternalAIAnalysis(params: any): Promise<MCPToolResp
     };
 
   } catch (error: any) {
-    console.error('[MCP外部AI分析] 错误:', error);
-    return {
-      content: [{
-        type: 'text',
-        text: JSON.stringify({
-          success: false,
-          error: error.message
-        })
-      }]
-    };
+    return handleToolError('外部AI分析', error);
   }
 }
 

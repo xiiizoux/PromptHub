@@ -3,10 +3,9 @@
  * 提供基于向量相似度的精准提示词匹配
  */
 
-import { StorageFactory } from '../storage/storage-factory.js';
+import { storage } from '../shared/services.js';
+import { handleToolError, handleToolSuccess } from '../shared/error-handler.js';
 import { ToolDescription, ToolParameter, MCPToolResponse, Prompt } from '../types.js';
-
-const storage = StorageFactory.getStorage();
 
 /**
  * 语义化搜索工具定义

@@ -3,10 +3,9 @@
  * 基于用户行为、偏好和上下文提供个性化提示词推荐
  */
 
-import { StorageFactory } from '../storage/storage-factory.js';
+import { storage } from '../shared/services.js';
+import { handleToolError, handleToolSuccess } from '../shared/error-handler.js';
 import { ToolDescription, ToolParameter, MCPToolResponse, Prompt } from '../types.js';
-
-const storage = StorageFactory.getStorage();
 
 /**
  * 智能推荐工具定义

@@ -4,13 +4,10 @@
  * 参考web服务器AI智能分析实现
  */
 
-import { MCPAIAnalyzer, MCPAIAnalysisResult } from '../ai/mcp-ai-analyzer.js';
-import { StorageFactory } from '../storage/storage-factory.js';
+import { MCPAIAnalysisResult } from '../ai/mcp-ai-analyzer.js';
+import { storage, aiAnalyzer } from '../shared/services.js';
+import { handleToolError, handleToolSuccess, validateRequiredParams } from '../shared/error-handler.js';
 import { ToolDescription, ToolParameter, MCPToolResponse, Prompt, StorageAdapter } from '../types.js';
-
-// 存储适配器实例
-const storage: StorageAdapter = StorageFactory.getStorage();
-const aiAnalyzer = new MCPAIAnalyzer();
 
 /**
  * 一键存储工具 - 最简化的存储体验
