@@ -169,6 +169,12 @@ function CreatePromptPage() {
     const handleURLParams = () => {
       const { query } = router;
       
+      // 等待分类数据加载完成后再处理
+      if (categoriesLoading) {
+        console.log('等待分类数据加载完成...');
+        return;
+      }
+      
       // 检查是否有来自优化器的内容
       if (query.optimizedContent) {
         const content = decodeURIComponent(query.optimizedContent as string);
@@ -201,15 +207,28 @@ function CreatePromptPage() {
               console.log('应用AI建议描述:', analysisResult.description);
             }
             
-            // 修复分类应用问题 - 使用正确的分类匹配逻辑
-            if (analysisResult.category && (!watch('category') || (watch('category') || '').trim() === '')) {
-              const mappedCategory = matchCategory(analysisResult.category, categories);
-              if (mappedCategory) {
-                setValue('category', mappedCategory);
-                console.log('应用AI分类:', analysisResult.category, '->', mappedCategory);
+            // 修复分类应用问题 - 始终应用AI分析结果中的分类
+            if (analysisResult.category) {
+              const currentCategory = watch('category');
+              
+              // 如果当前分类是默认值（通用）或为空，才应用AI分析结果
+              if (!currentCategory || currentCategory === '通用') {
+                // 首先尝试精确匹配
+                if (categories.includes(analysisResult.category)) {
+                  setValue('category', analysisResult.category);
+                  console.log('应用AI分类（精确匹配）:', analysisResult.category);
+                } else {
+                  // 再尝试智能匹配
+                  const mappedCategory = matchCategory(analysisResult.category, categories);
+                  if (mappedCategory) {
+                    setValue('category', mappedCategory);
+                    console.log('应用AI分类（智能匹配）:', analysisResult.category, '->', mappedCategory);
+                  } else {
+                    console.log('AI分类无法匹配，保持默认分类:', analysisResult.category, '-> 通用');
+                  }
+                }
               } else {
-                setValue('category', '通用');
-                console.log('AI分类无法匹配，使用默认分类:', analysisResult.category, '-> 通用');
+                console.log('当前已有非默认分类，跳过AI分类应用:', currentCategory);
               }
             }
             
@@ -306,11 +325,11 @@ function CreatePromptPage() {
       }
     };
 
-    // 只在路由准备好时处理参数
+    // 只在路由准备好且分类数据加载完成时处理参数
     if (router.isReady) {
       handleURLParams();
     }
-  }, [router.isReady, router.query]); // 移除models、tags、variables依赖以避免循环引用
+  }, [router.isReady, router.query, categoriesLoading, categories]); // 添加分类相关依赖
 
   // 获取分类数据 - 异步但不阻塞页面显示
   useEffect(() => {
