@@ -267,21 +267,16 @@ const PromptFilters: React.FC<PromptFiltersProps> = ({
             >
               {/* 标签标题和排序方式 */}
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
-                <div className="flex items-center justify-between">
+                <div className="flex items-center">
                   <h3 className="text-lg font-medium text-neon-purple flex items-center">
                     <div className="w-2 h-2 bg-neon-purple rounded-full mr-3 shadow-neon-sm"></div>
                     标签
                   </h3>
-                  {tags.length > 25 && (
-                    <span className="text-xs text-gray-500 sm:hidden">
-                      {displayTags.length} / {tags.length}
-                    </span>
-                  )}
                 </div>
 
-                {/* 排序方式 - 紧凑按钮组 */}
-                <div className="flex items-center gap-3">
-                  <h4 className="text-lg font-medium text-neon-pink hidden sm:block flex items-center">
+                {/* 排序方式 - 紧凑按钮组（仅桌面端显示） */}
+                <div className="hidden sm:flex items-center gap-3">
+                  <h4 className="text-lg font-medium text-neon-pink flex items-center">
                     <div className="w-2 h-2 bg-neon-pink rounded-full mr-3 shadow-neon-sm"></div>
                     排序方式:
                   </h4>
