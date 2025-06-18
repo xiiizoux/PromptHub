@@ -625,13 +625,8 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
       setSaveSuccess(true);
       setHasUnsavedChanges(false);
       
-      // 显示弹窗成功提示
-      alert('✅ 提示词保存成功！');
-      
-      setTimeout(() => setSaveSuccess(false), 5000); // 延长显示时间
-      
-      // 名称更改不影响URL，因为我们使用ID
-      // 无需重定向，保持在当前页面
+      // 保存成功后直接跳转回详情页面，提供更好的用户体验
+      router.push(`/prompts/${prompt.id}`);
     } catch (error) {
       console.error('更新提示词失败:', error);
       alert(`❌ 更新失败: ${error instanceof Error ? error.message : '未知错误'}`);
