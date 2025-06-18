@@ -133,15 +133,19 @@ const ProfilePage = () => {
     }
   }, [activeTab, user]);
 
-  // 加载用户提示词
+  // 当切换到"我的提示词"标签时，重置到第一页
   useEffect(() => {
     if (activeTab === 'my-prompts') {
-      // 当切换到"我的提示词"标签时，重置到第一页
       if (promptCurrentPage !== 1) {
         setPromptCurrentPage(1);
-        return;
       }
-      fetchUserPrompts();
+    }
+  }, [activeTab]);
+
+  // 加载用户提示词 - 当标签页为"我的提示词"且页面改变时
+  useEffect(() => {
+    if (activeTab === 'my-prompts') {
+      fetchUserPrompts(promptCurrentPage);
     }
   }, [activeTab, promptCurrentPage]);
 
@@ -423,12 +427,7 @@ const ProfilePage = () => {
     }
   };
 
-  // 监听页面变化，重新获取数据
-  useEffect(() => {
-    if (user?.id && activeTab === 'my-prompts') {
-      fetchUserPrompts(promptCurrentPage);
-    }
-  }, [user?.id, activeTab, promptCurrentPage]);
+
 
   // 获取收藏夹
   const fetchBookmarks = async () => {
@@ -882,7 +881,7 @@ const ProfilePage = () => {
 
         // 刷新数据
         if (successCount > 0) {
-          fetchUserPrompts();
+          fetchUserPrompts(promptCurrentPage);
           fetchPromptCount();
         }
         

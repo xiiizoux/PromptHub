@@ -530,35 +530,72 @@ export const getPromptPerformance = async (promptId: string): Promise<PromptPerf
   try {
     console.log(`获取提示词 ${promptId} 性能数据`);
     
-    // 使用模拟数据而不是调用可能失败的API
-    // 在生产环境中，这里应该调用真实的API
-    console.log(`提示词 ${promptId} 返回模拟性能数据`);
+    // 调用真实的API获取性能数据
+    const response = await api.get(`/performance/${promptId}`);
     
-    // 生成一些随机的模拟数据
-    const usageCount = Math.floor(Math.random() * 1000) + 10;
-    const successRate = 0.85 + Math.random() * 0.1; // 85%-95%
-    const avgRating = 3.5 + Math.random() * 1.5; // 3.5-5.0
-    const avgLatency = 500 + Math.random() * 1500; // 500-2000ms
-    const feedbackCount = Math.floor(usageCount * 0.3); // 30%的使用有反馈
+    if (response.data.success && response.data.data && response.data.data.performance) {
+      const performanceData = response.data.data.performance;
+      console.log(`提示词 ${promptId} 获取到真实性能数据:`, performanceData);
+      
+      return {
+        prompt_id: promptId,
+        total_usage: performanceData.total_usage || 0,
+        success_rate: performanceData.success_rate || 0,
+        average_rating: performanceData.average_rating || 0,
+        feedback_count: performanceData.feedback_count || 0,
+        average_latency: performanceData.average_latency || 0,
+        token_stats: performanceData.token_stats || {
+          total_input: 0,
+          total_output: 0,
+          input_avg: 0,
+          output_avg: 0
+        },
+        version_distribution: performanceData.version_distribution || {}
+      };
+    }
     
+    // 如果API没有返回数据，尝试从数据库直接获取
+    console.log(`API未返回数据，尝试从metrics端点获取`);
+    const metricsResponse = await api.get(`/performance/metrics?promptId=${promptId}&timeRange=30d`);
+    
+    if (metricsResponse.data.success && metricsResponse.data.metrics) {
+      const metrics = metricsResponse.data.metrics;
+      console.log(`从metrics获取到数据:`, metrics);
+      
+      return {
+        prompt_id: promptId,
+        total_usage: metrics.time_series?.usage_counts?.reduce((a: number, b: number) => a + b, 0) || 0,
+        success_rate: metrics.success_rate / 100 || 0, // 转换为小数
+        average_rating: metrics.user_satisfaction || 0,
+        feedback_count: metrics.satisfaction_count || 0,
+        average_latency: metrics.avg_response_time || 0,
+        token_stats: {
+          total_input: 0,
+          total_output: 0,
+          input_avg: metrics.avg_tokens || 0,
+          output_avg: 0
+        },
+        version_distribution: {}
+      };
+    }
+    
+    console.log(`提示词 ${promptId} 暂无真实性能数据，返回默认值`);
+    
+    // 返回默认性能数据，避免页面崩溃
     return {
       prompt_id: promptId,
-      total_usage: usageCount,
-      success_rate: successRate,
-      average_rating: avgRating,
-      feedback_count: feedbackCount,
-      average_latency: avgLatency,
+      total_usage: 0,
+      success_rate: 0,
+      average_rating: 0,
+      feedback_count: 0,
+      average_latency: 0,
       token_stats: {
-        total_input: usageCount * (200 + Math.floor(Math.random() * 300)),
-        total_output: usageCount * (150 + Math.floor(Math.random() * 200)),
-        input_avg: 200 + Math.floor(Math.random() * 300),
-        output_avg: 150 + Math.floor(Math.random() * 200)
+        total_input: 0,
+        total_output: 0,
+        input_avg: 0,
+        output_avg: 0
       },
-      version_distribution: {
-        "1.0": Math.floor(usageCount * 0.6),
-        "1.1": Math.floor(usageCount * 0.3),
-        "1.2": Math.floor(usageCount * 0.1)
-      }
+      version_distribution: {}
     };
   } catch (error: any) {
     console.error(`获取提示词 ${promptId} 性能数据失败:`, error);
@@ -587,14 +624,16 @@ export const getPerformanceReport = async (promptId: string): Promise<any> => {
   try {
     console.log(`获取提示词 ${promptId} 性能报告`);
     
-    // 尝试从API获取真实数据
+    // 尝试从MCP API获取真实数据
     const response = await api.get(`/performance/${promptId}/report`);
     
     if (response.data.success && response.data.data && response.data.data.report) {
       const report = response.data.data.report;
+      console.log(`提示词 ${promptId} 获取到真实性能报告:`, report);
+      
       return {
         suggestions: report.optimizationSuggestions || [
-          '暂无优化建议，请增加使用量以获得更准确的性能分析'
+          '基于真实数据的优化建议：请增加使用量以获得更准确的性能分析'
         ],
         insights: {
           most_common_issues: report.feedbackThemes ? Object.keys(report.feedbackThemes) : [],
@@ -610,13 +649,35 @@ export const getPerformanceReport = async (promptId: string): Promise<any> => {
       };
     }
     
-    // 如果没有真实数据，返回默认值
-    console.log(`提示词 ${promptId} 暂无性能报告数据，返回默认值`);
+    // 如果MCP API没有数据，尝试从性能指标API获取
+    console.log(`MCP API未返回报告数据，尝试从建议API获取`);
+    const suggestionsResponse = await api.get(`/performance/suggestions?promptId=${promptId}`);
+    
+    if (suggestionsResponse.data.success && suggestionsResponse.data.suggestions) {
+      const suggestions = suggestionsResponse.data.suggestions;
+      console.log(`从建议API获取到数据:`, suggestions);
+      
+      return {
+        suggestions: suggestions.optimizationSuggestions || [
+          '基于当前数据的优化建议',
+          '建议继续收集使用数据以获得更精确的分析'
+        ],
+        insights: {
+          most_common_issues: suggestions.issues || [],
+          best_performing_versions: suggestions.bestVersions || [],
+          recommended_models: suggestions.recommendedModels || ['gpt-4', 'gpt-3.5-turbo']
+        }
+      };
+    }
+    
+    // 如果没有真实数据，返回基于当前情况的默认值
+    console.log(`提示词 ${promptId} 暂无性能报告数据，返回基于实际情况的默认值`);
     return {
       suggestions: [
-        '该提示词暂无使用数据，无法生成优化建议',
-        '建议开始使用该提示词并收集用户反馈',
-        '考虑添加更多示例来提高输出质量'
+        '该提示词需要更多使用数据来生成准确的优化建议',
+        '建议增加用户反馈收集以改进性能分析',
+        '考虑添加更多使用示例来提高输出质量',
+        '监控响应时间并根据需要优化提示词长度'
       ],
       insights: {
         most_common_issues: [],
@@ -627,14 +688,15 @@ export const getPerformanceReport = async (promptId: string): Promise<any> => {
   } catch (error) {
     console.error(`获取提示词 ${promptId} 性能报告失败:`, error);
     
-    // 出错时返回默认值
+    // 出错时返回合理的默认值
     return {
       suggestions: [
-        '无法获取性能数据，请稍后重试',
-        '如果问题持续，请联系技术支持'
+        '暂时无法获取性能数据，请稍后重试',
+        '如果问题持续，请检查网络连接或联系技术支持',
+        '建议先确保提示词有使用记录后再查看性能分析'
       ],
       insights: {
-        most_common_issues: [],
+        most_common_issues: ['数据获取失败'],
         best_performing_versions: [],
         recommended_models: []
       }
