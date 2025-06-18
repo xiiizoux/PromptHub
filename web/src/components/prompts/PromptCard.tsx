@@ -113,11 +113,9 @@ const PromptCard: React.FC<PromptCardProps> = ({ prompt }) => {
     return (
       <div className="flex items-center space-x-2">
         <div className="relative w-20 h-2 bg-dark-bg-tertiary rounded-full overflow-hidden">
-          <motion.div 
+          <div 
             className="absolute top-0 left-0 h-full bg-gradient-to-r from-neon-yellow to-neon-green rounded-full"
-            initial={{ width: 0 }}
-            animate={{ width: `${percentage}%` }}
-            transition={{ duration: 0.5, delay: 0.2 }}
+            style={{ width: `${percentage}%` }}
           />
         </div>
         <span className="text-xs text-gray-400">{ratingValue.toFixed(1)}</span>
@@ -132,15 +130,12 @@ const PromptCard: React.FC<PromptCardProps> = ({ prompt }) => {
     return (
       <div className="flex flex-wrap gap-2 mt-3">
         {tags.slice(0, 3).map((tag, index) => (
-          <motion.span 
-            key={index}
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: index * 0.1 }}
+          <span 
+            key={`${prompt.id || 'unknown'}-tag-${tag}-${index}`}
             className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium glass border border-neon-cyan/20 text-neon-cyan"
           >
             #{tag}
-          </motion.span>
+          </span>
         ))}
         {tags.length > 3 && (
           <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium glass border border-gray-600 text-gray-400">
@@ -155,10 +150,7 @@ const PromptCard: React.FC<PromptCardProps> = ({ prompt }) => {
   const CategoryIcon = categoryInfo.icon;
 
   return (
-    <motion.div
-      whileHover={{ y: -5 }}
-      transition={{ duration: 0.2 }}
-    >
+    <div>
       <Link href={`/prompts/${prompt.id}`}>
         <div className="card glass border border-neon-cyan/20 hover:border-neon-cyan/40 transition-all duration-300 group cursor-pointer relative overflow-hidden">
           {/* 背景渐变 */}
@@ -178,15 +170,10 @@ const PromptCard: React.FC<PromptCardProps> = ({ prompt }) => {
               </div>
               <span className="text-sm font-medium text-gray-300">{categoryInfo.name}</span>
               {prompt.usageCount && prompt.usageCount > 100 && (
-                <motion.div
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  transition={{ type: "spring", bounce: 0.5 }}
-                  className="flex items-center space-x-1 px-2 py-1 rounded-full bg-neon-red/20 border border-neon-red/30"
-                >
+                <div className="flex items-center space-x-1 px-2 py-1 rounded-full bg-neon-red/20 border border-neon-red/30">
                   <FireIcon className="h-3 w-3 text-neon-red" />
                   <span className="text-xs text-neon-red">热门</span>
-                </motion.div>
+                </div>
               )}
             </div>
             <ArrowTopRightOnSquareIcon className="h-4 w-4 text-gray-500 group-hover:text-neon-cyan transition-colors" />
@@ -248,7 +235,7 @@ const PromptCard: React.FC<PromptCardProps> = ({ prompt }) => {
           </div>
         </div>
       </Link>
-    </motion.div>
+    </div>
   );
 };
 

@@ -304,27 +304,23 @@ export default function PromptsPage() {
                   {prompts && prompts.length > 0 ? (
                     <>
                       {/* 提示词网格 */}
-                      <motion.div 
-                        className="prompt-grid p-6"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ duration: 0.8, delay: 1 }}
-                      >
-                        {prompts.map((prompt, index) => (
-                          <motion.div
-                            key={prompt.id || prompt.name || `prompt-${index}`}
-                            initial={{ opacity: 0, y: 30 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ 
-                              duration: 0.6, 
-                              delay: 1.2 + index * 0.1,
-                              ease: "easeOut"
-                            }}
-                          >
-                            <PromptCard prompt={prompt} />
-                          </motion.div>
-                        ))}
-                      </motion.div>
+                      <div className="prompt-grid p-6">
+                        {prompts.map((prompt, index) => {
+                          // 确保每个item都有稳定的key并验证数据完整性
+                          if (!prompt) {
+                            console.warn('发现空提示词数据:', index);
+                            return null;
+                          }
+                          
+                          const stableKey = prompt.id || `prompt-${filters.page || 1}-${index}`;
+                          
+                          return (
+                            <div key={stableKey}>
+                              <PromptCard prompt={prompt} />
+                            </div>
+                          );
+                        })}
+                      </div>
 
                       {/* 分页 */}
                       {totalPages > 1 && (
