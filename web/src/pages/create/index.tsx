@@ -104,10 +104,11 @@ function CreatePromptPage() {
     
     // 应用标签 - 直接应用AI建议的标签，与编辑页面保持一致
     if (data.tags && Array.isArray(data.tags)) {
+      const currentTags = watch('tags') || [];
       setTags(data.tags);
       setValue('tags', data.tags);
       console.log('AI标签应用:', { 
-        原有标签: tags, 
+        原有标签: currentTags, 
         AI建议标签: data.tags, 
         最终应用: data.tags 
       });
@@ -115,10 +116,11 @@ function CreatePromptPage() {
     
     // 应用变量 - 直接应用AI建议的变量，与编辑页面保持一致
     if (data.variables && Array.isArray(data.variables)) {
+      const currentVariables = watch('input_variables') || [];
       setVariables(data.variables);
       setValue('input_variables', data.variables);
       console.log('AI变量应用:', { 
-        原有变量: variables, 
+        原有变量: currentVariables, 
         AI建议变量: data.variables, 
         最终应用: data.variables 
       });
@@ -126,10 +128,11 @@ function CreatePromptPage() {
     
     // 应用兼容模型 - 直接应用AI建议的模型，与编辑页面保持一致
     if (data.compatibleModels && Array.isArray(data.compatibleModels)) {
+      const currentModels = watch('compatible_models') || [];
       setModels(data.compatibleModels);
       setValue('compatible_models', data.compatibleModels);
       console.log('兼容模型应用:', { 
-        原有模型: models, 
+        原有模型: currentModels, 
         AI建议模型: data.compatibleModels, 
         最终应用: data.compatibleModels 
       });
@@ -204,34 +207,52 @@ function CreatePromptPage() {
             
             // 智能合并AI分析的标签
             if (analysisResult.tags && Array.isArray(analysisResult.tags)) {
-              const aiTagsToAdd = analysisResult.tags.filter((tag: string) => !tags.includes(tag));
+              const currentTags = watch('tags') || [];
+              const aiTagsToAdd = analysisResult.tags.filter((tag: string) => !currentTags.includes(tag));
               if (aiTagsToAdd.length > 0) {
-                const allNewTags = [...tags, ...aiTagsToAdd];
+                const allNewTags = [...currentTags, ...aiTagsToAdd];
                 setTags(allNewTags);
                 setValue('tags', allNewTags);
                 console.log('添加AI分析标签:', aiTagsToAdd);
+              } else {
+                // 如果没有新的标签要添加，但AI返回了标签列表，直接应用
+                setTags(analysisResult.tags);
+                setValue('tags', analysisResult.tags);
+                console.log('直接应用AI分析标签:', analysisResult.tags);
               }
             }
             
             // 智能合并AI分析的变量
             if (analysisResult.variables && Array.isArray(analysisResult.variables)) {
-              const aiVarsToAdd = analysisResult.variables.filter((variable: string) => !variables.includes(variable));
+              const currentVariables = watch('input_variables') || [];
+              const aiVarsToAdd = analysisResult.variables.filter((variable: string) => !currentVariables.includes(variable));
               if (aiVarsToAdd.length > 0) {
-                const allNewVars = [...variables, ...aiVarsToAdd];
+                const allNewVars = [...currentVariables, ...aiVarsToAdd];
                 setVariables(allNewVars);
                 setValue('input_variables', allNewVars);
                 console.log('添加AI分析变量:', aiVarsToAdd);
+              } else {
+                // 如果没有新的变量要添加，但AI返回了变量列表，直接应用
+                setVariables(analysisResult.variables);
+                setValue('input_variables', analysisResult.variables);
+                console.log('直接应用AI分析变量:', analysisResult.variables);
               }
             }
             
             // 智能合并兼容模型
             if (analysisResult.compatibleModels && Array.isArray(analysisResult.compatibleModels)) {
-              const aiModelsToAdd = analysisResult.compatibleModels.filter((model: string) => !models.includes(model));
+              const currentModels = watch('compatible_models') || [];
+              const aiModelsToAdd = analysisResult.compatibleModels.filter((model: string) => !currentModels.includes(model));
               if (aiModelsToAdd.length > 0) {
-                const allNewModels = [...models, ...aiModelsToAdd];
+                const allNewModels = [...currentModels, ...aiModelsToAdd];
                 setModels(allNewModels);
                 setValue('compatible_models', allNewModels);
                 console.log('添加AI兼容模型:', aiModelsToAdd);
+              } else {
+                // 如果没有新的模型要添加，但AI返回了模型列表，直接应用
+                setModels(analysisResult.compatibleModels);
+                setValue('compatible_models', analysisResult.compatibleModels);
+                console.log('直接应用AI兼容模型:', analysisResult.compatibleModels);
               }
             }
             
@@ -245,9 +266,10 @@ function CreatePromptPage() {
           if (matches) {
             const detectedVars = Array.from(new Set(matches.map(match => match.slice(2, -2))));
             // 只添加不存在的变量
-            const varsToAdd = detectedVars.filter(variable => !variables.includes(variable));
+            const currentVariables = watch('input_variables') || [];
+            const varsToAdd = detectedVars.filter(variable => !currentVariables.includes(variable));
             if (varsToAdd.length > 0) {
-              const newVariables = [...variables, ...varsToAdd];
+              const newVariables = [...currentVariables, ...varsToAdd];
               setVariables(newVariables);
               setValue('input_variables', newVariables);
               console.log('检测到新变量:', varsToAdd);
@@ -275,7 +297,7 @@ function CreatePromptPage() {
     if (router.isReady) {
       handleURLParams();
     }
-  }, [router.isReady, router.query, tags, variables]); // 移除循环依赖
+  }, [router.isReady, router.query]); // 移除models、tags、variables依赖以避免循环引用
 
   // 获取分类数据 - 异步但不阻塞页面显示
   useEffect(() => {
@@ -359,7 +381,8 @@ function CreatePromptPage() {
       const detectedVars = Array.from(new Set(matches.map(match => match.slice(2, -2))));
       if (detectedVars.length > 0) {
         setVariables(prev => Array.from(new Set([...prev, ...detectedVars])));
-        setValue('input_variables', Array.from(new Set([...variables, ...detectedVars])));
+        const currentVariables = watch('input_variables') || [];
+        setValue('input_variables', Array.from(new Set([...currentVariables, ...detectedVars])));
       }
     }
   };
