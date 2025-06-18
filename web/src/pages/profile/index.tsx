@@ -68,6 +68,12 @@ const ProfilePage = () => {
   const [promptsLoading, setPromptsLoading] = useState(false);
   const [promptCounts, setPromptCounts] = useState<{total: number, public: number, private: number}>({total: 0, public: 0, private: 0});
   
+  // 新增分页状态
+  const [promptCurrentPage, setPromptCurrentPage] = useState(1);
+  const [promptTotalPages, setPromptTotalPages] = useState(1);
+  const [promptTotalCount, setPromptTotalCount] = useState(0);
+  const promptPageSize = 21; // 每页21个（7行x3列）
+  
   // 新增功能的状态
   const [bookmarks, setBookmarks] = useState<UserPrompt[]>([]);
   const [usageHistory, setUsageHistory] = useState<any[]>([]);
@@ -111,9 +117,14 @@ const ProfilePage = () => {
   // 加载用户提示词
   useEffect(() => {
     if (activeTab === 'my-prompts') {
+      // 当切换到"我的提示词"标签时，重置到第一页
+      if (promptCurrentPage !== 1) {
+        setPromptCurrentPage(1);
+        return;
+      }
       fetchUserPrompts();
     }
-  }, [activeTab]);
+  }, [activeTab, promptCurrentPage]);
 
   // 加载收藏夹
   useEffect(() => {
@@ -335,15 +346,17 @@ const ProfilePage = () => {
       }
       
       try {
-        // 使用适配器获取用户提示词
+        // 使用适配器获取用户提示词，支持分页
         const result = await supabaseAdapter.getPrompts({
           userId: user.id,
-          page: 1,
-          pageSize: 20
+          page: promptCurrentPage,
+          pageSize: promptPageSize
         });
         
-        console.log('获取到用户提示词:', result.data.length);
+        console.log('获取到用户提示词:', result.data.length, '总数:', result.total);
         setUserPrompts(result.data || []);
+        setPromptTotalPages(result.totalPages || 1);
+        setPromptTotalCount(result.total || 0);
       } catch (adapterError) {
         console.error('通过适配器获取提示词失败:', adapterError);
         
@@ -354,7 +367,7 @@ const ProfilePage = () => {
           return;
         }
         
-        const response = await fetch('/api/profile/prompts?pageSize=20', {
+        const response = await fetch(`/api/profile/prompts?page=${promptCurrentPage}&pageSize=${promptPageSize}`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }
@@ -363,6 +376,8 @@ const ProfilePage = () => {
         if (response.ok) {
           const data = await response.json();
           setUserPrompts(data.prompts || []);
+          setPromptTotalPages(data.pagination?.totalPages || 1);
+          setPromptTotalCount(data.pagination?.total || 0);
         }
       }
     } catch (error) {
@@ -1108,6 +1123,91 @@ const ProfilePage = () => {
     }
   };
 
+  // 处理提示词分页
+  const handlePromptPageChange = (newPage: number) => {
+    setPromptCurrentPage(newPage);
+    // 滚动到页面顶部
+    if (typeof window !== 'undefined') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
+  // 渲染提示词分页组件
+  const renderPromptPagination = () => {
+    if (promptTotalPages <= 1) return null;
+
+    const maxVisiblePages = 7; // 显示7个页码
+    const startPage = Math.max(1, promptCurrentPage - Math.floor(maxVisiblePages / 2));
+    const endPage = Math.min(promptTotalPages, startPage + maxVisiblePages - 1);
+
+    const pages = [];
+    for (let i = startPage; i <= endPage; i++) {
+      pages.push(i);
+    }
+
+    return (
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="flex items-center justify-between p-4 md:p-6 bg-dark-card/30 backdrop-blur-md rounded-xl border border-dark-border shadow-xl mt-6"
+      >
+        <div className="flex flex-1 items-center justify-between">
+          <div>
+            <p className="text-sm text-gray-400">
+              显示第 <span className="font-medium text-neon-cyan">{(promptCurrentPage - 1) * promptPageSize + 1}</span> 到{' '}
+              <span className="font-medium text-neon-cyan">
+                {Math.min(promptCurrentPage * promptPageSize, promptTotalCount)}
+              </span>{' '}
+              条，共 <span className="font-medium text-neon-purple">{promptTotalCount}</span> 条结果
+            </p>
+          </div>
+          <div>
+            <nav className="isolate inline-flex -space-x-px rounded-md shadow-sm" aria-label="Pagination">
+              {/* 上一页 */}
+              <button
+                onClick={() => handlePromptPageChange(promptCurrentPage - 1)}
+                disabled={promptCurrentPage === 1}
+                className="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-dark-border hover:bg-dark-card focus:z-20 focus:outline-offset-0 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <span className="sr-only">Previous</span>
+                <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                  <path fillRule="evenodd" d="M12.79 5.23a.75.75 0 01-.02 1.06L8.832 10l3.938 3.71a.75.75 0 11-1.04 1.08l-4.5-4.25a.75.75 0 010-1.08l4.5-4.25a.75.75 0 011.06.02z" clipRule="evenodd" />
+                </svg>
+              </button>
+              
+              {/* 页码 */}
+              {pages.map((page) => (
+                <button
+                  key={page}
+                  onClick={() => handlePromptPageChange(page)}
+                  className={`relative inline-flex items-center px-4 py-2 text-sm font-semibold ring-1 ring-inset ring-dark-border hover:bg-dark-card focus:z-20 focus:outline-offset-0 ${
+                    page === promptCurrentPage
+                      ? 'z-10 bg-neon-cyan text-dark-bg-primary'
+                      : 'text-gray-300'
+                  }`}
+                >
+                  {page}
+                </button>
+              ))}
+              
+              {/* 下一页 */}
+              <button
+                onClick={() => handlePromptPageChange(promptCurrentPage + 1)}
+                disabled={promptCurrentPage === promptTotalPages}
+                className="relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-dark-border hover:bg-dark-card focus:z-20 focus:outline-offset-0 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <span className="sr-only">Next</span>
+                <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                  <path fillRule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clipRule="evenodd" />
+                </svg>
+              </button>
+            </nav>
+          </div>
+        </div>
+      </motion.div>
+    );
+  };
+
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('zh-CN');
   };
@@ -1444,146 +1544,151 @@ const ProfilePage = () => {
                     <p className="text-gray-400">您还没有创建任何提示词</p>
                   </div>
                 ) : (
-                  <div className="prompt-grid">
-                    {userPrompts.map((prompt, index) => (
-                      <motion.div
-                        key={prompt.id}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: index * 0.1 }}
-                        className="glass rounded-2xl p-6 border border-neon-cyan/20 hover:border-neon-cyan/40 transition-all duration-300 group cursor-pointer relative overflow-hidden"
-                      >
-                        {/* 背景渐变 */}
-                        <div className="absolute inset-0 bg-gradient-to-br from-neon-cyan/5 to-neon-purple/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                        
-                        <div className="relative">
-                          {/* 头部：分类和状态 */}
-                          <div className="flex items-center justify-between mb-4">
-                            <div className="flex items-center space-x-2">
-                              <div className="inline-flex p-2 rounded-lg bg-gradient-to-br from-neon-purple/20 to-neon-cyan/20">
-                                <DocumentTextIcon className="h-4 w-4 text-neon-cyan" />
+                  <>
+                    <div className="prompt-grid">
+                      {userPrompts.map((prompt, index) => (
+                        <motion.div
+                          key={prompt.id}
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: index * 0.1 }}
+                          className="glass rounded-2xl p-6 border border-neon-cyan/20 hover:border-neon-cyan/40 transition-all duration-300 group cursor-pointer relative overflow-hidden"
+                        >
+                          {/* 背景渐变 */}
+                          <div className="absolute inset-0 bg-gradient-to-br from-neon-cyan/5 to-neon-purple/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                          
+                          <div className="relative">
+                            {/* 头部：分类和状态 */}
+                            <div className="flex items-center justify-between mb-4">
+                              <div className="flex items-center space-x-2">
+                                <div className="inline-flex p-2 rounded-lg bg-gradient-to-br from-neon-purple/20 to-neon-cyan/20">
+                                  <DocumentTextIcon className="h-4 w-4 text-neon-cyan" />
+                                </div>
+                                <span className="text-sm font-medium text-gray-300">{prompt.category}</span>
                               </div>
-                              <span className="text-sm font-medium text-gray-300">{prompt.category}</span>
-                            </div>
-                            <div className="flex items-center space-x-2">
-                              <span className={`px-2 py-1 text-xs rounded-full ${
-                                prompt.is_public 
-                                  ? 'bg-neon-green/20 text-neon-green border border-neon-green/30'
-                                  : 'bg-neon-orange/20 text-neon-orange border border-neon-orange/30'
-                              }`}>
-                                {prompt.is_public ? '公开' : '私有'}
-                              </span>
-                            </div>
-                          </div>
-
-                          {/* 标题 */}
-                          <h3 className="text-lg font-semibold text-white mb-2 line-clamp-1 group-hover:text-neon-cyan transition-colors">
-                            {prompt.name}
-                          </h3>
-
-                          {/* 描述 */}
-                          <p className="text-sm text-gray-400 line-clamp-2 mb-4">
-                            {prompt.description || '暂无描述'}
-                          </p>
-
-                          {/* 标签和操作按钮在同一水平位置 */}
-                          <div className="flex items-center justify-between">
-                            {/* 标签 */}
-                            <div className="flex flex-wrap gap-1 flex-1 mr-3">
-                              {prompt.tags && prompt.tags.length > 0 ? (
-                                <>
-                                  {prompt.tags.slice(0, 2).map((tag, tagIndex) => (
-                                    <span
-                                      key={tagIndex}
-                                      className="px-2 py-1 text-xs rounded-full bg-neon-cyan/10 text-neon-cyan border border-neon-cyan/20"
-                                    >
-                                      {tag}
-                                    </span>
-                                  ))}
-                                  {prompt.tags.length > 2 && (
-                                    <span className="px-2 py-1 text-xs rounded-full bg-gray-600/20 text-gray-400 border border-gray-600/20">
-                                      +{prompt.tags.length - 2}
-                                    </span>
-                                  )}
-                                </>
-                              ) : (
-                                <span className="text-xs text-gray-500">无标签</span>
-                              )}
+                              <div className="flex items-center space-x-2">
+                                <span className={`px-2 py-1 text-xs rounded-full ${
+                                  prompt.is_public 
+                                    ? 'bg-neon-green/20 text-neon-green border border-neon-green/30'
+                                    : 'bg-neon-orange/20 text-neon-orange border border-neon-orange/30'
+                                }`}>
+                                  {prompt.is_public ? '公开' : '私有'}
+                                </span>
+                              </div>
                             </div>
 
-                            {/* 操作按钮 */}
-                            <div className="flex items-center space-x-1" onClick={(e) => e.preventDefault()}>
-                              <Link
-                                href={`/prompts/${prompt.id}`}
-                                className="p-1.5 glass rounded-md hover:bg-neon-cyan/10 transition-colors group/btn"
-                                title="查看详情"
-                                onClick={(e) => e.stopPropagation()}
-                              >
-                                <EyeIcon className="h-3.5 w-3.5 text-gray-400 group-hover/btn:text-neon-cyan" />
-                              </Link>
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  const shareUrl = `${window.location.origin}/prompts/${prompt.id}`;
-                                  navigator.clipboard.writeText(shareUrl).then(() => {
-                                    alert('分享链接已复制到剪贴板！');
-                                  }).catch(() => {
-                                    alert('复制失败，请手动复制链接');
-                                  });
-                                }}
-                                className="p-1.5 glass rounded-md hover:bg-neon-blue/10 transition-colors group/btn"
-                                title="分享提示词"
-                              >
-                                <ShareIcon className="h-3.5 w-3.5 text-gray-400 group-hover/btn:text-neon-blue" />
-                              </button>
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  copyToClipboard(prompt.name, prompt.id);
-                                }}
-                                className="p-1.5 glass rounded-md hover:bg-neon-green/10 transition-colors group/btn"
-                                title="复制提示词名称"
-                              >
-                                {copiedKey === prompt.id ? (
-                                  <CheckIcon className="h-3.5 w-3.5 text-neon-green" />
+                            {/* 标题 */}
+                            <h3 className="text-lg font-semibold text-white mb-2 line-clamp-1 group-hover:text-neon-cyan transition-colors">
+                              {prompt.name}
+                            </h3>
+
+                            {/* 描述 */}
+                            <p className="text-sm text-gray-400 line-clamp-2 mb-4">
+                              {prompt.description || '暂无描述'}
+                            </p>
+
+                            {/* 标签和操作按钮在同一水平位置 */}
+                            <div className="flex items-center justify-between">
+                              {/* 标签 */}
+                              <div className="flex flex-wrap gap-1 flex-1 mr-3">
+                                {prompt.tags && prompt.tags.length > 0 ? (
+                                  <>
+                                    {prompt.tags.slice(0, 2).map((tag, tagIndex) => (
+                                      <span
+                                        key={tagIndex}
+                                        className="px-2 py-1 text-xs rounded-full bg-neon-cyan/10 text-neon-cyan border border-neon-cyan/20"
+                                      >
+                                        {tag}
+                                      </span>
+                                    ))}
+                                    {prompt.tags.length > 2 && (
+                                      <span className="px-2 py-1 text-xs rounded-full bg-gray-600/20 text-gray-400 border border-gray-600/20">
+                                        +{prompt.tags.length - 2}
+                                      </span>
+                                    )}
+                                  </>
                                 ) : (
-                                  <ClipboardIcon className="h-3.5 w-3.5 text-gray-400 group-hover/btn:text-neon-green" />
+                                  <span className="text-xs text-gray-500">无标签</span>
                                 )}
-                              </button>
-                              <Link
-                                href={`/prompts/${prompt.id}/edit`}
-                                className="p-1.5 glass rounded-md hover:bg-neon-purple/10 transition-colors group/btn"
-                                title="编辑提示词"
-                                onClick={(e) => e.stopPropagation()}
-                              >
-                                <PencilIcon className="h-3.5 w-3.5 text-gray-400 group-hover/btn:text-neon-purple" />
-                              </Link>
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  deletePrompt(prompt.id);
-                                }}
-                                className="p-1.5 glass rounded-md hover:bg-neon-red/10 transition-colors group/btn"
-                                title="删除提示词"
-                              >
-                                <TrashIcon className="h-3.5 w-3.5 text-gray-400 group-hover/btn:text-neon-red" />
-                              </button>
-                            </div>
-                          </div>
+                              </div>
 
-                          {/* 底部信息 */}
-                          <div className="mt-4 pt-3 border-t border-neon-cyan/10">
-                            <div className="flex items-center justify-between text-xs text-gray-500">
-                              <span>创建于 {formatDate(prompt.created_at)}</span>
-                              {prompt.updated_at && (
-                                <span>更新于 {formatDate(prompt.updated_at)}</span>
-                              )}
+                              {/* 操作按钮 */}
+                              <div className="flex items-center space-x-1" onClick={(e) => e.preventDefault()}>
+                                <Link
+                                  href={`/prompts/${prompt.id}`}
+                                  className="p-1.5 glass rounded-md hover:bg-neon-cyan/10 transition-colors group/btn"
+                                  title="查看详情"
+                                  onClick={(e) => e.stopPropagation()}
+                                >
+                                  <EyeIcon className="h-3.5 w-3.5 text-gray-400 group-hover/btn:text-neon-cyan" />
+                                </Link>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    const shareUrl = `${window.location.origin}/prompts/${prompt.id}`;
+                                    navigator.clipboard.writeText(shareUrl).then(() => {
+                                      alert('分享链接已复制到剪贴板！');
+                                    }).catch(() => {
+                                      alert('复制失败，请手动复制链接');
+                                    });
+                                  }}
+                                  className="p-1.5 glass rounded-md hover:bg-neon-blue/10 transition-colors group/btn"
+                                  title="分享提示词"
+                                >
+                                  <ShareIcon className="h-3.5 w-3.5 text-gray-400 group-hover/btn:text-neon-blue" />
+                                </button>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    copyToClipboard(prompt.name, prompt.id);
+                                  }}
+                                  className="p-1.5 glass rounded-md hover:bg-neon-green/10 transition-colors group/btn"
+                                  title="复制提示词名称"
+                                >
+                                  {copiedKey === prompt.id ? (
+                                    <CheckIcon className="h-3.5 w-3.5 text-neon-green" />
+                                  ) : (
+                                    <ClipboardIcon className="h-3.5 w-3.5 text-gray-400 group-hover/btn:text-neon-green" />
+                                  )}
+                                </button>
+                                <Link
+                                  href={`/prompts/${prompt.id}/edit`}
+                                  className="p-1.5 glass rounded-md hover:bg-neon-purple/10 transition-colors group/btn"
+                                  title="编辑提示词"
+                                  onClick={(e) => e.stopPropagation()}
+                                >
+                                  <PencilIcon className="h-3.5 w-3.5 text-gray-400 group-hover/btn:text-neon-purple" />
+                                </Link>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    deletePrompt(prompt.id);
+                                  }}
+                                  className="p-1.5 glass rounded-md hover:bg-neon-red/10 transition-colors group/btn"
+                                  title="删除提示词"
+                                >
+                                  <TrashIcon className="h-3.5 w-3.5 text-gray-400 group-hover/btn:text-neon-red" />
+                                </button>
+                              </div>
+                            </div>
+
+                            {/* 底部信息 */}
+                            <div className="mt-4 pt-3 border-t border-neon-cyan/10">
+                              <div className="flex items-center justify-between text-xs text-gray-500">
+                                <span>创建于 {formatDate(prompt.created_at)}</span>
+                                {prompt.updated_at && (
+                                  <span>更新于 {formatDate(prompt.updated_at)}</span>
+                                )}
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      </motion.div>
-                    ))}
-                  </div>
+                        </motion.div>
+                      ))}
+                    </div>
+
+                    {/* 分页组件 */}
+                    {renderPromptPagination()}
+                  </>
                 )}
               </div>
             )}

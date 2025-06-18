@@ -424,38 +424,38 @@ code, pre, .font-mono {
     @apply py-2 sm:py-3 md:py-4;
   }
   
-  /* 网格布局优化 - 全宽设计 */
+  /* 网格布局优化 - 7行x3列设计，每页21个 */
   .prompt-grid {
     display: grid;
     gap: 1rem;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    grid-template-columns: repeat(1, 1fr); /* 移动端单列 */
   }
   
   @media (min-width: 640px) {
     .prompt-grid {
       gap: 1.25rem;
-      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      grid-template-columns: repeat(2, 1fr); /* 平板端双列 */
     }
   }
   
   @media (min-width: 768px) {
     .prompt-grid {
       gap: 1.5rem;
-      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      grid-template-columns: repeat(3, 1fr); /* 桌面端三列，正好7行21个 */
     }
   }
   
   @media (min-width: 1024px) {
     .prompt-grid {
       gap: 1.5rem;
-      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      grid-template-columns: repeat(3, 1fr); /* 保持三列布局 */
     }
   }
   
   @media (min-width: 1400px) {
     .prompt-grid {
       gap: 2rem;
-      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      grid-template-columns: repeat(3, 1fr); /* 大屏幕仍保持三列 */
     }
   }
   
