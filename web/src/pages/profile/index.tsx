@@ -1513,6 +1513,14 @@ const ProfilePage = () => {
 
                             {/* 操作按钮 */}
                             <div className="flex items-center space-x-1" onClick={(e) => e.preventDefault()}>
+                              <Link
+                                href={`/prompts/${prompt.id}`}
+                                className="p-1.5 glass rounded-md hover:bg-neon-cyan/10 transition-colors group/btn"
+                                title="查看详情"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                <EyeIcon className="h-3.5 w-3.5 text-gray-400 group-hover/btn:text-neon-cyan" />
+                              </Link>
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
