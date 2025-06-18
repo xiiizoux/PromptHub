@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import PromptCard from '@/components/prompts/PromptCard';
+import PromptFilters from '@/components/prompts/PromptFilters';
 import { getPrompts, getCategories, getTags } from '@/lib/api';
 import { PromptInfo, PromptFilters as PromptFiltersType } from '@/types';
 
@@ -17,11 +19,15 @@ export default function PromptsPage() {
   const [totalCount, setTotalCount] = useState(0);
   const pageSize = 21;
   
-  // 过滤状态
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('');
-  const [selectedTags, setSelectedTags] = useState<string[]>([]);
-  const [sortBy, setSortBy] = useState<'latest' | 'oldest' | 'name' | 'updated'>('latest');
+  // 使用统一的filters对象
+  const [filters, setFilters] = useState<PromptFiltersType>({
+    search: '',
+    category: '',
+    tags: [],
+    sortBy: 'latest',
+    page: 1,
+    pageSize: 21
+  });
 
   // 获取基础数据
   useEffect(() => {
@@ -45,79 +51,81 @@ export default function PromptsPage() {
   // 获取提示词数据
   useEffect(() => {
     const loadPrompts = async () => {
-      console.log('开始加载提示词，页面:', currentPage);
+      console.log('=== 开始加载提示词 ===');
+      console.log('当前页面:', currentPage);
+      console.log('过滤器状态:', filters);
+      
       setLoading(true);
       setError(null);
       
       try {
-        const filters: PromptFiltersType = {
-          search: searchQuery || undefined,
-          category: selectedCategory || undefined,
-          tags: selectedTags.length > 0 ? selectedTags : undefined,
-          sortBy: sortBy,
+        const apiFilters: PromptFiltersType = {
+          search: filters.search || undefined,
+          category: filters.category && filters.category !== '全部' ? filters.category : undefined,
+          tags: filters.tags && filters.tags.length > 0 ? filters.tags : undefined,
+          sortBy: filters.sortBy,
           page: currentPage,
           pageSize: pageSize
         };
         
-        const response = await getPrompts(filters);
-        console.log('获取提示词响应:', response);
+        console.log('API请求参数:', apiFilters);
         
-        setPrompts(response.data || []);
-        setTotalPages(response.totalPages || 1);
-        setTotalCount(response.total || 0);
+        const response = await getPrompts(apiFilters);
+        console.log('API响应数据:', {
+          success: !!response,
+          dataLength: response?.data?.length || 0,
+          total: response?.total || 0,
+          totalPages: response?.totalPages || 0,
+          currentPageFromAPI: response?.page || 0
+        });
+        
+        if (response && response.data) {
+          setPrompts(response.data);
+          setTotalPages(response.totalPages || 1);
+          setTotalCount(response.total || 0);
+          console.log('✅ 数据设置成功，提示词数量:', response.data.length);
+        } else {
+          console.warn('⚠️ API响应异常:', response);
+          setPrompts([]);
+          setTotalPages(1);
+          setTotalCount(0);
+        }
       } catch (err) {
-        console.error('获取提示词失败:', err);
+        console.error('❌ 获取提示词失败:', err);
         setError('加载提示词失败，请刷新页面重试');
         setPrompts([]);
+        setTotalPages(1);
+        setTotalCount(0);
       } finally {
         setLoading(false);
+        console.log('=== 加载完成 ===');
       }
     };
 
     loadPrompts();
-  }, [currentPage, searchQuery, selectedCategory, selectedTags, sortBy]);
+  }, [currentPage, filters.search, filters.category, filters.tags, filters.sortBy]);
 
   // 处理分页
   const handlePageChange = (page: number) => {
     if (page >= 1 && page <= totalPages) {
+      console.log('📄 页面变化:', page);
       setCurrentPage(page);
+      setFilters(prev => ({ ...prev, page }));
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
 
-  // 处理搜索
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(e.target.value);
-    setCurrentPage(1); // 重置到第一页
-  };
-
-  // 处理分类选择
-  const handleCategoryChange = (category: string) => {
-    setSelectedCategory(selectedCategory === category ? '' : category);
-    setCurrentPage(1);
-  };
-
-  // 处理标签选择
-  const handleTagChange = (tag: string) => {
-    const newTags = selectedTags.includes(tag)
-      ? selectedTags.filter(t => t !== tag)
-      : [...selectedTags, tag];
-    setSelectedTags(newTags);
-    setCurrentPage(1);
-  };
-
-  // 处理排序
-  const handleSortChange = (newSortBy: 'latest' | 'oldest' | 'name' | 'updated') => {
-    setSortBy(newSortBy);
-    setCurrentPage(1);
-  };
-
-  // 清除所有过滤器
-  const clearFilters = () => {
-    setSearchQuery('');
-    setSelectedCategory('');
-    setSelectedTags([]);
-    setSortBy('latest');
+  // 处理过滤器变化
+  const handleFilterChange = (newFilters: PromptFiltersType) => {
+    console.log('🔄 过滤器变化:', { 
+      旧值: filters, 
+      新值: newFilters 
+    });
+    setFilters({
+      ...newFilters,
+      page: 1, // 确保重置页面
+      pageSize: pageSize
+    });
     setCurrentPage(1);
   };
 
@@ -193,13 +201,16 @@ export default function PromptsPage() {
     );
   };
 
-  console.log('组件渲染状态:', { 
+  console.log('🎯 组件渲染状态:', { 
     loading, 
     error, 
     promptsCount: prompts.length, 
     totalCount, 
     totalPages,
-    currentPage 
+    currentPage,
+    filters,
+    categories: categories.length,
+    tags: tags.length
   });
 
   return (
@@ -218,76 +229,13 @@ export default function PromptsPage() {
           </p>
         </div>
 
-        {/* 简单的过滤器 */}
-        <div className="bg-dark-card/30 backdrop-blur-md rounded-2xl border border-dark-border p-6 mb-8">
-          {/* 搜索框 */}
-          <div className="mb-4">
-            <input
-              type="text"
-              className="w-full px-4 py-3 bg-dark-bg-secondary/50 border border-dark-border rounded-xl text-white placeholder-gray-500 focus:border-neon-cyan focus:ring-1 focus:ring-neon-cyan transition-all duration-300"
-              placeholder="搜索提示词..."
-              value={searchQuery}
-              onChange={handleSearchChange}
-            />
-          </div>
-
-          {/* 分类选择 */}
-          <div className="mb-4">
-            <h3 className="text-lg font-medium text-neon-cyan mb-3">类别</h3>
-            <div className="flex flex-wrap gap-2">
-              {categories.map((category) => (
-                <button
-                  key={category}
-                  onClick={() => handleCategoryChange(category)}
-                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${
-                    selectedCategory === category
-                      ? 'bg-neon-cyan/20 text-neon-cyan border border-neon-cyan/50'
-                      : 'bg-dark-bg-secondary/50 text-gray-400 border border-dark-border hover:bg-dark-card hover:text-neon-cyan'
-                  }`}
-                >
-                  {category}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* 排序选择 */}
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-lg font-medium text-neon-purple mb-3">排序方式</h3>
-              <div className="flex gap-2">
-                {[
-                  { value: 'latest', label: '最新' },
-                  { value: 'updated', label: '更新' },
-                  { value: 'oldest', label: '最早' },
-                  { value: 'name', label: '名称' }
-                ].map((option) => (
-                  <button
-                    key={option.value}
-                    onClick={() => handleSortChange(option.value as any)}
-                    className={`px-3 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${
-                      sortBy === option.value
-                        ? 'bg-neon-purple/20 text-neon-purple border border-neon-purple/50'
-                        : 'bg-dark-bg-secondary/50 text-gray-400 border border-dark-border hover:bg-dark-card hover:text-neon-purple'
-                    }`}
-                  >
-                    {option.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-            
-            {/* 清除过滤器 */}
-            {(searchQuery || selectedCategory || selectedTags.length > 0 || sortBy !== 'latest') && (
-              <button
-                onClick={clearFilters}
-                className="px-4 py-2 bg-red-500/20 text-red-400 border border-red-500/30 rounded-lg hover:bg-red-500/30 transition-all duration-300"
-              >
-                清除过滤器
-              </button>
-            )}
-          </div>
-        </div>
+        {/* 过滤器组件 */}
+        <PromptFilters
+          filters={filters}
+          onFilterChange={handleFilterChange}
+          categories={categories}
+          tags={tags}
+        />
 
         {/* 错误提示 */}
         {error && (
@@ -308,16 +256,34 @@ export default function PromptsPage() {
               {prompts && prompts.length > 0 ? (
                 <>
                   {/* 提示词网格 */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-6">
-                    {prompts.map((prompt, index) => {
-                      const stableKey = prompt.id || `prompt-${currentPage}-${index}`;
-                      return (
-                        <div key={stableKey}>
-                          <PromptCard prompt={prompt} />
-                        </div>
-                      );
-                    })}
-                  </div>
+                  <motion.div 
+                    className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-6"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.6 }}
+                  >
+                    <AnimatePresence mode="popLayout">
+                      {prompts.map((prompt, index) => {
+                        const stableKey = prompt.id || `prompt-${currentPage}-${index}`;
+                        return (
+                          <motion.div
+                            key={stableKey}
+                            layout
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -20 }}
+                            transition={{ 
+                              duration: 0.4, 
+                              delay: index * 0.1,
+                              layout: { duration: 0.3 }
+                            }}
+                          >
+                            <PromptCard prompt={prompt} />
+                          </motion.div>
+                        );
+                      })}
+                    </AnimatePresence>
+                  </motion.div>
 
                   {/* 分页 */}
                   {totalPages > 1 && renderPagination()}
