@@ -29,6 +29,7 @@ import { ModelSelector } from '@/components/ModelSelector';
 import { formatVersionDisplay } from '@/lib/version-utils';
 import { withAuth } from '@/contexts/AuthContext';
 import SmartWritingAssistant from '@/components/SmartWritingAssistant';
+import { toast } from 'react-hot-toast';
 
 // 扩展类型，添加messages字段和其他数据库中的字段
 type PromptFormData = Omit<PromptDetails, 'created_at' | 'updated_at'> & {
@@ -153,6 +154,165 @@ function CreatePromptPage() {
       }
     }
   };
+
+  // 添加处理URL参数的功能
+  useEffect(() => {
+    const handleURLParams = () => {
+      const { query } = router;
+      
+      // 检查是否有来自优化器的内容
+      if (query.optimizedContent) {
+        const content = decodeURIComponent(query.optimizedContent as string);
+        
+        // 只在内容为空时才填充
+        const currentContent = watch('content');
+        if (!currentContent || currentContent.trim() === '') {
+          setValue('content', content);
+          setCurrentContent(content);
+          console.log('填充优化后的内容');
+        }
+        
+        // 只在名称为空时才应用建议的名称
+        if (query.suggestedName) {
+          const name = decodeURIComponent(query.suggestedName as string);
+          const currentName = watch('name');
+          if (!currentName || currentName.trim() === '') {
+            setValue('name', name);
+            console.log('填充建议的名称:', name);
+          }
+        }
+        
+        // 只在描述为空时才应用建议的描述
+        if (query.suggestedDesc) {
+          const desc = decodeURIComponent(query.suggestedDesc as string);
+          const currentDesc = watch('description');
+          if (!currentDesc || currentDesc.trim() === '') {
+            setValue('description', desc);
+            console.log('填充建议的描述:', desc);
+          }
+        }
+        
+        // 智能添加优化相关的标签（避免重复）
+        const optimizedTags = ['AI优化', '自动生成'];
+        const tagsToAdd = optimizedTags.filter(tag => !tags.includes(tag));
+        if (tagsToAdd.length > 0) {
+          const newTags = [...tags, ...tagsToAdd];
+          setTags(newTags);
+          setValue('tags', newTags);
+          console.log('添加优化标签:', tagsToAdd);
+        }
+        
+        // 处理AI分析结果
+        if (query.aiAnalysisResult) {
+          try {
+            const analysisResult = JSON.parse(decodeURIComponent(query.aiAnalysisResult as string));
+            console.log('接收到AI分析结果:', analysisResult);
+            
+            // 应用AI分析结果（只在对应字段为空时应用）
+            if (analysisResult.suggestedTitle && (!watch('name') || (watch('name') || '').trim() === '')) {
+              setValue('name', analysisResult.suggestedTitle);
+              console.log('应用AI建议标题:', analysisResult.suggestedTitle);
+            }
+            
+            if (analysisResult.description && (!watch('description') || (watch('description') || '').trim() === '')) {
+              setValue('description', analysisResult.description);
+              console.log('应用AI建议描述:', analysisResult.description);
+            }
+            
+            if (analysisResult.category && (!watch('category') || (watch('category') || '').trim() === '')) {
+              setValue('category', analysisResult.category);
+              console.log('应用AI分类:', analysisResult.category);
+            }
+            
+            if (analysisResult.version && (!watch('version') || watch('version') === 1.0)) {
+              setValue('version', Number(analysisResult.version));
+              console.log('应用AI版本:', analysisResult.version);
+            }
+            
+            // 智能合并AI分析的标签
+            if (analysisResult.tags && Array.isArray(analysisResult.tags)) {
+              const aiTagsToAdd = analysisResult.tags.filter((tag: string) => !tags.includes(tag));
+              if (aiTagsToAdd.length > 0) {
+                const allNewTags = [...tags, ...aiTagsToAdd];
+                setTags(allNewTags);
+                setValue('tags', allNewTags);
+                console.log('添加AI分析标签:', aiTagsToAdd);
+              }
+            }
+            
+            // 智能合并AI分析的变量
+            if (analysisResult.variables && Array.isArray(analysisResult.variables)) {
+              const aiVarsToAdd = analysisResult.variables.filter((variable: string) => !variables.includes(variable));
+              if (aiVarsToAdd.length > 0) {
+                const allNewVars = [...variables, ...aiVarsToAdd];
+                setVariables(allNewVars);
+                setValue('input_variables', allNewVars);
+                console.log('添加AI分析变量:', aiVarsToAdd);
+              }
+            }
+            
+            // 智能合并兼容模型
+            if (analysisResult.compatibleModels && Array.isArray(analysisResult.compatibleModels)) {
+              const aiModelsToAdd = analysisResult.compatibleModels.filter((model: string) => !models.includes(model));
+              if (aiModelsToAdd.length > 0) {
+                const allNewModels = [...models, ...aiModelsToAdd];
+                setModels(allNewModels);
+                setValue('compatible_models', allNewModels);
+                console.log('添加AI兼容模型:', aiModelsToAdd);
+              }
+            }
+            
+          } catch (error) {
+            console.error('解析AI分析结果失败:', error);
+          }
+        } else {
+          // 如果没有AI分析结果，进行传统的变量检测
+          const regex = /\{\{([a-zA-Z0-9_]+)\}\}/g;
+          const matches = content.match(regex);
+          if (matches) {
+            const detectedVars = Array.from(new Set(matches.map(match => match.slice(2, -2))));
+            // 只添加不存在的变量
+            const varsToAdd = detectedVars.filter(variable => !variables.includes(variable));
+            if (varsToAdd.length > 0) {
+              const newVariables = [...variables, ...varsToAdd];
+              setVariables(newVariables);
+              setValue('input_variables', newVariables);
+              console.log('检测到新变量:', varsToAdd);
+            }
+          }
+        }
+        
+        console.log('从优化器智能填充完成');
+        
+        // 显示用户友好的提示
+        setTimeout(() => {
+          const hasContent = !!content;
+          const hasName = !!query.suggestedName;
+          const hasDesc = !!query.suggestedDesc;
+          const hasAiAnalysis = !!query.aiAnalysisResult;
+          const hasVars = query.aiAnalysisResult || content.match(/\{\{([a-zA-Z0-9_]+)\}\}/g);
+          
+          let message = '已从AI优化器填充：';
+          const items = [];
+          if (hasContent) items.push('提示词内容');
+          if (hasName) items.push('建议名称');
+          if (hasDesc) items.push('建议描述');
+          if (hasAiAnalysis) items.push('AI分析结果');
+          if (hasVars) items.push('检测到的变量');
+          
+          if (items.length > 0) {
+            message += items.join('、');
+            toast.success(message);
+          }
+        }, 500);
+      }
+    };
+
+    // 只在路由准备好时处理参数
+    if (router.isReady) {
+      handleURLParams();
+    }
+  }, [router.isReady, router.query, tags, variables]); // 移除循环依赖
 
   // 获取分类数据 - 异步但不阻塞页面显示
   useEffect(() => {

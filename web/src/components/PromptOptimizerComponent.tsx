@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useRouter } from 'next/router';
 import {
   SparklesIcon,
   ArrowPathIcon,
@@ -8,7 +9,9 @@ import {
   ClipboardDocumentIcon,
   LightBulbIcon,
   AdjustmentsHorizontalIcon,
-  InformationCircleIcon
+  InformationCircleIcon,
+  DocumentPlusIcon,
+  BeakerIcon
 } from '@heroicons/react/24/outline';
 import { StarIcon } from '@heroicons/react/24/solid';
 import {
@@ -19,6 +22,8 @@ import {
   iteratePrompt,
   analyzePrompt
 } from '@/lib/prompt-optimizer';
+import { AIAnalyzeButton, AIAnalysisResultDisplay } from '@/components/AIAnalyzeButton';
+import { AIAnalysisResult } from '@/lib/ai-analyzer';
 import toast from 'react-hot-toast';
 
 interface PromptOptimizerProps {
@@ -32,6 +37,7 @@ export const PromptOptimizerComponent: React.FC<PromptOptimizerProps> = ({
   onOptimizedPrompt,
   className = ''
 }) => {
+  const router = useRouter();
   const [prompt, setPrompt] = useState(initialPrompt);
   const [optimizedPrompt, setOptimizedPrompt] = useState('');
   const [isOptimizing, setIsOptimizing] = useState(false);
@@ -44,6 +50,10 @@ export const PromptOptimizerComponent: React.FC<PromptOptimizerProps> = ({
   const [iterationType, setIterationType] = useState<IterationRequest['type']>('refine');
   const [result, setResult] = useState<OptimizationResult | null>(null);
   const [analysisScore, setAnalysisScore] = useState<OptimizationResult['score'] | null>(null);
+  
+  // 添加智能分析相关状态
+  const [aiAnalysisResult, setAiAnalysisResult] = useState<AIAnalysisResult | null>(null);
+  const [showAiAnalysisResult, setShowAiAnalysisResult] = useState(false);
 
   // 同步外部prompt变化
   useEffect(() => {
@@ -164,6 +174,45 @@ export const PromptOptimizerComponent: React.FC<PromptOptimizerProps> = ({
     navigator.clipboard.writeText(text).then(() => {
       toast.success('已复制到剪贴板');
     });
+  };
+
+  // 添加填充到创建提示词的方法
+  const fillToCreatePrompt = () => {
+    const suggestedName = `优化提示词_${new Date().toLocaleString('zh-CN', {
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit'
+    })}`;
+    
+    const suggestedDesc = '通过AI优化生成的提示词，经过智能分析和结构化优化处理';
+    
+    // 构建URL参数
+    const params = new URLSearchParams({
+      optimizedContent: encodeURIComponent(optimizedPrompt),
+      suggestedName: encodeURIComponent(suggestedName),
+      suggestedDesc: encodeURIComponent(suggestedDesc)
+    });
+    
+    // 如果有AI分析结果，也添加到URL参数中
+    if (aiAnalysisResult) {
+      params.append('aiAnalysisResult', encodeURIComponent(JSON.stringify(aiAnalysisResult)));
+    }
+    
+    // 跳转到创建提示词页面
+    router.push(`/create?${params.toString()}`);
+    toast.success('正在跳转到创建提示词页面...');
+  };
+
+  // 处理AI分析完成
+  const handleAIAnalysisComplete = (result: Partial<AIAnalysisResult>) => {
+    console.log('优化器收到AI分析结果:', result);
+    
+    if (result as AIAnalysisResult) {
+      setAiAnalysisResult(result as AIAnalysisResult);
+      setShowAiAnalysisResult(true);
+      toast.success('智能分析完成！');
+    }
   };
 
   const ScoreBar = ({ label, value, color }: { label: string; value: number; color: string }) => (
@@ -493,6 +542,23 @@ export const PromptOptimizerComponent: React.FC<PromptOptimizerProps> = ({
               >
                 <AdjustmentsHorizontalIcon className="h-4 w-4" />
               </button>
+              
+              {/* 智能分析按钮 */}
+              <AIAnalyzeButton
+                content={optimizedPrompt}
+                onAnalysisComplete={handleAIAnalysisComplete}
+                variant="full"
+                className="!px-3 !py-2 !text-sm"
+              />
+              
+              <button
+                onClick={fillToCreatePrompt}
+                className="flex items-center space-x-2 px-4 py-2 rounded-lg bg-gradient-to-r from-neon-purple to-neon-pink hover:from-neon-purple/80 hover:to-neon-pink/80 text-white transition-all duration-200 shadow-lg hover:shadow-neon"
+                title="填充到创建提示词页面"
+              >
+                <DocumentPlusIcon className="h-4 w-4" />
+                <span className="text-sm font-medium">创建提示词</span>
+              </button>
             </div>
           </div>
 
@@ -518,6 +584,43 @@ export const PromptOptimizerComponent: React.FC<PromptOptimizerProps> = ({
               </div>
             </div>
           )}
+
+          {/* AI智能分析结果显示 */}
+          <AnimatePresence>
+            {showAiAnalysisResult && aiAnalysisResult && (
+              <motion.div
+                initial={{ opacity: 0, y: 20, height: 0 }}
+                animate={{ opacity: 1, y: 0, height: 'auto' }}
+                exit={{ opacity: 0, y: -20, height: 0 }}
+                className="mt-4 space-y-4"
+              >
+                <div className="flex items-center justify-between">
+                  <h4 className="font-medium text-white flex items-center">
+                    <BeakerIcon className="h-4 w-4 text-neon-blue mr-2" />
+                    智能分析结果
+                  </h4>
+                  <button
+                    type="button"
+                    onClick={() => setShowAiAnalysisResult(false)}
+                    className="text-gray-400 hover:text-gray-600 transition-colors"
+                    title="关闭智能分析结果"
+                  >
+                    ✕
+                  </button>
+                </div>
+                
+                <AIAnalysisResultDisplay
+                  result={aiAnalysisResult}
+                  onApplyResults={(data) => {
+                    // 在优化器中，我们暂时只显示分析结果
+                    // 实际应用会在创建提示词页面进行
+                    console.log('AI分析结果将在创建提示词页面应用:', data);
+                    toast.success('分析结果将在创建提示词时自动应用');
+                  }}
+                />
+              </motion.div>
+            )}
+          </AnimatePresence>
         </motion.div>
       )}
     </div>

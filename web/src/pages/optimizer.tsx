@@ -13,7 +13,8 @@ import {
   RocketLaunchIcon,
   CircleStackIcon,
   BoltIcon,
-  CubeTransparentIcon
+  CubeTransparentIcon,
+  BeakerIcon
 } from '@heroicons/react/24/outline';
 import { useRouter } from 'next/router';
 import { useAuth } from '@/contexts/AuthContext';
@@ -29,7 +30,8 @@ const OptimizerPage: React.FC = () => {
   const router = useRouter();
   const { user } = useAuth();
   const [optimizedPrompt, setOptimizedPrompt] = useState('');
-  const [isSaving, setIsSaving] = useState(false);
+  // 移除不再需要的保存状态
+  // const [isSaving, setIsSaving] = useState(false);
 
   const handleOptimizedPrompt = (prompt: string) => {
     setOptimizedPrompt(prompt);
@@ -46,32 +48,138 @@ const OptimizerPage: React.FC = () => {
       return;
     }
 
-    setIsSaving(true);
-    try {
-      const promptData = {
-        name: `优化提示词_${Date.now()}`,
-        description: '通过AI优化生成的提示词',
-        messages: [
-          {
-            role: 'user' as const,
-            content: optimizedPrompt
-          }
-        ],
-        category: 'general',
-        tags: ['AI优化', '自动生成'],
-        is_public: false
-      };
+    // 显示即将填充的内容预览
+    const confirmed = window.confirm(
+      `即将跳转到创建提示词页面并自动填充以下内容：
 
-      await createPrompt(promptData);
-      toast.success('优化结果已保存为新提示词！');
+📝 提示词内容：${optimizedPrompt.substring(0, 100)}${optimizedPrompt.length > 100 ? '...' : ''}
+
+📋 建议名称：优化提示词_${new Date().toLocaleString('zh-CN', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })}
+
+📄 建议描述：通过AI优化生成的提示词，经过智能分析和结构化优化处理
+
+🏷️ 自动标签：AI优化、自动生成
+
+⚙️ 变量检测：将自动识别 {{变量名}} 格式
+
+确认继续吗？您可以在创建页面修改这些信息。`
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    // 改为跳转到创建提示词页面而不是直接保存
+    const suggestedName = `优化提示词_${new Date().toLocaleString('zh-CN', {
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit'
+    })}`;
+    
+    const suggestedDesc = '通过AI优化生成的提示词，经过智能分析和结构化优化处理';
+    
+    // 构建URL参数
+    const params = new URLSearchParams({
+      optimizedContent: encodeURIComponent(optimizedPrompt),
+      suggestedName: encodeURIComponent(suggestedName),
+      suggestedDesc: encodeURIComponent(suggestedDesc)
+    });
+    
+    // 跳转到创建提示词页面
+    router.push(`/create?${params.toString()}`);
+    toast.success('正在跳转到创建提示词页面...');
+  };
+
+  // 添加智能分析后填充到创建提示词页面的功能
+  const handleSaveWithAnalysis = async () => {
+    if (!user) {
+      toast.error('请先登录');
+      return;
+    }
+
+    if (!optimizedPrompt.trim()) {
+      toast.error('没有可保存的优化结果');
+      return;
+    }
+
+    // 显示即将填充的内容预览
+    const confirmed = window.confirm(
+      `即将跳转到创建提示词页面并自动填充以下内容：
+
+📝 提示词内容：${optimizedPrompt.substring(0, 100)}${optimizedPrompt.length > 100 ? '...' : ''}
+
+🤖 智能分析：将自动分析分类、标签、变量、兼容模型等
+
+📋 建议名称：AI自动生成
+
+📄 建议描述：AI自动生成
+
+🏷️ 智能标签：AI自动提取
+
+⚙️ 智能变量：AI自动识别
+
+确认继续吗？您可以在创建页面修改这些信息。`
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      toast.loading('正在进行AI分析...', { id: 'ai-analysis' });
       
-      // 跳转到提示词列表
-      router.push('/prompts');
-    } catch (error) {
-      console.error('保存失败:', error);
-      toast.error('保存失败，请重试');
-    } finally {
-      setIsSaving(false);
+      // 调用AI分析API
+      const response = await fetch('/api/ai-analyze', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          content: optimizedPrompt,
+          action: 'full_analyze',
+          config: {
+            language: 'zh',
+            includeImprovements: true,
+            includeSuggestions: true
+          }
+        })
+      });
+
+      const result = await response.json();
+
+      if (response.ok && result.success) {
+        const analysisResult = result.data;
+        toast.success('AI分析完成！', { id: 'ai-analysis' });
+        
+        // 构建URL参数，包含AI分析结果
+        const suggestedName = analysisResult.suggestedTitle || `优化提示词_${new Date().toLocaleString('zh-CN', {
+          month: '2-digit',
+          day: '2-digit',
+          hour: '2-digit',
+          minute: '2-digit'
+        })}`;
+        
+        const suggestedDesc = analysisResult.description || '通过AI优化生成的提示词，经过智能分析和结构化优化处理';
+        
+        const params = new URLSearchParams({
+          optimizedContent: encodeURIComponent(optimizedPrompt),
+          suggestedName: encodeURIComponent(suggestedName),
+          suggestedDesc: encodeURIComponent(suggestedDesc),
+          aiAnalysisResult: encodeURIComponent(JSON.stringify(analysisResult))
+        });
+        
+        // 跳转到创建提示词页面
+        router.push(`/create?${params.toString()}`);
+        toast.success('正在跳转到创建提示词页面...');
+      } else {
+        throw new Error(result.error || 'AI分析失败');
+      }
+    } catch (error: any) {
+      console.error('AI分析失败:', error);
+      toast.error(`AI分析失败: ${error.message}`, { id: 'ai-analysis' });
+      // 作为后备，使用普通的填充方式
+      handleSaveAsNewPrompt();
     }
   };
 
@@ -146,25 +254,32 @@ const OptimizerPage: React.FC = () => {
             className="text-center mb-12"
           >
             {optimizedPrompt && (
-              <div className="flex justify-end mb-8">
+              <div className="flex justify-end mb-8 space-x-4">
                 <motion.button
                   initial={{ opacity: 0, scale: 0.8 }}
                   animate={{ opacity: 1, scale: 1 }}
                   onClick={handleSaveAsNewPrompt}
-                  disabled={isSaving || !user}
-                  className="flex items-center space-x-2 px-6 py-3 btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={!user || !optimizedPrompt.trim()}
+                  className="flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-neon-purple/80 to-neon-pink/80 hover:from-neon-purple hover:to-neon-pink text-white rounded-lg font-medium transition-all duration-200 shadow-lg hover:shadow-neon disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {isSaving ? (
-                    <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-2 border-neon-cyan border-t-transparent" />
-                      <span>保存中...</span>
-                    </>
-                  ) : (
-                    <>
-                      <DocumentPlusIcon className="h-4 w-4" />
-                      <span>保存为新提示词</span>
-                    </>
-                  )}
+                  <>
+                    <DocumentPlusIcon className="h-4 w-4" />
+                    <span>填充到创建提示词</span>
+                  </>
+                </motion.button>
+                
+                <motion.button
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.1 }}
+                  onClick={handleSaveWithAnalysis}
+                  disabled={!user || !optimizedPrompt.trim()}
+                  className="flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-neon-blue/80 to-neon-cyan/80 hover:from-neon-blue hover:to-neon-cyan text-white rounded-lg font-medium transition-all duration-200 shadow-lg hover:shadow-neon disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <>
+                    <BeakerIcon className="h-4 w-4" />
+                    <span>智能分析并填充</span>
+                  </>
                 </motion.button>
               </div>
             )}

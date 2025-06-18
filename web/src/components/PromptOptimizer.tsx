@@ -10,7 +10,8 @@ import {
   XMarkIcon,
   ClipboardDocumentIcon,
   LightBulbIcon,
-  AdjustmentsHorizontalIcon
+  AdjustmentsHorizontalIcon,
+  DocumentPlusIcon
 } from '@heroicons/react/24/outline';
 import { StarIcon } from '@heroicons/react/24/solid';
 import {
@@ -22,6 +23,7 @@ import {
   analyzePrompt
 } from '@/lib/prompt-optimizer';
 import toast from 'react-hot-toast';
+import { useRouter } from 'next/router';
 
 interface PromptOptimizerProps {
   initialPrompt?: string;
@@ -34,6 +36,7 @@ export const PromptOptimizer: React.FC<PromptOptimizerProps> = ({
   onOptimizedPrompt,
   className = ''
 }) => {
+  const router = useRouter();
   const [prompt, setPrompt] = useState(initialPrompt);
   const [optimizedPrompt, setOptimizedPrompt] = useState('');
   const [isOptimizing, setIsOptimizing] = useState(false);
@@ -149,6 +152,26 @@ export const PromptOptimizer: React.FC<PromptOptimizerProps> = ({
     navigator.clipboard.writeText(text).then(() => {
       toast.success('已复制到剪贴板');
     });
+  };
+
+  const fillToCreatePrompt = () => {
+    const suggestedName = `优化提示词_${new Date().toLocaleString('zh-CN', {
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit'
+    })}`;
+    
+    const suggestedDesc = '通过AI优化生成的提示词，经过智能分析和结构化优化处理';
+    
+    const params = new URLSearchParams({
+      optimizedContent: encodeURIComponent(optimizedPrompt),
+      suggestedName: encodeURIComponent(suggestedName),
+      suggestedDesc: encodeURIComponent(suggestedDesc)
+    });
+    
+    router.push(`/create?${params.toString()}`);
+    toast.success('正在跳转到创建提示词页面...');
   };
 
   const ScoreBar = ({ label, value, color }: { label: string; value: number; color: string }) => (
@@ -439,6 +462,14 @@ export const PromptOptimizer: React.FC<PromptOptimizerProps> = ({
                 title="应用优化结果"
               >
                 <AdjustmentsHorizontalIcon className="h-4 w-4" />
+              </button>
+              <button
+                onClick={fillToCreatePrompt}
+                className="flex items-center space-x-2 px-4 py-2 rounded-lg bg-gradient-to-r from-neon-purple to-neon-pink hover:from-neon-purple/80 hover:to-neon-pink/80 text-white transition-all duration-200 shadow-lg hover:shadow-neon"
+                title="填充到创建提示词页面"
+              >
+                <DocumentPlusIcon className="h-4 w-4" />
+                <span className="text-sm font-medium">创建提示词</span>
               </button>
             </div>
           </div>
