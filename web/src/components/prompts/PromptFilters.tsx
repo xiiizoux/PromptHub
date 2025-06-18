@@ -80,8 +80,8 @@ const PromptFilters: React.FC<PromptFiltersProps> = ({
       return fullOrderedTags;
     }
     
-    // 默认模式：只显示前10个，但保持相同的顺序
-    const maxDisplayTags = 10;
+    // 默认模式：只显示前25个，但保持相同的顺序
+    const maxDisplayTags = 25;
     return fullOrderedTags.slice(0, maxDisplayTags);
   }, [tags, filters.tags, popularTags, showAllTags, tagSearchQuery]);
 
@@ -272,7 +272,7 @@ const PromptFilters: React.FC<PromptFiltersProps> = ({
                     <div className="w-2 h-2 bg-neon-purple rounded-full mr-3 shadow-neon-sm"></div>
                     标签
                   </h3>
-                  {tags.length > 10 && (
+                  {tags.length > 25 && (
                     <span className="text-xs text-gray-500 sm:hidden">
                       {displayTags.length} / {tags.length}
                     </span>
@@ -281,7 +281,7 @@ const PromptFilters: React.FC<PromptFiltersProps> = ({
 
                 {/* 排序方式 - 紧凑按钮组 */}
                 <div className="flex items-center gap-3">
-                  <h4 className="text-sm font-medium text-neon-pink hidden sm:block">
+                  <h4 className="text-lg font-medium text-neon-pink hidden sm:block">
                     排序方式:
                   </h4>
                   <div className="flex bg-dark-bg-secondary/50 border border-dark-border rounded-lg p-1">
@@ -307,11 +307,6 @@ const PromptFilters: React.FC<PromptFiltersProps> = ({
                       </motion.button>
                     ))}
                   </div>
-                  {tags.length > 10 && (
-                    <span className="text-xs text-gray-500 hidden sm:block">
-                      {displayTags.length} / {tags.length}
-                    </span>
-                  )}
                 </div>
               </div>
 
