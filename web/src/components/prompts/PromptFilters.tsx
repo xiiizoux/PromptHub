@@ -281,7 +281,8 @@ const PromptFilters: React.FC<PromptFiltersProps> = ({
 
                 {/* 排序方式 - 紧凑按钮组 */}
                 <div className="flex items-center gap-3">
-                  <h4 className="text-lg font-medium text-neon-pink hidden sm:block">
+                  <h4 className="text-lg font-medium text-neon-pink hidden sm:block flex items-center">
+                    <div className="w-2 h-2 bg-neon-pink rounded-full mr-3 shadow-neon-sm"></div>
                     排序方式:
                   </h4>
                   <div className="flex bg-dark-bg-secondary/50 border border-dark-border rounded-lg p-1">
