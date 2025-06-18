@@ -388,7 +388,7 @@ function generateReadyToUseFormat(content: string, prompt: Prompt, targetAI: str
   format += `\n\n${'─'.repeat(40)}\n`;
   format += `📊 提示词信息:\n`;
   format += `• 名称: ${prompt.name}\n`;
-  format += `• 分类: ${prompt.category || '未分类'}\n`;
+  format += `• 分类: ${prompt.category || '通用'}\n`;
   format += `• 难度: ${prompt.difficulty || '中等'}\n`;
   
   if (prompt.variables?.length) {

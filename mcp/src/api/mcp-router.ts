@@ -705,7 +705,7 @@ async function handleCreatePrompt(params: any, req?: express.Request) {
   const prompt: Prompt = {
     name,
     description,
-    category: category || '未分类',
+    category: category || '通用',
     tags: tags || [],
     messages,
     user_id: req?.user?.id,

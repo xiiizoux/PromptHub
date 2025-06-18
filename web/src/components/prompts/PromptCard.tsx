@@ -98,8 +98,8 @@ const PromptCard: React.FC<PromptCardProps> = ({ prompt }) => {
       '健康': { name: '健康', color: 'from-neon-green to-neon-cyan', icon: HealthIcon },
       '科技': { name: '科技', color: 'from-neon-cyan to-neon-blue', icon: CpuChipIcon },
       
-      // 默认分类 - 用于未分类的提示词
-      'default': { name: '未分类', color: 'from-gray-600 to-gray-700', icon: TagIcon }
+      // 默认分类 - 用于未指定分类的提示词
+      'default': { name: '通用', color: 'from-neon-purple to-neon-blue', icon: SparklesIcon }
     };
     
     const categoryInfo = categoryMap[category || 'default'] || categoryMap.default;
