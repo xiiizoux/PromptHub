@@ -242,12 +242,12 @@ export default function PromptDetailsPage({ prompt }: PromptDetailsPageProps) {
     };
     
     const info = categoryMap[category || ''] || { 
-      color: 'from-gray-600 to-gray-700', 
-      icon: TagIcon 
+      color: 'from-neon-purple to-neon-blue', 
+      icon: SparklesIcon 
     };
     
     return {
-      name: category || '未分类',
+      name: category || '通用',
       ...info
     };
   };
