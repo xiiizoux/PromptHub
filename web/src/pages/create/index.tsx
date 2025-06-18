@@ -333,20 +333,7 @@ function CreatePromptPage() {
 
       <div className="relative z-10 py-16">
         <div className="container-custom">
-          {/* 返回按钮 */}
-          <motion.div 
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            className="mb-8"
-          >
-            <Link 
-              href="/prompts" 
-              className="inline-flex items-center text-neon-cyan hover:text-neon-purple transition-colors duration-300 group"
-            >
-              <ChevronLeftIcon className="h-5 w-5 mr-2 group-hover:-translate-x-1 transition-transform duration-300" />
-              返回提示词列表
-            </Link>
-          </motion.div>
+
 
           {/* 页面标题 */}
           <motion.div 
