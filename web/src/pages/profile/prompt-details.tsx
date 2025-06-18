@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { ChevronLeftIcon, PencilIcon, TrashIcon, ClipboardIcon, CheckIcon } from '@heroicons/react/24/outline';
 import { formatVersionDisplay } from '@/lib/version-utils';
 import { useAuth } from '@/contexts/AuthContext';
+import { MODEL_TAGS } from '@/constants/ai-models';
 
 const PromptDetails = () => {
   const router = useRouter();
@@ -231,7 +232,23 @@ const PromptDetails = () => {
               {prompt.compatible_models && prompt.compatible_models.length > 0 && (
                 <div>
                   <p className="text-gray-400">兼容模型</p>
-                  <p className="text-gray-200">{prompt.compatible_models.join(', ')}</p>
+                  <div className="flex flex-wrap gap-2 mt-1">
+                    {prompt.compatible_models.map((modelId: string, index: number) => {
+                      // 根据模型ID获取显示名称
+                      const modelTag = MODEL_TAGS.find(tag => tag.id === modelId);
+                      const displayName = modelTag ? modelTag.name : modelId;
+                      const color = modelTag ? modelTag.color : 'text-gray-400';
+                      
+                      return (
+                        <span 
+                          key={index}
+                          className={`px-2 py-1 text-xs rounded-md bg-gray-700/50 border border-gray-600 ${color}`}
+                        >
+                          {displayName}
+                        </span>
+                      );
+                    })}
+                  </div>
                 </div>
               )}
             </div>

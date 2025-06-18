@@ -212,7 +212,9 @@ export class DatabaseService {
         // 扩展字段
         content: content,
         input_variables: this.extractInputVariables(content),
-        compatible_models: prompt.compatible_models || ['gpt-4', 'gpt-3.5-turbo', 'claude-3'], // 从数据库读取，否则使用默认兼容模型
+        compatible_models: prompt.compatible_models && prompt.compatible_models.length > 0 
+          ? prompt.compatible_models 
+          : ['llm-large', 'llm-medium'], // 从数据库读取，否则使用默认兼容模型
         allow_collaboration: Boolean(prompt.is_public), // 基于是否公开来设置
         edit_permission: 'owner_only' as const, // 修复：改为前端期望的值
         author: authorName

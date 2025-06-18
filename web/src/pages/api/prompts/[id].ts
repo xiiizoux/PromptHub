@@ -214,11 +214,17 @@ async function getPrompt(req: NextApiRequest, res: NextApiResponse, id: string) 
       }
     }
 
+    // 确保兼容模型有默认值
+    const compatibleModels = prompt.compatible_models && prompt.compatible_models.length > 0 
+      ? prompt.compatible_models 
+      : ['llm-large', 'llm-medium']; // 使用新的模型ID格式作为默认值
+
     const responseData = {
       ...prompt,
       content: contentFromMessages, // 添加content字段以保持前端兼容性
       author: authorName,
       category: categoryName,
+      compatible_models: compatibleModels, // 确保有默认兼容模型
       average_rating: Math.round(averageRating * 10) / 10,
       rating_count: ratingCount,
       is_bookmarked: isBookmarked,
