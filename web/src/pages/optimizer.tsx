@@ -48,42 +48,9 @@ const OptimizerPage: React.FC = () => {
       return;
     }
 
-    // 显示即将填充的内容预览
-    const confirmed = window.confirm(
-      `即将跳转到创建提示词页面并自动填充以下内容：
-
-📝 提示词内容：${optimizedPrompt.substring(0, 100)}${optimizedPrompt.length > 100 ? '...' : ''}
-
-📋 建议名称：优化提示词_${new Date().toLocaleString('zh-CN', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })}
-
-📄 建议描述：通过AI优化生成的提示词，经过智能分析和结构化优化处理
-
-🏷️ 自动标签：AI优化、自动生成
-
-⚙️ 变量检测：将自动识别 {{变量名}} 格式
-
-确认继续吗？您可以在创建页面修改这些信息。`
-    );
-
-    if (!confirmed) {
-      return;
-    }
-
-    // 改为跳转到创建提示词页面而不是直接保存
-    const suggestedName = `优化提示词_${new Date().toLocaleString('zh-CN', {
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit'
-    })}`;
-    
-    const suggestedDesc = '通过AI优化生成的提示词，经过智能分析和结构化优化处理';
-    
-    // 构建URL参数
+    // 构建URL参数 - 只传递优化后的内容
     const params = new URLSearchParams({
-      optimizedContent: encodeURIComponent(optimizedPrompt),
-      suggestedName: encodeURIComponent(suggestedName),
-      suggestedDesc: encodeURIComponent(suggestedDesc)
+      optimizedContent: encodeURIComponent(optimizedPrompt)
     });
     
     // 跳转到创建提示词页面

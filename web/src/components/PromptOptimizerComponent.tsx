@@ -176,28 +176,12 @@ export const PromptOptimizerComponent: React.FC<PromptOptimizerProps> = ({
     });
   };
 
-  // 添加填充到创建提示词的方法
+  // 添加填充到创建提示词的方法 - 只填充内容
   const fillToCreatePrompt = () => {
-    const suggestedName = `优化提示词_${new Date().toLocaleString('zh-CN', {
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit'
-    })}`;
-    
-    const suggestedDesc = '通过AI优化生成的提示词，经过智能分析和结构化优化处理';
-    
-    // 构建URL参数
+    // 构建URL参数 - 只传递优化后的内容
     const params = new URLSearchParams({
-      optimizedContent: encodeURIComponent(optimizedPrompt),
-      suggestedName: encodeURIComponent(suggestedName),
-      suggestedDesc: encodeURIComponent(suggestedDesc)
+      optimizedContent: encodeURIComponent(optimizedPrompt)
     });
-    
-    // 如果有AI分析结果，也添加到URL参数中
-    if (aiAnalysisResult) {
-      params.append('aiAnalysisResult', encodeURIComponent(JSON.stringify(aiAnalysisResult)));
-    }
     
     // 跳转到创建提示词页面
     router.push(`/create?${params.toString()}`);
@@ -612,10 +596,18 @@ export const PromptOptimizerComponent: React.FC<PromptOptimizerProps> = ({
                 <AIAnalysisResultDisplay
                   result={aiAnalysisResult}
                   onApplyResults={(data) => {
-                    // 在优化器中，我们暂时只显示分析结果
-                    // 实际应用会在创建提示词页面进行
-                    console.log('AI分析结果将在创建提示词页面应用:', data);
-                    toast.success('分析结果将在创建提示词时自动应用');
+                    // 在优化器中，应用全部建议时跳转到创建提示词页面
+                    console.log('应用AI分析结果并跳转到创建提示词页面:', data);
+                    
+                    // 构建URL参数，包含优化内容和AI分析结果
+                    const params = new URLSearchParams({
+                      optimizedContent: encodeURIComponent(optimizedPrompt),
+                      aiAnalysisResult: encodeURIComponent(JSON.stringify(aiAnalysisResult))
+                    });
+                    
+                    // 跳转到创建提示词页面
+                    router.push(`/create?${params.toString()}`);
+                    toast.success('正在跳转到创建提示词页面并应用分析结果...');
                   }}
                 />
               </motion.div>

@@ -172,35 +172,8 @@ function CreatePromptPage() {
           console.log('填充优化后的内容');
         }
         
-        // 只在名称为空时才应用建议的名称
-        if (query.suggestedName) {
-          const name = decodeURIComponent(query.suggestedName as string);
-          const currentName = watch('name');
-          if (!currentName || currentName.trim() === '') {
-            setValue('name', name);
-            console.log('填充建议的名称:', name);
-          }
-        }
-        
-        // 只在描述为空时才应用建议的描述
-        if (query.suggestedDesc) {
-          const desc = decodeURIComponent(query.suggestedDesc as string);
-          const currentDesc = watch('description');
-          if (!currentDesc || currentDesc.trim() === '') {
-            setValue('description', desc);
-            console.log('填充建议的描述:', desc);
-          }
-        }
-        
-        // 智能添加优化相关的标签（避免重复）
-        const optimizedTags = ['AI优化', '自动生成'];
-        const tagsToAdd = optimizedTags.filter(tag => !tags.includes(tag));
-        if (tagsToAdd.length > 0) {
-          const newTags = [...tags, ...tagsToAdd];
-          setTags(newTags);
-          setValue('tags', newTags);
-          console.log('添加优化标签:', tagsToAdd);
-        }
+        // 移除硬编码的名称、描述和标签填充
+        // 只有在有AI分析结果时才进行智能填充，否则保持页面默认状态
         
         // 处理AI分析结果
         if (query.aiAnalysisResult) {
@@ -287,22 +260,12 @@ function CreatePromptPage() {
         // 显示用户友好的提示
         setTimeout(() => {
           const hasContent = !!content;
-          const hasName = !!query.suggestedName;
-          const hasDesc = !!query.suggestedDesc;
           const hasAiAnalysis = !!query.aiAnalysisResult;
-          const hasVars = query.aiAnalysisResult || content.match(/\{\{([a-zA-Z0-9_]+)\}\}/g);
           
-          let message = '已从AI优化器填充：';
-          const items = [];
-          if (hasContent) items.push('提示词内容');
-          if (hasName) items.push('建议名称');
-          if (hasDesc) items.push('建议描述');
-          if (hasAiAnalysis) items.push('AI分析结果');
-          if (hasVars) items.push('检测到的变量');
-          
-          if (items.length > 0) {
-            message += items.join('、');
-            toast.success(message);
+          if (hasContent && !hasAiAnalysis) {
+            toast.success('已从AI优化器填充提示词内容');
+          } else if (hasContent && hasAiAnalysis) {
+            toast.success('已从AI优化器填充内容并应用智能分析结果');
           }
         }, 500);
       }
