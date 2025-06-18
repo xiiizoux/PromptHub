@@ -258,23 +258,61 @@ const PromptFilters: React.FC<PromptFiltersProps> = ({
             </div>
           </motion.div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <div className="space-y-6">
             {/* 标签过滤 */}
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.5 }}
             >
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-medium text-neon-purple flex items-center">
-                  <div className="w-2 h-2 bg-neon-purple rounded-full mr-3 shadow-neon-sm"></div>
-                  标签
-                </h3>
-                {tags.length > 10 && (
-                  <span className="text-xs text-gray-500">
-                    {displayTags.length} / {tags.length}
-                  </span>
-                )}
+              {/* 标签标题和排序方式 */}
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-medium text-neon-purple flex items-center">
+                    <div className="w-2 h-2 bg-neon-purple rounded-full mr-3 shadow-neon-sm"></div>
+                    标签
+                  </h3>
+                  {tags.length > 10 && (
+                    <span className="text-xs text-gray-500 sm:hidden">
+                      {displayTags.length} / {tags.length}
+                    </span>
+                  )}
+                </div>
+
+                {/* 排序方式 - 紧凑按钮组 */}
+                <div className="flex items-center gap-3">
+                  <h4 className="text-sm font-medium text-neon-pink hidden sm:block">
+                    排序方式:
+                  </h4>
+                  <div className="flex bg-dark-bg-secondary/50 border border-dark-border rounded-lg p-1">
+                    {[
+                      { value: 'latest', label: '最新' },
+                      { value: 'updated', label: '更新' },
+                      { value: 'oldest', label: '最早' },
+                      { value: 'name', label: '名称' }
+                    ].map((option) => (
+                      <motion.button
+                        key={option.value}
+                        type="button"
+                        onClick={() => handleSortChange({ target: { value: option.value } } as any)}
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        className={`px-3 py-1.5 text-sm font-medium rounded-md transition-all duration-200 ${
+                          (filters.sortBy || 'latest') === option.value
+                            ? 'bg-neon-pink/20 text-neon-pink border border-neon-pink/50 shadow-neon-sm'
+                            : 'text-gray-400 hover:text-white hover:bg-dark-card'
+                        }`}
+                      >
+                        {option.label}
+                      </motion.button>
+                    ))}
+                  </div>
+                  {tags.length > 10 && (
+                    <span className="text-xs text-gray-500 hidden sm:block">
+                      {displayTags.length} / {tags.length}
+                    </span>
+                  )}
+                </div>
               </div>
 
               {/* 标签搜索框（始终显示） */}
@@ -427,30 +465,43 @@ const PromptFilters: React.FC<PromptFiltersProps> = ({
                 )}
               </div>
             </motion.div>
-
-            {/* 排序方式 */}
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.7 }}
-            >
-              <h3 className="text-lg font-medium text-neon-pink mb-4 flex items-center">
-                <div className="w-2 h-2 bg-neon-pink rounded-full mr-3 shadow-neon-sm"></div>
-                排序方式
-              </h3>
-              <motion.select
-                value={filters.sortBy || 'latest'}
-                onChange={handleSortChange}
-                whileFocus={{ scale: 1.02 }}
-                className="w-full px-4 py-3 bg-dark-bg-secondary/50 border border-dark-border rounded-xl text-white focus:border-neon-pink focus:ring-1 focus:ring-neon-pink focus:shadow-neon-sm transition-all duration-300 backdrop-blur-sm"
-              >
-                <option value="latest" className="bg-dark-bg-secondary">最新创建</option>
-                <option value="updated" className="bg-dark-bg-secondary">最近更新</option>
-                <option value="oldest" className="bg-dark-bg-secondary">最早创建</option>
-                <option value="name" className="bg-dark-bg-secondary">名称排序</option>
-              </motion.select>
-            </motion.div>
           </div>
+
+          {/* 移动端排序方式 */}
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.6 }}
+            className="sm:hidden"
+          >
+            <h3 className="text-lg font-medium text-neon-pink mb-4 flex items-center">
+              <div className="w-2 h-2 bg-neon-pink rounded-full mr-3 shadow-neon-sm"></div>
+              排序方式
+            </h3>
+            <div className="grid grid-cols-2 gap-2">
+              {[
+                { value: 'latest', label: '最新创建' },
+                { value: 'updated', label: '最近更新' },
+                { value: 'oldest', label: '最早创建' },
+                { value: 'name', label: '名称排序' }
+              ].map((option) => (
+                <motion.button
+                  key={option.value}
+                  type="button"
+                  onClick={() => handleSortChange({ target: { value: option.value } } as any)}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className={`px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${
+                    (filters.sortBy || 'latest') === option.value
+                      ? 'bg-neon-pink/20 text-neon-pink border border-neon-pink/50 shadow-neon-sm'
+                      : 'bg-dark-bg-secondary/50 text-gray-400 border border-dark-border hover:text-white hover:bg-dark-card hover:border-neon-pink'
+                  }`}
+                >
+                  {option.label}
+                </motion.button>
+              ))}
+            </div>
+          </motion.div>
 
           {/* 清除过滤器按钮（桌面端） */}
           <AnimatePresence>
