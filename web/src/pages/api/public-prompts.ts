@@ -1,42 +1,48 @@
-import type { NextApiRequest, NextApiResponse } from 'next';
+import { NextApiRequest, NextApiResponse } from 'next';
 import { createClient } from '@supabase/supabase-js';
 
-// 初始化Supabase客户端（使用服务角色密钥以绕过RLS）
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
-const supabase = createClient(supabaseUrl, supabaseKey);
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
 
-console.log('初始化Supabase客户端，使用服务角色密钥：', !!process.env.SUPABASE_SERVICE_ROLE_KEY);
+interface ApiResponse {
+  success: boolean;
+  data: any[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+  error?: string;
+}
 
-type PromptData = {
-  id: string;
-  name: string;
-  description: string;
-  category: string;
-  tags: string[];
-  version: number;
-  is_public: boolean;
-  user_id: string;
-  created_at: string;
-  updated_at: string;
-  created_by?: string;
-};
-
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse<ApiResponse>) {
   // 只接受GET请求
   if (req.method !== 'GET') {
-    return res.status(405).json({ success: false, error: '方法不允许' });
+    return res.status(405).json({ 
+      success: false, 
+      error: '方法不允许',
+      data: [],
+      total: 0,
+      page: 1,
+      pageSize: 0,
+      totalPages: 0
+    });
   }
 
   try {
     // 解析查询参数
-    const { search, category, tag, sortBy } = req.query;
+    const { search, category, tag, sortBy, page = '1', pageSize = '21' } = req.query;
+    
+    // 解析分页参数
+    const currentPage = Math.max(1, parseInt(page as string) || 1);
+    const currentPageSize = Math.max(1, Math.min(100, parseInt(pageSize as string) || 21));
     
     // 获取请求中的用户ID（如果存在）
     const userId = req.headers['x-user-id'] as string;
-    console.log('请求中的用户ID:', userId);
+    console.log('请求中的用户ID:', userId, '页面:', currentPage, '页面大小:', currentPageSize);
     
-    // 构建基础查询 - 不使用外键关系，先获取提示词数据
+    // 构建基础查询 - 使用count来获取总数
     let query = supabase
       .from('prompts')
       .select(`
@@ -51,7 +57,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         created_at,
         updated_at,
         created_by
-      `);
+      `, { count: 'exact' });
 
     // 如果有用户ID，则获取该用户的所有提示词和公开提示词
     // 如果没有用户ID，则只获取公开提示词
@@ -102,18 +108,28 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       query = query.order('created_at', { ascending: false });
     }
     
+    // 应用分页
+    const from = (currentPage - 1) * currentPageSize;
+    const to = from + currentPageSize - 1;
+    query = query.range(from, to);
+    
     // 执行查询
-    const { data: promptsData, error } = await query;
+    const { data: promptsData, error, count } = await query;
 
     if (error) {
       console.error('获取提示词失败:', error);
       return res.status(500).json({ 
         success: false, 
-        error: `获取提示词失败: ${error.message}` 
+        error: `获取提示词失败: ${error.message}`,
+        data: [],
+        total: 0,
+        page: currentPage,
+        pageSize: currentPageSize,
+        totalPages: 0
       });
     }
 
-    console.log('获取到的提示词数量:', promptsData?.length || 0);
+    console.log('获取到的提示词数量:', promptsData?.length || 0, '总数:', count);
 
     // 如果没有提示词，直接返回
     if (!promptsData || promptsData.length === 0) {
@@ -121,9 +137,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         success: true,
         data: [],
         total: 0,
-        page: 1,
-        pageSize: 0,
-        totalPages: 1
+        page: currentPage,
+        pageSize: currentPageSize,
+        totalPages: 0
       });
     }
 
@@ -139,66 +155,72 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // 分别查询用户信息
     let usersData: any[] = [];
     if (userIds.length > 0) {
-      const { data: users, error: usersError } = await supabase
-        .from('users')
-        .select('id, display_name, email')
-        .in('id', userIds);
-
-      if (!usersError && users) {
-        usersData = users;
-      } else {
-        console.warn('获取用户信息失败:', usersError);
+      try {
+        const { data: users, error: usersError } = await supabase
+          .from('users')
+          .select('id, display_name, email')
+          .in('id', userIds);
+        
+        if (usersError) {
+          console.error('获取用户信息失败:', usersError);
+        } else {
+          usersData = users || [];
+        }
+      } catch (userError) {
+        console.error('查询用户信息时出错:', userError);
       }
     }
 
-    // 创建用户ID到用户信息的映射
-    const userMap = new Map();
-    usersData.forEach(user => {
-      userMap.set(user.id, user);
-    });
+    // 创建用户映射
+    const userMap = new Map(usersData.map(user => [user.id, user]));
 
-    console.log('用户映射表:', Object.fromEntries(userMap));
-
-    // 格式化响应，确保包含所有必要字段
-    const formattedData = promptsData.map((prompt: PromptData) => {
-      // 确定作者信息的优先级：created_by > user_id
-      const authorId = prompt.created_by || prompt.user_id;
-      const authorInfo = authorId ? userMap.get(authorId) : null;
-      const authorName = authorInfo?.display_name || 
-                        authorInfo?.email?.split('@')[0] || 
-                        '未知用户';
-
+    // 格式化数据，确保包含用户信息
+    const formattedPrompts = promptsData.map(prompt => {
+      const user = userMap.get(prompt.user_id || prompt.created_by);
       return {
-        id: prompt.id,
-        name: prompt.name,
-        description: prompt.description,
-        category: prompt.category,
-        tags: prompt.tags || [],
-        version: prompt.version || 1,
-        created_at: prompt.created_at,
-        updated_at: prompt.updated_at,
-        author: authorName,
-        is_public: prompt.is_public,
-        user_id: prompt.user_id
+        ...prompt,
+        author: user ? {
+          id: user.id,
+          name: user.display_name || user.email?.split('@')[0] || '未知用户',
+          email: user.email
+        } : {
+          id: prompt.user_id || prompt.created_by,
+          name: '未知用户',
+          email: ''
+        }
       };
     });
 
-    console.log('格式化后的数据样例:', JSON.stringify(formattedData?.[0], null, 2));
+    // 计算总页数
+    const totalPages = count ? Math.ceil(count / currentPageSize) : 0;
 
-    // 返回结果
+    console.log('返回数据:', {
+      total: count,
+      page: currentPage,
+      pageSize: currentPageSize,
+      totalPages: totalPages,
+      dataLength: formattedPrompts.length
+    });
+
     return res.status(200).json({
       success: true,
-      data: formattedData,
-      total: formattedData.length,
-      page: 1,
-      pageSize: formattedData.length,
-      totalPages: 1
+      data: formattedPrompts,
+      total: count || 0,
+      page: currentPage,
+      pageSize: currentPageSize,
+      totalPages: totalPages
     });
-  } catch (error: any) {
-    console.error('处理获取提示词请求时出错:', error);
-    return res.status(500).json({ 
-      success: false, 
-      error: `处理请求时出错: ${error.message}` 
+
+  } catch (error) {
+    console.error('处理请求时发生错误:', error);
+    return res.status(500).json({
+      success: false,
+      error: '服务器内部错误',
+      data: [],
+      total: 0,
+      page: 1,
+      pageSize: 21,
+      totalPages: 0
     });
   }
 }

@@ -18,6 +18,7 @@ export default function PromptsPage() {
     sortBy: 'latest',
   });
   const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0); // 新增总数状态
   const [mounted, setMounted] = useState(false);
 
   // 确保组件已挂载
@@ -90,17 +91,21 @@ export default function PromptsPage() {
           console.log('设置提示词数据，数量:', response.data.length);
           setPrompts(response.data);
           setTotalPages(response.totalPages || 1);
+          setTotalCount(response.total || 0); // 设置总数
           setError(null);
         } else {
           console.error('获取提示词数据格式错误:', response);
           setPrompts([]);
           setTotalPages(1);
+          setTotalCount(0);
           setError('获取提示词数据格式错误');
         }
       } catch (err) {
         console.error('获取提示词失败:', err);
         setError('无法加载提示词，请稍后再试');
         setPrompts([]);
+        setTotalPages(1);
+        setTotalCount(0);
       } finally {
         console.log('提示词数据加载完成');
         setLoading(false);
@@ -118,10 +123,12 @@ export default function PromptsPage() {
 
   // 处理分页
   const handlePageChange = (newPage: number) => {
-    setFilters({ ...filters, page: newPage });
-    // 滚动到页面顶部
-    if (typeof window !== 'undefined') {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+    if (newPage >= 1 && newPage <= totalPages) {
+      setFilters({ ...filters, page: newPage });
+      // 滚动到页面顶部
+      if (typeof window !== 'undefined') {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
     }
   };
 
@@ -144,14 +151,14 @@ export default function PromptsPage() {
         animate={{ opacity: 1, y: 0 }}
         className="flex items-center justify-between p-4 md:p-6 bg-dark-card/30 backdrop-blur-md rounded-xl border border-dark-border shadow-xl"
       >
-        <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
+        <div className="flex flex-1 items-center justify-between">
           <div>
             <p className="text-sm text-gray-400">
               显示第 <span className="font-medium text-neon-cyan">{(currentPage - 1) * (filters.pageSize || 21) + 1}</span> 到{' '}
               <span className="font-medium text-neon-cyan">
-                {Math.min(currentPage * (filters.pageSize || 21), prompts.length)}
+                {Math.min(currentPage * (filters.pageSize || 21), totalCount)}
               </span>{' '}
-              条，共 <span className="font-medium text-neon-purple">{prompts.length}</span> 条结果
+              条，共 <span className="font-medium text-neon-purple">{totalCount}</span> 条结果
             </p>
           </div>
           <div>
@@ -160,7 +167,7 @@ export default function PromptsPage() {
               <button
                 onClick={() => handlePageChange(currentPage - 1)}
                 disabled={currentPage === 1}
-                className="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-dark-border hover:bg-dark-card focus:z-20 focus:outline-offset-0 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-dark-border hover:bg-dark-card focus:z-20 focus:outline-offset-0 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
               >
                 <span className="sr-only">Previous</span>
                 <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
@@ -173,10 +180,10 @@ export default function PromptsPage() {
                 <button
                   key={page}
                   onClick={() => handlePageChange(page)}
-                  className={`relative inline-flex items-center px-4 py-2 text-sm font-semibold ring-1 ring-inset ring-dark-border hover:bg-dark-card focus:z-20 focus:outline-offset-0 ${
+                  className={`relative inline-flex items-center px-4 py-2 text-sm font-semibold ring-1 ring-inset ring-dark-border focus:z-20 focus:outline-offset-0 transition-all duration-300 ${
                     page === currentPage
-                      ? 'z-10 bg-neon-cyan text-dark-bg-primary'
-                      : 'text-gray-300'
+                      ? 'z-10 bg-gradient-to-r from-neon-cyan to-neon-purple text-white shadow-lg'
+                      : 'text-gray-300 hover:bg-neon-cyan/20 hover:text-neon-cyan'
                   }`}
                 >
                   {page}
@@ -187,7 +194,7 @@ export default function PromptsPage() {
               <button
                 onClick={() => handlePageChange(currentPage + 1)}
                 disabled={currentPage === totalPages}
-                className="relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-dark-border hover:bg-dark-card focus:z-20 focus:outline-offset-0 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-dark-border hover:bg-dark-card focus:z-20 focus:outline-offset-0 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
               >
                 <span className="sr-only">Next</span>
                 <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">

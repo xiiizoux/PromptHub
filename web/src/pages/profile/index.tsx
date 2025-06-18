@@ -333,59 +333,73 @@ const ProfilePage = () => {
     }
   };
 
-  const fetchUserPrompts = async () => {
+  // 处理提示词页面变更
+  const handlePromptPageChange = (page: number) => {
+    if (page >= 1 && page <= promptTotalPages) {
+      setPromptCurrentPage(page);
+    }
+  };
+
+  // 获取用户提示词
+  const fetchUserPrompts = async (page: number = 1) => {
+    if (!user?.id) return;
+    
     setPromptsLoading(true);
     try {
-      // 直接使用Supabase适配器获取用户提示词
-      const { default: supabaseAdapter } = await import('@/lib/supabase-adapter');
-      
-      if (!user?.id) {
-        console.warn('未登录用户无法获取提示词');
-        setPromptsLoading(false);
-        return;
+      const token = await getToken();
+      if (!token) {
+        throw new Error('获取认证令牌失败');
       }
+
+      const response = await fetch(`/api/profile/prompts?page=${page}&pageSize=${promptPageSize}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`请求失败: ${response.status}`);
+      }
+
+      const data = await response.json();
       
-      try {
-        // 使用适配器获取用户提示词，支持分页
-        const result = await supabaseAdapter.getPrompts({
-          userId: user.id,
-          page: promptCurrentPage,
-          pageSize: promptPageSize
+      if (data.success) {
+        setUserPrompts(data.data.prompts || []);
+        const pagination = data.data.pagination;
+        setPromptTotalPages(pagination?.totalPages || 1);
+        setPromptTotalCount(pagination?.total || 0);
+        
+        // 更新统计
+        const totalPrompts = pagination?.total || 0;
+        const publicPrompts = data.data.prompts?.filter((p: any) => p.is_public)?.length || 0;
+        const privatePrompts = totalPrompts - publicPrompts;
+        
+        setPromptCounts({
+          total: totalPrompts,
+          public: publicPrompts,
+          private: privatePrompts
         });
-        
-        console.log('获取到用户提示词:', result.data.length, '总数:', result.total);
-        setUserPrompts(result.data || []);
-        setPromptTotalPages(result.totalPages || 1);
-        setPromptTotalCount(result.total || 0);
-      } catch (adapterError) {
-        console.error('通过适配器获取提示词失败:', adapterError);
-        
-        // 如果适配器方法失败，回退到直接API调用
-        const token = await getToken();
-        if (!token) {
-          console.error('无法获取认证令牌');
-          return;
-        }
-        
-        const response = await fetch(`/api/profile/prompts?page=${promptCurrentPage}&pageSize=${promptPageSize}`, {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
-        
-        if (response.ok) {
-          const data = await response.json();
-          setUserPrompts(data.prompts || []);
-          setPromptTotalPages(data.pagination?.totalPages || 1);
-          setPromptTotalCount(data.pagination?.total || 0);
-        }
+      } else {
+        throw new Error(data.message || '获取用户提示词失败');
       }
     } catch (error) {
       console.error('获取用户提示词失败:', error);
+      setUserPrompts([]);
+      setPromptTotalPages(1);
+      setPromptTotalCount(0);
+      setPromptCounts({ total: 0, public: 0, private: 0 });
     } finally {
       setPromptsLoading(false);
     }
   };
+
+  // 监听页面变化，重新获取数据
+  useEffect(() => {
+    if (user?.id && activeTab === 'prompts') {
+      fetchUserPrompts(promptCurrentPage);
+    }
+  }, [user?.id, activeTab, promptCurrentPage]);
 
   // 获取收藏夹
   const fetchBookmarks = async () => {
@@ -1120,15 +1134,6 @@ const ProfilePage = () => {
       setTimeout(() => setCopiedKey(null), 2000);
     } catch (error) {
       console.error('复制失败:', error);
-    }
-  };
-
-  // 处理提示词分页
-  const handlePromptPageChange = (newPage: number) => {
-    setPromptCurrentPage(newPage);
-    // 滚动到页面顶部
-    if (typeof window !== 'undefined') {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
 
