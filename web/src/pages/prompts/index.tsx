@@ -1,119 +1,145 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { getPrompts, getCategories, getTags } from '@/lib/api';
-import { PromptInfo, PromptFilters as PromptFiltersType } from '@/types';
 import PromptCard from '@/components/prompts/PromptCard';
 import PromptFilters from '@/components/prompts/PromptFilters';
+import { getPrompts, getCategories, getTags } from '@/lib/api';
+import { PromptInfo, PromptFilters as PromptFiltersType } from '@/types';
 
 export default function PromptsPage() {
-  // 状态管理
+  // 使用ref跟踪组件是否已挂载
+  const isMountedRef = useRef(true);
+  
+  // 状态定义
   const [prompts, setPrompts] = useState<PromptInfo[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [categories, setCategories] = useState<string[]>([]);
   const [tags, setTags] = useState<string[]>([]);
-  const [filters, setFilters] = useState<PromptFiltersType>({
-    page: 1,
-    pageSize: 21,
-    sortBy: 'latest',
-  });
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
+  const [filters, setFilters] = useState<PromptFiltersType>({
+    search: '',
+    category: '',
+    tags: [],
+    sortBy: 'latest',
+    page: 1,
+    pageSize: 21
+  });
 
-  // 获取分类数据
+  // 组件卸载时清理
   useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        console.log('开始获取类别数据...');
-        const data = await getCategories();
-        console.log('获取到的类别数据:', data);
-        
-        if (data && Array.isArray(data)) {
-          setCategories(data);
-        } else {
-          setCategories(['通用']);
-        }
-      } catch (err) {
-        console.error('获取分类失败:', err);
-        setCategories(['通用']);
-      }
+    return () => {
+      isMountedRef.current = false;
     };
-
-    fetchCategories();
   }, []);
-  
-  // 获取标签数据
-  useEffect(() => {
-    const fetchTags = async () => {
-      try {
-        const data = await getTags();
-        if (data && Array.isArray(data)) {
-          setTags(data);
-        } else {
-          setTags(['GPT-4', 'GPT-3.5', 'Claude', 'Gemini', '初学者', '高级']);
-        }
-      } catch (err) {
-        console.error('获取标签失败:', err);
+
+  // 获取分类数据 - 使用useCallback避免重复创建
+  const fetchCategories = useCallback(async () => {
+    if (!isMountedRef.current) return;
+    
+    try {
+      const data = await getCategories();
+      if (isMountedRef.current && data && Array.isArray(data)) {
+        setCategories(data);
+      } else if (isMountedRef.current) {
+        setCategories(['通用', '编程', '写作', '学术', '创意', '商业', '翻译', '教育']);
+      }
+    } catch (err) {
+      console.error('获取分类失败:', err);
+      if (isMountedRef.current) {
+        setCategories(['通用', '编程', '写作', '学术', '创意', '商业', '翻译', '教育']);
+      }
+    }
+  }, []);
+
+  // 获取标签数据 - 使用useCallback避免重复创建
+  const fetchTags = useCallback(async () => {
+    if (!isMountedRef.current) return;
+    
+    try {
+      const data = await getTags();
+      if (isMountedRef.current && data && Array.isArray(data)) {
+        setTags(data);
+      } else if (isMountedRef.current) {
         setTags(['GPT-4', 'GPT-3.5', 'Claude', 'Gemini', '初学者', '高级']);
       }
-    };
-
-    fetchTags();
+    } catch (err) {
+      console.error('获取标签失败:', err);
+      if (isMountedRef.current) {
+        setTags(['GPT-4', 'GPT-3.5', 'Claude', 'Gemini', '初学者', '高级']);
+      }
+    }
   }, []);
 
-  // 获取提示词数据
-  useEffect(() => {
-    const fetchPrompts = async () => {
-      console.log('开始获取提示词数据，filters:', filters);
-      setLoading(true);
-      setError(null);
+  // 获取提示词数据 - 使用useCallback避免重复创建
+  const fetchPrompts = useCallback(async (currentFilters: PromptFiltersType) => {
+    if (!isMountedRef.current) return;
+    
+    console.log('开始获取提示词数据，filters:', currentFilters);
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const response = await getPrompts(currentFilters);
+      console.log('获取提示词响应:', response);
       
-      try {
-        const response = await getPrompts(filters);
-        console.log('获取提示词响应:', response);
-        
-        if (response && response.data && Array.isArray(response.data)) {
-          console.log('设置提示词数据，数量:', response.data.length);
-          setPrompts(response.data);
-          setTotalPages(response.totalPages || 1);
-          setTotalCount(response.total || 0);
-          setError(null);
-        } else {
-          console.error('获取提示词数据格式错误:', response);
-          setPrompts([]);
-          setTotalPages(1);
-          setTotalCount(0);
-          setError('获取提示词数据格式错误');
-        }
-      } catch (err) {
-        console.error('获取提示词失败:', err);
+      if (!isMountedRef.current) return; // 再次检查组件是否已卸载
+      
+      if (response && response.data && Array.isArray(response.data)) {
+        console.log('设置提示词数据，数量:', response.data.length);
+        // 批量状态更新，避免多次渲染
+        setPrompts(response.data);
+        setTotalPages(response.totalPages || 1);
+        setTotalCount(response.total || 0);
+        setError(null);
+      } else {
+        console.error('获取提示词数据格式错误:', response);
+        setPrompts([]);
+        setTotalPages(1);
+        setTotalCount(0);
+        setError('获取提示词数据格式错误');
+      }
+    } catch (err) {
+      console.error('获取提示词失败:', err);
+      if (isMountedRef.current) {
         setError('无法加载提示词，请稍后再试');
         setPrompts([]);
         setTotalPages(1);
         setTotalCount(0);
-      } finally {
+      }
+    } finally {
+      if (isMountedRef.current) {
         console.log('提示词数据加载完成');
         setLoading(false);
       }
-    };
+    }
+  }, []);
 
-    fetchPrompts();
-  }, [filters]);
+  // 初始化数据加载
+  useEffect(() => {
+    fetchCategories();
+    fetchTags();
+  }, [fetchCategories, fetchTags]);
 
-  // 处理过滤器变更
-  const handleFilterChange = (newFilters: PromptFiltersType) => {
+  // 当filters变化时获取数据
+  useEffect(() => {
+    fetchPrompts(filters);
+  }, [filters, fetchPrompts]);
+
+  // 处理过滤器变更 - 使用useCallback避免重复创建
+  const handleFilterChange = useCallback((newFilters: PromptFiltersType) => {
     console.log('过滤器变更:', newFilters);
     setFilters({ ...newFilters, page: 1 });
-  };
+  }, []);
 
-  // 处理分页
-  const handlePageChange = (newPage: number) => {
+  // 处理分页 - 使用useCallback避免重复创建
+  const handlePageChange = useCallback((newPage: number) => {
     console.log('页面变更:', newPage);
     if (newPage >= 1 && newPage <= totalPages) {
-      setFilters({ ...filters, page: newPage });
+      setFilters((prev: PromptFiltersType) => ({ ...prev, page: newPage }));
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
-  };
+  }, [totalPages]);
 
   const renderPagination = () => {
     if (totalPages <= 1) return null;
@@ -129,11 +155,7 @@ export default function PromptsPage() {
     }
 
     return (
-      <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="flex items-center justify-between p-4 md:p-6 bg-dark-card/30 backdrop-blur-md rounded-xl border border-dark-border shadow-xl"
-      >
+      <div className="flex items-center justify-between p-4 md:p-6 bg-dark-card/30 backdrop-blur-md rounded-xl border border-dark-border shadow-xl">
         <div className="flex flex-1 items-center justify-between">
           <div>
             <p className="text-sm text-gray-400">
@@ -187,7 +209,7 @@ export default function PromptsPage() {
             </nav>
           </div>
         </div>
-      </motion.div>
+      </div>
     );
   };
 
@@ -208,97 +230,56 @@ export default function PromptsPage() {
         <div className="container-custom">
           <div className="minimal-spacing">
             {/* 页面标题 */}
-            <motion.div 
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8 }}
-              className="text-center"
-            >
-              <motion.h1 
-                className="text-4xl md:text-5xl lg:text-6xl font-bold bg-gradient-to-r from-neon-cyan via-neon-purple to-neon-pink bg-clip-text text-transparent mb-3 md:mb-4"
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 1, delay: 0.2 }}
-              >
+            <div className="text-center">
+              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold bg-gradient-to-r from-neon-cyan via-neon-purple to-neon-pink bg-clip-text text-transparent mb-3 md:mb-4">
                 探索提示词宇宙
-              </motion.h1>
-              <motion.p 
-                className="text-lg md:text-xl text-gray-400 max-w-3xl mx-auto leading-relaxed"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, delay: 0.4 }}
-              >
+              </h1>
+              <p className="text-lg md:text-xl text-gray-400 max-w-3xl mx-auto leading-relaxed">
                 在这里发现最强大的AI提示词，解锁无限创意可能
-              </motion.p>
-            </motion.div>
+              </p>
+            </div>
 
             {/* 过滤器 */}
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.6 }}
-            >
+            <div>
               <PromptFilters
                 filters={filters}
                 onFilterChange={handleFilterChange}
                 categories={categories}
                 tags={tags}
               />
-            </motion.div>
+            </div>
 
             {/* 错误提示 */}
-            <AnimatePresence>
-              {error && (
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  className="mb-8"
-                >
-                  <div className="p-6 bg-gradient-to-r from-red-500/20 to-pink-500/20 border border-red-500/30 rounded-xl backdrop-blur-sm">
-                    <div className="flex items-center">
-                      <div className="flex-shrink-0">
-                        <svg className="h-6 w-6 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                      </div>
-                      <div className="ml-3">
-                        <h3 className="text-lg font-medium text-red-300">发生错误</h3>
-                        <div className="mt-2 text-red-200">
-                          <p>{error}</p>
-                        </div>
+            {error && (
+              <div className="mb-8">
+                <div className="p-6 bg-gradient-to-r from-red-500/20 to-pink-500/20 border border-red-500/30 rounded-xl backdrop-blur-sm">
+                  <div className="flex items-center">
+                    <div className="flex-shrink-0">
+                      <svg className="h-6 w-6 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    </div>
+                    <div className="ml-3">
+                      <h3 className="text-lg font-medium text-red-300">发生错误</h3>
+                      <div className="mt-2 text-red-200">
+                        <p>{error}</p>
                       </div>
                     </div>
                   </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
+                </div>
+              </div>
+            )}
 
             {/* 主要内容区域 */}
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.8 }}
-              className="bg-dark-card/30 backdrop-blur-md rounded-2xl border border-dark-border shadow-2xl overflow-hidden"
-            >
+            <div className="bg-dark-card/30 backdrop-blur-md rounded-2xl border border-dark-border shadow-2xl overflow-hidden">
               {loading ? (
-                <motion.div 
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="text-center py-20"
-                >
+                <div className="text-center py-20">
                   <div className="relative inline-block">
                     <div className="w-16 h-16 border-4 border-neon-cyan/30 border-t-neon-cyan rounded-full animate-spin"></div>
                     <div className="absolute inset-0 w-16 h-16 border-4 border-transparent border-t-neon-purple rounded-full animate-spin animate-reverse"></div>
                   </div>
-                  <motion.p 
-                    className="mt-6 text-xl text-gray-400"
-                    animate={{ opacity: [0.5, 1, 0.5] }}
-                    transition={{ duration: 2, repeat: Infinity }}
-                  >
-                    正在加载提示词...
-                  </motion.p>
-                </motion.div>
+                  <p className="mt-6 text-xl text-gray-400">正在加载提示词...</p>
+                </div>
               ) : (
                 <>
                   {prompts && prompts.length > 0 ? (
@@ -324,23 +305,13 @@ export default function PromptsPage() {
 
                       {/* 分页 */}
                       {totalPages > 1 && (
-                        <motion.div
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ duration: 0.8, delay: 1.5 }}
-                          className="border-t border-dark-border"
-                        >
+                        <div className="border-t border-dark-border">
                           {renderPagination()}
-                        </motion.div>
+                        </div>
                       )}
                     </>
                   ) : (
-                    <motion.div 
-                      initial={{ opacity: 0, scale: 0.9 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{ duration: 0.6, delay: 1 }}
-                      className="text-center py-20"
-                    >
+                    <div className="text-center py-20">
                       <div className="w-20 h-20 rounded-full bg-gradient-to-r from-gray-600/20 to-gray-400/20 flex items-center justify-center mx-auto mb-6">
                         <svg className="h-10 w-10 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -354,11 +325,11 @@ export default function PromptsPage() {
                         <p>API响应: totalCount={totalCount}, loading={loading.toString()}</p>
                         <p>过滤器: {JSON.stringify(filters)}</p>
                       </div>
-                    </motion.div>
+                    </div>
                   )}
                 </>
               )}
-            </motion.div>
+            </div>
           </div>
         </div>
       </div>
