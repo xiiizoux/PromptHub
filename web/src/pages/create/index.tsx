@@ -90,15 +90,21 @@ function CreatePromptPage() {
   const applyAIResults = (data: Partial<AIAnalysisResult>) => {
     console.log('应用AI分析结果:', data);
     
-    // 应用分类 - 直接应用AI建议的分类，与编辑页面保持一致
+    // 应用分类 - 确保正确应用AI建议的分类
     if (data.category) {
       const mapped = matchCategory(data.category, categories);
       if (mapped) {
         setValue('category', mapped);
-        console.log(`AI分类应用: -> ${mapped}`);
+        console.log(`AI分类应用: ${data.category} -> ${mapped}`);
       } else {
-        setValue('category', '通用');
-        console.log(`AI分类应用: -> 通用 (默认)`);
+        // 如果匹配失败，检查分类是否在预设列表中
+        if (categories.includes(data.category)) {
+          setValue('category', data.category);
+          console.log(`AI分类直接应用: ${data.category}`);
+        } else {
+          setValue('category', '通用');
+          console.log(`AI分类无法匹配，使用默认分类: ${data.category} -> 通用`);
+        }
       }
     }
     
@@ -195,9 +201,16 @@ function CreatePromptPage() {
               console.log('应用AI建议描述:', analysisResult.description);
             }
             
+            // 修复分类应用问题 - 使用正确的分类匹配逻辑
             if (analysisResult.category && (!watch('category') || (watch('category') || '').trim() === '')) {
-              setValue('category', analysisResult.category);
-              console.log('应用AI分类:', analysisResult.category);
+              const mappedCategory = matchCategory(analysisResult.category, categories);
+              if (mappedCategory) {
+                setValue('category', mappedCategory);
+                console.log('应用AI分类:', analysisResult.category, '->', mappedCategory);
+              } else {
+                setValue('category', '通用');
+                console.log('AI分类无法匹配，使用默认分类:', analysisResult.category, '-> 通用');
+              }
             }
             
             if (analysisResult.version && (!watch('version') || watch('version') === 1.0)) {

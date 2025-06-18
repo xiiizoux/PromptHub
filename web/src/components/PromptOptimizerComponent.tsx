@@ -178,9 +178,17 @@ export const PromptOptimizerComponent: React.FC<PromptOptimizerProps> = ({
 
   // 添加填充到创建提示词的方法 - 只填充内容
   const fillToCreatePrompt = () => {
-    // 构建URL参数 - 只传递优化后的内容
+    // 确保使用优化后的提示词内容，如果没有优化内容则使用原始内容
+    const contentToUse = optimizedPrompt || prompt;
+    
+    if (!contentToUse.trim()) {
+      toast.error('请先输入或优化提示词内容');
+      return;
+    }
+    
+    // 构建URL参数 - 传递优化后的内容
     const params = new URLSearchParams({
-      optimizedContent: encodeURIComponent(optimizedPrompt)
+      optimizedContent: encodeURIComponent(contentToUse)
     });
     
     // 跳转到创建提示词页面
@@ -527,13 +535,15 @@ export const PromptOptimizerComponent: React.FC<PromptOptimizerProps> = ({
                 <AdjustmentsHorizontalIcon className="h-4 w-4" />
               </button>
               
-              {/* 智能分析按钮 */}
-              <AIAnalyzeButton
-                content={optimizedPrompt}
-                onAnalysisComplete={handleAIAnalysisComplete}
-                variant="full"
-                className="!px-3 !py-2 !text-sm"
-              />
+              {/* 智能分析按钮 - 确保分析优化后的内容 */}
+              <div title="对优化后的提示词进行智能分析">
+                <AIAnalyzeButton
+                  content={optimizedPrompt || prompt}
+                  onAnalysisComplete={handleAIAnalysisComplete}
+                  variant="full"
+                  className="!px-3 !py-2 !text-sm"
+                />
+              </div>
               
               <button
                 onClick={fillToCreatePrompt}
@@ -599,9 +609,12 @@ export const PromptOptimizerComponent: React.FC<PromptOptimizerProps> = ({
                     // 在优化器中，应用全部建议时跳转到创建提示词页面
                     console.log('应用AI分析结果并跳转到创建提示词页面:', data);
                     
+                    // 确保使用优化后的提示词内容
+                    const contentToUse = optimizedPrompt || prompt;
+                    
                     // 构建URL参数，包含优化内容和AI分析结果
                     const params = new URLSearchParams({
-                      optimizedContent: encodeURIComponent(optimizedPrompt),
+                      optimizedContent: encodeURIComponent(contentToUse),
                       aiAnalysisResult: encodeURIComponent(JSON.stringify(aiAnalysisResult))
                     });
                     
