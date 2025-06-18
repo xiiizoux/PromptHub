@@ -813,6 +813,7 @@ export class SupabaseAdapter {
         is_public: promptData.is_public ?? true,
         user_id: userId,
         version: typeof promptData.version === 'number' ? promptData.version : 1, // 确保版本是整数
+        compatible_models: Array.isArray(promptData.compatible_models) ? promptData.compatible_models : [], // 添加兼容模型字段
         created_at: new Date().toISOString(),
       };
       
@@ -825,6 +826,8 @@ export class SupabaseAdapter {
         name: promptToCreate.name,
         userId: promptToCreate.user_id,
         category: promptToCreate.category,
+        compatible_models: promptToCreate.compatible_models,
+        tags: promptToCreate.tags
       });
       
       // 创建管理员客户端以绕过RLS策略
