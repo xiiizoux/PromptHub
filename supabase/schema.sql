@@ -11,9 +11,9 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- 创建提示词分类枚举类型
 CREATE TYPE prompt_category AS ENUM (
-  '全部', '学术', '职业', '文案', '设计', '教育', '情感', 
-  '娱乐', '游戏', '通用', '生活', '商业', '办公', 
-  '编程', '翻译', '绘图', '视频', '播客', '音乐', 
+  '通用', '学术', '职业', '文案', '设计', '教育', '情感', 
+  '娱乐', '游戏', '生活', '商业', '办公', 
+  '编程', '翻译', '绘画', '视频', '播客', '音乐', 
   '健康', '科技'
 );
 
@@ -584,7 +584,6 @@ CREATE POLICY "Authenticated users can manage categories" ON categories
 -- 插入预置类别数据
 INSERT INTO categories (name, name_en, icon, description, sort_order) VALUES
 -- 基础类别
-('全部', 'all', 'grid-3x3', '显示所有类别的提示词', 0),
 ('通用', 'general', 'layers', '通用助手和日常对话类提示词', 10),
 
 -- 学术和专业类别

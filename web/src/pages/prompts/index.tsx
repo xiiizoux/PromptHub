@@ -35,19 +35,13 @@ export default function PromptsPage() {
         const data = await getCategories();
         console.log('获取到的类别数据:', data);
         // 直接使用字符串数组
-        // 确保"全部"选项始终存在
+        // 直接使用分类数据，不添加"全部"选项
         if (data && Array.isArray(data)) {
-          if (data.length > 0 && !data.includes('全部')) {
-            const finalCategories = ['全部', ...data];
-            console.log('设置类别数据（添加全部）:', finalCategories);
-            setCategories(finalCategories);
-          } else {
-            console.log('设置类别数据（原数据）:', data);
-            setCategories(data);
-          }
+          console.log('设置类别数据:', data);
+          setCategories(data);
         } else {
           console.log('类别数据格式错误，使用默认值');
-          setCategories(['全部']);
+          setCategories(['通用']);
         }
       } catch (err) {
         console.error('获取分类失败:', err);

@@ -184,8 +184,14 @@ async function getPrompt(req: NextApiRequest, res: NextApiResponse, id: string) 
     }
 
     // 获取类别信息
-    let categoryName = '未分类';
-    if (prompt.category_id) {
+    let categoryName = '通用';
+    
+    // 首先检查直接存储的分类名称
+    if (prompt.category) {
+      categoryName = prompt.category;
+    } 
+    // 如果没有直接分类名称，尝试从category_id查找
+    else if (prompt.category_id) {
       const { data: category } = await supabase
         .from('categories')
         .select('name')
