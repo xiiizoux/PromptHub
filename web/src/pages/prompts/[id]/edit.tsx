@@ -174,9 +174,7 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
     category: normalizeCategoryName(prompt.category),
     tags: Array.isArray(prompt.tags) ? prompt.tags : [],
     input_variables: Array.isArray(prompt.input_variables) ? prompt.input_variables : [],
-    compatible_models: Array.isArray(prompt.compatible_models) && prompt.compatible_models.length > 0 
-      ? prompt.compatible_models 
-      : ['llm-large', 'llm-medium'], // 使用新的模型ID格式作为默认值
+    compatible_models: Array.isArray(prompt.compatible_models) ? prompt.compatible_models : [], // 保持数据原始性
     version: currentVersionFormatted, // 使用正确的格式化版本号
     author: prompt.author || user?.display_name || user?.username || '未知用户',
     template_format: prompt.template_format || 'text',
@@ -1520,9 +1518,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       category: prompt.category || '通用',
       tags: Array.isArray(prompt.tags) ? prompt.tags : [],
       input_variables: Array.isArray(prompt.input_variables) ? prompt.input_variables : [],
-      compatible_models: Array.isArray(prompt.compatible_models) && prompt.compatible_models.length > 0 
-        ? prompt.compatible_models 
-        : ['llm-large', 'llm-medium'], // 确保有默认的兼容模型
+      compatible_models: Array.isArray(prompt.compatible_models) ? prompt.compatible_models : [], // 保持数据原始性
       template_format: prompt.template_format || 'text',
       version: typeof prompt.version === 'number' ? prompt.version : 1,
       author: prompt.author || prompt.user_id || '',

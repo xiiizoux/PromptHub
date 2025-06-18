@@ -602,12 +602,12 @@ export default function PromptDetailsPage({ prompt }: PromptDetailsPageProps) {
                 </div>
                 
                 {/* 兼容模型 */}
-                {prompt.compatible_models && prompt.compatible_models.length > 0 && (
-                  <div className="pt-4 border-t border-neon-cyan/20">
-                    <h4 className="text-sm font-medium text-gray-300 mb-3 flex items-center">
-                      <BoltIcon className="h-4 w-4 mr-2 text-neon-yellow" />
-                      兼容模型
-                    </h4>
+                <div className="pt-4 border-t border-neon-cyan/20">
+                  <h4 className="text-sm font-medium text-gray-300 mb-3 flex items-center">
+                    <BoltIcon className="h-4 w-4 mr-2 text-neon-yellow" />
+                    兼容模型
+                  </h4>
+                  {prompt.compatible_models && prompt.compatible_models.length > 0 ? (
                     <div className="space-y-2">
                       {prompt.compatible_models.map(modelId => {
                         const modelInfo = getModelDisplayInfo(modelId);
@@ -629,8 +629,17 @@ export default function PromptDetailsPage({ prompt }: PromptDetailsPageProps) {
                         );
                       })}
                     </div>
-                  </div>
-                )}
+                  ) : (
+                    <div className="p-3 rounded-lg bg-gray-800/30 border border-gray-600/30 text-center">
+                      <div className="text-sm text-gray-400 mb-1">
+                        🔧 未设置兼容模型
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        作者尚未指定此提示词的兼容AI模型
+                      </div>
+                    </div>
+                  )}
+                </div>
 
                 {/* 使用示例 */}
                 {prompt.examples && prompt.examples.length > 0 && (

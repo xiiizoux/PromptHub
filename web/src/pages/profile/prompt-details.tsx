@@ -229,9 +229,9 @@ const PromptDetails = () => {
                   <p className="text-gray-200">{prompt.author}</p>
                 </div>
               )}
-              {prompt.compatible_models && prompt.compatible_models.length > 0 && (
-                <div>
-                  <p className="text-gray-400">兼容模型</p>
+              <div>
+                <p className="text-gray-400">兼容模型</p>
+                {prompt.compatible_models && prompt.compatible_models.length > 0 ? (
                   <div className="flex flex-wrap gap-2 mt-1">
                     {prompt.compatible_models.map((modelId: string, index: number) => {
                       // 根据模型ID获取显示名称
@@ -249,8 +249,10 @@ const PromptDetails = () => {
                       );
                     })}
                   </div>
-                </div>
-              )}
+                ) : (
+                  <p className="text-gray-500 text-sm mt-1">未设置兼容模型</p>
+                )}
+              </div>
             </div>
           </div>
         </div>
