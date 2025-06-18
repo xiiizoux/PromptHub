@@ -3,22 +3,34 @@ import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getPrompts, getPromptPerformance } from '@/lib/api';
 import { PromptInfo, PromptPerformance } from '@/types';
-import { ChartBarIcon, ArrowRightIcon, CheckCircleIcon, ChartPieIcon, ClockIcon, StarIcon, FireIcon } from '@heroicons/react/24/outline';
+import { ChartBarIcon, ArrowRightIcon, CheckCircleIcon, ChartPieIcon, ClockIcon, StarIcon, FireIcon, ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
 
 export default function AnalyticsPage() {
   const [prompts, setPrompts] = useState<PromptInfo[]>([]);
   const [performanceData, setPerformanceData] = useState<Record<string, PromptPerformance>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
+  // 分页相关状态
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const pageSize = 20; // 每页显示20个
+  const totalPages = Math.ceil(totalCount / pageSize);
 
   // 获取提示词和性能数据
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // 获取提示词列表
-        const response = await getPrompts({ sortBy: 'popular', pageSize: 20 });
+        setLoading(true);
+        // 获取指定页面的提示词列表
+        const response = await getPrompts({ 
+          sortBy: 'latest', 
+          page: currentPage,
+          pageSize: pageSize 
+        });
         const promptList = response.data || [];
         setPrompts(promptList);
+        setTotalCount(response.total || 0);
         
         // 获取每个提示词的性能数据（只处理有ID的提示词）
         const promptsWithId = promptList.filter(prompt => prompt.id);
@@ -47,7 +59,95 @@ export default function AnalyticsPage() {
     };
 
     fetchData();
-  }, []);
+  }, [currentPage]);
+
+  // 处理页面变更
+  const handlePageChange = (page: number) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
+    }
+  };
+
+  // 渲染分页组件
+  const renderPagination = () => {
+    if (totalPages <= 1) return null;
+
+    const maxVisiblePages = 5; // 显示5个页码
+    const startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+    const endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+
+    const pages = [];
+    for (let i = startPage; i <= endPage; i++) {
+      pages.push(i);
+    }
+
+    return (
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="flex items-center justify-between p-6 bg-dark-bg-secondary/30 backdrop-blur-md border-t border-dark-border"
+      >
+        <div className="flex flex-1 items-center justify-between">
+          <div>
+            <p className="text-sm text-gray-400">
+              显示第 <span className="font-medium text-neon-cyan">{(currentPage - 1) * pageSize + 1}</span> 到{' '}
+              <span className="font-medium text-neon-cyan">
+                {Math.min(currentPage * pageSize, totalCount)}
+              </span>{' '}
+              条，共 <span className="font-medium text-neon-purple">{totalCount}</span> 条结果
+            </p>
+          </div>
+          
+          <div className="flex items-center space-x-2">
+            {/* 上一页按钮 */}
+            <button
+              onClick={() => handlePageChange(currentPage - 1)}
+              disabled={currentPage === 1}
+              className={`relative inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg transition-all duration-300 ${
+                currentPage === 1
+                  ? 'text-gray-500 bg-dark-bg-secondary/50 cursor-not-allowed'
+                  : 'text-gray-300 bg-dark-bg-secondary hover:bg-neon-cyan/20 hover:text-neon-cyan'
+              }`}
+            >
+              <ChevronLeftIcon className="h-4 w-4 mr-1" />
+              上一页
+            </button>
+
+            {/* 页码按钮 */}
+            <div className="flex items-center space-x-1">
+              {pages.map((page) => (
+                <button
+                  key={page}
+                  onClick={() => handlePageChange(page)}
+                  className={`relative inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg transition-all duration-300 ${
+                    currentPage === page
+                      ? 'bg-gradient-to-r from-neon-cyan to-neon-purple text-white shadow-lg'
+                      : 'text-gray-300 bg-dark-bg-secondary hover:bg-neon-cyan/20 hover:text-neon-cyan'
+                  }`}
+                >
+                  {page}
+                </button>
+              ))}
+            </div>
+
+            {/* 下一页按钮 */}
+            <button
+              onClick={() => handlePageChange(currentPage + 1)}
+              disabled={currentPage === totalPages}
+              className={`relative inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg transition-all duration-300 ${
+                currentPage === totalPages
+                  ? 'text-gray-500 bg-dark-bg-secondary/50 cursor-not-allowed'
+                  : 'text-gray-300 bg-dark-bg-secondary hover:bg-neon-cyan/20 hover:text-neon-cyan'
+              }`}
+            >
+              下一页
+              <ChevronRightIcon className="h-4 w-4 ml-1" />
+            </button>
+          </div>
+        </div>
+      </motion.div>
+    );
+  };
 
   // 计算百分比
   const formatPercent = (value: number) => {
@@ -333,6 +433,9 @@ export default function AnalyticsPage() {
                     </tbody>
                   </table>
                 </div>
+                
+                {/* 分页控件 */}
+                {renderPagination()}
               </motion.div>
 
               {/* 优化建议 */}
