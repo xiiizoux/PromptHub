@@ -761,6 +761,7 @@ function CreatePromptPage() {
                   标签
                 </label>
                 
+                {/* 添加标签输入框 */}
                 <div className="flex gap-2">
                   <input
                     type="text"
@@ -780,6 +781,40 @@ function CreatePromptPage() {
                     <PlusCircleIcon className="h-5 w-5" />
                   </motion.button>
                 </div>
+
+                {/* 已选标签 */}
+                <AnimatePresence>
+                  {tags.length > 0 && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="space-y-2"
+                    >
+                      <p className="text-xs text-gray-500">已选标签：</p>
+                      <div className="flex flex-wrap gap-2">
+                        {tags.map((tag) => (
+                          <motion.span
+                            key={tag}
+                            initial={{ opacity: 0, scale: 0.8 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.8 }}
+                            className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-neon-purple/20 text-neon-purple border border-neon-purple/30"
+                          >
+                            {tag}
+                            <button
+                              type="button"
+                              onClick={() => removeTag(tag)}
+                              className="ml-2 hover:text-neon-red transition-colors"
+                            >
+                              <XMarkIcon className="h-4 w-4" />
+                            </button>
+                          </motion.span>
+                        ))}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
 
                 {/* 推荐标签 */}
                 <div className="space-y-2">
@@ -802,37 +837,6 @@ function CreatePromptPage() {
                     ))}
                   </div>
                 </div>
-
-                {/* 已选标签 */}
-                <AnimatePresence>
-                  {tags.length > 0 && (
-                    <motion.div
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: 'auto' }}
-                      exit={{ opacity: 0, height: 0 }}
-                      className="flex flex-wrap gap-2"
-                    >
-                      {tags.map((tag) => (
-                        <motion.span
-                          key={tag}
-                          initial={{ opacity: 0, scale: 0.8 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          exit={{ opacity: 0, scale: 0.8 }}
-                          className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-neon-purple/20 text-neon-purple border border-neon-purple/30"
-                        >
-                          {tag}
-                          <button
-                            type="button"
-                            onClick={() => removeTag(tag)}
-                            className="ml-2 hover:text-neon-red transition-colors"
-                          >
-                            <XMarkIcon className="h-4 w-4" />
-                          </button>
-                        </motion.span>
-                      ))}
-                    </motion.div>
-                  )}
-                </AnimatePresence>
               </motion.div>
 
               {/* 兼容模型 */}
