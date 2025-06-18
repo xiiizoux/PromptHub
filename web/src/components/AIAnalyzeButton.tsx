@@ -229,12 +229,22 @@ export const AIAnalysisResultDisplay: React.FC<AIAnalysisResultDisplayProps> = (
   onApplyResults
 }) => {
   const [appliedFields, setAppliedFields] = useState<Set<string>>(new Set());
+  const [copiedField, setCopiedField] = useState<string | null>(null);
 
   const applyField = (fieldName: string, value: any) => {
     if (onApplyResults) {
       onApplyResults({ [fieldName]: value });
       setAppliedFields(prev => new Set(Array.from(prev).concat(fieldName)));
     }
+  };
+
+  const copyToClipboard = (text: string, fieldName: string) => {
+    navigator.clipboard.writeText(text).then(() => {
+      setCopiedField(fieldName);
+      setTimeout(() => setCopiedField(null), 2000);
+    }).catch((error) => {
+      console.error('复制失败:', error);
+    });
   };
 
   const applyAllResults = () => {
@@ -302,7 +312,7 @@ export const AIAnalysisResultDisplay: React.FC<AIAnalysisResultDisplayProps> = (
           <div>
             <p className="text-xs text-gray-300 leading-relaxed">
               <span className="text-neon-cyan font-semibold">智能建议系统：</span>
-              以下是AI神经网络分析的优化建议，您可以选择性地应用这些建议到表单中。点击各项的"应用"按钮可单独应用某项建议。
+              以下是AI神经网络分析的优化建议，您可以选择性地应用这些建议到表单中。点击各项的"应用"按钮可单独应用某项建议，"复制"按钮可复制内容到剪贴板。
             </p>
           </div>
         </div>
@@ -321,18 +331,28 @@ export const AIAnalysisResultDisplay: React.FC<AIAnalysisResultDisplayProps> = (
                   </div>
                   <h4 className="font-semibold text-gray-200 text-xs">建议标题</h4>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => applyField('suggestedTitle', result.suggestedTitle)}
-                  disabled={appliedFields.has('suggestedTitle')}
-                  className={`px-2 py-1 rounded-md text-xs font-medium transition-all duration-200 ${
-                    appliedFields.has('suggestedTitle')
-                      ? 'bg-neon-green/20 text-neon-green border border-neon-green/30'
-                      : 'bg-neon-yellow/20 text-neon-yellow border border-neon-yellow/30 hover:bg-neon-yellow/30'
-                  }`}
-                >
-                  {appliedFields.has('suggestedTitle') ? '✅ 已应用' : '应用'}
-                </button>
+                <div className="flex gap-1">
+                  <button
+                    type="button"
+                    onClick={() => copyToClipboard(result.suggestedTitle || '', 'suggestedTitle')}
+                    className="px-2 py-1 rounded-md text-xs font-medium transition-all duration-200 bg-gray-600/50 text-gray-300 hover:bg-gray-500/50 hover:text-white"
+                    title="复制标题"
+                  >
+                    {copiedField === 'suggestedTitle' ? '✅' : '📋'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => applyField('suggestedTitle', result.suggestedTitle)}
+                    disabled={appliedFields.has('suggestedTitle')}
+                    className={`px-2 py-1 rounded-md text-xs font-medium transition-all duration-200 ${
+                      appliedFields.has('suggestedTitle')
+                        ? 'bg-neon-green/20 text-neon-green border border-neon-green/30'
+                        : 'bg-neon-yellow/20 text-neon-yellow border border-neon-yellow/30 hover:bg-neon-yellow/30'
+                    }`}
+                  >
+                    {appliedFields.has('suggestedTitle') ? '✅ 已应用' : '应用'}
+                  </button>
+                </div>
               </div>
               <div className="bg-gradient-to-r from-dark-bg-secondary/60 to-dark-bg-primary/60 rounded-md p-3 border border-neon-yellow/30 backdrop-blur-sm">
                 <p className="text-gray-100 font-medium text-sm leading-relaxed">{result.suggestedTitle}</p>
@@ -352,18 +372,28 @@ export const AIAnalysisResultDisplay: React.FC<AIAnalysisResultDisplayProps> = (
                   </div>
                   <h4 className="font-semibold text-gray-200 text-xs">建议描述</h4>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => applyField('description', result.description)}
-                  disabled={appliedFields.has('description')}
-                  className={`px-2 py-1 rounded-md text-xs font-medium transition-all duration-200 ${
-                    appliedFields.has('description')
-                      ? 'bg-neon-green/20 text-neon-green border border-neon-green/30'
-                      : 'bg-neon-orange/20 text-neon-orange border border-neon-orange/30 hover:bg-neon-orange/30'
-                  }`}
-                >
-                  {appliedFields.has('description') ? '✅ 已应用' : '应用'}
-                </button>
+                <div className="flex gap-1">
+                  <button
+                    type="button"
+                    onClick={() => copyToClipboard(result.description || '', 'description')}
+                    className="px-2 py-1 rounded-md text-xs font-medium transition-all duration-200 bg-gray-600/50 text-gray-300 hover:bg-gray-500/50 hover:text-white"
+                    title="复制描述"
+                  >
+                    {copiedField === 'description' ? '✅' : '📋'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => applyField('description', result.description)}
+                    disabled={appliedFields.has('description')}
+                    className={`px-2 py-1 rounded-md text-xs font-medium transition-all duration-200 ${
+                      appliedFields.has('description')
+                        ? 'bg-neon-green/20 text-neon-green border border-neon-green/30'
+                        : 'bg-neon-orange/20 text-neon-orange border border-neon-orange/30 hover:bg-neon-orange/30'
+                    }`}
+                  >
+                    {appliedFields.has('description') ? '✅ 已应用' : '应用'}
+                  </button>
+                </div>
               </div>
               <div className="bg-gradient-to-r from-dark-bg-secondary/60 to-dark-bg-primary/60 rounded-md p-3 border border-neon-orange/30 backdrop-blur-sm">
                 <p className="text-gray-200 text-sm leading-relaxed line-clamp-2">
@@ -384,18 +414,28 @@ export const AIAnalysisResultDisplay: React.FC<AIAnalysisResultDisplayProps> = (
                 </div>
                 <h4 className="font-semibold text-gray-200 text-xs">版本建议</h4>
               </div>
-              <button
-                type="button"
-                onClick={() => applyField('version', result.version)}
-                disabled={appliedFields.has('version')}
-                className={`px-2 py-1 rounded-md text-xs font-medium transition-all duration-200 ${
-                  appliedFields.has('version')
-                    ? 'bg-neon-green/20 text-neon-green border border-neon-green/30'
-                    : 'bg-neon-pink/20 text-neon-pink border border-neon-pink/30 hover:bg-neon-pink/30'
-                }`}
-              >
-                {appliedFields.has('version') ? '✅ 已应用' : '应用'}
-              </button>
+              <div className="flex gap-1">
+                <button
+                  type="button"
+                  onClick={() => copyToClipboard(result.version, 'version')}
+                  className="px-2 py-1 rounded-md text-xs font-medium transition-all duration-200 bg-gray-600/50 text-gray-300 hover:bg-gray-500/50 hover:text-white"
+                  title="复制版本"
+                >
+                  {copiedField === 'version' ? '✅' : '📋'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => applyField('version', result.version)}
+                  disabled={appliedFields.has('version')}
+                  className={`px-2 py-1 rounded-md text-xs font-medium transition-all duration-200 ${
+                    appliedFields.has('version')
+                      ? 'bg-neon-green/20 text-neon-green border border-neon-green/30'
+                      : 'bg-neon-pink/20 text-neon-pink border border-neon-pink/30 hover:bg-neon-pink/30'
+                  }`}
+                >
+                  {appliedFields.has('version') ? '✅ 已应用' : '应用'}
+                </button>
+              </div>
             </div>
             <div className="bg-gradient-to-r from-dark-bg-secondary/60 to-dark-bg-primary/60 rounded-md p-3 border border-neon-pink/30 backdrop-blur-sm flex items-center justify-between">
               <p className="text-base font-bold text-neon-pink font-mono">v{Number(result.version).toFixed(1)}</p>
@@ -414,18 +454,28 @@ export const AIAnalysisResultDisplay: React.FC<AIAnalysisResultDisplayProps> = (
                 </div>
                 <h4 className="font-semibold text-gray-200 text-xs">智能分类</h4>
               </div>
-              <button
-                type="button"
-                onClick={() => applyField('category', result.category)}
-                disabled={appliedFields.has('category')}
-                className={`px-2 py-1 rounded-md text-xs font-medium transition-all duration-200 ${
-                  appliedFields.has('category')
-                    ? 'bg-neon-green/20 text-neon-green border border-neon-green/30'
-                    : 'bg-neon-cyan/20 text-neon-cyan border border-neon-cyan/30 hover:bg-neon-cyan/30'
-                }`}
-              >
-                {appliedFields.has('category') ? '✅ 已应用' : '应用'}
-              </button>
+              <div className="flex gap-1">
+                <button
+                  type="button"
+                  onClick={() => copyToClipboard(result.category, 'category')}
+                  className="px-2 py-1 rounded-md text-xs font-medium transition-all duration-200 bg-gray-600/50 text-gray-300 hover:bg-gray-500/50 hover:text-white"
+                  title="复制分类"
+                >
+                  {copiedField === 'category' ? '✅' : '📋'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => applyField('category', result.category)}
+                  disabled={appliedFields.has('category')}
+                  className={`px-2 py-1 rounded-md text-xs font-medium transition-all duration-200 ${
+                    appliedFields.has('category')
+                      ? 'bg-neon-green/20 text-neon-green border border-neon-green/30'
+                      : 'bg-neon-cyan/20 text-neon-cyan border border-neon-cyan/30 hover:bg-neon-cyan/30'
+                  }`}
+                >
+                  {appliedFields.has('category') ? '✅ 已应用' : '应用'}
+                </button>
+              </div>
             </div>
             <div className="bg-gradient-to-r from-dark-bg-secondary/60 to-dark-bg-primary/60 rounded-md p-3 border border-neon-cyan/30 backdrop-blur-sm">
               <p className="text-base font-bold text-neon-cyan">{result.category}</p>
@@ -443,18 +493,28 @@ export const AIAnalysisResultDisplay: React.FC<AIAnalysisResultDisplayProps> = (
                 </div>
                 <h4 className="font-semibold text-gray-200 text-xs">智能标签</h4>
               </div>
-              <button
-                type="button"
-                onClick={() => applyField('tags', result.tags)}
-                disabled={appliedFields.has('tags')}
-                className={`px-2 py-1 rounded-md text-xs font-medium transition-all duration-200 ${
-                  appliedFields.has('tags')
-                    ? 'bg-neon-green/20 text-neon-green border border-neon-green/30'
-                    : 'bg-neon-purple/20 text-neon-purple border border-neon-purple/30 hover:bg-neon-purple/30'
-                }`}
-              >
-                {appliedFields.has('tags') ? '✅ 已应用' : '应用'}
-              </button>
+              <div className="flex gap-1">
+                <button
+                  type="button"
+                  onClick={() => copyToClipboard(result.tags.join(', '), 'tags')}
+                  className="px-2 py-1 rounded-md text-xs font-medium transition-all duration-200 bg-gray-600/50 text-gray-300 hover:bg-gray-500/50 hover:text-white"
+                  title="复制标签"
+                >
+                  {copiedField === 'tags' ? '✅' : '📋'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => applyField('tags', result.tags)}
+                  disabled={appliedFields.has('tags')}
+                  className={`px-2 py-1 rounded-md text-xs font-medium transition-all duration-200 ${
+                    appliedFields.has('tags')
+                      ? 'bg-neon-green/20 text-neon-green border border-neon-green/30'
+                      : 'bg-neon-purple/20 text-neon-purple border border-neon-purple/30 hover:bg-neon-purple/30'
+                  }`}
+                >
+                  {appliedFields.has('tags') ? '✅ 已应用' : '应用'}
+                </button>
+              </div>
             </div>
             <div className="flex flex-wrap gap-1">
               {result.tags.map((tag, index) => (
@@ -479,18 +539,28 @@ export const AIAnalysisResultDisplay: React.FC<AIAnalysisResultDisplayProps> = (
                 </div>
                 <h4 className="font-semibold text-gray-200 text-xs">提取变量</h4>
               </div>
-              <button
-                type="button"
-                onClick={() => applyField('variables', result.variables)}
-                disabled={appliedFields.has('variables')}
-                className={`px-2 py-1 rounded-md text-xs font-medium transition-all duration-200 ${
-                  appliedFields.has('variables')
-                    ? 'bg-neon-green/20 text-neon-green border border-neon-green/30'
-                    : 'bg-neon-green/20 text-neon-green border border-neon-green/30 hover:bg-neon-green/30'
-                }`}
-              >
-                {appliedFields.has('variables') ? '✅ 已应用' : '应用'}
-              </button>
+              <div className="flex gap-1">
+                <button
+                  type="button"
+                  onClick={() => copyToClipboard(result.variables?.join(', ') || '', 'variables')}
+                  className="px-2 py-1 rounded-md text-xs font-medium transition-all duration-200 bg-gray-600/50 text-gray-300 hover:bg-gray-500/50 hover:text-white"
+                  title="复制变量"
+                >
+                  {copiedField === 'variables' ? '✅' : '📋'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => applyField('variables', result.variables)}
+                  disabled={appliedFields.has('variables')}
+                  className={`px-2 py-1 rounded-md text-xs font-medium transition-all duration-200 ${
+                    appliedFields.has('variables')
+                      ? 'bg-neon-green/20 text-neon-green border border-neon-green/30'
+                      : 'bg-neon-green/20 text-neon-green border border-neon-green/30 hover:bg-neon-green/30'
+                  }`}
+                >
+                  {appliedFields.has('variables') ? '✅ 已应用' : '应用'}
+                </button>
+              </div>
             </div>
             <div className="flex flex-wrap gap-1">
               {result.variables && result.variables.length > 0 ? (
@@ -520,18 +590,28 @@ export const AIAnalysisResultDisplay: React.FC<AIAnalysisResultDisplayProps> = (
                   </div>
                   <h4 className="font-semibold text-gray-200 text-xs">兼容模型</h4>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => applyField('compatibleModels', result.compatibleModels)}
-                  disabled={appliedFields.has('compatibleModels')}
-                  className={`px-2 py-1 rounded-md text-xs font-medium transition-all duration-200 ${
-                    appliedFields.has('compatibleModels')
-                      ? 'bg-neon-green/20 text-neon-green border border-neon-green/30'
-                      : 'bg-neon-red/20 text-neon-red border border-neon-red/30 hover:bg-neon-red/30'
-                  }`}
-                >
-                  {appliedFields.has('compatibleModels') ? '✅ 已应用' : '应用'}
-                </button>
+                <div className="flex gap-1">
+                  <button
+                    type="button"
+                    onClick={() => copyToClipboard(result.compatibleModels.join(', '), 'compatibleModels')}
+                    className="px-2 py-1 rounded-md text-xs font-medium transition-all duration-200 bg-gray-600/50 text-gray-300 hover:bg-gray-500/50 hover:text-white"
+                    title="复制兼容模型"
+                  >
+                    {copiedField === 'compatibleModels' ? '✅' : '📋'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => applyField('compatibleModels', result.compatibleModels)}
+                    disabled={appliedFields.has('compatibleModels')}
+                    className={`px-2 py-1 rounded-md text-xs font-medium transition-all duration-200 ${
+                      appliedFields.has('compatibleModels')
+                        ? 'bg-neon-green/20 text-neon-green border border-neon-green/30'
+                        : 'bg-neon-red/20 text-neon-red border border-neon-red/30 hover:bg-neon-red/30'
+                    }`}
+                  >
+                    {appliedFields.has('compatibleModels') ? '✅ 已应用' : '应用'}
+                  </button>
+                </div>
               </div>
               <div className="flex flex-wrap gap-1">
                 {result.compatibleModels.map((model, index) => (
@@ -556,11 +636,21 @@ export const AIAnalysisResultDisplay: React.FC<AIAnalysisResultDisplayProps> = (
             {/* 改进建议 */}
             {result.improvements?.length > 0 && (
               <div className="bg-gradient-to-br from-dark-bg-secondary/70 to-dark-bg-primary/70 rounded-lg p-3 border border-violet-400/40 backdrop-blur-sm hover:border-violet-400/60 transition-all duration-300">
-                <div className="flex items-center gap-2 mb-3">
-                  <div className="w-5 h-5 bg-violet-400/25 rounded-md flex items-center justify-center">
-                    <span className="text-violet-400 text-sm">💡</span>
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <div className="w-5 h-5 bg-violet-400/25 rounded-md flex items-center justify-center">
+                      <span className="text-violet-400 text-sm">💡</span>
+                    </div>
+                    <h4 className="text-sm font-semibold text-violet-400">优化建议</h4>
                   </div>
-                  <h4 className="text-sm font-semibold text-violet-400">优化建议</h4>
+                  <button
+                    type="button"
+                    onClick={() => copyToClipboard(result.improvements.join('\n'), 'improvements')}
+                    className="px-2 py-1 rounded-md text-xs font-medium transition-all duration-200 bg-gray-600/50 text-gray-300 hover:bg-gray-500/50 hover:text-white"
+                    title="复制优化建议"
+                  >
+                    {copiedField === 'improvements' ? '✅' : '📋'}
+                  </button>
                 </div>
                 <ul className="space-y-2">
                   {result.improvements.slice(0, 3).map((improvement, index) => (
@@ -576,11 +666,21 @@ export const AIAnalysisResultDisplay: React.FC<AIAnalysisResultDisplayProps> = (
             {/* 使用场景 */}
             {result.useCases?.length > 0 && (
               <div className="bg-gradient-to-br from-dark-bg-secondary/70 to-dark-bg-primary/70 rounded-lg p-3 border border-emerald-400/40 backdrop-blur-sm hover:border-emerald-400/60 transition-all duration-300">
-                <div className="flex items-center gap-2 mb-3">
-                  <div className="w-5 h-5 bg-emerald-400/25 rounded-md flex items-center justify-center">
-                    <span className="text-emerald-400 text-sm">🎯</span>
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <div className="w-5 h-5 bg-emerald-400/25 rounded-md flex items-center justify-center">
+                      <span className="text-emerald-400 text-sm">🎯</span>
+                    </div>
+                    <h4 className="text-sm font-semibold text-emerald-400">应用场景</h4>
                   </div>
-                  <h4 className="text-sm font-semibold text-emerald-400">应用场景</h4>
+                  <button
+                    type="button"
+                    onClick={() => copyToClipboard(result.useCases.join('\n'), 'useCases')}
+                    className="px-2 py-1 rounded-md text-xs font-medium transition-all duration-200 bg-gray-600/50 text-gray-300 hover:bg-gray-500/50 hover:text-white"
+                    title="复制应用场景"
+                  >
+                    {copiedField === 'useCases' ? '✅' : '📋'}
+                  </button>
                 </div>
                 <ul className="space-y-2">
                   {result.useCases.slice(0, 3).map((useCase, index) => (
