@@ -195,7 +195,6 @@ export default function PromptDetailsPage({ prompt }: PromptDetailsPageProps) {
     // 分类映射表 - 支持完整的21个分类
     const categoryMap: Record<string, { color: string; icon: any }> = {
       // 基础分类
-      '全部': { color: 'from-neon-purple to-neon-blue', icon: SparklesIcon },
       '通用': { color: 'from-neon-purple to-neon-blue', icon: SparklesIcon },
       
       // 专业和学术

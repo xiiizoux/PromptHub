@@ -60,7 +60,6 @@ const PromptCard: React.FC<PromptCardProps> = ({ prompt }) => {
   const getCategoryStyle = (category?: string) => {
     const categoryMap: Record<string, { name: string; color: string; icon: any }> = {
       // 基础分类
-      '全部': { name: '全部', color: 'from-neon-purple to-neon-blue', icon: SparklesIcon },
       '通用': { name: '通用', color: 'from-neon-purple to-neon-blue', icon: SparklesIcon },
       
       // 专业和学术
