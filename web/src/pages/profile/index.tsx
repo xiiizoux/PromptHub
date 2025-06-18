@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth, withAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
@@ -56,6 +56,9 @@ interface UserPrompt {
 
 const ProfilePage = () => {
   const { user, getToken } = useAuth();
+  // 使用ref来跟踪组件挂载状态
+  const isMountedRef = useRef(false);
+  
   const [activeTab, setActiveTab] = useState('profile');
   const [apiKeys, setApiKeys] = useState<ApiKey[]>([]);
   const [userPrompts, setUserPrompts] = useState<UserPrompt[]>([]);
@@ -83,6 +86,22 @@ const ProfilePage = () => {
   const [bookmarksLoading, setBookmarksLoading] = useState(false);
   const [historyLoading, setHistoryLoading] = useState(false);
   const [ratingsLoading, setRatingsLoading] = useState(false);
+
+  // 确保组件已挂载
+  useEffect(() => {
+    isMountedRef.current = true;
+    
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
+
+  // 安全的状态更新函数
+  const safeSetState = (updater: () => void) => {
+    if (isMountedRef.current) {
+      updater();
+    }
+  };
 
   const tabs = [
     { id: 'profile', name: '个人资料', icon: UserIcon },
@@ -335,6 +354,7 @@ const ProfilePage = () => {
 
   // 处理提示词页面变更
   const handlePromptPageChange = (page: number) => {
+    if (!isMountedRef.current) return;
     if (page >= 1 && page <= promptTotalPages) {
       setPromptCurrentPage(page);
     }
@@ -342,9 +362,10 @@ const ProfilePage = () => {
 
   // 获取用户提示词
   const fetchUserPrompts = async (page: number = 1) => {
-    if (!user?.id) return;
+    if (!user?.id || !isMountedRef.current) return;
     
-    setPromptsLoading(true);
+    safeSetState(() => setPromptsLoading(true));
+    
     try {
       const token = await getToken();
       if (!token) {
@@ -364,39 +385,47 @@ const ProfilePage = () => {
 
       const data = await response.json();
       
-      if (data.success) {
-        setUserPrompts(data.data.prompts || []);
-        const pagination = data.data.pagination;
-        setPromptTotalPages(pagination?.totalPages || 1);
-        setPromptTotalCount(pagination?.total || 0);
-        
-        // 更新统计
-        const totalPrompts = pagination?.total || 0;
-        const publicPrompts = data.data.prompts?.filter((p: any) => p.is_public)?.length || 0;
-        const privatePrompts = totalPrompts - publicPrompts;
-        
-        setPromptCounts({
-          total: totalPrompts,
-          public: publicPrompts,
-          private: privatePrompts
-        });
-      } else {
-        throw new Error(data.message || '获取用户提示词失败');
-      }
+      if (!isMountedRef.current) return;
+      
+      safeSetState(() => {
+        if (data.success) {
+          setUserPrompts(data.data.prompts || []);
+          const pagination = data.data.pagination;
+          setPromptTotalPages(pagination?.totalPages || 1);
+          setPromptTotalCount(pagination?.total || 0);
+          
+          // 更新统计
+          const totalPrompts = pagination?.total || 0;
+          const publicPrompts = data.data.prompts?.filter((p: any) => p.is_public)?.length || 0;
+          const privatePrompts = totalPrompts - publicPrompts;
+          
+          setPromptCounts({
+            total: totalPrompts,
+            public: publicPrompts,
+            private: privatePrompts
+          });
+        } else {
+          throw new Error(data.message || '获取用户提示词失败');
+        }
+      });
     } catch (error) {
       console.error('获取用户提示词失败:', error);
-      setUserPrompts([]);
-      setPromptTotalPages(1);
-      setPromptTotalCount(0);
-      setPromptCounts({ total: 0, public: 0, private: 0 });
+      if (!isMountedRef.current) return;
+      
+      safeSetState(() => {
+        setUserPrompts([]);
+        setPromptTotalPages(1);
+        setPromptTotalCount(0);
+        setPromptCounts({ total: 0, public: 0, private: 0 });
+      });
     } finally {
-      setPromptsLoading(false);
+      safeSetState(() => setPromptsLoading(false));
     }
   };
 
   // 监听页面变化，重新获取数据
   useEffect(() => {
-    if (user?.id && activeTab === 'prompts') {
+    if (user?.id && activeTab === 'my-prompts') {
       fetchUserPrompts(promptCurrentPage);
     }
   }, [user?.id, activeTab, promptCurrentPage]);

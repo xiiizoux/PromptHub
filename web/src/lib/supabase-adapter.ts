@@ -242,20 +242,18 @@ export class SupabaseAdapter {
       }
 
       if (userId) {
-        if (isPublic) {
+        if (isPublic === true) {
+          // 获取用户的公开提示词 + 所有公开的提示词
           query = query.or(`user_id.eq.${userId},is_public.eq.true`);
-        } else {
+        } else if (isPublic === false) {
+          // 只获取该用户的所有提示词（包括私有的）
           query = query.eq('user_id', userId);
+        } else {
+          // 默认情况：获取用户的提示词 + 公开提示词
+          query = query.or(`user_id.eq.${userId},is_public.eq.true`);
         }
-      } else if (!isPublic) {
-        return {
-          data: [],
-          total: 0,
-          page,
-          pageSize,
-          totalPages: 0
-        };
       } else {
+        // 没有用户ID，只能获取公开提示词
         query = query.eq('is_public', true);
       }
 

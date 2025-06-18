@@ -32,7 +32,7 @@ export default apiHandler(async (req: NextApiRequest, res: NextApiResponse, user
       pageSize: parseInt(pageSize as string),
       search: search as string || undefined,
       category: category as string || undefined,
-      isPublic: isPublic === 'true' ? true : false, // false表示获取所有（包括私有）
+      isPublic: false, // false表示获取该用户的所有提示词（包括私有）
       sortBy: 'latest' as const
     };
 
