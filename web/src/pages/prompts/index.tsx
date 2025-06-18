@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getPrompts, getCategories, getTags } from '@/lib/api';
 import { PromptInfo, PromptFilters as PromptFiltersType } from '@/types';
@@ -6,9 +6,6 @@ import PromptCard from '@/components/prompts/PromptCard';
 import PromptFilters from '@/components/prompts/PromptFilters';
 
 export default function PromptsPage() {
-  // 使用ref来跟踪组件挂载状态
-  const isMountedRef = useRef(false);
-  
   // 状态管理
   const [prompts, setPrompts] = useState<PromptInfo[]>([]);
   const [loading, setLoading] = useState(true);
@@ -17,151 +14,104 @@ export default function PromptsPage() {
   const [tags, setTags] = useState<string[]>([]);
   const [filters, setFilters] = useState<PromptFiltersType>({
     page: 1,
-    pageSize: 21, // 改为21个（7行x3列）
+    pageSize: 21,
     sortBy: 'latest',
   });
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
-  const [mounted, setMounted] = useState(false);
-
-  // 确保组件已挂载
-  useEffect(() => {
-    isMountedRef.current = true;
-    setMounted(true);
-    
-    return () => {
-      isMountedRef.current = false;
-    };
-  }, []);
-
-  // 安全的状态更新函数
-  const safeSetState = (updater: () => void) => {
-    if (isMountedRef.current) {
-      updater();
-    }
-  };
 
   // 获取分类数据
   useEffect(() => {
-    if (!mounted) return;
-    
     const fetchCategories = async () => {
       try {
         console.log('开始获取类别数据...');
         const data = await getCategories();
         console.log('获取到的类别数据:', data);
         
-        safeSetState(() => {
-          if (data && Array.isArray(data)) {
-            console.log('设置类别数据:', data);
-            setCategories(data);
-          } else {
-            console.log('类别数据格式错误，使用默认值');
-            setCategories(['通用']);
-          }
-        });
+        if (data && Array.isArray(data)) {
+          setCategories(data);
+        } else {
+          setCategories(['通用']);
+        }
       } catch (err) {
         console.error('获取分类失败:', err);
-        safeSetState(() => {
-          setError('无法加载分类数据，请刷新页面重试');
-        });
+        setCategories(['通用']);
       }
     };
 
     fetchCategories();
-  }, [mounted]);
+  }, []);
   
   // 获取标签数据
   useEffect(() => {
-    if (!mounted) return;
-    
     const fetchTags = async () => {
       try {
         const data = await getTags();
-        safeSetState(() => {
-          if (data && Array.isArray(data)) {
-            setTags(data);
-          } else {
-            setTags(['GPT-4', 'GPT-3.5', 'Claude', 'Gemini', '初学者', '高级', '长文本', '结构化输出', '翻译', '润色']);
-          }
-        });
+        if (data && Array.isArray(data)) {
+          setTags(data);
+        } else {
+          setTags(['GPT-4', 'GPT-3.5', 'Claude', 'Gemini', '初学者', '高级']);
+        }
       } catch (err) {
         console.error('获取标签失败:', err);
-        safeSetState(() => {
-          setTags(['GPT-4', 'GPT-3.5', 'Claude', 'Gemini', '初学者', '高级', '长文本', '结构化输出', '翻译', '润色']);
-        });
+        setTags(['GPT-4', 'GPT-3.5', 'Claude', 'Gemini', '初学者', '高级']);
       }
     };
 
     fetchTags();
-  }, [mounted]);
+  }, []);
 
   // 获取提示词数据
   useEffect(() => {
-    if (!mounted) return;
-    
     const fetchPrompts = async () => {
-      if (!isMountedRef.current) return;
-      
       console.log('开始获取提示词数据，filters:', filters);
-      safeSetState(() => setLoading(true));
+      setLoading(true);
+      setError(null);
       
       try {
         const response = await getPrompts(filters);
         console.log('获取提示词响应:', response);
         
-        if (!isMountedRef.current) return;
-        
-        safeSetState(() => {
-          if (response && response.data && Array.isArray(response.data)) {
-            console.log('设置提示词数据，数量:', response.data.length);
-            setPrompts(response.data);
-            setTotalPages(response.totalPages || 1);
-            setTotalCount(response.total || 0);
-            setError(null);
-          } else {
-            console.error('获取提示词数据格式错误:', response);
-            setPrompts([]);
-            setTotalPages(1);
-            setTotalCount(0);
-            setError('获取提示词数据格式错误');
-          }
-        });
-      } catch (err) {
-        console.error('获取提示词失败:', err);
-        if (!isMountedRef.current) return;
-        
-        safeSetState(() => {
-          setError('无法加载提示词，请稍后再试');
+        if (response && response.data && Array.isArray(response.data)) {
+          console.log('设置提示词数据，数量:', response.data.length);
+          setPrompts(response.data);
+          setTotalPages(response.totalPages || 1);
+          setTotalCount(response.total || 0);
+          setError(null);
+        } else {
+          console.error('获取提示词数据格式错误:', response);
           setPrompts([]);
           setTotalPages(1);
           setTotalCount(0);
-        });
+          setError('获取提示词数据格式错误');
+        }
+      } catch (err) {
+        console.error('获取提示词失败:', err);
+        setError('无法加载提示词，请稍后再试');
+        setPrompts([]);
+        setTotalPages(1);
+        setTotalCount(0);
       } finally {
         console.log('提示词数据加载完成');
-        safeSetState(() => setLoading(false));
+        setLoading(false);
       }
     };
 
     fetchPrompts();
-  }, [filters, mounted]);
+  }, [filters]);
 
   // 处理过滤器变更
   const handleFilterChange = (newFilters: PromptFiltersType) => {
-    if (!isMountedRef.current) return;
-    // 重置到第一页
+    console.log('过滤器变更:', newFilters);
     setFilters({ ...newFilters, page: 1 });
   };
 
   // 处理分页
   const handlePageChange = (newPage: number) => {
-    if (!isMountedRef.current) return;
+    console.log('页面变更:', newPage);
     if (newPage >= 1 && newPage <= totalPages) {
       setFilters({ ...filters, page: newPage });
-      // 滚动到页面顶部
-      if (typeof window !== 'undefined') {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-      }
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
 
@@ -241,17 +191,13 @@ export default function PromptsPage() {
     );
   };
 
-  // 如果组件未挂载，不渲染任何内容
-  if (!mounted) {
-    return (
-      <div className="min-h-screen bg-dark-bg-primary flex items-center justify-center">
-        <div className="relative inline-block">
-          <div className="w-16 h-16 border-4 border-neon-cyan/30 border-t-neon-cyan rounded-full animate-spin"></div>
-          <div className="absolute inset-0 w-16 h-16 border-4 border-transparent border-t-neon-purple rounded-full animate-spin animate-reverse"></div>
-        </div>
-      </div>
-    );
-  }
+  console.log('组件渲染状态:', { 
+    loading, 
+    error, 
+    promptsCount: prompts.length, 
+    totalCount, 
+    totalPages 
+  });
 
   return (
     <div className="min-h-screen bg-dark-bg-primary relative overflow-hidden">
@@ -355,7 +301,7 @@ export default function PromptsPage() {
                 </motion.div>
               ) : (
                 <>
-                  {prompts.length > 0 ? (
+                  {prompts && prompts.length > 0 ? (
                     <>
                       {/* 提示词网格 */}
                       <motion.div 
@@ -406,6 +352,12 @@ export default function PromptsPage() {
                       </div>
                       <h3 className="text-xl font-bold text-white mb-2">暂无提示词</h3>
                       <p className="text-gray-400">当前条件下没有找到相关提示词，请尝试调整搜索条件</p>
+                      
+                      {/* 调试信息 */}
+                      <div className="mt-4 p-4 bg-gray-800/50 rounded-lg text-sm text-gray-400">
+                        <p>API响应: totalCount={totalCount}, loading={loading.toString()}</p>
+                        <p>过滤器: {JSON.stringify(filters)}</p>
+                      </div>
                     </motion.div>
                   )}
                 </>
