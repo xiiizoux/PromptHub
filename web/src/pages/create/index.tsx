@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/router';
 import { useForm } from 'react-hook-form';
 import {
@@ -30,6 +30,8 @@ import { formatVersionDisplay } from '@/lib/version-utils';
 import { withAuth } from '@/contexts/AuthContext';
 import SmartWritingAssistant from '@/components/SmartWritingAssistant';
 import { toast } from 'react-hot-toast';
+import { requestMonitor } from '@/utils/request-monitor';
+import { DebugPanel } from '@/components/DebugPanel';
 
 // 扩展类型，添加messages字段和其他数据库中的字段
 type PromptFormData = Omit<PromptDetails, 'created_at' | 'updated_at'> & {
@@ -331,7 +333,7 @@ function CreatePromptPage() {
       category: '通用', // 与数据库默认值保持一致
       version: 1.0,  // 默认版本1.0，支持小数格式
       is_public: true, // 默认公开，便于分享和发现
-      allow_collaboration: false, // 默认不允许协作编辑，保护创建者权益
+      allow_collaboration: true, // 默认允许协作编辑，鼓励社区协作
       edit_permission: 'owner_only', // 默认仅创建者可编辑
       template_format: 'text',
       input_variables: [],
@@ -414,6 +416,9 @@ function CreatePromptPage() {
   const onSubmit = async (data: PromptFormData) => {
     setIsSubmitting(true);
     
+    // 开始监控创建提示词请求
+    const monitorId = requestMonitor.startRequest('POST', '/api/prompts', 45000);
+    
     try {
       console.log('提交提示词数据:', data);
       
@@ -429,15 +434,84 @@ function CreatePromptPage() {
 
       console.log('即将创建的提示词:', promptData);
       
-      const newPrompt = await createPrompt(promptData as any);
+      // 添加超时保护的提示词创建
+      const createPromptWithTimeout = () => {
+        return new Promise<any>((resolve, reject) => {
+          const timeoutId = setTimeout(() => {
+            reject(new Error('创建提示词超时，请检查网络连接并重试'));
+          }, 45000); // 45秒总超时时间
+          
+          createPrompt(promptData as any)
+            .then((result) => {
+              clearTimeout(timeoutId);
+              resolve(result);
+            })
+            .catch((error) => {
+              clearTimeout(timeoutId);
+              reject(error);
+            });
+        });
+      };
+      
+      const newPrompt = await createPromptWithTimeout();
       console.log('提示词创建成功:', newPrompt);
+      
+      // 标记监控成功
+      requestMonitor.markSuccess(monitorId, newPrompt);
+      
+      // 确保在导航前重置状态
+      setIsSubmitting(false);
+      
+      // 显示成功提示
+      toast.success('提示词创建成功！正在跳转...');
       
       // 导航到新提示词页面
       router.push(`/prompts/${newPrompt.id}`);
     } catch (error: any) {
       console.error('创建提示词失败:', error);
-      alert(`创建提示词失败: ${error.message || '请检查您的认证状态或网络连接'}`);
+      
+      // 标记监控失败
+      requestMonitor.markError(monitorId, error.message || '未知错误');
+      
+      // 提供用户友好的错误提示
+      let errorMessage = '创建提示词失败，请稍后重试';
+      
+      if (error.message) {
+        if (error.message.includes('超时') || error.message.includes('timeout')) {
+          errorMessage = '请求超时，请检查网络连接并重试';
+        } else if (error.message.includes('认证') || error.message.includes('登录')) {
+          errorMessage = '登录状态已过期，请重新登录';
+        } else if (error.message.includes('权限')) {
+          errorMessage = '权限不足，请联系管理员';
+        } else if (error.message.includes('服务器')) {
+          errorMessage = '服务器暂时不可用，请稍后重试';
+        } else {
+          errorMessage = error.message;
+        }
+      }
+      
+      // 显示错误提示
+      toast.error(errorMessage);
+      
+      // 使用更用户友好的提示方式
+      if (typeof window !== 'undefined' && window.confirm) {
+        const retry = window.confirm(`${errorMessage}\n\n是否重试？`);
+        if (retry) {
+          // 给用户一点时间，然后重试
+          setTimeout(() => {
+            onSubmit(data);
+          }, 1000);
+          return;
+        }
+      }
+      
+      // 在开发环境下输出监控统计
+      if (process.env.NODE_ENV === 'development') {
+        console.log('请求监控统计:', requestMonitor.getStats());
+        console.log('活跃请求:', requestMonitor.getActiveRequests());
+      }
     } finally {
+      // 确保无论如何都重置提交状态
       setIsSubmitting(false);
     }
   };
@@ -459,6 +533,9 @@ function CreatePromptPage() {
           <div>分类数量: {categories.length}</div>
         </div>
       )}
+
+      {/* 调试面板 */}
+      <DebugPanel />
 
       <div className="relative z-10 py-16">
         <div className="container-custom">

@@ -771,15 +771,28 @@ export class SupabaseAdapter {
       
       // 如果没有提供用户ID，尝试从当前会话获取
       if (!userId) {
-        const { data: sessionData } = await this.supabase.auth.getSession();
-        const session = sessionData?.session;
+        // 添加超时保护的会话获取
+        const sessionPromise = this.supabase.auth.getSession();
+        const timeoutPromise = new Promise<never>((_, reject) => {
+          setTimeout(() => reject(new Error('获取用户会话超时')), 5000);
+        });
         
-        if (session?.user) {
-          userId = session.user.id;
-          console.log('从当前会话获取用户ID:', userId);
-        } else {
-          console.error('未能从会话获取用户ID');
-          throw new Error('用户未登录或会话已过期');
+        try {
+          const { data: sessionData } = await Promise.race([sessionPromise, timeoutPromise]);
+          const session = sessionData?.session;
+          
+          if (session?.user) {
+            userId = session.user.id;
+            console.log('从当前会话获取用户ID:', userId);
+          } else {
+            console.error('未能从会话获取用户ID');
+            throw new Error('用户未登录或会话已过期');
+          }
+        } catch (error: any) {
+          if (error.message?.includes('超时')) {
+            throw new Error('获取用户信息超时，请重新登录');
+          }
+          throw error;
         }
       }
       
@@ -832,12 +845,28 @@ export class SupabaseAdapter {
       const adminClient = createSupabaseClient(true);
       console.log('使用管理员权限创建提示词');
       
-      // 尝试使用管理员权限插入提示词
-      const { data, error } = await adminClient
+      // 添加超时保护的数据库操作
+      const insertPromise = adminClient
         .from('prompts')
         .insert(promptToCreate)
         .select('*')
         .single();
+      
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        setTimeout(() => reject(new Error('数据库操作超时')), 30000); // 30秒超时
+      });
+      
+      let data, error;
+      try {
+        const result = await Promise.race([insertPromise, timeoutPromise]);
+        data = result.data;
+        error = result.error;
+      } catch (timeoutError: any) {
+        if (timeoutError.message?.includes('超时')) {
+          throw new Error('数据库操作超时，请检查网络连接并重试');
+        }
+        throw timeoutError;
+      }
         
       if (error) {
         console.error('插入提示词失败:', error);
@@ -852,6 +881,16 @@ export class SupabaseAdapter {
       return data as Prompt;
     } catch (err: any) {
       console.error('创建提示词时出错:', err);
+      
+      // 提供更友好的错误信息
+      if (err.message?.includes('超时')) {
+        throw new Error('操作超时，请检查网络连接并重试');
+      } else if (err.message?.includes('duplicate') || err.message?.includes('重复')) {
+        throw new Error('提示词名称已存在，请使用其他名称');
+      } else if (err.message?.includes('permission') || err.message?.includes('权限')) {
+        throw new Error('权限不足，无法创建提示词');
+      }
+      
       throw err;
     }
   }

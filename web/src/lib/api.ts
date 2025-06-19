@@ -6,6 +6,7 @@ import { supabase } from '@/lib/supabase';
 // 创建Axios实例 - Docker部署配置
 const api = axios.create({
   baseURL: '/api',
+  timeout: 30000, // 30秒超时
   headers: {
     'Content-Type': 'application/json',
   },
@@ -14,6 +15,7 @@ const api = axios.create({
 // 创建MCP API实例 - Docker部署时通过代理访问
 const mcpApi = axios.create({
   baseURL: '/api/mcp',
+  timeout: 30000, // 30秒超时
   headers: {
     'Content-Type': 'application/json',
   },
@@ -357,66 +359,41 @@ export const getPromptDetails = async (identifier: string): Promise<PromptDetail
   }
 };
 
-// 创建新提示词
+// 创建提示词
 export const createPrompt = async (prompt: Partial<PromptDetails>): Promise<PromptDetails> => {
+  let token = null;
+  
   try {
-    // 获取认证令牌 - 使用正确的Supabase存储键
-    let token = null;
-    
-    if (typeof window !== 'undefined') {
-      // 方法1: 检查PromptHub专用的存储键
-      try {
-        const authData = localStorage.getItem('prompthub-auth-token');
-        if (authData) {
-          const parsedAuth = JSON.parse(authData);
-          token = parsedAuth?.access_token;
-          console.log('从prompthub-auth-token获取到认证令牌');
-        }
-      } catch (e) {
-        console.warn('解析prompthub-auth-token失败:', e);
-      }
-      
-      // 方法2: 检查标准的auth.token（备用）
-      if (!token) {
-        token = localStorage.getItem('auth.token') || undefined;
-      }
-      
-      // 方法3: 检查其他Supabase标准格式的令牌存储（备用）
-      if (!token) {
-        try {
-          // 遍历localStorage寻找Supabase会话令牌
-          for (let i = 0; i < localStorage.length; i++) {
-            const key = localStorage.key(i);
-            if (key && key.includes('auth-token')) {
-              const tokenData = localStorage.getItem(key);
-              if (tokenData) {
-                const parsedData = JSON.parse(tokenData);
-                token = parsedData?.access_token;
-                if (token) {
-                  console.log('从其他Supabase存储获取到认证令牌:', key);
-                  break;
-                }
-              }
+    // 添加超时机制的 token 获取
+    const tokenPromise = (async () => {
+      if (typeof window !== 'undefined') {
+        // 首先尝试从localStorage获取
+        token = localStorage.getItem('auth.token');
+        
+        // 如果没有找到，尝试从Supabase session获取
+        if (!token) {
+          try {
+            const { supabase } = await import('@/lib/supabase');
+            const { data: { session } } = await supabase.auth.getSession();
+            
+            if (session?.access_token) {
+              token = session.access_token;
+              console.log('从Supabase session获取到token');
             }
+          } catch (error) {
+            console.error('获取Supabase token失败:', error);
           }
-        } catch (e) {
-          console.warn('从其他Supabase存储获取令牌失败:', e);
         }
       }
-      
-      // 方法4: 尝试从supabase.auth.token获取（最后备用）
-      if (!token) {
-        try {
-          const authSession = localStorage.getItem('supabase.auth.token');
-          if (authSession) {
-            const parsed = JSON.parse(authSession);
-            token = parsed?.currentSession?.access_token;
-          }
-        } catch (e) {
-          console.warn('解析supabase.auth.token失败:', e);
-        }
-      }
-    }
+      return token;
+    })();
+    
+    // 设置5秒超时获取token
+    const timeoutPromise = new Promise<null>((_, reject) => {
+      setTimeout(() => reject(new Error('获取认证token超时')), 5000);
+    });
+    
+    token = await Promise.race([tokenPromise, timeoutPromise]);
     
     console.log('创建提示词 - 认证令牌状态:', { hasToken: !!token, tokenLength: token?.length });
     
@@ -430,19 +407,48 @@ export const createPrompt = async (prompt: Partial<PromptDetails>): Promise<Prom
       headers['Authorization'] = `Bearer ${token}`;
     }
     
-    // 执行创建请求
-    console.log('发送创建提示词请求:', { prompt, hasToken: !!token });
-    const response = await api.post('/prompts', prompt, { 
-      headers 
-    });
+    // 执行创建请求，使用AbortController添加额外的超时控制
+    const abortController = new AbortController();
+    const timeoutId = setTimeout(() => {
+      abortController.abort();
+    }, 25000); // 25秒超时，留5秒给其他处理
     
-    if (!response.data || !response.data.success) {
-      throw new Error(response.data?.error || '创建提示词失败');
+    try {
+      console.log('发送创建提示词请求:', { prompt, hasToken: !!token });
+      const response = await api.post('/prompts', prompt, { 
+        headers,
+        signal: abortController.signal
+      });
+      
+      clearTimeout(timeoutId);
+      
+      if (!response.data || !response.data.success) {
+        throw new Error(response.data?.error || '创建提示词失败');
+      }
+      
+      return response.data.data;
+    } catch (error: any) {
+      clearTimeout(timeoutId);
+      
+      if (error.name === 'AbortError') {
+        throw new Error('创建提示词请求超时，请检查网络连接后重试');
+      }
+      throw error;
     }
-    
-    return response.data.data;
   } catch (error: any) {
     console.error('创建提示词失败:', error.response?.data || error);
+    
+    // 提供更友好的错误信息
+    if (error.message?.includes('timeout') || error.message?.includes('超时')) {
+      throw new Error('请求超时，请检查网络连接并重试');
+    } else if (error.response?.status === 401) {
+      throw new Error('认证失败，请重新登录');
+    } else if (error.response?.status === 403) {
+      throw new Error('权限不足，无法创建提示词');
+    } else if (error.response?.status >= 500) {
+      throw new Error('服务器错误，请稍后重试');
+    }
+    
     throw error;
   }
 };

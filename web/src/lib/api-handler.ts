@@ -69,6 +69,22 @@ export const apiHandler = (
   const opts = { ...defaultOptions, ...options };
 
   return async (req: NextApiRequest, res: NextApiResponse) => {
+    // 设置请求超时保护
+    const timeoutId = setTimeout(() => {
+      if (!res.headersSent) {
+        logger.error('API请求超时', new Error('Request timeout'), {
+          method: req.method,
+          url: req.url
+        });
+        res.status(408).json({
+          success: false,
+          error: '请求超时，请稍后重试',
+          code: 'REQUEST_TIMEOUT',
+          statusCode: 408
+        });
+      }
+    }, 120000); // 2分钟超时保护
+    
     // 记录请求
     logger.info(`API请求: ${req.method} ${req.url}`, {
       method: req.method,
@@ -137,6 +153,7 @@ export const apiHandler = (
           
           // 设置缓存标头
           res.setHeader('X-Cache', 'HIT');
+          clearTimeout(timeoutId);
           
           return res.status(200).json(cachedData);
         }
@@ -151,12 +168,16 @@ export const apiHandler = (
           }
           
           res.setHeader('X-Cache', 'MISS');
+          clearTimeout(timeoutId);
           return originalJson.call(this, body);
         };
       }
 
       // 调用实际的处理函数
       await handler(req, res, userId);
+      
+      // 清除超时定时器
+      clearTimeout(timeoutId);
       
       // 记录成功的请求
       logger.debug('API请求处理成功', {
@@ -165,10 +186,18 @@ export const apiHandler = (
         statusCode: res.statusCode
       });
     } catch (error: any) {
+      // 清除超时定时器
+      clearTimeout(timeoutId);
+      
       logger.error('API请求处理错误', error instanceof Error ? error : new Error(String(error)), {
         method: req.method,
         url: req.url
       });
+      
+      // 检查响应是否已发送
+      if (res.headersSent) {
+        return;
+      }
       
       // 处理API错误
       if (error instanceof ApiError) {
