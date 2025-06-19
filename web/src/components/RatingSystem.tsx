@@ -93,13 +93,17 @@ export const RatingSystem: React.FC<RatingSystemProps> = ({
     try {
       setIsLoading(true);
       
+      console.log('提交评分:', { promptId, rating: newRating, comment: newComment, user: user.id });
+      
       if (userRating) {
+        console.log('更新现有评分...');
         await updateRating(promptId, {
           rating: newRating,
           comment: newComment
         });
         toast.success('评分已更新');
       } else {
+        console.log('提交新评分...');
         await submitRating(promptId, {
           rating: newRating,
           comment: newComment
@@ -111,7 +115,19 @@ export const RatingSystem: React.FC<RatingSystemProps> = ({
       await fetchRatings();
       await fetchUserRating();
     } catch (error: any) {
-      toast.error(error.message || '评分提交失败');
+      console.error('评分操作失败详情:', error);
+      if (error.response) {
+        console.error('错误响应:', error.response.status, error.response.data);
+        if (error.response.status === 401) {
+          toast.error('认证失败，请重新登录');
+        } else if (error.response.status === 400) {
+          toast.error(error.response.data?.error || '请求参数错误');
+        } else {
+          toast.error(error.response.data?.error || error.message || '评分提交失败');
+        }
+      } else {
+        toast.error(error.message || '评分提交失败');
+      }
     } finally {
       setIsLoading(false);
     }

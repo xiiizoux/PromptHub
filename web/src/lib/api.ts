@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { PromptInfo, PromptDetails, ApiResponse, PaginatedResponse, PromptFilters, PromptUsage, PromptFeedback, PromptPerformance } from '@/types';
 import { PromptQualityAnalysis } from '@/types/performance';
+import { supabase } from '@/lib/supabase';
 
 // 创建Axios实例 - Docker部署配置
 const api = axios.create({
@@ -18,22 +19,49 @@ const mcpApi = axios.create({
   },
 });
 
-// 请求拦截器添加API密钥
-api.interceptors.request.use((config) => {
+// 请求拦截器添加认证和API密钥
+api.interceptors.request.use(async (config) => {
   // 从环境变量或本地存储获取API密钥
   const apiKey = process.env.API_KEY || localStorage.getItem('api_key');
   if (apiKey) {
     config.headers['x-api-key'] = apiKey;
   }
+  
+  // 添加认证token
+  try {
+    // 只在客户端添加认证头
+    if (typeof window !== 'undefined') {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.access_token) {
+        config.headers['Authorization'] = `Bearer ${session.access_token}`;
+      }
+    }
+  } catch (error) {
+    console.warn('获取认证token失败:', error);
+  }
+  
   return config;
 });
 
 // 也为MCP API实例添加相同的拦截器
-mcpApi.interceptors.request.use((config) => {
+mcpApi.interceptors.request.use(async (config) => {
   const apiKey = process.env.API_KEY || localStorage.getItem('api_key');
   if (apiKey) {
     config.headers['x-api-key'] = apiKey;
   }
+  
+  // 添加认证token
+  try {
+    if (typeof window !== 'undefined') {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.access_token) {
+        config.headers['Authorization'] = `Bearer ${session.access_token}`;
+      }
+    }
+  } catch (error) {
+    console.warn('获取认证token失败:', error);
+  }
+  
   return config;
 });
 
