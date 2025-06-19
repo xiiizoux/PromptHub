@@ -296,8 +296,8 @@ function CreatePromptPage() {
           setCategories(data);
         }
       } catch (err) {
+        toast.error('获取分类列表失败，已使用默认列表');
         console.error('获取分类失败:', err);
-        // 保持默认分类
       } finally {
         setCategoriesLoading(false);
       }
@@ -313,11 +313,11 @@ function CreatePromptPage() {
       try {
         const data = await getTags();
         if (data && data.length > 0) {
-          setSuggestedTags(data);
+          setSuggestedTags(prev => Array.from(new Set([...prev, ...data])));
         }
       } catch (err) {
+        toast.error('获取标签建议失败，已使用默认列表');
         console.error('获取标签失败:', err);
-        // 保持默认标签
       } finally {
         setTagsLoading(false);
       }

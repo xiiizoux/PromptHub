@@ -50,6 +50,7 @@ import { MODEL_TAGS, getModelTypeLabel } from '@/constants/ai-models';
 import { formatVersionDisplay } from '@/lib/version-utils';
 import { RatingSystem } from '@/components/RatingSystem';
 import PromptInteractions from '@/components/social/PromptInteractions';
+import { toast } from 'react-hot-toast';
 
 interface PromptDetailsPageProps {
   prompt: PromptDetails;
@@ -171,10 +172,12 @@ export default function PromptDetailsPage({ prompt }: PromptDetailsPageProps) {
           });
           setUsageTracked(true);
         } catch (error) {
+          toast.error('追踪使用情况失败，但内容已复制');
           console.error('追踪使用情况失败:', error);
         }
       }
     } catch (error) {
+      toast.error('复制到剪贴板失败');
       console.error('复制失败:', error);
     }
   };

@@ -3,6 +3,13 @@ import { PromptInfo, PromptDetails, ApiResponse, PaginatedResponse, PromptFilter
 import { PromptQualityAnalysis } from '@/types/performance';
 import { supabase } from '@/lib/supabase';
 
+// 定义一个更符合后端实际响应结构的泛型类型
+interface BackendApiResponse<T> {
+  success: boolean;
+  data: T;
+  error?: string;
+}
+
 // 创建Axios实例 - Docker部署配置
 const api = axios.create({
   baseURL: '/api',
@@ -148,44 +155,38 @@ export interface Category {
 // 获取所有分类
 export const getCategories = async (): Promise<string[]> => {
   try {
-    // 通过Next.js API Routes调用，符合项目架构
-    const response = await api.get<{success: boolean; data: Category[]}>('/categories');
-    console.log('分类API响应:', response.data);
+    const response = await api.get<BackendApiResponse<Category[]>>('/categories');
     
-    if (response.data.success && response.data.data && response.data.data.length > 0) {
-      // 将类别对象数组转换为字符串数组
-      const categories = response.data.data.map(category => category.name);
-      console.log('获取到的分类:', categories);
-      return categories;
+    if (response.data.success && Array.isArray(response.data.data)) {
+      return response.data.data.map(c => c.name);
     }
     
-    // API返回空数据或不成功时，抛出错误而不是使用备用数据
-    throw new Error('API返回空数据或请求不成功');
+    // 如果API报告失败或数据格式不正确，记录警告但返回空数组以避免UI崩溃
+    console.warn('获取分类失败或返回数据格式不正确:', response.data.error || 'API未返回成功状态');
+    return [];
   } catch (error) {
-    console.error('获取分类失败:', error);
-    // 直接抛出错误，不使用备用机制
-    throw new Error(`获取分类失败: ${error instanceof Error ? error.message : '未知错误'}`);
+    console.error('获取分类时发生网络或服务器错误:', error);
+    // 抛出错误，让调用方可以决定如何处理（例如显示toast）
+    throw new Error(`获取分类失败: ${error instanceof Error ? error.message : '未知网络错误'}`);
   }
 };
 
 // 获取所有标签
 export const getTags = async (): Promise<string[]> => {
   try {
-    // 直接调用Web服务API，不再依赖MCP服务
-    const response = await api.get<any>('/tags');
-    console.log('标签API响应:', response.data);
+    const response = await api.get<BackendApiResponse<string[]>>('/tags');
     
-    if (response.data.success && response.data.data && response.data.data.length > 0) {
+    if (response.data.success && Array.isArray(response.data.data)) {
       return response.data.data;
     }
     
-    console.log('API返回空标签数据或不成功，使用默认标签');
-    // 如果API返回空数据或失败，返回默认标签
-    return ['GPT-4', 'GPT-3.5', 'Claude', 'Gemini', '初学者', '高级', '长文本', '结构化输出', '翻译', '润色'];
+    // API报告失败或数据格式不正确
+    console.warn('获取标签失败或返回数据格式不正确:', response.data.error || 'API未返回成功状态');
+    throw new Error('未能从服务器获取标签列表。');
   } catch (error) {
-    console.error('获取标签失败:', error);
-    // 发生错误时也返回默认标签
-    return ['GPT-4', 'GPT-3.5', 'Claude', 'Gemini', '初学者', '高级', '长文本', '结构化输出', '翻译', '润色'];
+    console.error('获取标签时发生网络或服务器错误:', error);
+    // 重新抛出错误，以便UI层可以捕获并向用户显示明确的错误信息
+    throw new Error(`获取标签失败: ${error instanceof Error ? error.message : '未知网络错误'}`);
   }
 };
 
