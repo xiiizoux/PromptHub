@@ -136,10 +136,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       return res.status(200).json({
         success: true,
         data: [],
-        total: 0,
+        total: count || 0,
         page: currentPage,
         pageSize: currentPageSize,
-        totalPages: 0
+        totalPages: count ? Math.ceil(count / currentPageSize) : 0
       });
     }
 
@@ -177,17 +177,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     // 格式化数据，确保包含用户信息
     const formattedPrompts = promptsData.map(prompt => {
       const user = userMap.get(prompt.user_id || prompt.created_by);
+      const authorName = user ? (user.display_name || user.email?.split('@')[0] || '未知用户') : '未知用户';
       return {
         ...prompt,
-        author: user ? {
-          id: user.id,
-          name: user.display_name || user.email?.split('@')[0] || '未知用户',
-          email: user.email
-        } : {
-          id: prompt.user_id || prompt.created_by,
-          name: '未知用户',
-          email: ''
-        }
+        author: authorName
       };
     });
 
