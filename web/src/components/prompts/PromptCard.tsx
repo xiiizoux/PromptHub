@@ -122,9 +122,9 @@ const PromptCard: React.FC<PromptCardProps> = React.memo(({ prompt }) => {
             )}
           </div>
           
-          {/* 标题与分类图标、箭头 */}
-          <div className="relative flex justify-between items-start mb-2">
-            <div className="flex items-start space-x-2 flex-1 pr-2">
+          {/* 标题与分类图标 */}
+          <div className="relative flex items-start mb-2">
+            <div className="flex items-start space-x-2 flex-1">
               <div className={clsx(
                 'inline-flex p-2 rounded-lg bg-gradient-to-br flex-shrink-0',
                 categoryInfo.color
@@ -138,7 +138,6 @@ const PromptCard: React.FC<PromptCardProps> = React.memo(({ prompt }) => {
                 <div className="text-xs text-gray-400 mt-1">{categoryInfo.name}</div>
               </div>
             </div>
-            <ArrowTopRightOnSquareIcon className="h-4 w-4 text-gray-500 group-hover:text-neon-cyan transition-colors flex-shrink-0 mt-1" />
           </div>
           
           {/* 描述 */}
@@ -167,9 +166,9 @@ const PromptCard: React.FC<PromptCardProps> = React.memo(({ prompt }) => {
           
           {/* 底部信息 */}
           <div className="mt-auto pt-4 border-t border-neon-cyan/10 space-y-3">
-            {/* 第一行：评分（只在有评分且大于0时显示） */}
-            {rating.value > 0 && (
-              <div className="flex items-center justify-center">
+            {/* 第一行：评分 - 始终显示 */}
+            <div className="flex items-center">
+              {rating.value > 0 ? (
                 <div className="flex items-center space-x-2">
                   <div className="relative w-20 h-2 bg-dark-bg-tertiary rounded-full overflow-hidden">
                     <div 
@@ -179,20 +178,20 @@ const PromptCard: React.FC<PromptCardProps> = React.memo(({ prompt }) => {
                   </div>
                   <span className="text-xs text-gray-400">{rating.value.toFixed(1)}</span>
                 </div>
-              </div>
-            )}
+              ) : (
+                <span className="text-xs text-gray-500">暂无评分</span>
+              )}
+            </div>
             
             {/* 第二行：作者版本信息 */}
-            <div className="flex items-center justify-between text-xs text-gray-500">
-              <div className="flex items-center space-x-3">
-                <div className="flex items-center space-x-1">
-                  <UserIcon className="h-3 w-3" />
-                  <span>{prompt.author || '匿名'}</span>
-                </div>
-                <div className="flex items-center space-x-1">
-                  <DocumentTextIcon className="h-3 w-3" />
-                  <span>v{formatVersionDisplay(prompt.version)}</span>
-                </div>
+            <div className="flex items-center space-x-3 text-xs text-gray-500">
+              <div className="flex items-center space-x-1">
+                <UserIcon className="h-3 w-3" />
+                <span>{prompt.author || '匿名'}</span>
+              </div>
+              <div className="flex items-center space-x-1">
+                <DocumentTextIcon className="h-3 w-3" />
+                <span>v{formatVersionDisplay(prompt.version)}</span>
               </div>
             </div>
             
