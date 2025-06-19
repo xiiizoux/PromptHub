@@ -87,10 +87,11 @@ const PromptCard: React.FC<PromptCardProps> = React.memo(({ prompt }) => {
   }, [prompt.category]);
 
   const rating = useMemo(() => {
-    const ratingValue = prompt.rating || 0;
+    // 优先使用 average_rating，如果没有则使用 rating 字段
+    const ratingValue = prompt.average_rating !== undefined ? prompt.average_rating : (prompt.rating || 0);
     const percentage = (ratingValue / 5) * 100;
     return { value: ratingValue, percentage };
-  }, [prompt.rating]);
+  }, [prompt.average_rating, prompt.rating]);
 
   const tagsToShow = useMemo(() => {
     if (!prompt.tags || prompt.tags.length === 0) return null;

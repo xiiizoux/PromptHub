@@ -15,6 +15,8 @@ export interface PromptInfo {
   author?: string;
   usageCount?: number;
   rating?: number;
+  average_rating?: number;               // 添加平均评分字段
+  rating_count?: number;                 // 添加评分数量字段
 }
 
 // 提示词详情

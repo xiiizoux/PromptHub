@@ -1700,7 +1700,10 @@ const ProfilePage = () => {
                               <div className="flex items-center justify-between text-xs">
                                 <div className="flex items-center">
                                   {(() => {
-                                    const rating = (prompt as any).rating || 0;
+                                    // 优先使用 average_rating，如果没有则使用 rating 字段
+                                    const rating = (prompt as any).average_rating !== undefined 
+                                      ? (prompt as any).average_rating 
+                                      : ((prompt as any).rating || 0);
                                     const percentage = (rating / 5) * 100;
                                     return rating > 0 ? (
                                       <div className="flex items-center space-x-2">

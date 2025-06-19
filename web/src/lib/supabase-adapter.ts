@@ -37,6 +37,9 @@ export interface Prompt {
   created_at: string;
   updated_at?: string;
   compatible_models?: string[];
+  average_rating?: number;
+  rating_count?: number;
+  rating?: number; // 为了兼容前端组件
 }
 
 export interface PromptFilters {
@@ -278,10 +281,69 @@ export class SupabaseAdapter {
         };
       }
 
+      // 如果没有数据，直接返回
+      if (!data || data.length === 0) {
+        return {
+          data: [],
+          total: count || 0,
+          page,
+          pageSize,
+          totalPages: count ? Math.ceil(count / pageSize) : 0
+        };
+      }
+
+      // 获取所有提示词的评分数据
+      const promptIds = data.map(p => p.id).filter(Boolean);
+      let ratingsMap = new Map<string, { average: number; count: number }>();
+      
+      if (promptIds.length > 0) {
+        try {
+          const { data: ratingData, error: ratingError } = await adminClient
+            .from('prompt_ratings')
+            .select('prompt_id, rating')
+            .in('prompt_id', promptIds);
+
+          if (!ratingError && ratingData && ratingData.length > 0) {
+            // 计算每个提示词的平均评分和评分数量
+            const ratingStats = ratingData.reduce((acc, rating) => {
+              if (!acc[rating.prompt_id]) {
+                acc[rating.prompt_id] = { sum: 0, count: 0 };
+              }
+              acc[rating.prompt_id].sum += rating.rating;
+              acc[rating.prompt_id].count += 1;
+              return acc;
+            }, {} as Record<string, { sum: number; count: number }>);
+
+            // 计算平均值并存储到Map中
+            Object.entries(ratingStats).forEach(([promptId, stats]) => {
+              ratingsMap.set(promptId, {
+                average: Math.round((stats.sum / stats.count) * 10) / 10,
+                count: stats.count
+              });
+            });
+
+            console.log('计算的评分统计:', Object.fromEntries(ratingsMap));
+          }
+        } catch (ratingError) {
+          console.error('获取评分数据时出错:', ratingError);
+        }
+      }
+
+      // 添加评分信息到提示词数据中
+      const promptsWithRatings = data.map(prompt => {
+        const ratingInfo = ratingsMap.get(prompt.id) || { average: 0, count: 0 };
+        return {
+          ...prompt,
+          average_rating: ratingInfo.average,
+          rating_count: ratingInfo.count,
+          rating: ratingInfo.average // 为了兼容前端组件，同时提供rating字段
+        };
+      });
+
       const totalPages = count ? Math.ceil(count / pageSize) : 0;
 
       return {
-        data: data || [],
+        data: promptsWithRatings,
         total: count || 0,
         page,
         pageSize,

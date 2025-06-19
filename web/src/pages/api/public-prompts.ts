@@ -171,16 +171,58 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       }
     }
 
+    // 获取所有提示词的评分数据
+    const promptIds = promptsData.map(p => p.id).filter(Boolean);
+    let ratingsMap = new Map<string, { average: number; count: number }>();
+    
+    if (promptIds.length > 0) {
+      try {
+        const { data: ratingData, error: ratingError } = await supabase
+          .from('prompt_ratings')
+          .select('prompt_id, rating')
+          .in('prompt_id', promptIds);
+
+        if (!ratingError && ratingData && ratingData.length > 0) {
+          // 计算每个提示词的平均评分和评分数量
+          const ratingStats = ratingData.reduce((acc, rating) => {
+            if (!acc[rating.prompt_id]) {
+              acc[rating.prompt_id] = { sum: 0, count: 0 };
+            }
+            acc[rating.prompt_id].sum += rating.rating;
+            acc[rating.prompt_id].count += 1;
+            return acc;
+          }, {} as Record<string, { sum: number; count: number }>);
+
+          // 计算平均值并存储到Map中
+          Object.entries(ratingStats).forEach(([promptId, stats]) => {
+            ratingsMap.set(promptId, {
+              average: Math.round((stats.sum / stats.count) * 10) / 10,
+              count: stats.count
+            });
+          });
+
+          console.log('计算的评分统计:', Object.fromEntries(ratingsMap));
+        }
+      } catch (ratingError) {
+        console.error('获取评分数据时出错:', ratingError);
+      }
+    }
+
     // 创建用户映射
     const userMap = new Map(usersData.map(user => [user.id, user]));
 
-    // 格式化数据，确保包含用户信息
+    // 格式化数据，确保包含用户信息和评分信息
     const formattedPrompts = promptsData.map(prompt => {
       const user = userMap.get(prompt.user_id || prompt.created_by);
       const authorName = user ? (user.display_name || user.email?.split('@')[0] || '未知用户') : '未知用户';
+      const ratingInfo = ratingsMap.get(prompt.id) || { average: 0, count: 0 };
+      
       return {
         ...prompt,
-        author: authorName
+        author: authorName,
+        average_rating: ratingInfo.average,
+        rating_count: ratingInfo.count,
+        rating: ratingInfo.average // 为了兼容前端组件，同时提供rating字段
       };
     });
 
