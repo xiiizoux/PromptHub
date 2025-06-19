@@ -112,9 +112,9 @@ const PromptCard: React.FC<PromptCardProps> = React.memo(({ prompt }) => {
             categoryInfo.color
           )} />
           
-          {/* 头部 - 只显示热门标签 */}
+          {/* 头部 - 只在符合条件时显示热门标签 */}
           <div className="relative mb-4">
-            {prompt.usageCount && prompt.usageCount > 100 && (
+            {(prompt.usageCount || 0) > 100 && (
               <div className="flex items-center space-x-1 px-2 py-1 rounded-full bg-neon-red/20 border border-neon-red/30 w-fit">
                 <FireIcon className="h-3 w-3 text-neon-red" />
                 <span className="text-xs text-neon-red">热门</span>
@@ -166,40 +166,40 @@ const PromptCard: React.FC<PromptCardProps> = React.memo(({ prompt }) => {
           
           {/* 底部信息 */}
           <div className="mt-auto pt-4 border-t border-neon-cyan/10 space-y-3">
-            {/* 第一行：评分 - 始终显示 */}
-            <div className="flex items-center">
-              {rating.value > 0 ? (
-                <div className="flex items-center space-x-2">
-                  <div className="relative w-20 h-2 bg-dark-bg-tertiary rounded-full overflow-hidden">
-                    <div 
-                      className="absolute top-0 left-0 h-full bg-gradient-to-r from-neon-yellow to-neon-green rounded-full"
-                      style={{ width: `${rating.percentage}%` }}
-                    />
+            {/* 第一行：评分与日期 */}
+            <div className="flex items-center justify-between text-xs">
+              <div className="flex items-center">
+                {rating.value > 0 ? (
+                  <div className="flex items-center space-x-2">
+                    <div className="relative w-20 h-2 bg-dark-bg-tertiary rounded-full overflow-hidden">
+                      <div 
+                        className="absolute top-0 left-0 h-full bg-gradient-to-r from-neon-yellow to-neon-green rounded-full"
+                        style={{ width: `${rating.percentage}%` }}
+                      />
+                    </div>
+                    <span className="text-xs text-gray-400">{rating.value.toFixed(1)}</span>
                   </div>
-                  <span className="text-xs text-gray-400">{rating.value.toFixed(1)}</span>
-                </div>
-              ) : (
-                <span className="text-xs text-gray-500">暂无评分</span>
-              )}
-            </div>
-            
-            {/* 第二行：作者版本信息 */}
-            <div className="flex items-center space-x-3 text-xs text-gray-500">
-              <div className="flex items-center space-x-1">
-                <UserIcon className="h-3 w-3" />
-                <span>{prompt.author || '匿名'}</span>
+                ) : (
+                  <span className="text-xs text-gray-500">暂无评分</span>
+                )}
               </div>
-              <div className="flex items-center space-x-1">
-                <DocumentTextIcon className="h-3 w-3" />
-                <span>v{formatVersionDisplay(prompt.version)}</span>
-              </div>
-            </div>
-            
-            {/* 第三行：日期与互动按钮 */}
-            <div className="flex items-center justify-between text-xs text-gray-500">
-              <div className="flex items-center space-x-1">
+              <div className="flex items-center space-x-1 text-gray-500">
                 <ClockIcon className="h-3 w-3" />
                 <span>{formatDate(prompt.updated_at || prompt.created_at)}</span>
+              </div>
+            </div>
+            
+            {/* 第二行：作者版本信息与互动按钮 */}
+            <div className="flex items-center justify-between text-xs text-gray-500">
+              <div className="flex items-center space-x-3">
+                <div className="flex items-center space-x-1">
+                  <UserIcon className="h-3 w-3" />
+                  <span>{prompt.author || '匿名'}</span>
+                </div>
+                <div className="flex items-center space-x-1">
+                  <DocumentTextIcon className="h-3 w-3" />
+                  <span>v{formatVersionDisplay(prompt.version)}</span>
+                </div>
               </div>
               <div onClick={(e) => e.preventDefault()}>
                 <InteractionButtons promptId={prompt.id} size="sm" />
