@@ -5,7 +5,7 @@ import { FunnelIcon, MagnifyingGlassIcon, XMarkIcon, AdjustmentsHorizontalIcon, 
 import { getTagsWithStats } from '@/lib/api';
 
 interface PromptFiltersProps {
-  filters: PromptFiltersType;
+  filters: Omit<PromptFiltersType, 'page' | 'pageSize'>;
   onFilterChange: (newFilters: PromptFiltersType) => void;
   categories: string[];
   tags: string[];

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import PromptCard from '@/components/prompts/PromptCard';
 import PromptFilters from '@/components/prompts/PromptFilters';
@@ -19,13 +19,19 @@ export default function PromptsPage() {
   const [totalCount, setTotalCount] = useState(0);
   const pageSize = 21;
   
-  // 使用统一的filters对象，但不包含分页信息
-  const [filters, setFilters] = useState<Omit<PromptFiltersType, 'page' | 'pageSize'>>({
-    search: '',
-    category: '',
-    tags: [],
-    sortBy: 'latest'
-  });
+  // 过滤器状态 - 使用单独的状态管理每个字段，避免对象比较问题
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState<string>('');
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [sortBy, setSortBy] = useState<'latest' | 'oldest' | 'name' | 'updated'>('latest');
+
+  // 将过滤器状态组合成一个稳定的对象
+  const filters = useMemo(() => ({
+    search: searchQuery || undefined,
+    category: selectedCategory || undefined,
+    tags: selectedTags.length > 0 ? selectedTags : undefined,
+    sortBy: sortBy
+  }), [searchQuery, selectedCategory, selectedTags, sortBy]);
 
   // 获取基础数据
   useEffect(() => {
@@ -46,7 +52,7 @@ export default function PromptsPage() {
     loadInitialData();
   }, []);
 
-  // 获取提示词数据 - 使用useCallback避免依赖问题
+  // 获取提示词数据 - 使用稳定的依赖项
   const loadPrompts = useCallback(async () => {
     console.log('=== 开始加载提示词 ===');
     console.log('当前页面:', currentPage);
@@ -57,10 +63,7 @@ export default function PromptsPage() {
     
     try {
       const apiFilters: PromptFiltersType = {
-        search: filters.search || undefined,
-        category: filters.category && filters.category !== '全部' ? filters.category : undefined,
-        tags: filters.tags && filters.tags.length > 0 ? filters.tags : undefined,
-        sortBy: filters.sortBy,
+        ...filters,
         page: currentPage,
         pageSize: pageSize
       };
@@ -97,7 +100,7 @@ export default function PromptsPage() {
       setLoading(false);
       console.log('=== 加载完成 ===');
     }
-  }, [currentPage, filters.search, filters.category, filters.tags, filters.sortBy]);
+  }, [currentPage, filters]);
 
   // 当分页或过滤器变化时加载数据
   useEffect(() => {
@@ -113,19 +116,36 @@ export default function PromptsPage() {
     }
   };
 
-  // 处理过滤器变化 - 只更新filters，重置页面到1
-  const handleFilterChange = (newFilters: PromptFiltersType) => {
+  // 处理过滤器变化 - 使用单独的setter函数，避免对象比较
+  const handleFilterChange = useCallback((newFilters: PromptFiltersType) => {
     console.log('🔄 过滤器变化:', { 
       旧值: filters, 
       新值: newFilters 
     });
     
-    // 从新的过滤器中排除分页信息
-    const { page, pageSize, ...filterWithoutPaging } = newFilters;
+    // 只有当值真正发生变化时才更新状态
+    if (newFilters.search !== searchQuery) {
+      setSearchQuery(newFilters.search || '');
+    }
     
-    setFilters(filterWithoutPaging);
-    setCurrentPage(1); // 重置到第一页
-  };
+    if (newFilters.category !== selectedCategory) {
+      setSelectedCategory(newFilters.category || '');
+    }
+    
+    // 数组比较需要特殊处理
+    const newTags = newFilters.tags || [];
+    const currentTags = selectedTags;
+    if (JSON.stringify(newTags.sort()) !== JSON.stringify(currentTags.sort())) {
+      setSelectedTags(newTags);
+    }
+    
+    if (newFilters.sortBy !== sortBy) {
+      setSortBy(newFilters.sortBy || 'latest');
+    }
+    
+    // 重置到第一页
+    setCurrentPage(1);
+  }, [searchQuery, selectedCategory, selectedTags, sortBy, filters]);
 
   // 渲染分页
   const renderPagination = () => {
