@@ -214,29 +214,33 @@ const SimplePromptCard = ({ prompt }: { prompt: PromptInfo }) => {
 };
 
 export default function PromptsPage() {
-  // 基础状态
+  // === 基础状态 ===
   const [prompts, setPrompts] = useState<PromptInfo[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
   
-  // 基础数据
+  // === 基础数据 ===
   const [categories, setCategories] = useState<string[]>([]);
   
-  // 过滤和搜索状态 - 使用独立的简单状态
+  // === 过滤和搜索状态 ===
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
   const [sortBy, setSortBy] = useState<'latest' | 'oldest' | 'name' | 'updated'>('latest');
   
-  // 分页状态
+  // === 分页状态 ===
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const pageSize = 21;
   
-  // 防抖搜索 - 使用useCallback确保引用稳定
+  // === 防抖搜索 ===
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
   
+  // === 加载控制标志 ===
+  const [shouldLoad, setShouldLoad] = useState(false);
+  
+  // 初始化
   useEffect(() => {
     setMounted(true);
   }, []);
@@ -246,106 +250,131 @@ export default function PromptsPage() {
     const timer = setTimeout(() => {
       setDebouncedSearchQuery(searchQuery);
       setCurrentPage(1); // 搜索时重置到第一页
+      setShouldLoad(true); // 触发数据加载
     }, 500);
     
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
-  // 获取基础数据
+  // 当分类或排序改变时，立即触发加载
+  useEffect(() => {
+    if (mounted) {
+      setCurrentPage(1);
+      setShouldLoad(true);
+    }
+  }, [selectedCategory, sortBy, mounted]);
+
+  // 当页码改变时，触发加载
+  useEffect(() => {
+    if (mounted && currentPage > 1) {
+      setShouldLoad(true);
+    }
+  }, [currentPage, mounted]);
+
+  // 获取基础数据（分类列表）
   useEffect(() => {
     if (!mounted) return;
     
-    const loadBasicData = async () => {
+    const loadCategories = async () => {
       try {
         const categoriesData = await getCategories().catch(() => ['通用', '编程', '写作', '学术', '创意', '商业', '翻译', '教育']);
         setCategories(categoriesData);
       } catch (err) {
-        console.error('获取基础数据失败:', err);
+        console.error('获取分类失败:', err);
+        setCategories(['通用', '编程', '写作', '学术', '创意', '商业', '翻译', '教育']);
       }
     };
     
-    loadBasicData();
+    loadCategories();
   }, [mounted]);
 
-  // 构建API过滤器参数 - 使用useMemo确保稳定
-  const apiFilters = useMemo((): PromptFilters => {
-    return {
-      search: debouncedSearchQuery || undefined,
-      category: selectedCategory || undefined,
-      sortBy: sortBy,
-      page: currentPage,
-      pageSize: pageSize
-    };
-  }, [debouncedSearchQuery, selectedCategory, sortBy, currentPage]);
-
-  // 加载提示词数据 - 使用useCallback确保引用稳定
-  const loadPrompts = useCallback(async () => {
-    if (!mounted) return;
+  // 主数据加载逻辑 - 只在shouldLoad为true时执行
+  useEffect(() => {
+    if (!mounted || !shouldLoad) return;
     
-    console.log('=== 开始加载提示词 ===');
-    console.log('过滤器参数:', apiFilters);
-    
-    setLoading(true);
-    setError(null);
-    
-    try {
-      const response = await getPrompts(apiFilters);
+    const loadData = async () => {
+      console.log('=== 开始加载提示词数据 ===');
+      console.log('参数:', {
+        search: debouncedSearchQuery,
+        category: selectedCategory,
+        sortBy,
+        page: currentPage,
+        pageSize
+      });
       
-      if (response && response.data) {
-        console.log('✅ 加载成功，提示词数量:', response.data.length);
-        setPrompts(response.data);
-        setTotalPages(response.totalPages || 1);
-        setTotalCount(response.total || 0);
-        setError(null);
-      } else {
-        console.warn('⚠️ API响应异常:', response);
+      setLoading(true);
+      setError(null);
+      
+      try {
+        const filters: PromptFilters = {
+          search: debouncedSearchQuery || undefined,
+          category: selectedCategory || undefined,
+          sortBy: sortBy,
+          page: currentPage,
+          pageSize: pageSize
+        };
+        
+        const response = await getPrompts(filters);
+        
+        if (response && response.data) {
+          console.log('✅ 加载成功，数量:', response.data.length);
+          setPrompts(response.data);
+          setTotalPages(response.totalPages || 1);
+          setTotalCount(response.total || 0);
+          setError(null);
+        } else {
+          console.warn('⚠️ 响应异常:', response);
+          setPrompts([]);
+          setTotalPages(1);
+          setTotalCount(0);
+        }
+      } catch (err) {
+        console.error('❌ 加载失败:', err);
+        setError('加载提示词失败，请刷新页面重试');
         setPrompts([]);
         setTotalPages(1);
         setTotalCount(0);
+      } finally {
+        setLoading(false);
+        setShouldLoad(false); // 重置加载标志
+        console.log('=== 加载完成 ===');
       }
-    } catch (err) {
-      console.error('❌ 加载失败:', err);
-      setError('加载提示词失败，请刷新页面重试');
-      setPrompts([]);
-      setTotalPages(1);
-      setTotalCount(0);
-    } finally {
-      setLoading(false);
-      console.log('=== 加载完成 ===');
-    }
-  }, [mounted, apiFilters]);
+    };
+    
+    loadData();
+  }, [mounted, shouldLoad, debouncedSearchQuery, selectedCategory, sortBy, currentPage]);
 
-  // 当过滤器参数变化时加载数据
+  // 首次加载
   useEffect(() => {
-    loadPrompts();
-  }, [loadPrompts]);
+    if (mounted) {
+      setShouldLoad(true);
+    }
+  }, [mounted]);
 
-  // 事件处理函数 - 使用useCallback确保引用稳定
+  // === 事件处理函数 ===
   const handleSearchChange = useCallback((value: string) => {
     setSearchQuery(value);
   }, []);
 
   const handleCategoryChange = useCallback((value: string) => {
     setSelectedCategory(value);
-    setCurrentPage(1); // 重置到第一页
   }, []);
 
   const handleSortChange = useCallback((value: string) => {
     setSortBy(value as 'latest' | 'oldest' | 'name' | 'updated');
-    setCurrentPage(1); // 重置到第一页
   }, []);
 
   const handlePageChange = useCallback((page: number) => {
     if (page >= 1 && page <= totalPages && page !== currentPage) {
       setCurrentPage(page);
-      // 滚动到顶部
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   }, [currentPage, totalPages]);
 
-  console.log('🎯 页面渲染状态:', { 
+  console.log('🎯 页面状态:', { 
     mounted, 
     loading, 
+    shouldLoad,
     error, 
     promptsCount: prompts.length,
     totalCount,
