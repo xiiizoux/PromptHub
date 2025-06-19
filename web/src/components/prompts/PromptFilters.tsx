@@ -47,57 +47,85 @@ const PromptFilters: React.FC<PromptFiltersProps> = ({
     }
   }, [tags]);
 
-  // 智能标签展示逻辑 - 避免展开时重新排序
+  // 智能标签展示逻辑 - 性能优化版本
   const displayTags = useMemo(() => {
     const selectedTags = filters.tags || [];
+    const selectedTagsSet = new Set(selectedTags); // 使用Set提高查找性能
     
     // 如果有搜索查询，优先处理搜索
     if (tagSearchQuery.trim()) {
       const searchLower = tagSearchQuery.toLowerCase();
-      const filteredTags = tags.filter(tag => 
-        tag.toLowerCase().includes(searchLower)
-      );
+      const result = [];
+      const exactMatches = [];
+      const partialMatches = [];
       
-      // 搜索时按相关性排序：已选中 > 完全匹配 > 包含匹配
-      const exactMatches = filteredTags.filter(tag => 
-        tag.toLowerCase() === searchLower && !selectedTags.includes(tag)
-      );
-      const partialMatches = filteredTags.filter(tag => 
-        tag.toLowerCase() !== searchLower && !selectedTags.includes(tag)
-      );
-      const selectedMatches = selectedTags.filter(tag =>
-        tag.toLowerCase().includes(searchLower)
-      );
+      // 一次遍历完成所有分类，提高性能
+      for (const tag of tags) {
+        const tagLower = tag.toLowerCase();
+        if (!tagLower.includes(searchLower)) continue;
+        
+        if (selectedTagsSet.has(tag)) {
+          result.push(tag); // 已选中的直接加到前面
+        } else if (tagLower === searchLower) {
+          exactMatches.push(tag);
+        } else {
+          partialMatches.push(tag);
+        }
+      }
       
-      return [...selectedMatches, ...exactMatches, ...partialMatches];
+      return [...result, ...exactMatches, ...partialMatches];
     }
     
-    // 建立稳定的标签顺序：已选中 + 热门 + 其他（按原始顺序）
-    const unselectedTags = tags.filter(tag => !selectedTags.includes(tag));
-    const popularUnselected = popularTags.filter(tag => unselectedTags.includes(tag));
-    const otherUnselected = unselectedTags.filter(tag => !popularTags.includes(tag));
+    // 缓存经常访问的集合
+    const popularTagsSet = new Set(popularTags);
+    const result = [...selectedTags]; // 已选中的标签
+    const popularUnselected = [];
+    const otherUnselected = [];
     
-    // 建立完整的标签顺序（这个顺序在展开/收起时保持不变）
-    const fullOrderedTags = [...selectedTags, ...popularUnselected, ...otherUnselected];
+    // 一次遍历完成分类
+    for (const tag of tags) {
+      if (selectedTagsSet.has(tag)) continue;
+      
+      if (popularTagsSet.has(tag)) {
+        popularUnselected.push(tag);
+      } else {
+        otherUnselected.push(tag);
+      }
+    }
+    
+    const fullOrderedTags = [...result, ...popularUnselected, ...otherUnselected];
     
     // 如果显示所有标签，返回完整顺序
     if (showAllTags) {
       return fullOrderedTags;
     }
     
-    // 默认模式：只显示前25个，但保持相同的顺序
-    const maxDisplayTags = 25;
-    return fullOrderedTags.slice(0, maxDisplayTags);
+    // 默认模式：只显示前25个
+    return fullOrderedTags.slice(0, 25);
   }, [tags, filters.tags, popularTags, showAllTags, tagSearchQuery]);
 
-  // 计算未显示的标签数量
+  // 优化版本：减少不必要的重新计算
+  const { visibleTags, hiddenTags } = useMemo(() => {
+    const allTags = [...tags];
+    const selectedTags = filters.tags || [];
+    
+    // 快速计算可见和隐藏的标签
+    if (showAllTags || tagSearchQuery.trim()) {
+      return { visibleTags: displayTags, hiddenTags: [] };
+    }
+    
+    const maxDisplayTags = 25;
+    const visible = displayTags.slice(0, maxDisplayTags);
+    const hidden = allTags.slice(maxDisplayTags);
+    
+    return { visibleTags: visible, hiddenTags: hidden };
+  }, [displayTags, showAllTags, tagSearchQuery, tags, filters.tags]);
+
+  // 计算未显示的标签数量 - 优化版本
   const hiddenTagsCount = useMemo(() => {
     if (showAllTags || tagSearchQuery.trim()) return 0;
-    const filteredTags = tagSearchQuery.trim() 
-      ? tags.filter(tag => tag.toLowerCase().includes(tagSearchQuery.toLowerCase()))
-      : tags;
-    return Math.max(0, filteredTags.length - displayTags.length);
-  }, [tags, displayTags.length, showAllTags, tagSearchQuery]);
+    return Math.max(0, tags.length - visibleTags.length);
+  }, [tags.length, visibleTags.length, showAllTags, tagSearchQuery]);
 
   // 处理搜索输入
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -150,12 +178,15 @@ const PromptFilters: React.FC<PromptFiltersProps> = ({
     setShowAllTags(false);
   };
 
-  // 切换显示所有标签
+  // 切换显示所有标签 - 优化版本
   const toggleShowAllTags = () => {
-    setShowAllTags(!showAllTags);
-    if (!showAllTags) {
-      setTagSearchQuery(''); // 展开时清除搜索
-    }
+    // 使用批量状态更新减少重新渲染
+    React.startTransition(() => {
+      setShowAllTags(!showAllTags);
+      if (!showAllTags) {
+        setTagSearchQuery(''); // 展开时清除搜索
+      }
+    });
   };
 
   return (
@@ -347,27 +378,29 @@ const PromptFilters: React.FC<PromptFiltersProps> = ({
               {/* 标签列表容器 */}
               <div className="min-h-[60px]"> {/* 固定最小高度，减少布局跳动 */}
                 <div className="flex flex-wrap gap-2">
-                  <AnimatePresence mode="popLayout">
-                    {displayTags.map((tag, index) => (
+                  <AnimatePresence>
+                    {visibleTags.map((tag, index) => (
                       <motion.button
                         key={`tag-${tag}`} // 更稳定的key
                         type="button"
                         onClick={() => handleTagChange(tag)}
-                        layout
                         initial={{ opacity: 0, scale: 0.9 }}
                         animate={{ 
                           opacity: 1, 
                           scale: 1,
-                          transition: { duration: 0.4, delay: 0.6 + index * 0.03 } // 与类别动画保持一致
+                          transition: { 
+                            duration: 0.2, 
+                            delay: showAllTags ? index * 0.01 : Math.min(index * 0.02, 0.3) // 大幅减少延迟
+                          }
                         }}
                         exit={{ 
                           opacity: 0, 
                           scale: 0.9,
-                          transition: { duration: 0.15 }
+                          transition: { duration: 0.1 }
                         }}
                         whileHover={{ scale: 1.05, y: -1 }}
                         whileTap={{ scale: 0.95 }}
-                        className={`inline-flex items-center px-3 py-2 rounded-lg text-xs font-medium transition-all duration-300 backdrop-blur-sm ${
+                        className={`inline-flex items-center px-3 py-2 rounded-lg text-xs font-medium transition-all duration-200 backdrop-blur-sm ${
                           filters.tags?.includes(tag)
                             ? 'bg-neon-purple/20 text-neon-purple border border-neon-purple/50 shadow-neon-sm'
                             : 'bg-dark-bg-secondary/50 text-gray-400 border border-dark-border hover:bg-dark-card hover:border-neon-purple hover:text-neon-purple'
@@ -376,9 +409,9 @@ const PromptFilters: React.FC<PromptFiltersProps> = ({
                         {tag}
                         {filters.tags?.includes(tag) && (
                           <motion.div
-                                                      initial={{ opacity: 0, scale: 0 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          transition={{ duration: 0.2 }}
+                            initial={{ opacity: 0, scale: 0 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            transition={{ duration: 0.15 }}
                           >
                             <XMarkIcon className="w-3 h-3 ml-1" />
                           </motion.div>
@@ -396,17 +429,17 @@ const PromptFilters: React.FC<PromptFiltersProps> = ({
                         animate={{ 
                           opacity: 1, 
                           scale: 1,
-                          transition: { duration: 0.4 }
+                          transition: { duration: 0.15 } // 减少按钮动画时间
                         }}
                         exit={{ 
                           opacity: 0, 
                           scale: 0.9,
-                          transition: { duration: 0.15 }
+                          transition: { duration: 0.1 }
                         }}
                         onClick={toggleShowAllTags}
                         whileHover={{ scale: 1.05, y: -2 }}
                         whileTap={{ scale: 0.95 }}
-                        className="inline-flex items-center px-3 py-2 border border-dashed border-neon-purple/50 rounded-lg text-neon-purple hover:border-neon-purple hover:bg-neon-purple/10 transition-all duration-300 text-xs font-medium"
+                        className="inline-flex items-center px-3 py-2 border border-dashed border-neon-purple/50 rounded-lg text-neon-purple hover:border-neon-purple hover:bg-neon-purple/10 transition-all duration-200 text-xs font-medium"
                       >
                         <ChevronDownIcon className="w-3 h-3 mr-1" />
                         +{hiddenTagsCount} 更多
@@ -420,17 +453,17 @@ const PromptFilters: React.FC<PromptFiltersProps> = ({
                         animate={{ 
                           opacity: 1, 
                           scale: 1,
-                          transition: { duration: 0.4 }
+                          transition: { duration: 0.15 } // 减少按钮动画时间
                         }}
                         exit={{ 
                           opacity: 0, 
                           scale: 0.9,
-                          transition: { duration: 0.15 }
+                          transition: { duration: 0.1 }
                         }}
                         onClick={toggleShowAllTags}
                         whileHover={{ scale: 1.05, y: -2 }}
                         whileTap={{ scale: 0.95 }}
-                        className="inline-flex items-center px-3 py-2 bg-neon-purple/20 border border-neon-purple rounded-lg text-neon-purple hover:bg-neon-purple/30 transition-all duration-300 text-xs font-medium"
+                        className="inline-flex items-center px-3 py-2 bg-neon-purple/20 border border-neon-purple rounded-lg text-neon-purple hover:bg-neon-purple/30 transition-all duration-200 text-xs font-medium"
                       >
                         <ChevronUpIcon className="w-3 h-3 mr-1" />
                         收起
@@ -440,7 +473,7 @@ const PromptFilters: React.FC<PromptFiltersProps> = ({
                 </div>
 
                 {/* 标签搜索结果提示 */}
-                {tagSearchQuery && displayTags.length === 0 && (
+                {tagSearchQuery && visibleTags.length === 0 && (
                   <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
