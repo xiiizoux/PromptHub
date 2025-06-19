@@ -14,7 +14,7 @@ export default function PromptsPage() {
   const [tags, setTags] = useState<string[]>([]);
   const [filters, setFilters] = useState<PromptFiltersType>({
     page: 1,
-    pageSize: 21, // 改为21个（7行x3列）
+    pageSize: 30, // 改为30个（10行x3列）
     sortBy: 'latest',
   });
   const [totalPages, setTotalPages] = useState(1);
@@ -150,9 +150,9 @@ export default function PromptsPage() {
         <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
           <div>
             <p className="text-sm text-gray-400">
-              显示第 <span className="font-medium text-neon-cyan">{(currentPage - 1) * (filters.pageSize || 21) + 1}</span> 到{' '}
+              显示第 <span className="font-medium text-neon-cyan">{(currentPage - 1) * (filters.pageSize || 30) + 1}</span> 到{' '}
               <span className="font-medium text-neon-cyan">
-                {Math.min(currentPage * (filters.pageSize || 21), totalCount)}
+                {Math.min(currentPage * (filters.pageSize || 30), totalCount)}
               </span>{' '}
               条，共 <span className="font-medium text-neon-purple">{totalCount}</span> 条结果
             </p>

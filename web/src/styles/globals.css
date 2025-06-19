@@ -446,7 +446,7 @@ code, pre, .font-mono {
     @apply py-2 sm:py-3 md:py-4;
   }
   
-  /* 网格布局优化 - 7行x3列设计，每页21个 */
+  /* 网格布局优化 - 10行x3列设计，每页30个 */
   .prompt-grid {
     display: grid;
     gap: 1rem;
@@ -463,7 +463,7 @@ code, pre, .font-mono {
   @media (min-width: 768px) {
     .prompt-grid {
       gap: 1.5rem;
-      grid-template-columns: repeat(3, 1fr); /* 桌面端三列，正好7行21个 */
+      grid-template-columns: repeat(3, 1fr); /* 桌面端三列，正好10行30个 */
     }
   }
   

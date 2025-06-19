@@ -75,7 +75,7 @@ const ProfilePage = () => {
   const [promptCurrentPage, setPromptCurrentPage] = useState(1);
   const [promptTotalPages, setPromptTotalPages] = useState(1);
   const [promptTotalCount, setPromptTotalCount] = useState(0);
-  const promptPageSize = 21; // 每页21个（7行x3列）
+  const promptPageSize = 30; // 每页30个（10行x3列）
   
   // 新增功能的状态
   const [bookmarks, setBookmarks] = useState<UserPrompt[]>([]);
