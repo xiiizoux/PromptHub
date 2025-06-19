@@ -5,7 +5,12 @@ import { FunnelIcon, MagnifyingGlassIcon, XMarkIcon, AdjustmentsHorizontalIcon, 
 import { getTagsWithStats } from '@/lib/api';
 
 interface PromptFiltersProps {
-  filters: Omit<PromptFiltersType, 'page' | 'pageSize'>;
+  filters: {
+    search?: string;
+    category?: string;
+    tags?: string[];
+    sortBy?: 'latest' | 'oldest' | 'name' | 'updated';
+  };
   onFilterChange: (newFilters: PromptFiltersType) => void;
   categories: string[];
   tags: string[];
