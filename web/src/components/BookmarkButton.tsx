@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { HeartIcon, BookmarkIcon } from '@heroicons/react/24/outline';
 import { HeartIcon as HeartSolidIcon, BookmarkIcon as BookmarkSolidIcon } from '@heroicons/react/24/solid';
@@ -14,7 +14,7 @@ interface BookmarkButtonProps {
   className?: string;
 }
 
-export const BookmarkButton: React.FC<BookmarkButtonProps> = ({
+export const BookmarkButton: React.FC<BookmarkButtonProps> = React.memo(({
   promptId,
   variant = 'bookmark',
   showCount = true,
@@ -32,29 +32,29 @@ export const BookmarkButton: React.FC<BookmarkButtonProps> = ({
     setMounted(true);
   }, []);
 
-  // 获取初始状态
-  useEffect(() => {
+  // 获取初始状态 - 使用useCallback稳定引用
+  const fetchInteractions = useCallback(async () => {
     if (!promptId || !mounted) return;
     
-    const fetchInteractions = async () => {
-      try {
-        const data = await getPromptInteractions(promptId);
-        if (variant === 'bookmark') {
-          setIsActive(data.userBookmarked);
-          setCount(data.bookmarks);
-        } else {
-          setIsActive(data.userLiked);
-          setCount(data.likes);
-        }
-      } catch (error) {
-        console.error('获取互动状态失败:', error);
+    try {
+      const data = await getPromptInteractions(promptId);
+      if (variant === 'bookmark') {
+        setIsActive(data.userBookmarked);
+        setCount(data.bookmarks);
+      } else {
+        setIsActive(data.userLiked);
+        setCount(data.likes);
       }
-    };
-
-    fetchInteractions();
+    } catch (error) {
+      console.error('获取互动状态失败:', error);
+    }
   }, [promptId, variant, mounted]);
 
-  const handleToggle = async () => {
+  useEffect(() => {
+    fetchInteractions();
+  }, [fetchInteractions]);
+
+  const handleToggle = useCallback(async () => {
     if (!user) {
       toast.error('请先登录');
       return;
@@ -82,7 +82,7 @@ export const BookmarkButton: React.FC<BookmarkButtonProps> = ({
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [user, isLoading, variant, promptId]);
 
   if (!mounted) {
     return null; // 避免水合错误
@@ -133,9 +133,9 @@ export const BookmarkButton: React.FC<BookmarkButtonProps> = ({
         <IconComponent className={sizeClasses[size]} />
       </motion.div>
       
-      {showCount && (
+      {showCount && count > 0 && (
         <span className="font-medium">
-          {count > 0 ? count : ''}
+          {count}
         </span>
       )}
       
@@ -144,18 +144,22 @@ export const BookmarkButton: React.FC<BookmarkButtonProps> = ({
       )}
     </motion.button>
   );
-};
+});
+
+BookmarkButton.displayName = 'BookmarkButton';
 
 // 组合组件：同时显示点赞和收藏
 export const InteractionButtons: React.FC<{
   promptId: string;
   size?: 'sm' | 'md' | 'lg';
   className?: string;
-}> = ({ promptId, size = 'md', className = '' }) => {
+}> = React.memo(({ promptId, size = 'md', className = '' }) => {
   return (
     <div className={`flex items-center gap-3 ${className}`}>
       <BookmarkButton promptId={promptId} variant="like" size={size} />
       <BookmarkButton promptId={promptId} variant="bookmark" size={size} />
     </div>
   );
-}; 
+});
+
+InteractionButtons.displayName = 'InteractionButtons'; 

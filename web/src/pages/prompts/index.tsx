@@ -1,17 +1,232 @@
-import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import PromptCard from '@/components/prompts/PromptCard';
-import PromptFilters from '@/components/prompts/PromptFilters';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { getPrompts, getCategories, getTags } from '@/lib/api';
-import { PromptInfo, PromptFilters as PromptFiltersType } from '@/types';
+import { PromptInfo, PromptFilters } from '@/types';
+
+// 简化的过滤器组件
+const SearchAndFilters = ({ 
+  searchQuery, 
+  onSearchChange, 
+  selectedCategory, 
+  onCategoryChange,
+  categories,
+  sortBy,
+  onSortChange 
+}: {
+  searchQuery: string;
+  onSearchChange: (value: string) => void;
+  selectedCategory: string;
+  onCategoryChange: (value: string) => void;
+  categories: string[];
+  sortBy: string;
+  onSortChange: (value: string) => void;
+}) => {
+  return (
+    <div className="bg-white/5 backdrop-blur-lg border border-dark-border rounded-2xl p-6 mb-8 shadow-xl">
+      {/* 搜索框 */}
+      <div className="relative mb-6">
+        <div className="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
+          <svg className="w-5 h-5 text-neon-cyan" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+          </svg>
+        </div>
+        <input
+          type="text"
+          className="w-full pl-12 pr-4 py-4 bg-dark-bg-secondary/50 border border-dark-border rounded-xl text-white placeholder-gray-500 focus:border-neon-cyan focus:ring-1 focus:ring-neon-cyan focus:shadow-neon-sm transition-all duration-300 backdrop-blur-sm text-lg"
+          placeholder="搜索提示词..."
+          value={searchQuery}
+          onChange={(e) => onSearchChange(e.target.value)}
+        />
+      </div>
+
+      {/* 过滤器和排序 */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* 分类过滤 */}
+        <div>
+          <label className="block text-sm font-medium text-neon-cyan mb-3">分类</label>
+          <select
+            value={selectedCategory}
+            onChange={(e) => onCategoryChange(e.target.value)}
+            className="w-full px-4 py-3 bg-dark-bg-secondary/50 border border-dark-border rounded-xl text-white focus:border-neon-cyan focus:ring-1 focus:ring-neon-cyan transition-all duration-300"
+          >
+            <option value="">全部分类</option>
+            {categories.map((category) => (
+              <option key={category} value={category}>
+                {category}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* 排序 */}
+        <div>
+          <label className="block text-sm font-medium text-neon-pink mb-3">排序方式</label>
+          <select
+            value={sortBy}
+            onChange={(e) => onSortChange(e.target.value)}
+            className="w-full px-4 py-3 bg-dark-bg-secondary/50 border border-dark-border rounded-xl text-white focus:border-neon-pink focus:ring-1 focus:ring-neon-pink transition-all duration-300"
+          >
+            <option value="latest">最新创建</option>
+            <option value="updated">最近更新</option>
+            <option value="oldest">最早创建</option>
+            <option value="name">名称排序</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// 分页组件
+const Pagination = ({ 
+  currentPage, 
+  totalPages, 
+  totalCount, 
+  pageSize, 
+  onPageChange 
+}: {
+  currentPage: number;
+  totalPages: number;
+  totalCount: number;
+  pageSize: number;
+  onPageChange: (page: number) => void;
+}) => {
+  if (totalPages <= 1) return null;
+
+  const maxVisiblePages = 5;
+  const startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+  const endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+
+  const pages = [];
+  for (let i = startPage; i <= endPage; i++) {
+    pages.push(i);
+  }
+
+  return (
+    <div className="flex items-center justify-between p-4 md:p-6 bg-dark-card/30 backdrop-blur-md rounded-xl border border-dark-border shadow-xl mt-6">
+      <div className="flex flex-1 items-center justify-between">
+        <div>
+          <p className="text-sm text-gray-400">
+            显示第 <span className="font-medium text-neon-cyan">{(currentPage - 1) * pageSize + 1}</span> 到{' '}
+            <span className="font-medium text-neon-cyan">
+              {Math.min(currentPage * pageSize, totalCount)}
+            </span>{' '}
+            条，共 <span className="font-medium text-neon-purple">{totalCount}</span> 条结果
+          </p>
+        </div>
+        <div>
+          <nav className="isolate inline-flex -space-x-px rounded-md shadow-sm">
+            {/* 上一页 */}
+            <button
+              onClick={() => onPageChange(currentPage - 1)}
+              disabled={currentPage === 1}
+              className="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-dark-border hover:bg-dark-card focus:z-20 focus:outline-offset-0 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
+            >
+              <span className="sr-only">Previous</span>
+              <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M12.79 5.23a.75.75 0 01-.02 1.06L8.832 10l3.938 3.71a.75.75 0 11-1.04 1.08l-4.5-4.25a.75.75 0 010-1.08l4.5-4.25a.75.75 0 011.06.02z" clipRule="evenodd" />
+              </svg>
+            </button>
+            
+            {/* 页码 */}
+            {pages.map((page) => (
+              <button
+                key={page}
+                onClick={() => onPageChange(page)}
+                className={`relative inline-flex items-center px-4 py-2 text-sm font-semibold ring-1 ring-inset ring-dark-border focus:z-20 focus:outline-offset-0 transition-all duration-300 ${
+                  page === currentPage
+                    ? 'z-10 bg-gradient-to-r from-neon-cyan to-neon-purple text-white shadow-lg'
+                    : 'text-gray-300 hover:bg-neon-cyan/20 hover:text-neon-cyan'
+                }`}
+              >
+                {page}
+              </button>
+            ))}
+            
+            {/* 下一页 */}
+            <button
+              onClick={() => onPageChange(currentPage + 1)}
+              disabled={currentPage === totalPages}
+              className="relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-dark-border hover:bg-dark-card focus:z-20 focus:outline-offset-0 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
+            >
+              <span className="sr-only">Next</span>
+              <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clipRule="evenodd" />
+              </svg>
+            </button>
+          </nav>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// 简化的PromptCard组件，不包含BookmarkButton
+const SimplePromptCard = ({ prompt }: { prompt: PromptInfo }) => {
+  if (!prompt.id) return null;
+
+  return (
+    <div className="card glass border border-neon-cyan/20 hover:border-neon-cyan/40 transition-all duration-300 group cursor-pointer relative overflow-hidden p-6">
+      {/* 分类标签 */}
+      {prompt.category && (
+        <div className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-neon-purple/20 text-neon-purple border border-neon-purple/30 mb-3">
+          {prompt.category}
+        </div>
+      )}
+      
+      {/* 标题 */}
+      <h3 className="text-lg font-semibold text-white mb-2 line-clamp-1 group-hover:text-neon-cyan transition-colors">
+        {prompt.name}
+      </h3>
+      
+      {/* 描述 */}
+      <p className="text-sm text-gray-400 line-clamp-2 mb-4">
+        {prompt.description || '暂无描述'}
+      </p>
+      
+      {/* 标签 */}
+      {prompt.tags && prompt.tags.length > 0 && (
+        <div className="flex flex-wrap gap-2 mb-4">
+          {prompt.tags.slice(0, 3).map((tag, index) => (
+            <span 
+              key={`${prompt.id}-tag-${tag}-${index}`}
+              className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium glass border border-neon-cyan/20 text-neon-cyan"
+            >
+              #{tag}
+            </span>
+          ))}
+          {prompt.tags.length > 3 && (
+            <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium glass border border-gray-600 text-gray-400">
+              +{prompt.tags.length - 3}
+            </span>
+          )}
+        </div>
+      )}
+      
+      {/* 底部信息 */}
+      <div className="mt-4 pt-4 border-t border-neon-cyan/10">
+        <div className="flex items-center justify-between text-xs text-gray-500">
+          <span>{prompt.author || '匿名'}</span>
+          <span>v{prompt.version || 1}</span>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 export default function PromptsPage() {
   // 基础状态
   const [prompts, setPrompts] = useState<PromptInfo[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
+  
+  // 基础数据
   const [categories, setCategories] = useState<string[]>([]);
-  const [tags, setTags] = useState<string[]>([]);
+  
+  // 过滤和搜索状态 - 使用独立的简单状态
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('');
+  const [sortBy, setSortBy] = useState<'latest' | 'oldest' | 'name' | 'updated'>('latest');
   
   // 分页状态
   const [currentPage, setCurrentPage] = useState(1);
@@ -19,203 +234,132 @@ export default function PromptsPage() {
   const [totalCount, setTotalCount] = useState(0);
   const pageSize = 21;
   
-  // 过滤器状态 - 使用简单的字符串键值来避免对象比较问题
-  const [filterKey, setFilterKey] = useState('initial'); // 用于强制重新加载
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('');
-  const [selectedTags, setSelectedTags] = useState<string[]>([]);
-  const [sortBy, setSortBy] = useState<'latest' | 'oldest' | 'name' | 'updated'>('latest');
+  // 防抖搜索 - 使用useCallback确保引用稳定
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
+  
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // 搜索防抖处理
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+      setCurrentPage(1); // 搜索时重置到第一页
+    }, 500);
+    
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
   // 获取基础数据
   useEffect(() => {
-    const loadInitialData = async () => {
+    if (!mounted) return;
+    
+    const loadBasicData = async () => {
       try {
-        const [categoriesData, tagsData] = await Promise.all([
-          getCategories().catch(() => ['通用', '编程', '写作', '学术', '创意', '商业', '翻译', '教育']),
-          getTags().catch(() => ['GPT-4', 'GPT-3.5', 'Claude', 'Gemini', '初学者', '高级'])
-        ]);
-        
+        const categoriesData = await getCategories().catch(() => ['通用', '编程', '写作', '学术', '创意', '商业', '翻译', '教育']);
         setCategories(categoriesData);
-        setTags(tagsData);
       } catch (err) {
         console.error('获取基础数据失败:', err);
       }
     };
     
-    loadInitialData();
-  }, []);
+    loadBasicData();
+  }, [mounted]);
 
-  // 获取提示词数据 - 依赖简化，避免复杂对象比较
-  useEffect(() => {
-    const loadPrompts = async () => {
-      console.log('=== 开始加载提示词 ===');
-      console.log('过滤器状态:', { searchQuery, selectedCategory, selectedTags, sortBy, currentPage });
+  // 构建API过滤器参数 - 使用useMemo确保稳定
+  const apiFilters = useMemo((): PromptFilters => {
+    return {
+      search: debouncedSearchQuery || undefined,
+      category: selectedCategory || undefined,
+      sortBy: sortBy,
+      page: currentPage,
+      pageSize: pageSize
+    };
+  }, [debouncedSearchQuery, selectedCategory, sortBy, currentPage]);
+
+  // 加载提示词数据 - 使用useCallback确保引用稳定
+  const loadPrompts = useCallback(async () => {
+    if (!mounted) return;
+    
+    console.log('=== 开始加载提示词 ===');
+    console.log('过滤器参数:', apiFilters);
+    
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const response = await getPrompts(apiFilters);
       
-      setLoading(true);
-      setError(null);
-      
-      try {
-        const apiFilters: PromptFiltersType = {
-          search: searchQuery || undefined,
-          category: selectedCategory || undefined,
-          tags: selectedTags.length > 0 ? selectedTags : undefined,
-          sortBy: sortBy,
-          page: currentPage,
-          pageSize: pageSize
-        };
-        
-        console.log('API请求参数:', apiFilters);
-        
-        const response = await getPrompts(apiFilters);
-        console.log('API响应数据:', {
-          success: !!response,
-          dataLength: response?.data?.length || 0,
-          total: response?.total || 0,
-          totalPages: response?.totalPages || 0,
-          currentPageFromAPI: response?.page || 0
-        });
-        
-        if (response && response.data) {
-          setPrompts(response.data);
-          setTotalPages(response.totalPages || 1);
-          setTotalCount(response.total || 0);
-          console.log('✅ 数据设置成功，提示词数量:', response.data.length);
-        } else {
-          console.warn('⚠️ API响应异常:', response);
-          setPrompts([]);
-          setTotalPages(1);
-          setTotalCount(0);
-        }
-      } catch (err) {
-        console.error('❌ 获取提示词失败:', err);
-        setError('加载提示词失败，请刷新页面重试');
+      if (response && response.data) {
+        console.log('✅ 加载成功，提示词数量:', response.data.length);
+        setPrompts(response.data);
+        setTotalPages(response.totalPages || 1);
+        setTotalCount(response.total || 0);
+        setError(null);
+      } else {
+        console.warn('⚠️ API响应异常:', response);
         setPrompts([]);
         setTotalPages(1);
         setTotalCount(0);
-      } finally {
-        setLoading(false);
-        console.log('=== 加载完成 ===');
       }
-    };
+    } catch (err) {
+      console.error('❌ 加载失败:', err);
+      setError('加载提示词失败，请刷新页面重试');
+      setPrompts([]);
+      setTotalPages(1);
+      setTotalCount(0);
+    } finally {
+      setLoading(false);
+      console.log('=== 加载完成 ===');
+    }
+  }, [mounted, apiFilters]);
 
+  // 当过滤器参数变化时加载数据
+  useEffect(() => {
     loadPrompts();
-  }, [filterKey, currentPage, searchQuery, selectedCategory, selectedTags, sortBy]);
+  }, [loadPrompts]);
 
-  // 处理分页
-  const handlePageChange = (page: number) => {
+  // 事件处理函数 - 使用useCallback确保引用稳定
+  const handleSearchChange = useCallback((value: string) => {
+    setSearchQuery(value);
+  }, []);
+
+  const handleCategoryChange = useCallback((value: string) => {
+    setSelectedCategory(value);
+    setCurrentPage(1); // 重置到第一页
+  }, []);
+
+  const handleSortChange = useCallback((value: string) => {
+    setSortBy(value as 'latest' | 'oldest' | 'name' | 'updated');
+    setCurrentPage(1); // 重置到第一页
+  }, []);
+
+  const handlePageChange = useCallback((page: number) => {
     if (page >= 1 && page <= totalPages && page !== currentPage) {
-      console.log('📄 页面变化:', page);
       setCurrentPage(page);
+      // 滚动到顶部
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
-  };
+  }, [currentPage, totalPages]);
 
-  // 处理过滤器变化 - 简化逻辑，每次都重置页面
-  const handleFilterChange = (newFilters: PromptFiltersType) => {
-    console.log('🔄 过滤器变化:', newFilters);
-    
-    // 直接设置新状态，不做复杂比较
-    setSearchQuery(newFilters.search || '');
-    setSelectedCategory(newFilters.category || '');
-    setSelectedTags(newFilters.tags || []);
-    setSortBy(newFilters.sortBy || 'latest');
-    setCurrentPage(1);
-    
-    // 强制重新加载
-    setFilterKey(prev => prev + '-changed');
-  };
-
-  // 渲染分页
-  const renderPagination = () => {
-    if (totalPages <= 1) return null;
-
-    const maxVisiblePages = 5;
-    const startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
-    const endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
-
-    const pages = [];
-    for (let i = startPage; i <= endPage; i++) {
-      pages.push(i);
-    }
-
-    return (
-      <div className="flex items-center justify-between p-4 md:p-6 bg-dark-card/30 backdrop-blur-md rounded-xl border border-dark-border shadow-xl mt-6">
-        <div className="flex flex-1 items-center justify-between">
-          <div>
-            <p className="text-sm text-gray-400">
-              显示第 <span className="font-medium text-neon-cyan">{(currentPage - 1) * pageSize + 1}</span> 到{' '}
-              <span className="font-medium text-neon-cyan">
-                {Math.min(currentPage * pageSize, totalCount)}
-              </span>{' '}
-              条，共 <span className="font-medium text-neon-purple">{totalCount}</span> 条结果
-            </p>
-          </div>
-          <div>
-            <nav className="isolate inline-flex -space-x-px rounded-md shadow-sm">
-              {/* 上一页 */}
-              <button
-                onClick={() => handlePageChange(currentPage - 1)}
-                disabled={currentPage === 1}
-                className="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-dark-border hover:bg-dark-card focus:z-20 focus:outline-offset-0 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
-              >
-                <span className="sr-only">Previous</span>
-                <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                  <path fillRule="evenodd" d="M12.79 5.23a.75.75 0 01-.02 1.06L8.832 10l3.938 3.71a.75.75 0 11-1.04 1.08l-4.5-4.25a.75.75 0 010-1.08l4.5-4.25a.75.75 0 011.06.02z" clipRule="evenodd" />
-                </svg>
-              </button>
-              
-              {/* 页码 */}
-              {pages.map((page) => (
-                <button
-                  key={page}
-                  onClick={() => handlePageChange(page)}
-                  className={`relative inline-flex items-center px-4 py-2 text-sm font-semibold ring-1 ring-inset ring-dark-border focus:z-20 focus:outline-offset-0 transition-all duration-300 ${
-                    page === currentPage
-                      ? 'z-10 bg-gradient-to-r from-neon-cyan to-neon-purple text-white shadow-lg'
-                      : 'text-gray-300 hover:bg-neon-cyan/20 hover:text-neon-cyan'
-                  }`}
-                >
-                  {page}
-                </button>
-              ))}
-              
-              {/* 下一页 */}
-              <button
-                onClick={() => handlePageChange(currentPage + 1)}
-                disabled={currentPage === totalPages}
-                className="relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-dark-border hover:bg-dark-card focus:z-20 focus:outline-offset-0 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
-              >
-                <span className="sr-only">Next</span>
-                <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                  <path fillRule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clipRule="evenodd" />
-                </svg>
-              </button>
-            </nav>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-  // 创建稳定的filters对象供PromptFilters组件使用
-  const currentFilters = {
-    search: searchQuery,
-    category: selectedCategory,
-    tags: selectedTags,
-    sortBy: sortBy
-  };
-
-  console.log('🎯 组件渲染状态:', { 
+  console.log('🎯 页面渲染状态:', { 
+    mounted, 
     loading, 
     error, 
-    promptsCount: prompts.length, 
-    totalCount, 
-    totalPages,
+    promptsCount: prompts.length,
+    totalCount,
     currentPage,
-    currentFilters,
-    categories: categories.length,
-    tags: tags.length
+    totalPages,
+    searchQuery,
+    debouncedSearchQuery,
+    selectedCategory,
+    sortBy
   });
+
+  if (!mounted) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen bg-dark-bg-primary relative overflow-hidden">
@@ -233,12 +377,15 @@ export default function PromptsPage() {
           </p>
         </div>
 
-        {/* 过滤器组件 */}
-        <PromptFilters
-          filters={currentFilters}
-          onFilterChange={handleFilterChange}
+        {/* 搜索和过滤器 */}
+        <SearchAndFilters
+          searchQuery={searchQuery}
+          onSearchChange={handleSearchChange}
+          selectedCategory={selectedCategory}
+          onCategoryChange={handleCategoryChange}
           categories={categories}
-          tags={tags}
+          sortBy={sortBy}
+          onSortChange={handleSortChange}
         />
 
         {/* 错误提示 */}
@@ -260,37 +407,23 @@ export default function PromptsPage() {
               {prompts && prompts.length > 0 ? (
                 <>
                   {/* 提示词网格 */}
-                  <motion.div 
-                    className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-6"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ duration: 0.6 }}
-                  >
-                    <AnimatePresence mode="popLayout">
-                      {prompts.map((prompt, index) => {
-                        const stableKey = prompt.id || `prompt-${currentPage}-${index}`;
-                        return (
-                          <motion.div
-                            key={stableKey}
-                            layout
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -20 }}
-                            transition={{ 
-                              duration: 0.4, 
-                              delay: index * 0.1,
-                              layout: { duration: 0.3 }
-                            }}
-                          >
-                            <PromptCard prompt={prompt} />
-                          </motion.div>
-                        );
-                      })}
-                    </AnimatePresence>
-                  </motion.div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-6">
+                    {prompts.map((prompt, index) => (
+                      <SimplePromptCard 
+                        key={prompt.id || `prompt-${currentPage}-${index}`} 
+                        prompt={prompt} 
+                      />
+                    ))}
+                  </div>
 
                   {/* 分页 */}
-                  {totalPages > 1 && renderPagination()}
+                  <Pagination
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    totalCount={totalCount}
+                    pageSize={pageSize}
+                    onPageChange={handlePageChange}
+                  />
                 </>
               ) : (
                 <div className="text-center py-20">
@@ -300,7 +433,9 @@ export default function PromptsPage() {
                     </svg>
                   </div>
                   <h3 className="text-xl font-bold text-white mb-2">暂无提示词</h3>
-                  <p className="text-gray-400">当前条件下没有找到相关提示词，请尝试调整搜索条件</p>
+                  <p className="text-gray-400">
+                    {searchQuery || selectedCategory ? '当前搜索条件下没有找到匹配的提示词' : '当前没有找到任何提示词'}
+                  </p>
                 </div>
               )}
             </>
