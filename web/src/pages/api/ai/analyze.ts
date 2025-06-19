@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { aiAnalyzer, AIAnalysisResult } from '../../lib/ai-analyzer';
-import { getTags } from '../../lib/api';
+import { aiAnalyzer, AIAnalysisResult } from '@/lib/ai-analyzer';
+import { getTags } from '@/lib/api';
 
 export default async function handler(
   req: NextApiRequest,

@@ -23,7 +23,8 @@ RUN apk update && apk add --no-cache \
     python3-dev \
     make \
     g++ \
-    git
+    git \
+    curl
 
 # 复制package.json文件
 COPY package*.json ./
