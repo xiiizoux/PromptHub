@@ -352,7 +352,10 @@ export async function analyzePrompt(prompt: string): Promise<OptimizationResult[
       headers: {
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({ prompt })
+      body: JSON.stringify({
+        prompt,
+        action: 'analyze_quality'
+      })
     });
 
     if (!response.ok) {

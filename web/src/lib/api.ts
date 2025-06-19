@@ -40,84 +40,39 @@ const checkNetworkConnection = async (): Promise<boolean> => {
 const getAuthTokenWithRetry = async (maxRetries: number = 3): Promise<string | null> => {
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
-      console.log(`[Token获取] 第${attempt}次尝试`);
-      
-      // 检查网络连接
-      if (typeof window !== 'undefined') {
-        const isOnline = navigator.onLine;
-        if (!isOnline) {
-          throw new Error('网络连接已断开，请检查网络');
-        }
+      if (typeof window !== 'undefined' && !navigator.onLine) {
+        throw new Error('网络连接已断开');
       }
-      
-      let token = null;
-      
+
+      let token: string | null = null;
       if (typeof window !== 'undefined') {
-        // 方法1: 从localStorage获取
         token = localStorage.getItem('auth.token');
-        console.log(`[Token获取] localStorage方法: ${token ? '找到' : '未找到'}`);
+        if (token) return token;
+
+        const { supabase } = await import('@/lib/supabase');
+        const { data: { session }, error } = await supabase.auth.getSession();
+
+        if (error) throw new Error(`Supabase认证错误: ${error.message}`);
         
-        // 方法2: 从Supabase session获取（增加超时保护）
-        if (!token) {
-          const timeoutPromise = new Promise<never>((_, reject) => {
-            setTimeout(() => reject(new Error('Supabase session获取超时')), 15000); // 15秒超时
-          });
-          
-          const sessionPromise = (async () => {
-            const { supabase } = await import('@/lib/supabase');
-            const { data: { session }, error } = await supabase.auth.getSession();
-            
-            if (error) {
-              throw new Error(`Supabase认证错误: ${error.message}`);
-            }
-            
-            if (session?.access_token) {
-              token = session.access_token;
-              console.log(`[Token获取] Supabase session方法: 找到`);
-              // 缓存到localStorage
-              localStorage.setItem('auth.token', token);
-            }
-            
-            return token;
-          })();
-          
-          try {
-            token = await Promise.race([sessionPromise, timeoutPromise]);
-          } catch (error: any) {
-            console.warn(`[Token获取] 第${attempt}次尝试失败:`, error.message);
-            
-            if (attempt === maxRetries) {
-              throw error;
-            }
-            
-            // 等待后重试
-            await new Promise(resolve => setTimeout(resolve, attempt * 1000));
-            continue;
-          }
+        if (session?.access_token) {
+          localStorage.setItem('auth.token', session.access_token);
+          return session.access_token;
         }
       }
-      
-      if (token) {
-        console.log(`[Token获取] 第${attempt}次尝试成功`);
-        return token;
-      } else {
-        throw new Error('未能获取到认证token');
-      }
+
+      // 如果在服务器端或无法获取，则返回 null
+      if (attempt === 1) return null;
+
     } catch (error: any) {
       console.error(`[Token获取] 第${attempt}次尝试失败:`, error.message);
-      
-      if (attempt === maxRetries) {
-        throw new Error(`获取认证token失败(${maxRetries}次重试): ${error.message}`);
+      if (attempt >= maxRetries) {
+        throw new Error(`获取认证token失败: ${error.message}`);
       }
-      
-      // 指数退避重试
       const delay = Math.min(1000 * Math.pow(2, attempt - 1), 5000);
-      console.log(`[Token获取] ${delay}ms后重试`);
       await new Promise(resolve => setTimeout(resolve, delay));
     }
   }
-  
-  throw new Error('获取认证token失败');
+  return null;
 };
 
 // 请求拦截器添加认证和API密钥
@@ -375,82 +330,10 @@ export const getPrompts = async (filters?: PromptFilters): Promise<PaginatedResp
 // 获取提示词详情
 export const getPromptDetails = async (identifier: string): Promise<PromptDetails> => {
   try {
-    // 在服务端渲染时使用完整URL，在客户端使用相对路径
-    const baseUrl = typeof window === 'undefined' 
-      ? `http://localhost:${process.env.FRONTEND_PORT || 9011}` 
-      : '';
-    
-    // 获取当前用户ID（如果有的话）
-    let userId = null;
-    let userToken = null;
-    
-    // 尝试不同的存储位置获取用户信息
-    if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
-      // 尝试从 Supabase auth token 获取
-      try {
-        const supabaseAuthStr = localStorage.getItem('supabase.auth.token');
-        if (supabaseAuthStr) {
-          const supabaseAuth = JSON.parse(supabaseAuthStr);
-          userId = supabaseAuth?.currentSession?.user?.id;
-          userToken = supabaseAuth?.currentSession?.access_token;
-          console.log('从 supabase.auth.token 获取到用户ID:', userId);
-        }
-      } catch (e) {
-        console.error('解析 supabase.auth.token 失败:', e);
-      }
-      
-      // 如果上面的方法失败，尝试从 sb-xxx-auth-token 获取
-      if (!userId) {
-        try {
-          // 遍历所有localStorage条目，寻找 Supabase 令牌
-          for (let i = 0; i < localStorage.length; i++) {
-            const key = localStorage.key(i);
-            if (key && key.includes('-auth-token')) {
-              const tokenStr = localStorage.getItem(key);
-              if (tokenStr) {
-                const tokenData = JSON.parse(tokenStr);
-                userId = tokenData?.user?.id;
-                userToken = tokenData?.access_token;
-                if (userId) {
-                  console.log('从', key, '获取到用户ID:', userId);
-                  break;
-                }
-              }
-            }
-          }
-        } catch (e) {
-          console.error('遍历localStorage寻找用户ID失败:', e);
-        }
-      }
-    }
-
-    console.log('获取提示词详情:', identifier, '用户ID:', userId || '未登录');
-    
-    // 在服务器端渲染时使用完整URL，在客户端使用默认的api实例
-    let response;
-    if (typeof window === 'undefined') {
-      // 服务器端：使用完整URL调用
-      response = await axios.get(`${baseUrl}/api/prompts/${encodeURIComponent(identifier)}`, {
-        headers: {
-          'Content-Type': 'application/json',
-          ...(userId ? { 'user-id': userId } : {}),
-          ...(userToken ? { 'Authorization': `Bearer ${userToken}` } : {})
-        }
-      });
-    } else {
-      // 客户端：使用相对路径
-      response = await api.get(`/prompts/${encodeURIComponent(identifier)}`, {
-        headers: {
-          ...(userId ? { 'user-id': userId } : {}),
-          ...(userToken ? { 'Authorization': `Bearer ${userToken}` } : {})
-        }
-      });
-    }
-    
+    const response = await mcpApi.get(`/prompts/${encodeURIComponent(identifier)}`);
     if (!response.data.success) {
       throw new Error(response.data.error || '获取提示词详情失败');
     }
-    
     return response.data.prompt as PromptDetails;
   } catch (error) {
     console.error(`获取提示词 ${identifier} 详情失败:`, error);
@@ -460,188 +343,45 @@ export const getPromptDetails = async (identifier: string): Promise<PromptDetail
 
 // 创建提示词
 export const createPrompt = async (prompt: Partial<PromptDetails>): Promise<PromptDetails> => {
-  console.log('=== 开始创建提示词流程 ===');
-  
   try {
-    // 第一步：检查网络连接
-    console.log('[1/4] 检查网络连接状态...');
-    const networkOk = await checkNetworkConnection();
-    if (!networkOk) {
-      throw new Error('网络连接不稳定，请检查网络后重试');
-    }
-    console.log('[1/4] 网络连接正常');
-    
-    // 第二步：获取认证token（使用重试机制）
-    console.log('[2/4] 获取认证token...');
-    const token = await getAuthTokenWithRetry(3); // 最多3次重试
-    
-    if (!token) {
-      throw new Error('未提供认证令牌，请重新登录');
-    }
-    console.log('[2/4] 认证token获取成功');
-    
-    // 第三步：准备请求
-    console.log('[3/4] 准备API请求...');
-    const headers: Record<string, string> = {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json'
-    };
-    
-    // 第四步：发送请求（使用更长的超时时间和重试机制）
-    console.log('[4/4] 发送创建提示词请求...');
-    console.log('请求数据:', { 
-      name: prompt.name, 
-      category: prompt.category,
-      hasContent: !!prompt.content || !!prompt.messages
-    });
-    
-    // 使用Promise.race实现自定义超时控制
-    const requestPromise = api.post('/prompts', prompt, { headers });
-    const timeoutPromise = new Promise<never>((_, reject) => {
-      setTimeout(() => {
-        reject(new Error('API请求超时(90秒)，请检查网络连接'));
-      }, 90000); // 90秒超时
-    });
-    
-    const response = await Promise.race([requestPromise, timeoutPromise]);
-    
+    const response = await mcpApi.post('/prompts', prompt);
     if (!response.data || !response.data.success) {
-      const errorMsg = response.data?.error || '创建提示词失败';
-      throw new Error(errorMsg);
+      throw new Error(response.data?.error || '创建提示词失败');
     }
-    
-    console.log('=== 创建提示词成功 ===');
-    console.log('返回数据:', response.data.data);
-    
     return response.data.data;
-    
   } catch (error: any) {
-    console.error('=== 创建提示词失败 ===');
-    console.error('错误详情:', {
-      message: error.message,
-      name: error.name,
-      stack: error.stack,
-      response: error.response?.data
-    });
-    
-    // 根据错误类型提供更详细的错误信息
-    let errorMessage = '创建提示词失败';
-    
-    if (error.message?.includes('网络') || error.message?.includes('Network')) {
-      errorMessage = '网络连接问题，请检查网络状态并重试';
-    } else if (error.message?.includes('超时') || error.message?.includes('timeout')) {
-      errorMessage = '请求超时，请检查网络连接或稍后重试';
-    } else if (error.message?.includes('token') || error.message?.includes('认证')) {
-      errorMessage = '认证失败，请重新登录';
-    } else if (error.response?.status === 401) {
-      errorMessage = '认证失败，请重新登录';
-    } else if (error.response?.status === 403) {
-      errorMessage = '权限不足，无法创建提示词';
-    } else if (error.response?.status >= 500) {
-      errorMessage = '服务器错误，请稍后重试';
-    } else if (error.response?.status === 400) {
-      errorMessage = `请求参数错误: ${error.response?.data?.error || '请检查输入内容'}`;
-    } else if (error.message) {
-      errorMessage = error.message;
-    }
-    
-    // 创建一个包含详细信息的错误对象
-    const detailedError = new Error(errorMessage);
-    (detailedError as any).originalError = error;
-    (detailedError as any).timestamp = new Date().toISOString();
-    
-    throw detailedError;
+    console.error('创建提示词失败:', error);
+    const errorMessage = error.response?.data?.error || error.message || '创建提示词失败';
+    throw new Error(errorMessage);
   }
 };
 
 // 更新提示词
-export const updatePrompt = async (id: string, prompt: Partial<PromptDetails>, tokenArg?: string): Promise<PromptDetails> => {
+export const updatePrompt = async (id: string, prompt: Partial<PromptDetails>): Promise<PromptDetails> => {
   try {
-    let token = tokenArg;
-    
-    // 如果没有提供token，尝试从Supabase获取当前session的token
-    if (!token && typeof window !== 'undefined') {
-      try {
-        // 动态导入Supabase客户端以避免SSR问题
-        const { supabase } = await import('@/lib/supabase');
-        const { data: { session } } = await supabase.auth.getSession();
-        
-        if (session?.access_token) {
-          token = session.access_token;
-          console.log('从Supabase session获取到token');
-        }
-      } catch (error) {
-        console.error('获取Supabase token失败:', error);
-      }
+    const response = await mcpApi.put(`/prompts/${id}`, prompt);
+    if (!response.data || !response.data.success) {
+      throw new Error(response.data?.error || '更新提示词失败');
     }
-    
-    if (!token) {
-      throw new Error('未找到有效的认证令牌，请重新登录');
-    }
-    
-    const headers: Record<string, string> = {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json'
-    };
-    
-    console.log('发送更新提示词请求:', { id, hasToken: !!token });
-    
-    const response = await api.put(`/prompts/${encodeURIComponent(id)}`, prompt, { headers });
-    
-    if (!response.data.success) {
-      throw new Error(response.data.error || '更新提示词失败');
-    }
-    
-    return response.data.prompt as PromptDetails;
+    return response.data.data;
   } catch (error: any) {
-    console.error('更新提示词失败:', error);
-    
-    if (error.response?.status === 401) {
-      throw new Error('认证失败，请重新登录');
-    }
-    
-    throw new Error(`更新提示词失败: ${error.response?.data?.error || error.message}`);
+    console.error(`更新提示词 ${id} 失败:`, error);
+    const errorMessage = error.response?.data?.error || error.message || '更新提示词失败';
+    throw new Error(errorMessage);
   }
 };
 
 // 删除提示词
-export const deletePrompt = async (name: string): Promise<boolean> => {
+export const deletePrompt = async (id: string): Promise<void> => {
   try {
-    // 获取认证令牌
-    let token = null;
-    if (typeof window !== 'undefined') {
-      token = localStorage.getItem('auth.token');
-      
-      if (!token) {
-        try {
-          const authSession = localStorage.getItem('supabase.auth.token');
-          if (authSession) {
-            const parsed = JSON.parse(authSession);
-            token = parsed?.currentSession?.access_token;
-          }
-        } catch (e) {
-          console.warn('解析会话存储令牌失败:', e);
-        }
-      }
+    const response = await mcpApi.delete(`/prompts/${id}`);
+    if (!response.data || !response.data.success) {
+      throw new Error(response.data?.error || '删除提示词失败');
     }
-    
-    // 添加认证头
-    const headers: Record<string, string> = {};
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
-    }
-
-    console.log('发送删除提示词请求:', { name, hasToken: !!token });
-    
-    // 直接调用Web服务API，不再依赖MCP服务
-    const response = await api.delete<any>(`/prompts/${encodeURIComponent(name)}`, {
-      headers
-    });
-    
-    return response.data.success === true;
   } catch (error: any) {
-    console.error(`删除提示词 ${name} 失败:`, error);
-    return false;
+    console.error(`删除提示词 ${id} 失败:`, error);
+    const errorMessage = error.response?.data?.error || error.message || '删除提示词失败';
+    throw new Error(errorMessage);
   }
 };
 
