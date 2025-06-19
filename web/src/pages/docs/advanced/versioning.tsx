@@ -298,20 +298,44 @@ const VersioningPage: React.FC = () => {
                       <h4 className="font-medium text-gray-800 mb-3">功能审查</h4>
                       <ul className="text-sm text-gray-600 space-y-2">
                         <li className="flex items-start space-x-2">
-                          <input type="checkbox" className="mt-1" disabled />
-                          <span>提示词逻辑正确</span>
+                          <input 
+                            id="check-logic"
+                            name="check_logic"
+                            type="checkbox" 
+                            className="mt-1" 
+                            disabled 
+                          />
+                          <label htmlFor="check-logic" className="cursor-pointer">提示词逻辑正确</label>
                         </li>
                         <li className="flex items-start space-x-2">
-                          <input type="checkbox" className="mt-1" disabled />
-                          <span>输出格式符合规范</span>
+                          <input 
+                            id="check-format"
+                            name="check_format"
+                            type="checkbox" 
+                            className="mt-1" 
+                            disabled 
+                          />
+                          <label htmlFor="check-format" className="cursor-pointer">输出格式符合规范</label>
                         </li>
                         <li className="flex items-start space-x-2">
-                          <input type="checkbox" className="mt-1" disabled />
-                          <span>示例质量良好</span>
+                          <input 
+                            id="check-quality"
+                            name="check_quality"
+                            type="checkbox" 
+                            className="mt-1" 
+                            disabled 
+                          />
+                          <label htmlFor="check-quality" className="cursor-pointer">示例质量良好</label>
                         </li>
                         <li className="flex items-start space-x-2">
-                          <input type="checkbox" className="mt-1" disabled />
-                          <span>边界情况处理</span>
+                          <input 
+                            id="check-boundary"
+                            name="check_boundary"
+                            type="checkbox" 
+                            className="mt-1" 
+                            disabled 
+                          />
+                          <label htmlFor="check-boundary" className="cursor-pointer">边界情况处理</label>
                         </li>
                       </ul>
                     </div>
@@ -319,20 +343,44 @@ const VersioningPage: React.FC = () => {
                       <h4 className="font-medium text-gray-800 mb-3">质量审查</h4>
                       <ul className="text-sm text-gray-600 space-y-2">
                         <li className="flex items-start space-x-2">
-                          <input type="checkbox" className="mt-1" disabled />
-                          <span>性能测试通过</span>
+                          <input 
+                            id="check-performance"
+                            name="check_performance"
+                            type="checkbox" 
+                            className="mt-1" 
+                            disabled 
+                          />
+                          <label htmlFor="check-performance" className="cursor-pointer">性能测试通过</label>
                         </li>
                         <li className="flex items-start space-x-2">
-                          <input type="checkbox" className="mt-1" disabled />
-                          <span>A/B测试结果良好</span>
+                          <input 
+                            id="check-ab-test"
+                            name="check_ab_test"
+                            type="checkbox" 
+                            className="mt-1" 
+                            disabled 
+                          />
+                          <label htmlFor="check-ab-test" className="cursor-pointer">A/B测试结果良好</label>
                         </li>
                         <li className="flex items-start space-x-2">
-                          <input type="checkbox" className="mt-1" disabled />
-                          <span>文档已更新</span>
+                          <input 
+                            id="check-docs"
+                            name="check_docs"
+                            type="checkbox" 
+                            className="mt-1" 
+                            disabled 
+                          />
+                          <label htmlFor="check-docs" className="cursor-pointer">文档已更新</label>
                         </li>
                         <li className="flex items-start space-x-2">
-                          <input type="checkbox" className="mt-1" disabled />
-                          <span>变更日志已记录</span>
+                          <input 
+                            id="check-changelog"
+                            name="check_changelog"
+                            type="checkbox" 
+                            className="mt-1" 
+                            disabled 
+                          />
+                          <label htmlFor="check-changelog" className="cursor-pointer">变更日志已记录</label>
                         </li>
                       </ul>
                     </div>

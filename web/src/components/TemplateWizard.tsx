@@ -128,6 +128,8 @@ export const TemplateWizard: React.FC<TemplateWizardProps> = ({
             {/* 输入字段 */}
             {currentField.type === 'text' && (
               <input
+                id={`field-${currentField.key}`}
+                name={currentField.key}
                 type="text"
                 value={values[currentField.key] || ''}
                 onChange={(e) => handleFieldChange(currentField.key, e.target.value)}
@@ -139,6 +141,8 @@ export const TemplateWizard: React.FC<TemplateWizardProps> = ({
 
             {currentField.type === 'textarea' && (
               <textarea
+                id={`field-${currentField.key}`}
+                name={currentField.key}
                 value={values[currentField.key] || ''}
                 onChange={(e) => handleFieldChange(currentField.key, e.target.value)}
                 placeholder={currentField.placeholder}
@@ -150,6 +154,8 @@ export const TemplateWizard: React.FC<TemplateWizardProps> = ({
 
             {currentField.type === 'select' && currentField.options && (
               <select
+                id={`field-${currentField.key}`}
+                name={currentField.key}
                 value={values[currentField.key] || ''}
                 onChange={(e) => handleFieldChange(currentField.key, e.target.value)}
                 className="input-primary w-full"

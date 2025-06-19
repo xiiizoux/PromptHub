@@ -409,10 +409,12 @@ const CreateTestModal: React.FC<CreateTestModalProps> = ({
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* 基本信息 */}
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
+              <label htmlFor="test-name" className="block text-sm font-medium text-gray-300 mb-2">
                 测试名称
               </label>
               <input
+                id="test-name"
+                name="test_name"
                 type="text"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
@@ -423,10 +425,12 @@ const CreateTestModal: React.FC<CreateTestModalProps> = ({
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
+              <label htmlFor="test-description" className="block text-sm font-medium text-gray-300 mb-2">
                 测试描述
               </label>
               <textarea
+                id="test-description"
+                name="test_description"
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 className="input-primary w-full h-20"
@@ -437,10 +441,12 @@ const CreateTestModal: React.FC<CreateTestModalProps> = ({
             {/* 测试配置 */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
+                <label htmlFor="test-type" className="block text-sm font-medium text-gray-300 mb-2">
                   测试类型
                 </label>
                 <select
+                  id="test-type"
+                  name="test_type"
                   value={formData.test_type}
                   onChange={(e) => setFormData({ ...formData, test_type: e.target.value })}
                   className="input-primary w-full"
@@ -452,10 +458,12 @@ const CreateTestModal: React.FC<CreateTestModalProps> = ({
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
+                <label htmlFor="traffic-allocation" className="block text-sm font-medium text-gray-300 mb-2">
                   流量分配 (%)
                 </label>
                 <input
+                  id="traffic-allocation"
+                  name="traffic_allocation"
                   type="number"
                   min="10"
                   max="100"
@@ -474,6 +482,8 @@ const CreateTestModal: React.FC<CreateTestModalProps> = ({
                 <div className="space-y-3">
                   <h5 className="text-sm font-medium text-neon-cyan">版本A（控制组）</h5>
                   <input
+                    id="variant-a-name"
+                    name="variant_a_name"
                     type="text"
                     value={formData.variant_a.name}
                     onChange={(e) => setFormData({
@@ -484,6 +494,8 @@ const CreateTestModal: React.FC<CreateTestModalProps> = ({
                     placeholder="版本名称"
                   />
                   <textarea
+                    id="variant-a-description"
+                    name="variant_a_description"
                     value={formData.variant_a.description}
                     onChange={(e) => setFormData({
                       ...formData,
