@@ -416,10 +416,11 @@ function CreatePromptPage() {
   const onSubmit = async (data: PromptFormData) => {
     setIsSubmitting(true);
     
-    // 开始监控创建提示词请求
-    const monitorId = requestMonitor.startRequest('POST', '/api/prompts', 45000);
+    // 开始监控创建提示词请求（增加超时时间）
+    const monitorId = requestMonitor.startRequest('POST', '/api/prompts', 120000); // 2分钟监控超时
     
     try {
+      console.log('=== 开始提示词创建流程 ===');
       console.log('提交提示词数据:', data);
       
       // 构建完整的数据对象
@@ -434,12 +435,12 @@ function CreatePromptPage() {
 
       console.log('即将创建的提示词:', promptData);
       
-      // 添加超时保护的提示词创建
+      // 使用新的超时机制
       const createPromptWithTimeout = () => {
         return new Promise<any>((resolve, reject) => {
           const timeoutId = setTimeout(() => {
-            reject(new Error('创建提示词超时，请检查网络连接并重试'));
-          }, 45000); // 45秒总超时时间
+            reject(new Error('创建提示词总体超时(2分钟)，请检查网络连接并重试'));
+          }, 120000); // 2分钟总超时时间
           
           createPrompt(promptData as any)
             .then((result) => {
@@ -463,45 +464,67 @@ function CreatePromptPage() {
       setIsSubmitting(false);
       
       // 显示成功提示
-      toast.success('提示词创建成功！正在跳转...');
+      toast.success('提示词创建成功！正在跳转...', {
+        duration: 3000,
+        position: 'top-center'
+      });
       
       // 导航到新提示词页面
       router.push(`/prompts/${newPrompt.id}`);
     } catch (error: any) {
-      console.error('创建提示词失败:', error);
+      console.error('=== 创建提示词失败 ===');
+      console.error('错误详情:', error);
       
       // 标记监控失败
       requestMonitor.markError(monitorId, error.message || '未知错误');
       
       // 提供用户友好的错误提示
       let errorMessage = '创建提示词失败，请稍后重试';
+      let canRetry = true;
       
       if (error.message) {
-        if (error.message.includes('超时') || error.message.includes('timeout')) {
-          errorMessage = '请求超时，请检查网络连接并重试';
-        } else if (error.message.includes('认证') || error.message.includes('登录')) {
+        if (error.message.includes('网络') || error.message.includes('Network')) {
+          errorMessage = '网络连接问题，请检查网络状态并重试';
+        } else if (error.message.includes('超时') || error.message.includes('timeout')) {
+          errorMessage = '请求超时，可能是网络较慢，请稍后重试';
+        } else if (error.message.includes('认证') || error.message.includes('登录') || error.message.includes('token')) {
           errorMessage = '登录状态已过期，请重新登录';
+          canRetry = false; // 认证问题不建议重试
         } else if (error.message.includes('权限')) {
           errorMessage = '权限不足，请联系管理员';
+          canRetry = false;
         } else if (error.message.includes('服务器')) {
           errorMessage = '服务器暂时不可用，请稍后重试';
+        } else if (error.message.includes('参数错误')) {
+          errorMessage = '请检查输入内容是否正确';
+          canRetry = false;
         } else {
           errorMessage = error.message;
         }
       }
       
       // 显示错误提示
-      toast.error(errorMessage);
+      toast.error(errorMessage, {
+        duration: 5000,
+        position: 'top-center'
+      });
       
-      // 使用更用户友好的提示方式
-      if (typeof window !== 'undefined' && window.confirm) {
+      // 根据错误类型决定是否显示重试选项
+      if (canRetry && typeof window !== 'undefined' && window.confirm) {
         const retry = window.confirm(`${errorMessage}\n\n是否重试？`);
         if (retry) {
           // 给用户一点时间，然后重试
           setTimeout(() => {
             onSubmit(data);
-          }, 1000);
+          }, 2000); // 延长重试间隔
           return;
+        }
+      } else if (!canRetry) {
+        // 对于不可重试的错误，提供相应的指导
+        if (errorMessage.includes('登录')) {
+          setTimeout(() => {
+            router.push('/login');
+          }, 3000);
         }
       }
       
@@ -509,6 +532,7 @@ function CreatePromptPage() {
       if (process.env.NODE_ENV === 'development') {
         console.log('请求监控统计:', requestMonitor.getStats());
         console.log('活跃请求:', requestMonitor.getActiveRequests());
+        console.log('最近请求日志:', requestMonitor.getAllLogs().slice(-5));
       }
     } finally {
       // 确保无论如何都重置提交状态

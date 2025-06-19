@@ -83,7 +83,7 @@ export const apiHandler = (
           statusCode: 408
         });
       }
-    }, 120000); // 2分钟超时保护
+    }, 180000); // 增加到3分钟超时保护（比前端更长）
     
     // 记录请求
     logger.info(`API请求: ${req.method} ${req.url}`, {

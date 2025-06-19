@@ -774,7 +774,7 @@ export class SupabaseAdapter {
         // 添加超时保护的会话获取
         const sessionPromise = this.supabase.auth.getSession();
         const timeoutPromise = new Promise<never>((_, reject) => {
-          setTimeout(() => reject(new Error('获取用户会话超时')), 5000);
+          setTimeout(() => reject(new Error('获取用户会话超时')), 30000); // 增加到30秒超时
         });
         
         try {
@@ -853,7 +853,7 @@ export class SupabaseAdapter {
         .single();
       
       const timeoutPromise = new Promise<never>((_, reject) => {
-        setTimeout(() => reject(new Error('数据库操作超时')), 30000); // 30秒超时
+        setTimeout(() => reject(new Error('数据库操作超时')), 60000); // 增加到60秒超时
       });
       
       let data, error;

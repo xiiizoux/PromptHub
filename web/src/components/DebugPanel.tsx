@@ -5,6 +5,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { requestMonitor } from '@/utils/request-monitor';
+import { runDiagnostics } from '@/utils/connection-diagnostics';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   ChevronDownIcon, 
@@ -12,7 +13,8 @@ import {
   ExclamationTriangleIcon,
   ClockIcon,
   CheckCircleIcon,
-  XCircleIcon 
+  XCircleIcon,
+  WrenchScrewdriverIcon 
 } from '@heroicons/react/24/outline';
 
 interface DebugPanelProps {
@@ -24,6 +26,8 @@ export const DebugPanel: React.FC<DebugPanelProps> = ({ show = process.env.NODE_
   const [stats, setStats] = useState(requestMonitor.getStats());
   const [activeLogs, setActiveLogs] = useState(requestMonitor.getActiveRequests());
   const [allLogs, setAllLogs] = useState(requestMonitor.getAllLogs());
+  const [isRunningDiagnostics, setIsRunningDiagnostics] = useState(false);
+  const [diagnosticsResult, setDiagnosticsResult] = useState<any>(null);
 
   useEffect(() => {
     if (!show) return;
@@ -36,6 +40,18 @@ export const DebugPanel: React.FC<DebugPanelProps> = ({ show = process.env.NODE_
 
     return () => clearInterval(interval);
   }, [show]);
+
+  const handleRunDiagnostics = async () => {
+    setIsRunningDiagnostics(true);
+    try {
+      const result = await runDiagnostics();
+      setDiagnosticsResult(result);
+    } catch (error) {
+      console.error('运行诊断失败:', error);
+    } finally {
+      setIsRunningDiagnostics(false);
+    }
+  };
 
   if (!show) return null;
 
@@ -64,6 +80,19 @@ export const DebugPanel: React.FC<DebugPanelProps> = ({ show = process.env.NODE_
         return 'text-yellow-400';
       case 'pending':
         return 'text-blue-400';
+      default:
+        return 'text-gray-400';
+    }
+  };
+
+  const getDiagnosticStatusColor = (overall: string) => {
+    switch (overall) {
+      case 'pass':
+        return 'text-green-400';
+      case 'warning':
+        return 'text-yellow-400';
+      case 'fail':
+        return 'text-red-400';
       default:
         return 'text-gray-400';
     }
@@ -100,6 +129,15 @@ export const DebugPanel: React.FC<DebugPanelProps> = ({ show = process.env.NODE_
               {stats.timeout > 0 && (
                 <span className="bg-yellow-600/20 text-yellow-400 px-1.5 py-0.5 rounded">
                   {stats.timeout} 超时
+                </span>
+              )}
+              {diagnosticsResult && (
+                <span className={`px-1.5 py-0.5 rounded text-xs ${
+                  diagnosticsResult.overall === 'pass' ? 'bg-green-600/20 text-green-400' :
+                  diagnosticsResult.overall === 'warning' ? 'bg-yellow-600/20 text-yellow-400' :
+                  'bg-red-600/20 text-red-400'
+                }`}>
+                  诊断: {diagnosticsResult.overall}
                 </span>
               )}
             </div>
@@ -142,6 +180,51 @@ export const DebugPanel: React.FC<DebugPanelProps> = ({ show = process.env.NODE_
                     <div className="text-gray-400">活跃请求</div>
                     <div className="text-white font-mono">{stats.pending}</div>
                   </div>
+                </div>
+
+                {/* 连接诊断 */}
+                <div>
+                  <div className="flex items-center justify-between text-xs text-gray-400 mb-2">
+                    <span>连接诊断</span>
+                    <button
+                      onClick={handleRunDiagnostics}
+                      disabled={isRunningDiagnostics}
+                      className="flex items-center space-x-1 px-2 py-1 bg-blue-600 hover:bg-blue-500 disabled:bg-gray-600 text-white rounded transition-colors"
+                    >
+                      <WrenchScrewdriverIcon className={`w-3 h-3 ${isRunningDiagnostics ? 'animate-spin' : ''}`} />
+                      <span>{isRunningDiagnostics ? '诊断中...' : '运行诊断'}</span>
+                    </button>
+                  </div>
+                  
+                  {diagnosticsResult && (
+                    <div className="space-y-1 max-h-32 overflow-y-auto">
+                      <div className={`text-xs font-medium ${getDiagnosticStatusColor(diagnosticsResult.overall)}`}>
+                        总体状态: {diagnosticsResult.overall}
+                      </div>
+                      {diagnosticsResult.results.map((result: any, index: number) => (
+                        <div key={index} className="flex items-center space-x-2 text-xs p-1.5 hover:bg-gray-800/30 rounded">
+                          {result.success ? 
+                            <CheckCircleIcon className="w-3 h-3 text-green-400" /> :
+                            <XCircleIcon className="w-3 h-3 text-red-400" />
+                          }
+                          <span className="text-gray-300 truncate flex-1">
+                            {result.test}
+                          </span>
+                          <span className={`font-mono text-xs ${result.success ? 'text-green-400' : 'text-red-400'}`}>
+                            {result.duration}ms
+                          </span>
+                        </div>
+                      ))}
+                      {diagnosticsResult.recommendations.length > 0 && (
+                        <div className="mt-2 p-2 bg-blue-600/10 rounded">
+                          <div className="text-xs text-blue-400 font-medium mb-1">建议:</div>
+                          {diagnosticsResult.recommendations.map((rec: string, index: number) => (
+                            <div key={index} className="text-xs text-gray-300">• {rec}</div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
 
                 {/* 活跃请求 */}
@@ -199,7 +282,8 @@ export const DebugPanel: React.FC<DebugPanelProps> = ({ show = process.env.NODE_
                       console.log('请求监控详细信息:', {
                         stats: requestMonitor.getStats(),
                         activeLogs: requestMonitor.getActiveRequests(),
-                        allLogs: requestMonitor.getAllLogs()
+                        allLogs: requestMonitor.getAllLogs(),
+                        diagnostics: diagnosticsResult
                       });
                     }}
                     className="flex-1 text-xs bg-blue-600 hover:bg-blue-500 text-white px-2 py-1 rounded transition-colors"
