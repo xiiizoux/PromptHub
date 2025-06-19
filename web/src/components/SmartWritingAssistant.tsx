@@ -19,6 +19,8 @@ interface SmartWritingAssistantProps {
   content: string;
   onContentChange: (content: string) => void;
   onAnalysisComplete?: (result: Partial<AIAnalysisResult>) => void;
+  onApplyAnalysisResults?: (data: Partial<AIAnalysisResult>) => void;
+  pendingAIAnalysis?: any | null;
   className?: string;
   category?: string;
   tags?: string[];
@@ -36,6 +38,8 @@ const SmartWritingAssistant: React.FC<SmartWritingAssistantProps> = ({
   content,
   onContentChange,
   onAnalysisComplete,
+  onApplyAnalysisResults,
+  pendingAIAnalysis,
   className = '',
   category,
   tags
@@ -112,6 +116,16 @@ const SmartWritingAssistant: React.FC<SmartWritingAssistantProps> = ({
     return () => clearTimeout(timer);
   }, [content]);
 
+  // 处理从URL参数传递来的待应用AI分析结果
+  useEffect(() => {
+    if (pendingAIAnalysis) {
+      console.log('收到待应用的AI分析结果:', pendingAIAnalysis);
+      setAiAnalysisResult(pendingAIAnalysis);
+      setShowAiAnalysisResult(true);
+      setActiveTab('analysis'); // 自动切换到分析标签页
+    }
+  }, [pendingAIAnalysis]);
+
   const analyzeContentQuality = async (text: string) => {
     try {
       const score = calculateBasicScore(text);
@@ -183,8 +197,9 @@ const SmartWritingAssistant: React.FC<SmartWritingAssistantProps> = ({
   const handleApplyAIResults = (data: Partial<AIAnalysisResult>) => {
     console.log('应用AI分析结果:', data);
     
-    if (onAnalysisComplete) {
-      onAnalysisComplete(data);
+    // 使用专门的应用回调，而不是分析完成回调
+    if (onApplyAnalysisResults) {
+      onApplyAnalysisResults(data);
     }
     
     // 隐藏分析结果

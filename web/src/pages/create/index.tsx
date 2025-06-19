@@ -63,6 +63,9 @@ function CreatePromptPage() {
   
   // 移动端智能助手显示状态
   const [showMobileAssistant, setShowMobileAssistant] = useState(false);
+  
+  // 待应用的AI分析结果
+  const [pendingAIAnalysis, setPendingAIAnalysis] = useState<any | null>(null);
 
   // 智能分类映射函数 - 改进安全性，与编辑页面保持一致
   function matchCategory(aiCategory: string, availableCategories: string[]): string | null {
@@ -162,6 +165,12 @@ function CreatePromptPage() {
         setValue('version', versionNumber);
       }
     }
+    
+    // 清除待应用的AI分析结果
+    setPendingAIAnalysis(null);
+    
+    // 显示应用成功提示
+    toast.success('AI分析建议已成功应用到表单中');
   };
 
   // 添加处理URL参数的功能
@@ -190,102 +199,41 @@ function CreatePromptPage() {
         // 移除硬编码的名称、描述和标签填充
         // 只有在有AI分析结果时才进行智能填充，否则保持页面默认状态
         
-        // 处理AI分析结果
+        // 处理AI分析结果 - 区分来源，智能决定是否自动应用
         if (query.aiAnalysisResult) {
           try {
             const analysisResult = JSON.parse(decodeURIComponent(query.aiAnalysisResult as string));
             console.log('接收到AI分析结果:', analysisResult);
             
-            // 应用AI分析结果（只在对应字段为空时应用）
-            if (analysisResult.suggestedTitle && (!watch('name') || (watch('name') || '').trim() === '')) {
-              setValue('name', analysisResult.suggestedTitle);
-              console.log('应用AI建议标题:', analysisResult.suggestedTitle);
-            }
+            // 检查是否还有其他AI优化器相关的参数，如果有，说明来自AI优化器页面的手动应用
+            const isFromOptimizerManualApply = !!(query.suggestedName || query.suggestedDesc);
             
-            if (analysisResult.description && (!watch('description') || (watch('description') || '').trim() === '')) {
-              setValue('description', analysisResult.description);
-              console.log('应用AI建议描述:', analysisResult.description);
-            }
-            
-            // 修复分类应用问题 - 始终应用AI分析结果中的分类
-            if (analysisResult.category) {
-              const currentCategory = watch('category');
+            if (isFromOptimizerManualApply) {
+              // 来自AI优化器页面的手动应用，直接自动填充（用户已经在优化器页面确认过了）
+              console.log('来自AI优化器页面的手动应用，自动填充分析结果');
+              applyAIResults(analysisResult);
               
-              // 如果当前分类是默认值（通用）或为空，才应用AI分析结果
-              if (!currentCategory || currentCategory === '通用') {
-                // 首先尝试精确匹配
-                if (categories.includes(analysisResult.category)) {
-                  setValue('category', analysisResult.category);
-                  console.log('应用AI分类（精确匹配）:', analysisResult.category);
-                } else {
-                  // 再尝试智能匹配
-                  const mappedCategory = matchCategory(analysisResult.category, categories);
-                  if (mappedCategory) {
-                    setValue('category', mappedCategory);
-                    console.log('应用AI分类（智能匹配）:', analysisResult.category, '->', mappedCategory);
-                  } else {
-                    console.log('AI分类无法匹配，保持默认分类:', analysisResult.category, '-> 通用');
-                  }
-                }
-              } else {
-                console.log('当前已有非默认分类，跳过AI分类应用:', currentCategory);
+              // 应用建议名称和描述
+              if (query.suggestedName) {
+                const suggestedName = decodeURIComponent(query.suggestedName as string);
+                setValue('name', suggestedName);
+                console.log('应用建议名称:', suggestedName);
               }
-            }
-            
-            if (analysisResult.version && (!watch('version') || watch('version') === 1.0)) {
-              setValue('version', Number(analysisResult.version));
-              console.log('应用AI版本:', analysisResult.version);
-            }
-            
-            // 智能合并AI分析的标签
-            if (analysisResult.tags && Array.isArray(analysisResult.tags)) {
-              const currentTags = watch('tags') || [];
-              const aiTagsToAdd = analysisResult.tags.filter((tag: string) => !currentTags.includes(tag));
-              if (aiTagsToAdd.length > 0) {
-                const allNewTags = [...currentTags, ...aiTagsToAdd];
-                setTags(allNewTags);
-                setValue('tags', allNewTags);
-                console.log('添加AI分析标签:', aiTagsToAdd);
-              } else {
-                // 如果没有新的标签要添加，但AI返回了标签列表，直接应用
-                setTags(analysisResult.tags);
-                setValue('tags', analysisResult.tags);
-                console.log('直接应用AI分析标签:', analysisResult.tags);
+              
+              if (query.suggestedDesc) {
+                const suggestedDesc = decodeURIComponent(query.suggestedDesc as string);
+                setValue('description', suggestedDesc);
+                console.log('应用建议描述:', suggestedDesc);
               }
-            }
-            
-            // 智能合并AI分析的变量
-            if (analysisResult.variables && Array.isArray(analysisResult.variables)) {
-              const currentVariables = watch('input_variables') || [];
-              const aiVarsToAdd = analysisResult.variables.filter((variable: string) => !currentVariables.includes(variable));
-              if (aiVarsToAdd.length > 0) {
-                const allNewVars = [...currentVariables, ...aiVarsToAdd];
-                setVariables(allNewVars);
-                setValue('input_variables', allNewVars);
-                console.log('添加AI分析变量:', aiVarsToAdd);
-              } else {
-                // 如果没有新的变量要添加，但AI返回了变量列表，直接应用
-                setVariables(analysisResult.variables);
-                setValue('input_variables', analysisResult.variables);
-                console.log('直接应用AI分析变量:', analysisResult.variables);
-              }
-            }
-            
-            // 智能合并兼容模型
-            if (analysisResult.compatibleModels && Array.isArray(analysisResult.compatibleModels)) {
-              const currentModels = watch('compatible_models') || [];
-              const aiModelsToAdd = analysisResult.compatibleModels.filter((model: string) => !currentModels.includes(model));
-              if (aiModelsToAdd.length > 0) {
-                const allNewModels = [...currentModels, ...aiModelsToAdd];
-                setModels(allNewModels);
-                setValue('compatible_models', allNewModels);
-                console.log('添加AI兼容模型:', aiModelsToAdd);
-              } else {
-                // 如果没有新的模型要添加，但AI返回了模型列表，直接应用
-                setModels(analysisResult.compatibleModels);
-                setValue('compatible_models', analysisResult.compatibleModels);
-                console.log('直接应用AI兼容模型:', analysisResult.compatibleModels);
-              }
+            } else {
+              // 来自页面内智能分析，存储待手动应用
+              console.log('来自页面内智能分析，等待用户手动应用');
+              setPendingAIAnalysis(analysisResult);
+              
+              // 显示智能助手，方便用户查看和应用建议
+              setTimeout(() => {
+                setShowMobileAssistant(true);
+              }, 1000);
             }
             
           } catch (error) {
@@ -315,11 +263,14 @@ function CreatePromptPage() {
         setTimeout(() => {
           const hasContent = !!content;
           const hasAiAnalysis = !!query.aiAnalysisResult;
+          const isFromOptimizerManualApply = !!(query.suggestedName || query.suggestedDesc);
           
           if (hasContent && !hasAiAnalysis) {
             toast.success('已从AI优化器填充提示词内容');
-          } else if (hasContent && hasAiAnalysis) {
-            toast.success('已从AI优化器填充内容并应用智能分析结果');
+          } else if (hasContent && hasAiAnalysis && isFromOptimizerManualApply) {
+            toast.success('已从AI优化器填充内容并自动应用智能分析结果');
+          } else if (hasContent && hasAiAnalysis && !isFromOptimizerManualApply) {
+            toast.success('已填充内容，右侧智能助手中有AI分析建议等待您应用', { duration: 6000 });
           }
         }, 500);
       }
@@ -574,7 +525,12 @@ function CreatePromptPage() {
                       setValue('content', newContent);
                       setCurrentContent(newContent);
                     }}
-                    onAnalysisComplete={applyAIResults}
+                    onAnalysisComplete={(result) => {
+                      // 仅显示分析结果，不自动应用，需要用户手动点击应用按钮
+                      console.log('收到智能分析结果，等待用户手动应用:', result);
+                    }}
+                    onApplyAnalysisResults={applyAIResults}
+                    pendingAIAnalysis={pendingAIAnalysis}
                     category={watch('category')}
                     tags={tags}
                     className="max-h-96 overflow-y-auto"
@@ -1059,7 +1015,12 @@ function CreatePromptPage() {
                 setValue('content', newContent);
                 setCurrentContent(newContent);
               }}
-              onAnalysisComplete={applyAIResults}
+              onAnalysisComplete={(result) => {
+                setPendingAIAnalysis(result);
+                console.log('收到智能分析结果，等待用户手动应用:', result);
+              }}
+              onApplyAnalysisResults={applyAIResults}
+              pendingAIAnalysis={pendingAIAnalysis}
               category={watch('category')}
               tags={tags}
               className="h-full"

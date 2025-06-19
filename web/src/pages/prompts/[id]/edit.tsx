@@ -880,7 +880,11 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
                       setValue('content', newContent);
                       setCurrentContent(newContent);
                     }}
-                    onAnalysisComplete={applyAIResults}
+                    onAnalysisComplete={(result) => {
+                      // 仅显示分析结果，不自动应用，需要用户手动点击应用按钮
+                      console.log('收到智能分析结果，等待用户手动应用:', result);
+                    }}
+                    onApplyAnalysisResults={applyAIResults}
                     category={watch('category')}
                     tags={tags}
                     className="max-h-96 overflow-y-auto"
@@ -1443,7 +1447,11 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
                 setValue('content', newContent);
                 setCurrentContent(newContent);
               }}
-              onAnalysisComplete={applyAIResults}
+              onAnalysisComplete={(result) => {
+                // 仅显示分析结果，不自动应用，需要用户手动点击应用按钮
+                console.log('收到智能分析结果，等待用户手动应用:', result);
+              }}
+              onApplyAnalysisResults={applyAIResults}
               category={watch('category')}
               tags={tags}
               className="h-full"

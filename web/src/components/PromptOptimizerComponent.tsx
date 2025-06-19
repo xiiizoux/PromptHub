@@ -612,10 +612,22 @@ export const PromptOptimizerComponent: React.FC<PromptOptimizerProps> = ({
                     // 确保使用优化后的提示词内容
                     const contentToUse = optimizedPrompt || prompt;
                     
-                    // 构建URL参数，包含优化内容和AI分析结果
+                    // 生成建议标题和描述，用于标识这是来自优化器的手动应用
+                    const suggestedName = aiAnalysisResult.suggestedTitle || `优化提示词_${new Date().toLocaleString('zh-CN', {
+                      month: '2-digit',
+                      day: '2-digit',
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    })}`;
+                    
+                    const suggestedDesc = aiAnalysisResult.description || '通过AI优化生成的提示词，经过智能分析和结构化优化处理';
+                    
+                    // 构建URL参数，包含优化内容、AI分析结果和标识参数
                     const params = new URLSearchParams({
                       optimizedContent: encodeURIComponent(contentToUse),
-                      aiAnalysisResult: encodeURIComponent(JSON.stringify(aiAnalysisResult))
+                      aiAnalysisResult: encodeURIComponent(JSON.stringify(aiAnalysisResult)),
+                      suggestedName: encodeURIComponent(suggestedName),
+                      suggestedDesc: encodeURIComponent(suggestedDesc)
                     });
                     
                     // 跳转到创建提示词页面
