@@ -112,39 +112,32 @@ const PromptCard: React.FC<PromptCardProps> = React.memo(({ prompt }) => {
             categoryInfo.color
           )} />
           
-          {/* 头部 */}
-          <div className="relative flex justify-between items-start mb-4">
-            <div className="flex items-center space-x-2">
-              <div className={clsx(
-                'inline-flex p-2 rounded-lg bg-gradient-to-br',
-                categoryInfo.color
-              )}>
-                <CategoryIcon className="h-4 w-4 text-dark-bg-primary" />
+          {/* 头部 - 只显示热门标签 */}
+          <div className="relative mb-4">
+            {prompt.usageCount && prompt.usageCount > 100 && (
+              <div className="flex items-center space-x-1 px-2 py-1 rounded-full bg-neon-red/20 border border-neon-red/30 w-fit">
+                <FireIcon className="h-3 w-3 text-neon-red" />
+                <span className="text-xs text-neon-red">热门</span>
               </div>
-              <span className="text-sm font-medium text-gray-300">{categoryInfo.name}</span>
-              {prompt.usageCount && prompt.usageCount > 100 && (
-                <div className="flex items-center space-x-1 px-2 py-1 rounded-full bg-neon-red/20 border border-neon-red/30">
-                  <FireIcon className="h-3 w-3 text-neon-red" />
-                  <span className="text-xs text-neon-red">热门</span>
-                </div>
-              )}
-            </div>
-            <ArrowTopRightOnSquareIcon className="h-4 w-4 text-gray-500 group-hover:text-neon-cyan transition-colors" />
+            )}
           </div>
           
-          {/* 标题 */}
-          <h3 className="text-lg font-semibold text-white mb-2 line-clamp-1 group-hover:text-neon-cyan transition-colors">
-            {prompt.name}
-          </h3>
+          {/* 标题与箭头 */}
+          <div className="relative flex justify-between items-start mb-2">
+            <h3 className="text-lg font-semibold text-white line-clamp-1 group-hover:text-neon-cyan transition-colors flex-1 pr-2">
+              {prompt.name}
+            </h3>
+            <ArrowTopRightOnSquareIcon className="h-4 w-4 text-gray-500 group-hover:text-neon-cyan transition-colors flex-shrink-0 mt-1" />
+          </div>
           
           {/* 描述 */}
-          <p className="text-sm text-gray-400 line-clamp-2 mb-4">
+          <p className="text-sm text-gray-400 line-clamp-3 mb-4">
             {prompt.description || '暂无描述'}
           </p>
           
           {/* 标签 */}
           {tagsToShow && (
-            <div className="flex flex-wrap gap-2 mt-3">
+            <div className="flex flex-wrap gap-2 mb-4">
               {tagsToShow.visible.map((tag, index) => (
                 <span 
                   key={`${prompt.id}-tag-${tag}-${index}`}
@@ -162,19 +155,30 @@ const PromptCard: React.FC<PromptCardProps> = React.memo(({ prompt }) => {
           )}
           
           {/* 底部信息 */}
-          <div className="mt-4 pt-4 border-t border-neon-cyan/10 space-y-3">
-            {/* 评分 */}
-            <div className="flex items-center space-x-2">
-              <div className="relative w-20 h-2 bg-dark-bg-tertiary rounded-full overflow-hidden">
-                <div 
-                  className="absolute top-0 left-0 h-full bg-gradient-to-r from-neon-yellow to-neon-green rounded-full"
-                  style={{ width: `${rating.percentage}%` }}
-                />
+          <div className="mt-auto pt-4 border-t border-neon-cyan/10 space-y-3">
+            {/* 第一行：分类信息 + 评分 */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <div className={clsx(
+                  'inline-flex p-2 rounded-lg bg-gradient-to-br',
+                  categoryInfo.color
+                )}>
+                  <CategoryIcon className="h-4 w-4 text-dark-bg-primary" />
+                </div>
+                <span className="text-sm font-medium text-gray-300">{categoryInfo.name}</span>
               </div>
-              <span className="text-xs text-gray-400">{rating.value.toFixed(1)}</span>
+              <div className="flex items-center space-x-2">
+                <div className="relative w-20 h-2 bg-dark-bg-tertiary rounded-full overflow-hidden">
+                  <div 
+                    className="absolute top-0 left-0 h-full bg-gradient-to-r from-neon-yellow to-neon-green rounded-full"
+                    style={{ width: `${rating.percentage}%` }}
+                  />
+                </div>
+                <span className="text-xs text-gray-400">{rating.value.toFixed(1)}</span>
+              </div>
             </div>
             
-            {/* 元信息 */}
+            {/* 第二行：作者版本信息 + 日期与互动按钮 */}
             <div className="flex items-center justify-between text-xs text-gray-500">
               <div className="flex items-center space-x-3">
                 <div className="flex items-center space-x-1">
@@ -186,17 +190,14 @@ const PromptCard: React.FC<PromptCardProps> = React.memo(({ prompt }) => {
                   <span>v{formatVersionDisplay(prompt.version)}</span>
                 </div>
               </div>
-              <div className="flex items-center space-x-1">
-                <ClockIcon className="h-3 w-3" />
-                <span>{formatDate(prompt.updated_at || prompt.created_at)}</span>
-              </div>
-            </div>
-            
-            {/* 互动按钮 */}
-            <div className="flex items-center justify-between">
-              <div></div>
-              <div onClick={(e) => e.preventDefault()}>
-                <InteractionButtons promptId={prompt.id} size="sm" />
+              <div className="flex items-center space-x-4">
+                <div className="flex items-center space-x-1">
+                  <ClockIcon className="h-3 w-3" />
+                  <span>{formatDate(prompt.updated_at || prompt.created_at)}</span>
+                </div>
+                <div onClick={(e) => e.preventDefault()}>
+                  <InteractionButtons promptId={prompt.id} size="sm" />
+                </div>
               </div>
             </div>
           </div>
