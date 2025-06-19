@@ -186,31 +186,60 @@ export const getPrompts = async (filters?: PromptFilters): Promise<PaginatedResp
       headers: userId ? { 'x-user-id': userId } : {}
     });
     
-    // 输出原始响应信息
-    console.log('获取提示词响应:', response.data);
-    
-    // 直接使用响应数据
-    const { data, total, page, pageSize, totalPages, success } = response.data;
-    
-    // 检查数据格式
-    console.log('提示词数据:', data?.length, '总数:', total, '页面:', page, '总页数:', totalPages);
-    
-    // 如果响应失败或数据为空，则返回空数组
-    if (!success) {
-      console.error('响应失败:', response.data.error);
-      return { data: [], total: 0, page: 1, pageSize: 10, totalPages: 0 };
+    // 1. 验证响应的基础结构
+    if (!response || !response.data || typeof response.data !== 'object') {
+      console.error('API响应格式无效或为空:', response);
+      return { data: [], total: 0, page: 1, pageSize: filters?.pageSize || 10, totalPages: 0 };
     }
-    
+
+    const responseData = response.data;
+    console.log('获取提示词原始响应:', responseData);
+
+    // 2. 检查成功状态
+    if (responseData.success === false || !responseData.data) {
+      console.error('API报告获取失败:', responseData.error || '未知错误');
+      return { data: [], total: 0, page: 1, pageSize: filters?.pageSize || 10, totalPages: 0 };
+    }
+
+    // 3. 验证核心数据data是否为数组
+    if (!Array.isArray(responseData.data)) {
+      console.error('API返回的data字段不是一个数组:', responseData.data);
+      return { data: [], total: 0, page: 1, pageSize: filters?.pageSize || 10, totalPages: 0 };
+    }
+
+    // 4. (可选但推荐) 清理和映射每个prompt对象，确保字段符合预期
+    const cleanedData = responseData.data.map((item: any) => ({
+      id: item.id || `fallback-${Math.random()}`,
+      name: item.name || '无标题',
+      description: item.description || '无描述',
+      category: item.category || '通用',
+      tags: Array.isArray(item.tags) ? item.tags : [],
+      version: item.version || 1,
+      created_at: item.created_at,
+      updated_at: item.updated_at,
+      author: item.author || '匿名',
+      usageCount: item.usageCount || 0,
+      rating: item.rating || 0,
+    }));
+
+    const total = typeof responseData.total === 'number' ? responseData.total : 0;
+    const page = typeof responseData.page === 'number' ? responseData.page : 1;
+    const pageSize = typeof responseData.pageSize === 'number' ? responseData.pageSize : 10;
+    const totalPages = typeof responseData.totalPages === 'number' ? responseData.totalPages : 0;
+
+    console.log('清理后的提示词数据:', cleanedData.length, '总数:', total, '页面:', page, '总页数:', totalPages);
+
     return { 
-      data: data || [], 
-      total: total || 0, 
-      page: page || 1, 
-      pageSize: pageSize || 10, 
-      totalPages: totalPages || 0 
+      data: cleanedData,
+      total,
+      page,
+      pageSize,
+      totalPages,
     };
   } catch (error) {
     console.error('获取提示词列表失败:', error);
-    return { data: [], total: 0, page: 1, pageSize: 10, totalPages: 0 };
+    // 在捕获到错误时也返回一个保证结构正确的空对象
+    return { data: [], total: 0, page: 1, pageSize: filters?.pageSize || 10, totalPages: 0 };
   }
 };
 
