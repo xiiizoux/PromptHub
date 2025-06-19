@@ -71,27 +71,16 @@ export interface ApiKey {
 }
 
 // Supabase客户端创建函数
-export function createSupabaseClient(useServiceKey: boolean = false): SupabaseClient {
+export function createSupabaseClient(): SupabaseClient {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  let supabaseKey = useServiceKey 
-    ? process.env.SUPABASE_SERVICE_ROLE_KEY
-    : process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-    
-  // 如果请求服务密钥但不存在，回退到匿名密钥
-  if (useServiceKey && !supabaseKey) {
-    console.warn('SUPABASE_SERVICE_ROLE_KEY未设置，回退到匿名密钥');
-    supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  }
-    
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
   if (!supabaseUrl || !supabaseKey) {
     throw new Error('Supabase配置缺失。请在.env文件中设置NEXT_PUBLIC_SUPABASE_URL和NEXT_PUBLIC_SUPABASE_ANON_KEY。');
   }
-    
+
   return createClient(supabaseUrl, supabaseKey);
 }
-
-// 管理员客户端
-export const adminSupabase = createSupabaseClient(true);
 
 /**
  * Supabase适配器类
@@ -99,8 +88,8 @@ export const adminSupabase = createSupabaseClient(true);
 export class SupabaseAdapter {
   public supabase: SupabaseClient;
   
-  constructor(useAdmin: boolean = false) {
-    this.supabase = useAdmin ? adminSupabase : createSupabaseClient(false);
+  constructor() {
+    this.supabase = createSupabaseClient();
   }
 
   getType(): string {
@@ -112,11 +101,8 @@ export class SupabaseAdapter {
     try {
       console.log('=== SupabaseAdapter: 开始获取categories ===');
       
-      // 使用管理员权限客户端
-      const adminClient = createSupabaseClient(true);
-      
-      // 首先尝试从专用的categories表获取，去除is_active过滤
-      const { data: categoriesData, error: categoriesError } = await adminClient
+      // 警告：不再使用管理员权限。必须为'categories'表设置RLS策略。
+      const { data: categoriesData, error: categoriesError } = await this.supabase
         .from('categories')
         .select('name, sort_order, is_active')
         .order('sort_order');
@@ -134,8 +120,8 @@ export class SupabaseAdapter {
 
       console.log('categories表查询失败，回退到prompts表');
       
-      // 如果categories表没有数据，回退到从prompts表提取
-      const { data, error } = await adminClient
+      // 警告：不再使用管理员权限。必须为'prompts'表设置RLS策略。
+      const { data, error } = await this.supabase
         .from('prompts')
         .select('category')
         .order('category');
@@ -226,11 +212,11 @@ export class SupabaseAdapter {
         sortBy = 'latest'
       } = filters || {};
 
-      // 使用管理员权限绕过RLS策略
-      const adminClient = createSupabaseClient(true);
-      console.log('使用管理员权限获取提示词列表', { userId });
-      
-      let query = adminClient.from('prompts').select('*', { count: 'exact' });
+      // 警告：管理员权限已被移除。这里的查询现在会失败，
+      // 必须在Supabase中为'prompts'表设置行级安全(RLS)策略。
+      console.warn('管理员权限已被移除，查询将依赖RLS策略');
+
+      let query = this.supabase.from('prompts').select('*', { count: 'exact' });
 
       if (category && category !== '全部') {
         query = query.eq('category', category);
@@ -298,7 +284,7 @@ export class SupabaseAdapter {
       
       if (promptIds.length > 0) {
         try {
-          const { data: ratingData, error: ratingError } = await adminClient
+          const { data: ratingData, error: ratingError } = await this.supabase
             .from('prompt_ratings')
             .select('prompt_id, rating')
             .in('prompt_id', promptIds);
@@ -363,11 +349,11 @@ export class SupabaseAdapter {
 
   async getPrompt(nameOrId: string, userId?: string): Promise<Prompt | null> {
     try {
-      // 使用管理员权限绕过RLS策略
-      const adminClient = createSupabaseClient(true);
-      console.log('使用管理员权限获取单个提示词', { nameOrId, userId });
+      // 警告：管理员权限已被移除。这里的查询现在会失败，
+      // 必须在Supabase中为'prompts'表设置行级安全(RLS)策略。
+      console.warn('管理员权限已被移除，查询将依赖RLS策略');
       
-      let query = adminClient
+      let query = this.supabase
         .from('prompts')
         .select('*');
         
@@ -565,7 +551,7 @@ export class SupabaseAdapter {
       console.log('JWT验证成功, 用户ID:', data.user.id);
       
       // 创建管理员客户端以绕过RLS策略
-      const adminClient = createSupabaseClient(true);
+      const adminClient = createSupabaseClient();
       
       // 获取用户详细信息，使用管理员客户端
       const { data: userData, error: userError } = await adminClient
@@ -716,7 +702,7 @@ export class SupabaseAdapter {
       }
       
       // 创建管理员客户端以绕过RLS策略
-      const adminClient = createSupabaseClient(true);
+      const adminClient = createSupabaseClient();
       console.log('使用管理员权限创建API密钥', { userId, name });
       
       // 使用管理员客户端插入记录
@@ -759,7 +745,7 @@ export class SupabaseAdapter {
       console.log('获取用户 ' + userId + ' 的API密钥列表');
       
       // 创建管理员客户端以绕过RLS策略
-      const adminClient = createSupabaseClient(true);
+      const adminClient = createSupabaseClient();
       console.log('使用管理员权限获取API密钥列表');
       
       // 直接使用标准查询
@@ -803,7 +789,7 @@ export class SupabaseAdapter {
   async deleteApiKey(userId: string, keyId: string): Promise<boolean> {
     try {
       // 创建管理员客户端以绕过RLS策略
-      const adminClient = createSupabaseClient(true);
+      const adminClient = createSupabaseClient();
       console.log('使用管理员权限删除API密钥', { userId, keyId });
       
       const { error } = await adminClient
@@ -904,7 +890,7 @@ export class SupabaseAdapter {
       });
       
       // 创建管理员客户端以绕过RLS策略
-      const adminClient = createSupabaseClient(true);
+      const adminClient = createSupabaseClient();
       console.log('使用管理员权限创建提示词');
       
       // 添加超时保护的数据库操作
@@ -960,10 +946,9 @@ export class SupabaseAdapter {
 
 // 创建适配器实例
 const supabaseAdapter = new SupabaseAdapter();
-const adminSupabaseAdapter = new SupabaseAdapter(true);
 
 // 导出适配器实例
-export { supabaseAdapter, adminSupabaseAdapter };
+export { supabaseAdapter };
 
 // 默认导出
 export default supabaseAdapter; 

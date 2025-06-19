@@ -64,7 +64,7 @@ export class DatabaseService {
   private adapter: SupabaseAdapter;
 
   constructor() {
-    this.adapter = new SupabaseAdapter(true); // 使用管理员权限
+    this.adapter = new SupabaseAdapter(); // 移除管理员权限
   }
 
   // ===== 提示词管理 =====

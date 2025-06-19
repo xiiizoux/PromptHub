@@ -21,8 +21,8 @@ export const config = {
   },
   
   // API 配置
-  apiKey: getParamValue("api_key") || process.env.API_KEY || 'your-secure-api-key',
-  serverKey: getParamValue("server_key") || process.env.SERVER_KEY || 'your-secure-api-key',
+  apiKey: getParamValue("api_key") || process.env.API_KEY,
+  serverKey: getParamValue("server_key") || process.env.SERVER_KEY,
   
   // 存储配置 - 支持多种存储方案
   storage: {
@@ -45,7 +45,7 @@ export const config = {
   
   // JWT 配置
   jwt: {
-    secret: getParamValue("jwt_secret") || process.env.JWT_SECRET || 'your-jwt-secret',
+    secret: getParamValue("jwt_secret") || process.env.JWT_SECRET,
     expiresIn: getParamValue("jwt_expires_in") || process.env.JWT_EXPIRES_IN || '7d',
   },
   
@@ -65,22 +65,28 @@ export const config = {
 export function validateConfig(): void {
   const errors: string[] = [];
   
-  // 检查API密钥是否在生产环境中配置
-  if (config.isProduction && config.apiKey === 'your-secure-api-key') {
-    console.warn('Warning: Using default API key in production environment');
-  }
-  
-  // Docker部署特定验证
-  if (process.env.NODE_ENV === 'production') {
-    console.log('Running in production environment');
+  // 在生产环境中，严格验证关键密钥是否存在
+  if (config.isProduction) {
+    if (!config.apiKey) {
+      errors.push('API_KEY is not configured in production environment.');
+    }
+    if (!config.serverKey) {
+      errors.push('SERVER_KEY is not configured in production environment.');
+    }
+    if (!config.jwt.secret) {
+      errors.push('JWT_SECRET is not configured in production environment.');
+    }
     
-    // 生产环境验证
-    if (!process.env.API_KEY || config.apiKey === 'your-secure-api-key') {
-      console.warn('Warning: Using default or missing API key in production');
+    // 生产环境还需验证Supabase配置
+    if (!config.supabase.url) {
+      errors.push('SUPABASE_URL is not configured for production.');
+    }
+    if (!config.supabase.anonKey) {
+      errors.push('SUPABASE_ANON_KEY is not configured for production.');
     }
   }
   
   if (errors.length > 0) {
-    throw new Error(`Configuration errors:\n${errors.join('\n')}`);
+    throw new Error(`Critical configuration errors found:\n- ${errors.join('\n- ')}`);
   }
 }

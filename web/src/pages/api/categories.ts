@@ -13,12 +13,13 @@ export default apiHandler(async (req: NextApiRequest, res: NextApiResponse) => {
     try {
       console.log('=== 开始获取分类列表 ===');
       
-      // 直接使用环境变量创建Supabase客户端
-      const supabaseUrl = process.env.SUPABASE_URL;
-      const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY;
+      // 直接使用为Next.js应用配置的环境变量
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+      const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
       
       if (!supabaseUrl || !supabaseKey) {
-        return errorResponse(res, 'Supabase配置缺失');
+        // 更新了错误消息，以反映所需的确切环境变量
+        return errorResponse(res, 'Supabase URL或匿名密钥未在环境中配置');
       }
 
       const supabase = createClient(supabaseUrl, supabaseKey);
