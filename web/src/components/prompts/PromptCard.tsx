@@ -122,11 +122,22 @@ const PromptCard: React.FC<PromptCardProps> = React.memo(({ prompt }) => {
             )}
           </div>
           
-          {/* 标题与箭头 */}
+          {/* 标题与分类图标、箭头 */}
           <div className="relative flex justify-between items-start mb-2">
-            <h3 className="text-lg font-semibold text-white line-clamp-1 group-hover:text-neon-cyan transition-colors flex-1 pr-2">
-              {prompt.name}
-            </h3>
+            <div className="flex items-start space-x-2 flex-1 pr-2">
+              <div className={clsx(
+                'inline-flex p-2 rounded-lg bg-gradient-to-br flex-shrink-0',
+                categoryInfo.color
+              )}>
+                <CategoryIcon className="h-4 w-4 text-dark-bg-primary" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h3 className="text-lg font-semibold text-white line-clamp-1 group-hover:text-neon-cyan transition-colors">
+                  {prompt.name}
+                </h3>
+                <div className="text-xs text-gray-400 mt-1">{categoryInfo.name}</div>
+              </div>
+            </div>
             <ArrowTopRightOnSquareIcon className="h-4 w-4 text-gray-500 group-hover:text-neon-cyan transition-colors flex-shrink-0 mt-1" />
           </div>
           
@@ -156,29 +167,22 @@ const PromptCard: React.FC<PromptCardProps> = React.memo(({ prompt }) => {
           
           {/* 底部信息 */}
           <div className="mt-auto pt-4 border-t border-neon-cyan/10 space-y-3">
-            {/* 第一行：分类信息 + 评分 */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                <div className={clsx(
-                  'inline-flex p-2 rounded-lg bg-gradient-to-br',
-                  categoryInfo.color
-                )}>
-                  <CategoryIcon className="h-4 w-4 text-dark-bg-primary" />
+            {/* 第一行：评分（只在有评分且大于0时显示） */}
+            {rating.value > 0 && (
+              <div className="flex items-center justify-center">
+                <div className="flex items-center space-x-2">
+                  <div className="relative w-20 h-2 bg-dark-bg-tertiary rounded-full overflow-hidden">
+                    <div 
+                      className="absolute top-0 left-0 h-full bg-gradient-to-r from-neon-yellow to-neon-green rounded-full"
+                      style={{ width: `${rating.percentage}%` }}
+                    />
+                  </div>
+                  <span className="text-xs text-gray-400">{rating.value.toFixed(1)}</span>
                 </div>
-                <span className="text-sm font-medium text-gray-300">{categoryInfo.name}</span>
               </div>
-              <div className="flex items-center space-x-2">
-                <div className="relative w-20 h-2 bg-dark-bg-tertiary rounded-full overflow-hidden">
-                  <div 
-                    className="absolute top-0 left-0 h-full bg-gradient-to-r from-neon-yellow to-neon-green rounded-full"
-                    style={{ width: `${rating.percentage}%` }}
-                  />
-                </div>
-                <span className="text-xs text-gray-400">{rating.value.toFixed(1)}</span>
-              </div>
-            </div>
+            )}
             
-            {/* 第二行：作者版本信息 + 日期与互动按钮 */}
+            {/* 第二行：作者版本信息 */}
             <div className="flex items-center justify-between text-xs text-gray-500">
               <div className="flex items-center space-x-3">
                 <div className="flex items-center space-x-1">
@@ -190,14 +194,16 @@ const PromptCard: React.FC<PromptCardProps> = React.memo(({ prompt }) => {
                   <span>v{formatVersionDisplay(prompt.version)}</span>
                 </div>
               </div>
-              <div className="flex items-center space-x-4">
-                <div className="flex items-center space-x-1">
-                  <ClockIcon className="h-3 w-3" />
-                  <span>{formatDate(prompt.updated_at || prompt.created_at)}</span>
-                </div>
-                <div onClick={(e) => e.preventDefault()}>
-                  <InteractionButtons promptId={prompt.id} size="sm" />
-                </div>
+            </div>
+            
+            {/* 第三行：日期与互动按钮 */}
+            <div className="flex items-center justify-between text-xs text-gray-500">
+              <div className="flex items-center space-x-1">
+                <ClockIcon className="h-3 w-3" />
+                <span>{formatDate(prompt.updated_at || prompt.created_at)}</span>
+              </div>
+              <div onClick={(e) => e.preventDefault()}>
+                <InteractionButtons promptId={prompt.id} size="sm" />
               </div>
             </div>
           </div>

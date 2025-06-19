@@ -4,6 +4,7 @@ import { useAuth, withAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import Link from 'next/link';
 import { ProtectedLink, ProtectedButton } from '@/components/ProtectedLink';
+import clsx from 'clsx';
 import { 
   UserIcon, 
   KeyIcon, 
@@ -27,7 +28,24 @@ import {
   ArrowDownTrayIcon,
   ChartBarIcon,
   QuestionMarkCircleIcon,
-  ShareIcon
+  ShareIcon,
+  CodeBracketIcon,
+  TagIcon,
+  BookOpenIcon,
+  BriefcaseIcon,
+  SwatchIcon,
+  PaintBrushIcon,
+  AcademicCapIcon,
+  HeartIcon,
+  PuzzlePieceIcon,
+  HomeIcon,
+  FolderIcon,
+  LanguageIcon,
+  VideoCameraIcon,
+  MicrophoneIcon,
+  MusicalNoteIcon,
+  HeartIcon as HealthIcon,
+  CpuChipIcon
 } from '@heroicons/react/24/outline';
 
 // 定义与适配器返回的API密钥兼容的接口
@@ -58,6 +76,31 @@ const ProfilePage = () => {
   const { user, getToken } = useAuth();
   // 使用ref来跟踪组件挂载状态
   const isMountedRef = useRef(false);
+
+  // 分类映射 - 与PromptCard组件保持一致
+  const CATEGORY_MAP: Record<string, { name: string; color: string; icon: any }> = {
+    '通用': { name: '通用', color: 'from-neon-purple to-neon-blue', icon: SparklesIcon },
+    '学术': { name: '学术', color: 'from-neon-blue to-neon-cyan', icon: AcademicCapIcon },
+    '职业': { name: '职业', color: 'from-neon-green to-neon-yellow', icon: BriefcaseIcon },
+    '文案': { name: '文案', color: 'from-neon-pink to-neon-yellow', icon: PencilIcon },
+    '设计': { name: '设计', color: 'from-neon-yellow to-neon-orange', icon: SwatchIcon },
+    '绘画': { name: '绘画', color: 'from-neon-orange to-neon-red', icon: PaintBrushIcon },
+    '教育': { name: '教育', color: 'from-neon-green to-neon-cyan', icon: BookOpenIcon },
+    '情感': { name: '情感', color: 'from-neon-pink to-neon-purple', icon: HeartIcon },
+    '娱乐': { name: '娱乐', color: 'from-neon-yellow to-neon-green', icon: SparklesIcon },
+    '游戏': { name: '游戏', color: 'from-neon-purple to-neon-pink', icon: PuzzlePieceIcon },
+    '生活': { name: '生活', color: 'from-neon-green to-neon-blue', icon: HomeIcon },
+    '商业': { name: '商业', color: 'from-neon-red to-neon-orange', icon: ChartBarIcon },
+    '办公': { name: '办公', color: 'from-neon-blue to-neon-purple', icon: FolderIcon },
+    '编程': { name: '编程', color: 'from-neon-cyan to-neon-cyan-dark', icon: CodeBracketIcon },
+    '翻译': { name: '翻译', color: 'from-neon-blue to-neon-cyan', icon: LanguageIcon },
+    '视频': { name: '视频', color: 'from-neon-red to-neon-pink', icon: VideoCameraIcon },
+    '播客': { name: '播客', color: 'from-neon-orange to-neon-yellow', icon: MicrophoneIcon },
+    '音乐': { name: '音乐', color: 'from-neon-purple to-neon-blue', icon: MusicalNoteIcon },
+    '健康': { name: '健康', color: 'from-neon-green to-neon-cyan', icon: HealthIcon },
+    '科技': { name: '科技', color: 'from-neon-cyan to-neon-blue', icon: CpuChipIcon },
+    'default': { name: '通用', color: 'from-neon-purple to-neon-blue', icon: SparklesIcon }
+  };
   
   const [activeTab, setActiveTab] = useState('profile');
   const [apiKeys, setApiKeys] = useState<ApiKey[]>([]);
@@ -1591,13 +1634,29 @@ const ProfilePage = () => {
                           <div className="absolute inset-0 bg-gradient-to-br from-neon-cyan/5 to-neon-purple/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                           
                           <div className="relative">
-                            {/* 头部：分类和状态 */}
-                            <div className="flex items-center justify-between mb-4">
-                              <div className="flex items-center space-x-2">
-                                <div className="inline-flex p-2 rounded-lg bg-gradient-to-br from-neon-purple/20 to-neon-cyan/20">
-                                  <DocumentTextIcon className="h-4 w-4 text-neon-cyan" />
-                                </div>
-                                <span className="text-sm font-medium text-gray-300">{prompt.category}</span>
+                            {/* 标题与分类图标、公开/私有状态 */}
+                            <div className="flex justify-between items-start mb-2">
+                              <div className="flex items-start space-x-2 flex-1 pr-2">
+                                {(() => {
+                                  const categoryInfo = CATEGORY_MAP[prompt.category || 'default'] || CATEGORY_MAP.default;
+                                  const CategoryIcon = categoryInfo.icon;
+                                  return (
+                                    <>
+                                      <div className={clsx(
+                                        'inline-flex p-2 rounded-lg bg-gradient-to-br flex-shrink-0',
+                                        categoryInfo.color
+                                      )}>
+                                        <CategoryIcon className="h-4 w-4 text-dark-bg-primary" />
+                                      </div>
+                                      <div className="flex-1 min-w-0">
+                                        <h3 className="text-lg font-semibold text-white line-clamp-1 group-hover:text-neon-cyan transition-colors">
+                                          {prompt.name}
+                                        </h3>
+                                        <div className="text-xs text-gray-400 mt-1">{categoryInfo.name}</div>
+                                      </div>
+                                    </>
+                                  );
+                                })()}
                               </div>
                               <div className="flex items-center space-x-2">
                                 <span className={`px-2 py-1 text-xs rounded-full ${
@@ -1609,11 +1668,6 @@ const ProfilePage = () => {
                                 </span>
                               </div>
                             </div>
-
-                            {/* 标题 */}
-                            <h3 className="text-lg font-semibold text-white mb-2 line-clamp-1 group-hover:text-neon-cyan transition-colors">
-                              {prompt.name}
-                            </h3>
 
                             {/* 描述 */}
                             <p className="text-sm text-gray-400 line-clamp-2 mb-4">
