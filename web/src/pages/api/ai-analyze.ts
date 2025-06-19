@@ -40,17 +40,6 @@ export default async function handler(
           existingModels
         } = req.body;
         
-        // 添加调试日志
-        console.log('🚀 API full_analyze 调试 (增量分析):');
-        console.log('- 内容长度:', content.length);
-        console.log('- 当前版本:', fullAnalysisCurrentVersion);
-        console.log('- 是否新提示词:', fullAnalysisIsNewPrompt);
-        console.log('- 已有版本:', fullAnalysisExistingVersions);
-        console.log('- 原始内容长度:', originalContent?.length || 0);
-        console.log('- 现有分类:', existingCategory);
-        console.log('- 现有标签:', promptExistingTags);
-        console.log('- 现有模型:', existingModels);
-        
         // 增强配置，包含现有参数信息
         const enhancedConfig = {
           ...config,
@@ -69,14 +58,6 @@ export default async function handler(
           fullAnalysisIsNewPrompt, 
           fullAnalysisExistingVersions
         );
-        
-        console.log('🎯 API返回结果 (增量分析):', {
-          version: fullResult.version,
-          compatibleModels: fullResult.compatibleModels,
-          variables: fullResult.variables,
-          category: fullResult.category,
-          tags: fullResult.tags
-        });
         
         return res.status(200).json({ success: true, data: fullResult });
 

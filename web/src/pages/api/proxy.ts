@@ -10,7 +10,6 @@ import axios from 'axios';
 
 // 前端处理的API路径，不需要代理到后端
 const FRONTEND_API_PATHS = [
-  'test-openai',
   'ai/optimize',
   'auth',
   'prompts',
@@ -23,7 +22,6 @@ const FRONTEND_API_PATHS = [
   'collaborative',
   'recommendations',
   'search',
-  'debug',
   'categories',
   'tags',
   'public-prompts',

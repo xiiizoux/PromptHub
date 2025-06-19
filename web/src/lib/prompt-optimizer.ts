@@ -248,14 +248,11 @@ export class PromptOptimizer {
       // 回退到默认评分
       return calculateScore(prompt);
     } catch (error) {
-      console.error('分析失败:', error);
-      return calculateScore(prompt);
+        console.error('分析失败:', error);
+        throw new Error(`分析失败: ${error instanceof Error ? error.message : '未知错误'}`);
     }
   }
 
-  /**
-   * 调用LLM服务
-   */
   private async callLLM(systemPrompt: string, userPrompt: string): Promise<string> {
     const response = await fetch(`${this.baseURL}/chat/completions`, {
       method: 'POST',
@@ -270,148 +267,63 @@ export class PromptOptimizer {
           { role: 'user', content: userPrompt }
         ],
         temperature: 0.7,
-        max_tokens: 2000
       })
     });
 
     if (!response.ok) {
-      throw new Error(`API请求失败: ${response.status} ${response.statusText}`);
+      const errorData = await response.json();
+      throw new Error(errorData.error?.message || 'LLM API call failed');
     }
 
     const data = await response.json();
-    return data.choices?.[0]?.message?.content || '';
+    return data.choices[0].message.content;
   }
 
-  /**
-   * 从响应中提取优化后的提示词
-   */
   private extractOptimizedPrompt(response: string): string {
-    // 尝试多种模式匹配
-    const patterns = [
-      /### 优化后的提示词\s*\n([\s\S]*?)(?=\n### |$)/,
-      /优化后的提示词[：:]\s*\n([\s\S]*?)(?=\n\n|$)/,
-      /```\s*\n([\s\S]*?)\n```/,
-      /【优化版本】\s*\n([\s\S]*?)(?=\n【|$)/
-    ];
-
-    for (const pattern of patterns) {
-      const match = response.match(pattern);
-      if (match && match[1]) {
-        return match[1].trim();
-      }
-    }
-
-    // 如果没有匹配到特定格式，返回整个响应的清理版本
-    return response.replace(/^[\s\S]*?(?=优化|改进|建议)/i, '').trim() || response.trim();
+    const match = response.match(/### 优化后的提示词\s*([\s\S]*?)\s*(?:###|$)/);
+    return match ? match[1].trim() : response.trim();
   }
 
-  /**
-   * 从响应中提取改进说明
-   */
   private extractImprovements(response: string): string[] {
-    const improvements: string[] = [];
+    const match = response.match(/### 改进说明\s*([\s\S]*?)\s*(?:###|$)/);
+    if (!match) return [];
     
-    const patterns = [
-      /### 改进说明\s*\n([\s\S]*?)(?=\n### |$)/,
-      /改进点[：:]\s*\n([\s\S]*?)(?=\n\n|$)/,
-      /优化要点[：:]\s*\n([\s\S]*?)(?=\n\n|$)/
-    ];
-
-    for (const pattern of patterns) {
-      const match = response.match(pattern);
-      if (match && match[1]) {
-        const text = match[1].trim();
-        // 按行分割并清理
-        const lines = text.split('\n')
-          .map(line => line.replace(/^[-*•]\s*/, '').trim())
-          .filter(line => line.length > 0);
-        improvements.push(...lines);
-        break;
-      }
-    }
-
-    return improvements.length > 0 ? improvements : ['AI提示词已优化，提高了清晰度和准确性'];
+    return match[1].trim().split('\n').map(line => line.replace(/^\s*[-*]?\s*/, '')).filter(Boolean);
   }
 }
 
-// 创建默认实例的工厂函数
 export async function createPromptOptimizer(): Promise<PromptOptimizer | null> {
   try {
-    // 从环境变量或本地存储获取配置
-    const apiKey = process.env.NEXT_PUBLIC_OPENAI_API_KEY || 
-                   localStorage.getItem('openai_api_key') ||
-                   localStorage.getItem('prompt_optimizer_api_key');
-
-    if (!apiKey) {
-      console.warn('未找到API密钥，无法创建提示词优化器');
-      return null;
-    }
-
-    const baseURL = process.env.NEXT_PUBLIC_OPENAI_BASE_URL || 
-                    localStorage.getItem('openai_base_url') ||
-                    'https://api.openai.com/v1';
-
-    const model = localStorage.getItem('optimization_model') || 'gpt-3.5-turbo';
+    const response = await fetch('/api/auth/session');
+    if (!response.ok) return null;
+    
+    const session = await response.json();
+    if (!session.accessToken) return null;
 
     return new PromptOptimizer({
-      apiKey,
-      baseURL,
-      model
+      apiKey: session.accessToken,
+      baseURL: '/api/mcp' 
     });
   } catch (error) {
-    console.error('创建提示词优化器失败:', error);
+    console.error('创建优化器失败:', error);
     return null;
   }
 }
 
-// 导出便捷方法
 export async function optimizePrompt(
   prompt: string, 
   requirements?: string,
   type: OptimizationRequest['type'] = 'general'
 ): Promise<OptimizationResult | null> {
   try {
-    // 通过API路由调用，而不是直接调用OpenAI
-    const response = await fetch('/api/ai/optimize', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        prompt,
-        requirements,
-        type
-      })
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || `API请求失败: ${response.status}`);
+    const optimizer = await createPromptOptimizer();
+    if (!optimizer) {
+      throw new Error('无法初始化优化器');
     }
-
-    const data = await response.json();
-    
-    if (!data.success) {
-      throw new Error(data.error || '优化失败');
-    }
-
-    // 构造返回结果
-    const optimizedPrompt = data.data.optimized;
-    const score = calculateScore(optimizedPrompt);
-    
-    return {
-      optimizedPrompt,
-      improvements: [
-        '通过AI分析优化了提示词结构',
-        '增强了指令的清晰性和具体性',
-        '改善了提示词的逻辑组织'
-      ],
-      score,
-      suggestions: generateSuggestions(prompt)
-    };
+    return await optimizer.optimizePrompt({ prompt, requirements, type });
   } catch (error) {
-    console.error('优化失败:', error);
-    throw error;
+    console.error('优化提示词失败:', error);
+    return null;
   }
 }
 
@@ -422,65 +334,45 @@ export async function iteratePrompt(
   type: IterationRequest['type'] = 'refine'
 ): Promise<string | null> {
   try {
-    // 通过API路由调用迭代优化
-    const response = await fetch('/api/ai/iterate', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        originalPrompt,
-        currentPrompt,
-        requirements,
-        type
-      })
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || `API请求失败: ${response.status}`);
+    const optimizer = await createPromptOptimizer();
+    if (!optimizer) {
+      throw new Error('无法初始化优化器');
     }
-
-    const data = await response.json();
-    
-    if (!data.success) {
-      throw new Error(data.error || '迭代失败');
-    }
-
-    return data.data.optimized;
+    return await optimizer.iteratePrompt({ originalPrompt, currentPrompt, requirements, type });
   } catch (error) {
-    console.error('迭代失败:', error);
-    throw error;
+    console.error('迭代提示词失败:', error);
+    return null;
   }
 }
 
 export async function analyzePrompt(prompt: string): Promise<OptimizationResult['score'] | null> {
   try {
-    // 通过API路由调用分析
     const response = await fetch('/api/ai/analyze', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({
-        prompt
-      })
+      body: JSON.stringify({ prompt })
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || `API请求失败: ${response.status}`);
+      console.error('分析API调用失败:', response.status, response.statusText);
+      // 返回基于本地计算的默认值
+      return calculateScore(prompt);
     }
 
-    const data = await response.json();
+    const result = await response.json();
     
-    if (!data.success) {
-      throw new Error(data.error || '分析失败');
+    if (result.success && result.data.score) {
+      return result.data.score;
+    } else {
+      console.warn('分析API返回数据格式不正确，使用本地计算:', result);
+      return calculateScore(prompt);
     }
 
-    return data.data.score;
   } catch (error) {
-    console.error('分析失败:', error);
+    console.error('分析提示词时发生错误:', error);
+    // 发生错误时，返回基于本地计算的默认值
     return calculateScore(prompt);
   }
 } 
