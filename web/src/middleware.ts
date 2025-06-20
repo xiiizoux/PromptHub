@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { addSecurityHeaders, handleCORS } from './src/middleware/security';
 
 // API基础URL
 const API_BASE_URL = process.env.API_URL || 'http://localhost:9010';
@@ -52,34 +53,15 @@ function requiresAuth(pathname: string): boolean {
   return PROTECTED_ROUTES.some(route => pathname.startsWith(route));
 }
 
-// 添加安全头
-function addSecurityHeaders(response: NextResponse): NextResponse {
-  // 防止XSS攻击
-  response.headers.set('X-Content-Type-Options', 'nosniff');
-  response.headers.set('X-Frame-Options', 'DENY');
-  response.headers.set('X-XSS-Protection', '1; mode=block');
-  response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
-
-  // 隐藏技术栈信息
-  response.headers.delete('X-Powered-By');
-
-  // HSTS (仅在HTTPS环境下启用)
-  if (process.env.NODE_ENV === 'production') {
-    response.headers.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
-  }
-
-  // 内容安全策略（根据需要调整）
-  response.headers.set('Content-Security-Policy',
-    "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https:; frame-ancestors 'none';"
-  );
-
-  // 权限策略
-  response.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
-
-  return response;
-}
+// addSecurityHeaders 函数现在从 security.ts 导入
 
 export function middleware(request: NextRequest) {
+  // 处理CORS预检请求
+  const corsResponse = handleCORS(request);
+  if (corsResponse) {
+    return corsResponse;
+  }
+
   // 只处理API路由的请求
   if (request.nextUrl.pathname.startsWith('/api/')) {
     const pathname = request.nextUrl.pathname;

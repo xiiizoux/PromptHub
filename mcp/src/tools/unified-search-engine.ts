@@ -5,6 +5,8 @@
 
 import { BaseMCPTool, ToolContext, ToolResult } from '../shared/base-tool.js';
 import { ToolDescription, ToolParameter, Prompt } from '../types.js';
+import { searchCache, CacheKeys } from './enhanced-search-cache.js';
+import { searchPerformanceMonitor } from './search-performance-monitor.js';
 
 // 搜索结果接口
 interface SearchResult {
@@ -117,26 +119,34 @@ export class UnifiedSearchEngine extends BaseMCPTool {
       sortBy: sort_by as any
     };
 
-    this.logExecution('统一搜索', context, { 
-      query: query.substring(0, 50), 
-      algorithm, 
-      maxResults: max_results 
+    this.logExecution('统一搜索', context, {
+      query: query.substring(0, 50),
+      algorithm,
+      maxResults: max_results
     });
 
+    // 开始性能监控
+    const timer = searchPerformanceMonitor.startSearch(query, algorithm, context.userId, filters);
+
     try {
-      // 检查缓存
+      // 检查增强缓存
       if (enable_cache) {
-        const cached = this.getCachedResults(query, config);
+        const cacheKey = CacheKeys.searchResults(query, { algorithm, filters, max_results, min_confidence });
+        const cached = await searchCache.get<SearchResult[]>(cacheKey);
+
         if (cached) {
+          timer.end(cached.length, true, true);
+
           return {
             success: true,
             data: {
-              results: cached.results,
+              results: cached,
               from_cache: true,
               search_config: config,
-              cache_timestamp: cached.timestamp
+              cache_key: cacheKey,
+              performance: { cached: true, response_time: 0 }
             },
-            message: `从缓存获取 ${cached.results.length} 个搜索结果`
+            message: `从缓存获取 ${cached.length} 个搜索结果`
           };
         }
       }
@@ -145,12 +155,17 @@ export class UnifiedSearchEngine extends BaseMCPTool {
       const searchResults = await this.performUnifiedSearch(query, searchContext, filters, config, context.userId);
 
       // 缓存结果
-      if (enable_cache) {
-        this.cacheResults(query, searchResults, config);
+      if (enable_cache && searchResults.length > 0) {
+        const cacheKey = CacheKeys.searchResults(query, { algorithm, filters, max_results, min_confidence });
+        await searchCache.set(cacheKey, searchResults, 300000, { // 5分钟缓存
+          algorithm,
+          resultCount: searchResults.length,
+          timestamp: Date.now()
+        });
       }
 
-      // 启动缓存清理
-      this.startCacheCleanup();
+      // 结束性能监控
+      timer.end(searchResults.length, false, true);
 
       return {
         success: true,
@@ -159,15 +174,20 @@ export class UnifiedSearchEngine extends BaseMCPTool {
           from_cache: false,
           search_config: config,
           performance: this.generatePerformanceReport(searchResults),
-          suggestions: this.generateSearchSuggestions(searchResults, query)
+          suggestions: this.generateSearchSuggestions(searchResults, query),
+          cache_stats: searchCache.getStats()
         },
         message: `找到 ${searchResults.length} 个搜索结果`
       };
 
     } catch (error) {
+      // 记录错误
+      timer.end(0, false, false, error.message);
+
       return {
         success: false,
-        message: '搜索失败，请尝试简化搜索条件'
+        message: '搜索失败，请尝试简化搜索条件',
+        error: error.message
       };
     }
   }

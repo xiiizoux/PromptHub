@@ -7,6 +7,9 @@ import { config, validateConfig } from './config.js';
 import mcpRouter from './api/mcp-router.js';
 import apiKeysRouter from './api/api-keys-router.js';
 import logger from './utils/logger.js';
+import { securityHeadersMiddleware, rateLimitMiddleware } from './api/auth-middleware.js';
+import { systemMonitor } from './monitoring/system-monitor.js';
+import { accessLogger } from './monitoring/access-logger.js';
 
 export async function startMCPServer() {
   try {
@@ -18,24 +21,14 @@ export async function startMCPServer() {
     // 创建Express应用
     const app = express();
     
+    // 访问日志中间件
+    app.use(accessLogger.middleware());
+
     // 安全中间件
-    app.use((req, res, next) => {
-      // 隐藏技术栈信息
-      res.removeHeader('X-Powered-By');
+    app.use(securityHeadersMiddleware);
 
-      // 添加安全头部
-      res.setHeader('X-Content-Type-Options', 'nosniff');
-      res.setHeader('X-Frame-Options', 'DENY');
-      res.setHeader('X-XSS-Protection', '1; mode=block');
-      res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
-
-      // 生产环境启用HSTS
-      if (process.env.NODE_ENV === 'production') {
-        res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
-      }
-
-      next();
-    });
+    // 速率限制中间件
+    app.use(rateLimitMiddleware);
 
     // 配置CORS
     if (config.security.enableCors) {
@@ -106,16 +99,71 @@ export async function startMCPServer() {
     });
     
     // 健康检查端点
-    app.get('/api/health', (req, res) => {
-      res.json({ 
-        status: 'healthy', 
-        version: config.mcp.version,
-        timestamp: new Date().toISOString(),
-        storage: config.storage.type,
-        transportType: process.env.TRANSPORT_TYPE || 'stdio'
-      });
+    app.get('/api/health', async (req, res) => {
+      try {
+        const healthStatus = await systemMonitor.performHealthCheck();
+        const currentMetrics = systemMonitor.getCurrentMetrics();
+
+        res.json({
+          status: healthStatus.status,
+          version: config.mcp.version,
+          timestamp: new Date().toISOString(),
+          storage: config.storage.type,
+          transportType: process.env.TRANSPORT_TYPE || 'stdio',
+          uptime: healthStatus.uptime,
+          checks: healthStatus.checks,
+          metrics: currentMetrics ? {
+            cpu: currentMetrics.cpu.usage,
+            memory: currentMetrics.memory.usage,
+            loadAverage: currentMetrics.cpu.loadAverage[0]
+          } : null
+        });
+      } catch (error) {
+        res.status(500).json({
+          status: 'error',
+          message: '健康检查失败',
+          timestamp: new Date().toISOString()
+        });
+      }
     });
     
+    // 监控端点
+    app.get('/api/metrics', (req, res) => {
+      const currentMetrics = systemMonitor.getCurrentMetrics();
+      const performanceStats = systemMonitor.getPerformanceStats();
+      const accessStats = accessLogger.getAccessStats();
+
+      res.json({
+        system: currentMetrics,
+        performance: performanceStats,
+        access: accessStats,
+        timestamp: new Date().toISOString()
+      });
+    });
+
+    app.get('/api/logs/access', (req, res) => {
+      const timeRange = req.query.timeRange ? JSON.parse(req.query.timeRange as string) : undefined;
+      const stats = accessLogger.getAccessStats(timeRange);
+      const slowRequests = accessLogger.getSlowRequests(1000, timeRange);
+
+      res.json({
+        stats,
+        slowRequests,
+        timestamp: new Date().toISOString()
+      });
+    });
+
+    app.get('/api/logs/errors', (req, res) => {
+      const timeRange = req.query.timeRange ? JSON.parse(req.query.timeRange as string) : undefined;
+      const level = req.query.level as 'error' | 'warn' | 'info' | undefined;
+      const errors = accessLogger.getErrorLogs(timeRange, level);
+
+      res.json({
+        errors,
+        timestamp: new Date().toISOString()
+      });
+    });
+
     // 配置路由
     app.use('/', mcpRouter);
     app.use('/api/keys', apiKeysRouter);
@@ -145,6 +193,11 @@ export async function startMCPServer() {
       logger.info(`MCP服务器启动成功，端口: ${port}`);
       logger.info(`健康检查: http://localhost:${port}/api/health`);
       logger.info(`MCP工具端点: http://localhost:${port}/tools`);
+      logger.info(`监控端点: http://localhost:${port}/api/metrics`);
+
+      // 启动系统监控
+      systemMonitor.start(30000); // 每30秒收集一次指标
+      logger.info('系统监控已启动');
     });
     
     // 优雅关闭处理

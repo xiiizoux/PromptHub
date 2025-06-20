@@ -54,9 +54,25 @@ function extractAuthInfo(req: Request): {
   };
 }
 
-// 会话管理
-const activeSessions = new Map<string, { userId: string; lastActivity: number; expiresAt: number }>();
+// 增强的会话管理
+interface SessionInfo {
+  userId: string;
+  lastActivity: number;
+  expiresAt: number;
+  ip: string;
+  userAgent: string;
+  authMethod: string;
+  createdAt: number;
+}
+
+const activeSessions = new Map<string, SessionInfo>();
 const SESSION_TIMEOUT = 30 * 60 * 1000; // 30分钟
+const MAX_SESSIONS_PER_USER = 5; // 每个用户最多5个活跃会话
+
+// 速率限制存储
+const rateLimitStore = new Map<string, { count: number; resetTime: number }>();
+const RATE_LIMIT_WINDOW = 15 * 60 * 1000; // 15分钟窗口
+const RATE_LIMIT_MAX_REQUESTS = 100; // 每个窗口最多100个请求
 
 function isSessionValid(sessionId: string): boolean {
   const session = activeSessions.get(sessionId);
@@ -71,33 +87,127 @@ function isSessionValid(sessionId: string): boolean {
   return true;
 }
 
-function updateSessionActivity(sessionId: string, userId: string): void {
+function updateSessionActivity(sessionId: string, userId: string, ip: string, userAgent: string, authMethod: string): void {
   const now = Date.now();
+
+  // 检查用户的活跃会话数量
+  const userSessions = Array.from(activeSessions.entries())
+    .filter(([_, session]) => session.userId === userId);
+
+  // 如果超过最大会话数，删除最旧的会话
+  if (userSessions.length >= MAX_SESSIONS_PER_USER) {
+    const oldestSession = userSessions
+      .sort((a, b) => a[1].lastActivity - b[1].lastActivity)[0];
+    activeSessions.delete(oldestSession[0]);
+    logger.info('删除最旧的会话', { userId, sessionId: oldestSession[0] });
+  }
+
   activeSessions.set(sessionId, {
     userId,
     lastActivity: now,
-    expiresAt: now + SESSION_TIMEOUT
+    expiresAt: now + SESSION_TIMEOUT,
+    ip,
+    userAgent,
+    authMethod,
+    createdAt: activeSessions.get(sessionId)?.createdAt || now
   });
 }
 
 function cleanupExpiredSessions(): void {
   const now = Date.now();
+  let cleanedCount = 0;
+
   for (const [sessionId, session] of activeSessions) {
     if (now > session.expiresAt) {
       activeSessions.delete(sessionId);
+      cleanedCount++;
     }
+  }
+
+  if (cleanedCount > 0) {
+    logger.debug(`清理了 ${cleanedCount} 个过期会话`);
   }
 }
 
-// 定期清理过期会话
-setInterval(cleanupExpiredSessions, 5 * 60 * 1000); // 每5分钟清理一次
+// 速率限制检查
+function checkRateLimit(identifier: string): { allowed: boolean; remaining: number; resetTime: number } {
+  const now = Date.now();
+  const key = `rate_limit_${identifier}`;
+  const record = rateLimitStore.get(key);
 
-// 统一的认证逻辑
+  if (!record || now > record.resetTime) {
+    // 创建新的速率限制记录
+    const newRecord = {
+      count: 1,
+      resetTime: now + RATE_LIMIT_WINDOW
+    };
+    rateLimitStore.set(key, newRecord);
+    return {
+      allowed: true,
+      remaining: RATE_LIMIT_MAX_REQUESTS - 1,
+      resetTime: newRecord.resetTime
+    };
+  }
+
+  if (record.count >= RATE_LIMIT_MAX_REQUESTS) {
+    return {
+      allowed: false,
+      remaining: 0,
+      resetTime: record.resetTime
+    };
+  }
+
+  record.count++;
+  rateLimitStore.set(key, record);
+
+  return {
+    allowed: true,
+    remaining: RATE_LIMIT_MAX_REQUESTS - record.count,
+    resetTime: record.resetTime
+  };
+}
+
+// 清理过期的速率限制记录
+function cleanupRateLimit(): void {
+  const now = Date.now();
+  let cleanedCount = 0;
+
+  for (const [key, record] of rateLimitStore) {
+    if (now > record.resetTime) {
+      rateLimitStore.delete(key);
+      cleanedCount++;
+    }
+  }
+
+  if (cleanedCount > 0) {
+    logger.debug(`清理了 ${cleanedCount} 个过期的速率限制记录`);
+  }
+}
+
+// 定期清理过期会话和速率限制记录
+setInterval(() => {
+  cleanupExpiredSessions();
+  cleanupRateLimit();
+}, 5 * 60 * 1000); // 每5分钟清理一次
+
+// 增强的认证逻辑
 async function performAuthentication(req: Request, requireAuth: boolean = true): Promise<AuthResult> {
   const { apiKey, serverKey, token, ip, userAgent } = extractAuthInfo(req);
   const sessionId = req.headers['x-session-id'] as string || `session_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
 
   try {
+    // 0. 速率限制检查
+    const rateLimitResult = checkRateLimit(ip);
+    if (!rateLimitResult.allowed) {
+      logSecurityEvent(
+        AuditEventType.SECURITY_VIOLATION,
+        'high',
+        'Rate limit exceeded',
+        { ip, userAgent, sessionId, resetTime: rateLimitResult.resetTime }
+      );
+      return { success: false, error: '请求过于频繁，请稍后再试' };
+    }
+
     // 1. 系统级API密钥验证
     if (apiKey && (apiKey === config.apiKey || apiKey === serverKey)) {
       const systemUser: User = {
@@ -105,6 +215,9 @@ async function performAuthentication(req: Request, requireAuth: boolean = true):
         email: 'system@example.com',
         display_name: 'System User'
       };
+
+      // 更新会话活动
+      updateSessionActivity(sessionId, 'system-user', ip, userAgent, 'system');
 
       logAuthActivity('system-user', AuditEventType.API_KEY_USED, true, {
         ip, userAgent, sessionId, keyType: 'system'
@@ -118,7 +231,7 @@ async function performAuthentication(req: Request, requireAuth: boolean = true):
       const user = await storage.verifyApiKey(apiKey);
       if (user) {
         // 更新会话活动
-        updateSessionActivity(sessionId, user.id);
+        updateSessionActivity(sessionId, user.id, ip, userAgent, 'api_key');
 
         // 异步更新最后使用时间，不阻塞请求
         storage.updateApiKeyLastUsed(apiKey).catch(err => {
@@ -146,7 +259,7 @@ async function performAuthentication(req: Request, requireAuth: boolean = true):
       const user = await storage.verifyToken(token);
       if (user) {
         // 更新会话活动
-        updateSessionActivity(sessionId, user.id);
+        updateSessionActivity(sessionId, user.id, ip, userAgent, 'jwt_token');
 
         logAuthActivity(user.id, AuditEventType.USER_LOGIN, true, {
           ip, userAgent, sessionId, method: 'jwt'
@@ -190,6 +303,14 @@ async function performAuthentication(req: Request, requireAuth: boolean = true):
  * 身份验证中间件，用于保护需要认证的API路由
  */
 export const authenticateRequest = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  const { ip } = extractAuthInfo(req);
+  const rateLimitResult = checkRateLimit(ip);
+
+  // 添加速率限制响应头
+  res.setHeader('X-RateLimit-Limit', RATE_LIMIT_MAX_REQUESTS);
+  res.setHeader('X-RateLimit-Remaining', rateLimitResult.remaining);
+  res.setHeader('X-RateLimit-Reset', Math.ceil(rateLimitResult.resetTime / 1000));
+
   const result = await performAuthentication(req, true);
 
   if (result.success) {
@@ -197,6 +318,16 @@ export const authenticateRequest = async (req: Request, res: Response, next: Nex
     req.authMethod = result.method;
     req.sessionId = req.headers['x-session-id'] as string;
     return next();
+  }
+
+  // 如果是速率限制错误，返回429状态码
+  if (result.error?.includes('请求过于频繁')) {
+    return res.status(429).json({
+      success: false,
+      error: result.error,
+      timestamp: new Date().toISOString(),
+      retryAfter: Math.ceil((rateLimitResult.resetTime - Date.now()) / 1000)
+    });
   }
 
   res.status(401).json({
@@ -270,38 +401,124 @@ function getAuthValue(request: Request, key: string): string {
 }
 
 /**
- * 速率限制中间件
+ * 增强的速率限制中间件
  */
 export const rateLimitMiddleware = (req: Request, res: Response, next: NextFunction): void => {
   if (!config.security.enableRateLimit) {
     return next();
   }
 
-  // 简单的内存速率限制（生产环境应使用Redis）
-  const ip = req.ip || req.connection.remoteAddress || 'unknown';
-  const now = Date.now();
-  const windowStart = now - config.security.rateLimitWindow;
+  const { ip } = extractAuthInfo(req);
+  const rateLimitResult = checkRateLimit(ip);
 
-  // 这里应该实现真正的速率限制逻辑
-  // 为了简化，这里只是记录访问
-  logger.debug('Rate limit check', { ip, timestamp: now });
+  // 添加速率限制响应头
+  res.setHeader('X-RateLimit-Limit', RATE_LIMIT_MAX_REQUESTS);
+  res.setHeader('X-RateLimit-Remaining', rateLimitResult.remaining);
+  res.setHeader('X-RateLimit-Reset', Math.ceil(rateLimitResult.resetTime / 1000));
+
+  if (!rateLimitResult.allowed) {
+    logSecurityEvent(
+      AuditEventType.SECURITY_VIOLATION,
+      'high',
+      'Rate limit exceeded in middleware',
+      { ip, resetTime: rateLimitResult.resetTime }
+    );
+
+    return res.status(429).json({
+      success: false,
+      error: '请求过于频繁，请稍后再试',
+      retryAfter: Math.ceil((rateLimitResult.resetTime - Date.now()) / 1000),
+      timestamp: new Date().toISOString()
+    });
+  }
+
+  logger.debug('Rate limit check passed', {
+    ip,
+    remaining: rateLimitResult.remaining,
+    resetTime: new Date(rateLimitResult.resetTime).toISOString()
+  });
 
   next();
 };
 
 /**
- * 安全头中间件
+ * 增强的安全头中间件
  */
 export const securityHeadersMiddleware = (req: Request, res: Response, next: NextFunction): void => {
-  // 设置安全头
+  // 基础安全头
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('X-Frame-Options', 'DENY');
   res.setHeader('X-XSS-Protection', '1; mode=block');
   res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
 
+  // 内容安全策略 (CSP)
+  const cspDirectives = [
+    "default-src 'self'",
+    "script-src 'self' 'unsafe-inline' 'unsafe-eval'", // 允许内联脚本用于兼容性
+    "style-src 'self' 'unsafe-inline'", // 允许内联样式
+    "img-src 'self' data: https:",
+    "font-src 'self' data:",
+    "connect-src 'self' https://api.supabase.co wss://realtime.supabase.co",
+    "media-src 'self'",
+    "object-src 'none'",
+    "base-uri 'self'",
+    "form-action 'self'",
+    "frame-ancestors 'none'"
+  ];
+  res.setHeader('Content-Security-Policy', cspDirectives.join('; '));
+
+  // HTTPS 强制 (仅在生产环境)
+  if (process.env.NODE_ENV === 'production') {
+    res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
+  }
+
+  // 权限策略
+  res.setHeader('Permissions-Policy',
+    'camera=(), microphone=(), geolocation=(), payment=(), usb=()');
+
+  // 防止MIME类型嗅探
+  res.setHeader('X-Download-Options', 'noopen');
+
   // 移除暴露服务器信息的头
   res.removeHeader('X-Powered-By');
   res.removeHeader('Server');
+  res.removeHeader('X-AspNet-Version');
+  res.removeHeader('X-AspNetMvc-Version');
 
   next();
+};
+
+/**
+ * 会话信息获取函数
+ */
+export const getSessionInfo = (sessionId: string): SessionInfo | undefined => {
+  return activeSessions.get(sessionId);
+};
+
+/**
+ * 获取用户的所有活跃会话
+ */
+export const getUserSessions = (userId: string): Array<{ sessionId: string; info: SessionInfo }> => {
+  return Array.from(activeSessions.entries())
+    .filter(([_, session]) => session.userId === userId)
+    .map(([sessionId, info]) => ({ sessionId, info }));
+};
+
+/**
+ * 强制注销用户的所有会话
+ */
+export const logoutUserSessions = (userId: string): number => {
+  let loggedOutCount = 0;
+  for (const [sessionId, session] of activeSessions) {
+    if (session.userId === userId) {
+      activeSessions.delete(sessionId);
+      loggedOutCount++;
+    }
+  }
+
+  if (loggedOutCount > 0) {
+    logger.info(`强制注销用户的 ${loggedOutCount} 个会话`, { userId });
+  }
+
+  return loggedOutCount;
 };
