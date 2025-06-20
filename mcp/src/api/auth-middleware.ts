@@ -49,7 +49,7 @@ function extractAuthInfo(req: Request): {
     apiKey,
     serverKey,
     token,
-    ip: req.ip || req.connection.remoteAddress || 'unknown',
+    ip: req.ip || req.socket.remoteAddress || 'unknown',
     userAgent: req.headers['user-agent'] || 'unknown'
   };
 }
@@ -325,12 +325,13 @@ export const authenticateRequest = async (req: Request, res: Response, next: Nex
 
   // 如果是速率限制错误，返回429状态码
   if (result.error?.includes('请求过于频繁')) {
-    return res.status(429).json({
+    res.status(429).json({
       success: false,
       error: result.error,
       timestamp: new Date().toISOString(),
       retryAfter: Math.ceil((rateLimitResult.resetTime - Date.now()) / 1000)
     });
+    return;
   }
 
   res.status(401).json({
@@ -427,12 +428,13 @@ export const rateLimitMiddleware = (req: Request, res: Response, next: NextFunct
       { ip, resetTime: rateLimitResult.resetTime }
     );
 
-    return res.status(429).json({
+    res.status(429).json({
       success: false,
       error: '请求过于频繁，请稍后再试',
       retryAfter: Math.ceil((rateLimitResult.resetTime - Date.now()) / 1000),
       timestamp: new Date().toISOString()
     });
+    return;
   }
 
   logger.debug('Rate limit check passed', {
