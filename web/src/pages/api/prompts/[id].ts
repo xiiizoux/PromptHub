@@ -1,453 +1,187 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { createClient } from '@supabase/supabase-js';
+import { apiHandler, successResponse, errorResponse, ErrorCode } from '@/lib/api-handler';
+import { databaseService } from '@/lib/database-service';
+import { logger } from '@/lib/error-handler';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
-
-// 验证用户令牌并获取用户ID
-async function authenticateUser(req: NextApiRequest): Promise<string | null> {
-  try {
-    const authHeader = req.headers.authorization;
-    
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return null;
-    }
-    
-    const token = authHeader.substring(7);
-    
-    // 验证用户token
-    const { data: { user }, error } = await supabase.auth.getUser(token);
-    
-    if (error || !user) {
-      console.error('JWT验证失败:', error);
-      return null;
-    }
-    
-    return user.id;
-  } catch (error) {
-    console.error('认证错误:', error);
-    return null;
+// 输入验证函数
+function validatePromptId(id: string): { isValid: boolean; error?: string } {
+  if (!id || typeof id !== 'string') {
+    return { isValid: false, error: '提示词ID不能为空' };
   }
+
+  // 检查是否是有效的UUID格式或合法的名称
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  const nameRegex = /^[a-zA-Z0-9\u4e00-\u9fa5_-]{1,100}$/; // 允许中英文、数字、下划线、连字符，最长100字符
+
+  if (!uuidRegex.test(id) && !nameRegex.test(id)) {
+    return { isValid: false, error: '无效的提示词ID格式' };
+  }
+
+  return { isValid: true };
 }
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+function validateUpdateData(data: any): { isValid: boolean; errors: string[] } {
+  const errors: string[] = [];
+
+  if (data.name !== undefined) {
+    if (typeof data.name !== 'string' || data.name.length < 1 || data.name.length > 100) {
+      errors.push('提示词名称长度应在1-100个字符之间');
+    }
+  }
+
+  if (data.description !== undefined) {
+    if (typeof data.description !== 'string' || data.description.length > 1000) {
+      errors.push('描述长度不能超过1000个字符');
+    }
+  }
+
+  if (data.content !== undefined) {
+    if (typeof data.content !== 'string' || data.content.length > 10000) {
+      errors.push('内容长度不能超过10000个字符');
+    }
+  }
+
+  if (data.tags !== undefined) {
+    if (!Array.isArray(data.tags) || data.tags.length > 20) {
+      errors.push('标签应为数组且不超过20个');
+    } else {
+      for (const tag of data.tags) {
+        if (typeof tag !== 'string' || tag.length > 50) {
+          errors.push('每个标签长度不能超过50个字符');
+          break;
+        }
+      }
+    }
+  }
+
+  if (data.version !== undefined) {
+    const version = parseFloat(String(data.version));
+    if (isNaN(version) || version < 0 || version > 999) {
+      errors.push('版本号应为0-999之间的数字');
+    }
+  }
+
+  return { isValid: errors.length === 0, errors };
+}
+
+export default apiHandler(async (req: NextApiRequest, res: NextApiResponse, userId?: string) => {
   const { id } = req.query;
 
-  if (!id || typeof id !== 'string') {
-    return res.status(400).json({ 
-      success: false, 
-      error: '提示词ID不能为空' 
-    });
+  // 验证提示词ID
+  const idValidation = validatePromptId(id as string);
+  if (!idValidation.isValid) {
+    return errorResponse(res, idValidation.error!, ErrorCode.BAD_REQUEST);
   }
+
+  const promptId = id as string;
 
   try {
     switch (req.method) {
       case 'GET':
-        return await getPrompt(req, res, id);
+        return await getPrompt(req, res, promptId, userId);
       case 'PUT':
-        return await updatePrompt(req, res, id);
-      case 'DELETE':
-        return await deletePrompt(req, res, id);
-      default:
-        return res.status(405).json({ 
-          success: false, 
-          error: 'Method not allowed' 
-        });
-    }
-  } catch (error: any) {
-    console.error('API错误:', error);
-    return res.status(500).json({ 
-      success: false, 
-      error: error.message || '服务器内部错误' 
-    });
-  }
-}
-
-async function getPrompt(req: NextApiRequest, res: NextApiResponse, id: string) {
-  try {
-    let prompt = null;
-    
-    // 首先尝试通过ID查找（如果看起来像UUID）
-    const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
-    
-    if (isUUID) {
-      const { data: promptById, error: idError } = await supabase
-        .from('prompts')
-        .select('*')
-        .eq('id', id)
-        .single();
-      
-      if (!idError) {
-        prompt = promptById;
-      }
-    }
-    
-    // 如果UUID查找失败或不是UUID格式，尝试通过名称查找
-    if (!prompt) {
-      const decodedName = decodeURIComponent(id);
-      
-      const { data: promptByName, error: nameError } = await supabase
-        .from('prompts')
-        .select('*')
-        .eq('name', decodedName)
-        .single();
-
-      if (nameError) {
-        return res.status(404).json({ 
-          success: false, 
-          error: '未找到指定的提示词' 
-        });
-      }
-
-      prompt = promptByName;
-    }
-
-    // 获取当前用户ID（可选）
-    const userId = await authenticateUser(req);
-
-    // 增加查看次数
-    await supabase
-      .from('prompts')
-      .update({ 
-        view_count: (prompt.view_count || 0) + 1,
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', prompt.id);
-
-    // 记录使用历史
-    if (userId) {
-      await supabase
-        .from('prompt_usage_history')
-        .insert({
-          prompt_id: prompt.id,
-          user_id: userId,
-          action: 'view',
-          timestamp: new Date().toISOString()
-        });
-    }
-
-    // 获取评分统计
-    let averageRating = 0;
-    let ratingCount = 0;
-    
-    const { data: ratingStats } = await supabase
-      .from('prompt_ratings')
-      .select('rating')
-      .eq('prompt_id', prompt.id);
-
-    if (ratingStats && ratingStats.length > 0) {
-      const totalRating = ratingStats.reduce((sum, r) => sum + r.rating, 0);
-      averageRating = totalRating / ratingStats.length;
-      ratingCount = ratingStats.length;
-    }
-
-    // 获取用户是否已收藏
-    let isBookmarked = false;
-    if (userId) {
-      const { data: bookmark } = await supabase
-        .from('prompt_bookmarks')
-        .select('id')
-        .eq('prompt_id', prompt.id)
-        .eq('user_id', userId)
-        .single();
-      
-      isBookmarked = !!bookmark;
-    }
-
-    // 获取用户评分
-    let userRating = null;
-    if (userId) {
-      const { data: rating } = await supabase
-        .from('prompt_ratings')
-        .select('rating')
-        .eq('prompt_id', prompt.id)
-        .eq('user_id', userId)
-        .single();
-      
-      userRating = rating?.rating || null;
-    }
-
-    // 获取用户信息
-    let authorName = '匿名用户';
-    if (prompt.user_id) {
-      const { data: user } = await supabase
-        .from('users')
-        .select('email, display_name')
-        .eq('id', prompt.user_id)
-        .single();
-      
-      if (user) {
-        authorName = user.display_name || user.email;
-      }
-    }
-
-    // 获取类别信息
-    let categoryName = '通用';
-    
-    // 首先检查直接存储的分类名称
-    if (prompt.category) {
-      categoryName = prompt.category;
-    } 
-    // 如果没有直接分类名称，尝试从category_id查找
-    else if (prompt.category_id) {
-      const { data: category } = await supabase
-        .from('categories')
-        .select('name')
-        .eq('id', prompt.category_id)
-        .single();
-      
-      if (category) {
-        categoryName = category.name;
-      }
-    }
-
-    // 从messages中提取content用于前端兼容性
-    let contentFromMessages = '';
-    if (prompt.messages && Array.isArray(prompt.messages) && prompt.messages.length > 0) {
-      const systemMessage = prompt.messages.find((msg: any) => msg.role === 'system');
-      if (systemMessage?.content?.text) {
-        contentFromMessages = systemMessage.content.text;
-      } else if (typeof systemMessage?.content === 'string') {
-        contentFromMessages = systemMessage.content;
-      }
-    }
-
-    const responseData = {
-      ...prompt,
-      content: contentFromMessages, // 添加content字段以保持前端兼容性
-      author: authorName,
-      category: categoryName,
-      compatible_models: prompt.compatible_models || [], // 保持数据原始性，不添加假的默认值
-      average_rating: Math.round(averageRating * 10) / 10,
-      rating_count: ratingCount,
-      is_bookmarked: isBookmarked,
-      user_rating: userRating,
-      view_count: (prompt.view_count || 0) + 1
-    };
-
-    res.status(200).json({
-      success: true,
-      prompt: responseData
-    });
-  } catch (error: any) {
-    console.error('获取提示词失败:', error);
-    res.status(500).json({ 
-      success: false, 
-      error: error.message || '获取提示词失败' 
-    });
-  }
-}
-
-async function updatePrompt(req: NextApiRequest, res: NextApiResponse, id: string) {
-  try {
-    const { 
-      name, 
-      content, 
-      description, 
-      category, 
-      category_id, 
-      tags, 
-      version,
-      is_public,
-      allow_collaboration,
-      edit_permission,
-      input_variables,
-      compatible_models
-    } = req.body;
-    
-    // 验证用户身份
-    const userId = await authenticateUser(req);
-    
-    if (!userId) {
-      return res.status(401).json({ 
-        success: false, 
-        error: '需要登录才能更新提示词' 
-      });
-    }
-
-    // 检查提示词是否存在且用户有权限
-    const { data: existingPrompt, error: fetchError } = await supabase
-      .from('prompts')
-      .select('user_id, created_by')
-      .eq('id', id)
-      .single();
-
-    if (fetchError) {
-      return res.status(404).json({ 
-        success: false, 
-        error: '未找到指定的提示词' 
-      });
-    }
-
-    // 检查权限（支持created_by和user_id两个字段）
-    const hasPermission = existingPrompt.user_id === userId || existingPrompt.created_by === userId;
-    
-    if (!hasPermission) {
-      return res.status(403).json({ 
-        success: false, 
-        error: '无权限更新此提示词' 
-      });
-    }
-
-    // 构建更新数据
-    const updateData: any = {
-      updated_at: new Date().toISOString(),
-      last_modified_by: userId
-    };
-
-    // 处理基本字段
-    if (name !== undefined) updateData.name = name;
-    if (description !== undefined) updateData.description = description;
-    if (tags !== undefined) updateData.tags = tags;
-    if (version !== undefined) {
-      // 保持小数精度，格式化为一位小数
-      const versionNum = parseFloat(String(version));
-      updateData.version = isNaN(versionNum) ? 1.0 : Math.round(versionNum * 10) / 10;
-    }
-    if (is_public !== undefined) updateData.is_public = Boolean(is_public);
-    if (allow_collaboration !== undefined) updateData.allow_collaboration = Boolean(allow_collaboration);
-    if (edit_permission !== undefined) updateData.edit_permission = edit_permission;
-    if (compatible_models !== undefined) updateData.compatible_models = compatible_models;
-
-    // 处理分类（支持category_id和category两种方式）
-    if (category_id !== undefined) {
-      updateData.category_id = category_id;
-    } else if (category !== undefined) {
-      updateData.category = category;
-      
-      // 如果提供了分类名称，尝试查找对应的category_id
-      const { data: categoryData } = await supabase
-        .from('categories')
-        .select('id')
-        .eq('name', category)
-        .single();
-      
-      if (categoryData) {
-        updateData.category_id = categoryData.id;
-      }
-    }
-
-    // 处理content字段 - 转换为messages格式
-    if (content !== undefined) {
-      // 将content字符串转换为messages JSONB格式
-      const messages = [{
-        role: "system",
-        content: {
-          type: "text",
-          text: content
+        if (!userId) {
+          return errorResponse(res, '需要登录才能更新提示词', ErrorCode.UNAUTHORIZED);
         }
-      }];
-      updateData.messages = messages;
+        return await updatePrompt(req, res, promptId, userId);
+      case 'DELETE':
+        if (!userId) {
+          return errorResponse(res, '需要登录才能删除提示词', ErrorCode.UNAUTHORIZED);
+        }
+        return await deletePrompt(req, res, promptId, userId);
+      default:
+        return errorResponse(res, '不支持的请求方法', ErrorCode.BAD_REQUEST);
+    }
+  } catch (error: any) {
+    logger.error('API处理错误', error, { method: req.method, promptId, userId });
+    return errorResponse(res, '服务器内部错误', ErrorCode.INTERNAL_SERVER_ERROR);
+  }
+}, {
+  allowedMethods: ['GET', 'PUT', 'DELETE'],
+  requireAuth: false // 在内部根据方法判断是否需要认证
+});
+
+async function getPrompt(req: NextApiRequest, res: NextApiResponse, id: string, userId?: string) {
+  try {
+    // 使用数据库服务获取提示词详情
+    const prompt = await databaseService.getPromptByName(id, userId);
+
+    if (!prompt) {
+      return errorResponse(res, '未找到指定的提示词', ErrorCode.NOT_FOUND);
     }
 
-    console.log('更新提示词数据:', { id, updateData });
+    // TODO: 增加查看次数和记录使用历史的功能可以在这里添加
+    // 目前先返回基本的提示词信息
 
-    // 执行数据库更新
-    const { data: updatedPrompt, error: updateError } = await supabase
-      .from('prompts')
-      .update(updateData)
-      .eq('id', id)
-      .select('*')
-      .single();
+    logger.info('获取提示词详情', undefined, { promptId: id, userId });
 
-    if (updateError) {
-      console.error('数据库更新错误:', updateError);
-      throw updateError;
+    return successResponse(res, { prompt });
+  } catch (error: any) {
+    logger.error('获取提示词失败', error, { promptId: id, userId });
+    return errorResponse(res, '获取提示词失败', ErrorCode.INTERNAL_SERVER_ERROR);
+  }
+}
+
+async function updatePrompt(req: NextApiRequest, res: NextApiResponse, id: string, userId: string) {
+  try {
+    // 验证输入数据
+    const validation = validateUpdateData(req.body);
+    if (!validation.isValid) {
+      logger.warn('更新提示词输入验证失败', undefined, {
+        errors: validation.errors,
+        promptId: id,
+        userId
+      });
+      return errorResponse(res, validation.errors.join('; '), ErrorCode.BAD_REQUEST);
     }
 
-    // 从messages中提取content用于响应
-    let contentFromMessages = '';
-    if (updatedPrompt.messages && Array.isArray(updatedPrompt.messages) && updatedPrompt.messages.length > 0) {
-      const systemMessage = updatedPrompt.messages.find((msg: any) => msg.role === 'system');
-      if (systemMessage?.content?.text) {
-        contentFromMessages = systemMessage.content.text;
-      } else if (typeof systemMessage?.content === 'string') {
-        contentFromMessages = systemMessage.content;
-      }
-    }
+    // 使用数据库服务更新提示词
+    const updatedPrompt = await databaseService.updatePrompt(id, req.body, userId);
 
-    // 构建响应数据
-    const responseData = {
-      ...updatedPrompt,
-      content: contentFromMessages, // 添加content字段以保持前端兼容性
-      input_variables: input_variables || updatedPrompt.input_variables || [],
-      compatible_models: compatible_models || updatedPrompt.compatible_models || []
-    };
+    logger.info('提示词更新成功', undefined, { promptId: id, userId });
 
-    res.status(200).json({
-      success: true,
-      prompt: responseData,
+    return successResponse(res, {
+      prompt: updatedPrompt,
       message: '提示词更新成功'
     });
   } catch (error: any) {
-    console.error('更新提示词失败:', error);
-    res.status(500).json({ 
-      success: false, 
-      error: error.message || '更新提示词失败' 
-    });
+    logger.error('更新提示词失败', error, { promptId: id, userId });
+
+    if (error.message?.includes('不存在')) {
+      return errorResponse(res, '未找到指定的提示词', ErrorCode.NOT_FOUND);
+    }
+    if (error.message?.includes('无权限')) {
+      return errorResponse(res, '无权限更新此提示词', ErrorCode.FORBIDDEN);
+    }
+
+    return errorResponse(res, '更新提示词失败', ErrorCode.INTERNAL_SERVER_ERROR);
   }
 }
 
-async function deletePrompt(req: NextApiRequest, res: NextApiResponse, id: string) {
+async function deletePrompt(req: NextApiRequest, res: NextApiResponse, id: string, userId: string) {
   try {
-    // 验证用户身份
-    const userId = await authenticateUser(req);
-    
-    if (!userId) {
-      return res.status(401).json({ 
-        success: false, 
-        error: '需要登录才能删除提示词' 
-      });
+    // 使用数据库服务删除提示词
+    const success = await databaseService.deletePrompt(id, userId);
+
+    if (!success) {
+      return errorResponse(res, '删除提示词失败', ErrorCode.INTERNAL_SERVER_ERROR);
     }
 
-    // 检查提示词是否存在且用户有权限
-    const { data: existingPrompt, error: fetchError } = await supabase
-      .from('prompts')
-      .select('user_id, name')
-      .eq('id', id)
-      .single();
+    logger.info('提示词删除成功', undefined, { promptId: id, userId });
 
-    if (fetchError) {
-      return res.status(404).json({ 
-        success: false, 
-        error: '未找到指定的提示词' 
-      });
-    }
-
-    if (existingPrompt.user_id !== userId) {
-      return res.status(403).json({ 
-        success: false, 
-        error: '无权限删除此提示词' 
-      });
-    }
-
-    // 删除相关数据（由于外键约束，某些可能会自动删除）
-    await Promise.all([
-      supabase.from('prompt_ratings').delete().eq('prompt_id', id),
-      supabase.from('prompt_bookmarks').delete().eq('prompt_id', id),
-      supabase.from('prompt_usage_history').delete().eq('prompt_id', id),
-      supabase.from('prompt_comments').delete().eq('prompt_id', id)
-    ]);
-
-    // 删除提示词
-    const { error: deleteError } = await supabase
-      .from('prompts')
-      .delete()
-      .eq('id', id);
-
-    if (deleteError) throw deleteError;
-
-    res.status(200).json({
-      success: true,
-      message: `提示词 "${existingPrompt.name}" 删除成功`
+    return successResponse(res, {
+      message: '提示词删除成功'
     });
   } catch (error: any) {
-    console.error('删除提示词失败:', error);
-    res.status(500).json({ 
-      success: false, 
-      error: error.message || '删除提示词失败' 
-    });
+    logger.error('删除提示词失败', error, { promptId: id, userId });
+
+    if (error.message?.includes('不存在')) {
+      return errorResponse(res, '未找到指定的提示词', ErrorCode.NOT_FOUND);
+    }
+    if (error.message?.includes('无权限')) {
+      return errorResponse(res, '无权限删除此提示词', ErrorCode.FORBIDDEN);
+    }
+
+    return errorResponse(res, '删除提示词失败', ErrorCode.INTERNAL_SERVER_ERROR);
   }
-} 
+}

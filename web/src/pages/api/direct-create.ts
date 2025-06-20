@@ -1,18 +1,33 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { createClient } from '@supabase/supabase-js';
+import { apiHandler, successResponse, errorResponse, ErrorCode } from '@/lib/api-handler';
+import { databaseService } from '@/lib/database-service';
+import { logger } from '@/lib/error-handler';
+import { InputValidator, VALIDATION_PRESETS } from '@/lib/input-validator';
 
-// 初始化Supabase客户端
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-const supabaseKey = process.env.SUPABASE_SERVICE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
-const supabase = createClient(supabaseUrl, supabaseKey);
-
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  // 只接受POST请求
-  if (req.method !== 'POST') {
-    return res.status(405).json({ success: false, error: '方法不允许' });
-  }
-
+export default apiHandler(async (req: NextApiRequest, res: NextApiResponse, userId?: string) => {
   try {
+    // 使用新的验证系统
+    const validationRules = [
+      VALIDATION_PRESETS.promptName,
+      VALIDATION_PRESETS.promptDescription,
+      VALIDATION_PRESETS.promptCategory,
+      { ...VALIDATION_PRESETS.promptTags, required: false },
+      { field: 'messages', required: true, type: 'array' as const, minLength: 1 },
+      { ...VALIDATION_PRESETS.userId, field: 'user_id', required: false },
+      { ...VALIDATION_PRESETS.isPublic, required: false }
+    ];
+
+    const validation = InputValidator.validate(req.body, validationRules);
+    if (!validation.isValid) {
+      logger.warn('创建提示词输入验证失败', undefined, {
+        errors: validation.errors,
+        userId
+      });
+      return errorResponse(res, validation.errors.join('; '), ErrorCode.BAD_REQUEST);
+    }
+
+    // 使用清理后的数据
+    const sanitizedData = validation.sanitizedData!;
     const {
       name,
       description,
@@ -21,17 +36,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       messages,
       is_public,
       user_id
-    } = req.body;
+    } = sanitizedData;
 
-    // 验证必填字段
-    if (!name || !description || !category || !messages || messages.length === 0) {
-      return res.status(400).json({ 
-        success: false, 
-        error: '缺少必要字段: name, description, category, messages' 
-      });
+    // 使用提供的user_id或当前认证用户的ID
+    const finalUserId = user_id || userId;
+
+    if (!finalUserId) {
+      return errorResponse(res, '需要提供用户ID或进行身份认证', ErrorCode.UNAUTHORIZED);
     }
 
-    // 准备要插入数据库的提示词数据
+    // 准备提示词数据
     const promptData = {
       name,
       description,
@@ -39,36 +53,34 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       tags: tags || [],
       messages,
       is_public: is_public !== undefined ? is_public : true,
-      user_id: user_id || null,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
+      user_id: finalUserId,
       version: 1
     };
 
-    // 插入数据到prompts表
-    const { data, error } = await supabase
-      .from('prompts')
-      .insert([promptData])
-      .select();
+    // 使用数据库服务创建提示词
+    const newPrompt = await databaseService.createPrompt(promptData);
 
-    if (error) {
-      console.error('创建提示词失败:', error);
-      return res.status(500).json({ 
-        success: false, 
-        error: `创建提示词失败: ${error.message}` 
-      });
+    logger.info('提示词创建成功', undefined, {
+      promptId: newPrompt.id,
+      name: newPrompt.name,
+      userId: finalUserId
+    });
+
+    return successResponse(res, { prompt: newPrompt });
+
+  } catch (error: any) {
+    logger.error('创建提示词失败', error, { userId });
+
+    if (error.message?.includes('已存在')) {
+      return errorResponse(res, '提示词名称已存在', ErrorCode.BAD_REQUEST);
+    }
+    if (error.message?.includes('权限')) {
+      return errorResponse(res, '权限不足', ErrorCode.FORBIDDEN);
     }
 
-    // 成功创建
-    return res.status(200).json({
-      success: true,
-      data: data[0]
-    });
-  } catch (error: any) {
-    console.error('处理创建提示词请求时出错:', error);
-    return res.status(500).json({ 
-      success: false, 
-      error: `服务器错误: ${error.message}` 
-    });
+    return errorResponse(res, '创建提示词失败，请稍后重试', ErrorCode.INTERNAL_SERVER_ERROR);
   }
-}
+}, {
+  allowedMethods: ['POST'],
+  requireAuth: false // 允许通过user_id参数或认证两种方式
+});

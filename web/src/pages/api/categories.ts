@@ -5,54 +5,41 @@
  */
 
 import { NextApiRequest, NextApiResponse } from 'next';
-import { apiHandler, successResponse, errorResponse } from '@/lib/api-handler';
-import { createClient } from '@supabase/supabase-js';
+import { apiHandler, successResponse, errorResponse, ErrorCode } from '@/lib/api-handler';
+import { databaseService } from '@/lib/database-service';
+import { logger } from '@/lib/error-handler';
 
 export default apiHandler(async (req: NextApiRequest, res: NextApiResponse) => {
-  if (req.method === 'GET') {
-    try {
-      console.log('=== 开始获取分类列表 ===');
-      
-      // 直接使用为Next.js应用配置的环境变量
-      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-      const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-      
-      if (!supabaseUrl || !supabaseKey) {
-        // 更新了错误消息，以反映所需的确切环境变量
-        return errorResponse(res, 'Supabase URL或匿名密钥未在环境中配置');
-      }
+  try {
+    logger.info('获取分类列表请求');
 
-      const supabase = createClient(supabaseUrl, supabaseKey);
+    // 使用数据库服务获取分类
+    const categories = await databaseService.getCategories();
 
-      // 直接查询categories表，获取所有分类
-      const { data: categoriesData, error: categoriesError } = await supabase
-        .from('categories')
-        .select('id, name, name_en, icon, description, sort_order, is_active')
-        .order('sort_order');
-
-      console.log('数据库查询结果:', {
-        error: categoriesError,
-        dataLength: categoriesData?.length || 0
-      });
-
-      if (!categoriesError && categoriesData && categoriesData.length > 0) {
-        console.log('成功获取分类数据，数量:', categoriesData.length);
-        console.log('分类列表:', categoriesData.map(c => c.name));
-        return successResponse(res, categoriesData);
-      }
-
-      // 如果查询失败，返回错误
-      console.error('获取分类失败:', categoriesError);
-      return errorResponse(res, `获取分类失败: ${categoriesError?.message || '未知错误'}`);
-      
-    } catch (error: any) {
-      console.error('获取分类列表失败:', error);
-      return errorResponse(res, `获取分类列表失败: ${error.message}`);
+    if (!categories || categories.length === 0) {
+      logger.warn('未找到任何分类数据');
+      return successResponse(res, []); // 返回空数组而不是错误
     }
-  }
 
-  return errorResponse(res, `不支持的方法: ${req.method}`);
+    logger.info('成功获取分类数据', undefined, { count: categories.length });
+    return successResponse(res, categories);
+
+  } catch (error: any) {
+    logger.error('获取分类列表失败', error);
+
+    // 根据错误类型返回不同的错误码
+    if (error.message?.includes('配置')) {
+      return errorResponse(res, '服务配置错误', ErrorCode.INTERNAL_SERVER_ERROR);
+    }
+    if (error.message?.includes('连接')) {
+      return errorResponse(res, '数据库连接失败', ErrorCode.INTERNAL_SERVER_ERROR);
+    }
+
+    return errorResponse(res, '获取分类列表失败，请稍后重试', ErrorCode.INTERNAL_SERVER_ERROR);
+  }
 }, {
   allowedMethods: ['GET'],
-  requireAuth: false
-}); 
+  requireAuth: false,
+  enableCache: true,
+  cacheTTL: 300 // 缓存5分钟
+});

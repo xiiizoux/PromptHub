@@ -227,19 +227,28 @@ export class SupabaseAdapter {
       }
 
       if (search) {
-        query = query.or(`name.ilike.%${search}%,description.ilike.%${search}%`);
+        // 安全的搜索查询，防止SQL注入
+        const sanitizedSearch = search.replace(/[%_\\]/g, '\\$&'); // 转义特殊字符
+        query = query.or(`name.ilike.%${sanitizedSearch}%,description.ilike.%${sanitizedSearch}%`);
       }
 
       if (userId) {
-        if (isPublic === true) {
-          // 获取用户的公开提示词 + 所有公开的提示词
-          query = query.or(`user_id.eq.${userId},is_public.eq.true`);
-        } else if (isPublic === false) {
-          // 只获取该用户的所有提示词（包括私有的）
-          query = query.eq('user_id', userId);
+        // 验证userId是有效的UUID格式，防止SQL注入
+        const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+        if (uuidRegex.test(userId)) {
+          if (isPublic === true) {
+            // 获取用户的公开提示词 + 所有公开的提示词
+            query = query.or(`user_id.eq.${userId},is_public.eq.true`);
+          } else if (isPublic === false) {
+            // 只获取该用户的所有提示词（包括私有的）
+            query = query.eq('user_id', userId);
+          } else {
+            // 默认情况：获取用户的提示词 + 公开提示词
+            query = query.or(`user_id.eq.${userId},is_public.eq.true`);
+          }
         } else {
-          // 默认情况：获取用户的提示词 + 公开提示词
-          query = query.or(`user_id.eq.${userId},is_public.eq.true`);
+          console.warn('无效的用户ID格式，仅返回公开提示词');
+          query = query.eq('is_public', true);
         }
       } else {
         // 没有用户ID，只能获取公开提示词
@@ -366,7 +375,14 @@ export class SupabaseAdapter {
       }
       
       if (userId) {
-        query = query.or(`user_id.eq.${userId},is_public.eq.true`);
+        // 验证userId是有效的UUID格式，防止SQL注入
+        const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+        if (uuidRegex.test(userId)) {
+          query = query.or(`user_id.eq.${userId},is_public.eq.true`);
+        } else {
+          console.warn('无效的用户ID格式，仅返回公开提示词');
+          query = query.eq('is_public', true);
+        }
       } else {
         query = query.eq('is_public', true);
       }

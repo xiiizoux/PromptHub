@@ -7,19 +7,27 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import { apiHandler, successResponse, errorResponse, ErrorCode } from '../../../lib/api-handler';
 import supabaseAdapter from '../../../lib/supabase-adapter';
 import { UserApi } from '@/types/api';
+import { InputValidator, VALIDATION_PRESETS, DataSanitizer } from '@/lib/input-validator';
+import { logger } from '@/lib/error-handler';
 
 export default apiHandler(async (req: NextApiRequest, res: NextApiResponse) => {
-  if (req.method !== 'POST') {
-    return errorResponse(res, `不支持的方法: ${req.method}`, ErrorCode.BAD_REQUEST);
-  }
-  
   try {
-    const { email, password } = req.body as UserApi.SignInRequest;
-    
-    // 验证请求数据
-    if (!email || !password) {
-      return errorResponse(res, '邮箱和密码是必填项', ErrorCode.BAD_REQUEST);
+    // 使用验证系统
+    const validationRules = [
+      { field: 'email', required: true, type: 'string' as const, maxLength: 255 },
+      { field: 'password', required: true, type: 'string' as const, minLength: 1, maxLength: 128 }
+    ];
+
+    const validation = InputValidator.validate(req.body, validationRules);
+    if (!validation.isValid) {
+      logger.warn('登录输入验证失败', undefined, {
+        errors: validation.errors,
+        email: req.body.email?.substring(0, 3) + '***'
+      });
+      return errorResponse(res, validation.errors.join('; '), ErrorCode.BAD_REQUEST);
     }
+
+    const { email, password } = validation.sanitizedData!;
     
     // 调用Supabase适配器进行登录
     const authResult = await supabaseAdapter.signIn(email, password);

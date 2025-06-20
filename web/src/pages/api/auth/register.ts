@@ -1,34 +1,65 @@
 import { NextApiRequest, NextApiResponse } from 'next';
+import { apiHandler, successResponse, errorResponse, ErrorCode } from '@/lib/api-handler';
+import supabaseAdapter from '@/lib/supabase-adapter';
+import { logger } from '@/lib/error-handler';
+import { InputValidator, VALIDATION_PRESETS } from '@/lib/input-validator';
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  // 只允许POST请求
-  if (req.method !== 'POST') {
-    return res.status(405).json({ success: false, message: '方法不允许' });
-  }
-
-  // 对于实际项目，这里应该调用真实的注册API
-  // 由于MCP Prompt Server可能没有内置的用户注册系统，这里模拟注册过程
+export default apiHandler(async (req: NextApiRequest, res: NextApiResponse) => {
   try {
-    const { username, email, password } = req.body;
+    const { email, password, username } = req.body;
 
-    // 基本验证
-    if (!username || !email || !password) {
-      return res.status(400).json({ success: false, message: '请提供所有必需的字段' });
+    // 使用新的验证系统
+    const validationRules = [
+      VALIDATION_PRESETS.email,
+      VALIDATION_PRESETS.password,
+      { ...VALIDATION_PRESETS.username, required: false } // 用户名可选
+    ];
+
+    const validation = InputValidator.validate(req.body, validationRules);
+    if (!validation.isValid) {
+      logger.warn('注册输入验证失败', undefined, {
+        errors: validation.errors,
+        email: email?.substring(0, 3) + '***' // 只记录邮箱前缀用于调试
+      });
+      return errorResponse(res, validation.errors.join('; '), ErrorCode.BAD_REQUEST);
     }
 
-    // 在实际应用中，这里应该检查用户名和电子邮件是否已存在，并将用户信息保存到数据库
-    // 这里仅做简单模拟
-    if (email === 'admin@example.com') {
-      return res.status(400).json({ success: false, message: '该电子邮件已被注册' });
+    // 使用清理后的数据进行注册
+    const sanitizedData = validation.sanitizedData!;
+    const result = await supabaseAdapter.signUp(
+      sanitizedData.email,
+      sanitizedData.password,
+      sanitizedData.username
+    );
+
+    if (!result.user) {
+      return errorResponse(res, '注册失败，请稍后重试', ErrorCode.INTERNAL_SERVER_ERROR);
     }
 
-    // 返回成功响应
-    return res.status(201).json({
-      success: true,
-      message: '注册成功，请登录',
+    logger.info('用户注册成功', undefined, {
+      userId: result.user.id,
+      email: email.substring(0, 3) + '***'
     });
-  } catch (error) {
-    console.error('注册错误:', error);
-    return res.status(500).json({ success: false, message: '注册过程中发生错误' });
+
+    return successResponse(res, {
+      user: {
+        id: result.user.id,
+        email: result.user.email,
+        username: username
+      },
+      message: '注册成功，请检查邮箱进行验证'
+    });
+
+  } catch (error: any) {
+    logger.error('注册过程中发生错误', error);
+
+    // 处理常见的Supabase错误
+    if (error.message?.includes('already registered')) {
+      return errorResponse(res, '该邮箱已被注册', ErrorCode.BAD_REQUEST);
+    }
+
+    return errorResponse(res, '注册过程中发生错误，请稍后重试', ErrorCode.INTERNAL_SERVER_ERROR);
   }
-}
+}, {
+  allowedMethods: ['POST']
+});
