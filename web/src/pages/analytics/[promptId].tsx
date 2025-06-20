@@ -18,20 +18,46 @@ import {
   BoltIcon,
   PresentationChartLineIcon
 } from '@heroicons/react/24/outline';
-import { getPromptDetails, getPromptPerformance, getPerformanceReport } from '@/lib/api';
+import { getPromptPerformance, getPerformanceReport } from '@/lib/api';
+import { databaseService } from '@/lib/database-service';
 import { PromptDetails, PromptPerformance } from '@/types';
 import QualityAnalysisPanel from '@/components/QualityAnalysisPanel';
 import { formatVersionDisplay } from '@/lib/version-utils';
 
 interface PromptAnalyticsPageProps {
   prompt: PromptDetails;
-  performance: PromptPerformance;
-  report: any;
+  performance: PromptPerformance | null;
+  report: any | null;
 }
 
-export default function PromptAnalyticsPage({ prompt, performance, report }: PromptAnalyticsPageProps) {
+export default function PromptAnalyticsPage({ prompt, performance: initialPerformance, report: initialReport }: PromptAnalyticsPageProps) {
   const router = useRouter();
   const [timeRange, setTimeRange] = useState('all'); // 'all', 'month', 'week', 'day'
+  const [performance, setPerformance] = useState<PromptPerformance | null>(initialPerformance);
+  const [report, setReport] = useState<any | null>(initialReport);
+  const [loading, setLoading] = useState(!initialPerformance || !initialReport);
+
+  // 在客户端加载性能数据
+  useEffect(() => {
+    if (!performance || !report) {
+      const loadData = async () => {
+        try {
+          setLoading(true);
+          const [performanceData, reportData] = await Promise.all([
+            getPromptPerformance(prompt.id),
+            getPerformanceReport(prompt.id)
+          ]);
+          setPerformance(performanceData);
+          setReport(reportData);
+        } catch (error) {
+          console.error('加载性能数据失败:', error);
+        } finally {
+          setLoading(false);
+        }
+      };
+      loadData();
+    }
+  }, [prompt.id, performance, report]);
 
   // 格式化百分比
   const formatPercent = (value: number) => {
@@ -58,6 +84,18 @@ export default function PromptAnalyticsPage({ prompt, performance, report }: Pro
       day: 'numeric' 
     });
   };
+
+  // 如果数据还在加载中，显示加载状态
+  if (loading || !performance) {
+    return (
+      <div className="min-h-screen bg-dark-bg-primary relative overflow-hidden flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-neon-cyan mx-auto mb-4"></div>
+          <p className="text-xl text-gray-300">正在加载性能数据...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-dark-bg-primary relative overflow-hidden">
@@ -714,25 +752,28 @@ export default function PromptAnalyticsPage({ prompt, performance, report }: Pro
 
 export const getServerSideProps: GetServerSideProps = async (context) => {
   const { promptId } = context.params as { promptId: string };
-  
+
   try {
-    // 并行获取提示词详情、性能数据和性能报告
-    const [promptDetails, performanceData, reportData] = await Promise.all([
-      getPromptDetails(promptId),
-      getPromptPerformance(promptId),
-      getPerformanceReport(promptId)
-    ]);
-    
+    // 在服务端直接使用数据库服务获取提示词详情
+    const promptDetails = await databaseService.getPromptByName(promptId);
+
+    if (!promptDetails) {
+      return {
+        notFound: true,
+      };
+    }
+
+    // 性能数据和报告在客户端获取，避免服务端HTTP调用
     return {
       props: {
         prompt: promptDetails,
-        performance: performanceData,
-        report: reportData
+        performance: null, // 将在客户端加载
+        report: null // 将在客户端加载
       },
     };
   } catch (error) {
     console.error(`获取提示词 ${promptId} 分析数据失败:`, error);
-    
+
     return {
       notFound: true,
     };

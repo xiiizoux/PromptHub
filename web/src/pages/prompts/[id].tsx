@@ -44,7 +44,8 @@ import {
   CpuChipIcon
 } from '@heroicons/react/24/outline';
 import { StarIcon as SolidStarIcon } from '@heroicons/react/24/solid';
-import { getPromptDetails, trackPromptUsage } from '@/lib/api';
+import { trackPromptUsage } from '@/lib/api';
+import { databaseService } from '@/lib/database-service';
 import { PromptDetails, PromptExample, PromptVersion } from '@/types';
 import { MODEL_TAGS, getModelTypeLabel } from '@/constants/ai-models';
 import { formatVersionDisplay } from '@/lib/version-utils';
@@ -732,7 +733,8 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
   const { id } = context.params as { id: string };
 
   try {
-    const promptDetails = await getPromptDetails(id);
+    // 在服务端直接使用数据库服务，避免HTTP调用
+    const promptDetails = await databaseService.getPromptByName(id);
 
     if (!promptDetails) {
       return {
