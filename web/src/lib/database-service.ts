@@ -159,16 +159,11 @@ export class DatabaseService {
    */
   async getPromptByName(nameOrId: string, userId?: string): Promise<PromptDetails | null> {
     try {
-      console.log(`[DatabaseService] 开始获取提示词，标识符: ${nameOrId}, 用户ID: ${userId || '未登录'}`);
-
       // 首先获取提示词基本信息
       const prompt = await this.adapter.getPrompt(nameOrId, userId);
       if (!prompt) {
-        console.log(`[DatabaseService] 提示词 ${nameOrId} 不存在或无权限访问`);
         return null;
       }
-
-      console.log(`[DatabaseService] 成功获取提示词基本信息，名称: ${prompt.name}, ID: ${prompt.id}`);
 
       // 然后获取作者信息
       let authorName = '未知用户';
