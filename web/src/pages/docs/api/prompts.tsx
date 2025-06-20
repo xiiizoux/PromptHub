@@ -46,12 +46,67 @@ const PromptsAPIPage: React.FC = () => {
             </p>
           </motion.div>
 
-          {/* API概览 */}
-          <motion.div 
-            className="glass rounded-2xl p-8 border border-neon-cyan/30 mb-8 hover:border-neon-cyan/50 transition-all duration-300"
+          {/* 基础配置 */}
+          <motion.div
+            className="glass rounded-2xl p-8 border border-neon-blue/30 mb-8 hover:border-neon-blue/50 transition-all duration-300"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
+          >
+            <h2 className="text-2xl font-semibold bg-gradient-to-r from-neon-blue to-neon-cyan bg-clip-text text-transparent mb-6">
+              基础配置
+            </h2>
+            <div className="space-y-6">
+              <p className="text-gray-300 leading-relaxed">
+                所有API请求都需要包含认证头部，并使用正确的基础URL。
+              </p>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="cyber-card p-6">
+                  <h3 className="text-lg font-semibold text-neon-green mb-4">🌐 生产环境</h3>
+                  <div className="space-y-3">
+                    <div>
+                      <span className="text-gray-400 text-sm">基础URL:</span>
+                      <code className="block mt-1 p-2 bg-dark-bg-secondary rounded text-neon-cyan font-mono text-sm">
+                        https://prompt-hub.cc/api
+                      </code>
+                    </div>
+                    <div>
+                      <span className="text-gray-400 text-sm">认证头部:</span>
+                      <code className="block mt-1 p-2 bg-dark-bg-secondary rounded text-neon-cyan font-mono text-sm">
+                        X-Api-Key: your-api-key
+                      </code>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="cyber-card p-6">
+                  <h3 className="text-lg font-semibold text-neon-purple mb-4">🔧 本地开发</h3>
+                  <div className="space-y-3">
+                    <div>
+                      <span className="text-gray-400 text-sm">基础URL:</span>
+                      <code className="block mt-1 p-2 bg-dark-bg-secondary rounded text-neon-cyan font-mono text-sm">
+                        http://localhost:9011/api
+                      </code>
+                    </div>
+                    <div>
+                      <span className="text-gray-400 text-sm">认证头部:</span>
+                      <code className="block mt-1 p-2 bg-dark-bg-secondary rounded text-neon-cyan font-mono text-sm">
+                        X-Api-Key: your-api-key
+                      </code>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* API概览 */}
+          <motion.div
+            className="glass rounded-2xl p-8 border border-neon-cyan/30 mb-8 hover:border-neon-cyan/50 transition-all duration-300"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.4 }}
           >
             <h2 className="text-2xl font-semibold bg-gradient-to-r from-neon-cyan to-neon-purple bg-clip-text text-transparent mb-6">
               API概览

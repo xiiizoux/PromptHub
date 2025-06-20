@@ -12,6 +12,10 @@ npm install @modelcontextprotocol/sdk
 # 方式二：直接 HTTP API 调用
 # 无需安装额外SDK，直接使用 HTTP 请求
 curl -X GET "https://mcp.prompt-hub.cc/tools" \\
+  -H "X-Api-Key: your-api-key"
+
+# 本地开发环境
+curl -X GET "http://localhost:9010/tools" \\
   -H "X-Api-Key: your-api-key"`;
 
   const configCode = `{
@@ -25,7 +29,7 @@ curl -X GET "https://mcp.prompt-hub.cc/tools" \\
         async function main() {
           const transport = new StdioClientTransport({
             command: 'curl',
-            args: ['-X', 'POST', 'https://mcp.prompt-hub.cc/mcp'],
+            args: ['-X', 'POST', 'https://mcp.prompt-hub.cc/tools/invoke'],
             env: { MCP_API_KEY: process.env.MCP_API_KEY }
           });
           
@@ -84,7 +88,8 @@ import json
 
 # 配置
 API_KEY = "your-api-key"
-BASE_URL = "https://mcp.prompt-hub.cc"
+BASE_URL = "https://mcp.prompt-hub.cc"  # 生产环境
+# BASE_URL = "http://localhost:9010"    # 本地开发环境
 
 headers = {
     "X-Api-Key": API_KEY,
@@ -105,8 +110,8 @@ store_data = {
 }
 
 response = requests.post(
-    f"{BASE_URL}/tools/call", 
-    headers=headers, 
+    f"{BASE_URL}/tools/quick_store/invoke",
+    headers=headers,
     json=store_data
 )
 
@@ -424,10 +429,10 @@ print("存储结果:", result)`;
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <code className="text-sm text-neon-cyan">MCP_SERVER_URL</code>
-                    <p className="text-xs text-gray-400 mt-1">MCP 服务器地址（HTTP API）</p>
+                    <p className="text-xs text-gray-400 mt-1">MCP 服务器地址</p>
                   </div>
                   <div>
-                    <code className="text-sm text-gray-300">https://your-domain.com:9010</code>
+                    <code className="text-sm text-gray-300">https://mcp.prompt-hub.cc</code>
                   </div>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

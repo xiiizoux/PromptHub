@@ -63,12 +63,13 @@ const PerformanceApiPage: React.FC = () => {
               <div>
                 <h3 className="text-lg font-medium text-gray-900 mb-3">基础统计</h3>
                 <pre className="bg-gray-800 text-white p-4 rounded-lg overflow-auto text-sm">
-{`GET /analytics/prompts/{id}/stats
+{`GET /api/performance/metrics
 
 # 查询参数
-?period=7d           # 时间范围：1d, 7d, 30d, 90d, 1y
-&granularity=day     # 数据粒度：hour, day, week, month
-&metrics=all         # 指标类型：usage,performance,satisfaction,all`}
+?promptId=prompt-123  # 提示词ID（必需）
+&timeRange=7d         # 时间范围：1d, 7d, 30d, 90d, 1y
+&granularity=day      # 数据粒度：hour, day, week, month
+&metrics=all          # 指标类型：usage,performance,satisfaction,all`}
                 </pre>
               </div>
 
@@ -136,14 +137,12 @@ const PerformanceApiPage: React.FC = () => {
               <div>
                 <h3 className="text-lg font-medium text-gray-900 mb-3">多提示词对比</h3>
                 <pre className="bg-gray-800 text-white p-4 rounded-lg overflow-auto text-sm">
-{`POST /analytics/prompts/compare
+{`GET /api/performance/{promptId}
 Content-Type: application/json
 
-{
-  "prompt_ids": ["prompt-123", "prompt-456", "prompt-789"],
-  "period": "30d",
-  "metrics": ["usage", "performance", "satisfaction"]
-}`}
+# 查询参数
+?version=1.0         # 可选：指定版本号
+&includeHistory=true # 可选：包含历史数据`}
                 </pre>
               </div>
 
@@ -636,7 +635,8 @@ from datetime import datetime, timedelta
 class PromptAnalytics:
     def __init__(self, api_key):
         self.api_key = api_key
-        self.base_url = 'https://api.prompthub.com/v1/analytics'
+        self.base_url = 'https://prompt-hub.cc/api/performance'  # 生产环境
+        # self.base_url = 'http://localhost:9011/api/performance'  # 本地开发
         self.headers = {
             'Authorization': f'Bearer {api_key}',
             'Content-Type': 'application/json'

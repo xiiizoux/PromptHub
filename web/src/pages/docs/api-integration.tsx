@@ -52,9 +52,19 @@ const APIIntegrationPage: React.FC = () => {
     }
   ];
 
-  const getPromptsExample = `curl -X GET "https://your-domain.com/api/prompts" \\
-  -H "Authorization: Bearer your-api-key" \\
-  -H "Content-Type: application/json"`;
+  const getPromptsExample = `# 获取提示词列表 - 生产环境
+curl -X GET "https://prompt-hub.cc/api/prompts" \\
+  -H "X-Api-Key: YOUR_API_KEY" \\
+  -H "Content-Type: application/json"
+
+# 本地开发环境
+curl -X GET "http://localhost:9011/api/prompts" \\
+  -H "X-Api-Key: YOUR_API_KEY" \\
+  -H "Content-Type: application/json"
+
+# 带查询参数的请求
+curl -X GET "https://prompt-hub.cc/api/prompts?page=1&limit=10&category=编程" \\
+  -H "X-Api-Key: YOUR_API_KEY"`;
 
   const responseExample = `{
   "success": true,
