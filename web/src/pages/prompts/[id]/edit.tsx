@@ -3,7 +3,8 @@ import { useRouter } from 'next/router';
 import { GetServerSideProps } from 'next';
 import { useForm, Controller } from 'react-hook-form';
 import { motion, AnimatePresence } from 'framer-motion';
-import { updatePrompt, getCategories, getTags, getPromptDetails, Category } from '@/lib/api';
+import { updatePrompt, getCategories, getTags, Category } from '@/lib/api';
+import { databaseService } from '@/lib/database-service';
 import { PromptDetails, PermissionCheck } from '@/types';
 import Link from 'next/link';
 import {
@@ -183,19 +184,7 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
     edit_permission: mapEditPermission(prompt.edit_permission),
   };
   
-  // 添加调试日志以排查问题
-  console.log('编辑页面数据处理结果（一位小数版本方案）:', {
-    原始版本: prompt.version,
-    格式化版本: currentVersionFormatted,
-    最终版本: safePromptData.version,
-    版本类型: typeof safePromptData.version,
-    原始分类: prompt.category,
-    标准化分类: safePromptData.category,
-    原始编辑权限: prompt.edit_permission,
-    映射后编辑权限: safePromptData.edit_permission,
-    权限常量: PERMISSION_LEVELS,
-    映射描述: PERMISSION_LEVEL_DESCRIPTIONS
-  });
+
   
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [variables, setVariables] = useState<string[]>(safePromptData.input_variables);
@@ -233,11 +222,7 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
         const data = await getCategories();
         // 直接使用字符串数组
         setCategories(data);
-        console.log('分类数据加载完成:', {
-          categories: data,
-          currentCategory: safePromptData.category,
-          isCurrentCategoryInList: data.some((cat: string) => cat === safePromptData.category)
-        });
+
       } catch (err) {
         console.error('获取分类失败:', err);
         setCategories([
@@ -305,11 +290,9 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
         // 如果不在列表中，尝试智能匹配
         const matched = matchCategory(currentCategory, categories);
         if (matched) {
-          console.log(`分类智能匹配: "${currentCategory}" -> "${matched}"`);
           setValue('category', matched);
         } else {
           // 如果匹配失败，添加到分类列表中
-          console.log(`添加新分类: "${currentCategory}"`);
           setCategories(prev => [...prev, currentCategory]);
           setValue('category', currentCategory);
         }
@@ -338,20 +321,7 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
     setTags(safePromptData.tags || []);
     setModels(safePromptData.compatible_models || []);
     
-    console.log('前端一次性数据初始化完成:', {
-      promptName: safePromptData.name,
-      category: safePromptData.category,
-      extractedVariables: finalVariables,
-      originalVariables: safePromptData.input_variables,
-      tags: safePromptData.tags,
-      models: safePromptData.compatible_models,
-      content: safePromptData.content ? safePromptData.content.substring(0, 100) + '...' : 'empty',
-      formDefaultValues: {
-        name: safePromptData.name,
-        category: safePromptData.category,
-        description: safePromptData.description
-      }
-    });
+
   }, []); // 空依赖数组，仅执行一次
 
   // 权限检查和作者信息更新
@@ -1470,75 +1440,18 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
   const { id } = context.params!;
   
   try {
-    // 使用Next.js API路由获取提示词详情，这样可以复用前端的API逻辑
-    const baseUrl = `http://localhost:${process.env.FRONTEND_PORT || 9011}`;
-    
-    // 从 Cookie 获取用户认证信息（如果有的话）
-    let authHeaders: Record<string, string> = {};
-    if (context.req.headers.cookie) {
-      authHeaders['Cookie'] = context.req.headers.cookie;
+    // 在服务端直接使用数据库服务，避免HTTP调用
+    const prompt = await databaseService.getPromptByName(id as string);
+
+    if (!prompt) {
+      return {
+        notFound: true,
+      };
     }
-    
-    // 尝试通过API获取提示词详情
-    const apiResponse = await fetch(`${baseUrl}/api/prompts/${encodeURIComponent(id as string)}`, {
-      headers: {
-        'Content-Type': 'application/json',
-        ...authHeaders,
-      },
-    });
-    
-    if (!apiResponse.ok) {
-      throw new Error(`API请求失败: ${apiResponse.status} ${apiResponse.statusText}`);
-    }
-    
-    const result = await apiResponse.json();
-    
-    if (!result.success || !result.prompt) {
-      throw new Error(result.error || '无法获取提示词数据');
-    }
-    
-    const prompt = result.prompt;
-    
-    // 添加详细的调试输出
-    console.log('getServerSideProps - API返回的原始数据:', JSON.stringify(prompt, null, 2));
-    console.log('getServerSideProps - 数据字段检查:', {
-      id: prompt.id,
-      name: prompt.name,
-      category: prompt.category,
-      tags: prompt.tags,
-      input_variables: prompt.input_variables,
-      content: prompt.content || 'empty', // 显示完整内容
-      messages: prompt.messages,
-      contentLength: prompt.content ? prompt.content.length : 0
-    });
-    
-    // 确保数据格式符合PromptDetails类型
-    const promptDetails: PromptDetails = {
-      id: prompt.id,
-      name: prompt.name || id as string,
-      description: prompt.description || '',
-      content: prompt.content || prompt.messages?.[0]?.content || '', // 尝试从messages中提取content
-      category: prompt.category || '通用',
-      tags: Array.isArray(prompt.tags) ? prompt.tags : [],
-      input_variables: Array.isArray(prompt.input_variables) ? prompt.input_variables : [],
-      compatible_models: Array.isArray(prompt.compatible_models) ? prompt.compatible_models : [], // 保持数据原始性
-      template_format: prompt.template_format || 'text',
-      version: typeof prompt.version === 'number' ? prompt.version : 1,
-      author: prompt.author || prompt.user_id || '',
-      is_public: Boolean(prompt.is_public),
-      allow_collaboration: Boolean(prompt.allow_collaboration),
-      edit_permission: prompt.edit_permission === 'owner' ? 'owner_only' as const : 
-                      (prompt.edit_permission || 'owner_only' as const),
-      user_id: prompt.user_id || '',
-      created_at: prompt.created_at || new Date().toISOString(),
-      updated_at: prompt.updated_at || new Date().toISOString(),
-    };
-    
-    console.log('getServerSideProps - 处理后的数据:', JSON.stringify(promptDetails, null, 2));
-    
+
     return {
       props: {
-        prompt: promptDetails,
+        prompt: prompt,
       },
     };
   } catch (error) {
