@@ -181,38 +181,36 @@ export NODE_ENV=production
 # 使用之前设置的STORAGE_TYPE环境变量
 export API_KEY=default-api-key-for-docker
 
-# 直接使用node运行编译后的代码
-echo "启动MCP服务"
+# 启动MCP服务
+echo "启动MCP服务..."
+
 # 检查编译后的文件是否存在
-if [ ! -f "/app/mcp/dist/src/index.js" ]; then
-  echo "错误: 编译后的MCP文件不存在，尝试重新编译..."
-  cd /app/mcp && npm run build
-  if [ ! -f "/app/mcp/dist/src/index.js" ]; then
-    echo "错误: 编译失败，使用tsx直接运行源码"
-    cd /app/mcp && npx tsx src/index.ts > /app/logs/mcp.log 2>&1 &
-  else
-    # 使用正确的路径启动MCP服务 - 修复编译后文件路径
-    cd /app/mcp && node dist/src/index.js > /app/logs/mcp.log 2>&1 &
-  fi
-else
-  # 使用正确的路径启动MCP服务 - 修复编译后文件路径
+if [ -f "/app/mcp/dist/src/index.js" ]; then
+  echo "使用编译后的文件启动MCP服务"
   cd /app/mcp && node dist/src/index.js > /app/logs/mcp.log 2>&1 &
+else
+  echo "编译文件不存在，使用tsx直接运行源码"
+  cd /app/mcp && npx tsx src/index.ts > /app/logs/mcp.log 2>&1 &
 fi
 
 MCP_PID=$!
+echo "MCP_PID=$MCP_PID" > /app/logs/mcp.pid
 
-# 等待服务启动
-echo "等待MCP服务启动 (15秒)..."
-sleep 15
-
-# 检查服务是否还在运行
-if ! kill -0 $MCP_PID 2>/dev/null; then
-  echo "MCP服务进程已终止，启动失败!"
-  # 显示日志以帮助诊断
-  echo "显示MCP日志最后几行:"
-  tail -n 20 /app/logs/mcp.log
-  exit 1
-fi
+# 等待MCP服务启动
+echo "等待MCP服务启动..."
+for i in {1..30}; do
+  if curl -s http://localhost:$MCP_PORT/api/health > /dev/null 2>&1; then
+    echo "✅ MCP服务启动成功"
+    break
+  fi
+  if [ $i -eq 30 ]; then
+    echo "❌ MCP服务启动超时"
+    echo "显示MCP日志:"
+    tail -n 20 /app/logs/mcp.log
+    exit 1
+  fi
+  sleep 2
+done
 
 # ====== 启动Web服务 ======
 echo "正在启动Web服务 (端口: $WEB_PORT)..."
@@ -221,28 +219,32 @@ cd /app/web
 
 # 检查构建文件是否存在
 if [ ! -d "/app/web/.next" ]; then
-  echo "错误: Web应用构建文件不存在，尝试重新构建..."
-  cd /app/web && npm run build
-fi
-
-# 使用环境变量启动Web服务
-echo "启动Next.js Web服务"
-# 使用next start命令启动Next.js应用
-NODE_ENV=production PORT=$WEB_PORT npx next start > /app/logs/web.log 2>&1 &
-WEB_PID=$!
-
-# 等待Web服务启动
-echo "等待Web服务启动 (10秒)..."
-sleep 10
-
-# 检查Web服务是否还在运行
-if ! kill -0 $WEB_PID 2>/dev/null; then
-  echo "Web服务进程已终止，启动失败!"
-  # 显示日志以帮助诊断
-  echo "显示Web日志最后几行:"
-  tail -n 20 /app/logs/web.log
+  echo "❌ Web应用构建文件不存在"
+  echo "请确保在构建Docker镜像时Web应用已正确构建"
   exit 1
 fi
+
+# 启动Next.js Web服务
+echo "启动Next.js Web服务..."
+NODE_ENV=production PORT=$WEB_PORT npx next start > /app/logs/web.log 2>&1 &
+WEB_PID=$!
+echo "WEB_PID=$WEB_PID" > /app/logs/web.pid
+
+# 等待Web服务启动
+echo "等待Web服务启动..."
+for i in {1..30}; do
+  if curl -s http://localhost:$WEB_PORT > /dev/null 2>&1; then
+    echo "✅ Web服务启动成功"
+    break
+  fi
+  if [ $i -eq 30 ]; then
+    echo "❌ Web服务启动超时"
+    echo "显示Web日志:"
+    tail -n 20 /app/logs/web.log
+    exit 1
+  fi
+  sleep 2
+done
 
 # 显示成功信息
 echo "===================================="

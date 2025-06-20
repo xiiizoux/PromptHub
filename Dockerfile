@@ -32,22 +32,18 @@ COPY mcp/package*.json ./mcp/
 COPY web/package*.json ./web/
 COPY supabase/package*.json ./supabase/
 
-# 安装依赖
-RUN npm install
+# 安装根目录依赖
+RUN npm install --only=production
 
 # 安装MCP依赖
-RUN cd mcp && npm install && \
-    npm install --save-dev dotenv-cli@latest tsx@latest typescript@latest && \
-    npm install --save dotenv@latest
+RUN cd mcp && npm ci --only=production && \
+    npm install --save-dev tsx@latest dotenv-cli@latest typescript@latest
 
 # 安装Web依赖
-RUN cd web && NODE_OPTIONS="--max-old-space-size=4096" npm install
+RUN cd web && NODE_OPTIONS="--max-old-space-size=4096" npm ci --only=production
 
-# 安装Supabase依赖
-RUN cd supabase && npm install
-
-# 全局安装TypeScript
-RUN npm install -g typescript
+# 安装Supabase依赖（如果需要）
+RUN cd supabase && npm ci --only=production || echo "Supabase依赖安装跳过"
 
 # 复制所有项目文件
 COPY . .

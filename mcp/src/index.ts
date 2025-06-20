@@ -19,13 +19,27 @@ export async function startMCPServer() {
     const app = express();
     
     // 配置中间件
-    app.use(cors({
-      origin: '*',
-      methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-      credentials: true,
-      allowedHeaders: ['Content-Type', 'Authorization', 'X-Api-Key', 'Server-Key']
+    if (config.security.enableCors) {
+      app.use(cors({
+        origin: config.security.corsOrigin,
+        methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+        credentials: true,
+        allowedHeaders: ['Content-Type', 'Authorization', 'X-Api-Key', 'Server-Key', 'X-Request-ID']
+      }));
+    }
+
+    app.use(express.json({
+      limit: '10mb',
+      verify: (req, res, buf) => {
+        // 验证JSON格式，防止恶意请求
+        try {
+          JSON.parse(buf.toString());
+        } catch (e) {
+          res.status(400).json({ success: false, error: 'Invalid JSON format' });
+          return;
+        }
+      }
     }));
-    app.use(express.json({ limit: '10mb' }));
     
     // 根路径
     app.get('/', (req, res) => {

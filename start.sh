@@ -89,34 +89,72 @@ check_ports() {
 # 启动服务
 start_services() {
     echo -e "${YELLOW}🚀 启动服务...${NC}"
-    
+
     # 创建日志目录
     mkdir -p logs
-    
+
     # 启动MCP服务（后台运行）
     echo -e "${YELLOW}   启动MCP服务 (端口: 9010)...${NC}"
-    
-    # 检查关键依赖是否存在
+
     cd "$PROJECT_DIR/mcp"
-    if [ ! -f "./node_modules/.bin/dotenv" ] || [ ! -f "./node_modules/.bin/tsx" ]; then
-        echo -e "${YELLOW}   检测到关键依赖缺失，尝试安装...${NC}"
-        npm install --save-dev dotenv-cli@latest tsx@latest
-        npm install --save dotenv@latest
+
+    # 检查并安装关键依赖
+    if [ ! -f "./node_modules/.bin/tsx" ]; then
+        echo -e "${YELLOW}   安装关键依赖...${NC}"
+        npm install --save-dev tsx@latest dotenv-cli@latest
     fi
-    
-    # 使用npm run start命令启动MCP服务
-    npm run start > ../logs/mcp.log 2>&1 &
+
+    # 检查环境变量文件
+    if [ ! -f "../.env" ]; then
+        echo -e "${YELLOW}   警告: 未找到.env文件，使用默认配置${NC}"
+    fi
+
+    # 启动MCP服务，使用更健壮的启动方式
+    echo -e "${YELLOW}   启动MCP服务进程...${NC}"
+    if [ -f "dist/src/index.js" ]; then
+        # 使用编译后的文件
+        NODE_ENV=production node dist/src/index.js > ../logs/mcp.log 2>&1 &
+    else
+        # 使用tsx直接运行源码
+        npm run start > ../logs/mcp.log 2>&1 &
+    fi
+
+    MCP_PID=$!
+    echo "MCP_PID=$MCP_PID" > ../logs/mcp.pid
+
     cd "$PROJECT_DIR"
-    
+
     # 启动Web服务（生产模式，后台运行）
-    echo -e "${YELLOW}   启动Web服务生产模式 (端口: 9011)...${NC}"
-    cd web && NODE_ENV=production FRONTEND_PORT=9011 npm run start > ../logs/web.log 2>&1 &
+    echo -e "${YELLOW}   启动Web服务 (端口: 9011)...${NC}"
+    cd web
+
+    # 检查Web构建文件
+    if [ ! -d ".next" ]; then
+        echo -e "${YELLOW}   Web应用未构建，请先运行 ./build.sh${NC}"
+        return 1
+    fi
+
+    NODE_ENV=production FRONTEND_PORT=9011 npm run start > ../logs/web.log 2>&1 &
+    WEB_PID=$!
+    echo "WEB_PID=$WEB_PID" > ../logs/web.pid
+
     cd "$PROJECT_DIR"
-    
+
     # 等待服务启动
     echo -e "${YELLOW}   等待服务启动...${NC}"
-    sleep 8
-    
+    sleep 10
+
+    # 检查进程是否还在运行
+    if ! kill -0 $MCP_PID 2>/dev/null; then
+        echo -e "${RED}   MCP服务启动失败${NC}"
+        return 1
+    fi
+
+    if ! kill -0 $WEB_PID 2>/dev/null; then
+        echo -e "${RED}   Web服务启动失败${NC}"
+        return 1
+    fi
+
     return 0
 }
 

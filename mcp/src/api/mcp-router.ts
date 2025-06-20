@@ -28,14 +28,14 @@ const getMcpServerInfo = () => ({
   ]
 });
 import { authenticateRequest, optionalAuthMiddleware } from './auth-middleware.js';
-import { 
+import {
   intelligentPromptSelectionTool,
   intelligentPromptStorageTool,
   externalAIAnalysisTool,
   handleIntelligentPromptSelection,
   handleIntelligentPromptStorage,
   handleExternalAIAnalysis
-} from '../tools/intelligent-tools.js';
+} from '../tools/intelligent-new-style.js';
 import {
   quickStoreTool,
   smartStoreTool,
@@ -43,15 +43,15 @@ import {
   handleQuickStore,
   handleSmartStore,
   handleAnalyzeAndStore
-} from '../tools/auto-storage-tools.js';
+} from '../tools/auto-storage-new-style.js';
 import {
-  enhancedSearchTool,
-  promptSelectionTool,
-  quickAccessTool,
-  handleEnhancedSearch,
-  handlePromptSelection,
-  handleQuickAccess
-} from '../tools/enhanced-search-tools.js';
+  advancedSearchTool as enhancedSearchTool,
+  multiFieldSearchTool as promptSelectionTool,
+  smartFilterTool as quickAccessTool,
+  handleAdvancedSearch as handleEnhancedSearch,
+  handleMultiFieldSearch as handlePromptSelection,
+  handleSmartFilter as handleQuickAccess
+} from '../tools/enhanced-search-new-style.js';
 import {
   unifiedSearchEngineToolDef,
   quickSearchToolDef,

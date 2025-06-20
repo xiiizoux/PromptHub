@@ -1,27 +1,92 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { config } from '../config.js';
 import crypto from 'crypto';
-import { 
-  Prompt, 
-  PromptVersion, 
-  StorageAdapter, 
-  User, 
-  AuthResponse, 
+import logger, { logPerformanceEvent } from '../utils/logger.js';
+import { createEnhancedError, ErrorType, ErrorSeverity } from '../shared/error-handler.js';
+import {
+  Prompt,
+  PromptVersion,
+  StorageAdapter,
+  User,
+  AuthResponse,
   PromptFilters,
   PaginatedResponse,
   ApiKey
 } from '../types.js';
 
+// 连接池配置
+interface ConnectionConfig {
+  maxRetries: number;
+  retryDelay: number;
+  timeout: number;
+  poolSize: number;
+}
+
+// 查询缓存
+interface QueryCache {
+  [key: string]: {
+    data: any;
+    timestamp: number;
+    ttl: number;
+  };
+}
+
 export class SupabaseAdapter implements StorageAdapter {
   private supabase: SupabaseClient;
+  private adminSupabase?: SupabaseClient;
+  private connectionConfig: ConnectionConfig;
+  private queryCache: QueryCache = {};
+  private readonly CACHE_TTL = 5 * 60 * 1000; // 5分钟缓存
 
   constructor() {
-    // 确保使用正确的配置访问Supabase URL和匿名密钥
+    // 验证配置
     if (!config.supabase?.url || !config.supabase?.anonKey) {
-      throw new Error('Supabase URL and anon key are required for Supabase adapter');
+      throw createEnhancedError(
+        'Supabase URL and anon key are required for Supabase adapter',
+        ErrorType.STORAGE,
+        ErrorSeverity.CRITICAL,
+        { configKeys: Object.keys(config.supabase || {}) }
+      );
     }
-    
-    this.supabase = createClient(config.supabase.url, config.supabase.anonKey);
+
+    // 连接配置
+    this.connectionConfig = {
+      maxRetries: 3,
+      retryDelay: 1000,
+      timeout: 30000,
+      poolSize: 10
+    };
+
+    // 创建客户端连接
+    this.supabase = createClient(config.supabase.url, config.supabase.anonKey, {
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false
+      },
+      db: {
+        schema: 'public'
+      },
+      global: {
+        headers: {
+          'x-application-name': 'mcp-prompt-server'
+        }
+      }
+    });
+
+    // 如果有服务密钥，创建管理员客户端
+    if (config.supabase.serviceKey) {
+      this.adminSupabase = createClient(config.supabase.url, config.supabase.serviceKey, {
+        auth: {
+          persistSession: false,
+          autoRefreshToken: false
+        }
+      });
+    }
+
+    logger.info('Supabase adapter initialized', {
+      url: config.supabase.url,
+      hasServiceKey: !!config.supabase.serviceKey
+    });
   }
   
   /**
@@ -32,26 +97,196 @@ export class SupabaseAdapter implements StorageAdapter {
     return 'supabase';
   }
 
+  /**
+   * 执行带重试的查询
+   */
+  private async executeWithRetry<T>(
+    operation: () => Promise<{ data: T; error: any }>,
+    operationName: string,
+    context?: Record<string, any>
+  ): Promise<T> {
+    const startTime = Date.now();
+    let lastError: any;
+
+    for (let attempt = 1; attempt <= this.connectionConfig.maxRetries; attempt++) {
+      try {
+        const { data, error } = await operation();
+
+        if (error) {
+          lastError = error;
+
+          // 判断是否应该重试
+          if (this.shouldRetry(error) && attempt < this.connectionConfig.maxRetries) {
+            logger.warn(`Supabase operation failed, retrying (${attempt}/${this.connectionConfig.maxRetries})`, {
+              operation: operationName,
+              error: error.message,
+              attempt,
+              context
+            });
+
+            await this.delay(this.connectionConfig.retryDelay * attempt);
+            continue;
+          }
+
+          // 记录错误并抛出
+          const enhancedError = createEnhancedError(
+            `${operationName} failed: ${error.message}`,
+            this.mapErrorType(error),
+            this.mapErrorSeverity(error),
+            { ...context, attempt, supabaseError: error }
+          );
+
+          logger.error('Supabase operation failed', {
+            operation: operationName,
+            error: error.message,
+            code: error.code,
+            details: error.details,
+            context
+          });
+
+          throw enhancedError;
+        }
+
+        // 记录性能
+        const duration = Date.now() - startTime;
+        logPerformanceEvent(operationName, duration, { attempt, context });
+
+        return data;
+
+      } catch (error) {
+        lastError = error;
+
+        if (attempt < this.connectionConfig.maxRetries) {
+          logger.warn(`Supabase operation exception, retrying (${attempt}/${this.connectionConfig.maxRetries})`, {
+            operation: operationName,
+            error: error.message,
+            attempt
+          });
+
+          await this.delay(this.connectionConfig.retryDelay * attempt);
+          continue;
+        }
+
+        break;
+      }
+    }
+
+    throw lastError;
+  }
+
+  /**
+   * 判断错误是否应该重试
+   */
+  private shouldRetry(error: any): boolean {
+    // 网络错误、超时错误、临时服务器错误应该重试
+    const retryableCodes = ['PGRST301', 'PGRST302', '08000', '08003', '08006'];
+    const retryableMessages = ['network', 'timeout', 'connection', 'temporary'];
+
+    if (retryableCodes.includes(error.code)) {
+      return true;
+    }
+
+    const errorMessage = (error.message || '').toLowerCase();
+    return retryableMessages.some(msg => errorMessage.includes(msg));
+  }
+
+  /**
+   * 映射Supabase错误到内部错误类型
+   */
+  private mapErrorType(error: any): ErrorType {
+    if (error.code === 'PGRST116') return ErrorType.NOT_FOUND;
+    if (error.code === 'PGRST301') return ErrorType.AUTHENTICATION;
+    if (error.code === 'PGRST302') return ErrorType.AUTHORIZATION;
+    if (error.message?.includes('network')) return ErrorType.NETWORK;
+    return ErrorType.STORAGE;
+  }
+
+  /**
+   * 映射错误严重程度
+   */
+  private mapErrorSeverity(error: any): ErrorSeverity {
+    if (error.code === 'PGRST116') return ErrorSeverity.LOW; // Not found
+    if (error.code?.startsWith('08')) return ErrorSeverity.HIGH; // Connection errors
+    if (error.message?.includes('timeout')) return ErrorSeverity.MEDIUM;
+    return ErrorSeverity.MEDIUM;
+  }
+
+  /**
+   * 延迟函数
+   */
+  private delay(ms: number): Promise<void> {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+  /**
+   * 缓存查询结果
+   */
+  private getCachedResult<T>(cacheKey: string): T | null {
+    const cached = this.queryCache[cacheKey];
+    if (cached && Date.now() - cached.timestamp < cached.ttl) {
+      return cached.data;
+    }
+    return null;
+  }
+
+  /**
+   * 设置缓存
+   */
+  private setCachedResult<T>(cacheKey: string, data: T, ttl: number = this.CACHE_TTL): void {
+    this.queryCache[cacheKey] = {
+      data,
+      timestamp: Date.now(),
+      ttl
+    };
+  }
+
+  /**
+   * 清理过期缓存
+   */
+  private cleanupCache(): void {
+    const now = Date.now();
+    Object.keys(this.queryCache).forEach(key => {
+      const cached = this.queryCache[key];
+      if (now - cached.timestamp > cached.ttl) {
+        delete this.queryCache[key];
+      }
+    });
+  }
+
   // ========= 基本提示词管理 =========
   
   async getCategories(): Promise<string[]> {
+    const cacheKey = 'categories';
+
+    // 检查缓存
+    const cached = this.getCachedResult<string[]>(cacheKey);
+    if (cached) {
+      return cached;
+    }
+
     try {
-      // 获取所有分类（从prompts表的category字段中提取唯一值）
-      const { data, error } = await this.supabase
-        .from('prompts')
-        .select('category')
-        .order('category');
+      const data = await this.executeWithRetry(
+        () => this.supabase
+          .from('prompts')
+          .select('category')
+          .not('category', 'is', null)
+          .order('category'),
+        'getCategories'
+      );
 
-      if (error) {
-        console.error('获取分类失败:', error);
-        return [];
-      }
+      // 提取唯一分类并过滤空值
+      const categories = Array.from(new Set(
+        data
+          .map(item => item.category)
+          .filter(category => category && category.trim())
+      )).sort();
 
-      // 提取唯一分类
-      const categories = Array.from(new Set(data.map(item => item.category)));
+      // 缓存结果
+      this.setCachedResult(cacheKey, categories);
+
       return categories;
-    } catch (err) {
-      console.error('获取分类时出错:', err);
+    } catch (error) {
+      logger.error('获取分类失败', { error: error.message });
       return [];
     }
   }
@@ -61,62 +296,98 @@ export class SupabaseAdapter implements StorageAdapter {
    * @returns 标签列表
    */
   async getTags(): Promise<string[]> {
+    const cacheKey = 'tags';
+
+    // 检查缓存
+    const cached = this.getCachedResult<string[]>(cacheKey);
+    if (cached) {
+      return cached;
+    }
+
     try {
-      // 获取所有提示词的标签
-      const { data, error } = await this.supabase
-        .from('prompts')
-        .select('tags');
+      const data = await this.executeWithRetry(
+        () => this.supabase
+          .from('prompts')
+          .select('tags')
+          .not('tags', 'is', null),
+        'getTags'
+      );
 
-      if (error) {
-        console.error('获取标签失败:', error);
-        return [];
-      }
+      // 提取所有标签并去重，过滤空值
+      const allTags = data
+        .flatMap(item => item.tags || [])
+        .filter(tag => tag && typeof tag === 'string' && tag.trim())
+        .map(tag => tag.trim());
 
-      // 提取所有标签并去重
-      const allTags = data.flatMap(item => item.tags || []);
-      const uniqueTags = Array.from(new Set(allTags));
-      return uniqueTags.sort(); // 按字母顺序排序
-    } catch (err) {
-      console.error('获取标签时出错:', err);
+      const uniqueTags = Array.from(new Set(allTags)).sort();
+
+      // 缓存结果
+      this.setCachedResult(cacheKey, uniqueTags);
+
+      return uniqueTags;
+    } catch (error) {
+      logger.error('获取标签失败', { error: error.message });
       return [];
     }
   }
   
   async getPromptsByCategory(category: string, userId?: string, includePublic: boolean = true): Promise<Prompt[]> {
+    // 构建缓存键
+    const cacheKey = `prompts_by_category_${category}_${userId || 'anonymous'}_${includePublic}`;
+
+    // 检查缓存（较短的缓存时间，因为数据可能经常变化）
+    const cached = this.getCachedResult<Prompt[]>(cacheKey);
+    if (cached) {
+      return cached;
+    }
+
     try {
-      let query = this.supabase
-        .from('prompts')
-        .select('*')
-        .eq('category', category)
-        .order('created_at', { ascending: false });
-
-      // 如果提供了用户ID，添加访问控制筛选
-      if (userId) {
-        if (includePublic) {
-          // 用户自己的提示词 + 公开提示词
-          query = query.or(`user_id.eq.${userId},is_public.eq.true`);
-        } else {
-          // 只查询用户自己的提示词
-          query = query.eq('user_id', userId);
-        }
-      } else if (!includePublic) {
-        // 如果没有用户ID且不包括公开内容，返回空
-        return [];
-      } else {
-        // 没有用户ID时只返回公开内容
-        query = query.eq('is_public', true);
-      }
-
-      const { data, error } = await query;
-
-      if (error) {
-        console.error('按分类获取提示词失败:', error);
+      // 如果没有用户ID且不包括公开内容，直接返回空
+      if (!userId && !includePublic) {
         return [];
       }
 
-      return data || [];
-    } catch (err) {
-      console.error('按分类获取提示词时出错:', err);
+      const data = await this.executeWithRetry(
+        () => {
+          let query = this.supabase
+            .from('prompts')
+            .select('*')
+            .eq('category', category)
+            .order('created_at', { ascending: false });
+
+          // 添加访问控制筛选
+          if (userId) {
+            if (includePublic) {
+              // 用户自己的提示词 + 公开提示词
+              query = query.or(`user_id.eq.${userId},is_public.eq.true`);
+            } else {
+              // 只查询用户自己的提示词
+              query = query.eq('user_id', userId);
+            }
+          } else {
+            // 没有用户ID时只返回公开内容
+            query = query.eq('is_public', true);
+          }
+
+          return query;
+        },
+        'getPromptsByCategory',
+        { category, userId, includePublic }
+      );
+
+      const result = data || [];
+
+      // 缓存结果（较短的缓存时间）
+      this.setCachedResult(cacheKey, result, 2 * 60 * 1000); // 2分钟缓存
+
+      return result;
+    } catch (error) {
+      logger.error('按分类获取提示词失败', {
+        error: error.message,
+        category,
+        userId,
+        includePublic
+      });
       return [];
     }
   }
