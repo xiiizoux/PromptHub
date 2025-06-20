@@ -76,8 +76,18 @@ const formatDate = (dateString?: string) => {
 };
 
 const PromptCard: React.FC<PromptCardProps> = React.memo(({ prompt }) => {
+  // 调试信息
+  console.log('[PromptCard] 接收到的提示词数据:', {
+    id: prompt.id,
+    name: prompt.name,
+    hasId: !!prompt.id,
+    idType: typeof prompt.id,
+    idLength: prompt.id?.length
+  });
+
   // 如果没有id，不渲染卡片
   if (!prompt.id) {
+    console.warn('[PromptCard] 提示词缺少ID，跳过渲染:', prompt.name);
     return null;
   }
 

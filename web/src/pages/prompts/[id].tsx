@@ -733,6 +733,9 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
 
   try {
     console.log(`[getServerSideProps] 尝试获取提示词详情，ID: ${id}`);
+    console.log(`[getServerSideProps] ID类型: ${typeof id}, 长度: ${id?.length}`);
+    console.log(`[getServerSideProps] 是否为UUID格式: ${/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)}`);
+
     const promptDetails = await getPromptDetails(id);
 
     if (!promptDetails) {
@@ -742,7 +745,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       };
     }
 
-    console.log(`[getServerSideProps] 成功获取提示词详情，名称: ${promptDetails.name}`);
+    console.log(`[getServerSideProps] 成功获取提示词详情，名称: ${promptDetails.name}, ID: ${promptDetails.id}`);
 
     return {
       props: {
@@ -751,6 +754,10 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     };
   } catch (error) {
     console.error(`[getServerSideProps] 获取提示词 ${id} 详情失败:`, error);
+    console.error(`[getServerSideProps] 错误详情:`, {
+      message: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined
+    });
 
     return {
       notFound: true,

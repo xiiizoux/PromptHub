@@ -4,7 +4,7 @@
 
 // 提示词基本信息
 export interface PromptInfo {
-  id?: string;                            // 添加id字段作为可选属性
+  id: string;                             // id字段是必需的
   name: string;
   description: string;
   category?: string;
