@@ -677,10 +677,14 @@ const QuickTemplates: React.FC<{
           </svg>
         </div>
         <input
-          type="text"
+          id="writing-assistant-search"
+          name="writingAssistantSearch"
+          type="search"
           placeholder="搜索模板..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
+          autoComplete="off"
+          aria-label="搜索写作模板"
           className="w-full pl-10 pr-10 py-2 bg-dark-bg-secondary/50 border border-gray-600/30 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-neon-cyan/50 focus:border-neon-cyan/50 transition-all text-sm"
         />
         {searchQuery && (

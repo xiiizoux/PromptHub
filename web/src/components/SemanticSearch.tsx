@@ -233,7 +233,9 @@ export const SemanticSearch: React.FC<SemanticSearchProps> = ({
           
           <input
             ref={searchInputRef}
-            type="text"
+            id="semantic-search-input"
+            name="search"
+            type="search"
             value={query}
             onChange={(e) => {
               setQuery(e.target.value);
@@ -242,6 +244,8 @@ export const SemanticSearch: React.FC<SemanticSearchProps> = ({
             onFocus={() => setShowSuggestionDropdown(true)}
             onKeyDown={handleKeyDown}
             placeholder={placeholder}
+            autoComplete="off"
+            aria-label="搜索提示词"
             className={`w-full pl-12 pr-12 py-4 rounded-xl glass border transition-all duration-300 ${
               semanticMode
                 ? 'border-neon-cyan/30 focus:border-neon-cyan/60'

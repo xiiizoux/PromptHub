@@ -427,10 +427,14 @@ const ExpandedTemplateLibrary: React.FC = () => {
           <div className="flex-1 relative">
             <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
             <input
-              type="text"
+              id="template-search-input"
+              name="templateSearch"
+              type="search"
               placeholder={userLevel === 'beginner' ? '搜索您需要的模板...' : '搜索模板或功能...'}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
+              autoComplete="off"
+              aria-label="搜索模板"
               className="w-full pl-10 pr-4 py-2 bg-dark-bg-secondary border border-gray-700 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-neon-cyan focus:border-transparent"
             />
           </div>
@@ -439,11 +443,14 @@ const ExpandedTemplateLibrary: React.FC = () => {
           <div className="flex gap-3">
             {/* 分类筛选 */}
             <select
+              id="category-filter"
+              name="categoryFilter"
               value={selectedCategory}
               onChange={(e) => {
                 setSelectedCategory(e.target.value);
                 setSelectedSubcategory('all');
               }}
+              aria-label="选择分类"
               className="bg-dark-bg-secondary border border-gray-700 text-white rounded-lg px-3 py-2 focus:ring-2 focus:ring-neon-cyan focus:border-transparent"
             >
               <option value="all">所有分类</option>
@@ -457,8 +464,11 @@ const ExpandedTemplateLibrary: React.FC = () => {
             {/* 子分类筛选 */}
             {selectedCategory !== 'all' && (
               <select
+                id="subcategory-filter"
+                name="subcategoryFilter"
                 value={selectedSubcategory}
                 onChange={(e) => setSelectedSubcategory(e.target.value)}
+                aria-label="选择子分类"
                 className="bg-dark-bg-secondary border border-gray-700 text-white rounded-lg px-3 py-2 focus:ring-2 focus:ring-neon-cyan focus:border-transparent"
               >
                 <option value="all">所有子类</option>
@@ -474,8 +484,11 @@ const ExpandedTemplateLibrary: React.FC = () => {
 
             {/* 难度筛选 */}
             <select
+              id="difficulty-filter"
+              name="difficultyFilter"
               value={selectedDifficulty}
               onChange={(e) => setSelectedDifficulty(e.target.value)}
+              aria-label="选择难度"
               className="bg-dark-bg-secondary border border-gray-700 text-white rounded-lg px-3 py-2 focus:ring-2 focus:ring-neon-cyan focus:border-transparent"
             >
               <option value="all">所有难度</option>
@@ -486,8 +499,11 @@ const ExpandedTemplateLibrary: React.FC = () => {
 
             {/* 排序 */}
             <select
+              id="sort-filter"
+              name="sortFilter"
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as any)}
+              aria-label="选择排序方式"
               className="bg-dark-bg-secondary border border-gray-700 text-white rounded-lg px-3 py-2 focus:ring-2 focus:ring-neon-cyan focus:border-transparent"
             >
               <option value="popular">最受欢迎</option>

@@ -156,14 +156,24 @@ export class DatabaseService {
 
   /**
    * 根据名称或ID获取提示词详情
+   * 支持通过UUID或名称查找提示词
    */
   async getPromptByName(nameOrId: string, userId?: string): Promise<PromptDetails | null> {
     try {
+      console.log(`[DatabaseService] 开始获取提示词，标识符: ${nameOrId}, 用户ID: ${userId}`);
+
+      // 检测是否为UUID格式
+      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(nameOrId);
+      console.log(`[DatabaseService] 标识符类型: ${isUuid ? 'UUID' : 'Name'}`);
+
       // 首先获取提示词基本信息
       const prompt = await this.adapter.getPrompt(nameOrId, userId);
       if (!prompt) {
+        console.log(`[DatabaseService] 未找到提示词，标识符: ${nameOrId}`);
         return null;
       }
+
+      console.log(`[DatabaseService] 找到提示词: ${prompt.name} (ID: ${prompt.id})`);
 
       // 然后获取作者信息
       let authorName = '未知用户';

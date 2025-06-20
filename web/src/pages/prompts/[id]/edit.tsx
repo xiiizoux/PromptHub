@@ -1438,16 +1438,22 @@ export default withAuth(EditPromptPage);
 
 export const getServerSideProps: GetServerSideProps = async (context) => {
   const { id } = context.params!;
-  
+
   try {
+    console.log(`[Edit getServerSideProps] 获取提示词详情，ID: ${id}`);
+
     // 在服务端直接使用数据库服务，避免HTTP调用
+    // 注意：getPromptByName 方法实际上支持通过ID或name查找
     const prompt = await databaseService.getPromptByName(id as string);
 
     if (!prompt) {
+      console.log(`[Edit getServerSideProps] 未找到提示词，ID: ${id}`);
       return {
         notFound: true,
       };
     }
+
+    console.log(`[Edit getServerSideProps] 成功获取提示词: ${prompt.name} (ID: ${prompt.id})`);
 
     return {
       props: {
@@ -1455,10 +1461,10 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       },
     };
   } catch (error) {
-    console.error('获取提示词详情失败:', error);
-    
+    console.error(`[Edit getServerSideProps] 获取提示词详情失败，ID: ${id}`, error);
+
     return {
       notFound: true,
     };
   }
-}; 
+};

@@ -509,6 +509,8 @@ const CreateTestModal: React.FC<CreateTestModalProps> = ({
                 <div className="space-y-3">
                   <h5 className="text-sm font-medium text-neon-pink">版本B（实验组）</h5>
                   <input
+                    id="variant-b-name"
+                    name="variant_b_name"
                     type="text"
                     value={formData.variant_b.name}
                     onChange={(e) => setFormData({
@@ -519,6 +521,8 @@ const CreateTestModal: React.FC<CreateTestModalProps> = ({
                     placeholder="版本名称"
                   />
                   <textarea
+                    id="variant-b-description"
+                    name="variant_b_description"
                     value={formData.variant_b.description}
                     onChange={(e) => setFormData({
                       ...formData,

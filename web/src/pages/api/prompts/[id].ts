@@ -103,12 +103,18 @@ export default apiHandler(async (req: NextApiRequest, res: NextApiResponse, user
 
 async function getPrompt(req: NextApiRequest, res: NextApiResponse, id: string, userId?: string) {
   try {
+    console.log(`[API getPrompt] 获取提示词详情，ID: ${id}, 用户ID: ${userId}`);
+
     // 使用数据库服务获取提示词详情
+    // 注意：getPromptByName 方法实际上支持通过ID或name查找
     const prompt = await databaseService.getPromptByName(id, userId);
 
     if (!prompt) {
+      console.log(`[API getPrompt] 未找到提示词，ID: ${id}`);
       return errorResponse(res, '未找到指定的提示词', ErrorCode.NOT_FOUND);
     }
+
+    console.log(`[API getPrompt] 成功获取提示词: ${prompt.name} (ID: ${prompt.id})`);
 
     // TODO: 增加查看次数和记录使用历史的功能可以在这里添加
     // 目前先返回基本的提示词信息
@@ -117,6 +123,7 @@ async function getPrompt(req: NextApiRequest, res: NextApiResponse, id: string, 
 
     return successResponse(res, { prompt });
   } catch (error: any) {
+    console.error(`[API getPrompt] 获取提示词失败，ID: ${id}`, error);
     logger.error('获取提示词失败', error, { promptId: id, userId });
     return errorResponse(res, '获取提示词失败', ErrorCode.INTERNAL_SERVER_ERROR);
   }

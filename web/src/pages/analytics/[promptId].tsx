@@ -754,14 +754,20 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
   const { promptId } = context.params as { promptId: string };
 
   try {
+    console.log(`[Analytics getServerSideProps] 获取提示词详情，ID: ${promptId}`);
+
     // 在服务端直接使用数据库服务获取提示词详情
+    // 注意：getPromptByName 方法实际上支持通过ID或name查找
     const promptDetails = await databaseService.getPromptByName(promptId);
 
     if (!promptDetails) {
+      console.log(`[Analytics getServerSideProps] 未找到提示词，ID: ${promptId}`);
       return {
         notFound: true,
       };
     }
+
+    console.log(`[Analytics getServerSideProps] 成功获取提示词: ${promptDetails.name} (ID: ${promptDetails.id})`);
 
     // 性能数据和报告在客户端获取，避免服务端HTTP调用
     return {
@@ -772,7 +778,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       },
     };
   } catch (error) {
-    console.error(`获取提示词 ${promptId} 分析数据失败:`, error);
+    console.error(`[Analytics getServerSideProps] 获取提示词 ${promptId} 分析数据失败:`, error);
 
     return {
       notFound: true,
