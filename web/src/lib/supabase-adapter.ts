@@ -82,6 +82,23 @@ export function createSupabaseClient(): SupabaseClient {
   return createClient(supabaseUrl, supabaseKey);
 }
 
+// 管理员Supabase客户端创建函数
+export function createSupabaseAdminClient(): SupabaseClient {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (!supabaseUrl || !supabaseServiceKey) {
+    throw new Error('Supabase管理员配置缺失。请在.env文件中设置NEXT_PUBLIC_SUPABASE_URL和SUPABASE_SERVICE_ROLE_KEY。');
+  }
+
+  return createClient(supabaseUrl, supabaseServiceKey, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false
+    }
+  });
+}
+
 /**
  * Supabase适配器类
  */
@@ -567,8 +584,8 @@ export class SupabaseAdapter {
       console.log('JWT验证成功, 用户ID:', data.user.id);
       
       // 创建管理员客户端以绕过RLS策略
-      const adminClient = createSupabaseClient();
-      
+      const adminClient = createSupabaseAdminClient();
+
       // 获取用户详细信息，使用管理员客户端
       const { data: userData, error: userError } = await adminClient
         .from('users')
@@ -718,7 +735,7 @@ export class SupabaseAdapter {
       }
       
       // 创建管理员客户端以绕过RLS策略
-      const adminClient = createSupabaseClient();
+      const adminClient = createSupabaseAdminClient();
       console.log('使用管理员权限创建API密钥', { userId, name });
       
       // 使用管理员客户端插入记录
@@ -761,7 +778,7 @@ export class SupabaseAdapter {
       console.log('获取用户 ' + userId + ' 的API密钥列表');
       
       // 创建管理员客户端以绕过RLS策略
-      const adminClient = createSupabaseClient();
+      const adminClient = createSupabaseAdminClient();
       console.log('使用管理员权限获取API密钥列表');
       
       // 直接使用标准查询
@@ -805,7 +822,7 @@ export class SupabaseAdapter {
   async deleteApiKey(userId: string, keyId: string): Promise<boolean> {
     try {
       // 创建管理员客户端以绕过RLS策略
-      const adminClient = createSupabaseClient();
+      const adminClient = createSupabaseAdminClient();
       console.log('使用管理员权限删除API密钥', { userId, keyId });
       
       const { error } = await adminClient
@@ -906,7 +923,7 @@ export class SupabaseAdapter {
       });
       
       // 创建管理员客户端以绕过RLS策略
-      const adminClient = createSupabaseClient();
+      const adminClient = createSupabaseAdminClient();
       console.log('使用管理员权限创建提示词');
       
       // 添加超时保护的数据库操作
