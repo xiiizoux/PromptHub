@@ -254,29 +254,29 @@ export class PromptOptimizer {
   }
 
   private async callLLM(systemPrompt: string, userPrompt: string): Promise<string> {
-    const response = await fetch(`${this.baseURL}/chat/completions`, {
+    // 使用web服务的AI优化API
+    const response = await fetch(`${this.baseURL}/optimize`, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${this.apiKey}`
+        'Content-Type': 'application/json'
+        // 注意：/api/ai/optimize 端点目前不需要认证
       },
       body: JSON.stringify({
-        model: this.model,
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: userPrompt }
-        ],
-        temperature: 0.7,
+        prompt: `${systemPrompt}\n\n${userPrompt}`
       })
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error?.message || 'LLM API call failed');
+      const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+      throw new Error(errorData.error || `API call failed: ${response.status} ${response.statusText}`);
     }
 
     const data = await response.json();
-    return data.choices[0].message.content;
+    if (!data.success || !data.data?.optimized) {
+      throw new Error('Invalid response from optimization API');
+    }
+
+    return data.data.optimized;
   }
 
   private extractOptimizedPrompt(response: string): string {
@@ -294,15 +294,11 @@ export class PromptOptimizer {
 
 export async function createPromptOptimizer(): Promise<PromptOptimizer | null> {
   try {
-    const response = await fetch('/api/auth/session');
-    if (!response.ok) return null;
-    
-    const session = await response.json();
-    if (!session.accessToken) return null;
-
+    // 使用web服务自己的AI API，不依赖MCP
+    // 注意：当前AI API不需要用户认证
     return new PromptOptimizer({
-      apiKey: session.accessToken,
-      baseURL: '/api/mcp' 
+      apiKey: '', // 暂时不需要API密钥
+      baseURL: '/api/ai' // 使用web服务的AI API
     });
   } catch (error) {
     console.error('创建优化器失败:', error);

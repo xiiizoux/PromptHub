@@ -97,7 +97,7 @@ const OptimizerPage: React.FC = () => {
       toast.loading('正在进行AI分析...', { id: 'ai-analysis' });
       
       // 调用AI分析API
-      const response = await fetch('/api/ai-analyze', {
+      const response = await fetch('/api/ai/analyze', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'

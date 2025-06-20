@@ -117,7 +117,7 @@ export const AIAnalyzeButton: React.FC<AIAnalyzeButtonProps> = ({
         });
       }
 
-      const response = await fetch('/api/ai-analyze', {
+      const response = await fetch('/api/ai/analyze', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'

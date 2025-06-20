@@ -12,7 +12,7 @@ export default apiHandler(async (req: NextApiRequest, res: NextApiResponse) => {
   // 获取可用工具列表
   if (req.method === 'GET') {
     try {
-      const result = await mcpProxy('/mcp/tools', 'GET');
+      const result = await mcpProxy('/tools', 'GET');
       return successResponse(res, result.tools || []);
     } catch (error) {
       console.error('获取MCP工具列表失败:', error);
@@ -30,7 +30,7 @@ export default apiHandler(async (req: NextApiRequest, res: NextApiResponse) => {
       }
       
       // 调用MCP工具
-      const result = await mcpProxy(`/mcp/tools/${name}/invoke`, 'POST', args || {});
+      const result = await mcpProxy(`/tools/${name}/invoke`, 'POST', args || {});
       
       // 将MCP响应格式转换为API响应格式
       const responseData = {

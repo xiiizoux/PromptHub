@@ -19,14 +19,14 @@ const api = axios.create({
   },
 });
 
-// 创建MCP API实例 - Docker部署时通过代理访问
-const mcpApi = axios.create({
-  baseURL: '/api/mcp',
-  timeout: 120000, // 增加到2分钟超时
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
+// 注意：MCP API实例已弃用，现在通过Web API代理访问MCP服务
+// const mcpApi = axios.create({
+//   baseURL: '/api/mcp',
+//   timeout: 120000,
+//   headers: {
+//     'Content-Type': 'application/json',
+//   },
+// });
 
 // 网络状态检测
 const checkNetworkConnection = async (): Promise<boolean> => {
@@ -106,27 +106,27 @@ api.interceptors.request.use(async (config) => {
   return config;
 });
 
-// 也为MCP API实例添加相同的拦截器
-mcpApi.interceptors.request.use(async (config) => {
-  const apiKey = process.env.API_KEY || localStorage.getItem('api_key');
-  if (apiKey) {
-    config.headers['x-api-key'] = apiKey;
-  }
-  
-  // 添加认证token
-  try {
-    if (typeof window !== 'undefined') {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.access_token) {
-        config.headers['Authorization'] = `Bearer ${session.access_token}`;
-      }
-    }
-  } catch (error) {
-    console.warn('获取认证token失败:', error);
-  }
-  
-  return config;
-});
+// 注意：MCP API拦截器已弃用，现在通过Web API代理访问MCP服务
+// mcpApi.interceptors.request.use(async (config) => {
+//   const apiKey = process.env.API_KEY || localStorage.getItem('api_key');
+//   if (apiKey) {
+//     config.headers['x-api-key'] = apiKey;
+//   }
+//
+//   // 添加认证token
+//   try {
+//     if (typeof window !== 'undefined') {
+//       const { data: { session } } = await supabase.auth.getSession();
+//       if (session?.access_token) {
+//         config.headers['Authorization'] = `Bearer ${session.access_token}`;
+//       }
+//     }
+//   } catch (error) {
+//     console.warn('获取认证token失败:', error);
+//   }
+//
+//   return config;
+// });
 
 // 响应拦截器处理错误
 api.interceptors.response.use(
@@ -215,7 +215,8 @@ export const getTagsWithStats = async (): Promise<Array<{tag: string, count: num
 // 获取所有提示词名称
 export const getPromptNames = async (): Promise<string[]> => {
   try {
-    const response = await mcpApi.get<any>('/prompts');
+    // 使用新的解耦API而不是已弃用的MCP API
+    const response = await api.get<any>('/prompts');
     return response.data?.data?.names || [];
   } catch (error) {
     console.error('获取提示词名称失败:', error);
@@ -331,7 +332,8 @@ export const getPrompts = async (filters?: PromptFilters): Promise<PaginatedResp
 // 获取提示词详情
 export const getPromptDetails = async (identifier: string): Promise<PromptDetails> => {
   try {
-    const response = await mcpApi.get(`/prompts/${encodeURIComponent(identifier)}`);
+    // 使用新的解耦API而不是已弃用的MCP API
+    const response = await api.get(`/prompts/${encodeURIComponent(identifier)}`);
     if (!response.data.success) {
       throw new Error(response.data.error || '获取提示词详情失败');
     }
@@ -345,7 +347,8 @@ export const getPromptDetails = async (identifier: string): Promise<PromptDetail
 // 创建提示词
 export const createPrompt = async (prompt: Partial<PromptDetails>): Promise<PromptDetails> => {
   try {
-    const response = await mcpApi.post('/prompts', prompt);
+    // 使用新的解耦API而不是已弃用的MCP API
+    const response = await api.post('/prompts', prompt);
     if (!response.data || !response.data.success) {
       throw new Error(response.data?.error || '创建提示词失败');
     }
@@ -360,7 +363,8 @@ export const createPrompt = async (prompt: Partial<PromptDetails>): Promise<Prom
 // 更新提示词
 export const updatePrompt = async (id: string, prompt: Partial<PromptDetails>): Promise<PromptDetails> => {
   try {
-    const response = await mcpApi.put(`/prompts/${id}`, prompt);
+    // 使用新的解耦API而不是已弃用的MCP API
+    const response = await api.put(`/prompts/${id}`, prompt);
     if (!response.data || !response.data.success) {
       throw new Error(response.data?.error || '更新提示词失败');
     }
@@ -375,7 +379,8 @@ export const updatePrompt = async (id: string, prompt: Partial<PromptDetails>): 
 // 删除提示词
 export const deletePrompt = async (id: string): Promise<void> => {
   try {
-    const response = await mcpApi.delete(`/prompts/${id}`);
+    // 使用新的解耦API而不是已弃用的MCP API
+    const response = await api.delete(`/prompts/${id}`);
     if (!response.data || !response.data.success) {
       throw new Error(response.data?.error || '删除提示词失败');
     }
@@ -402,8 +407,9 @@ export const trackPromptUsage = async (data: Omit<PromptUsage, 'usage_id' | 'cre
       latency_ms: data.latency, // 前端使用latency而后端使用latency_ms
       session_id: 'frontend-session' // 前端没有这个字段，设置一个默认值
     };
-    
-    const response = await mcpApi.post<any>('/tools/track_prompt_usage/invoke', params);
+
+    // 使用新的解耦API而不是已弃用的MCP API
+    const response = await api.post<any>('/usage/track', params);
     const result = response.data;
     return { usage_id: result.data?.usageId || 'unknown' };
   } catch (error) {
@@ -421,8 +427,9 @@ export const submitPromptFeedback = async (feedback: Omit<PromptFeedback, 'creat
       feedback_text: feedback.comments, // 前端使用comments而后端使用feedback_text
       categories: [] // 前端没有这个字段，设置空数组
     };
-    
-    const response = await mcpApi.post<any>('/tools/submit_prompt_feedback/invoke', params);
+
+    // 使用新的解耦API而不是已弃用的MCP API
+    const response = await api.post<any>('/feedback/submit', params);
     return response.data.success === true;
   } catch (error) {
     console.error('提交提示词反馈失败:', error);
@@ -687,13 +694,15 @@ export const getPromptQualityAnalysis = async (promptId: string): Promise<Prompt
 
 // 调用MCP工具
 export const invokeMcpTool = async (toolName: string, params: any): Promise<any> => {
-  const response = await mcpApi.post<any>(`/tools/${toolName}/invoke`, { params });
+  // 使用Web API代理调用MCP工具
+  const response = await api.post<any>('/mcp/tools', { name: toolName, arguments: params });
   return response.data;
 };
 
 // 获取可用工具列表
 export const getMcpTools = async (): Promise<any> => {
-  const response = await mcpApi.get<any>('/tools');
+  // 使用Web API代理获取MCP工具列表
+  const response = await api.get<any>('/mcp/tools');
   return response.data;
 };
 

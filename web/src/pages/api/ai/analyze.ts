@@ -1,6 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { aiAnalyzer, AIAnalysisResult } from '@/lib/ai-analyzer';
-import { getTags } from '@/lib/api';
 
 export default async function handler(
   req: NextApiRequest,
@@ -18,14 +17,8 @@ export default async function handler(
       return res.status(400).json({ error: '请提供有效的提示词内容' });
     }
 
-    // 获取系统中已有的标签（用于智能合并）
-    let existingTags: string[] = [];
-    try {
-      existingTags = await getTags();
-    } catch (error) {
-      console.warn('获取已有标签失败，将使用默认标签', error);
-      existingTags = ['GPT-4', 'GPT-3.5', 'Claude', 'Gemini', '初学者', '高级', '长文本', '结构化输出', '翻译', '润色'];
-    }
+    // 使用默认标签（避免在服务器端API路由中调用其他API）
+    const existingTags: string[] = ['GPT-4', 'GPT-3.5', 'Claude', 'Gemini', '初学者', '高级', '长文本', '结构化输出', '翻译', '润色', '分析', '创作', '编程', '学术', '商业', '教育'];
 
     // 根据action执行不同的分析功能
     switch (action) {

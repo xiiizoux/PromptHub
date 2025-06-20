@@ -263,34 +263,46 @@ export const errorResponse = (
  * MCP服务代理辅助函数
  */
 export const mcpProxy = async (
-  endpoint: string, 
+  endpoint: string,
   method: 'GET' | 'POST' | 'PUT' | 'DELETE' = 'POST',
   data?: any
 ) => {
   const mcpUrl = process.env.MCP_URL || 'http://localhost:9010';
   const url = `${mcpUrl}${endpoint}`;
-  
+
   logger.debug('代理请求到MCP服务', { endpoint, method });
-  
+
   try {
+    // 准备认证头
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+
+    // 添加API密钥认证（优先使用系统级API密钥）
+    const apiKey = process.env.API_KEY || process.env.MCP_API_KEY;
+    if (apiKey) {
+      headers['x-api-key'] = apiKey;
+    }
+
+    // 添加会话ID用于审计
+    headers['x-session-id'] = `web-proxy-${Date.now()}-${Math.random().toString(36).substring(2, 10)}`;
+
     const response = await fetch(url, {
       method,
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers,
       body: data ? JSON.stringify(data) : undefined,
     });
-    
+
     if (!response.ok) {
       const errorText = await response.text();
-      const errorMessage = `MCP服务错误: ${errorText}`;
+      const errorMessage = `MCP服务错误 (${response.status}): ${errorText}`;
       logger.error(errorMessage, undefined, { endpoint, method, statusCode: response.status });
       throw new Error(errorMessage);
     }
-    
+
     const result = await response.json();
     logger.debug('MCP服务响应成功', { endpoint });
-    
+
     return result;
   } catch (error) {
     logger.error('MCP代理错误', error instanceof Error ? error : new Error(String(error)), { endpoint, method });
