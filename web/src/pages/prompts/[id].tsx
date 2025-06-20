@@ -61,6 +61,18 @@ export default function PromptDetailsPage({ prompt }: PromptDetailsPageProps) {
   const [selectedVersion, setSelectedVersion] = useState<string>(prompt.version?.toString() || '1');
   const [copied, setCopied] = useState(false);
   const [usageTracked, setUsageTracked] = useState(false);
+
+  // 如果没有提示词数据，显示加载状态
+  if (!prompt) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-neon-cyan mx-auto mb-4"></div>
+          <p className="text-gray-400">加载中...</p>
+        </div>
+      </div>
+    );
+  }
   
   // 从prompt数据中获取完整的内容
   const getFullContent = () => {
@@ -460,7 +472,7 @@ export default function PromptDetailsPage({ prompt }: PromptDetailsPageProps) {
                   >
                     <ShareIcon className="h-5 w-5" />
                   </motion.button>
-                  <Link 
+                  <Link
                     href={`/prompts/${prompt.id}/edit`}
                     className="p-3 glass rounded-xl border border-neon-yellow/30 text-neon-yellow hover:border-neon-yellow/50 hover:text-white transition-colors"
                   >
@@ -698,7 +710,7 @@ export default function PromptDetailsPage({ prompt }: PromptDetailsPageProps) {
                 
                 {/* 操作按钮 */}
                 <div className="pt-4 border-t border-neon-cyan/20">
-                  <Link 
+                  <Link
                     href={`/analytics/${prompt.id}`}
                     className="w-full btn-secondary flex items-center justify-center group hover:bg-neon-purple/20 hover:border-neon-purple/50 transition-all duration-300"
                     title="查看详细性能分析"
@@ -718,18 +730,28 @@ export default function PromptDetailsPage({ prompt }: PromptDetailsPageProps) {
 
 export const getServerSideProps: GetServerSideProps = async (context) => {
   const { id } = context.params as { id: string };
-  
+
   try {
+    console.log(`[getServerSideProps] 尝试获取提示词详情，ID: ${id}`);
     const promptDetails = await getPromptDetails(id);
-    
+
+    if (!promptDetails) {
+      console.error(`[getServerSideProps] 提示词详情为空，ID: ${id}`);
+      return {
+        notFound: true,
+      };
+    }
+
+    console.log(`[getServerSideProps] 成功获取提示词详情，名称: ${promptDetails.name}`);
+
     return {
       props: {
         prompt: promptDetails,
       },
     };
   } catch (error) {
-    console.error(`获取提示词 ${id} 详情失败:`, error);
-    
+    console.error(`[getServerSideProps] 获取提示词 ${id} 详情失败:`, error);
+
     return {
       notFound: true,
     };

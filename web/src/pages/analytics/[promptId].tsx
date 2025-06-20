@@ -121,7 +121,7 @@ export default function PromptAnalyticsPage({ prompt, performance, report }: Pro
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ duration: 0.6, delay: 0.8 }}
                 >
-                  <Link 
+                  <Link
                     href={`/prompts/${prompt.id}`}
                     className="btn-primary flex items-center space-x-2 group"
                   >
