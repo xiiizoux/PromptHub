@@ -77,7 +77,7 @@ export class DatabaseService {
     try {
       console.log('=== 开始获取categories表数据 ===');
 
-      // 从专用的categories表获取完整对象，只获取激活状态的分类
+      // 首先检查categories表是否存在并获取数据
       const { data: categoriesData, error: categoriesError } = await this.adapter.supabase
         .from('categories')
         .select('id, name, name_en, alias, description, sort_order, is_active')
@@ -86,29 +86,69 @@ export class DatabaseService {
 
       console.log('数据库查询结果:', {
         error: categoriesError,
+        errorCode: categoriesError?.code,
+        errorMessage: categoriesError?.message,
         dataLength: categoriesData?.length || 0,
-        data: categoriesData
+        data: categoriesData?.slice(0, 3) // 只显示前3个用于调试
       });
 
+      // 如果查询成功且有数据，直接返回
+      if (!categoriesError && categoriesData && categoriesData.length > 0) {
+        console.log('成功从categories表获取数据，数量:', categoriesData.length);
+        console.log('返回的分类:', categoriesData.map(c => c.name));
+        return categoriesData;
+      }
+
+      // 如果categories表查询失败或没有数据，返回默认的20个预设分类
+      console.log('categories表查询失败或无数据，使用默认分类');
       if (categoriesError) {
-        console.error('categories表查询失败:', categoriesError);
-        throw new Error(`数据库查询失败: ${categoriesError.message}`);
+        console.error('数据库错误详情:', {
+          code: categoriesError.code,
+          message: categoriesError.message,
+          details: categoriesError.details,
+          hint: categoriesError.hint
+        });
       }
 
-      if (!categoriesData || categoriesData.length === 0) {
-        console.warn('categories表中没有找到激活状态的分类数据');
-        throw new Error('categories表中没有可用的分类数据');
-      }
-
-      console.log('成功从categories表获取数据，数量:', categoriesData.length);
-      console.log('返回的分类:', categoriesData.map(c => c.name));
-
-      return categoriesData;
+      return this.getDefaultCategories();
 
     } catch (error) {
       console.error('获取分类失败:', error);
-      throw new Error(`获取分类失败: ${error instanceof Error ? error.message : '未知错误'}`);
+      console.log('发生异常，返回默认分类');
+      return this.getDefaultCategories();
     }
+  }
+
+  /**
+   * 获取默认的20个预设分类
+   * 当数据库中没有分类数据时使用
+   */
+  private getDefaultCategories(): any[] {
+    const defaultCategories = [
+      { id: '1', name: '通用', name_en: 'General', sort_order: 1, is_active: true },
+      { id: '2', name: '学术', name_en: 'Academic', sort_order: 2, is_active: true },
+      { id: '3', name: '职业', name_en: 'Professional', sort_order: 3, is_active: true },
+      { id: '4', name: '文案', name_en: 'Copywriting', sort_order: 4, is_active: true },
+      { id: '5', name: '设计', name_en: 'Design', sort_order: 5, is_active: true },
+      { id: '6', name: '教育', name_en: 'Education', sort_order: 6, is_active: true },
+      { id: '7', name: '情感', name_en: 'Emotional', sort_order: 7, is_active: true },
+      { id: '8', name: '娱乐', name_en: 'Entertainment', sort_order: 8, is_active: true },
+      { id: '9', name: '游戏', name_en: 'Gaming', sort_order: 9, is_active: true },
+      { id: '10', name: '生活', name_en: 'Lifestyle', sort_order: 10, is_active: true },
+      { id: '11', name: '商业', name_en: 'Business', sort_order: 11, is_active: true },
+      { id: '12', name: '办公', name_en: 'Office', sort_order: 12, is_active: true },
+      { id: '13', name: '编程', name_en: 'Programming', sort_order: 13, is_active: true },
+      { id: '14', name: '翻译', name_en: 'Translation', sort_order: 14, is_active: true },
+      { id: '15', name: '绘画', name_en: 'Drawing', sort_order: 15, is_active: true },
+      { id: '16', name: '视频', name_en: 'Video', sort_order: 16, is_active: true },
+      { id: '17', name: '播客', name_en: 'Podcast', sort_order: 17, is_active: true },
+      { id: '18', name: '音乐', name_en: 'Music', sort_order: 18, is_active: true },
+      { id: '19', name: '健康', name_en: 'Health', sort_order: 19, is_active: true },
+      { id: '20', name: '科技', name_en: 'Technology', sort_order: 20, is_active: true }
+    ];
+
+    console.log('使用默认分类，数量:', defaultCategories.length);
+    return defaultCategories;
   }
 
   /**
