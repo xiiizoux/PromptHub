@@ -47,11 +47,19 @@ const SimpleTestPage = () => {
           </button>
           
           <button
-            onClick={() => testAPI('/api/debug/prompt-test?id=test')}
+            onClick={() => testAPI('/api/debug/prompt-test?id=14b9bbd5-66d3-4588-a8b2-39643122092b')}
             disabled={loading}
             className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50 mr-4"
           >
-            测试调试API
+            测试真实ID调试
+          </button>
+
+          <button
+            onClick={() => testAPI('/api/prompts/14b9bbd5-66d3-4588-a8b2-39643122092b')}
+            disabled={loading}
+            className="px-4 py-2 bg-yellow-600 text-white rounded hover:bg-yellow-700 disabled:opacity-50 mr-4"
+          >
+            测试提示词详情API
           </button>
           
           <button
