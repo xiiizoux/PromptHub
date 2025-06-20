@@ -71,15 +71,17 @@ export class DatabaseService {
 
   /**
    * 获取所有分类（返回完整对象数组）
+   * 只从categories表获取数据，确保数据的一致性和完整性
    */
   async getCategories(): Promise<any[]> {
     try {
       console.log('=== 开始获取categories表数据 ===');
-      
-      // 先尝试从专用的categories表获取完整对象，去除is_active过滤条件
+
+      // 从专用的categories表获取完整对象，只获取激活状态的分类
       const { data: categoriesData, error: categoriesError } = await this.adapter.supabase
         .from('categories')
         .select('id, name, name_en, alias, description, sort_order, is_active')
+        .eq('is_active', true)
         .order('sort_order');
 
       console.log('数据库查询结果:', {
@@ -88,47 +90,23 @@ export class DatabaseService {
         data: categoriesData
       });
 
-      if (!categoriesError && categoriesData && categoriesData.length > 0) {
-        console.log('成功从categories表获取数据，数量:', categoriesData.length);
-        console.log('返回的分类:', categoriesData.map(c => c.name));
-        return categoriesData;
+      if (categoriesError) {
+        console.error('categories表查询失败:', categoriesError);
+        throw new Error(`数据库查询失败: ${categoriesError.message}`);
       }
 
-      console.log('categories表查询失败或无数据，尝试备用方案');
-
-      // 如果categories表查询失败，从prompts表中提取现有分类
-      const { data: promptsData, error: promptsError } = await this.adapter.supabase
-        .from('prompts')
-        .select('category')
-        .not('category', 'is', null)
-        .order('category');
-
-      if (!promptsError && promptsData) {
-        const existingCategories = Array.from(new Set(
-          promptsData.map(item => item.category).filter(Boolean)
-        ));
-        if (existingCategories.length > 0) {
-          console.log('从prompts表提取的分类:', existingCategories);
-          // 返回对象数组格式
-          return existingCategories.map((name, idx) => ({
-            id: undefined,
-            name,
-            name_en: undefined,
-            alias: undefined,
-            description: undefined,
-            sort_order: idx + 100,
-            is_active: true
-          }));
-        }
+      if (!categoriesData || categoriesData.length === 0) {
+        console.warn('categories表中没有找到激活状态的分类数据');
+        throw new Error('categories表中没有可用的分类数据');
       }
 
-      // 所有方案都失败时，抛出错误
-      console.log('所有获取分类的方案都失败');
-      throw new Error('无法从数据库获取分类数据');
-      
+      console.log('成功从categories表获取数据，数量:', categoriesData.length);
+      console.log('返回的分类:', categoriesData.map(c => c.name));
+
+      return categoriesData;
+
     } catch (error) {
       console.error('获取分类失败:', error);
-      // 直接抛出错误，不使用备用机制
       throw new Error(`获取分类失败: ${error instanceof Error ? error.message : '未知错误'}`);
     }
   }

@@ -37,27 +37,44 @@ export class SupabaseAdapter {
   
   /**
    * 获取所有分类
+   * 只从categories表获取数据，确保数据的一致性和完整性
    * @returns 分类列表
    */
   async getCategories(): Promise<string[]> {
     try {
-      // 获取所有分类（从prompts表的category字段中提取唯一值）
-      const { data, error } = await this.supabase
-        .from('prompts')
-        .select('category')
-        .order('category');
+      console.log('=== SupabaseAdapter: 开始获取categories表数据 ===');
 
-      if (error) {
-        console.error('获取分类失败:', error);
-        return [];
+      // 只从专用的categories表获取数据
+      const { data: categoriesData, error: categoriesError } = await this.supabase
+        .from('categories')
+        .select('name, sort_order, is_active')
+        .eq('is_active', true)
+        .order('sort_order');
+
+      console.log('categories表查询结果:', {
+        error: categoriesError,
+        count: categoriesData?.length || 0,
+        sample: categoriesData?.slice(0, 3)
+      });
+
+      if (categoriesError) {
+        console.error('categories表查询失败:', categoriesError);
+        throw new Error(`数据库查询失败: ${categoriesError.message}`);
       }
 
-      // 提取唯一分类
-      const categories = Array.from(new Set(data.map(item => item.category).filter(Boolean)));
-      return categories as string[];
+      if (!categoriesData || categoriesData.length === 0) {
+        console.warn('categories表中没有找到激活状态的分类数据');
+        throw new Error('categories表中没有可用的分类数据');
+      }
+
+      console.log('成功从categories表获取数据，数量:', categoriesData.length);
+      const categories = categoriesData.map(item => item.name);
+      console.log('返回的分类:', categories);
+
+      return categories;
     } catch (err) {
       console.error('获取分类时出错:', err);
-      return [];
+      throw new Error(`获取分类失败: ${err instanceof Error ? err.message : '未知错误'}`);
     }
   }
   

@@ -267,19 +267,17 @@ export class SupabaseAdapter implements StorageAdapter {
     try {
       const data = await this.executeWithRetry(
         () => this.supabase
-          .from('prompts')
-          .select('category')
-          .not('category', 'is', null)
-          .order('category'),
+          .from('categories')
+          .select('name')
+          .eq('is_active', true)
+          .order('sort_order'),
         'getCategories'
       );
 
-      // 提取唯一分类并过滤空值
-      const categories = Array.from(new Set(
-        data
-          .map(item => item.category)
-          .filter(category => category && category.trim())
-      )).sort();
+      // 提取分类名称并过滤空值
+      const categories = data
+        .map(item => item.name)
+        .filter(name => name && name.trim());
 
       // 缓存结果
       this.setCachedResult(cacheKey, categories);
@@ -287,7 +285,7 @@ export class SupabaseAdapter implements StorageAdapter {
       return categories;
     } catch (error) {
       logger.error('获取分类失败', { error: error.message });
-      return [];
+      throw new Error(`获取分类失败: ${error.message}`);
     }
   }
   

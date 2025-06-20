@@ -117,11 +117,12 @@ export class SupabaseAdapter {
   async getCategories(): Promise<string[]> {
     try {
       console.log('=== SupabaseAdapter: 开始获取categories ===');
-      
-      // 警告：不再使用管理员权限。必须为'categories'表设置RLS策略。
+
+      // 只从categories表获取数据，确保数据的一致性和完整性
       const { data: categoriesData, error: categoriesError } = await this.supabase
         .from('categories')
         .select('name, sort_order, is_active')
+        .eq('is_active', true)
         .order('sort_order');
 
       console.log('categories表查询结果:', {
@@ -130,30 +131,24 @@ export class SupabaseAdapter {
         sample: categoriesData?.slice(0, 3)
       });
 
-      if (!categoriesError && categoriesData && categoriesData.length > 0) {
-        console.log('成功从categories表获取数据');
-        return categoriesData.map(item => item.name);
+      if (categoriesError) {
+        console.error('categories表查询失败:', categoriesError);
+        throw new Error(`数据库查询失败: ${categoriesError.message}`);
       }
 
-      console.log('categories表查询失败，回退到prompts表');
-      
-      // 警告：不再使用管理员权限。必须为'prompts'表设置RLS策略。
-      const { data, error } = await this.supabase
-        .from('prompts')
-        .select('category')
-        .order('category');
-
-      if (error) {
-        console.error('获取分类失败:', error);
-        return [];
+      if (!categoriesData || categoriesData.length === 0) {
+        console.warn('categories表中没有找到激活状态的分类数据');
+        throw new Error('categories表中没有可用的分类数据');
       }
 
-      const categories = Array.from(new Set(data.map(item => item.category).filter(Boolean)));
-      console.log('从prompts表提取的分类:', categories);
-      return categories as string[];
+      console.log('成功从categories表获取数据，数量:', categoriesData.length);
+      const categories = categoriesData.map(item => item.name);
+      console.log('返回的分类:', categories);
+
+      return categories;
     } catch (err) {
       console.error('获取分类时出错:', err);
-      return [];
+      throw new Error(`获取分类失败: ${err instanceof Error ? err.message : '未知错误'}`);
     }
   }
 
