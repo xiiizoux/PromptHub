@@ -93,7 +93,7 @@ export const config = {
   supabase: {
     url: getParamValue("supabase_url") || process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || '',
     anonKey: getParamValue("supabase_anon_key") || process.env.SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '',
-    serviceKey: process.env.SUPABASE_SERVICE_KEY || '' // 新增服务密钥支持
+    serviceKey: process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY || '' // 新增服务密钥支持
   },
 
   // JWT 配置

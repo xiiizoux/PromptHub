@@ -210,16 +210,19 @@ async function performAuthentication(req: Request, requireAuth: boolean = true):
 
     // 1. 系统级API密钥验证
     if (apiKey && (apiKey === config.apiKey || apiKey === serverKey)) {
+      // 生成固定的系统用户UUID（基于固定字符串的UUID v5）
+      const systemUserId = '00000000-0000-5000-8000-000000000001'; // 固定的系统用户UUID
+
       const systemUser: User = {
-        id: 'system-user',
-        email: 'system@example.com',
-        display_name: 'System User'
+        id: systemUserId,
+        email: 'system@mcp-server.local',
+        display_name: 'MCP System User'
       };
 
       // 更新会话活动
-      updateSessionActivity(sessionId, 'system-user', ip, userAgent, 'system');
+      updateSessionActivity(sessionId, systemUserId, ip, userAgent, 'system');
 
-      logAuthActivity('system-user', AuditEventType.API_KEY_USED, true, {
+      logAuthActivity(systemUserId, AuditEventType.API_KEY_USED, true, {
         ip, userAgent, sessionId, keyType: 'system'
       });
 

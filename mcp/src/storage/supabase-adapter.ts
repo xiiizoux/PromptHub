@@ -543,7 +543,10 @@ export class SupabaseAdapter implements StorageAdapter {
         if (currentUser) {
           prompt.user_id = currentUser.id;
         } else {
-          throw new Error('无法创建提示词: 未提供用户ID且无当前登录用户');
+          // 使用系统用户ID作为默认值
+          const systemUserId = '00000000-0000-5000-8000-000000000001';
+          prompt.user_id = systemUserId;
+          console.log('使用系统用户ID创建提示词:', systemUserId);
         }
       }
       
@@ -562,8 +565,11 @@ export class SupabaseAdapter implements StorageAdapter {
         user_id: prompt.user_id
       };
       
-      // 创建提示词
-      const { data, error } = await this.supabase
+      // 创建提示词 - 如果是系统用户，使用管理员客户端绕过RLS
+      const isSystemUser = prompt.user_id === '00000000-0000-5000-8000-000000000001';
+      const client = isSystemUser && this.adminSupabase ? this.adminSupabase : this.supabase;
+
+      const { data, error } = await client
         .from('prompts')
         .insert([promptData])
         .select();
@@ -797,7 +803,11 @@ export class SupabaseAdapter implements StorageAdapter {
         created_at: new Date().toISOString()
       };
       
-      const { data, error } = await this.supabase
+      // 如果是系统用户，使用管理员客户端绕过RLS
+      const isSystemUser = userId === '00000000-0000-5000-8000-000000000001';
+      const client = isSystemUser && this.adminSupabase ? this.adminSupabase : this.supabase;
+
+      const { data, error } = await client
         .from('prompt_versions')
         .insert([versionData])
         .select();
