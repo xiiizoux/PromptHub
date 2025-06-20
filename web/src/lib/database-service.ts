@@ -199,12 +199,12 @@ export class DatabaseService {
         try {
           const { data: userData, error: userError } = await this.adapter.supabase
             .from('users')
-            .select('display_name, email')
+            .select('display_name')
             .eq('id', prompt.user_id)
             .single();
 
-          if (!userError && userData) {
-            authorName = userData.display_name || userData.email?.split('@')[0] || '未知用户';
+          if (!userError && userData && userData.display_name) {
+            authorName = userData.display_name;
           }
         } catch (userErr) {
           console.warn('获取用户信息失败，使用默认作者名:', userErr);
@@ -690,15 +690,15 @@ export class DatabaseService {
     try {
       const { data, error } = await this.adapter.supabase
         .from('users')
-        .select('username, display_name')
+        .select('display_name')
         .eq('id', userId)
         .single();
 
-      if (error || !data) {
+      if (error || !data || !data.display_name) {
         return '未知用户';
       }
 
-      return data.display_name || data.username || '未知用户';
+      return data.display_name;
     } catch (error) {
       return '未知用户';
     }

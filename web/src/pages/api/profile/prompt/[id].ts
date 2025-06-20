@@ -24,20 +24,44 @@ export default apiHandler(async (req: NextApiRequest, res: NextApiResponse, user
 
   try {
     console.log(`用户 ${userId} 正在请求私有提示词详情:`, id);
-    
+
     // 使用适配器获取提示词详情（仅限用户自己的提示词）
     const prompt = await supabaseAdapter.getPrompt(id, userId);
-    
+
     if (!prompt) {
       return errorResponse(res, '提示词不存在或您无权访问', ErrorCode.NOT_FOUND);
     }
-    
+
     // 验证这是否是用户自己的提示词
     if (prompt.user_id !== userId) {
       return errorResponse(res, '您无权访问此提示词', ErrorCode.FORBIDDEN);
     }
-    
-    return successResponse(res, prompt);
+
+    // 获取作者信息
+    let authorName = '未知用户';
+    if (prompt.user_id) {
+      try {
+        const { data: userData, error: userError } = await supabaseAdapter.supabase
+          .from('users')
+          .select('display_name')
+          .eq('id', prompt.user_id)
+          .single();
+
+        if (!userError && userData && userData.display_name) {
+          authorName = userData.display_name;
+        }
+      } catch (userErr) {
+        console.warn('获取用户信息失败，使用默认作者名:', userErr);
+      }
+    }
+
+    // 返回包含作者信息的提示词数据
+    const promptWithAuthor = {
+      ...prompt,
+      author: authorName
+    };
+
+    return successResponse(res, promptWithAuthor);
   } catch (error: any) {
     console.error(`获取提示词 ${id} 详情失败:`, error);
     return errorResponse(

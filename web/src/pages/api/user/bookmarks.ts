@@ -91,7 +91,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (authorIds.length > 0) {
       const { data: authors } = await supabase
         .from('users')
-        .select('id, display_name, email')
+        .select('id, display_name')
         .in('id', authorIds);
       
               if (authors) {
@@ -112,7 +112,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const author = prompt.user_id ? authorMap[prompt.user_id] : null;
       return {
         ...prompt,
-        author: author?.display_name || author?.email || '匿名用户',
+        author: author?.display_name || '匿名用户',
         bookmarked_at: bookmark.created_at
       };
     }).filter(Boolean);

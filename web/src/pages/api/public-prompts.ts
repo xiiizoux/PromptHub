@@ -158,7 +158,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       try {
         const { data: users, error: usersError } = await supabase
           .from('users')
-          .select('id, display_name, email')
+          .select('id, display_name')
           .in('id', userIds);
         
         if (usersError) {
@@ -214,7 +214,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     // 格式化数据，确保包含用户信息和评分信息
     const formattedPrompts = promptsData.map(prompt => {
       const user = userMap.get(prompt.user_id || prompt.created_by);
-      const authorName = user ? (user.display_name || user.email?.split('@')[0] || '未知用户') : '未知用户';
+      const authorName = user && user.display_name ? user.display_name : '未知用户';
       const ratingInfo = ratingsMap.get(prompt.id) || { average: 0, count: 0 };
       
       return {
