@@ -30,8 +30,7 @@ import { formatVersionDisplay } from '@/lib/version-utils';
 import { withAuth } from '@/contexts/AuthContext';
 import SmartWritingAssistant from '@/components/SmartWritingAssistant';
 import { toast } from 'react-hot-toast';
-import { requestMonitor } from '@/utils/request-monitor';
-import { DebugPanel } from '@/components/DebugPanel';
+
 
 // 扩展类型，添加messages字段和其他数据库中的字段
 type PromptFormData = Omit<PromptDetails, 'created_at' | 'updated_at'> & {
@@ -416,8 +415,7 @@ function CreatePromptPage() {
   const onSubmit = async (data: PromptFormData) => {
     setIsSubmitting(true);
     
-    // 开始监控创建提示词请求（增加超时时间）
-    const monitorId = requestMonitor.startRequest('POST', '/api/prompts', 120000); // 2分钟监控超时
+    // 创建提示词请求
     
     try {
       console.log('=== 开始提示词创建流程 ===');
@@ -457,8 +455,7 @@ function CreatePromptPage() {
       const newPrompt = await createPromptWithTimeout();
       console.log('提示词创建成功:', newPrompt);
       
-      // 标记监控成功
-      requestMonitor.markSuccess(monitorId, newPrompt);
+      // 创建成功
       
       // 确保在导航前重置状态
       setIsSubmitting(false);
@@ -475,8 +472,7 @@ function CreatePromptPage() {
       console.error('=== 创建提示词失败 ===');
       console.error('错误详情:', error);
       
-      // 标记监控失败
-      requestMonitor.markError(monitorId, error.message || '未知错误');
+      // 创建失败
       
       // 提供用户友好的错误提示
       let errorMessage = '创建提示词失败，请稍后重试';
@@ -528,11 +524,9 @@ function CreatePromptPage() {
         }
       }
       
-      // 在开发环境下输出监控统计
+      // 在开发环境下输出错误信息
       if (process.env.NODE_ENV === 'development') {
-        console.log('请求监控统计:', requestMonitor.getStats());
-        console.log('活跃请求:', requestMonitor.getActiveRequests());
-        console.log('最近请求日志:', requestMonitor.getAllLogs().slice(-5));
+        console.log('创建提示词失败，错误详情:', error);
       }
     } finally {
       // 确保无论如何都重置提交状态
@@ -558,8 +552,7 @@ function CreatePromptPage() {
         </div>
       )}
 
-      {/* 调试面板 */}
-      <DebugPanel />
+
 
       <div className="relative z-10 py-16">
         <div className="container-custom">
