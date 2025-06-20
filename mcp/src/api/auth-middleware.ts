@@ -54,6 +54,44 @@ function extractAuthInfo(req: Request): {
   };
 }
 
+// 会话管理
+const activeSessions = new Map<string, { userId: string; lastActivity: number; expiresAt: number }>();
+const SESSION_TIMEOUT = 30 * 60 * 1000; // 30分钟
+
+function isSessionValid(sessionId: string): boolean {
+  const session = activeSessions.get(sessionId);
+  if (!session) return false;
+
+  const now = Date.now();
+  if (now > session.expiresAt) {
+    activeSessions.delete(sessionId);
+    return false;
+  }
+
+  return true;
+}
+
+function updateSessionActivity(sessionId: string, userId: string): void {
+  const now = Date.now();
+  activeSessions.set(sessionId, {
+    userId,
+    lastActivity: now,
+    expiresAt: now + SESSION_TIMEOUT
+  });
+}
+
+function cleanupExpiredSessions(): void {
+  const now = Date.now();
+  for (const [sessionId, session] of activeSessions) {
+    if (now > session.expiresAt) {
+      activeSessions.delete(sessionId);
+    }
+  }
+}
+
+// 定期清理过期会话
+setInterval(cleanupExpiredSessions, 5 * 60 * 1000); // 每5分钟清理一次
+
 // 统一的认证逻辑
 async function performAuthentication(req: Request, requireAuth: boolean = true): Promise<AuthResult> {
   const { apiKey, serverKey, token, ip, userAgent } = extractAuthInfo(req);
@@ -79,6 +117,9 @@ async function performAuthentication(req: Request, requireAuth: boolean = true):
     if (apiKey) {
       const user = await storage.verifyApiKey(apiKey);
       if (user) {
+        // 更新会话活动
+        updateSessionActivity(sessionId, user.id);
+
         // 异步更新最后使用时间，不阻塞请求
         storage.updateApiKeyLastUsed(apiKey).catch(err => {
           logger.warn('更新API密钥使用时间失败', { error: err.message, userId: user.id });
@@ -104,6 +145,9 @@ async function performAuthentication(req: Request, requireAuth: boolean = true):
     if (token) {
       const user = await storage.verifyToken(token);
       if (user) {
+        // 更新会话活动
+        updateSessionActivity(sessionId, user.id);
+
         logAuthActivity(user.id, AuditEventType.USER_LOGIN, true, {
           ip, userAgent, sessionId, method: 'jwt'
         });

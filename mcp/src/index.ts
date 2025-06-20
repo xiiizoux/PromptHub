@@ -18,13 +18,68 @@ export async function startMCPServer() {
     // 创建Express应用
     const app = express();
     
-    // 配置中间件
+    // 安全中间件
+    app.use((req, res, next) => {
+      // 隐藏技术栈信息
+      res.removeHeader('X-Powered-By');
+
+      // 添加安全头部
+      res.setHeader('X-Content-Type-Options', 'nosniff');
+      res.setHeader('X-Frame-Options', 'DENY');
+      res.setHeader('X-XSS-Protection', '1; mode=block');
+      res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+
+      // 生产环境启用HSTS
+      if (process.env.NODE_ENV === 'production') {
+        res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
+      }
+
+      next();
+    });
+
+    // 配置CORS
     if (config.security.enableCors) {
       app.use(cors({
-        origin: config.security.corsOrigin,
-        methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+        origin: (origin, callback) => {
+          // 允许没有origin的请求（如移动应用、Postman等）
+          if (!origin) return callback(null, true);
+
+          const allowedOrigins = config.security.corsOrigin;
+
+          // 如果配置为*，允许所有
+          if (allowedOrigins === '*') {
+            return callback(null, true);
+          }
+
+          // 检查是否在允许列表中
+          const isAllowed = Array.isArray(allowedOrigins)
+            ? allowedOrigins.includes(origin)
+            : allowedOrigins === origin;
+
+          if (isAllowed) {
+            callback(null, true);
+          } else {
+            // 在开发环境中记录被拒绝的请求，生产环境中静默拒绝
+            if (process.env.NODE_ENV === 'development') {
+              console.warn(`[CORS] Blocked origin: ${origin}`);
+            }
+            callback(new Error('Not allowed by CORS'));
+          }
+        },
+        methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
         credentials: true,
-        allowedHeaders: ['Content-Type', 'Authorization', 'X-Api-Key', 'Server-Key', 'X-Request-ID']
+        allowedHeaders: [
+          'Content-Type',
+          'Authorization',
+          'X-Api-Key',
+          'Server-Key',
+          'X-Request-ID',
+          'X-Session-ID',
+          'Accept',
+          'Origin',
+          'User-Agent'
+        ],
+        optionsSuccessStatus: 200 // 兼容旧版浏览器
       }));
     }
 

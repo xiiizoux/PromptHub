@@ -18,6 +18,50 @@ function parsePort(portStr: string, defaultPort: number): number {
   return port;
 }
 
+// 智能CORS配置函数
+function getCorsOrigin(): string | string[] | boolean {
+  const corsOrigin = process.env.CORS_ORIGIN;
+  const nodeEnv = process.env.NODE_ENV;
+
+  // 如果明确设置了CORS_ORIGIN，使用设置的值
+  if (corsOrigin) {
+    if (corsOrigin === '*') {
+      return '*';
+    }
+    // 支持逗号分隔的多个域名
+    return corsOrigin.split(',').map(origin => origin.trim());
+  }
+
+  // 根据环境智能配置
+  if (nodeEnv === 'development' || nodeEnv === 'test') {
+    // 开发环境：允许常见的开发端口
+    return [
+      'http://localhost:3000',
+      'http://localhost:9011',
+      'http://localhost:8080',
+      'http://127.0.0.1:3000',
+      'http://127.0.0.1:9011',
+      'http://127.0.0.1:8080'
+    ];
+  } else if (nodeEnv === 'production') {
+    // 生产环境：更严格的配置，但仍保持一定灵活性
+    const allowedOrigins = [
+      'http://localhost:9011', // 本地Web服务
+      'http://127.0.0.1:9011'  // 本地Web服务
+    ];
+
+    // 如果设置了前端URL，添加到允许列表
+    if (process.env.FRONTEND_URL) {
+      allowedOrigins.push(process.env.FRONTEND_URL);
+    }
+
+    return allowedOrigins;
+  }
+
+  // 默认情况：允许本地访问
+  return ['http://localhost:9011', 'http://127.0.0.1:9011'];
+}
+
 // 配置对象，兼容环境变量
 export const config = {
   // 服务器配置
@@ -76,7 +120,7 @@ export const config = {
   // 安全配置
   security: {
     enableCors: process.env.ENABLE_CORS !== 'false',
-    corsOrigin: process.env.CORS_ORIGIN || '*',
+    corsOrigin: getCorsOrigin(),
     enableRateLimit: process.env.ENABLE_RATE_LIMIT === 'true',
     rateLimitMax: parseInt(process.env.RATE_LIMIT_MAX || '100'),
     rateLimitWindow: parseInt(process.env.RATE_LIMIT_WINDOW || '900000') // 15分钟

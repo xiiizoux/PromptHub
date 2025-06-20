@@ -105,8 +105,8 @@ router.get('/sse', (req, res) => {
   });
 });
 
-// MCP 工具描述
-router.get('/tools', optionalAuthMiddleware, (req, res) => {
+// MCP 工具描述 - 需要认证才能访问完整工具列表
+router.get('/tools', authenticateRequest, (req, res) => {
   const tools: ToolDescription[] = [
     // 核心提示词管理工具
     {

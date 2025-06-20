@@ -36,20 +36,19 @@ COPY supabase/package*.json ./supabase/
 RUN npm install --only=production
 
 # 安装MCP依赖
-RUN cd mcp && npm ci --only=production && \
+RUN cd mcp && npm install --only=production && \
     npm install --save-dev tsx@latest dotenv-cli@latest typescript@latest
 
 # 安装Web依赖
-RUN cd web && NODE_OPTIONS="--max-old-space-size=4096" npm ci --only=production
+RUN cd web && NODE_OPTIONS="--max-old-space-size=4096" npm install --only=production
 
 # 安装Supabase依赖（如果需要）
-RUN cd supabase && npm ci --only=production || echo "Supabase依赖安装跳过"
+RUN cd supabase && npm install --only=production || echo "Supabase依赖安装跳过"
 
 # 复制所有项目文件
 COPY . .
 
-# 构建MCP服务 - 直接使用TypeScript编译
-RUN cd mcp && NODE_OPTIONS="--max-old-space-size=4096" npx tsc
+# 跳过MCP构建 - 运行时使用tsx直接运行TypeScript
 
 # 构建Web应用
 RUN cd web && \
