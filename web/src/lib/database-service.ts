@@ -64,7 +64,7 @@ export class DatabaseService {
   private adapter: SupabaseAdapter;
 
   constructor() {
-    this.adapter = new SupabaseAdapter(); // 移除管理员权限
+    this.adapter = new SupabaseAdapter(true); // 使用管理员权限以便查询用户信息
   }
 
   // ===== 提示词管理 =====
@@ -195,26 +195,38 @@ export class DatabaseService {
 
       // 然后获取作者信息
       let authorName = '未知用户';
-      if (prompt.user_id) {
+      const authorUserId = prompt.user_id || prompt.created_by; // 尝试 user_id 或 created_by
+
+      if (authorUserId) {
         try {
-          console.log(`[DatabaseService] 开始获取用户信息，用户ID: ${prompt.user_id}`);
+          console.log(`[DatabaseService] 开始获取用户信息，用户ID: ${authorUserId} (来源: ${prompt.user_id ? 'user_id' : 'created_by'})`);
           const { data: userData, error: userError } = await this.adapter.supabase
             .from('users')
-            .select('display_name')
-            .eq('id', prompt.user_id)
+            .select('display_name, email')
+            .eq('id', authorUserId)
             .maybeSingle(); // 使用 maybeSingle() 而不是 single()，避免在没有记录时抛出错误
 
           if (userError) {
             console.warn('获取用户信息时发生错误:', userError);
-          } else if (userData && userData.display_name) {
-            authorName = userData.display_name;
-            console.log(`[DatabaseService] 成功获取用户信息: ${authorName}`);
+          } else if (userData) {
+            if (userData.display_name) {
+              authorName = userData.display_name;
+              console.log(`[DatabaseService] 成功获取用户信息: ${authorName}`);
+            } else if (userData.email) {
+              // 如果没有 display_name，使用 email 的前缀作为备用
+              authorName = userData.email.split('@')[0];
+              console.log(`[DatabaseService] 使用邮箱前缀作为用户名: ${authorName}`);
+            } else {
+              console.warn(`[DatabaseService] 用户 ${authorUserId} 存在但没有 display_name 或 email`);
+            }
           } else {
-            console.warn(`[DatabaseService] 用户 ${prompt.user_id} 不存在或没有 display_name`);
+            console.warn(`[DatabaseService] 用户 ${authorUserId} 不存在`);
           }
         } catch (userErr) {
           console.warn('获取用户信息失败，使用默认作者名:', userErr);
         }
+      } else {
+        console.warn('[DatabaseService] 提示词没有 user_id 或 created_by 字段');
       }
 
       // 处理内容提取
@@ -258,7 +270,15 @@ export class DatabaseService {
         input_variables: promptDetails.input_variables,
         edit_permission: promptDetails.edit_permission,
         author: promptDetails.author,
+        user_id: promptDetails.user_id,
         contentLength: content.length
+      });
+
+      console.log('getPromptByName - 详细调试信息:', {
+        prompt_user_id: prompt.user_id,
+        prompt_created_by: prompt.created_by,
+        final_author: authorName,
+        prompt_is_public: prompt.is_public
       });
 
       return promptDetails;

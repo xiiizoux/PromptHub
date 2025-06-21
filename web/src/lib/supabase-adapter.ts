@@ -104,9 +104,9 @@ export function createSupabaseAdminClient(): SupabaseClient {
  */
 export class SupabaseAdapter {
   public supabase: SupabaseClient;
-  
-  constructor() {
-    this.supabase = createSupabaseClient();
+
+  constructor(useAdmin: boolean = false) {
+    this.supabase = useAdmin ? createSupabaseAdminClient() : createSupabaseClient();
   }
 
   getType(): string {
