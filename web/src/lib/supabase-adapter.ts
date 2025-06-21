@@ -637,11 +637,15 @@ export class SupabaseAdapter {
         return null;
       }
       
-      const { data: userData } = await this.supabase
+      const { data: userData, error: userError } = await this.supabase
         .from('users')
         .select('*')
         .eq('id', data.user.id)
-        .single();
+        .maybeSingle(); // 使用 maybeSingle() 而不是 single()
+
+      if (userError) {
+        console.warn('获取用户额外信息时发生错误:', userError);
+      }
         
       return {
         id: data.user.id,

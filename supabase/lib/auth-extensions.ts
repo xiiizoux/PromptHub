@@ -34,10 +34,15 @@ export function extendAuthAdapter(adapter: SupabaseAdapter): any {
         .from('users')
         .select('*')
         .eq('id', user.id)
-        .single();
-        
-      if (userError || !userData) {
-        console.error('获取用户信息失败:', userError);
+        .maybeSingle(); // 使用 maybeSingle() 而不是 single()
+
+      if (userError) {
+        console.error('获取用户信息时发生错误:', userError);
+        return null;
+      }
+
+      if (!userData) {
+        console.warn('用户信息不存在于users表中');
         return null;
       }
       

@@ -197,14 +197,20 @@ export class DatabaseService {
       let authorName = '未知用户';
       if (prompt.user_id) {
         try {
+          console.log(`[DatabaseService] 开始获取用户信息，用户ID: ${prompt.user_id}`);
           const { data: userData, error: userError } = await this.adapter.supabase
             .from('users')
             .select('display_name')
             .eq('id', prompt.user_id)
-            .single();
+            .maybeSingle(); // 使用 maybeSingle() 而不是 single()，避免在没有记录时抛出错误
 
-          if (!userError && userData && userData.display_name) {
+          if (userError) {
+            console.warn('获取用户信息时发生错误:', userError);
+          } else if (userData && userData.display_name) {
             authorName = userData.display_name;
+            console.log(`[DatabaseService] 成功获取用户信息: ${authorName}`);
+          } else {
+            console.warn(`[DatabaseService] 用户 ${prompt.user_id} 不存在或没有 display_name`);
           }
         } catch (userErr) {
           console.warn('获取用户信息失败，使用默认作者名:', userErr);
@@ -688,18 +694,27 @@ export class DatabaseService {
    */
   private async getUsernameById(userId: string): Promise<string> {
     try {
+      console.log(`[DatabaseService] 获取用户名，用户ID: ${userId}`);
       const { data, error } = await this.adapter.supabase
         .from('users')
         .select('display_name')
         .eq('id', userId)
-        .single();
+        .maybeSingle(); // 使用 maybeSingle() 而不是 single()
 
-      if (error || !data || !data.display_name) {
+      if (error) {
+        console.warn('获取用户名时发生错误:', error);
         return '未知用户';
       }
 
+      if (!data || !data.display_name) {
+        console.warn(`用户 ${userId} 不存在或没有 display_name`);
+        return '未知用户';
+      }
+
+      console.log(`[DatabaseService] 成功获取用户名: ${data.display_name}`);
       return data.display_name;
     } catch (error) {
+      console.warn('获取用户名失败:', error);
       return '未知用户';
     }
   }

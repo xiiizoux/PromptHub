@@ -518,14 +518,15 @@ export class SupabaseAdapter implements StorageAdapter {
         query = query.eq('is_public', true);
       }
       
-      const { data, error } = await query.single();
+      const { data, error } = await query.maybeSingle(); // 使用 maybeSingle() 而不是 single()
 
       if (error) {
-        if (error.code === 'PGRST116') {
-          return null; // Not found
-        }
         console.error(`获取提示词失败: ${error.message}`);
         return null;
+      }
+
+      if (!data) {
+        return null; // Not found
       }
 
       return data;
@@ -1283,16 +1284,24 @@ export class SupabaseAdapter implements StorageAdapter {
   // 获取用户信息
   async getUser(userId: string): Promise<User | null> {
     try {
+      console.log(`[MCP Adapter] 获取用户信息，用户ID: ${userId}`);
       const { data, error } = await this.supabase
         .from('users')
         .select('*')
         .eq('id', userId)
-        .single();
-        
-      if (error || !data) {
+        .maybeSingle(); // 使用 maybeSingle() 而不是 single()
+
+      if (error) {
+        console.warn('获取用户信息时发生错误:', error);
         return null;
       }
-      
+
+      if (!data) {
+        console.warn(`用户 ${userId} 不存在`);
+        return null;
+      }
+
+      console.log(`[MCP Adapter] 成功获取用户信息: ${data.display_name || data.email}`);
       return {
         id: data.id,
         email: data.email,

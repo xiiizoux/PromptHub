@@ -41,14 +41,20 @@ export default apiHandler(async (req: NextApiRequest, res: NextApiResponse, user
     let authorName = '未知用户';
     if (prompt.user_id) {
       try {
+        console.log(`[Profile API] 开始获取用户信息，用户ID: ${prompt.user_id}`);
         const { data: userData, error: userError } = await supabaseAdapter.supabase
           .from('users')
           .select('display_name')
           .eq('id', prompt.user_id)
-          .single();
+          .maybeSingle(); // 使用 maybeSingle() 而不是 single()
 
-        if (!userError && userData && userData.display_name) {
+        if (userError) {
+          console.warn('获取用户信息时发生错误:', userError);
+        } else if (userData && userData.display_name) {
           authorName = userData.display_name;
+          console.log(`[Profile API] 成功获取用户信息: ${authorName}`);
+        } else {
+          console.warn(`[Profile API] 用户 ${prompt.user_id} 不存在或没有 display_name`);
         }
       } catch (userErr) {
         console.warn('获取用户信息失败，使用默认作者名:', userErr);
