@@ -95,8 +95,7 @@ web/src/lib/cache-data
 ehthumbs.db
 Thumbs.db
 
-# Web构建输出
-web/.next
+# Web构建输出 (保留.next用于生产环境)
 web/out
 web/build
 web/dist

@@ -27,23 +27,18 @@ RUN apk update && apk add --no-cache \
     curl
 
 # 复制package.json文件
-COPY package*.json ./
 COPY mcp/package*.json ./mcp/
 COPY web/package*.json ./web/
 COPY supabase/package*.json ./supabase/
 
-# 安装根目录依赖
-RUN npm install --only=production
+# 安装MCP依赖（包含运行时必需的开发依赖）
+RUN cd mcp && npm install
 
-# 安装MCP依赖
-RUN cd mcp && npm install --only=production && \
-    npm install --save-dev tsx@latest dotenv-cli@latest typescript@latest
-
-# 安装Web依赖
-RUN cd web && NODE_OPTIONS="--max-old-space-size=4096" npm install --only=production
+# 安装Web依赖（构建需要开发依赖）
+RUN cd web && NODE_OPTIONS="--max-old-space-size=4096" npm install
 
 # 安装Supabase依赖（如果需要）
-RUN cd supabase && npm install --only=production || echo "Supabase依赖安装跳过"
+RUN cd supabase && npm install || echo "Supabase依赖安装跳过"
 
 # 复制所有项目文件
 COPY . .
