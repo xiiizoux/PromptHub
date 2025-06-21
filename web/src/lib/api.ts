@@ -510,8 +510,11 @@ export const getPromptPerformance = async (promptId: string): Promise<PromptPerf
       version_distribution: {}
     };
   } catch (error: any) {
-    console.error(`获取提示词 ${promptId} 性能数据失败:`, error);
-    
+    // 静默处理404错误，避免在控制台显示大量错误信息
+    if (error.response?.status !== 404) {
+      console.warn(`获取提示词 ${promptId} 性能数据失败:`, error.message);
+    }
+
     // 返回默认性能数据，避免页面崩溃
     return {
       prompt_id: promptId,
@@ -597,9 +600,12 @@ export const getPerformanceReport = async (promptId: string): Promise<any> => {
         recommended_models: ['gpt-4', 'gpt-3.5-turbo']
       }
     };
-  } catch (error) {
-    console.error(`获取提示词 ${promptId} 性能报告失败:`, error);
-    
+  } catch (error: any) {
+    // 静默处理404错误，避免在控制台显示大量错误信息
+    if (error.response?.status !== 404) {
+      console.warn(`获取提示词 ${promptId} 性能报告失败:`, error.message);
+    }
+
     // 出错时返回合理的默认值
     return {
       suggestions: [
@@ -1247,39 +1253,106 @@ export interface OptimizationSuggestion {
 }
 
 export async function getPerformanceMetrics(
-  promptId: string, 
+  promptId: string,
   timeRange: '24h' | '7d' | '30d' | '90d' = '7d'
 ): Promise<PerformanceMetrics> {
-  const response = await api.get(`/performance/metrics?promptId=${promptId}&timeRange=${timeRange}`);
-  
-  if (!response.data.success) {
-    throw new Error('获取性能指标失败');
-  }
+  try {
+    const response = await api.get(`/performance/metrics?promptId=${promptId}&timeRange=${timeRange}`);
 
-  return response.data.metrics;
+    if (!response.data.success) {
+      throw new Error('获取性能指标失败');
+    }
+
+    return response.data.metrics;
+  } catch (error: any) {
+    // 静默处理404错误
+    if (error.response?.status !== 404) {
+      console.warn(`获取性能指标失败:`, error.message);
+    }
+
+    // 返回默认指标数据
+    return {
+      overall_score: 0,
+      avg_response_time: 0,
+      response_time_trend: 'stable',
+      response_time_change: 0,
+      success_rate: 0,
+      success_rate_trend: 'stable',
+      success_rate_change: 0,
+      avg_tokens: 0,
+      token_usage_trend: 'stable',
+      user_satisfaction: 0,
+      satisfaction_trend: 'stable',
+      satisfaction_count: 0,
+      time_series: {
+        labels: [],
+        response_times: [],
+        usage_counts: []
+      },
+      usage_distribution: {
+        labels: [],
+        values: []
+      }
+    };
+  }
 }
 
 export async function getPerformanceAnalysis(
-  promptId: string, 
+  promptId: string,
   timeRange: '24h' | '7d' | '30d' | '90d' = '7d'
 ): Promise<PerformanceAnalysis> {
-  const response = await api.get(`/performance/analysis?promptId=${promptId}&timeRange=${timeRange}`);
-  
-  if (!response.data.success) {
-    throw new Error('获取性能分析失败');
-  }
+  try {
+    const response = await api.get(`/performance/analysis?promptId=${promptId}&timeRange=${timeRange}`);
 
-  return response.data.analysis;
+    if (!response.data.success) {
+      throw new Error('获取性能分析失败');
+    }
+
+    return response.data.analysis;
+  } catch (error: any) {
+    // 静默处理404错误
+    if (error.response?.status !== 404) {
+      console.warn(`获取性能分析失败:`, error.message);
+    }
+
+    // 返回默认分析数据
+    return {
+      key_findings: ['暂无足够数据进行分析'],
+      bottlenecks: [],
+      performance_trends: {
+        trend: 'stable',
+        factors: []
+      }
+    };
+  }
 }
 
 export async function getOptimizationSuggestions(promptId: string): Promise<OptimizationSuggestion[]> {
-  const response = await api.get(`/performance/suggestions?promptId=${promptId}`);
-  
-  if (!response.data.success) {
-    throw new Error('获取优化建议失败');
-  }
+  try {
+    const response = await api.get(`/performance/suggestions?promptId=${promptId}`);
 
-  return response.data.suggestions;
+    if (!response.data.success) {
+      throw new Error('获取优化建议失败');
+    }
+
+    return response.data.suggestions;
+  } catch (error: any) {
+    // 静默处理404错误
+    if (error.response?.status !== 404) {
+      console.warn(`获取优化建议失败:`, error.message);
+    }
+
+    // 返回默认建议
+    return [
+      {
+        title: '增加使用数据',
+        description: '需要更多使用数据来生成个性化的优化建议',
+        priority: 'medium',
+        expected_improvement: '提高分析准确性',
+        implementation_effort: 'low'
+      }
+    ];
+  }
 }
 
 // 获取系统性能数据

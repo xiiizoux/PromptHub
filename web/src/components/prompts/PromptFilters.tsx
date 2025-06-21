@@ -207,7 +207,11 @@ const PromptFilters: React.FC<PromptFiltersProps> = ({
           <MagnifyingGlassIcon className="w-5 h-5 text-neon-cyan" />
         </div>
         <motion.input
-          type="text"
+          type="search"
+          id="prompt-search-input"
+          name="promptSearch"
+          autoComplete="search"
+          aria-label="搜索提示词"
           whileFocus={{ scale: 1.02 }}
           className="w-full pl-12 pr-4 py-4 bg-dark-bg-secondary/50 border border-dark-border rounded-xl text-white placeholder-gray-500 focus:border-neon-cyan focus:ring-1 focus:ring-neon-cyan focus:shadow-neon-sm transition-all duration-300 backdrop-blur-sm text-lg"
           placeholder="搜索提示词..."
@@ -353,7 +357,11 @@ const PromptFilters: React.FC<PromptFiltersProps> = ({
                   <MagnifyingGlassIcon className="w-4 h-4 text-neon-purple/60" />
                 </div>
                 <input
-                  type="text"
+                  type="search"
+                  id="tag-search-input"
+                  name="tagSearch"
+                  autoComplete="search"
+                  aria-label="搜索标签"
                   placeholder="搜索标签..."
                   value={tagSearchQuery}
                   onChange={handleTagSearchChange}
