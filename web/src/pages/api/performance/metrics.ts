@@ -21,6 +21,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       });
     }
 
+    console.log(`[API] 获取性能指标，ID: ${promptId}, 时间范围: ${timeRange}`);
+
     const metrics = await getPerformanceMetrics(promptId as string, timeRange as string);
 
     res.status(200).json({
@@ -58,20 +60,32 @@ async function getPerformanceMetrics(promptId: string, timeRange: string) {
       .gte('created_at', startDate.toISOString())
       .order('created_at', { ascending: true });
 
-    if (usageError) throw usageError;
+    if (usageError) {
+      console.warn('获取使用数据失败:', usageError);
+    }
 
-    // 获取评分数据
-    const { data: ratingData, error: ratingError } = await supabase
-      .from('ratings')
-      .select('rating, created_at')
-      .eq('prompt_id', promptId)
-      .gte('created_at', startDate.toISOString());
+    // 修正：使用正确的表名 prompt_feedback 而不是 ratings
+    // 获取反馈数据，通过 usage_id 关联
+    const usageIds = (usageData || []).map(u => u.id);
+    let ratingData = [];
+    
+    if (usageIds.length > 0) {
+      const { data: feedbackData, error: feedbackError } = await supabase
+        .from('prompt_feedback')
+        .select('rating, created_at, usage_id')
+        .in('usage_id', usageIds)
+        .gte('created_at', startDate.toISOString());
 
-    if (ratingError) throw ratingError;
+      if (feedbackError) {
+        console.warn('获取反馈数据失败:', feedbackError);
+      } else {
+        ratingData = feedbackData || [];
+      }
+    }
 
     // 计算性能指标
-    const metrics = calculateMetrics(usageData || [], ratingData || [], days);
-    
+    const metrics = calculateMetrics(usageData || [], ratingData, days);
+
     return metrics;
   } catch (error) {
     console.error('查询性能数据失败:', error);
@@ -82,14 +96,14 @@ async function getPerformanceMetrics(promptId: string, timeRange: string) {
 function calculateMetrics(usageData: any[], ratingData: any[], days: number) {
   // 响应时间分析
   const responseTimes = usageData.map(u => u.latency_ms).filter(t => t != null);
-  const avgResponseTime = responseTimes.length > 0 
+  const avgResponseTime = responseTimes.length > 0
     ? Math.round(responseTimes.reduce((a, b) => a + b, 0) / responseTimes.length)
     : 0;
 
   // 成功率计算（假设latency_ms存在表示成功）
   const successfulRequests = usageData.filter(u => u.latency_ms != null).length;
   const totalRequests = usageData.length;
-  const successRate = totalRequests > 0 
+  const successRate = totalRequests > 0
     ? Math.round((successfulRequests / totalRequests) * 100)
     : 100;
 
@@ -181,7 +195,7 @@ function generateTimeSeries(usageData: any[], days: number) {
     const periodResponseTimes = periodData
       .map(u => u.latency_ms)
       .filter(t => t != null);
-    
+
     const avgResponseTime = periodResponseTimes.length > 0
       ? periodResponseTimes.reduce((a, b) => a + b, 0) / periodResponseTimes.length
       : null;
@@ -200,7 +214,7 @@ function generateTimeSeries(usageData: any[], days: number) {
 function generateUsageDistribution(usageData: any[]) {
   // 按小时分布
   const hours = Array(24).fill(0);
-  
+
   usageData.forEach(usage => {
     const hour = new Date(usage.created_at).getHours();
     hours[hour]++;
@@ -208,7 +222,7 @@ function generateUsageDistribution(usageData: any[]) {
 
   const labels = [];
   const values = [];
-  
+
   // 按6小时分组
   for (let i = 0; i < 24; i += 6) {
     const periodSum = hours.slice(i, i + 6).reduce((a, b) => a + b, 0);
@@ -221,18 +235,18 @@ function generateUsageDistribution(usageData: any[]) {
 
 function calculateTrend(values: number[]): 'up' | 'down' | 'stable' {
   if (values.length < 2) return 'stable';
-  
+
   const validValues = values.filter(v => v > 0);
   if (validValues.length < 2) return 'stable';
-  
+
   const firstHalf = validValues.slice(0, Math.floor(validValues.length / 2));
   const secondHalf = validValues.slice(Math.floor(validValues.length / 2));
-  
+
   const firstAvg = firstHalf.reduce((a, b) => a + b, 0) / firstHalf.length;
   const secondAvg = secondHalf.reduce((a, b) => a + b, 0) / secondHalf.length;
-  
+
   const change = (secondAvg - firstAvg) / firstAvg;
-  
+
   if (change > 0.1) return 'up';
   if (change < -0.1) return 'down';
   return 'stable';
@@ -240,16 +254,16 @@ function calculateTrend(values: number[]): 'up' | 'down' | 'stable' {
 
 function calculateChange(values: number[]): number {
   if (values.length < 2) return 0;
-  
+
   const validValues = values.filter(v => v > 0);
   if (validValues.length < 2) return 0;
-  
+
   const firstHalf = validValues.slice(0, Math.floor(validValues.length / 2));
   const secondHalf = validValues.slice(Math.floor(validValues.length / 2));
-  
+
   const firstAvg = firstHalf.reduce((a, b) => a + b, 0) / firstHalf.length;
   const secondAvg = secondHalf.reduce((a, b) => a + b, 0) / secondHalf.length;
-  
+
   return Math.round(((secondAvg - firstAvg) / firstAvg) * 100);
 }
 
@@ -292,4 +306,4 @@ function calculateOverallScore(metrics: {
   }
 
   return Math.round(Math.min(score, 100));
-} 
+}
