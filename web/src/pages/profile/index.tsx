@@ -111,6 +111,7 @@ const ProfilePage = () => {
   const [newKeyExpiry, setNewKeyExpiry] = useState(30);
   const [visibleKeys, setVisibleKeys] = useState<Set<string>>(new Set());
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
+  const [newlyCreatedKeys, setNewlyCreatedKeys] = useState<Set<string>>(new Set()); // 跟踪新创建的密钥
   const [loading, setLoading] = useState(false);
   const [promptsLoading, setPromptsLoading] = useState(false);
   const [promptCounts, setPromptCounts] = useState<{total: number, public: number, private: number}>({total: 0, public: 0, private: 0});
@@ -220,6 +221,19 @@ const ProfilePage = () => {
       fetchPromptCount();
     }
   }, [user]);
+
+  // 页面卸载时清除新创建密钥的状态
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      setNewlyCreatedKeys(new Set());
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, []);
 
   // 当切换到个人资料标签时刷新统计数据
   useEffect(() => {
@@ -1039,22 +1053,18 @@ const ProfilePage = () => {
         setApiKeys(prev => [newKey, ...prev]);
         setNewKeyName('');
         setShowCreateForm(false);
-        
-        // 自动显示并复制新创建的密钥 - 使用Array.from解决Set迭代问题
-        setVisibleKeys(prev => {
-          // 先转换为Array，再添加新元素，然后转回成Set
-          const prevArray = Array.from(prev);
-          return new Set([...prevArray, newKey.id]);
-        });
-        
+
+        // 标记为新创建的密钥，这样它会显示密钥值
+        setNewlyCreatedKeys(prev => new Set([...Array.from(prev), newKey.id]));
+
         // 如果密钥中包含原始密钥字符串，显示提示
         if (newKey.key && newKey.key.length > 32) {
           // 使用浏览器API复制到剪贴板
           try {
             await navigator.clipboard.writeText(newKey.key);
-            alert(`API密钥创建成功并已复制到剪贴板：\n${newKey.key}\n\n注意：这是唯一一次显示完整密钥的机会！`);
+            alert(`API密钥创建成功并已复制到剪贴板！\n\n注意：这是唯一一次显示完整密钥的机会，请立即保存！`);
           } catch (e) {
-            alert(`API密钥创建成功。请手动复制密钥：\n${newKey.key}\n\n注意：这是唯一一次显示完整密钥的机会！`);
+            alert(`API密钥创建成功。请手动复制密钥：\n${newKey.key}\n\n注意：这是唯一一次显示完整密钥的机会，请立即保存！`);
           }
         }
       } catch (adapterError) {
@@ -1571,6 +1581,50 @@ const ProfilePage = () => {
                                 </span>
                               )}
                             </div>
+
+                            {/* API密钥值显示区域 - 只有新创建的密钥才显示 */}
+                            {apiKey.key && newlyCreatedKeys.has(apiKey.id) && (
+                              <div className="mt-4 p-3 glass rounded-lg border border-neon-cyan/20 bg-dark-bg-secondary/30">
+                                <div className="flex items-center justify-between">
+                                  <div className="flex-1 mr-3">
+                                    <p className="text-xs text-gray-400 mb-1">API密钥（仅显示一次）</p>
+                                    <div className="font-mono text-sm text-neon-cyan break-all">
+                                      {apiKey.key}
+                                    </div>
+                                  </div>
+                                  <button
+                                    onClick={() => copyToClipboard(apiKey.key, apiKey.id)}
+                                    className="p-2 glass rounded-lg hover:bg-neon-green/10 transition-colors flex-shrink-0"
+                                    title="复制密钥"
+                                  >
+                                    {copiedKey === apiKey.id ? (
+                                      <CheckIcon className="h-5 w-5 text-neon-green" />
+                                    ) : (
+                                      <ClipboardIcon className="h-5 w-5 text-neon-green" />
+                                    )}
+                                  </button>
+                                </div>
+                                <div className="flex items-center justify-between mt-2">
+                                  <p className="text-xs text-neon-orange">
+                                    ⚠️ 请立即复制并保存此密钥，关闭页面后将无法再次查看
+                                  </p>
+                                  <button
+                                    onClick={() => {
+                                      setNewlyCreatedKeys(prev => {
+                                        const newSet = new Set(Array.from(prev));
+                                        newSet.delete(apiKey.id);
+                                        return newSet;
+                                      });
+                                    }}
+                                    className="text-xs text-gray-400 hover:text-neon-red transition-colors"
+                                    title="隐藏密钥"
+                                  >
+                                    隐藏密钥
+                                  </button>
+                                </div>
+                              </div>
+                            )}
+
                             <div className="flex items-center space-x-2 mt-3">
                               <button
                                 onClick={() => deleteApiKey(apiKey.id)}
