@@ -6,7 +6,7 @@
 
 ```bash
 # 使用 npx 直接运行（推荐）
-npx prompthub-mcp
+npx prompthub-mcp-adapter
 ```
 
 ### 🔧 AI 客户端配置
@@ -20,7 +20,7 @@ npx prompthub-mcp
   "mcpServers": {
     "prompthub": {
       "command": "npx",
-      "args": ["prompthub-mcp"],
+      "args": ["prompthub-mcp-adapter"],
       "env": {
         "API_KEY": "your-api-key-here"
       }
@@ -38,7 +38,7 @@ npx prompthub-mcp
   "mcpServers": {
     "prompthub": {
       "command": "npx",
-      "args": ["prompthub-mcp"],
+      "args": ["prompthub-mcp-adapter"],
       "env": {
         "API_KEY": "your-api-key-here"
       }
@@ -84,7 +84,7 @@ npx prompthub-mcp
 3. **NPX 缓存问题**
    ```bash
    # 清除 npx 缓存
-   npx --yes prompthub-mcp
+   npx --yes prompthub-mcp-adapter
    ```
 
 ### 📚 更多资源

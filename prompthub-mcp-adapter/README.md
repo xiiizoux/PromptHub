@@ -1,6 +1,6 @@
 # PromptHub MCP Adapter
 
-[![npm version](https://badge.fury.io/js/prompthub-mcp.svg)](https://badge.fury.io/js/prompthub-mcp)
+[![npm version](https://badge.fury.io/js/prompthub-mcp-adapter.svg)](https://badge.fury.io/js/prompthub-mcp-adapter)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 MCP (Model Context Protocol) adapter for connecting AI clients like Cursor and Claude Desktop to PromptHub server.
@@ -10,14 +10,14 @@ MCP (Model Context Protocol) adapter for connecting AI clients like Cursor and C
 ### Install and Run with npx (Recommended)
 
 ```bash
-npx prompthub-mcp
+npx prompthub-mcp-adapter
 ```
 
 ### Install Globally
 
 ```bash
-npm install -g prompthub-mcp
-prompthub-mcp
+npm install -g prompthub-mcp-adapter
+prompthub-mcp-adapter
 ```
 
 ## 📋 Prerequisites
@@ -44,7 +44,7 @@ Add to your Cursor settings:
   "mcpServers": {
     "prompthub": {
       "command": "npx",
-      "args": ["prompthub-mcp"],
+      "args": ["prompthub-mcp-adapter"],
       "env": {
         "API_KEY": "your-api-key-here"
       }
@@ -62,7 +62,7 @@ Add to `~/.claude_desktop_config.json`:
   "mcpServers": {
     "prompthub": {
       "command": "npx",
-      "args": ["prompthub-mcp"],
+      "args": ["prompthub-mcp-adapter"],
       "env": {
         "API_KEY": "your-api-key-here"
       }

@@ -20,9 +20,9 @@ prompthub-mcp-adapter/
 ## 🔧 包配置详情
 
 ### package.json 核心配置
-- **包名**: `prompthub-mcp`
+- **包名**: `prompthub-mcp-adapter`
 - **版本**: `1.0.0`
-- **可执行文件**: `prompthub-mcp` -> `./index.js`
+- **可执行文件**: `prompthub-mcp-adapter` -> `./index.js`
 - **关键词**: mcp, prompthub, ai, claude, cursor, adapter
 - **许可证**: MIT
 - **Node.js 要求**: >=16.0.0
@@ -36,13 +36,13 @@ prompthub-mcp-adapter/
 
 ### 1. NPX 直接运行（推荐）
 ```bash
-npx prompthub-mcp
+npx prompthub-mcp-adapter
 ```
 
 ### 2. 全局安装
 ```bash
-npm install -g prompthub-mcp
-prompthub-mcp
+npm install -g prompthub-mcp-adapter
+prompthub-mcp-adapter
 ```
 
 ### 3. AI 客户端配置
@@ -53,7 +53,7 @@ prompthub-mcp
   "mcpServers": {
     "prompthub": {
       "command": "npx",
-      "args": ["prompthub-mcp"],
+      "args": ["prompthub-mcp-adapter"],
       "env": {
         "API_KEY": "your-api-key-here"
       }
@@ -68,7 +68,7 @@ prompthub-mcp
   "mcpServers": {
     "prompthub": {
       "command": "npx", 
-      "args": ["prompthub-mcp"],
+      "args": ["prompthub-mcp-adapter"],
       "env": {
         "API_KEY": "your-api-key-here"
       }
@@ -131,8 +131,8 @@ npm publish --access public
 
 ### 验证发布
 ```bash
-npm info prompthub-mcp
-npx prompthub-mcp@latest
+npm info prompthub-mcp-adapter
+npx prompthub-mcp-adapter@latest
 ```
 
 ## 🔄 版本管理策略
@@ -144,7 +144,7 @@ npx prompthub-mcp@latest
 ## 📊 预期效果
 
 ### 用户便利性提升
-- 从手动下载文件 → `npx prompthub-mcp`
+- 从手动下载文件 → `npx prompthub-mcp-adapter`
 - 从复杂路径配置 → 简单 `npx` 命令
 - 从手动更新 → 自动获取最新版本
 

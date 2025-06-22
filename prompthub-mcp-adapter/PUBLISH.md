@@ -23,7 +23,7 @@ npm test
 npm pack --dry-run
 
 # 验证包信息
-npm info prompthub-mcp
+npm info prompthub-mcp-adapter
 ```
 
 ### 3. 发布包
@@ -40,10 +40,10 @@ npm publish --access public
 
 ```bash
 # 检查是否发布成功
-npm info prompthub-mcp
+npm info prompthub-mcp-adapter
 
 # 测试安装
-npx prompthub-mcp@latest
+npx prompthub-mcp-adapter@latest
 ```
 
 ## 🔄 版本管理
@@ -151,7 +151,7 @@ jobs:
 npm whoami
 
 # 检查包名是否被占用
-npm info prompthub-mcp
+npm info prompthub-mcp-adapter
 
 # 检查网络连接
 npm ping
@@ -174,10 +174,10 @@ npm org ls your-org
 
 ```bash
 # 查看下载统计
-npm info prompthub-mcp
+npm info prompthub-mcp-adapter
 
 # 查看详细统计
-curl https://api.npmjs.org/downloads/range/last-month/prompthub-mcp
+curl https://api.npmjs.org/downloads/range/last-month/prompthub-mcp-adapter
 ```
 
 ---

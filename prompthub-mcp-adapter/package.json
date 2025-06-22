@@ -1,10 +1,10 @@
 {
-  "name": "prompthub-mcp",
-  "version": "1.0.5",
+  "name": "prompthub-mcp-adapter",
+  "version": "1.0.6",
   "description": "MCP adapter for connecting AI clients (Cursor, Claude Desktop) to PromptHub server",
   "main": "index.js",
   "bin": {
-    "prompthub-mcp": "./index.js"
+    "prompthub-mcp-adapter": "./index.js"
   },
   "scripts": {
     "start": "node index.js",
