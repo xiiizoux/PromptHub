@@ -5,7 +5,11 @@ import DocLayout from '@/components/DocLayout';
 import { DocSection, DocGrid, DocCard, DocCodeBlock, DocList, DocHighlight } from '@/components/DocContent';
 
 const MCPIntegrationPage: React.FC = () => {
-  const installCode = `# 🚀 推荐方式：直接 HTTP API 调用
+  const installCode = `# 🏆 最推荐：NPM 包方式（一键安装）
+# 零配置，自动更新，支持所有AI客户端
+npx prompthub-mcp-adapter
+
+# 🚀 备用方式：直接 HTTP API 调用
 # 无需安装额外SDK，只需要URL和API密钥
 curl -X GET "https://mcp.prompt-hub.cc/tools" \\
   -H "X-Api-Key: your-api-key" \\
@@ -21,12 +25,32 @@ curl -X POST "https://mcp.prompt-hub.cc/tools/search/invoke" \\
 curl -X GET "http://localhost:9010/tools" \\
   -H "X-Api-Key: your-api-key"`;
 
-  const zeroConfigCode = `# 🏆 最推荐：零配置MCP方案
-# 完全自动化！无需下载文件！
+  const npmConfigCode = `# 🏆 最推荐：NPM 包方式
+# 零配置，自动更新，30个工具立即可用！
 
 {
   "mcpServers": {
     "prompthub": {
+      "command": "npx",
+      "args": ["prompthub-mcp-adapter"],
+      "env": {
+        "API_KEY": "your-api-key-here"
+      }
+    }
+  }
+}
+
+# 🎯 优势：
+# ✅ 一键安装 - 无需下载任何文件
+# ✅ 自动更新 - 每次运行都是最新版本
+# ✅ 30个工具 - 完整的提示词管理工具集
+# ✅ 跨平台 - Windows、macOS、Linux 全支持
+# ✅ 零配置 - 只需设置 API 密钥
+
+# 备用：传统零配置MCP方案
+{
+  "mcpServers": {
+    "prompthub-legacy": {
       "command": "curl",
       "args": [
         "-s",
@@ -39,13 +63,7 @@ curl -X GET "http://localhost:9010/tools" \\
       }
     }
   }
-}
-
-# 🎯 优势：
-# ✅ 零文件管理 - 无需下载任何文件
-# ✅ 自动发现所有工具 - 新工具自动可用
-# ✅ 自动更新 - 始终使用最新版本
-# ✅ 智能缓存 - 避免重复下载`;
+}`;
 
   const httpApiConfigCode = `# 🚀 备选：直接HTTP API调用
 # 简单快速，适合开发测试
@@ -319,8 +337,8 @@ curl -X POST "https://mcp.prompt-hub.cc/tools/unified_search/invoke" \\
               <h4 className="text-lg font-semibold text-white mb-4">3. 配置示例</h4>
               <div className="space-y-6">
                 <DocCodeBlock
-                  code={zeroConfigCode}
-                  title="🏆 最推荐：零配置MCP方案"
+                  code={npmConfigCode}
+                  title="🏆 最推荐：NPM 包方式"
                   language="json"
                 />
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -333,12 +351,16 @@ curl -X POST "https://mcp.prompt-hub.cc/tools/unified_search/invoke" \\
                     <h5 className="text-md font-medium text-white">📋 配置对比</h5>
                     <div className="space-y-3 text-sm">
                       <div className="p-3 bg-green-500/10 border border-green-500/30 rounded-lg">
-                        <div className="font-medium text-green-400">🏆 零配置MCP</div>
-                        <div className="text-gray-300 mt-1">完全自动化，无需文件管理</div>
+                        <div className="font-medium text-green-400">🏆 NPM 包方式</div>
+                        <div className="text-gray-300 mt-1">一键安装，30个工具，自动更新</div>
                       </div>
                       <div className="p-3 bg-blue-500/10 border border-blue-500/30 rounded-lg">
                         <div className="font-medium text-blue-400">🚀 HTTP API</div>
                         <div className="text-gray-300 mt-1">简单直接，适合快速测试</div>
+                      </div>
+                      <div className="p-3 bg-purple-500/10 border border-purple-500/30 rounded-lg">
+                        <div className="font-medium text-purple-400">🔧 传统MCP</div>
+                        <div className="text-gray-300 mt-1">零配置方案，兼容性好</div>
                       </div>
                     </div>
                   </div>
@@ -347,7 +369,59 @@ curl -X POST "https://mcp.prompt-hub.cc/tools/unified_search/invoke" \\
             </div>
 
             <div>
-              <h4 className="text-lg font-semibold text-white mb-4">4. 实际调用示例</h4>
+              <h4 className="text-lg font-semibold text-white mb-4">4. NPM 包使用示例</h4>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <DocCodeBlock
+                  code={`# 🏆 推荐：直接使用 NPX
+npx prompthub-mcp-adapter
+
+# 全局安装
+npm install -g prompthub-mcp-adapter
+prompthub-mcp-adapter
+
+# 测试连接
+API_KEY=your-api-key npx prompthub-mcp-adapter`}
+                  title="🏆 NPM 包使用方式"
+                  language="bash"
+                />
+                <DocCodeBlock
+                  code={`{
+  "mcpServers": {
+    "prompthub": {
+      "command": "npx",
+      "args": ["prompthub-mcp-adapter"],
+      "env": {
+        "API_KEY": "your-api-key-here",
+        "MCP_SERVER_URL": "https://mcp.prompt-hub.cc"
+      }
+    }
+  }
+}
+
+// 可用工具：30个
+// ✅ 提示词管理：创建、更新、搜索
+// ✅ 智能推荐：AI 驱动的推荐
+// ✅ 性能分析：使用数据追踪
+// ✅ 协作功能：团队共享和版本控制`}
+                  title="AI 客户端配置示例"
+                  language="json"
+                />
+              </div>
+              <DocHighlight type="success">
+                <h5 className="font-semibold mb-3">🏆 为什么推荐NPM包方式？</h5>
+                <ul className="space-y-2 text-sm">
+                  <li>• <strong>一键安装：</strong>无需下载文件，npx 自动处理</li>
+                  <li>• <strong>自动更新：</strong>每次运行都是最新版本，无需手动更新</li>
+                  <li>• <strong>30个工具：</strong>完整的提示词管理工具集，功能全面</li>
+                  <li>• <strong>跨平台：</strong>Windows、macOS、Linux 全支持</li>
+                  <li>• <strong>零配置：</strong>只需设置 API 密钥即可使用</li>
+                  <li>• <strong>易于调试：</strong>详细的日志输出，问题排查简单</li>
+                </ul>
+              </DocHighlight>
+            </div>
+
+            <div>
+              <h4 className="text-lg font-semibold text-white mb-4">5. HTTP API 调用示例</h4>
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <DocCodeBlock
                   code={httpApiExample}
@@ -384,10 +458,27 @@ curl -X POST "https://mcp.prompt-hub.cc/tools/unified_search/invoke" \\
           
           <DocGrid cols={3}>
             <DocCard
-              title="🚀 HTTP API（推荐）"
-              description="直接 REST API 调用，简单易用"
+              title="🏆 NPM 包方式（强烈推荐）"
+              description="一键安装，30个工具，自动更新"
               icon={<ServerIcon className="h-6 w-6" />}
               color="green"
+            >
+              <DocList
+                items={[
+                  { title: "一键安装", description: "npx 自动处理" },
+                  { title: "30个工具", description: "完整工具集" },
+                  { title: "自动更新", description: "始终最新版本" },
+                  { title: "跨平台", description: "全平台支持" }
+                ]}
+                className="mt-4"
+              />
+            </DocCard>
+
+            <DocCard
+              title="🚀 HTTP API"
+              description="直接 REST API 调用，简单易用"
+              icon={<CloudIcon className="h-6 w-6" />}
+              color="cyan"
             >
               <DocList
                 items={[
@@ -436,11 +527,45 @@ curl -X POST "https://mcp.prompt-hub.cc/tools/unified_search/invoke" \\
           <DocHighlight type="success">
             <h4 className="font-semibold mb-3">🎯 使用建议</h4>
             <ul className="space-y-2 text-sm">
-              <li>• <strong>🚀 HTTP API（强烈推荐）：</strong>适合所有场景，简单快速，易于集成</li>
+              <li>• <strong>🏆 NPM 包方式（最推荐）：</strong>一键安装，30个工具，自动更新，适合所有AI客户端</li>
+              <li>• <strong>🚀 HTTP API：</strong>适合快速测试和开发，简单直接</li>
               <li>• <strong>传统MCP协议：</strong>仅在AI客户端严格要求MCP协议时使用</li>
               <li>• <strong>实时通信：</strong>需要实时数据更新的应用场景</li>
               <li>• <strong>服务地址：</strong>生产环境 https://mcp.prompt-hub.cc，本地开发 http://localhost:9010</li>
             </ul>
+          </DocHighlight>
+
+          <DocHighlight type="info">
+            <h4 className="font-semibold mb-3">📦 NPM 包详细信息</h4>
+            <div className="bg-dark-bg-primary rounded-lg p-4 space-y-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <code className="text-sm text-neon-cyan">包名</code>
+                  <p className="text-xs text-gray-400 mt-1">prompthub-mcp-adapter</p>
+                </div>
+                <div>
+                  <code className="text-sm text-gray-300">最新版本: 1.0.6</code>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <code className="text-sm text-neon-cyan">安装命令</code>
+                  <p className="text-xs text-gray-400 mt-1">npx prompthub-mcp-adapter</p>
+                </div>
+                <div>
+                  <code className="text-sm text-gray-300">支持平台: Windows, macOS, Linux</code>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <code className="text-sm text-neon-cyan">工具数量</code>
+                  <p className="text-xs text-gray-400 mt-1">30个完整工具集</p>
+                </div>
+                <div>
+                  <code className="text-sm text-gray-300">Node.js要求: {'>'}= 16.0.0</code>
+                </div>
+              </div>
+            </div>
           </DocHighlight>
         </div>
       </DocSection>
