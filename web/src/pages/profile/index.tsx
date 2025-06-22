@@ -1593,7 +1593,7 @@ const ProfilePage = () => {
                                     </div>
                                   </div>
                                   <button
-                                    onClick={() => copyToClipboard(apiKey.key, apiKey.id)}
+                                    onClick={() => copyToClipboard(apiKey.key || '', apiKey.id || '')}
                                     className="p-2 glass rounded-lg hover:bg-neon-green/10 transition-colors flex-shrink-0"
                                     title="复制密钥"
                                   >

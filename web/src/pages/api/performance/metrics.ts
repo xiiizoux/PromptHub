@@ -69,7 +69,7 @@ async function getPerformanceMetrics(promptId: string, timeRange: string) {
     // 修正：使用正确的表名 prompt_feedback 而不是 ratings
     // 获取反馈数据，通过 usage_id 关联
     const usageIds = (usageData || []).map(u => u.id);
-    let ratingData = [];
+    let ratingData: any[] = [];
     
     if (usageIds.length > 0) {
       const { data: feedbackData, error: feedbackError } = await supabase

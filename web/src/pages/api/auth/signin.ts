@@ -20,7 +20,7 @@ export default apiHandler(async (req: NextApiRequest, res: NextApiResponse) => {
 
     const validation = InputValidator.validate(req.body, validationRules);
     if (!validation.isValid) {
-      logger.warn('登录输入验证失败', undefined, {
+      logger.warn('登录输入验证失败', {
         errors: validation.errors,
         email: req.body.email?.substring(0, 3) + '***'
       });

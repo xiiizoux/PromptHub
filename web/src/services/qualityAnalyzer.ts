@@ -30,7 +30,6 @@ export class PromptQualityAnalyzer {
     const level = this.determineQualityLevel(overallScore);
     
     return {
-      promptId: prompt.id,
       overallScore,
       level,
       dimensions,
@@ -38,8 +37,11 @@ export class PromptQualityAnalyzer {
       weaknesses: this.identifyWeaknesses(dimensions),
       recommendations: this.generateRecommendations(dimensions, prompt),
       comparisonWithCategory: await this.getComparisonData(prompt.category || '通用', overallScore),
-      lastAnalyzed: new Date().toISOString(),
-      analysisVersion: '1.0'
+      metadata: {
+        analysisDate: new Date().toISOString(),
+        modelVersion: '1.0',
+        confidence: 0.95
+      }
     };
   }
 

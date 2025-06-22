@@ -129,7 +129,7 @@ export class EnhancedQualityAnalyzer extends PromptQualityAnalyzer {
     
     // 结构复杂度
     if (content.includes('步骤') || content.includes('分别')) complexityScore += 1;
-    if (content.match(/\d+\./g)?.length > 3) complexityScore += 1;
+    if ((content.match(/\d+\./g)?.length || 0) > 3) complexityScore += 1;
     
     // 专业术语
     const technicalTerms = ['算法', '机器学习', '深度学习', '神经网络', '数据结构'];
@@ -154,7 +154,7 @@ export class EnhancedQualityAnalyzer extends PromptQualityAnalyzer {
     const dimensions = Object.entries(analysis.dimensions || {});
     
     dimensions.forEach(([key, dimension]) => {
-      if (dimension && dimension.score < 70) {
+      if (dimension?.score && dimension.score < 70) {
         let potentialImprovement = 0;
         let actionItems: string[] = [];
         

@@ -27,7 +27,7 @@ export default apiHandler(async (req: NextApiRequest, res: NextApiResponse) => {
     // 可以在这里添加更多的健康检查，比如数据库连接等
     // 但要注意不要暴露敏感信息
 
-    logger.info('健康检查请求', undefined, {
+    logger.info('健康检查请求', {
       ip: req.headers['x-forwarded-for'] || req.socket.remoteAddress
     });
 

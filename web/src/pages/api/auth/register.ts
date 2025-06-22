@@ -17,7 +17,7 @@ export default apiHandler(async (req: NextApiRequest, res: NextApiResponse) => {
 
     const validation = InputValidator.validate(req.body, validationRules);
     if (!validation.isValid) {
-      logger.warn('注册输入验证失败', undefined, {
+      logger.warn('注册输入验证失败', {
         errors: validation.errors,
         email: email?.substring(0, 3) + '***' // 只记录邮箱前缀用于调试
       });
@@ -36,7 +36,7 @@ export default apiHandler(async (req: NextApiRequest, res: NextApiResponse) => {
       return errorResponse(res, '注册失败，请稍后重试', ErrorCode.INTERNAL_SERVER_ERROR);
     }
 
-    logger.info('用户注册成功', undefined, {
+    logger.info('用户注册成功', {
       userId: result.user.id,
       email: email.substring(0, 3) + '***'
     });

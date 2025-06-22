@@ -590,7 +590,7 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
           token = await getToken();
         }
       }
-      const result = await updatePrompt(prompt.id, data, token || undefined);
+      const result = await updatePrompt(prompt.id, data);
       
       setSaveSuccess(true);
       setHasUnsavedChanges(false);

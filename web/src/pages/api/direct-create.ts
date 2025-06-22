@@ -19,7 +19,7 @@ export default apiHandler(async (req: NextApiRequest, res: NextApiResponse, user
 
     const validation = InputValidator.validate(req.body, validationRules);
     if (!validation.isValid) {
-      logger.warn('创建提示词输入验证失败', undefined, {
+      logger.warn('创建提示词输入验证失败', {
         errors: validation.errors,
         userId
       });
@@ -60,7 +60,7 @@ export default apiHandler(async (req: NextApiRequest, res: NextApiResponse, user
     // 使用数据库服务创建提示词
     const newPrompt = await databaseService.createPrompt(promptData);
 
-    logger.info('提示词创建成功', undefined, {
+    logger.info('提示词创建成功', {
       promptId: newPrompt.id,
       name: newPrompt.name,
       userId: finalUserId

@@ -119,7 +119,7 @@ async function getPrompt(req: NextApiRequest, res: NextApiResponse, id: string, 
     // TODO: 增加查看次数和记录使用历史的功能可以在这里添加
     // 目前先返回基本的提示词信息
 
-    logger.info('获取提示词详情', undefined, { promptId: id, userId });
+    logger.info('获取提示词详情', { promptId: id, userId });
 
     return successResponse(res, { prompt });
   } catch (error: any) {
@@ -134,7 +134,7 @@ async function updatePrompt(req: NextApiRequest, res: NextApiResponse, id: strin
     // 验证输入数据
     const validation = validateUpdateData(req.body);
     if (!validation.isValid) {
-      logger.warn('更新提示词输入验证失败', undefined, {
+      logger.warn('更新提示词输入验证失败', {
         errors: validation.errors,
         promptId: id,
         userId
@@ -145,7 +145,7 @@ async function updatePrompt(req: NextApiRequest, res: NextApiResponse, id: strin
     // 使用数据库服务更新提示词
     const updatedPrompt = await databaseService.updatePrompt(id, req.body, userId);
 
-    logger.info('提示词更新成功', undefined, { promptId: id, userId });
+    logger.info('提示词更新成功', { promptId: id, userId });
 
     return successResponse(res, {
       prompt: updatedPrompt,
@@ -174,7 +174,7 @@ async function deletePrompt(req: NextApiRequest, res: NextApiResponse, id: strin
       return errorResponse(res, '删除提示词失败', ErrorCode.INTERNAL_SERVER_ERROR);
     }
 
-    logger.info('提示词删除成功', undefined, { promptId: id, userId });
+    logger.info('提示词删除成功', { promptId: id, userId });
 
     return successResponse(res, {
       message: '提示词删除成功'

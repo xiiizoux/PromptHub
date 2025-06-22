@@ -212,7 +212,7 @@ const QualityAnalysisPanel: React.FC<QualityAnalysisPanelProps> = ({ promptId, c
                   name={dimension.name}
                   score={dimension.score}
                   description={dimension.description}
-                  suggestions={dimension.suggestions}
+                  suggestions={(dimension as any).suggestions || []}
                 />
               </motion.div>
             ))}

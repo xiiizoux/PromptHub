@@ -21,7 +21,7 @@ export default apiHandler(async (req: NextApiRequest, res: NextApiResponse) => {
       return successResponse(res, []); // 返回空数组而不是错误
     }
 
-    logger.info('成功获取分类数据', undefined, { count: categories.length });
+    logger.info('成功获取分类数据', { count: categories.length });
     return successResponse(res, categories);
 
   } catch (error: any) {
