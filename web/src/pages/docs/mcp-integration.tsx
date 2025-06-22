@@ -5,118 +5,151 @@ import DocLayout from '@/components/DocLayout';
 import { DocSection, DocGrid, DocCard, DocCodeBlock, DocList, DocHighlight } from '@/components/DocContent';
 
 const MCPIntegrationPage: React.FC = () => {
-  const installCode = `# 方式一：使用标准 MCP 客户端连接
-# 通过官方 MCP SDK 连接我们的服务器
-npm install @modelcontextprotocol/sdk
-
-# 方式二：直接 HTTP API 调用
-# 无需安装额外SDK，直接使用 HTTP 请求
+  const installCode = `# 🚀 推荐方式：直接 HTTP API 调用
+# 无需安装额外SDK，只需要URL和API密钥
 curl -X GET "https://mcp.prompt-hub.cc/tools" \\
-  -H "X-Api-Key: your-api-key"
+  -H "X-Api-Key: your-api-key" \\
+  -H "Content-Type: application/json"
+
+# 调用工具示例
+curl -X POST "https://mcp.prompt-hub.cc/tools/search/invoke" \\
+  -H "X-Api-Key: your-api-key" \\
+  -H "Content-Type: application/json" \\
+  -d '{"query": "React hooks", "limit": 5}'
 
 # 本地开发环境
 curl -X GET "http://localhost:9010/tools" \\
   -H "X-Api-Key: your-api-key"`;
 
-  const configCode = `{
+  const zeroConfigCode = `# 🏆 最推荐：零配置MCP方案
+# 完全自动化！无需下载文件！
+
+{
   "mcpServers": {
-    "prompt-hub": {
-      "command": "node",
-      "args": ["-e", "
-        const { Client } = require('@modelcontextprotocol/sdk/client/index.js');
-        const { StdioClientTransport } = require('@modelcontextprotocol/sdk/client/stdio.js');
-        
-        async function main() {
-          const transport = new StdioClientTransport({
-            command: 'curl',
-            args: ['-X', 'POST', 'https://mcp.prompt-hub.cc/tools/invoke'],
-            env: { MCP_API_KEY: process.env.MCP_API_KEY }
-          });
-          
-          const client = new Client({
-            name: 'prompt-hub-client',
-            version: '1.0.0'
-          }, {
-            capabilities: {}
-          });
-          
-          await client.connect(transport);
-        }
-        
-        main().catch(console.error);
-      "],
+    "prompthub": {
+      "command": "curl",
+      "args": [
+        "-s",
+        "https://raw.githubusercontent.com/xiiizoux/PromptHub/main/mcp/src/adapters/auto-download-adapter.js",
+        "|",
+        "node"
+      ],
       "env": {
-        "MCP_API_KEY": "your-api-key"
+        "API_KEY": "your-api-key-here"
       }
+    }
+  }
+}
+
+# 🎯 优势：
+# ✅ 零文件管理 - 无需下载任何文件
+# ✅ 自动发现所有工具 - 新工具自动可用
+# ✅ 自动更新 - 始终使用最新版本
+# ✅ 智能缓存 - 避免重复下载`;
+
+  const httpApiConfigCode = `# 🚀 备选：直接HTTP API调用
+# 简单快速，适合开发测试
+
+# Cursor IDE 配置示例
+{
+  "customTools": {
+    "promptHub": {
+      "name": "PromptHub工具",
+      "baseUrl": "https://mcp.prompt-hub.cc",
+      "headers": {
+        "X-Api-Key": "your-api-key",
+        "Content-Type": "application/json"
+      },
+      "tools": [
+        {
+          "name": "搜索提示词",
+          "endpoint": "/tools/search/invoke",
+          "method": "POST"
+        }
+      ]
     }
   }
 }`;
 
-  const nodeExample = `// 方式一：使用标准 MCP SDK
-import { Client } from '@modelcontextprotocol/sdk/client/index.js';
-import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
+  const httpApiExample = `// 🚀 推荐方式：直接HTTP API调用
+const axios = require('axios');
 
-const transport = new StdioClientTransport({
-  command: 'node',
-  args: ['./connect-to-prompthub.js'],
-  env: { MCP_API_KEY: process.env.MCP_API_KEY }
-});
+// 配置
+const API_KEY = "your-api-key";
+const BASE_URL = "https://mcp.prompt-hub.cc";
 
-const client = new Client({
-  name: 'my-app',
-  version: '1.0.0'
-}, {
-  capabilities: {}
-});
+const headers = {
+  "X-Api-Key": API_KEY,
+  "Content-Type": "application/json"
+};
 
-await client.connect(transport);
+async function usePromptHub() {
+  try {
+    // 1. 获取可用工具
+    const toolsResponse = await axios.get(\`\${BASE_URL}/tools\`, { headers });
+    console.log("可用工具:", toolsResponse.data);
 
-// 调用工具
-const result = await client.callTool({
-  name: 'quick_store',
-  arguments: {
-    content: '你的提示词内容...',
-    title: '可选标题'
+    // 2. 搜索提示词
+    const searchResponse = await axios.post(
+      \`\${BASE_URL}/tools/search/invoke\`,
+      { query: "React hooks", limit: 5 },
+      { headers }
+    );
+    console.log("搜索结果:", searchResponse.data);
+
+    // 3. 快速存储提示词
+    const storeResponse = await axios.post(
+      \`\${BASE_URL}/tools/quick_store/invoke\`,
+      {
+        content: "你是一个React专家，帮助用户解决React相关问题。",
+        title: "React专家助手"
+      },
+      { headers }
+    );
+    console.log("存储结果:", storeResponse.data);
+
+  } catch (error) {
+    console.error("API调用失败:", error.response?.data || error.message);
   }
-});
-
-console.log(result);`;
-
-  const pythonExample = `# 方式二：直接 HTTP API 调用
-import requests
-import json
-
-# 配置
-API_KEY = "your-api-key"
-BASE_URL = "https://mcp.prompt-hub.cc"  # 生产环境
-# BASE_URL = "http://localhost:9010"    # 本地开发环境
-
-headers = {
-    "X-Api-Key": API_KEY,
-    "Content-Type": "application/json"
 }
 
-# 获取可用工具
-tools_response = requests.get(f"{BASE_URL}/tools", headers=headers)
-print("可用工具:", tools_response.json())
+usePromptHub();`;
 
-# 调用快速存储工具
-store_data = {
-    "name": "quick_store",
-    "arguments": {
-        "content": "你的提示词内容...",
-        "title": "可选标题"
-    }
-}
+  const curlExample = `# 命令行调用示例
+# 1. 健康检查
+curl -X GET "https://mcp.prompt-hub.cc/api/health"
 
-response = requests.post(
-    f"{BASE_URL}/tools/quick_store/invoke",
-    headers=headers,
-    json=store_data
-)
+# 2. 获取可用工具（需要API密钥）
+curl -X GET "https://mcp.prompt-hub.cc/tools" \\
+  -H "X-Api-Key: your-api-key" \\
+  -H "Content-Type: application/json"
 
-result = response.json()
-print("存储结果:", result)`;
+# 3. 搜索提示词
+curl -X POST "https://mcp.prompt-hub.cc/tools/search/invoke" \\
+  -H "X-Api-Key: your-api-key" \\
+  -H "Content-Type: application/json" \\
+  -d '{"query": "React hooks", "limit": 5}'
+
+# 4. 快速存储提示词
+curl -X POST "https://mcp.prompt-hub.cc/tools/quick_store/invoke" \\
+  -H "X-Api-Key: your-api-key" \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "content": "你是一个React专家，帮助用户解决React相关问题。",
+    "title": "React专家助手",
+    "category": "编程助手"
+  }'
+
+# 5. 统一搜索（高级功能）
+curl -X POST "https://mcp.prompt-hub.cc/tools/unified_search/invoke" \\
+  -H "X-Api-Key: your-api-key" \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "query": "前端开发",
+    "algorithm": "smart",
+    "limit": 10,
+    "include_content": true
+  }'`;
 
   const features = [
     {
@@ -147,62 +180,83 @@ print("存储结果:", result)`;
 
   const tools = [
     {
+      name: "search",
+      description: "🔍 快速搜索提示词（推荐）",
+      params: ["query", "limit", "category"]
+    },
+    {
+      name: "unified_search",
+      description: "🎯 统一搜索引擎，支持多种算法",
+      params: ["query", "algorithm", "limit", "include_content"]
+    },
+    {
       name: "quick_store",
-      description: "一键快速存储提示词，自动分析所有参数",
-      params: ["content", "title", "make_public"]
+      description: "⚡ 一键快速存储提示词",
+      params: ["content", "title", "category", "tags"]
     },
     {
       name: "smart_store",
-      description: "智能存储提示词，支持分析确认流程",
+      description: "🧠 智能存储提示词，自动分析",
       params: ["content", "auto_analyze", "confirm_before_save"]
     },
     {
-      name: "analyze_and_store",
-      description: "分步式提示词分析和存储",
-      params: ["content", "analysis_only", "analysis_result"]
+      name: "get_categories",
+      description: "📂 获取所有可用分类",
+      params: []
+    },
+    {
+      name: "get_prompt_names",
+      description: "📋 获取提示词名称列表",
+      params: ["category", "limit"]
     },
     {
       name: "get_prompt_details",
-      description: "获取特定提示词的详细信息",
+      description: "📄 获取特定提示词详细信息",
       params: ["name"]
     },
     {
-      name: "search_prompts",
-      description: "搜索和筛选提示词",
-      params: ["query", "category", "tags", "limit"]
-    },
-    {
-      name: "enhanced_search",
-      description: "增强搜索功能，支持复杂查询",
-      params: ["query", "filters", "sort_by", "include_ai_suggestions"]
+      name: "track_prompt_usage",
+      description: "📊 跟踪提示词使用情况",
+      params: ["prompt_id", "usage_context", "feedback"]
     }
   ];
 
   return (
     <DocLayout
-      title="MCP 集成指南"
-      description="深入了解如何集成和使用 Model Context Protocol (MCP) 服务，实现与 AI 模型的高效交互"
+      title="🚀 MCP 简化集成指南"
+      description="了解如何通过简单的HTTP API调用使用PromptHub MCP服务，无需复杂配置，只要URL和API密钥即可"
       breadcrumbs={[
         { name: "文档", href: "/docs" },
         { name: "MCP 集成", href: "/docs/mcp-integration" }
       ]}
     >
       {/* MCP 简介 */}
-      <DocSection title="什么是 MCP" delay={0.1}>
+      <DocSection title="🚀 简化的MCP集成" delay={0.1}>
         <div className="space-y-6">
           <p className="text-dark-text-secondary leading-relaxed">
-            Model Context Protocol (MCP) 是一个开放标准，用于在 AI 应用和外部数据源及工具之间建立安全、可控的连接。
-            PromptHub 的 MCP 集成让您能够无缝地与各种 AI 模型和工具进行交互。
+            PromptHub的MCP服务器实际上是一个<strong>HTTP REST API服务器</strong>，支持直接通过HTTP请求调用，
+            无需复杂的MCP协议配置！只需要URL和API密钥就能使用所有功能。
           </p>
-          
-          <DocHighlight type="info">
-            <h4 className="font-semibold mb-3">MCP 的核心优势</h4>
+
+          <DocHighlight type="success">
+            <h4 className="font-semibold mb-3">🎯 为什么选择我们的简化方案？</h4>
             <ul className="space-y-2 text-sm">
-              <li>• <strong>标准化接口：</strong>统一的 API 设计，简化集成过程</li>
-              <li>• <strong>安全可控：</strong>细粒度的权限控制和安全认证</li>
-              <li>• <strong>实时通信：</strong>支持实时数据交换和状态同步</li>
-              <li>• <strong>可扩展性：</strong>支持自定义工具和服务扩展</li>
+              <li>• <strong>🚀 极简配置：</strong>只需要URL + API密钥，无需复杂的协议配置</li>
+              <li>• <strong>🔧 通用兼容：</strong>任何HTTP客户端都支持，包括curl、Postman、浏览器</li>
+              <li>• <strong>⚡ 性能优秀：</strong>直接HTTP调用，减少协议转换开销</li>
+              <li>• <strong>🛠️ 易于调试：</strong>使用常见工具就能测试和调试</li>
+              <li>• <strong>📚 功能完整：</strong>与传统MCP协议功能完全相同</li>
             </ul>
+          </DocHighlight>
+
+          <DocHighlight type="info">
+            <h4 className="font-semibold mb-3">💡 快速体验</h4>
+            <div className="bg-dark-bg-primary rounded-lg p-4">
+              <code className="text-sm text-neon-cyan">
+                curl -X GET "https://mcp.prompt-hub.cc/api/health"
+              </code>
+              <p className="text-xs text-gray-400 mt-2">无需API密钥即可测试连接</p>
+            </div>
           </DocHighlight>
         </div>
       </DocSection>
@@ -245,52 +299,75 @@ print("存储结果:", result)`;
 
             <div>
               <h4 className="text-lg font-semibold text-white mb-4">2. 连接方式</h4>
-              <DocHighlight type="info">
-                <h5 className="font-semibold mb-3">我们支持两种连接方式</h5>
+              <DocHighlight type="success">
+                <h5 className="font-semibold mb-3">🚀 推荐：直接HTTP API调用</h5>
                 <ul className="space-y-2 text-sm">
-                  <li>• <strong>标准 MCP 协议：</strong>通过官方 MCP SDK 连接，完全兼容 MCP 标准</li>
-                  <li>• <strong>直接 HTTP API：</strong>无需额外依赖，直接使用 HTTP 请求调用工具</li>
-                  <li>• <strong>无需自定义SDK：</strong>我们遵循标准协议，无需安装专门的SDK</li>
-                  <li>• <strong>多语言支持：</strong>任何支持 HTTP 或 MCP 协议的语言都可以接入</li>
+                  <li>• <strong>简单直接：</strong>只需要URL和API密钥，无需复杂配置</li>
+                  <li>• <strong>通用兼容：</strong>任何HTTP客户端都支持，包括curl、axios、requests等</li>
+                  <li>• <strong>易于调试：</strong>可以直接用浏览器或命令行工具测试</li>
+                  <li>• <strong>性能更好：</strong>减少协议转换开销，响应更快</li>
                 </ul>
               </DocHighlight>
-              <DocCodeBlock 
+              <DocCodeBlock
                 code={installCode}
-                title="连接方式选择"
+                title="快速开始 - HTTP API调用"
                 language="bash"
               />
             </div>
 
             <div>
-              <h4 className="text-lg font-semibold text-white mb-4">3. 配置连接</h4>
-              <DocCodeBlock 
-                code={configCode}
-                title="配置文件"
-                language="json"
-              />
+              <h4 className="text-lg font-semibold text-white mb-4">3. 配置示例</h4>
+              <div className="space-y-6">
+                <DocCodeBlock
+                  code={zeroConfigCode}
+                  title="🏆 最推荐：零配置MCP方案"
+                  language="json"
+                />
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <DocCodeBlock
+                    code={httpApiConfigCode}
+                    title="🚀 备选：HTTP API配置"
+                    language="json"
+                  />
+                  <div className="space-y-4">
+                    <h5 className="text-md font-medium text-white">📋 配置对比</h5>
+                    <div className="space-y-3 text-sm">
+                      <div className="p-3 bg-green-500/10 border border-green-500/30 rounded-lg">
+                        <div className="font-medium text-green-400">🏆 零配置MCP</div>
+                        <div className="text-gray-300 mt-1">完全自动化，无需文件管理</div>
+                      </div>
+                      <div className="p-3 bg-blue-500/10 border border-blue-500/30 rounded-lg">
+                        <div className="font-medium text-blue-400">🚀 HTTP API</div>
+                        <div className="text-gray-300 mt-1">简单直接，适合快速测试</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
 
             <div>
               <h4 className="text-lg font-semibold text-white mb-4">4. 实际调用示例</h4>
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <DocCodeBlock 
-                  code={nodeExample}
-                  title="标准 MCP SDK 示例"
+                <DocCodeBlock
+                  code={httpApiExample}
+                  title="🚀 JavaScript HTTP API调用"
                   language="javascript"
                 />
-                <DocCodeBlock 
-                  code={pythonExample}
-                  title="HTTP API 调用示例"
-                  language="python"
+                <DocCodeBlock
+                  code={curlExample}
+                  title="命令行调用示例"
+                  language="bash"
                 />
               </div>
-              <DocHighlight type="warning">
-                <h5 className="font-semibold mb-3">重要说明</h5>
+              <DocHighlight type="success">
+                <h5 className="font-semibold mb-3">为什么推荐HTTP API？</h5>
                 <ul className="space-y-2 text-sm">
-                  <li>• 我们的服务器完全遵循 MCP 标准协议，无需专门的 SDK</li>
-                  <li>• 推荐使用官方 MCP SDK 以获得最佳兼容性</li>
-                  <li>• HTTP API 方式更简单，适合快速集成和测试</li>
-                  <li>• 两种方式功能完全相同，选择最适合您项目的即可</li>
+                  <li>• <strong>简单直接：</strong>无需复杂的协议配置，只要URL和API密钥</li>
+                  <li>• <strong>通用兼容：</strong>所有HTTP客户端都支持，包括浏览器、curl、Postman</li>
+                  <li>• <strong>易于调试：</strong>可以直接用常见工具测试和调试</li>
+                  <li>• <strong>性能更好：</strong>减少协议转换开销，响应更快更稳定</li>
+                  <li>• <strong>功能完整：</strong>与传统MCP协议功能完全相同</li>
                 </ul>
               </DocHighlight>
             </div>
@@ -306,45 +383,46 @@ print("存储结果:", result)`;
           </p>
           
           <DocGrid cols={3}>
-            <DocCard 
-              title="标准 MCP 协议"
-              description="通过官方 MCP SDK 连接，支持 stdio 传输"
+            <DocCard
+              title="🚀 HTTP API（推荐）"
+              description="直接 REST API 调用，简单易用"
+              icon={<ServerIcon className="h-6 w-6" />}
+              color="green"
+            >
+              <DocList
+                items={[
+                  { title: "简单配置", description: "只需URL+API密钥" },
+                  { title: "通用兼容", description: "任何HTTP客户端" },
+                  { title: "易于调试", description: "使用常见工具" },
+                  { title: "性能优秀", description: "响应快速稳定" }
+                ]}
+                className="mt-4"
+              />
+            </DocCard>
+
+            <DocCard
+              title="传统 MCP 协议"
+              description="通过官方 MCP SDK 连接（可选）"
               icon={<CommandLineIcon className="h-6 w-6" />}
               color="cyan"
             >
-              <DocList 
+              <DocList
                 items={[
-                  { title: "stdio 传输", description: "标准输入输出" },
-                  { title: "完全兼容", description: "MCP 标准协议" },
-                  { title: "类型安全", description: "TypeScript 支持" }
+                  { title: "标准协议", description: "MCP官方标准" },
+                  { title: "SDK支持", description: "TypeScript支持" },
+                  { title: "生态兼容", description: "MCP生态系统" }
                 ]}
                 className="mt-4"
               />
             </DocCard>
-            
-            <DocCard 
-              title="HTTP API"
-              description="直接 REST API 调用，简单易用"
-              icon={<ServerIcon className="h-6 w-6" />}
+
+            <DocCard
+              title="实时通信"
+              description="WebSocket实时事件流"
+              icon={<BoltIcon className="h-6 w-6" />}
               color="purple"
             >
-              <DocList 
-                items={[
-                  { title: "RESTful API", description: "标准 HTTP 请求" },
-                  { title: "多语言支持", description: "任何 HTTP 客户端" },
-                  { title: "易于调试", description: "使用常见工具" }
-                ]}
-                className="mt-4"
-              />
-            </DocCard>
-            
-            <DocCard 
-              title="Server-Sent Events"
-              description="实时事件流，支持长连接"
-              icon={<BoltIcon className="h-6 w-6" />}
-              color="pink"
-            >
-              <DocList 
+              <DocList
                 items={[
                   { title: "实时更新", description: "服务器推送" },
                   { title: "长连接", description: "保持状态同步" },
@@ -355,13 +433,13 @@ print("存储结果:", result)`;
             </DocCard>
           </DocGrid>
           
-          <DocHighlight type="info">
-            <h4 className="font-semibold mb-3">传输方式选择建议</h4>
+          <DocHighlight type="success">
+            <h4 className="font-semibold mb-3">🎯 使用建议</h4>
             <ul className="space-y-2 text-sm">
-              <li>• <strong>MCP SDK：</strong>推荐用于新项目，完全兼容 MCP 生态</li>
-              <li>• <strong>HTTP API：</strong>适合快速集成和现有系统改造</li>
-              <li>• <strong>SSE：</strong>需要实时数据更新的应用场景</li>
-              <li>• <strong>端口：</strong>默认运行在 9010 端口</li>
+              <li>• <strong>🚀 HTTP API（强烈推荐）：</strong>适合所有场景，简单快速，易于集成</li>
+              <li>• <strong>传统MCP协议：</strong>仅在AI客户端严格要求MCP协议时使用</li>
+              <li>• <strong>实时通信：</strong>需要实时数据更新的应用场景</li>
+              <li>• <strong>服务地址：</strong>生产环境 https://mcp.prompt-hub.cc，本地开发 http://localhost:9010</li>
             </ul>
           </DocHighlight>
         </div>
@@ -576,30 +654,44 @@ print("存储结果:", result)`;
       </DocSection>
 
       {/* 下一步 */}
-      <DocSection title="下一步" delay={0.8}>
+      <DocSection title="📚 相关资源" delay={0.8}>
         <div className="space-y-6">
           <p className="text-dark-text-secondary leading-relaxed">
-            完成基础集成后，您可以继续探索更多高级功能和最佳实践。
+            现在您已经了解了MCP集成的基础知识，可以继续探索更多功能和最佳实践。
           </p>
-          
+
+          <DocHighlight type="info">
+            <h4 className="font-semibold mb-3">🎯 推荐阅读顺序</h4>
+            <ol className="space-y-2 text-sm list-decimal list-inside">
+              <li>先尝试HTTP API调用方式（本页介绍的推荐方法）</li>
+              <li>查看详细的配置文档和示例</li>
+              <li>了解API集成的最佳实践</li>
+              <li>探索高级功能和自定义选项</li>
+            </ol>
+          </DocHighlight>
+
           <div className="flex flex-wrap gap-4">
-            <Link 
-              href="/docs/api-integration" 
-              className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-neon-cyan to-neon-purple text-white rounded-xl font-medium shadow-neon hover:shadow-neon-lg transition-all duration-300"
+            <a
+              href="https://github.com/xiiizoux/PromptHub/blob/main/docs/mcp-universal-config.md"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-neon-green to-neon-cyan text-white rounded-xl font-medium shadow-neon hover:shadow-neon-lg transition-all duration-300"
             >
-              API 集成指南
-            </Link>
-            <Link 
-              href="/docs/best-practices" 
+              🏆 通用配置指南
+            </a>
+            <a
+              href="https://github.com/xiiizoux/PromptHub/blob/main/docs/mcp-simple-config.md"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center px-6 py-3 border border-neon-green text-neon-green rounded-xl font-medium hover:bg-neon-green/10 transition-all duration-300"
+            >
+              🚀 简化配置指南
+            </a>
+            <Link
+              href="/docs/api-integration"
               className="inline-flex items-center px-6 py-3 border border-neon-cyan text-neon-cyan rounded-xl font-medium hover:bg-neon-cyan/10 transition-all duration-300"
             >
-              最佳实践
-            </Link>
-            <Link 
-              href="/docs/examples-library" 
-              className="inline-flex items-center px-6 py-3 border border-neon-purple text-neon-purple rounded-xl font-medium hover:bg-neon-purple/10 transition-all duration-300"
-            >
-              示例库
+              API 集成指南
             </Link>
           </div>
         </div>

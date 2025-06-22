@@ -1,5 +1,37 @@
 # Model Context Protocol (MCP) 使用指南
 
+## 🚀 快速开始 - 三种使用方式
+
+我们提供三种使用方式，按推荐程度排序：
+
+### 1. 🏆 通用MCP配置（最推荐）
+**一次配置，访问所有工具！**
+```json
+{
+  "mcpServers": {
+    "prompthub": {
+      "command": "node",
+      "args": ["mcp-protocol-adapter.js"],
+      "env": { "API_KEY": "your-api-key" }
+    }
+  }
+}
+```
+👉 **详细指南**: [MCP通用配置指南](./mcp-universal-config.md)
+
+### 2. 🚀 直接HTTP API调用
+**简单快速，适合开发测试**
+```bash
+curl -X POST "https://mcp.prompt-hub.cc/tools/search/invoke" \
+  -H "X-Api-Key: your-key" -d '{"query": "React"}'
+```
+👉 **详细指南**: [MCP简化配置指南](./mcp-simple-config.md)
+
+### 3. 📚 传统MCP协议配置
+**完整的MCP协议实现，适合特殊需求**
+
+---
+
 ## 概述
 
 Model Context Protocol (MCP) 是一个开放协议，用于标准化应用程序如何向大语言模型（LLM）提供上下文。MCP于2024年11月由Anthropic发布，旨在解决AI生态系统中的一个根本挑战：如何标准化AI模型访问和与外部数据源及工具交互的方式。
@@ -270,30 +302,115 @@ MCP协议能够通过任意数据访问和代码执行路径实现强大功能�
 
 ## 配置示例
 
-### MCP服务器配置
+### 🚀 推荐方式：直接HTTP API调用
 
+我们的MCP服务器实际上是一个HTTP REST API服务器，**推荐直接通过HTTP请求调用**，无需复杂的MCP协议配置：
+
+#### 基本配置
+- **服务器地址**: `https://mcp.prompt-hub.cc`
+- **认证方式**: API密钥（X-Api-Key头部）
+- **内容类型**: `application/json`
+
+#### 使用示例
+
+**获取工具列表：**
+```bash
+curl -X GET "https://mcp.prompt-hub.cc/tools" \
+  -H "X-Api-Key: your-api-key" \
+  -H "Content-Type: application/json"
+```
+
+**调用工具：**
+```bash
+curl -X POST "https://mcp.prompt-hub.cc/tools/search/invoke" \
+  -H "X-Api-Key: your-api-key" \
+  -H "Content-Type: application/json" \
+  -d '{"query": "React hooks"}'
+```
+
+#### 在AI客户端中使用
+
+**Cursor配置示例：**
 ```json
 {
-  "name": "prompt-store-server",
-  "command": "node",
-  "args": ["dist/index.js"],
-  "env": {
-    "DATABASE_URL": "your-database-url",
-    "PORT": "9010"
+  "customTools": {
+    "promptHub": {
+      "baseUrl": "https://mcp.prompt-hub.cc",
+      "headers": {
+        "X-Api-Key": "your-api-key",
+        "Content-Type": "application/json"
+      },
+      "endpoints": {
+        "search": "/tools/search/invoke",
+        "store": "/tools/quick_store/invoke"
+      }
+    }
   }
 }
 ```
 
-### Claude Desktop配置
+### 🔧 传统MCP协议配置（可选）
 
+如果你的AI客户端需要标准MCP协议，可以使用以下简化配置：
+
+#### Claude Desktop配置
 ```json
 {
   "mcpServers": {
-    "prompt-store": {
+    "prompt-hub": {
+      "command": "curl",
+      "args": [
+        "-X", "POST",
+        "https://mcp.prompt-hub.cc/tools/search/invoke",
+        "-H", "X-Api-Key: your-api-key",
+        "-H", "Content-Type: application/json",
+        "-d", "@-"
+      ]
+    }
+  }
+}
+```
+
+#### 其他MCP客户端配置
+```json
+{
+  "mcpServers": {
+    "prompt-hub": {
       "command": "node",
-      "args": ["./mcp/dist/index.js"],
+      "args": ["-e", "
+        const https = require('https');
+        const readline = require('readline');
+
+        const rl = readline.createInterface({
+          input: process.stdin,
+          output: process.stdout
+        });
+
+        rl.on('line', (input) => {
+          const data = JSON.stringify(JSON.parse(input));
+          const options = {
+            hostname: 'mcp.prompt-hub.cc',
+            path: '/tools/search/invoke',
+            method: 'POST',
+            headers: {
+              'X-Api-Key': process.env.MCP_API_KEY,
+              'Content-Type': 'application/json',
+              'Content-Length': data.length
+            }
+          };
+
+          const req = https.request(options, (res) => {
+            let responseData = '';
+            res.on('data', (chunk) => responseData += chunk);
+            res.on('end', () => console.log(responseData));
+          });
+
+          req.write(data);
+          req.end();
+        });
+      "],
       "env": {
-        "DATABASE_URL": "postgresql://user:pass@localhost:5432/prompts"
+        "MCP_API_KEY": "your-api-key"
       }
     }
   }

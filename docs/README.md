@@ -20,8 +20,11 @@
 - **[安全使用指南](security-usage-guide.md)** - 安全功能使用说明
 
 ### 🔌 MCP集成
-- **[MCP使用指南](mcp-usage-guide.md)** - Model Context Protocol完整使用指南
-- **[MCP技术文档](mcp/)** - MCP服务技术实现文档
+- **[MCP零配置示例](mcp-zero-config-examples.md)** - 🏆 **一键复制**: 各种AI客户端的零配置示例
+- **[MCP通用配置指南](mcp-universal-config.md)** - 🚀 完整指南: 自动下载和配置说明
+- **[MCP简化配置指南](mcp-simple-config.md)** - 🔧 备选方案: HTTP API调用方式
+- **[MCP使用指南](mcp-usage-guide.md)** - 📚 完整文档: Model Context Protocol详细说明
+- **[MCP技术文档](mcp/)** - 🛠️ 技术实现: MCP服务技术文档
 
 ## 🎯 快速导航
 
@@ -31,7 +34,11 @@
 3. 如需开发，请参考 [开发者指南](developer-guide.md)
 
 ### MCP用户指南
-如果您想使用MCP功能连接第三方AI客户端，请直接查看 [MCP使用指南](mcp-usage-guide.md)。
+如果您想使用MCP功能连接第三方AI客户端，推荐按以下顺序：
+1. **🏆 一键配置**: [MCP零配置示例](mcp-zero-config-examples.md) - 复制粘贴即可使用
+2. **🚀 详细指南**: [MCP通用配置指南](mcp-universal-config.md) - 完整的配置说明
+3. **🔧 备选方案**: [MCP简化配置指南](mcp-simple-config.md) - HTTP API调用方式
+4. **📚 完整文档**: [MCP使用指南](mcp-usage-guide.md) - 传统MCP协议配置
 
 ### 系统管理员
 - [权限管理文档](permission-management.md) - 用户权限配置
@@ -52,6 +59,9 @@ docs/
 ├── security-audit-fixes.md            # 安全审计修复
 ├── security-implementation.md         # 安全实现
 ├── security-usage-guide.md            # 安全使用指南
+├── mcp-zero-config-examples.md        # MCP零配置示例
+├── mcp-universal-config.md            # MCP通用配置指南
+├── mcp-simple-config.md               # MCP简化配置指南
 ├── mcp-usage-guide.md                 # MCP使用指南
 └── mcp/                               # MCP技术文档
     ├── README.md                      # MCP文档导航
