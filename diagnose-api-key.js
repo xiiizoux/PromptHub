@@ -7,7 +7,7 @@
 
 const https = require('https');
 
-const API_KEY = '82b6cd18a3e50c28542b74267a1beecab842617580a8f1e6b71edce7ad003251';
+const API_KEY = 'aceb020aa5b61b7cac2d35a03d97cfdfb34ba93c2ef5b8911218d19a80ab8653';
 const SERVER_URL = 'https://mcp.prompt-hub.cc';
 
 console.log('🔍 API密钥诊断工具');
