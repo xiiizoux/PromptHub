@@ -34,6 +34,7 @@ docker-compose.yml
 •cursorrules
 .cursor/
 .cursor/rules/
+.serena/
 
 # 日志文件
 logs/

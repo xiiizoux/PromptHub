@@ -29,25 +29,25 @@ const getMcpServerInfo = () => ({
 });
 import { authenticateRequest, optionalAuthMiddleware } from './auth-middleware.js';
 import {
-  intelligentPromptSelectionTool,
-  intelligentPromptStorageTool,
-  externalAIAnalysisTool,
+  intelligentPromptSelectionToolDef,
+  intelligentPromptStorageToolDef,
+  externalAIAnalysisToolDef,
   handleIntelligentPromptSelection,
   handleIntelligentPromptStorage,
   handleExternalAIAnalysis
 } from '../tools/intelligent-new-style.js';
 import {
-  quickStoreTool,
-  smartStoreTool,
-  analyzeAndStoreTool,
+  quickStoreToolDef,
+  smartStoreToolDef,
+  analyzeAndStoreToolDef,
   handleQuickStore,
   handleSmartStore,
   handleAnalyzeAndStore
 } from '../tools/auto-storage-new-style.js';
 import {
-  advancedSearchTool as enhancedSearchTool,
-  multiFieldSearchTool as promptSelectionTool,
-  smartFilterTool as quickAccessTool,
+  advancedSearchToolDef,
+  multiFieldSearchToolDef,
+  smartFilterToolDef,
   handleAdvancedSearch as handleEnhancedSearch,
   handleMultiFieldSearch as handlePromptSelection,
   handleSmartFilter as handleQuickAccess
@@ -321,19 +321,19 @@ router.get('/tools', authenticateRequest, (req, res) => {
     },
     
     // 智能AI工具 - 支持第三方客户端AI分析
-    intelligentPromptSelectionTool,
-    intelligentPromptStorageTool,
-    externalAIAnalysisTool,
+    intelligentPromptSelectionToolDef,
+    intelligentPromptStorageToolDef,
+    externalAIAnalysisToolDef,
     
     // 自动存储工具 - 简化的提示词存储体验
-    quickStoreTool,
-    smartStoreTool,
-    analyzeAndStoreTool,
+    quickStoreToolDef,
+    smartStoreToolDef,
+    analyzeAndStoreToolDef,
     
     // 增强搜索和展示工具
-    enhancedSearchTool,
-    promptSelectionTool,
-    quickAccessTool,
+    advancedSearchToolDef,
+    multiFieldSearchToolDef,
+    smartFilterToolDef,
     
     // 🔍 统一搜索引擎 - 整合所有搜索功能
     unifiedSearchEngineToolDef,

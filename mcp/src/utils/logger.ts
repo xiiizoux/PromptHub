@@ -99,6 +99,9 @@ export enum AuditEventType {
   API_KEY_CREATED = 'api_key_created',
   API_KEY_USED = 'api_key_used',
   API_KEY_DELETED = 'api_key_deleted',
+  LIST_API_KEYS = 'list_api_keys',
+  CREATE_API_KEY = 'create_api_key',
+  DELETE_API_KEY = 'delete_api_key',
   USER_LOGIN = 'user_login',
   USER_LOGOUT = 'user_logout',
   USER_REGISTER = 'user_register',
@@ -109,6 +112,7 @@ export enum AuditEventType {
   SECURITY_VIOLATION = 'security_violation',
   RATE_LIMIT_EXCEEDED = 'rate_limit_exceeded'
 }
+
 
 // 记录API密钥相关操作的审计函数
 export const logApiKeyActivity = (

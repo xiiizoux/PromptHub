@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import express from 'express';
+import express, { Request, Response } from 'express';
 import cors from 'cors';
 import { createServer } from 'http';
 import { config, validateConfig } from './config.js';
@@ -78,7 +78,7 @@ export async function startMCPServer() {
 
     app.use(express.json({
       limit: '10mb',
-      verify: (req, res, buf) => {
+      verify: (req: Request, res: Response, buf: Buffer) => {
         // 验证JSON格式，防止恶意请求
         try {
           JSON.parse(buf.toString());

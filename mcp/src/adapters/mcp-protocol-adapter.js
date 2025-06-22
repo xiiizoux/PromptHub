@@ -178,14 +178,38 @@ class MCPProtocolAdapter {
     }
 
     try {
-      const result = await this.makeHttpRequest(`/tools/${name}/invoke`, 'POST', args);
+      // MCP服务器使用JSON-RPC 2.0协议，需要发送到根路径
+      const rpcRequest = {
+        jsonrpc: '2.0',
+        id: Date.now(),
+        method: 'tools/call',
+        params: {
+          name: name,
+          arguments: args
+        }
+      };
+      
+      const result = await this.makeHttpRequest('/', 'POST', rpcRequest);
+      
+      // 处理JSON-RPC响应
+      let responseData;
+      if (result && result.result) {
+        // 处理JSON-RPC成功响应
+        responseData = result.result;
+      } else if (result && result.error) {
+        // 处理JSON-RPC错误响应
+        throw new Error(result.error.message || 'Tool execution failed');
+      } else {
+        // 直接响应数据
+        responseData = result;
+      }
       
       // 转换为MCP响应格式
       const mcpResponse = {
         content: [
           {
             type: 'text',
-            text: typeof result === 'string' ? result : JSON.stringify(result, null, 2)
+            text: typeof responseData === 'string' ? responseData : JSON.stringify(responseData, null, 2)
           }
         ]
       };

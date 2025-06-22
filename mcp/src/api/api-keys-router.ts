@@ -4,7 +4,7 @@ import { storage } from '../shared/services.js';
 import { handleToolError } from '../shared/error-handler.js';
 import { ResponseFormatter } from '../shared/response-formatter.js';
 import { authenticateRequest } from './auth-middleware.js';
-import logger, { logApiKeyActivity } from '../utils/logger.js';
+import logger, { logApiKeyActivity, AuditEventType } from '../utils/logger.js';
 
 const router = express.Router();
 
@@ -58,7 +58,7 @@ router.get('/', authenticateRequest, async (req: Request, res: Response, next: N
     
     const requestMetadata = getRequestMetadata(req);
     // 记录成功获取API密钥列表的操作
-    logApiKeyActivity(req.user.id, 'LIST_API_KEYS', undefined, {
+    logApiKeyActivity(req.user.id, AuditEventType.LIST_API_KEYS, undefined, {
       count: apiKeys.length,
       ...requestMetadata
     });
@@ -115,7 +115,7 @@ router.post('/', authenticateRequest, async (req: Request, res: Response, next: 
     const apiKey = await storage.generateApiKey(req.user.id, name.trim(), daysToExpire);
     
     // 记录创建API密钥的操作（不记录实际密钥，只记录相关信息）
-    logApiKeyActivity(req.user.id, 'CREATE_API_KEY', undefined, {
+    logApiKeyActivity(req.user.id, AuditEventType.CREATE_API_KEY, undefined, {
       keyName: name.trim(),
       expiresInDays: daysToExpire,
       ...metadata
@@ -187,7 +187,7 @@ router.delete('/:id', authenticateRequest, async (req: Request, res: Response, n
     }
 
     // 记录删除API密钥的操作
-    logApiKeyActivity(req.user.id, 'DELETE_API_KEY', keyId, metadata);
+    logApiKeyActivity(req.user.id, AuditEventType.DELETE_API_KEY, keyId, metadata);
     
     return res.json({
       success: true,

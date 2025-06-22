@@ -186,8 +186,7 @@ export class UnifiedSearchEngine extends BaseMCPTool {
 
       return {
         success: false,
-        message: '搜索失败，请尝试简化搜索条件',
-        error: error.message
+        message: `搜索失败：${error.message}，请尝试简化搜索条件`
       };
     }
   }

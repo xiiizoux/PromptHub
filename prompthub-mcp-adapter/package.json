@@ -1,0 +1,42 @@
+{
+  "name": "prompthub-mcp",
+  "version": "1.0.0",
+  "description": "MCP adapter for connecting AI clients (Cursor, Claude Desktop) to PromptHub server",
+  "main": "index.js",
+  "bin": {
+    "prompthub-mcp": "./index.js"
+  },
+  "scripts": {
+    "start": "node index.js",
+    "test": "node test.js"
+  },
+  "keywords": [
+    "mcp",
+    "prompthub", 
+    "ai",
+    "claude",
+    "cursor",
+    "adapter",
+    "protocol",
+    "prompt",
+    "management"
+  ],
+  "author": "PromptHub Team",
+  "license": "MIT",
+  "homepage": "https://prompt-hub.cc",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/xiiizoux/PromptHub.git"
+  },
+  "bugs": {
+    "url": "https://github.com/xiiizoux/PromptHub/issues"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "files": [
+    "index.js",
+    "README.md",
+    "LICENSE"
+  ]
+} 

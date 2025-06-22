@@ -265,21 +265,23 @@ export class SupabaseAdapter implements StorageAdapter {
     }
 
     try {
-      const data = await this.executeWithRetry(
-        () => this.supabase
+      const categoryResult = await this.executeWithRetry(
+        async () => await this.supabase
           .from('prompts')
           .select('category')
           .not('category', 'is', null)
           .order('category'),
         'getCategories'
       );
+      
+      const data = categoryResult || [];
 
       // 提取唯一分类并过滤空值
       const categories = Array.from(new Set(
-        data
-          .map(item => item.category)
-          .filter(category => category && category.trim())
-      )).sort();
+        (data as any[])
+          .map(item => item?.category)
+          .filter(category => category && typeof category === 'string' && category.trim())
+      )).sort() as string[];
 
       // 缓存结果
       this.setCachedResult(cacheKey, categories);
@@ -305,17 +307,19 @@ export class SupabaseAdapter implements StorageAdapter {
     }
 
     try {
-      const data = await this.executeWithRetry(
-        () => this.supabase
+      const tagResult = await this.executeWithRetry(
+        async () => await this.supabase
           .from('prompts')
           .select('tags')
           .not('tags', 'is', null),
         'getTags'
       );
+      
+      const data = tagResult || [];
 
       // 提取所有标签并去重，过滤空值
-      const allTags = data
-        .flatMap(item => item.tags || [])
+      const allTags = (data as any[])
+        .flatMap(item => item?.tags || [])
         .filter(tag => tag && typeof tag === 'string' && tag.trim())
         .map(tag => tag.trim());
 
@@ -347,8 +351,8 @@ export class SupabaseAdapter implements StorageAdapter {
         return [];
       }
 
-      const data = await this.executeWithRetry(
-        () => {
+      const promptResult = await this.executeWithRetry(
+        async () => {
           let query = this.supabase
             .from('prompts')
             .select('*')
@@ -369,18 +373,18 @@ export class SupabaseAdapter implements StorageAdapter {
             query = query.eq('is_public', true);
           }
 
-          return query;
+          return await query;
         },
         'getPromptsByCategory',
         { category, userId, includePublic }
       );
-
-      const result = data || [];
+      
+      const data = promptResult || [];
 
       // 缓存结果（较短的缓存时间）
-      this.setCachedResult(cacheKey, result, 2 * 60 * 1000); // 2分钟缓存
+      this.setCachedResult(cacheKey, data, 2 * 60 * 1000); // 2分钟缓存
 
-      return result;
+      return data;
     } catch (error) {
       logger.error('按分类获取提示词失败', {
         error: error.message,
