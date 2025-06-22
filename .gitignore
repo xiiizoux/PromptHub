@@ -48,6 +48,9 @@ yarn-error.log*
 # 测试文件
 src/prompts/test_*.json
 
+# MCP适配器包（临时开发文件）
+mcp-adapter-package/
+
 # 编辑器和 IDE 文件
 .idea/
 .vscode/

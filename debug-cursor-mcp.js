@@ -1,10 +1,12 @@
 #!/usr/bin/env node
 
 /**
- * Cursor MCP调试脚本
- * 帮助诊断Cursor中MCP配置问题
+ * Cursor MCP调试工具
+ * 模拟Cursor调用NPX包的过程
  */
 
+const { spawn } = require('child_process');
+const path = require('path');
 const https = require('https');
 const fs = require('fs');
 const path = require('path');
