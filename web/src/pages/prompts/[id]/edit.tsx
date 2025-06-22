@@ -883,7 +883,7 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
                 className="space-y-4"
               >
                 <div className="flex items-center justify-between mb-3">
-                  <label className="flex items-center text-lg font-semibold text-gray-200">
+                  <label htmlFor="edit-content" className="flex items-center text-lg font-semibold text-gray-200">
                     <CodeBracketIcon className="h-6 w-6 text-neon-cyan mr-3" />
                     提示词内容 *
                     <span className="ml-2 text-sm font-normal text-gray-400">核心内容区域</span>
@@ -897,6 +897,7 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
                 
                 <div className="relative">
                   <textarea
+                    id="edit-content"
                     {...register('content', { required: '请输入提示词内容' })}
                     rows={12}
                     placeholder="在这里编写您的提示词内容。您可以使用 {{变量名}} 来定义动态变量..."
@@ -924,11 +925,12 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
                 className="grid grid-cols-1 lg:grid-cols-2 gap-8"
               >
                 <div className="space-y-2">
-                  <label className="flex items-center text-sm font-medium text-gray-300 mb-3">
+                  <label htmlFor="edit-prompt-name" className="flex items-center text-sm font-medium text-gray-300 mb-3">
                     <SparklesIcon className="h-5 w-5 text-neon-cyan mr-2" />
                     提示词名称 *
                   </label>
                   <input
+                    id="edit-prompt-name"
                     {...register('name', { required: '请输入提示词名称' })}
                     type="text"
                     placeholder="为您的提示词起个响亮的名字"
@@ -940,11 +942,12 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="flex items-center text-sm font-medium text-gray-300 mb-3">
+                  <label htmlFor="edit-author" className="flex items-center text-sm font-medium text-gray-300 mb-3">
                     <UserIcon className="h-5 w-5 text-neon-purple mr-2" />
                     作者
                   </label>
                   <input
+                    id="edit-author"
                     {...register('author')}
                     type="text"
                     placeholder={user?.username || "您的名字"}
@@ -961,11 +964,12 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
                 className="grid grid-cols-1 lg:grid-cols-2 gap-8"
               >
                 <div className="space-y-2">
-                  <label className="flex items-center text-sm font-medium text-gray-300 mb-3">
+                  <label htmlFor="edit-category" className="flex items-center text-sm font-medium text-gray-300 mb-3">
                     <TagIcon className="h-5 w-5 text-neon-cyan mr-2" />
                     分类 *
                   </label>
                   <select
+                    id="edit-category"
                     {...register('category', { required: '请选择分类' })}
                     className="input-primary w-full"
                   >
@@ -1029,11 +1033,12 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="flex items-center text-sm font-medium text-gray-300 mb-3">
+                  <label htmlFor="edit-author-2" className="flex items-center text-sm font-medium text-gray-300 mb-3">
                     <UserIcon className="h-5 w-5 text-neon-purple mr-2" />
                     作者
                   </label>
                   <input
+                    id="edit-author-2"
                     {...register('author')}
                     type="text"
                     placeholder="作者名称"
@@ -1052,11 +1057,12 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
                 transition={{ delay: 1.4 }}
                 className="space-y-2"
               >
-                <label className="flex items-center text-sm font-medium text-gray-300 mb-3">
+                <label htmlFor="edit-description" className="flex items-center text-sm font-medium text-gray-300 mb-3">
                   <DocumentTextIcon className="h-5 w-5 text-neon-cyan mr-2" />
                   描述 *
                 </label>
                 <textarea
+                  id="edit-description"
                   {...register('description', { required: '请输入描述' })}
                   rows={3}
                   placeholder="简要描述您的提示词的用途和特点..."
@@ -1074,7 +1080,7 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
                 transition={{ delay: 1.6 }}
                 className="space-y-4"
               >
-                <label className="flex items-center text-sm font-medium text-gray-300">
+                <label htmlFor="edit-variable-input" className="flex items-center text-sm font-medium text-gray-300">
                   <CodeBracketIcon className="h-5 w-5 text-neon-purple mr-2" />
                   输入变量
                 </label>
@@ -1082,6 +1088,8 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
                 {/* 添加变量 */}
                 <div className="flex space-x-3">
                   <input
+                    id="edit-variable-input"
+                    name="edit-variable-input"
                     type="text"
                     value={variableInput}
                     onChange={(e) => setVariableInput(e.target.value)}
@@ -1139,7 +1147,7 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
                 transition={{ delay: 1.8 }}
                 className="space-y-4"
               >
-                <label className="flex items-center text-sm font-medium text-gray-300">
+                <label htmlFor="edit-tag-input" className="flex items-center text-sm font-medium text-gray-300">
                   <TagIcon className="h-5 w-5 text-neon-purple mr-2" />
                   标签
                 </label>
@@ -1147,6 +1155,8 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
                 {/* 添加标签 */}
                 <div className="flex space-x-3">
                   <input
+                    id="edit-tag-input"
+                    name="edit-tag-input"
                     type="text"
                     value={tagInput}
                     onChange={(e) => setTagInput(e.target.value)}
@@ -1271,8 +1281,9 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
                   </div>
                 </div>
                 <div className="flex flex-col items-end">
-                  <label className="relative inline-flex items-center cursor-pointer">
+                  <label htmlFor="edit-is-public" className="relative inline-flex items-center cursor-pointer">
                     <input 
+                      id="edit-is-public"
                       type="checkbox" 
                       className="sr-only peer" 
                       {...register('is_public')} 
@@ -1304,6 +1315,8 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
                 <div className="relative flex items-start p-4 border border-neon-cyan/20 rounded-xl bg-dark-bg-secondary">
                   <div className="flex items-center h-5">
                     <input
+                      id="edit-allow-collaboration"
+                      name="edit-allow-collaboration"
                       type="checkbox"
                       checked={watch('allow_collaboration') || false}
                       onChange={(e) => setValue('allow_collaboration', e.target.checked)}
@@ -1312,9 +1325,9 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
                     />
                   </div>
                   <div className="ml-3">
-                    <div className="text-sm font-medium text-gray-300">
+                    <label htmlFor="edit-allow-collaboration" className="text-sm font-medium text-gray-300">
                       允许协作编辑
-                    </div>
+                    </label>
                     <div className="text-sm text-gray-400">
                       允许其他贡献者修改这个提示词的内容（编辑权限，仅在公开分享时有效）
                     </div>
@@ -1328,10 +1341,12 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
 
                 {/* 编辑权限级别 */}
                 <div className="p-4 border border-neon-cyan/20 rounded-xl bg-dark-bg-secondary">
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                  <label htmlFor="edit-permission" className="block text-sm font-medium text-gray-300 mb-2">
                     编辑权限级别
                   </label>
                   <select
+                    id="edit-permission"
+                    name="edit-permission"
                     value={watch('edit_permission') || PERMISSION_LEVELS.OWNER_ONLY}
                     onChange={(e) => setValue('edit_permission', e.target.value as any)}
                     className="input-primary w-full"
