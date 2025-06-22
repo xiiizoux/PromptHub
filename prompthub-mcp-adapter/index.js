@@ -74,32 +74,49 @@ class PromptHubMCPAdapter {
    */
   async testConnection() {
     try {
+      console.error('[PromptHub MCP] 测试服务器连接...');
       const health = await this.makeHttpRequest('/api/health', 'GET');
       console.error(`[PromptHub MCP] 服务器连接正常 (状态: ${health.status})`);
+      
+      // 测试认证
+      console.error('[PromptHub MCP] 测试API认证...');
+      const info = await this.makeHttpRequest('/info', 'GET');
+      console.error(`[PromptHub MCP] 服务器信息获取成功: ${info.name}`);
     } catch (error) {
       console.error('[PromptHub MCP] 服务器连接失败:', error.message);
       throw error;
     }
   }
 
+
   /**
    * 发现服务器上的可用工具
    */
   async discoverTools() {
     try {
-      const tools = await this.makeHttpRequest('/tools', 'GET');
+      const response = await this.makeHttpRequest('/tools', 'GET');
       
-      if (tools && Array.isArray(tools.tools)) {
-        tools.tools.forEach(tool => {
+      if (response && Array.isArray(response)) {
+        // 直接处理工具数组
+        response.forEach(tool => {
           this.tools.set(tool.name, tool);
         });
         console.error(`[PromptHub MCP] 发现 ${this.tools.size} 个工具`);
+      } else if (response && response.tools && Array.isArray(response.tools)) {
+        // 处理包装在tools字段中的工具数组
+        response.tools.forEach(tool => {
+          this.tools.set(tool.name, tool);
+        });
+        console.error(`[PromptHub MCP] 发现 ${this.tools.size} 个工具`);
+      } else {
+        console.error('[PromptHub MCP] 未找到工具列表');
       }
     } catch (error) {
       console.error('[PromptHub MCP] 工具发现失败:', error.message);
       // 继续运行，但工具列表为空
     }
   }
+
 
   /**
    * 设置stdio处理器
@@ -198,17 +215,27 @@ class PromptHubMCPAdapter {
           type: 'object',
           properties: tool.parameters || {},
           required: Object.keys(tool.parameters || {}).filter(key => 
-            tool.parameters[key].required
+            tool.parameters[key] && tool.parameters[key].required
           )
         }
       }));
       
       console.error(`[PromptHub MCP] 返回 ${tools.length} 个工具`);
+      
+      // 如果没有工具，记录详细信息
+      if (tools.length === 0) {
+        console.error('[PromptHub MCP] 警告: 未发现任何工具');
+        console.error('[PromptHub MCP] 工具映射大小:', this.tools.size);
+        console.error('[PromptHub MCP] 工具映射内容:', Array.from(this.tools.keys()));
+      }
+      
       this.sendResponse(id, { tools });
     } catch (error) {
+      console.error('[PromptHub MCP] 工具列表获取失败:', error.message);
       this.sendError(id, -32603, `Failed to list tools: ${error.message}`);
     }
   }
+
 
   /**
    * 处理工具调用请求
@@ -221,43 +248,52 @@ class PromptHubMCPAdapter {
       this.sendError(id, -32602, `Tool not found: ${name}`);
       return;
     }
-
+  
     try {
-      // MCP服务器使用JSON-RPC 2.0协议
-      const rpcRequest = {
-        jsonrpc: '2.0',
-        id: Date.now(),
-        method: 'tools/call',
-        params: {
-          name: name,
-          arguments: args
-        }
-      };
-      
-      const result = await this.makeHttpRequest('/', 'POST', rpcRequest);
-      
-      // 处理JSON-RPC响应
-      let responseData;
-      if (result && result.result) {
-        // 处理JSON-RPC成功响应
-        responseData = result.result;
-      } else if (result && result.error) {
-        // 处理JSON-RPC错误响应
-        throw new Error(result.error.message || 'Tool execution failed');
-      } else {
-        // 直接响应数据
-        responseData = result;
-      }
+      // MCP服务器使用RESTful API，不是JSON-RPC
+      const endpoint = `/tools/${name}/invoke`;
+      const result = await this.makeHttpRequest(endpoint, 'POST', args);
       
       // 转换为MCP响应格式
-      const mcpResponse = {
-        content: [
-          {
-            type: 'text',
-            text: typeof responseData === 'string' ? responseData : JSON.stringify(responseData, null, 2)
+      let mcpResponse;
+      
+      if (result && typeof result === 'object') {
+        if (result.success !== undefined) {
+          // 处理带有success字段的响应
+          if (result.success) {
+            mcpResponse = {
+              content: [
+                {
+                  type: 'text',
+                  text: typeof result.data === 'string' ? result.data : JSON.stringify(result.data, null, 2)
+                }
+              ]
+            };
+          } else {
+            throw new Error(result.error || 'Tool execution failed');
           }
-        ]
-      };
+        } else {
+          // 直接使用结果数据
+          mcpResponse = {
+            content: [
+              {
+                type: 'text',
+                text: typeof result === 'string' ? result : JSON.stringify(result, null, 2)
+              }
+            ]
+          };
+        }
+      } else {
+        // 处理字符串响应
+        mcpResponse = {
+          content: [
+            {
+              type: 'text',
+              text: String(result)
+            }
+          ]
+        };
+      }
       
       this.sendResponse(id, mcpResponse);
       console.error(`[PromptHub MCP] 工具调用完成: ${name}`);
@@ -266,6 +302,7 @@ class PromptHubMCPAdapter {
       this.sendError(id, -32603, `Tool execution failed: ${error.message}`);
     }
   }
+
 
   /**
    * 发送成功响应
@@ -316,19 +353,19 @@ class PromptHubMCPAdapter {
         },
         timeout: this.timeout
       };
-
-      // 添加认证头
+  
+      // 添加认证头 - 使用X-Api-Key
       if (this.apiKey) {
         options.headers['X-Api-Key'] = this.apiKey;
       }
-
+  
       // 添加请求体
       let postData = '';
       if (data && (method === 'POST' || method === 'PUT')) {
         postData = JSON.stringify(data);
         options.headers['Content-Length'] = Buffer.byteLength(postData);
       }
-
+  
       const req = client.request(options, (res) => {
         let responseData = '';
         
@@ -342,23 +379,28 @@ class PromptHubMCPAdapter {
               const result = responseData ? JSON.parse(responseData) : {};
               resolve(result);
             } else {
-              reject(new Error(`HTTP ${res.statusCode}: ${responseData}`));
+              const errorMsg = responseData || `HTTP ${res.statusCode}`;
+              console.error(`[PromptHub MCP] HTTP错误 ${res.statusCode}: ${errorMsg}`);
+              reject(new Error(`HTTP ${res.statusCode}: ${errorMsg}`));
             }
           } catch (error) {
+            console.error(`[PromptHub MCP] 响应解析错误:`, error.message);
             reject(new Error(`Response parse error: ${error.message}`));
           }
         });
       });
-
+  
       req.on('error', (error) => {
+        console.error(`[PromptHub MCP] 请求错误:`, error.message);
         reject(new Error(`Request failed: ${error.message}`));
       });
-
+  
       req.on('timeout', () => {
         req.destroy();
+        console.error(`[PromptHub MCP] 请求超时`);
         reject(new Error('Request timeout'));
       });
-
+  
       if (postData) {
         req.write(postData);
       }
@@ -366,6 +408,7 @@ class PromptHubMCPAdapter {
       req.end();
     });
   }
+
 }
 
 // 启动适配器
