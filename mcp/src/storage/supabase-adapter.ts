@@ -1178,32 +1178,63 @@ export class SupabaseAdapter implements StorageAdapter {
    */
   async verifyApiKey(apiKey: string): Promise<User | null> {
     try {
+      logger.debug('开始验证API密钥', { apiKeyPrefix: apiKey.substring(0, 8) + '...' });
+
       // 计算密钥哈希
       const keyHash = crypto.createHash('sha256').update(apiKey).digest('hex');
-      
+      logger.debug('计算API密钥哈希', { hashPrefix: keyHash.substring(0, 16) + '...' });
+
       // 查询有效的API密钥
       const { data, error } = await this.supabase
         .from('api_keys')
-        .select('user_id')
+        .select('user_id, name, expires_at')
         .eq('key_hash', keyHash)
         .or(`expires_at.is.null,expires_at.gt.${new Date().toISOString()}`)
         .single();
-        
-      if (error || !data) {
+
+      if (error) {
+        logger.warn('API密钥查询失败', { error: error.message, code: error.code });
         return null;
       }
-      
+
+      if (!data) {
+        logger.warn('未找到匹配的API密钥', { hashPrefix: keyHash.substring(0, 16) + '...' });
+        return null;
+      }
+
+      logger.debug('找到API密钥记录', {
+        userId: data.user_id,
+        keyName: data.name,
+        expiresAt: data.expires_at
+      });
+
       // 获取用户信息
       const { data: userData, error: userError } = await this.supabase
         .from('users')
         .select('*')
         .eq('id', data.user_id)
         .single();
-        
-      if (userError || !userData) {
+
+      if (userError) {
+        logger.warn('用户信息查询失败', {
+          error: userError.message,
+          code: userError.code,
+          userId: data.user_id
+        });
         return null;
       }
-      
+
+      if (!userData) {
+        logger.warn('未找到用户信息', { userId: data.user_id });
+        return null;
+      }
+
+      logger.info('API密钥验证成功', {
+        userId: userData.id,
+        userEmail: userData.email,
+        keyName: data.name
+      });
+
       return {
         id: userData.id,
         email: userData.email,

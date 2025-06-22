@@ -91,9 +91,22 @@ export async function startMCPServer() {
     
     // 根路径
     app.get('/', (req, res) => {
-      res.json({ 
+      res.json({
         message: 'Welcome to MCP Prompt Server',
         version: config.mcp.version,
+        timestamp: new Date().toISOString()
+      });
+    });
+
+    // 配置调试端点（仅用于诊断）
+    app.get('/api/debug/auth-config', (req, res) => {
+      res.json({
+        hasApiKey: !!config.apiKey,
+        hasServerKey: !!config.serverKey,
+        apiKeyPrefix: config.apiKey ? config.apiKey.substring(0, 8) + '...' : 'none',
+        serverKeyPrefix: config.serverKey ? config.serverKey.substring(0, 8) + '...' : 'none',
+        transportType: config.transportType,
+        nodeEnv: process.env.NODE_ENV,
         timestamp: new Date().toISOString()
       });
     });

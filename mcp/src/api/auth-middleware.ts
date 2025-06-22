@@ -210,6 +210,12 @@ async function performAuthentication(req: Request, requireAuth: boolean = true):
 
     // 1. 系统级API密钥验证
     if (apiKey && (apiKey === config.apiKey || apiKey === serverKey)) {
+      logger.info('系统级API密钥验证成功', {
+        hasConfigApiKey: !!config.apiKey,
+        hasServerKey: !!serverKey,
+        ip, userAgent, sessionId
+      });
+
       // 生成固定的系统用户UUID（基于固定字符串的UUID v5）
       const systemUserId = '00000000-0000-5000-8000-000000000001'; // 固定的系统用户UUID
 
@@ -227,12 +233,30 @@ async function performAuthentication(req: Request, requireAuth: boolean = true):
       });
 
       return { success: true, user: systemUser, method: 'system' };
+    } else if (apiKey) {
+      logger.debug('系统级API密钥验证失败', {
+        hasConfigApiKey: !!config.apiKey,
+        hasServerKey: !!serverKey,
+        apiKeyPrefix: apiKey.substring(0, 8) + '...',
+        ip, userAgent, sessionId
+      });
     }
 
     // 2. 用户API密钥验证
     if (apiKey) {
+      logger.debug('尝试用户API密钥验证', {
+        apiKeyPrefix: apiKey.substring(0, 8) + '...',
+        ip, userAgent, sessionId
+      });
+
       const user = await storage.verifyApiKey(apiKey);
       if (user) {
+        logger.info('用户API密钥验证成功', {
+          userId: user.id,
+          userEmail: user.email,
+          ip, userAgent, sessionId
+        });
+
         // 更新会话活动
         updateSessionActivity(sessionId, user.id, ip, userAgent, 'api_key');
 
@@ -247,6 +271,11 @@ async function performAuthentication(req: Request, requireAuth: boolean = true):
 
         return { success: true, user, method: 'api_key' };
       } else {
+        logger.warn('用户API密钥验证失败', {
+          apiKeyPrefix: apiKey.substring(0, 8) + '...',
+          ip, userAgent, sessionId
+        });
+
         // 记录无效API密钥使用
         logSecurityEvent(
           AuditEventType.SECURITY_VIOLATION,
@@ -287,11 +316,19 @@ async function performAuthentication(req: Request, requireAuth: boolean = true):
     }
 
     // 认证失败
+    logger.warn('所有认证方法都失败', {
+      hasApiKey: !!apiKey,
+      hasToken: !!token,
+      hasConfigApiKey: !!config.apiKey,
+      hasServerKey: !!serverKey,
+      ip, userAgent, sessionId
+    });
+
     logSecurityEvent(
       AuditEventType.SECURITY_VIOLATION,
       'low',
       'Authentication failed - no valid credentials',
-      { ip, userAgent, sessionId }
+      { ip, userAgent, sessionId, hasApiKey: !!apiKey, hasToken: !!token }
     );
 
     return { success: false, error: '未授权访问，请提供有效的API密钥或认证令牌' };
