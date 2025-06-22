@@ -172,7 +172,7 @@ export function useSession(options: UseSessionOptions = {}): UseSessionReturn {
   // 监听Supabase认证状态变化
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, supabaseSession) => {
+      async (event: any, supabaseSession: any) => {
         if (event === 'SIGNED_OUT' || !supabaseSession) {
           if (sessionIdRef.current) {
             sessionManager.invalidateSession(sessionIdRef.current);

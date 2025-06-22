@@ -195,11 +195,11 @@ export class DatabaseService {
 
       // 然后获取作者信息
       let authorName = '未知用户';
-      const authorUserId = prompt.user_id || prompt.created_by; // 尝试 user_id 或 created_by
+      const authorUserId = prompt.user_id; // 只使用 user_id
 
       if (authorUserId) {
         try {
-          console.log(`[DatabaseService] 开始获取用户信息，用户ID: ${authorUserId} (来源: ${prompt.user_id ? 'user_id' : 'created_by'})`);
+          console.log(`[DatabaseService] 开始获取用户信息，用户ID: ${authorUserId}`);
           const { data: userData, error: userError } = await this.adapter.supabase
             .from('users')
             .select('display_name, email')
@@ -226,7 +226,7 @@ export class DatabaseService {
           console.warn('获取用户信息失败，使用默认作者名:', userErr);
         }
       } else {
-        console.warn('[DatabaseService] 提示词没有 user_id 或 created_by 字段');
+        console.warn('[DatabaseService] 提示词没有 user_id 字段');
       }
 
       // 处理内容提取
@@ -276,7 +276,7 @@ export class DatabaseService {
 
       console.log('getPromptByName - 详细调试信息:', {
         prompt_user_id: prompt.user_id,
-        prompt_created_by: prompt.created_by,
+        // prompt_created_by 属性不存在，已移除
         final_author: authorName,
         prompt_is_public: prompt.is_public
       });

@@ -185,7 +185,7 @@ export class EnhancedQualityAnalyzer extends PromptQualityAnalyzer {
             break;
         }
         
-        if (potentialImprovement > 0) {
+        if (potentialImprovement > 0 && dimension) {
           priorities.push({
             area: dimension.name,
             reason: `当前得分${dimension.score}分，有较大提升空间`,

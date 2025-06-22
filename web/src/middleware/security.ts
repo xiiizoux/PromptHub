@@ -93,23 +93,40 @@ function setSecurityHeaders(res: NextApiResponse | NextResponse, config: Securit
   // 获取浏览器兼容的安全头部配置
   const compatibleHeaders = browserCompatibility.getCompatibleSecurityHeaders();
 
+  // 类型守卫函数
+  const isNextResponse = (response: any): response is NextResponse => {
+    return response.headers && typeof response.headers.set === 'function';
+  };
+
   // 应用兼容的安全头部
   Object.entries(compatibleHeaders).forEach(([key, value]) => {
-    res.headers.set(key, value);
+    if (isNextResponse(res)) {
+      res.headers.set(key, value);
+    } else {
+      (res as NextApiResponse).setHeader(key, value);
+    }
   });
 
   // 权限策略（现代浏览器支持）
-  res.headers.set('Permissions-Policy',
-    'camera=(), microphone=(), geolocation=(), payment=(), usb=(), interest-cohort=()');
-
-  // 防止MIME类型嗅探
-  res.headers.set('X-Download-Options', 'noopen');
-
-  // 移除暴露服务器信息的头
-  res.headers.delete('X-Powered-By');
-  res.headers.delete('Server');
-  res.headers.delete('X-AspNet-Version');
-  res.headers.delete('X-AspNetMvc-Version');
+  if (isNextResponse(res)) {
+    res.headers.set('Permissions-Policy',
+      'camera=(), microphone=(), geolocation=(), payment=(), usb=(), interest-cohort=()');
+    // 防止MIME类型嗅探
+    res.headers.set('X-Download-Options', 'noopen');
+    // 移除暴露服务器信息的头
+    res.headers.delete('X-Powered-By');
+    res.headers.delete('Server');
+    res.headers.delete('X-AspNet-Version');
+    res.headers.delete('X-AspNetMvc-Version');
+  } else {
+    const apiRes = res as NextApiResponse;
+    apiRes.setHeader('Permissions-Policy',
+      'camera=(), microphone=(), geolocation=(), payment=(), usb=(), interest-cohort=()');
+    // 防止MIME类型嗅探
+    apiRes.setHeader('X-Download-Options', 'noopen');
+    // API路由无法删除这些头部，只能设置为空
+    apiRes.removeHeader('X-Powered-By');
+  }
 }
 
 /**
@@ -132,19 +149,42 @@ function setCORSHeaders(res: NextApiResponse | NextResponse, origin: string | un
   // 获取浏览器兼容的CORS配置
   const corsConfig = browserCompatibility.getCompatibleCORSConfig();
 
+  // 类型守卫函数
+  const isNextResponse = (response: any): response is NextResponse => {
+    return response.headers && typeof response.headers.set === 'function';
+  };
+
   // 检查源是否被允许
   if (origin && isOriginAllowed(origin, config.allowedOrigins)) {
-    res.headers.set('Access-Control-Allow-Origin', origin);
+    if (isNextResponse(res)) {
+      res.headers.set('Access-Control-Allow-Origin', origin);
+    } else {
+      (res as NextApiResponse).setHeader('Access-Control-Allow-Origin', origin);
+    }
   } else if (config.allowedOrigins.includes('*')) {
-    res.headers.set('Access-Control-Allow-Origin', '*');
+    if (isNextResponse(res)) {
+      res.headers.set('Access-Control-Allow-Origin', '*');
+    } else {
+      (res as NextApiResponse).setHeader('Access-Control-Allow-Origin', '*');
+    }
   }
 
-  res.headers.set('Access-Control-Allow-Methods', corsConfig.methods.join(', '));
-  res.headers.set('Access-Control-Allow-Headers', corsConfig.headers.join(', '));
-  res.headers.set('Access-Control-Allow-Credentials', corsConfig.credentials === 'include' ? 'true' : 'false');
-  res.headers.set('Access-Control-Max-Age', '86400'); // 24小时
-  res.headers.set('Access-Control-Expose-Headers',
-    'X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Reset');
+  if (isNextResponse(res)) {
+    res.headers.set('Access-Control-Allow-Methods', corsConfig.methods.join(', '));
+    res.headers.set('Access-Control-Allow-Headers', corsConfig.headers.join(', '));
+    res.headers.set('Access-Control-Allow-Credentials', corsConfig.credentials === 'include' ? 'true' : 'false');
+    res.headers.set('Access-Control-Max-Age', '86400'); // 24小时
+    res.headers.set('Access-Control-Expose-Headers',
+      'X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Reset');
+  } else {
+    const apiRes = res as NextApiResponse;
+    apiRes.setHeader('Access-Control-Allow-Methods', corsConfig.methods.join(', '));
+    apiRes.setHeader('Access-Control-Allow-Headers', corsConfig.headers.join(', '));
+    apiRes.setHeader('Access-Control-Allow-Credentials', corsConfig.credentials === 'include' ? 'true' : 'false');
+    apiRes.setHeader('Access-Control-Max-Age', '86400'); // 24小时
+    apiRes.setHeader('Access-Control-Expose-Headers',
+      'X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Reset');
+  }
 }
 
 /**

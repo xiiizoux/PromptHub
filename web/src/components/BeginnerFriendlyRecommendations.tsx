@@ -25,6 +25,21 @@ import { useAuth } from '@/contexts/AuthContext';
 import toast from 'react-hot-toast';
 import { useUserLevel } from '@/hooks/useUserLevel';
 
+// 添加缺失的类型定义
+type RecommendationType = 'personalized' | 'trending' | 'similar';
+
+interface RecommendationResult {
+  id: string;
+  prompt: {
+    id: string;
+    title: string;
+    description: string;
+    difficulty?: 'beginner' | 'intermediate' | 'advanced';
+  };
+  score: number;
+  reason?: string;
+}
+
 interface BeginnerFriendlyRecommendationsProps {
   currentPromptId?: string;
   userId?: string;
@@ -198,12 +213,13 @@ export const BeginnerFriendlyRecommendations: React.FC<BeginnerFriendlyRecommend
   showLearningPath = true
 }) => {
   const { user } = useAuth();
-  const { levelData, isLoading } = useUserLevel();
+  const { levelData, isLoading: userLevelLoading } = useUserLevel();
   const [recommendations, setRecommendations] = useState<RecommendationResult[]>([]);
   const [learningPaths, setLearningPaths] = useState<LearningPath[]>([]);
   const [personalizedRecs, setPersonalizedRecs] = useState<PersonalizedRecommendation[]>([]);
   const [activeTab, setActiveTab] = useState<'paths' | 'recommendations' | 'achievements'>('paths');
   const [filter, setFilter] = useState<'all' | 'beginner' | 'intermediate' | 'advanced'>('all');
+  const [isLoading, setIsLoading] = useState(false);
 
   // 适合初学者的推荐类型
   const beginnerRecommendationTypes = [
@@ -231,6 +247,51 @@ export const BeginnerFriendlyRecommendations: React.FC<BeginnerFriendlyRecommend
     }
   ];
 
+  // 添加缺失的辅助函数
+  const getDifficultyColor = (difficulty: 'beginner' | 'intermediate' | 'advanced') => {
+    const configs = {
+      beginner: 'text-green-400 bg-green-400/10 border-green-400/30',
+      intermediate: 'text-orange-400 bg-orange-400/10 border-orange-400/30',
+      advanced: 'text-purple-400 bg-purple-400/10 border-purple-400/30'
+    };
+    return configs[difficulty];
+  };
+
+  const getDifficultyText = (difficulty: 'beginner' | 'intermediate' | 'advanced') => {
+    const configs = {
+      beginner: '新手',
+      intermediate: '进阶',
+      advanced: '专家'
+    };
+    return configs[difficulty];
+  };
+
+  const getTypeIcon = (type: 'read' | 'practice' | 'create' | 'review') => {
+    const icons = {
+      read: <BookOpenIcon className="h-3 w-3" />,
+      practice: <PlayIcon className="h-3 w-3" />,
+      create: <SparklesIcon className="h-3 w-3" />,
+      review: <CheckCircleIcon className="h-3 w-3" />
+    };
+    return icons[type];
+  };
+
+  // Mock API 函数
+  const getPersonalizedRecommendations = async (userId: string, limit: number): Promise<RecommendationResult[]> => {
+    // Mock 实现
+    return [];
+  };
+
+  const getTrendingPrompts = async (limit: number): Promise<RecommendationResult[]> => {
+    // Mock 实现
+    return [];
+  };
+
+  const getSimilarPrompts = async (promptId: string, limit: number): Promise<RecommendationResult[]> => {
+    // Mock 实现
+    return [];
+  };
+
   useEffect(() => {
     fetchRecommendations();
     generateLearningPaths();
@@ -243,20 +304,18 @@ export const BeginnerFriendlyRecommendations: React.FC<BeginnerFriendlyRecommend
       let results: RecommendationResult[] = [];
 
       switch (activeTab) {
-        case 'personalized':
+        case 'recommendations':
           if (user) {
             results = await getPersonalizedRecommendations(user.id, maxRecommendations);
           } else {
             results = await getTrendingPrompts(maxRecommendations);
           }
           break;
-        case 'similar':
-          if (currentPromptId) {
-            results = await getSimilarPrompts(currentPromptId, maxRecommendations);
-          }
+        case 'paths':
+          // 学习路径不需要特殊处理
           break;
-        case 'trending':
-          results = await getTrendingPrompts(maxRecommendations);
+        case 'achievements':
+          // 成就不需要特殊处理
           break;
       }
 
@@ -619,7 +678,7 @@ export const BeginnerFriendlyRecommendations: React.FC<BeginnerFriendlyRecommend
                         key={index}
                         initial={{ opacity: 0, x: -20 }}
                         animate={{ opacity: 1, x: 0 }}
-                        delay={index * 0.1}
+                        transition={{ delay: index * 0.1 }}
                         className="bg-gradient-to-r from-yellow-900/20 to-orange-900/20 border border-yellow-500/30 rounded-lg p-3 flex items-center gap-3"
                       >
                         <div className="text-2xl">{achievement.split(' ')[0]}</div>

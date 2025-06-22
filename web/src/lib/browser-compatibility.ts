@@ -89,10 +89,15 @@ export class BrowserCompatibilityManager {
     const browserInfo = this.parseBrowserInfo(userAgent);
     const features = this.detectFeatures();
     
-    this.currentBrowser = {
+    const tempBrowser: BrowserInfo = {
       ...browserInfo,
       features,
-      supported: this.isBrowserSupported(browserInfo)
+      supported: false // 临时值，稍后会被正确设置
+    };
+    
+    this.currentBrowser = {
+      ...tempBrowser,
+      supported: this.isBrowserSupported(tempBrowser)
     };
 
     return this.currentBrowser;

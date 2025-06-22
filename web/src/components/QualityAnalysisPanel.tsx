@@ -86,7 +86,7 @@ const QualityAnalysisPanel: React.FC<QualityAnalysisPanelProps> = ({ promptId, c
   };
 
   const DimensionBar: React.FC<{ name: string; score: number; description: string; suggestions?: string[] }> = ({
-    name, score, description, suggestions
+    name, score, description, suggestions = []
   }) => (
     <motion.div
       initial={{ opacity: 0, x: -20 }}
@@ -291,8 +291,8 @@ const QualityAnalysisPanel: React.FC<QualityAnalysisPanelProps> = ({ promptId, c
         {/* 分析信息 */}
         <div className="text-xs text-gray-500 border-t border-gray-700 pt-4">
           <div className="flex justify-between items-center">
-            <span>分析时间: {new Date(analysis.lastAnalyzed).toLocaleString('zh-CN')}</span>
-            <span>分析版本: {analysis.analysisVersion}</span>
+            <span>分析时间: {new Date(analysis.metadata.analysisDate).toLocaleString('zh-CN')}</span>
+            <span>分析版本: {analysis.metadata.modelVersion}</span>
           </div>
         </div>
       </div>

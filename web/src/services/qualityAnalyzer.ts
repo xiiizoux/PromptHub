@@ -415,10 +415,15 @@ export class PromptQualityAnalyzer {
    */
   private async getComparisonData(category: string, score: number) {
     // 模拟数据，实际应从数据库获取
+    const ranking = Math.floor(Math.random() * 50) + 1;
+    const totalInCategory = Math.floor(Math.random() * 100) + 50;
+    const percentile = Math.round((1 - ranking / totalInCategory) * 100);
+    
     return {
       categoryAverage: 72,
-      ranking: Math.floor(Math.random() * 50) + 1,
-      totalInCategory: Math.floor(Math.random() * 100) + 50
+      ranking,
+      totalInCategory,
+      percentile
     };
   }
 
