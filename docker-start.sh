@@ -179,7 +179,14 @@ cd /app/mcp
 echo "初始化MCP服务环境变量..."
 export NODE_ENV=production
 # 使用之前设置的STORAGE_TYPE环境变量
-export API_KEY=default-api-key-for-docker
+# 🔧 修复: 完全移除系统级API密钥设置，依赖数据库验证
+# MCP服务器现在将通过Supabase验证所有用户API密钥
+echo "ℹ️  MCP服务器将通过Supabase数据库验证用户API密钥"
+echo "📡 Supabase配置: ${SUPABASE_URL}"
+
+# 确保不设置任何系统级API密钥，强制使用数据库验证
+unset API_KEY
+unset SERVER_KEY
 
 # 启动MCP服务
 echo "启动MCP服务..."

@@ -167,18 +167,22 @@ export function validateConfig(): void {
     errors.push(`Invalid port number: ${config.port}. Must be between 1 and 65535.`);
   }
 
-  // 在生产环境中，严格验证关键密钥是否存在
+  // 在生产环境中，验证关键配置
   if (config.isProduction) {
-    if (!config.apiKey) {
-      errors.push('API_KEY is required in production environment.');
-    } else if (config.apiKey.includes('dev-') || config.apiKey.length < 16) {
-      warnings.push('API_KEY appears to be a development key. Use a strong production key.');
+    // 🔧 修复: 系统级API密钥现在是可选的
+    // 如果设置了系统级密钥，则验证其强度
+    if (config.apiKey) {
+      if (config.apiKey.includes('dev-') || config.apiKey.length < 16) {
+        warnings.push('API_KEY appears to be a development key. Use a strong production key.');
+      }
+    } else {
+      console.log('ℹ️  未设置系统级API_KEY，将完全依赖数据库验证用户密钥');
     }
 
-    if (!config.serverKey) {
-      errors.push('SERVER_KEY is required in production environment.');
-    } else if (config.serverKey === config.apiKey) {
-      warnings.push('SERVER_KEY should be different from API_KEY for better security.');
+    if (config.serverKey) {
+      if (config.serverKey === config.apiKey && config.apiKey) {
+        warnings.push('SERVER_KEY should be different from API_KEY for better security.');
+      }
     }
 
     if (!config.jwt.secret) {
