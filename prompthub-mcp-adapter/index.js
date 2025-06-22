@@ -168,6 +168,23 @@ class PromptHubMCPAdapter {
         }
       },
       {
+        name: 'update_prompt',
+        description: '更新现有提示词',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            name: { type: 'string', description: '提示词名称' },
+            description: { type: 'string', description: '提示词描述' },
+            category: { type: 'string', description: '提示词分类' },
+            tags: { type: 'array', items: { type: 'string' }, description: '提示词标签' },
+            messages: { type: 'array', description: '提示词消息' },
+            is_public: { type: 'boolean', description: '是否公开可见' },
+            allow_collaboration: { type: 'boolean', description: '是否允许协作编辑' }
+          },
+          required: ['name']
+        }
+      },
+      {
         name: 'search_prompts',
         description: '根据关键词搜索提示词',
         inputSchema: {
@@ -179,6 +196,95 @@ class PromptHubMCPAdapter {
           required: ['query']
         }
       },
+      {
+        name: 'get_prompt_template',
+        description: '获取提示词模板',
+        inputSchema: {
+          type: 'object',
+          properties: {},
+          required: []
+        }
+      },
+      // 智能AI工具
+      {
+        name: 'intelligent_prompt_selection',
+        description: '智能提示词选择和推荐',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            context: { type: 'string', description: '使用场景描述' },
+            task_type: { type: 'string', description: '任务类型' },
+            preferences: { type: 'object', description: '用户偏好' }
+          },
+          required: ['context']
+        }
+      },
+      {
+        name: 'intelligent_prompt_storage',
+        description: '智能提示词存储',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            content: { type: 'string', description: '提示词内容' },
+            context: { type: 'string', description: '使用场景' },
+            auto_categorize: { type: 'boolean', description: '自动分类' }
+          },
+          required: ['content']
+        }
+      },
+      {
+        name: 'analyze_prompt_with_external_ai',
+        description: '使用外部AI分析提示词质量',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            prompt_content: { type: 'string', description: '提示词内容' },
+            analysis_type: { type: 'string', description: '分析类型' }
+          },
+          required: ['prompt_content']
+        }
+      },
+      // 自动存储工具
+      {
+        name: 'quick_store',
+        description: '快速存储提示词',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            content: { type: 'string', description: '提示词内容' },
+            name: { type: 'string', description: '提示词名称' },
+            category: { type: 'string', description: '分类' }
+          },
+          required: ['content']
+        }
+      },
+      {
+        name: 'smart_store',
+        description: '智能存储提示词',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            content: { type: 'string', description: '提示词内容' },
+            auto_optimize: { type: 'boolean', description: '自动优化' },
+            suggest_tags: { type: 'boolean', description: '建议标签' }
+          },
+          required: ['content']
+        }
+      },
+      {
+        name: 'analyze_and_store',
+        description: '分析并存储提示词',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            content: { type: 'string', description: '提示词内容' },
+            analyze_quality: { type: 'boolean', description: '分析质量' },
+            suggest_improvements: { type: 'boolean', description: '建议改进' }
+          },
+          required: ['content']
+        }
+      },
+      // 增强搜索工具
       {
         name: 'enhanced_search_prompts',
         description: '增强搜索功能，支持多条件筛选',
@@ -194,6 +300,32 @@ class PromptHubMCPAdapter {
         }
       },
       {
+        name: 'select_prompt_by_index',
+        description: '通过索引选择提示词',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            search_results: { type: 'array', description: '搜索结果' },
+            index: { type: 'number', description: '选择的索引' }
+          },
+          required: ['search_results', 'index']
+        }
+      },
+      {
+        name: 'quick_access_prompts',
+        description: '快速访问提示词',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            access_type: { type: 'string', description: '访问类型' },
+            category: { type: 'string', description: '分类' },
+            limit: { type: 'number', description: '限制数量' }
+          },
+          required: ['access_type']
+        }
+      },
+      // 统一搜索引擎
+      {
         name: 'unified_search',
         description: '统一搜索引擎，整合所有搜索功能',
         inputSchema: {
@@ -207,41 +339,15 @@ class PromptHubMCPAdapter {
         }
       },
       {
-        name: 'quick_store',
-        description: '快速存储提示词',
+        name: 'search',
+        description: '快速搜索工具',
         inputSchema: {
           type: 'object',
           properties: {
-            content: { type: 'string', description: '提示词内容' },
-            name: { type: 'string', description: '提示词名称' },
-            category: { type: 'string', description: '分类' }
+            query: { type: 'string', description: '搜索关键词' },
+            limit: { type: 'number', description: '结果限制' }
           },
-          required: ['content']
-        }
-      },
-      {
-        name: 'intelligent_prompt_selection',
-        description: '智能提示词选择和推荐',
-        inputSchema: {
-          type: 'object',
-          properties: {
-            context: { type: 'string', description: '使用场景描述' },
-            task_type: { type: 'string', description: '任务类型' },
-            preferences: { type: 'object', description: '用户偏好' }
-          },
-          required: ['context']
-        }
-      },
-      {
-        name: 'analyze_prompt_with_external_ai',
-        description: '使用外部AI分析提示词质量',
-        inputSchema: {
-          type: 'object',
-          properties: {
-            prompt_content: { type: 'string', description: '提示词内容' },
-            analysis_type: { type: 'string', description: '分析类型' }
-          },
-          required: ['prompt_content']
+          required: ['query']
         }
       },
       // 版本控制工具
@@ -311,11 +417,30 @@ class PromptHubMCPAdapter {
           type: 'object',
           properties: {
             prompt_id: { type: 'string', description: '提示词ID' },
+            prompt_version: { type: 'number', description: '提示词版本' },
             input_tokens: { type: 'number', description: '输入令牌数' },
             output_tokens: { type: 'number', description: '输出令牌数' },
-            latency_ms: { type: 'number', description: '延迟时间（毫秒）' }
+            total_tokens: { type: 'number', description: '总令牌数' },
+            latency_ms: { type: 'number', description: '延迟时间（毫秒）' },
+            user_id: { type: 'string', description: '用户ID' },
+            session_id: { type: 'string', description: '会话ID' },
+            metadata: { type: 'object', description: '额外元数据' }
           },
-          required: ['prompt_id', 'input_tokens', 'output_tokens', 'latency_ms']
+          required: ['prompt_id', 'input_tokens', 'output_tokens', 'total_tokens', 'latency_ms']
+        }
+      },
+      {
+        name: 'submit_prompt_feedback',
+        description: '提交提示词反馈',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            usage_id: { type: 'string', description: '使用记录ID' },
+            rating: { type: 'number', description: '评分（1-5）' },
+            comments: { type: 'string', description: '评论' },
+            user_id: { type: 'string', description: '用户ID' }
+          },
+          required: ['usage_id', 'rating']
         }
       },
       {
@@ -324,9 +449,49 @@ class PromptHubMCPAdapter {
         inputSchema: {
           type: 'object',
           properties: {
+            prompt_id: { type: 'string', description: '提示词ID' },
+            version: { type: 'number', description: '提示词版本' }
+          },
+          required: ['prompt_id']
+        }
+      },
+      {
+        name: 'generate_performance_report',
+        description: '生成提示词性能报告',
+        inputSchema: {
+          type: 'object',
+          properties: {
             prompt_id: { type: 'string', description: '提示词ID' }
           },
           required: ['prompt_id']
+        }
+      },
+      {
+        name: 'create_ab_test',
+        description: '创建A/B测试',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            name: { type: 'string', description: '测试名称' },
+            description: { type: 'string', description: '测试描述' },
+            prompt_a: { type: 'string', description: '提示词A的ID' },
+            prompt_b: { type: 'string', description: '提示词B的ID' },
+            version_a: { type: 'number', description: '提示词A的版本' },
+            version_b: { type: 'number', description: '提示词B的版本' },
+            traffic_split: { type: 'number', description: '流量分配比例（0-1）' }
+          },
+          required: ['name', 'prompt_a', 'prompt_b']
+        }
+      },
+      {
+        name: 'get_ab_test_results',
+        description: '获取A/B测试结果',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            test_id: { type: 'string', description: '测试ID' }
+          },
+          required: ['test_id']
         }
       }
     ];
