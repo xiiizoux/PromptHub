@@ -93,15 +93,30 @@ const AnalyticsPage: NextPage = () => {
       <div className="space-y-6">
         {/* 页面标题 */}
         <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-4xl md:text-6xl font-bold text-neon-purple mb-4">
-              <ChartBarIcon className="h-8 w-8 md:h-12 md:w-12 text-neon-purple mr-4 inline" />
-              数据分析
-            </h1>
-            <p className="text-gray-400 mt-2">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            className="text-center"
+          >
+            <motion.h1 
+              className="text-4xl md:text-6xl font-bold text-neon-cyan mb-4"
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 1, delay: 0.2 }}
+            >
+              <ChartBarIcon className="h-8 w-8 md:h-12 md:w-12 text-neon-cyan mr-4 inline" />
+              数据分析中心
+            </motion.h1>
+            <motion.p 
+              className="text-lg md:text-xl text-gray-400 max-w-3xl mx-auto leading-relaxed"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.4 }}
+            >
               深入了解您的提示词性能和发现新的内容
-            </p>
-          </div>
+            </motion.p>
+          </motion.div>
           
           <div className="flex items-center gap-3">
             <Cog6ToothIcon className="h-6 w-6 text-gray-400" />

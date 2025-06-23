@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { BookOpenIcon } from '@heroicons/react/24/outline';
+import { RectangleStackIcon } from '@heroicons/react/24/outline';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getPrompts, getCategories, getTags } from '@/lib/api';
 import { PromptInfo, PromptFilters as PromptFiltersType } from '@/types';
@@ -246,7 +246,7 @@ export default function PromptsPage() {
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ duration: 1, delay: 0.2 }}
                 >
-                  <BookOpenIcon className="h-8 w-8 md:h-12 md:w-12 text-neon-cyan mr-4 inline" />
+                  <RectangleStackIcon className="h-8 w-8 md:h-12 md:w-12 text-neon-cyan mr-4 inline" />
                   探索提示词宇宙
                 </motion.h1>
                 <motion.p 
