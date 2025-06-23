@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
+import * as React from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/router';
 import { useForm } from 'react-hook-form';
 import {
@@ -245,7 +246,9 @@ function CreatePromptPage() {
           const regex = /\{\{([a-zA-Z0-9_]+)\}\}/g;
           const matches = content.match(regex);
           if (matches) {
-            const detectedVars = Array.from(new Set(matches.map(match => match.slice(2, -2))));
+            const detectedVars = Array.from(new Set(matches
+          .map(match => match.slice(2, -2))
+          .filter(variable => variable && typeof variable === 'string' && variable.trim().length > 0)));
             // 只添加不存在的变量
             const currentVariables = watch('input_variables') || [];
             const varsToAdd = detectedVars.filter(variable => !currentVariables.includes(variable));
@@ -291,8 +294,8 @@ function CreatePromptPage() {
         console.log('开始获取类别数据...');
         const data = await getCategories();
         console.log('获取到的类别数据:', data);
-        if (data && data.length > 0) {
-          setCategories(data);
+        if (data && Array.isArray(data) && data.length > 0) {
+          setCategories(data as string[]);
         }
       } catch (err) {
         toast.error('获取分类列表失败，已使用默认列表');
@@ -312,7 +315,7 @@ function CreatePromptPage() {
       try {
         const data = await getTags();
         if (data && data.length > 0) {
-          setSuggestedTags(prev => Array.from(new Set([...prev, ...data])));
+          setSuggestedTags(prev => Array.from(new Set([...prev, ...(data as string[])])));
         }
       } catch (err) {
         toast.error('获取标签建议失败，已使用默认列表');
@@ -357,12 +360,14 @@ function CreatePromptPage() {
     // 实时更新内容状态以确保AI按钮能够监听到变化
     setCurrentContent(content);
     
-    if (!content) return;
+    if (!content || typeof content !== 'string') return;
     const regex = /\{\{([a-zA-Z0-9_]+)\}\}/g;
     const matches = content.match(regex);
     
     if (matches) {
-      const detectedVars = Array.from(new Set(matches.map(match => match.slice(2, -2))));
+      const detectedVars = Array.from(new Set(matches
+          .map(match => match.slice(2, -2))
+          .filter(variable => variable && typeof variable === 'string' && variable.trim().length > 0)));
       if (detectedVars.length > 0) {
         setVariables(prev => Array.from(new Set([...prev, ...detectedVars])));
         const currentVariables = watch('input_variables') || [];
@@ -374,7 +379,8 @@ function CreatePromptPage() {
   // 添加变量
   const addVariable = () => {
     if (variableInput && !variables.includes(variableInput)) {
-      const newVariables = [...variables, variableInput];
+      const trimmedVariable = variableInput.trim();
+      const newVariables = [...variables, trimmedVariable];
       setVariables(newVariables);
       setValue('input_variables', newVariables);
       setVariableInput('');
@@ -391,7 +397,8 @@ function CreatePromptPage() {
   // 添加标签
   const addTag = () => {
     if (tagInput && !tags.includes(tagInput)) {
-      const newTags = [...tags, tagInput];
+      const trimmedTag = tagInput.trim();
+      const newTags = [...tags, trimmedTag];
       setTags(newTags);
       setValue('tags', newTags);
       setTagInput('');
@@ -413,6 +420,22 @@ function CreatePromptPage() {
 
   // 表单提交
   const onSubmit = async (data: PromptFormData) => {
+    // 基础输入验证
+    if (!data.name || typeof data.name !== 'string' || data.name.trim().length === 0) {
+      toast.error('提示词名称不能为空');
+      return;
+    }
+    
+    if (!data.content || typeof data.content !== 'string' || data.content.trim().length === 0) {
+      toast.error('提示词内容不能为空');
+      return;
+    }
+    
+    if (data.name.trim().length > 100) {
+      toast.error('提示词名称不能超过100个字符');
+      return;
+    }
+    
     setIsSubmitting(true);
     
     // 创建提示词请求
@@ -426,10 +449,10 @@ function CreatePromptPage() {
         ...data,
         version: Number(data.version) || 1.0,
         author: data.author || user?.username || '未知作者',
-        input_variables: variables,
-        tags,
-        compatible_models: models,
-      };
+        input_variables: variables.filter(Boolean), // 过滤空值
+        tags: tags.filter(Boolean), // 过滤空值
+        compatible_models: models.filter(Boolean), // 过滤空值
+      } as const;
 
       console.log('即将创建的提示词:', promptData);
       
@@ -468,7 +491,7 @@ function CreatePromptPage() {
       
       // 导航到新提示词页面
       router.push(`/prompts/${newPrompt.id}`);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('=== 创建提示词失败 ===');
       console.error('错误详情:', error);
       
@@ -478,7 +501,7 @@ function CreatePromptPage() {
       let errorMessage = '创建提示词失败，请稍后重试';
       let canRetry = true;
       
-      if (error.message) {
+      if (error instanceof Error && error.message) {
         if (error.message.includes('网络') || error.message.includes('Network')) {
           errorMessage = '网络连接问题，请检查网络状态并重试';
         } else if (error.message.includes('超时') || error.message.includes('timeout')) {
@@ -748,7 +771,7 @@ function CreatePromptPage() {
                     autoComplete="off"
                   >
                     <option value="">选择分类</option>
-                    {categories.map((category) => (
+                    {categories.map((category: string) => (
                       <option key={category} value={category}>
                         {category}
                       </option>
