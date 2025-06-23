@@ -31,61 +31,118 @@ export default function PromptsPage() {
   useEffect(() => {
     if (!mounted) return;
     
+    const abortController = new AbortController();
+    
     const fetchCategories = async () => {
       try {
         console.log('开始获取类别数据...');
         const data = await getCategories();
+        
+        // 检查请求是否被中止
+        if (abortController.signal.aborted) {
+          console.log('分类数据请求被中止');
+          return;
+        }
+        
         console.log('获取到的类别数据:', data);
-        // 直接使用字符串数组
-        // 直接使用分类数据，不添加"全部"选项
-        if (data && Array.isArray(data)) {
+        
+        if (data && Array.isArray(data) && data.length > 0) {
           console.log('设置类别数据:', data);
           setCategories(data);
         } else {
-          console.log('类别数据格式错误，使用默认值');
-          setCategories(['通用']);
+          console.log('类别数据为空，使用默认值');
+          setCategories(['通用', '学术', '职业', '文案', '设计']);
         }
       } catch (err) {
+        // 检查请求是否被中止
+        if (abortController.signal.aborted) {
+          console.log('分类数据请求被中止');
+          return;
+        }
+        
         console.error('获取分类失败:', err);
-        // 不设置备用数据，让错误状态显示
-        setError('无法加载分类数据，请刷新页面重试');
+        // 即使出错也提供默认分类，确保UI正常工作
+        setCategories(['通用', '学术', '职业', '文案', '设计']);
+        console.log('分类获取失败，已设置默认分类');
       }
     };
 
     fetchCategories();
+    
+    // 清理函数：当组件卸载或依赖项变化时中止请求
+    return () => {
+      abortController.abort();
+    };
   }, [mounted]);
   
   // 获取标签数据
   useEffect(() => {
     if (!mounted) return;
     
+    const abortController = new AbortController();
+    
     const fetchTags = async () => {
       try {
+        console.log('开始获取标签数据...');
         const data = await getTags();
-        if (data && Array.isArray(data)) {
+        
+        // 检查请求是否被中止
+        if (abortController.signal.aborted) {
+          console.log('标签数据请求被中止');
+          return;
+        }
+        
+        console.log('获取到的标签数据:', data);
+        
+        if (data && Array.isArray(data) && data.length > 0) {
           setTags(data);
+          console.log('标签数据设置成功，数量:', data.length);
         } else {
-          setTags([]);
+          console.log('标签数据为空，使用默认值');
+          setTags(['GPT-4', 'GPT-3.5', 'Claude', 'Gemini', '初学者']);
         }
       } catch (err) {
+        // 检查请求是否被中止
+        if (abortController.signal.aborted) {
+          console.log('标签数据请求被中止');
+          return;
+        }
+        
         console.error('获取标签失败:', err);
-        // 如果获取失败，设置一些默认标签
+        // 即使出错也提供默认标签，确保UI正常工作
         setTags(['GPT-4', 'GPT-3.5', 'Claude', 'Gemini', '初学者', '高级', '长文本', '结构化输出', '翻译', '润色']);
+        console.log('标签获取失败，已设置默认标签');
       }
     };
 
     fetchTags();
+    
+    // 清理函数：当组件卸载或依赖项变化时中止请求
+    return () => {
+      abortController.abort();
+    };
   }, [mounted]);
 
   // 获取提示词数据
   useEffect(() => {
     if (!mounted) return;
     
+    const abortController = new AbortController();
+    
     const fetchPrompts = async () => {
       console.log('开始获取提示词数据，filters:', filters);
       setLoading(true);
+      setError(null); // 重置错误状态
+      
       try {
         const response = await getPrompts(filters);
+        
+        // 检查请求是否被中止
+        if (abortController.signal.aborted) {
+          console.log('提示词数据请求被中止');
+          return;
+        }
+        
         console.log('获取提示词响应:', response);
         
         if (response && response.data && Array.isArray(response.data)) {
@@ -99,19 +156,35 @@ export default function PromptsPage() {
           setPrompts([]);
           setTotalPages(1);
           setTotalCount(0);
-          setError('获取提示词数据格式错误');
+          setError('获取提示词数据格式错误，请刷新页面重试');
         }
       } catch (err) {
+        // 检查请求是否被中止
+        if (abortController.signal.aborted) {
+          console.log('提示词数据请求被中止');
+          return;
+        }
+        
         console.error('获取提示词失败:', err);
-        setError('无法加载提示词，请稍后再试');
+        setError('无法加载提示词，请检查网络连接后重试');
         setPrompts([]);
+        setTotalPages(1);
+        setTotalCount(0);
       } finally {
-        console.log('提示词数据加载完成');
-        setLoading(false);
+        // 检查请求是否被中止
+        if (!abortController.signal.aborted) {
+          console.log('提示词数据加载完成');
+          setLoading(false);
+        }
       }
     };
 
     fetchPrompts();
+    
+    // 清理函数：当组件卸载或依赖项变化时中止请求
+    return () => {
+      abortController.abort();
+    };
   }, [filters, mounted]);
 
   // 处理过滤器变更
@@ -291,6 +364,16 @@ export default function PromptsPage() {
                         <p className="text-red-200">{error}</p>
                       </div>
                     </div>
+                    <button
+                      onClick={() => {
+                        setError(null);
+                        // 重新加载数据
+                        window.location.reload();
+                      }}
+                      className="mt-3 px-4 py-2 bg-red-500/30 hover:bg-red-500/50 text-red-200 rounded-md text-sm transition-colors"
+                    >
+                      重新加载页面
+                    </button>
                   </div>
                 </motion.div>
               )}

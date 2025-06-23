@@ -73,17 +73,17 @@ export class DatabaseService {
    * 获取所有分类（返回完整对象数组）
    * 只从categories表获取数据，确保数据的一致性和完整性
    */
-  async getCategories(): Promise<any[]> {
+  async getCategories(): Promise<string[]> {
     try {
       console.log('=== 开始获取categories表数据 ===');
-
+  
       // 首先检查categories表是否存在并获取数据
       const { data: categoriesData, error: categoriesError } = await this.adapter.supabase
         .from('categories')
         .select('id, name, name_en, alias, description, sort_order, is_active')
         .eq('is_active', true)
         .order('sort_order');
-
+  
       console.log('数据库查询结果:', {
         error: categoriesError,
         errorCode: categoriesError?.code,
@@ -91,15 +91,16 @@ export class DatabaseService {
         dataLength: categoriesData?.length || 0,
         data: categoriesData?.slice(0, 3) // 只显示前3个用于调试
       });
-
-      // 如果查询成功且有数据，直接返回
+  
+      // 如果查询成功且有数据，返回字符串数组
       if (!categoriesError && categoriesData && categoriesData.length > 0) {
         console.log('成功从categories表获取数据，数量:', categoriesData.length);
-        console.log('返回的分类:', categoriesData.map(c => c.name));
-        return categoriesData;
+        const categoryNames = categoriesData.map(c => c.name);
+        console.log('返回的分类名称:', categoryNames);
+        return categoryNames;
       }
-
-      // 如果categories表查询失败或没有数据，返回默认的20个预设分类
+  
+      // 如果categories表查询失败或没有数据，返回默认的字符串分类数组
       console.log('categories表查询失败或无数据，使用默认分类');
       if (categoriesError) {
         console.error('数据库错误详情:', {
@@ -109,18 +110,35 @@ export class DatabaseService {
           hint: categoriesError.hint
         });
       }
-
-      return this.getDefaultCategories();
-
+  
+      return this.getDefaultCategoryNames();
+  
     } catch (error) {
       console.error('获取分类失败:', error);
       console.log('发生异常，返回默认分类');
-      return this.getDefaultCategories();
+      return this.getDefaultCategoryNames();
     }
   }
 
+
   /**
    * 获取默认的20个预设分类
+   * 当数据库中没有分类数据时使用
+   */
+  private getDefaultCategoryNames(): string[] {
+    const defaultCategoryNames = [
+      '通用', '学术', '职业', '文案', '设计', 
+      '教育', '情感', '娱乐', '游戏', '生活',
+      '商业', '办公', '编程', '翻译', '绘画',
+      '视频', '播客', '音乐', '健康', '科技'
+    ];
+  
+    console.log('使用默认分类名称，数量:', defaultCategoryNames.length);
+    return defaultCategoryNames;
+  }
+  
+  /**
+   * 获取默认的20个预设分类对象（保留原有方法用于其他用途）
    * 当数据库中没有分类数据时使用
    */
   private getDefaultCategories(): any[] {
@@ -146,10 +164,11 @@ export class DatabaseService {
       { id: '19', name: '健康', name_en: 'Health', sort_order: 19, is_active: true },
       { id: '20', name: '科技', name_en: 'Technology', sort_order: 20, is_active: true }
     ];
-
+  
     console.log('使用默认分类，数量:', defaultCategories.length);
     return defaultCategories;
   }
+
 
   /**
    * 获取所有标签
