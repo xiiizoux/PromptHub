@@ -502,7 +502,7 @@ class PromptHubMCPAdapter {
       method: method,
       headers: {
         'Content-Type': 'application/json',
-        'User-Agent': 'PromptHub-MCP-Adapter/1.0.3'
+        'User-Agent': 'PromptHub-MCP-Adapter/1.1.0'
       }
     };
 
@@ -577,7 +577,7 @@ async function handleMessage(message) {
             },
             serverInfo: {
               name: 'prompthub-mcp-adapter',
-              version: '1.0.3'
+              version: '1.1.0'
             }
           }
         });

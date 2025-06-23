@@ -1,7 +1,7 @@
 {
   "name": "prompthub-mcp-adapter",
-  "version": "1.0.6",
-  "description": "MCP adapter for connecting AI clients (Cursor, Claude Desktop) to PromptHub server",
+  "version": "1.1.0",
+  "description": "MCP adapter for connecting AI clients (Cursor, Claude Desktop) to PromptHub server with intelligent semantic search",
   "main": "index.js",
   "bin": {
     "prompthub-mcp-adapter": "./index.js"
@@ -19,7 +19,10 @@
     "adapter",
     "protocol",
     "prompt",
-    "management"
+    "management",
+    "semantic-search",
+    "intelligent-search",
+    "nlp"
   ],
   "author": "PromptHub Team",
   "license": "MIT",
