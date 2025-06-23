@@ -1,4 +1,5 @@
 import express from 'express';
+import express from 'express';
 import { config } from '../config.js';
 import { storage } from '../shared/services.js';
 import { handleToolError, handleToolSuccess } from '../shared/error-handler.js';
@@ -58,6 +59,10 @@ import {
   handleUnifiedSearch,
   handleQuickSearch
 } from '../tools/unified-search-engine.js';
+import {
+  optimizedSemanticSearchToolDef,
+  handleOptimizedSemanticSearch
+} from '../tools/optimized-semantic-search.js';
 
 // 创建路由器
 const router = express.Router();
@@ -338,6 +343,9 @@ router.get('/tools', authenticateRequest, (req, res) => {
     // 🔍 统一搜索引擎 - 整合所有搜索功能
     unifiedSearchEngineToolDef,
     quickSearchToolDef,
+    
+    // 🎯 优化语义搜索 - 智能简洁的搜索体验 (推荐使用)
+    optimizedSemanticSearchToolDef,
     
     // 性能分析工具
     {
@@ -621,6 +629,15 @@ router.post('/tools/:name/invoke', optionalAuthMiddleware, async (req, res) => {
         break;
       case 'search':
         result = await handleQuickSearch(params, req?.user?.id);
+        break;
+      
+      // 🎯 优化语义搜索处理 (推荐使用)
+      case 'smart_semantic_search':
+        result = await handleOptimizedSemanticSearch(params, {
+          userId: req?.user?.id,
+          requestId: req?.headers?.['x-request-id'],
+          userAgent: req?.headers?.['user-agent']
+        });
         break;
         
       default:

@@ -297,40 +297,53 @@ export class SupabaseAdapter {
    * @returns 提示词列表
    */
   async searchPrompts(query: string, userId?: string, includePublic: boolean = true): Promise<Prompt[]> {
-    try {
-      // 创建基本查询
-      let dbQuery = this.supabase
-        .from('prompts')
-        .select('*')
-        .or(`name.ilike.%${query}%,description.ilike.%${query}%,category.ilike.%${query}%`);
-      
-      // 添加访问控制
-      if (userId) {
-        if (includePublic) {
-          // 用户自己的提示词 + 公开提示词
-          dbQuery = dbQuery.or(`user_id.eq.${userId},is_public.eq.true`);
+      try {
+        // 构建搜索模式 - 搜索标题、描述、分类、标签和消息内容
+        const searchPattern = `%${query}%`;
+        
+        // 创建基本查询 - 搜索所有相关字段
+        let dbQuery = this.supabase
+          .from('prompts')
+          .select('*')
+          .or([
+            `name.ilike.${searchPattern}`,
+            `description.ilike.${searchPattern}`, 
+            `category.ilike.${searchPattern}`,
+            `tags::text.ilike.${searchPattern}`,
+            `messages::text.ilike.${searchPattern}`
+          ].join(','));
+        
+        // 添加访问控制
+        if (userId) {
+          if (includePublic) {
+            // 用户自己的提示词 + 公开提示词
+            dbQuery = dbQuery.or(`user_id.eq.${userId},is_public.eq.true`);
+          } else {
+            // 只查询用户自己的提示词
+            dbQuery = dbQuery.eq('user_id', userId);
+          }
         } else {
-          // 只查询用户自己的提示词
-          dbQuery = dbQuery.eq('user_id', userId);
+          // 没有用户ID时只返回公开内容
+          dbQuery = dbQuery.eq('is_public', true);
         }
-      } else {
-        // 没有用户ID时只返回公开内容
-        dbQuery = dbQuery.eq('is_public', true);
-      }
-      
-      const { data, error } = await dbQuery;
-
-      if (error) {
-        console.error(`搜索提示词失败: ${error.message}`);
+        
+        // 按相关性排序：优先显示标题匹配的结果
+        dbQuery = dbQuery.order('name', { ascending: true });
+        
+        const { data, error } = await dbQuery;
+  
+        if (error) {
+          console.error(`搜索提示词失败: ${error.message}`);
+          return [];
+        }
+  
+        return data || [];
+      } catch (err) {
+        console.error('搜索提示词时出错:', err);
         return [];
       }
-
-      return data || [];
-    } catch (err) {
-      console.error('搜索提示词时出错:', err);
-      return [];
     }
-  }
+
   
   // ========= 用户认证 =========
   

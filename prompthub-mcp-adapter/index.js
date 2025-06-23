@@ -108,7 +108,21 @@ class PromptHubMCPAdapter {
    */
   loadPredefinedTools() {
     this.tools = [
-      // 核心提示词管理工具
+      // ============= 🎯 优化语义搜索 (强烈推荐优先使用) =============
+      {
+        name: 'smart_semantic_search',
+        description: '🎯 智能语义搜索 - 用自然语言描述需求，快速找到最相关的提示词 (⭐⭐⭐ 强烈推荐)',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            query: { type: 'string', description: '用自然语言描述您的需求，例如："写商务邮件"、"分析代码问题"、"创意文案"等' },
+            max_results: { type: 'number', description: '最多返回几个结果，默认5个' }
+          },
+          required: ['query']
+        }
+      },
+      
+      // ============= 核心提示词管理工具 =============
       {
         name: 'get_categories',
         description: '获取所有提示词分类',
@@ -184,9 +198,21 @@ class PromptHubMCPAdapter {
           required: ['name']
         }
       },
+
+
+      {
+        name: 'get_prompt_template',
+        description: '获取提示词模板',
+        inputSchema: {
+          type: 'object',
+          properties: {},
+          required: []
+        }
+      },
+      // ============= 其他搜索选项 =============
       {
         name: 'search_prompts',
-        description: '根据关键词搜索提示词',
+        description: '基础关键词搜索',
         inputSchema: {
           type: 'object',
           properties: {
@@ -197,15 +223,21 @@ class PromptHubMCPAdapter {
         }
       },
       {
-        name: 'get_prompt_template',
-        description: '获取提示词模板',
+        name: 'enhanced_search_prompts',
+        description: '高级搜索 - 支持多条件筛选',
         inputSchema: {
           type: 'object',
-          properties: {},
-          required: []
+          properties: {
+            query: { type: 'string', description: '搜索关键词' },
+            category: { type: 'string', description: '分类筛选' },
+            tags: { type: 'array', items: { type: 'string' }, description: '标签筛选' },
+            difficulty: { type: 'string', description: '难度级别' }
+          },
+          required: ['query']
         }
       },
-      // 智能AI工具
+      
+      // ============= 智能AI工具 =============
       {
         name: 'intelligent_prompt_selection',
         description: '智能提示词选择和推荐',
@@ -284,72 +316,7 @@ class PromptHubMCPAdapter {
           required: ['content']
         }
       },
-      // 增强搜索工具
-      {
-        name: 'enhanced_search_prompts',
-        description: '增强搜索功能，支持多条件筛选',
-        inputSchema: {
-          type: 'object',
-          properties: {
-            query: { type: 'string', description: '搜索关键词' },
-            category: { type: 'string', description: '分类筛选' },
-            tags: { type: 'array', items: { type: 'string' }, description: '标签筛选' },
-            difficulty: { type: 'string', description: '难度级别' }
-          },
-          required: ['query']
-        }
-      },
-      {
-        name: 'select_prompt_by_index',
-        description: '通过索引选择提示词',
-        inputSchema: {
-          type: 'object',
-          properties: {
-            search_results: { type: 'array', description: '搜索结果' },
-            index: { type: 'number', description: '选择的索引' }
-          },
-          required: ['search_results', 'index']
-        }
-      },
-      {
-        name: 'quick_access_prompts',
-        description: '快速访问提示词',
-        inputSchema: {
-          type: 'object',
-          properties: {
-            access_type: { type: 'string', description: '访问类型' },
-            category: { type: 'string', description: '分类' },
-            limit: { type: 'number', description: '限制数量' }
-          },
-          required: ['access_type']
-        }
-      },
-      // 统一搜索引擎
-      {
-        name: 'unified_search',
-        description: '统一搜索引擎，整合所有搜索功能',
-        inputSchema: {
-          type: 'object',
-          properties: {
-            query: { type: 'string', description: '搜索查询' },
-            searchType: { type: 'string', enum: ['basic', 'advanced', 'semantic'], description: '搜索类型' },
-            filters: { type: 'object', description: '搜索过滤器' }
-          },
-          required: ['query']
-        }
-      },
-      {
-        name: 'search',
-        description: '快速搜索工具',
-        inputSchema: {
-          type: 'object',
-          properties: {
-            query: { type: 'string', description: '搜索关键词' },
-            limit: { type: 'number', description: '结果限制' }
-          },
-          required: ['query']
-        }
-      },
+
       // 版本控制工具
       {
         name: 'get_prompt_versions',
