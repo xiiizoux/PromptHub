@@ -20,7 +20,8 @@ import {
   DocumentTextIcon,
   UserIcon,
   CpuChipIcon,
-  ShieldExclamationIcon
+  ShieldExclamationIcon,
+  PlusCircleIcon
 } from '@heroicons/react/24/outline';
 import { AIAnalyzeButton, AIAnalysisResultDisplay } from '@/components/AIAnalyzeButton';
 import { AIAnalysisResult } from '@/lib/ai-analyzer';
@@ -566,11 +567,12 @@ function CreatePromptPage() {
             className="mb-12 text-center"
           >
             <motion.h1 
-              className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-neon-cyan via-neon-purple to-neon-pink bg-clip-text text-transparent mb-6"
+              className="text-4xl md:text-6xl font-bold text-neon-cyan mb-4"
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 1, delay: 0.2 }}
             >
+              <PlusCircleIcon className="h-8 w-8 md:h-12 md:w-12 text-neon-cyan mr-4 inline" />
               创建新提示词
             </motion.h1>
             <motion.p 

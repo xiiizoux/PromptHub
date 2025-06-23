@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { BookOpenIcon } from '@heroicons/react/24/outline';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getPrompts, getCategories, getTags } from '@/lib/api';
 import { PromptInfo, PromptFilters as PromptFiltersType } from '@/types';
@@ -240,11 +241,12 @@ export default function PromptsPage() {
                 className="text-center"
               >
                 <motion.h1 
-                  className="text-4xl md:text-5xl lg:text-6xl font-bold bg-gradient-to-r from-neon-cyan via-neon-purple to-neon-pink bg-clip-text text-transparent mb-3 md:mb-4"
+                  className="text-4xl md:text-6xl font-bold text-neon-cyan mb-4"
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ duration: 1, delay: 0.2 }}
                 >
+                  <BookOpenIcon className="h-8 w-8 md:h-12 md:w-12 text-neon-cyan mr-4 inline" />
                   探索提示词宇宙
                 </motion.h1>
                 <motion.p 

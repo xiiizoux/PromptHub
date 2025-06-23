@@ -35,11 +35,12 @@ const DocsPage: React.FC = () => {
             className="mb-16 text-center"
           >
             <motion.h1 
-              className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-neon-cyan via-neon-purple to-neon-pink bg-clip-text text-transparent mb-6"
+              className="text-4xl md:text-6xl font-bold text-neon-cyan mb-4"
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 1, delay: 0.2 }}
             >
+              <DocumentTextIcon className="h-8 w-8 md:h-12 md:w-12 text-neon-cyan mr-4 inline" />
               开发文档
             </motion.h1>
             <motion.p 

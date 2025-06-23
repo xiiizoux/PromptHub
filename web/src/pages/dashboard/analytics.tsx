@@ -8,7 +8,8 @@ import {
   UserGroupIcon,
   DocumentTextIcon,
   ArrowTrendingUpIcon,
-  Cog6ToothIcon
+  Cog6ToothIcon,
+  ChartBarIcon
 } from '@heroicons/react/24/outline';
 import DashboardLayout from '@/components/DashboardLayout';
 import { RecommendationEngine } from '@/components/RecommendationEngine';
@@ -94,7 +95,10 @@ const AnalyticsPage: NextPage = () => {
         {/* 页面标题 */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-white">数据分析</h1>
+            <h1 className="text-4xl md:text-6xl font-bold text-neon-cyan mb-4">
+              <ChartBarIcon className="h-8 w-8 md:h-12 md:w-12 text-neon-cyan mr-4 inline" />
+              数据分析
+            </h1>
             <p className="text-gray-400 mt-2">
               深入了解您的提示词性能和发现新的内容
             </p>
