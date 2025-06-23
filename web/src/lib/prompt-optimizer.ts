@@ -524,15 +524,17 @@ export class PromptOptimizer {
       return results;
     }
   private async callLLM(systemPrompt: string, userPrompt: string): Promise<string> {
-      // 修复API调用路径 - 使用正确的前端API端点
+      // 修复API调用 - 使用正确的参数格式
       const response = await fetch('/api/ai/optimize', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          prompt: `${systemPrompt}\n\n${userPrompt}`,
-          optimizationType: 'general'
+          prompt: userPrompt, // 传递用户提示词
+          optimizationType: 'general', // 默认优化类型
+          requirements: '', // 可以从系统提示词中提取需求
+          context: systemPrompt // 将系统提示词作为上下文
         })
       });
   
@@ -550,6 +552,7 @@ export class PromptOptimizer {
     }
 
 
+
   private extractOptimizedPrompt(response: string): string {
     const match = response.match(/### 优化后的提示词\s*([\s\S]*?)\s*(?:###|$)/);
     return match ? match[1].trim() : response.trim();
@@ -565,17 +568,8 @@ export class PromptOptimizer {
 
 export async function createPromptOptimizer(): Promise<PromptOptimizer | null> {
   try {
-    // 检查环境变量是否可用
-    const hasApiKey = typeof window !== 'undefined' 
-      ? window.location.hostname === 'localhost' // 本地开发环境
-      : process.env.NEXT_PUBLIC_OPENAI_API_KEY; // 服务器环境
-    
-    if (!hasApiKey) {
-      console.warn('AI优化功能需要配置API密钥');
-      return null;
-    }
-
-    // 使用web服务自己的AI API，不依赖MCP
+    // 简化环境检查 - 直接创建优化器实例，让API层处理配置检查
+    // 前端不需要直接检查API key，这应该由后端API处理
     return new PromptOptimizer({
       apiKey: '', // 通过API端点处理，不需要直接传递
       baseURL: '' // 使用相对路径调用
@@ -585,6 +579,7 @@ export async function createPromptOptimizer(): Promise<PromptOptimizer | null> {
     return null;
   }
 }
+
 
 
 export async function optimizePrompt(
@@ -613,7 +608,9 @@ export async function iteratePrompt(
   try {
     const optimizer = await createPromptOptimizer();
     if (!optimizer) {
-      throw new Error('无法初始化优化器');
+      console.warn('优化器未初始化，使用默认处理');
+      // 如果优化器创建失败，返回当前提示词
+      return currentPrompt;
     }
     return await optimizer.iteratePrompt({ originalPrompt, currentPrompt, requirements, type });
   } catch (error) {

@@ -286,7 +286,7 @@ export const PromptOptimizerComponent: React.FC<PromptOptimizerProps> = ({
                   <StarIcon
                     key={i}
                     className={`h-4 w-4 ${
-                      i < Math.round(result.score.overall / 2)
+                      i < Math.round((result?.score?.overall || 0) / 2)
                         ? 'text-neon-yellow'
                         : 'text-gray-600'
                     }`}
@@ -294,7 +294,7 @@ export const PromptOptimizerComponent: React.FC<PromptOptimizerProps> = ({
                 ))}
               </div>
               <span className="text-sm text-gray-400">
-                {result.score.overall.toFixed(1)}/10
+                {(result?.score?.overall || 0).toFixed(1)}/10
               </span>
             </div>
           )}
@@ -508,7 +508,7 @@ export const PromptOptimizerComponent: React.FC<PromptOptimizerProps> = ({
                   改进建议
                 </h4>
                 <div className="space-y-2">
-                  {result.suggestions.map((suggestion, index) => (
+                  {result?.suggestions?.map((suggestion, index) => (
                     <div key={index} className="flex items-start space-x-3 text-sm">
                       <div className="w-1.5 h-1.5 rounded-full bg-neon-yellow mt-2 flex-shrink-0" />
                       <span className="text-gray-300">{suggestion}</span>
@@ -596,7 +596,7 @@ export const PromptOptimizerComponent: React.FC<PromptOptimizerProps> = ({
                 主要改进
               </h4>
               <div className="space-y-2">
-                {result.improvements.map((improvement, index) => (
+                {result?.improvements?.map((improvement, index) => (
                   <div key={index} className="flex items-start space-x-3 text-sm">
                     <div className="w-1.5 h-1.5 rounded-full bg-neon-green mt-2 flex-shrink-0" />
                     <span className="text-gray-300">{improvement}</span>

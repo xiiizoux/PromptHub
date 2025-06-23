@@ -533,7 +533,7 @@ export const PromptOptimizer: React.FC<PromptOptimizerProps> = ({
                   
                   <AIAnalysisResultDisplay 
                     result={aiAnalysisResult}
-                    onSave={() => {
+                    onApplyResults={() => {
                       const contentToUse = optimizedPrompt || prompt;
                       const suggestedName = `AI优化提示词_${new Date().toLocaleDateString('zh-CN', {
                         month: '2-digit',
@@ -542,7 +542,7 @@ export const PromptOptimizer: React.FC<PromptOptimizerProps> = ({
                         minute: '2-digit'
                       })}`;
                       
-                      const suggestedDesc = aiAnalysisResult.description || '通过AI优化生成的提示词，经过智能分析和结构化优化处理';
+                      const suggestedDesc = aiAnalysisResult?.description || '通过AI优化生成的提示词，经过智能分析和结构化优化处理';
                       
                       // 构建URL参数，包含优化内容、AI分析结果和标识参数
                       const params = new URLSearchParams({
@@ -561,14 +561,14 @@ export const PromptOptimizer: React.FC<PromptOptimizerProps> = ({
               )}
             </AnimatePresence>
 
-            {result.suggestions && result.suggestions.length > 0 && (
+            {result?.suggestions && result.suggestions.length > 0 && (
               <div className="mt-6">
                 <h4 className="font-medium text-white mb-3 flex items-center">
                   <InformationCircleIcon className="h-4 w-4 text-neon-yellow mr-2" />
                   改进建议
                 </h4>
                 <div className="space-y-2">
-                  {result.suggestions.map((suggestion, index) => (
+                  {result?.suggestions?.map((suggestion, index) => (
                     <div key={index} className="flex items-start space-x-3 text-sm">
                       <div className="w-1.5 h-1.5 rounded-full bg-neon-yellow mt-2 flex-shrink-0" />
                       <span className="text-gray-300">{suggestion}</span>
