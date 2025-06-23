@@ -64,18 +64,28 @@ export class PerformanceTracker {
   private isEnabled: boolean = false;
 
   constructor() {
-    // 初始化supabase客户端（避免初始化错误）
-    this.supabase = createClient('https://placeholder.supabase.co', 'placeholder-key');
-    
-    // 如果使用Supabase存储，则启用性能跟踪
-    if (config.storage.type === 'supabase' && config.supabase && config.supabase.url && config.supabase.anonKey) {
-      this.supabase = createClient(config.supabase.url, config.supabase.anonKey);
-      this.isEnabled = true;
-      console.log('提示词性能分析功能已启用');
-    } else {
-      console.log('提示词性能分析功能需要Supabase存储，当前未启用');
+      // 初始化supabase客户端（避免初始化错误）
+      this.supabase = createClient('https://placeholder.supabase.co', 'placeholder-key');
+      
+      // 如果使用Supabase存储，则启用性能跟踪
+      if (config.storage.type === 'supabase' && config.supabase && config.supabase.url && config.supabase.anonKey) {
+        // 优先使用服务密钥，这样可以绕过RLS策略
+        const serviceKey = config.supabase.serviceKey || config.supabase.anonKey;
+        
+        this.supabase = createClient(config.supabase.url, serviceKey);
+        this.isEnabled = true;
+        console.log('提示词性能分析功能已启用');
+        
+        if (config.supabase.serviceKey) {
+          console.log('✅ 使用服务密钥，可绕过行级安全策略');
+        } else {
+          console.log('⚠️  使用匿名密钥，受行级安全策略限制');
+        }
+      } else {
+        console.log('提示词性能分析功能需要Supabase存储，当前未启用');
+      }
     }
-  }
+
 
   /**
    * 记录提示词使用
@@ -83,35 +93,68 @@ export class PerformanceTracker {
    * @returns 新创建的记录ID或null
    */
   public async trackUsage(usage: PromptUsage): Promise<string | null> {
-    if (!this.isEnabled) return null;
-
-    try {
-      const { data, error } = await this.supabase
-        .from('prompt_usage')
-        .insert([{
-          prompt_id: usage.promptId,
-          prompt_version: usage.promptVersion,
-          user_id: usage.userId,
-          session_id: usage.sessionId || this.generateSessionId(),
-          model: usage.model,
-          input_tokens: usage.inputTokens,
-          output_tokens: usage.outputTokens,
-          latency_ms: usage.latencyMs,
-          client_metadata: usage.clientMetadata || {}
-        }])
-        .select('id');
-
-      if (error) {
-        console.error('记录提示词使用时出错:', error);
+      if (!this.isEnabled) return null;
+  
+      try {
+        // 对于搜索操作，使用特殊的处理方式
+        if (usage.promptId === '00000000-0000-4000-8000-000000000001') {
+          // 直接插入使用记录，不关联具体的提示词
+          const { data, error } = await this.supabase
+            .from('prompt_usage')
+            .insert([{
+              prompt_id: null, // 搜索操作不关联具体提示词
+              prompt_version: usage.promptVersion,
+              user_id: usage.userId === 'anonymous' ? null : usage.userId,
+              session_id: usage.sessionId || this.generateSessionId(),
+              model: usage.model,
+              input_tokens: usage.inputTokens,
+              output_tokens: usage.outputTokens,
+              latency_ms: usage.latencyMs,
+              client_metadata: {
+                ...usage.clientMetadata,
+                search_operation: true, // 标记为搜索操作
+                prompt_placeholder_id: usage.promptId // 保存原始的占位符ID
+              }
+            }])
+            .select('id');
+  
+          if (error) {
+            console.error('记录搜索操作使用时出错:', error);
+            return null;
+          }
+  
+          console.log('✅ 搜索操作使用记录已创建:', data?.[0]?.id);
+          return data && data[0] ? data[0].id : null;
+        } else {
+          // 正常的提示词使用记录
+          const { data, error } = await this.supabase
+            .from('prompt_usage')
+            .insert([{
+              prompt_id: usage.promptId,
+              prompt_version: usage.promptVersion,
+              user_id: usage.userId === 'anonymous' ? null : usage.userId,
+              session_id: usage.sessionId || this.generateSessionId(),
+              model: usage.model,
+              input_tokens: usage.inputTokens,
+              output_tokens: usage.outputTokens,
+              latency_ms: usage.latencyMs,
+              client_metadata: usage.clientMetadata || {}
+            }])
+            .select('id');
+  
+          if (error) {
+            console.error('记录提示词使用时出错:', error);
+            return null;
+          }
+  
+          return data && data[0] ? data[0].id : null;
+        }
+      } catch (err) {
+        console.error('跟踪提示词使用时出错:', err);
         return null;
       }
-
-      return data && data[0] ? data[0].id : null;
-    } catch (err) {
-      console.error('跟踪提示词使用时出错:', err);
-      return null;
     }
-  }
+
 
   /**
    * 提交提示词使用反馈

@@ -10,7 +10,21 @@
  */
 
 import { BaseMCPTool } from '../shared/base-tool.js';
-import { ToolDescription, ToolParameter, ToolResult, ToolContext, Prompt } from '../types.js';
+import { ToolDescription, ToolParameter, Prompt } from '../types.js';
+
+// 定义本地类型接口
+interface ToolResult {
+  success: boolean;
+  data?: any;
+  message?: string;
+}
+
+interface ToolContext {
+  userId?: string;
+  requestId?: string;
+  timestamp: number;
+  userAgent?: string;
+}
 
 /**
  * 用户意图分析结果
@@ -533,26 +547,98 @@ export class OptimizedSemanticSearchTool extends BaseMCPTool {
    * 生成预览
    */
   private generatePreview(prompt: Prompt): string {
-    let preview = prompt.description || '';
-    
-    // 如果描述太短，尝试从消息中提取内容
-    if (preview.length < 50 && prompt.messages) {
-      try {
-        const content = Array.isArray(prompt.messages) 
-          ? prompt.messages.find(msg => typeof msg === 'object' && msg.content)?.content
-          : typeof prompt.messages === 'string' ? prompt.messages : '';
-        
-        if (typeof content === 'string' && content.length > preview.length) {
-          preview = content;
+      let content = '';
+      
+      // 优先从messages中提取实际内容
+      if (prompt.messages) {
+        try {
+          if (Array.isArray(prompt.messages)) {
+            // 查找包含实际提示词内容的消息
+            const contentMsg = prompt.messages.find(msg => {
+              if (typeof msg === 'object' && msg !== null && 'content' in msg) {
+                const msgContent = (msg as any).content;
+                return typeof msgContent === 'string' && msgContent.trim().length > 20;
+              }
+              return false;
+            });
+            
+            if (contentMsg) {
+              content = (contentMsg as any).content;
+            } else if (prompt.messages.length > 0) {
+              // 如果没找到content字段，尝试获取第一个非空消息
+              const firstMsg = prompt.messages[0];
+              if (typeof firstMsg === 'string') {
+                content = firstMsg;
+              } else if (typeof firstMsg === 'object' && firstMsg !== null) {
+                // 尝试各种可能的字段名
+                const msgObj = firstMsg as any;
+                content = msgObj.content || msgObj.text || msgObj.prompt || msgObj.message || '';
+              }
+            }
+          } else if (typeof prompt.messages === 'string') {
+            content = prompt.messages;
+          } else if (typeof prompt.messages === 'object' && prompt.messages !== null) {
+            // 处理单个消息对象
+            const msgObj = prompt.messages as any;
+            content = msgObj.content || msgObj.text || msgObj.prompt || msgObj.message || '';
+          }
+        } catch (error) {
+          console.warn('解析提示词消息内容失败:', error);
         }
-      } catch (error) {
-        // 忽略消息解析错误
       }
+      
+      // 如果没有从messages中提取到内容，使用描述作为备选
+      if (!content || content.trim().length < 20) {
+        content = prompt.description || '';
+      }
+      
+      // 如果内容仍然太短，尝试组合多个字段
+      if (content.trim().length < 30) {
+        const combinedContent = [
+          prompt.description,
+          prompt.category,
+          (prompt.tags || []).join(' ')
+        ].filter(Boolean).join(' - ');
+        
+        if (combinedContent.length > content.length) {
+          content = combinedContent;
+        }
+      }
+      
+      // 清理和格式化内容
+      content = content.trim();
+      
+      // 如果内容太长，智能截断（保持完整句子）
+      if (content.length > 300) {
+        // 在句号、问号、感叹号处截断
+        const sentences = content.match(/[^.!?]*[.!?]/g) || [];
+        let truncated = '';
+        
+        for (const sentence of sentences) {
+          if ((truncated + sentence).length <= 300) {
+            truncated += sentence;
+          } else {
+            break;
+          }
+        }
+        
+        // 如果没有找到合适的句子边界，直接截断
+        if (truncated.length < 100) {
+          truncated = content.substring(0, 300);
+          // 尝试在词边界截断
+          const lastSpace = truncated.lastIndexOf(' ');
+          if (lastSpace > 200) {
+            truncated = truncated.substring(0, lastSpace);
+          }
+          truncated += '...';
+        }
+        
+        content = truncated;
+      }
+      
+      return content || '暂无内容预览';
     }
-    
-    // 截断并添加省略号
-    return preview.length > 120 ? preview.substring(0, 120) + '...' : preview;
-  }
+
 
   /**
    * 第四层：结果优化与排序
@@ -607,46 +693,51 @@ export class OptimizedSemanticSearchTool extends BaseMCPTool {
    * 第五层：简洁化对话展示
    */
   private formatForConversationalDisplay(
-    results: SearchResultItem[], 
-    query: string, 
-    intent: UserIntent
-  ): string {
-    if (results.length === 0) {
-      return `😔 抱歉，没有找到与"${query}"相关的提示词。\n\n🔍 建议：\n• 尝试使用更简单的关键词\n• 检查是否有拼写错误\n• 或者浏览我们的分类目录`;
+      results: SearchResultItem[], 
+      query: string, 
+      intent: UserIntent
+    ): string {
+      if (results.length === 0) {
+        return `😔 抱歉，没有找到与"${query}"相关的提示词。\n\n🔍 建议：\n• 尝试使用更简单的关键词\n• 检查是否有拼写错误\n• 或者浏览我们的分类目录`;
+      }
+  
+      let output = `🎯 为您找到 ${results.length} 个与"${query}"相关的提示词：\n\n`;
+  
+      results.forEach((result, index) => {
+        const emoji = this.getEmojiForCategory(result.category);
+        const relevanceBar = this.getRelevanceBar(result.relevanceScore);
+        
+        // 核心：标题、描述、内容是必要的
+        output += `**${index + 1}. ${emoji} ${result.name}**\n`;
+        output += `📝 **描述：** ${result.description}\n`;
+        
+        // 最重要：显示实际内容
+        if (result.preview && result.preview.trim()) {
+          output += `📄 **内容：**\n\`\`\`\n${result.preview}\n\`\`\`\n`;
+        }
+        
+        // 简化其他信息：相关度和匹配原因
+        output += `🎯 相关度 ${result.relevanceScore}% | ${result.matchReason}\n`;
+        
+        // 标签信息（可选）
+        if (result.tags.length > 0) {
+          output += `🏷️ ${result.tags.slice(0, 3).join(' • ')}\n`;
+        }
+        
+        if (index < results.length - 1) {
+          output += '\n---\n\n';
+        }
+      });
+  
+      output += `\n\n💬 **使用说明：**\n`;
+      output += `上述提示词按相关度排序，每个都包含了完整的内容预览。\n`;
+      output += `您可以直接使用这些内容，或者说"我要第X个提示词"获取更多详细信息。\n\n`;
+      
+      output += `🔄 **需要更多结果？** 尝试使用不同的搜索关键词或浏览相关分类。`;
+  
+      return output;
     }
 
-    let output = `🎯 为您找到 ${results.length} 个与"${query}"相关的提示词：\n\n`;
-
-    results.forEach((result, index) => {
-      const emoji = this.getEmojiForCategory(result.category);
-      const relevanceBar = this.getRelevanceBar(result.relevanceScore);
-      
-      output += `**${index + 1}. ${emoji} ${result.name}**\n`;
-      output += `📊 相关度：${relevanceBar} ${result.relevanceScore}%\n`;
-      output += `📝 ${result.description}\n`;
-      
-      if (result.tags.length > 0) {
-        output += `🏷️ 标签：${result.tags.slice(0, 3).join(' • ')}\n`;
-      }
-      
-      output += `💡 匹配原因：${result.matchReason}\n`;
-      
-      if (index < results.length - 1) {
-        output += '\n---\n\n';
-      }
-    });
-
-    output += `\n\n💬 **使用方法：**\n`;
-    output += `选择编号 ${results.map((_, i) => i + 1).join(', ')} 中的任意一个，我将为您获取完整的提示词内容。\n`;
-    output += `例如：请给我第1个提示词的详细内容\n\n`;
-    
-    output += `🔧 **其他操作：**\n`;
-    output += `• 重新搜索：使用不同的关键词\n`;
-    output += `• 浏览分类：查看 ${intent.domain} 领域的更多提示词\n`;
-    output += `• 创建新提示词：如果没找到合适的`;
-
-    return output;
-  }
 
   /**
    * 获取分类对应的表情符号

@@ -9,7 +9,21 @@
  */
 
 import { BaseMCPTool } from '../shared/base-tool.js';
-import { ToolDescription, ToolParameter, ToolResult, ToolContext } from '../types.js';
+import { ToolDescription, ToolParameter } from '../types.js';
+
+// 定义本地类型接口
+interface ToolResult {
+  success: boolean;
+  data?: any;
+  message?: string;
+}
+
+interface ToolContext {
+  userId?: string;
+  requestId?: string;
+  timestamp: number;
+  userAgent?: string;
+}
 
 /**
  * AI分析结果接口
@@ -64,7 +78,7 @@ interface UnifiedStoreParams {
   difficulty?: string;
   is_public?: boolean;
   allow_collaboration?: boolean;
-  collaborative_level?: string;
+  collaborative_level?: 'creator_only' | 'invite_only' | 'public_edit';
   
   // 控制参数
   auto_analyze?: boolean;
@@ -533,9 +547,9 @@ export class UnifiedStoreTool extends BaseMCPTool {
 
     // 添加AI分析的扩展信息
     if (aiAnalysis) {
-      merged.compatible_models = aiAnalysis.compatible_models;
-      merged.domain = aiAnalysis.domain;
-      merged.use_cases = aiAnalysis.use_cases;
+      // merged.compatible_models = aiAnalysis.compatible_models;
+      // merged.domain = aiAnalysis.domain;
+      // merged.use_cases = aiAnalysis.use_cases;
     }
 
     return merged;
@@ -581,21 +595,22 @@ export class UnifiedStoreTool extends BaseMCPTool {
         name: params.title,
         description: params.description,
         content: params.content,
+        messages: [{ role: 'user' as const, content: params.content }], // 添加必需的messages字段
         category: params.category,
         tags: params.tags,
         difficulty: params.difficulty,
         is_public: params.is_public || false,
-        // 扩展字段
-        compatible_models: params.compatible_models,
-        domain: params.domain,
-        use_cases: params.use_cases,
+        // 扩展字段（暂时注释，等数据库模式更新）
+        // compatible_models: params.compatible_models,
+        // domain: params.domain,
+        // use_cases: params.use_cases,
         allow_collaboration: params.allow_collaboration,
         collaborative_level: params.collaborative_level,
         created_by: context.userId,
         created_at: new Date().toISOString()
       };
 
-      const result = await storage.createPrompt(promptData, context.userId);
+      const result = await storage.createPrompt(promptData);
       
       return {
         success: true,
@@ -638,9 +653,9 @@ export class UnifiedStoreTool extends BaseMCPTool {
         suggested_category: aiAnalysis.category,
         suggested_tags: aiAnalysis.tags,
         confidence: aiAnalysis.confidence,
-        compatible_models: aiAnalysis.compatible_models,
-        domain: aiAnalysis.domain,
-        use_cases: aiAnalysis.use_cases
+        // compatible_models: aiAnalysis.compatible_models,
+        // domain: aiAnalysis.domain,
+        // use_cases: aiAnalysis.use_cases
       } : null,
       final_parameters: {
         title: finalParams.title,

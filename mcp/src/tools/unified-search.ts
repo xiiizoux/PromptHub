@@ -8,7 +8,21 @@
  */
 
 import { BaseMCPTool } from '../shared/base-tool.js';
-import { ToolDescription, ToolParameter, ToolResult, ToolContext } from '../types.js';
+import { ToolDescription, ToolParameter } from '../types.js';
+
+// 定义本地类型接口
+interface ToolResult {
+  success: boolean;
+  data?: any;
+  message?: string;
+}
+
+interface ToolContext {
+  userId?: string;
+  requestId?: string;
+  timestamp: number;
+  userAgent?: string;
+}
 import { optimizedSemanticSearchTool } from './optimized-semantic-search.js';
 import { advancedSearchTool, multiFieldSearchTool } from './enhanced-search-new-style.js';
 import { intelligentPromptSelectionTool } from './intelligent-new-style.js';

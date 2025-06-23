@@ -150,7 +150,7 @@ class PromptHubMCPAdapter {
       // ============= 🎯 其他搜索选项 (通过统一搜索自动调用) =============
       {
         name: 'smart_semantic_search',
-        description: '🎯 智能语义搜索 - 用自然语言描述需求，快速找到最相关的提示词 (统一搜索会自动调用)',
+        description: '🎯 智能语义搜索 - 用自然语言描述需求，返回包含完整内容预览的相关提示词',
         inputSchema: {
           type: 'object',
           properties: {

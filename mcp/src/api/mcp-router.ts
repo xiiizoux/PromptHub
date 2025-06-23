@@ -1,5 +1,4 @@
 import express from 'express';
-import express from 'express';
 import { config } from '../config.js';
 import { storage } from '../shared/services.js';
 import { handleToolError, handleToolSuccess } from '../shared/error-handler.js';
@@ -543,9 +542,10 @@ async function trackMCPToolUsage(toolName: string, params: any, userId?: string,
     // 从结果中提取提示词ID (如果有)
     let promptId = params.prompt_id || params.name;
     
-    // 对于搜索类工具，记录为一般搜索使用
+    // 对于搜索类工具，使用固定的UUID来标识搜索操作
     if (['unified_search', 'smart_semantic_search', 'enhanced_search_prompts'].includes(toolName)) {
-      promptId = 'search_operation'; // 搜索操作的特殊标识
+      // 使用固定的UUID来标识搜索操作，这样可以在数据库中正确记录
+      promptId = '00000000-0000-4000-8000-000000000001'; // 固定的搜索操作UUID
     }
     
     if (promptId) {
@@ -561,7 +561,7 @@ async function trackMCPToolUsage(toolName: string, params: any, userId?: string,
         latencyMs: executionTime,
         sessionId: `mcp_${toolName}_${Date.now()}`,
         userId: userId || 'anonymous',
-        metadata: {
+        clientMetadata: {
           toolName: toolName,
           source: 'mcp_server'
         }
@@ -573,6 +573,7 @@ async function trackMCPToolUsage(toolName: string, params: any, userId?: string,
     console.warn(`[MCP] 统计使用失败:`, error);
   }
 }
+
 
 // MCP 工具调用
 router.post('/tools/:name/invoke', optionalAuthMiddleware, async (req, res) => {
@@ -694,16 +695,24 @@ router.post('/tools/:name/invoke', optionalAuthMiddleware, async (req, res) => {
       case 'unified_search':
         result = await handleUnifiedSearchNew(params, {
           userId: req?.user?.id,
-          requestId: req?.headers?.['x-request-id'],
-          userAgent: req?.headers?.['user-agent']
+          requestId: Array.isArray(req?.headers?.['x-request-id']) 
+            ? req.headers['x-request-id'][0] 
+            : req?.headers?.['x-request-id'],
+          userAgent: Array.isArray(req?.headers?.['user-agent']) 
+            ? req.headers['user-agent'][0] 
+            : req?.headers?.['user-agent']
         });
         break;
       
       case 'unified_store':
         result = await handleUnifiedStore(params, {
           userId: req?.user?.id,
-          requestId: req?.headers?.['x-request-id'],
-          userAgent: req?.headers?.['user-agent']
+          requestId: Array.isArray(req?.headers?.['x-request-id']) 
+            ? req.headers['x-request-id'][0] 
+            : req?.headers?.['x-request-id'],
+          userAgent: Array.isArray(req?.headers?.['user-agent']) 
+            ? req.headers['user-agent'][0] 
+            : req?.headers?.['user-agent']
         });
         break;
       
@@ -711,8 +720,12 @@ router.post('/tools/:name/invoke', optionalAuthMiddleware, async (req, res) => {
       case 'smart_semantic_search':
         result = await handleOptimizedSemanticSearch(params, {
           userId: req?.user?.id,
-          requestId: req?.headers?.['x-request-id'],
-          userAgent: req?.headers?.['user-agent']
+          requestId: Array.isArray(req?.headers?.['x-request-id']) 
+            ? req.headers['x-request-id'][0] 
+            : req?.headers?.['x-request-id'],
+          userAgent: Array.isArray(req?.headers?.['user-agent']) 
+            ? req.headers['user-agent'][0] 
+            : req?.headers?.['user-agent']
         });
         break;
         
