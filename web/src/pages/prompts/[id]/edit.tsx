@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import * as React from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { GetServerSideProps } from 'next';
 import { useForm, Controller } from 'react-hook-form';
@@ -220,8 +221,10 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
     const fetchCategories = async () => {
       try {
         const data = await getCategories();
-        // 直接使用字符串数组
-        setCategories(data);
+        console.log('获取到的类别数据:', data);
+        if (data && Array.isArray(data) && data.length > 0) {
+          setCategories(data as string[]);
+        }
 
       } catch (err) {
         console.error('获取分类失败:', err);
@@ -240,7 +243,9 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
     const fetchTags = async () => {
       try {
         const data = await getTags();
-        setSuggestedTags(data);
+        if (data && Array.isArray(data)) {
+          setSuggestedTags(data as string[]);
+        }
       } catch (err) {
         console.error('获取标签失败:', err);
         setSuggestedTags(['GPT-4', 'GPT-3.5', 'Claude', 'Gemini', '初学者', '高级', '长文本', '结构化输出', '翻译', '润色']);
@@ -282,7 +287,7 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
 
   // 分类加载后自动匹配（编辑场景） - 移动到useForm之后
   useEffect(() => {
-    if (!categoriesLoading && categories.length > 0) {
+    if (!categoriesLoading && Array.isArray(categories) && categories.length > 0) {
       const currentCategory = safePromptData.category;
       
       // 检查当前分类是否在分类列表中
@@ -375,7 +380,7 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
     // 实时更新内容状态以确保AI按钮能够监听到变化
     setCurrentContent(content);
     
-    if (!content) return;
+    if (!content || typeof content !== 'string') return;
     
     // 修复正则表达式以正确匹配 {{variable}} 格式
     const matches = content.match(/\{\{([^}]+)\}\}/g);
@@ -597,7 +602,7 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
       
       // 保存成功后直接跳转回详情页面，提供更好的用户体验
       router.push(`/prompts/${prompt.id}`);
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('更新提示词失败:', error);
       alert(`❌ 更新失败: ${error instanceof Error ? error.message : '未知错误'}`);
     } finally {
@@ -978,10 +983,10 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
                     autoComplete="off"
                   >
                     <option value="">选择分类</option>
-                    {categories.map((category) => (
+                    {categories.map((category: string) => (
                       <option key={category} value={category}>
-                        {category}
-                      </option>
+                        {String(category)}
+                        </option>
                     ))}
                   </select>
                   {errors.category && (
@@ -1484,7 +1489,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
         prompt: prompt,
       },
     };
-  } catch (error) {
+  } catch (error: unknown) {
     console.error(`[Edit getServerSideProps] 获取提示词详情失败，ID: ${id}`, error);
 
     return {
