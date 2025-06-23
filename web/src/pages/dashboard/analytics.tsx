@@ -100,12 +100,12 @@ const AnalyticsPage: NextPage = () => {
             className="text-center"
           >
             <motion.h1 
-              className="text-4xl md:text-6xl font-bold text-neon-cyan mb-4"
+              className="text-4xl md:text-6xl font-bold bg-gradient-to-r from-neon-cyan to-neon-purple bg-clip-text text-transparent mb-4"
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 1, delay: 0.2 }}
             >
-              <ChartBarIcon className="h-8 w-8 md:h-12 md:w-12 text-neon-cyan mr-4 inline" />
+              <ChartBarIcon className="h-8 w-8 md:h-12 md:w-12 text-neon-cyan mr-4 inline" style={{ color: '#00ffff' }} />
               数据分析中心
             </motion.h1>
             <motion.p 

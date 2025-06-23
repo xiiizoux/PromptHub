@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
+import { useRouter } from 'next/router';
 import { supabase } from '@/lib/supabase';
 import { User } from '@/types';
 
@@ -338,19 +339,47 @@ export const useAuth = (): AuthContextType => {
 };
 
 export const withAuth = <P extends object>(Component: React.ComponentType<P>): React.FC<P> => {
-  const AuthComponent: React.FC<P> = (props) => {
-    const { user, isLoading } = useAuth();
-
-    if (isLoading) {
-      return <div>Loading...</div>;
-    }
-
-    if (!user) {
-      return <div>Please login</div>;
-    }
-
-    return <Component {...props} />;
-  };
-
-  return AuthComponent;
-};
+               const AuthComponent: React.FC<P> = (props) => {
+                 const { user, isLoading } = useAuth();
+                 const router = useRouter();
+             
+                 useEffect(() => {
+                   // 如果还在加载认证状态，不做任何操作
+                   if (isLoading) return;
+             
+                   // 如果未登录，重定向到登录页面
+                   if (!user) {
+                     const currentUrl = window.location.pathname + window.location.search;
+                     const redirectUrl = `/auth/login?returnUrl=${encodeURIComponent(currentUrl)}`;
+                     router.replace(redirectUrl);
+                   }
+                 }, [user, isLoading, router]);
+             
+                 if (isLoading) {
+                   return (
+                     <div className="min-h-screen bg-dark-bg-primary flex items-center justify-center">
+                       <div className="flex flex-col items-center space-y-4">
+                         <div className="w-8 h-8 border-2 border-neon-cyan/30 border-t-neon-cyan rounded-full animate-spin"></div>
+                         <p className="text-gray-400">正在验证身份...</p>
+                       </div>
+                     </div>
+                   );
+                 }
+             
+                 if (!user) {
+                   return (
+                     <div className="min-h-screen bg-dark-bg-primary flex items-center justify-center">
+                       <div className="flex flex-col items-center space-y-4">
+                         <div className="w-8 h-8 border-2 border-neon-cyan/30 border-t-neon-cyan rounded-full animate-spin"></div>
+                         <p className="text-gray-400">正在跳转到登录页面...</p>
+                       </div>
+                     </div>
+                   );
+                 }
+             
+                 return <Component {...props} />;
+               };
+             
+               return AuthComponent;
+             };
+;

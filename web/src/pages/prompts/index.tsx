@@ -242,11 +242,12 @@ export default function PromptsPage() {
               >
                 <motion.h1 
                   className="text-4xl md:text-6xl font-bold text-neon-cyan mb-4"
+                  style={{ color: '#00ffff' }}
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ duration: 1, delay: 0.2 }}
                 >
-                  <RectangleStackIcon className="h-8 w-8 md:h-12 md:w-12 text-neon-cyan mr-4 inline" />
+                  <RectangleStackIcon className="h-8 w-8 md:h-12 md:w-12 text-neon-cyan mr-4 inline" style={{ color: '#00ffff' }} />
                   探索提示词宇宙
                 </motion.h1>
                 <motion.p 
