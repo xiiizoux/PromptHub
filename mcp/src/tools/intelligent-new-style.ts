@@ -57,14 +57,94 @@ export class IntelligentPromptSelectionTool extends BaseMCPTool {
       const searchResults = await storage.searchPrompts(user_query, context.userId);
       const results = Array.isArray(searchResults) ? searchResults.slice(0, max_results) : [];
 
+      // 格式化结果
+      const formattedOutput = this.formatForConversationalDisplay(results, user_query);
+
       return {
         success: true,
-        data: { matches: results, total: results.length },
-        message: `🎯 找到 ${results.length} 个匹配的提示词`
+        data: { 
+          matches: results, 
+          conversation_display: formattedOutput,
+          total: results.length
+        },
+        message: `🎯 智能选择完成，找到 ${results.length} 个匹配的提示词`
       };
     } catch (error) {
       return { success: false, message: '❌ 智能选择失败' };
     }
+  }
+
+  /**
+   * 格式化搜索结果为对话式显示
+   */
+  private formatForConversationalDisplay(results: Prompt[], query: string): string {
+    if (results.length === 0) {
+      return `😔 抱歉，没有找到与"${query}"相关的提示词。\n\n🔍 建议：\n• 尝试使用更简单的关键词\n• 检查是否有拼写错误\n• 或者浏览我们的分类目录`;
+    }
+
+    let output = `🎯 智能为您推荐 ${results.length} 个与"${query}"相关的提示词：\n\n`;
+
+    results.forEach((prompt, index) => {
+      const emoji = this.getEmojiForCategory(prompt.category);
+      
+      output += `**${index + 1}. ${emoji} ${prompt.name}**\n`;
+      output += `📝 **描述：** ${prompt.description || '暂无描述'}\n`;
+      
+      const content = this.extractContentPreview(prompt);
+      if (content && content.trim()) {
+        output += `📄 **内容：**\n\`\`\`\n${content}\n\`\`\`\n`;
+      }
+      
+      if (prompt.category) {
+        output += `📂 **分类：** ${prompt.category}\n`;
+      }
+      
+      if (prompt.tags && prompt.tags.length > 0) {
+        output += `🏷️ ${prompt.tags.slice(0, 3).join(' • ')}\n`;
+      }
+      
+      if (index < results.length - 1) {
+        output += '\n---\n\n';
+      }
+    });
+
+    output += `\n\n💬 **使用说明：**\n`;
+    output += `上述提示词经过智能分析推荐，每个都包含了完整的内容预览。\n`;
+    output += `您可以直接使用这些内容，或者说"我要第X个提示词"获取更多详细信息。`;
+
+    return output;
+  }
+
+  private getEmojiForCategory(category?: string): string {
+    const categoryEmojis: Record<string, string> = {
+      '通用': '🔧', '学术': '🎓', '职业': '💼', '文案': '✍️', '设计': '🎨',
+      '绘画': '🖌️', '教育': '📚', '情感': '💝', '娱乐': '🎮', '游戏': '🎯',
+      '生活': '🏠', '商业': '💰', '办公': '📊', '编程': '💻', '翻译': '🌐',
+      '视频': '📹', '播客': '🎙️', '音乐': '🎵', '健康': '🏥', '科技': '🔬'
+    };
+    return categoryEmojis[category || ''] || '📝';
+  }
+
+  private extractContentPreview(prompt: Prompt): string {
+    let content = '';
+    
+    if (prompt.messages && Array.isArray(prompt.messages)) {
+      content = prompt.messages
+        .map(msg => typeof msg === 'string' ? msg : msg.content || '')
+        .join('\n\n');
+    } else if (typeof prompt.messages === 'string') {
+      content = prompt.messages;
+    }
+    
+    if (!content && prompt.content) {
+      content = prompt.content;
+    }
+    
+    if (content.length > 500) {
+      content = content.substring(0, 500) + '...';
+    }
+    
+    return content;
   }
 }
 

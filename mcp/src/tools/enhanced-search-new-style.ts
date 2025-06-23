@@ -55,16 +55,20 @@ export class AdvancedSearchTool extends BaseMCPTool {
       // 限制结果数量
       results = results.slice(0, limit);
 
+      // 格式化结果
+      const formattedOutput = this.formatForConversationalDisplay(results, query);
+
       return {
         success: true,
         data: {
           results,
+          conversation_display: formattedOutput,
           total: results.length,
           query,
           filters_applied: filters,
           sort_by
         },
-        message: `找到 ${results.length} 个匹配的提示词`
+        message: `🎯 高级搜索完成，找到 ${results.length} 个匹配的提示词`
       };
 
     } catch (error) {
@@ -122,6 +126,90 @@ export class AdvancedSearchTool extends BaseMCPTool {
       default:
         return sorted; // 保持搜索引擎的相关性排序
     }
+  }
+
+  /**
+   * 格式化搜索结果为对话式显示
+   */
+  private formatForConversationalDisplay(results: Prompt[], query: string): string {
+    if (results.length === 0) {
+      return `😔 抱歉，没有找到与"${query}"相关的提示词。\n\n🔍 建议：\n• 尝试使用更简单的关键词\n• 检查是否有拼写错误\n• 或者浏览我们的分类目录`;
+    }
+
+    let output = `🎯 为您找到 ${results.length} 个与"${query}"相关的提示词：\n\n`;
+
+    results.forEach((prompt, index) => {
+      const emoji = this.getEmojiForCategory(prompt.category);
+      
+      // 核心：标题、描述、内容是必要的
+      output += `**${index + 1}. ${emoji} ${prompt.name}**\n`;
+      output += `📝 **描述：** ${prompt.description || '暂无描述'}\n`;
+      
+      // 最重要：显示实际内容
+      const content = this.extractContentPreview(prompt);
+      if (content && content.trim()) {
+        output += `📄 **内容：**\n\`\`\`\n${content}\n\`\`\`\n`;
+      }
+      
+      // 分类和标签信息
+      if (prompt.category) {
+        output += `📂 **分类：** ${prompt.category}\n`;
+      }
+      
+      if (prompt.tags && prompt.tags.length > 0) {
+        output += `🏷️ ${prompt.tags.slice(0, 3).join(' • ')}\n`;
+      }
+      
+      if (index < results.length - 1) {
+        output += '\n---\n\n';
+      }
+    });
+
+    output += `\n\n💬 **使用说明：**\n`;
+    output += `上述提示词按相关度排序，每个都包含了完整的内容预览。\n`;
+    output += `您可以直接使用这些内容，或者说"我要第X个提示词"获取更多详细信息。\n\n`;
+    
+    output += `🔄 **需要更多结果？** 尝试使用不同的搜索关键词或浏览相关分类。`;
+
+    return output;
+  }
+
+  /**
+   * 为分类获取对应的emoji
+   */
+  private getEmojiForCategory(category?: string): string {
+    const categoryEmojis: Record<string, string> = {
+      '通用': '🔧', '学术': '🎓', '职业': '💼', '文案': '✍️', '设计': '🎨',
+      '绘画': '🖌️', '教育': '📚', '情感': '💝', '娱乐': '🎮', '游戏': '🎯',
+      '生活': '🏠', '商业': '💰', '办公': '📊', '编程': '💻', '翻译': '🌐',
+      '视频': '📹', '播客': '🎙️', '音乐': '🎵', '健康': '🏥', '科技': '🔬'
+    };
+    return categoryEmojis[category || ''] || '📝';
+  }
+
+  /**
+   * 提取内容预览
+   */
+  private extractContentPreview(prompt: Prompt): string {
+    let content = '';
+    
+    if (prompt.messages && Array.isArray(prompt.messages)) {
+      content = prompt.messages
+        .map(msg => typeof msg === 'string' ? msg : msg.content || '')
+        .join('\n\n');
+    } else if (typeof prompt.messages === 'string') {
+      content = prompt.messages;
+    }
+    
+    if (!content && prompt.content) {
+      content = prompt.content;
+    }
+    
+    if (content.length > 500) {
+      content = content.substring(0, 500) + '...';
+    }
+    
+    return content;
   }
 }
 

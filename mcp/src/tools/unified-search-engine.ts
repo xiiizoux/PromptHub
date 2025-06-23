@@ -137,10 +137,14 @@ export class UnifiedSearchEngine extends BaseMCPTool {
         if (cached) {
           timer.end(cached.length, true, true);
 
+          // 格式化缓存结果
+          const formattedOutput = this.formatForConversationalDisplay(cached, query);
+
           return {
             success: true,
             data: {
               results: cached,
+              conversation_display: formattedOutput,
               from_cache: true,
               search_config: config,
               cache_key: cacheKey,
@@ -167,17 +171,22 @@ export class UnifiedSearchEngine extends BaseMCPTool {
       // 结束性能监控
       timer.end(searchResults.length, false, true);
 
+      // 格式化搜索结果
+      const formattedOutput = this.formatForConversationalDisplay(searchResults, query);
+      const suggestions = this.generateSearchSuggestions(searchResults, query);
+
       return {
         success: true,
         data: {
           results: searchResults,
+          conversation_display: formattedOutput,
           from_cache: false,
           search_config: config,
           performance: this.generatePerformanceReport(searchResults),
-          suggestions: this.generateSearchSuggestions(searchResults, query),
+          suggestions,
           cache_stats: searchCache.getStats()
         },
-        message: `找到 ${searchResults.length} 个搜索结果`
+        message: `🎯 统一搜索完成，为您找到 ${searchResults.length} 个相关的提示词`
       };
 
     } catch (error) {
@@ -735,6 +744,150 @@ export class UnifiedSearchEngine extends BaseMCPTool {
     }
     
     return suggestions;
+  }
+
+  /**
+   * 格式化搜索结果为对话式显示
+   */
+  private formatForConversationalDisplay(results: SearchResult[], query: string): string {
+    if (results.length === 0) {
+      return `😔 抱歉，没有找到与"${query}"相关的提示词。\n\n🔍 建议：\n• 尝试使用更简单的关键词\n• 检查是否有拼写错误\n• 或者浏览我们的分类目录`;
+    }
+
+    let output = `🎯 为您找到 ${results.length} 个与"${query}"相关的提示词：\n\n`;
+
+    results.forEach((result, index) => {
+      const emoji = this.getEmojiForCategory(result.prompt.category);
+      const relevanceScore = Math.round((result.confidence || 0.5) * 100);
+      
+      // 核心：标题、描述、内容是必要的
+      output += `**${index + 1}. ${emoji} ${result.prompt.name}**\n`;
+      output += `📝 **描述：** ${result.prompt.description || '暂无描述'}\n`;
+      
+      // 最重要：显示实际内容
+      const content = this.extractContentPreview(result.prompt);
+      if (content && content.trim()) {
+        output += `📄 **内容：**\n\`\`\`\n${content}\n\`\`\`\n`;
+      }
+      
+      // 简化其他信息：相关度和匹配原因
+      const matchReason = this.generateMatchReason(result, query);
+      output += `🎯 相关度 ${relevanceScore}% | ${matchReason}\n`;
+      
+      // 标签信息（可选）
+      if (result.prompt.tags && result.prompt.tags.length > 0) {
+        output += `🏷️ ${result.prompt.tags.slice(0, 3).join(' • ')}\n`;
+      }
+      
+      if (index < results.length - 1) {
+        output += '\n---\n\n';
+      }
+    });
+
+    output += `\n\n💬 **使用说明：**\n`;
+    output += `上述提示词按相关度排序，每个都包含了完整的内容预览。\n`;
+    output += `您可以直接使用这些内容，或者说"我要第X个提示词"获取更多详细信息。\n\n`;
+    
+    output += `🔄 **需要更多结果？** 尝试使用不同的搜索关键词或浏览相关分类。`;
+
+    return output;
+  }
+
+  /**
+   * 为分类获取对应的emoji
+   */
+  private getEmojiForCategory(category?: string): string {
+    const categoryEmojis: Record<string, string> = {
+      '通用': '🔧',
+      '学术': '🎓',
+      '职业': '💼',
+      '文案': '✍️',
+      '设计': '🎨',
+      '绘画': '🖌️',
+      '教育': '📚',
+      '情感': '💝',
+      '娱乐': '🎮',
+      '游戏': '🎯',
+      '生活': '🏠',
+      '商业': '💰',
+      '办公': '📊',
+      '编程': '💻',
+      '翻译': '🌐',
+      '视频': '📹',
+      '播客': '🎙️',
+      '音乐': '🎵',
+      '健康': '🏥',
+      '科技': '🔬',
+      'business': '💼',
+      'tech': '💻',
+      'academic': '🎓',
+      'creative': '🎨',
+      'legal': '⚖️',
+      'health': '🏥',
+      'education': '📚'
+    };
+    
+    return categoryEmojis[category || ''] || '📝';
+  }
+
+  /**
+   * 提取内容预览
+   */
+  private extractContentPreview(prompt: Prompt): string {
+    let content = '';
+    
+    // 从messages中提取内容
+    if (prompt.messages && Array.isArray(prompt.messages)) {
+      content = prompt.messages
+        .map(msg => typeof msg === 'string' ? msg : msg.content || '')
+        .join('\n\n');
+    } else if (typeof prompt.messages === 'string') {
+      content = prompt.messages;
+    }
+    
+    // 如果没有messages，尝试其他字段
+    if (!content && prompt.content) {
+      content = prompt.content;
+    }
+    
+    // 限制预览长度
+    if (content.length > 500) {
+      content = content.substring(0, 500) + '...';
+    }
+    
+    return content;
+  }
+
+  /**
+   * 生成匹配原因
+   */
+  private generateMatchReason(result: SearchResult, query: string): string {
+    // 如果已有原因，使用现有的
+    if (result.reasons && result.reasons.length > 0) {
+      return result.reasons[0];
+    }
+
+    // 生成默认匹配原因
+    const prompt = result.prompt;
+    const queryLower = query.toLowerCase();
+    
+    if (prompt.name && prompt.name.toLowerCase().includes(queryLower)) {
+      return '标题高度匹配';
+    }
+    
+    if (prompt.description && prompt.description.toLowerCase().includes(queryLower)) {
+      return '描述内容相关';
+    }
+    
+    if (prompt.category && prompt.category.toLowerCase().includes(queryLower)) {
+      return '分类匹配';
+    }
+    
+    if (prompt.tags && prompt.tags.some(tag => tag.toLowerCase().includes(queryLower))) {
+      return '标签匹配';
+    }
+    
+    return `${result.source || '智能'}搜索匹配`;
   }
 }
 
