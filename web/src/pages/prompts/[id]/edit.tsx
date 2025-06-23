@@ -903,6 +903,7 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
                     placeholder="在这里编写您的提示词内容。您可以使用 {{变量名}} 来定义动态变量..."
                     className="input-primary w-full font-mono text-sm resize-none"
                     onChange={detectVariables}
+                    autocomplete="off"
                   />
                   
                   <div className="absolute top-3 right-3 text-xs text-gray-500">
@@ -935,6 +936,7 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
                     type="text"
                     placeholder="为您的提示词起个响亮的名字"
                     className="input-primary w-full"
+                    autocomplete="off"
                   />
                   {errors.name && (
                     <p className="text-neon-red text-sm mt-1">{errors.name.message}</p>
@@ -952,6 +954,7 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
                     type="text"
                     placeholder={user?.username || "您的名字"}
                     className="input-primary w-full"
+                    autocomplete="name"
                   />
                 </div>
               </motion.div>
@@ -972,6 +975,7 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
                     id="edit-category"
                     {...register('category', { required: '请选择分类' })}
                     className="input-primary w-full"
+                    autocomplete="off"
                   >
                     <option value="">选择分类</option>
                     {categories.map((category) => (
@@ -1043,6 +1047,7 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
                     type="text"
                     placeholder="作者名称"
                     className="input-primary w-full"
+                    autocomplete="name"
                   />
                   <p className="text-xs text-gray-500">
                     提示词作者信息，可选填写
@@ -1067,6 +1072,7 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
                   rows={3}
                   placeholder="简要描述您的提示词的用途和特点..."
                   className="input-primary w-full resize-none"
+                  autocomplete="off"
                 />
                 {errors.description && (
                   <p className="text-neon-red text-sm mt-1">{errors.description.message}</p>
@@ -1096,6 +1102,7 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
                     placeholder="输入变量名"
                     className="input-primary flex-1"
                     onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addVariable())}
+                    autocomplete="off"
                   />
                   <motion.button
                     type="button"
@@ -1163,6 +1170,7 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
                     placeholder="输入标签"
                     className="input-primary flex-1"
                     onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addTag())}
+                    autocomplete="off"
                   />
                   <motion.button
                     type="button"
@@ -1351,6 +1359,7 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
                     onChange={(e) => setValue('edit_permission', e.target.value as any)}
                     className="input-primary w-full"
                     disabled={!checkFieldPermission('edit_permission', permissionCheck)}
+                    autocomplete="off"
                   >
                     {Object.entries(PERMISSION_LEVEL_DESCRIPTIONS).map(([key, description]) => (
                       <option key={key} value={key}>
