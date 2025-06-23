@@ -71,6 +71,10 @@ import {
   unifiedStoreToolDef,
   handleUnifiedStore
 } from '../tools/unified-store.js';
+import {
+  promptOptimizerMCPToolDef,
+  handlePromptOptimization
+} from '../tools/prompt-optimizer-mcp.js';
 
 // 创建路由器
 const router = express.Router();
@@ -352,6 +356,9 @@ router.get('/tools', authenticateRequest, (req, res) => {
     unifiedSearchToolDef,    // 统一搜索入口 - 智能路由搜索
     unifiedStoreToolDef,     // 统一存储入口 - AI智能分析存储
     
+    // 🎯 提示词优化工具
+    promptOptimizerMCPToolDef,  // 提示词优化器 - 为第三方AI客户端提供结构化优化指导
+    
     // 🔍 其他搜索选项 (通过统一搜索自动选择)
     unifiedSearchEngineToolDef,
     quickSearchToolDef,
@@ -538,7 +545,8 @@ async function trackMCPToolUsage(toolName: string, params: any, userId?: string,
     // 只统计与提示词相关的操作
     const trackableTools = [
       'unified_search', 'smart_semantic_search', 'enhanced_search_prompts',
-      'get_prompt_details', 'quick_access_prompts', 'select_prompt_by_index'
+      'get_prompt_details', 'quick_access_prompts', 'select_prompt_by_index',
+      'prompt_optimizer'
     ];
     
     if (!trackableTools.includes(toolName)) {
@@ -742,6 +750,19 @@ router.post('/tools/:name/invoke', optionalAuthMiddleware, async (req, res) => {
       // 🎯 优化语义搜索处理 (通过统一搜索自动调用)
       case 'smart_semantic_search':
         result = await handleOptimizedSemanticSearch(params, {
+          userId: req?.user?.id,
+          requestId: Array.isArray(req?.headers?.['x-request-id']) 
+            ? req.headers['x-request-id'][0] 
+            : req?.headers?.['x-request-id'],
+          userAgent: Array.isArray(req?.headers?.['user-agent']) 
+            ? req.headers['user-agent'][0] 
+            : req?.headers?.['user-agent']
+        });
+        break;
+      
+      // 🎯 提示词优化处理
+      case 'prompt_optimizer':
+        result = await handlePromptOptimization(params, {
           userId: req?.user?.id,
           requestId: Array.isArray(req?.headers?.['x-request-id']) 
             ? req.headers['x-request-id'][0] 
