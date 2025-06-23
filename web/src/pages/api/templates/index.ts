@@ -9,7 +9,7 @@ export default async function handler(
     total?: number;
     error?: string;
     message?: string;
-  }>
+  }>,
 ) {
   switch (req.method) {
     case 'GET':
@@ -23,7 +23,7 @@ export default async function handler(
 // 获取模板列表
 async function handleGetTemplates(
   req: NextApiRequest,
-  res: NextApiResponse
+  res: NextApiResponse,
 ) {
   try {
     const {
@@ -35,7 +35,7 @@ async function handleGetTemplates(
       official,
       search,
       limit = '20',
-      offset = '0'
+      offset = '0',
     } = req.query;
 
     const filters: TemplateFilters = {};
@@ -58,13 +58,13 @@ async function handleGetTemplates(
     res.status(200).json({
       data: templates,
       total: templates.length,
-      message: '获取模板列表成功'
+      message: '获取模板列表成功',
     });
   } catch (error) {
     console.error('获取模板列表失败:', error);
     res.status(500).json({ 
       error: '获取模板列表失败',
-      message: error instanceof Error ? error.message : '未知错误'
+      message: error instanceof Error ? error.message : '未知错误',
     });
   }
 } 

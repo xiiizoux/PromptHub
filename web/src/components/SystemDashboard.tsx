@@ -9,7 +9,7 @@ import {
   CheckCircleIcon,
   ServerIcon,
   CpuChipIcon,
-  GlobeAltIcon
+  GlobeAltIcon,
 } from '@heroicons/react/24/outline';
 import { getSystemPerformance } from '@/lib/api';
 import toast from 'react-hot-toast';

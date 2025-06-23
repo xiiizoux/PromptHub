@@ -6,50 +6,50 @@ import { DocSection, DocGrid, DocCard, DocCodeBlock, DocList, DocHighlight } fro
 
 const APIIntegrationPage: React.FC = () => {
   const authMethods = [
-    { title: "API密钥认证", description: "简单安全的认证方式" },
-    { title: "Bearer Token", description: "标准化令牌认证" },
-    { title: "用户会话认证", description: "基于会话的认证" },
-    { title: "OAuth 2.0支持", description: "企业级授权标准" }
+    { title: 'API密钥认证', description: '简单安全的认证方式' },
+    { title: 'Bearer Token', description: '标准化令牌认证' },
+    { title: '用户会话认证', description: '基于会话的认证' },
+    { title: 'OAuth 2.0支持', description: '企业级授权标准' },
   ];
 
   const responseFeatures = [
-    { title: "统一JSON响应", description: "标准化数据格式" },
-    { title: "标准HTTP状态码", description: "明确的状态指示" },
-    { title: "详细错误信息", description: "精确的错误描述" },
-    { title: "分页数据支持", description: "高效数据处理" }
+    { title: '统一JSON响应', description: '标准化数据格式' },
+    { title: '标准HTTP状态码', description: '明确的状态指示' },
+    { title: '详细错误信息', description: '精确的错误描述' },
+    { title: '分页数据支持', description: '高效数据处理' },
   ];
 
   const setupSteps = [
-    { title: "登录账户", description: "访问PromptHub并登录您的账户" },
-    { title: "进入设置", description: "点击用户头像 → 个人设置" },
-    { title: "API密钥管理", description: '选择"API密钥"标签页' },
-    { title: "创建密钥", description: '点击"创建新密钥"并设置权限' },
-    { title: "保存密钥", description: "复制并安全存储您的API密钥" }
+    { title: '登录账户', description: '访问PromptHub并登录您的账户' },
+    { title: '进入设置', description: '点击用户头像 → 个人设置' },
+    { title: 'API密钥管理', description: '选择"API密钥"标签页' },
+    { title: '创建密钥', description: '点击"创建新密钥"并设置权限' },
+    { title: '保存密钥', description: '复制并安全存储您的API密钥' },
   ];
 
   const queryParams = [
-    { title: "page", description: "页码（默认：1）" },
-    { title: "limit", description: "每页数量（默认：20）" },
-    { title: "category", description: "按分类筛选" },
-    { title: "search", description: "搜索关键词" }
+    { title: 'page', description: '页码（默认：1）' },
+    { title: 'limit', description: '每页数量（默认：20）' },
+    { title: 'category', description: '按分类筛选' },
+    { title: 'search', description: '搜索关键词' },
   ];
 
   const relatedResources = [
     {
-      title: "🔌 MCP集成",
-      description: "了解如何通过MCP协议集成AI工具",
-      href: "/docs/mcp-integration"
+      title: '🔌 MCP集成',
+      description: '了解如何通过MCP协议集成AI工具',
+      href: '/docs/mcp-integration',
     },
     {
-      title: "📖 基础功能",
-      description: "掌握PromptHub的核心功能和使用方法",
-      href: "/docs/basic-features"
+      title: '📖 基础功能',
+      description: '掌握PromptHub的核心功能和使用方法',
+      href: '/docs/basic-features',
     },
     {
-      title: "📚 示例库",
-      description: "丰富的代码示例和最佳实践",
-      href: "/docs/examples-library"
-    }
+      title: '📚 示例库',
+      description: '丰富的代码示例和最佳实践',
+      href: '/docs/examples-library',
+    },
   ];
 
   const getPromptsExample = `# 获取提示词列表 - 生产环境
@@ -112,8 +112,8 @@ curl -X GET "https://prompt-hub.cc/api/prompts?page=1&limit=10&category=编程" 
       title="API集成指南"
       description="学习如何通过REST API将PromptHub集成到您的应用程序中"
       breadcrumbs={[
-        { name: "文档", href: "/docs" },
-        { name: "API集成", href: "/docs/api-integration" }
+        { name: '文档', href: '/docs' },
+        { name: 'API集成', href: '/docs/api-integration' },
       ]}
     >
       {/* API概述 */}

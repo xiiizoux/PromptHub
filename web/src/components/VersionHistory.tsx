@@ -9,14 +9,14 @@ import {
   CodeBracketIcon,
   UserIcon,
   CalendarIcon,
-  PlusIcon
+  PlusIcon,
 } from '@heroicons/react/24/outline';
 import { useAuth } from '@/contexts/AuthContext';
 import { 
   getVersionHistory,
   saveVersion,
   restoreVersion,
-  Version
+  Version,
 } from '@/lib/collaborative';
 import toast from 'react-hot-toast';
 
@@ -36,7 +36,7 @@ export const VersionHistory: React.FC<VersionHistoryProps> = ({
   promptId,
   currentContent,
   onRestore,
-  className = ''
+  className = '',
 }) => {
   const { user } = useAuth();
   const [versions, setVersions] = useState<Version[]>([]);
@@ -138,7 +138,7 @@ export const VersionHistory: React.FC<VersionHistoryProps> = ({
       'border-neon-cyan/30 bg-neon-cyan/5',
       'border-neon-purple/30 bg-neon-purple/5',
       'border-neon-pink/30 bg-neon-pink/5',
-      'border-neon-yellow/30 bg-neon-yellow/5'
+      'border-neon-yellow/30 bg-neon-yellow/5',
     ];
     return colors[index % colors.length];
   };

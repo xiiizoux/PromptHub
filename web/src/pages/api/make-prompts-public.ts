@@ -22,14 +22,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       console.error('获取提示词失败:', fetchError);
       return res.status(500).json({ 
         success: false, 
-        error: `获取提示词失败: ${fetchError.message}` 
+        error: `获取提示词失败: ${fetchError.message}`, 
       });
     }
 
     if (!allPrompts || allPrompts.length === 0) {
       return res.status(404).json({
         success: false,
-        error: '没有找到提示词'
+        error: '没有找到提示词',
       });
     }
 
@@ -48,7 +48,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         id: prompt.id,
         name: prompt.name,
         success: !error,
-        error: error?.message
+        error: error?.message,
       });
     }
 
@@ -56,13 +56,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(200).json({
       success: true,
       message: `成功将 ${updateResults.filter(r => r.success).length} 个提示词设置为公开`,
-      results: updateResults
+      results: updateResults,
     });
   } catch (error: any) {
     console.error('处理更新提示词请求时出错:', error);
     return res.status(500).json({ 
       success: false, 
-      error: `服务器错误: ${error.message}` 
+      error: `服务器错误: ${error.message}`, 
     });
   }
 }

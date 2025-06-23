@@ -5,7 +5,7 @@ import { supabase, clearAuthState } from '@/lib/supabase';
 import { 
   ExclamationTriangleIcon, 
   CheckCircleIcon,
-  ArrowLeftIcon 
+  ArrowLeftIcon, 
 } from '@heroicons/react/24/outline';
 
 /**
@@ -92,11 +92,11 @@ export default function ClearAuthPage() {
       // 4. 清理cookies（如果有的话）
       addStep('正在清理相关cookies...');
       try {
-        document.cookie.split(";").forEach(cookie => {
-          const eqPos = cookie.indexOf("=");
+        document.cookie.split(';').forEach(cookie => {
+          const eqPos = cookie.indexOf('=');
           const name = eqPos > -1 ? cookie.substr(0, eqPos) : cookie;
           if (name.includes('auth') || name.includes('token') || name.includes('supabase')) {
-            document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/";
+            document.cookie = name + '=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/';
           }
         });
         addStep('✓ 相关cookies已清理');
@@ -155,7 +155,7 @@ export default function ClearAuthPage() {
             <motion.div
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
-              transition={{ type: "spring", bounce: 0.5, delay: 0.2 }}
+              transition={{ type: 'spring', bounce: 0.5, delay: 0.2 }}
               className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-r from-orange-500 to-red-500 p-0.5"
             >
               <div className="w-full h-full bg-dark-bg-primary rounded-full flex items-center justify-center">
@@ -229,7 +229,7 @@ export default function ClearAuthPage() {
                 <motion.div
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
-                  transition={{ type: "spring", bounce: 0.5 }}
+                  transition={{ type: 'spring', bounce: 0.5 }}
                   className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-r from-green-400 to-emerald-500 p-0.5"
                 >
                   <div className="w-full h-full bg-dark-bg-primary rounded-full flex items-center justify-center">

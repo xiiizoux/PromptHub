@@ -190,7 +190,7 @@ const BookmarksPage: React.FC = () => {
                         <span className="text-xs text-gray-500">
                           收藏于 {formatDistanceToNow(new Date((bookmark as any).bookmarked_at), { 
                             addSuffix: true, 
-                            locale: zhCN 
+                            locale: zhCN, 
                           })}
                         </span>
                       </div>

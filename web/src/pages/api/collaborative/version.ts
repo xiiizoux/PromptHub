@@ -3,7 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
+  process.env.SUPABASE_SERVICE_ROLE_KEY!,
 );
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -17,7 +17,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (!promptId || !content) {
       return res.status(400).json({ 
         success: false, 
-        error: '提示词ID和内容不能为空' 
+        error: '提示词ID和内容不能为空', 
       });
     }
 
@@ -26,7 +26,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (!userId) {
       return res.status(401).json({ 
         success: false, 
-        error: '未授权，缺少用户信息' 
+        error: '未授权，缺少用户信息', 
       });
     }
 
@@ -40,7 +40,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (userError) {
       return res.status(404).json({ 
         success: false, 
-        error: '用户不存在' 
+        error: '用户不存在', 
       });
     }
 
@@ -86,7 +86,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         author_id: userId,
         author_name: user.display_name || user.email,
         changes_summary: JSON.stringify(changes),
-        created_at: new Date().toISOString()
+        created_at: new Date().toISOString(),
       })
       .select()
       .single();
@@ -98,7 +98,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       .from('prompts')
       .update({ 
         current_version: nextVersionNumber,
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
       })
       .eq('id', promptId);
 
@@ -108,18 +108,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       operations: [], // 简化处理
       timestamp: new Date(newVersion.created_at),
       author: newVersion.author_name,
-      message: newVersion.message
+      message: newVersion.message,
     };
 
     res.status(200).json({
       success: true,
-      version: responseVersion
+      version: responseVersion,
     });
   } catch (error: any) {
     console.error('保存版本失败:', error);
     res.status(500).json({ 
       success: false, 
-      error: error.message || '保存版本失败' 
+      error: error.message || '保存版本失败', 
     });
   }
 }
@@ -152,6 +152,6 @@ function calculateChanges(oldContent: string, newContent: string) {
     linesRemoved: removed,
     linesModified: modified,
     totalChanges: added + removed + modified,
-    changePercentage: maxLines > 0 ? Math.round(((added + removed + modified) / maxLines) * 100) : 0
+    changePercentage: maxLines > 0 ? Math.round(((added + removed + modified) / maxLines) * 100) : 0,
   };
 } 

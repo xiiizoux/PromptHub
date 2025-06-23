@@ -9,7 +9,7 @@ import {
   ChatBubbleLeftIcon,
   ArrowUturnLeftIcon,
   MegaphoneIcon,
-  InformationCircleIcon
+  InformationCircleIcon,
 } from '@heroicons/react/24/outline';
 import { formatDistanceToNow } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
@@ -35,7 +35,7 @@ export default function NotificationList({
   showActions = true,
   onClose,
   unreadOnly = false,
-  grouped = false
+  grouped = false,
 }: NotificationListProps) {
   const router = useRouter();
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -54,7 +54,7 @@ export default function NotificationList({
         pageNum,
         maxItems || 10,
         unreadOnly,
-        isGrouped
+        isGrouped,
       );
       
       if (isGrouped) {
@@ -78,7 +78,7 @@ export default function NotificationList({
       setHasMore(
         Array.isArray(response.data) &&
         response.data.length > 0 &&
-        response.page < response.totalPages
+        response.page < response.totalPages,
       );
       setPage(pageNum);
       setError(null);
@@ -95,7 +95,7 @@ export default function NotificationList({
     try {
       await notificationApi.markAsRead(notificationId);
       setNotifications(prev => 
-        prev.map(n => n.id === notificationId ? { ...n, is_read: true } : n)
+        prev.map(n => n.id === notificationId ? { ...n, is_read: true } : n),
       );
     } catch (err) {
       console.error('标记通知已读失败:', err);
@@ -189,7 +189,7 @@ export default function NotificationList({
   const renderNotificationItem = (notification: Notification) => {
     const timeAgo = formatDistanceToNow(new Date(notification.created_at), { 
       addSuffix: true,
-      locale: zhCN
+      locale: zhCN,
     });
     
     // 获取第一个字母用于头像显示
@@ -231,7 +231,7 @@ export default function NotificationList({
                   'comment': '评论',
                   'reply': '回复',
                   'mention': '提及',
-                  'system': '系统'
+                  'system': '系统',
                 }[notification.type] || notification.type}
               </span>
             </div>

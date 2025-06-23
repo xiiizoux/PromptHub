@@ -35,5 +35,5 @@ export default apiHandler(async (req: NextApiRequest, res: NextApiResponse) => {
   return errorResponse(res, `不支持的方法: ${req.method}`);
 }, {
   allowedMethods: ['GET'],
-  requireAuth: false
+  requireAuth: false,
 }); 

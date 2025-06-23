@@ -16,18 +16,18 @@ const DocLayout: React.FC<DocLayoutProps> = ({
   title,
   description,
   children,
-  backLink = "/docs",
-  backText = "返回文档首页",
-  breadcrumbs
+  backLink = '/docs',
+  backText = '返回文档首页',
+  breadcrumbs,
 }) => {
   const pageVariants = {
     hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0 }
+    visible: { opacity: 1, y: 0 },
   };
 
   const contentVariants = {
     hidden: { opacity: 0, y: 30 },
-    visible: { opacity: 1, y: 0 }
+    visible: { opacity: 1, y: 0 },
   };
 
   return (

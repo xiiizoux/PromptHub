@@ -8,12 +8,11 @@ import {
   ArrowRightIcon,
   ClipboardDocumentIcon,
   BeakerIcon,
-  XMarkIcon
+  XMarkIcon,
 } from '@heroicons/react/24/outline';
-import { AIAnalyzeButton } from './AIAnalyzeButton';
+import { AIAnalyzeButton, AIAnalysisResultDisplay } from './AIAnalyzeButton';
 import { PromptOptimizer } from './PromptOptimizer';
 import { AIAnalysisResult } from '@/lib/ai-analyzer';
-import { AIAnalysisResultDisplay } from './AIAnalyzeButton';
 
 interface SmartWritingAssistantProps {
   content: string;
@@ -42,7 +41,7 @@ const SmartWritingAssistant: React.FC<SmartWritingAssistantProps> = ({
   pendingAIAnalysis,
   className = '',
   category,
-  tags
+  tags,
 }) => {
   const [activeTab, setActiveTab] = useState<'guide' | 'analysis' | 'templates' | 'optimizer'>('guide');
   
@@ -66,8 +65,8 @@ const SmartWritingAssistant: React.FC<SmartWritingAssistantProps> = ({
         suggestions: [
           '你是一位专业的[领域]专家',
           '作为经验丰富的[职业]',
-          '假设你是[具体角色]'
-        ]
+          '假设你是[具体角色]',
+        ],
       },
       {
         id: 'context',
@@ -77,8 +76,8 @@ const SmartWritingAssistant: React.FC<SmartWritingAssistantProps> = ({
         suggestions: [
           '背景：[描述情况]',
           '目标：[说明目的]',
-          '约束：[限制条件]'
-        ]
+          '约束：[限制条件]',
+        ],
       },
       {
         id: 'task',
@@ -88,8 +87,8 @@ const SmartWritingAssistant: React.FC<SmartWritingAssistantProps> = ({
         suggestions: [
           '请帮我分析...',
           '请为我生成...',
-          '请协助我创建...'
-        ]
+          '请协助我创建...',
+        ],
       },
       {
         id: 'format',
@@ -99,9 +98,9 @@ const SmartWritingAssistant: React.FC<SmartWritingAssistantProps> = ({
         suggestions: [
           '请按以下格式输出：',
           '回答应包含：1. ... 2. ... 3. ...',
-          '以[格式]形式提供结果'
-        ]
-      }
+          '以[格式]形式提供结果',
+        ],
+      },
     ];
     setWritingSteps(steps);
   }, [content]);
@@ -137,7 +136,7 @@ const SmartWritingAssistant: React.FC<SmartWritingAssistantProps> = ({
         hasFormat: checkOutputFormat(text),
         hasContext: checkContext(text),
         wordCount: text.length,
-        suggestions: generateRealTimeSuggestions(text)
+        suggestions: generateRealTimeSuggestions(text),
       };
       setRealTimeAnalysis(analysis);
     } catch (error) {
@@ -210,7 +209,7 @@ const SmartWritingAssistant: React.FC<SmartWritingAssistantProps> = ({
     { id: 'guide', label: '写作指南', icon: LightBulbIcon },
     { id: 'analysis', label: '智能分析', icon: BeakerIcon },
     { id: 'templates', label: '快速模板', icon: ClipboardDocumentIcon },
-    { id: 'optimizer', label: '智能优化', icon: SparklesIcon }
+    { id: 'optimizer', label: '智能优化', icon: SparklesIcon },
   ];
 
   return (
@@ -471,7 +470,7 @@ const QuickTemplates: React.FC<{
       // 获取更多模板用于搜索
       const params = new URLSearchParams({
         featured: 'true',
-        limit: searchQuery ? '20' : '4'  // 如果有搜索词，获取更多模板
+        limit: searchQuery ? '20' : '4',  // 如果有搜索词，获取更多模板
       });
 
       const url = `/api/templates?${params}`;
@@ -489,7 +488,7 @@ const QuickTemplates: React.FC<{
           category: template.category_info?.display_name || template.category,
           template: template.content,
           tags: template.tags || [],
-          description: template.description || ''
+          description: template.description || '',
         }));
         
         setAllTemplates(formattedTemplates);
@@ -503,7 +502,7 @@ const QuickTemplates: React.FC<{
           dataType: typeof result.data,
           isArray: Array.isArray(result.data),
           length: result.data?.length,
-          result
+          result,
         });
         
         // 设置默认模板作为后备
@@ -521,8 +520,8 @@ const QuickTemplates: React.FC<{
 2. 提供具体的数据和事实支撑
 3. 给出可行的建议和解决方案`,
             tags: ['分析', '专业', '研究'],
-            description: '专业的分析师模板，适用于各种分析场景'
-          }
+            description: '专业的分析师模板，适用于各种分析场景',
+          },
         ];
         
         setAllTemplates(fallbackTemplates);
@@ -546,8 +545,8 @@ const QuickTemplates: React.FC<{
 2. 提供具体的数据和事实支撑
 3. 给出可行的建议和解决方案`,
           tags: ['分析', '专业', '研究'],
-          description: '专业的分析师模板，适用于各种分析场景'
-        }
+          description: '专业的分析师模板，适用于各种分析场景',
+        },
       ];
       
       setAllTemplates(fallbackTemplates);
@@ -571,7 +570,7 @@ const QuickTemplates: React.FC<{
       // 调用API进行搜索
       const params = new URLSearchParams({
         search: searchQuery,
-        limit: '12'
+        limit: '12',
       });
 
       const url = `/api/templates?${params}`;
@@ -589,7 +588,7 @@ const QuickTemplates: React.FC<{
           category: template.category_info?.display_name || template.category,
           template: template.content,
           tags: template.tags || [],
-          description: template.description || ''
+          description: template.description || '',
         }));
         
         setTemplates(formattedTemplates);
@@ -599,7 +598,7 @@ const QuickTemplates: React.FC<{
           template.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
           template.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
           template.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          template.tags.some((tag: string) => tag.toLowerCase().includes(searchQuery.toLowerCase()))
+          template.tags.some((tag: string) => tag.toLowerCase().includes(searchQuery.toLowerCase())),
         );
         setTemplates(filtered);
       }
@@ -610,7 +609,7 @@ const QuickTemplates: React.FC<{
         template.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         template.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
         template.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        template.tags.some((tag: string) => tag.toLowerCase().includes(searchQuery.toLowerCase()))
+        template.tags.some((tag: string) => tag.toLowerCase().includes(searchQuery.toLowerCase())),
       );
       setTemplates(filtered);
     } finally {

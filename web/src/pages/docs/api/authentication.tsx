@@ -171,7 +171,7 @@ const AuthenticationPage: React.FC = () => {
                         <span className="text-neon-pink text-sm font-mono">CURL</span>
                       </div>
                       <pre className="p-4 text-green-400 font-mono text-sm overflow-auto">
-{`curl "https://api.prompthub.com/v1/prompts?api_key=your-api-key-here"`}
+{'curl "https://api.prompthub.com/v1/prompts?api_key=your-api-key-here"'}
                       </pre>
                     </div>
                     <p className="text-gray-400 text-sm mt-3">

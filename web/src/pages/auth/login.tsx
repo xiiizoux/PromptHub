@@ -27,8 +27,8 @@ export default function LoginPage() {
     defaultValues: {
       email: '',
       password: '',
-      remember: false
-    }
+      remember: false,
+    },
   });
   
   // 检查用户是否已经登录，如果是则重定向到目标页面
@@ -42,12 +42,12 @@ export default function LoginPage() {
         // 添加超时处理，避免无限等待
         const sessionPromise = supabase.auth.getSession();
         const timeoutPromise = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('会话检查超时')), 8000)
+          setTimeout(() => reject(new Error('会话检查超时')), 8000),
         );
         
         const { data: { session }, error } = await Promise.race([
           sessionPromise,
-          timeoutPromise
+          timeoutPromise,
         ]) as any;
         
         if (error) {
@@ -176,7 +176,7 @@ export default function LoginPage() {
             <motion.div
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
-              transition={{ type: "spring", bounce: 0.5, delay: 0.6 }}
+              transition={{ type: 'spring', bounce: 0.5, delay: 0.6 }}
               className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-r from-neon-cyan to-neon-purple p-0.5"
             >
               <div className="w-full h-full bg-dark-bg-primary rounded-full flex items-center justify-center">
@@ -248,8 +248,8 @@ export default function LoginPage() {
                     required: '请输入电子邮件',
                     pattern: {
                       value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                      message: '请输入有效的电子邮件地址'
-                    }
+                      message: '请输入有效的电子邮件地址',
+                    },
                   })}
                 />
               </div>
@@ -279,7 +279,7 @@ export default function LoginPage() {
                 </div>
                 <motion.input
                   id="password"
-                  type={showPassword ? "text" : "password"}
+                  type={showPassword ? 'text' : 'password'}
                   autoComplete="current-password"
                   whileFocus={{ scale: 1.02 }}
                   className={`w-full pl-12 pr-12 py-3 bg-dark-bg-secondary/50 border rounded-xl text-white placeholder-gray-500 transition-all duration-300 backdrop-blur-sm ${
@@ -292,8 +292,8 @@ export default function LoginPage() {
                     required: '请输入密码',
                     minLength: {
                       value: 6,
-                      message: '密码必须至少包含6个字符'
-                    }
+                      message: '密码必须至少包含6个字符',
+                    },
                   })}
                 />
                 <button

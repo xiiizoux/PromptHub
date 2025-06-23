@@ -60,7 +60,7 @@ export class EnhancedQualityAnalyzer extends PromptQualityAnalyzer {
       difficultyLevel,
       improvementPriority,
       quickFixes,
-      successExamples
+      successExamples,
     };
   }
 
@@ -77,7 +77,7 @@ export class EnhancedQualityAnalyzer extends PromptQualityAnalyzer {
         title: '给AI一个明确的身份',
         description: '就像介绍朋友一样，先告诉AI它应该扮演什么角色，这样回答会更专业',
         example: '你是一位经验丰富的写作老师...',
-        impact: 'high'
+        impact: 'high',
       });
     }
 
@@ -88,7 +88,7 @@ export class EnhancedQualityAnalyzer extends PromptQualityAnalyzer {
         title: '用"请"开头，礼貌地提出要求',
         description: '明确告诉AI你需要它做什么，就像和朋友聊天一样自然',
         example: '请帮我分析这篇文章的主要观点...',
-        impact: 'high'
+        impact: 'high',
       });
     }
 
@@ -99,7 +99,7 @@ export class EnhancedQualityAnalyzer extends PromptQualityAnalyzer {
         title: '告诉AI你想要什么样的回答',
         description: '指定回答的格式，就像点菜时说要什么一样',
         example: '请用1、2、3的列表形式回答...',
-        impact: 'medium'
+        impact: 'medium',
       });
     }
 
@@ -110,7 +110,7 @@ export class EnhancedQualityAnalyzer extends PromptQualityAnalyzer {
         title: '提供更多背景信息',
         description: '想象你在向朋友解释问题，提供足够的细节',
         example: '我是一名大学生，正在写关于环保的论文...',
-        impact: 'medium'
+        impact: 'medium',
       });
     }
 
@@ -164,7 +164,7 @@ export class EnhancedQualityAnalyzer extends PromptQualityAnalyzer {
             actionItems = [
               '使用更简单直接的语言',
               '删除不必要的修饰词',
-              '一个句子表达一个意思'
+              '一个句子表达一个意思',
             ];
             break;
           case 'actionability':
@@ -172,7 +172,7 @@ export class EnhancedQualityAnalyzer extends PromptQualityAnalyzer {
             actionItems = [
               '使用具体的动作词汇',
               '提供分步骤的指导',
-              '添加具体的数量要求'
+              '添加具体的数量要求',
             ];
             break;
           case 'completeness':
@@ -180,7 +180,7 @@ export class EnhancedQualityAnalyzer extends PromptQualityAnalyzer {
             actionItems = [
               '补充背景信息',
               '明确目标和约束',
-              '添加使用场景说明'
+              '添加使用场景说明',
             ];
             break;
         }
@@ -191,7 +191,7 @@ export class EnhancedQualityAnalyzer extends PromptQualityAnalyzer {
             reason: `当前得分${dimension.score}分，有较大提升空间`,
             currentScore: dimension.score,
             potentialImprovement,
-            actionItems
+            actionItems,
           });
         }
       }
@@ -214,7 +214,7 @@ export class EnhancedQualityAnalyzer extends PromptQualityAnalyzer {
         solution: '在开头添加角色描述',
         beforeExample: content.substring(0, 50) + '...',
         afterExample: '你是一位专业的助手。' + content.substring(0, 50) + '...',
-        applyable: true
+        applyable: true,
       });
     }
 
@@ -225,7 +225,7 @@ export class EnhancedQualityAnalyzer extends PromptQualityAnalyzer {
         solution: '添加明确的请求词汇',
         beforeExample: content,
         afterExample: content.replace(/^/, '请帮我'),
-        applyable: true
+        applyable: true,
       });
     }
 
@@ -236,7 +236,7 @@ export class EnhancedQualityAnalyzer extends PromptQualityAnalyzer {
         solution: '添加更多背景信息和要求',
         beforeExample: content,
         afterExample: content + '\n\n请详细说明，并提供具体例子。',
-        applyable: true
+        applyable: true,
       });
     }
 
@@ -250,20 +250,20 @@ export class EnhancedQualityAnalyzer extends PromptQualityAnalyzer {
     const examples: Record<string, string[]> = {
       '文案': [
         '你是一位资深的营销文案专家。请为我们的新产品写一段吸引人的宣传文案，产品是智能手表。目标受众是年轻上班族，文案长度150字左右，语调要活泼有趣。',
-        '作为品牌营销专家，请帮我创作一条朋友圈广告文案。产品：咖啡店新品拿铁，受众：白领女性，要求：温暖治愈风格，包含优惠信息。'
+        '作为品牌营销专家，请帮我创作一条朋友圈广告文案。产品：咖啡店新品拿铁，受众：白领女性，要求：温暖治愈风格，包含优惠信息。',
       ],
       '编程': [
         '你是一位Python编程专家。请帮我写一个函数，功能是计算两个日期之间的天数差。要求：输入为字符串格式的日期，输出为整数，包含错误处理和详细注释。',
-        '作为前端开发专家，请帮我创建一个响应式导航栏组件，使用HTML、CSS和JavaScript。要求：支持移动端，有下拉菜单，代码要简洁易懂。'
+        '作为前端开发专家，请帮我创建一个响应式导航栏组件，使用HTML、CSS和JavaScript。要求：支持移动端，有下拉菜单，代码要简洁易懂。',
       ],
       '学术': [
         '你是一位学术研究专家。请帮我分析"人工智能对教育的影响"这个主题，从积极影响、潜在挑战、未来趋势三个角度进行论述，每个角度300字左右，要求有理有据。',
-        '作为论文写作指导老师，请帮我制定一个关于"可持续发展"的研究计划，包括研究问题、研究方法、时间安排、预期成果等部分。'
+        '作为论文写作指导老师，请帮我制定一个关于"可持续发展"的研究计划，包括研究问题、研究方法、时间安排、预期成果等部分。',
       ],
       '通用': [
         '你是一位经验丰富的顾问。请帮我分析一下从北京到上海的旅行方案，考虑时间、成本、舒适度三个因素，提供2-3个选择，并说明各自的优缺点。',
-        '作为生活助手，请为我制定一个健康的一周运动计划，我是初学者，每天有1小时时间，希望既能减肥又能增强体质。请详细说明每天的运动内容和注意事项。'
-      ]
+        '作为生活助手，请为我制定一个健康的一周运动计划，我是初学者，每天有1小时时间，希望既能减肥又能增强体质。请详细说明每天的运动内容和注意事项。',
+      ],
     };
 
     return examples[category] || examples['通用'];

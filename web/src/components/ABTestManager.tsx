@@ -8,7 +8,7 @@ import {
   XCircleIcon,
   PlayIcon,
   PauseIcon,
-  DocumentDuplicateIcon
+  DocumentDuplicateIcon,
 } from '@heroicons/react/24/outline';
 import { useAuth } from '@/contexts/AuthContext';
 import toast from 'react-hot-toast';
@@ -73,7 +73,7 @@ interface ABTestManagerProps {
 
 export const ABTestManager: React.FC<ABTestManagerProps> = ({ 
   promptId, 
-  className = '' 
+  className = '', 
 }) => {
   const { user } = useAuth();
   const [tests, setTests] = useState<ABTest[]>([]);
@@ -112,7 +112,7 @@ export const ABTestManager: React.FC<ABTestManagerProps> = ({
       await createABTest({
         ...testData,
         prompt_id: promptId!,
-        creator_id: user.id
+        creator_id: user.id,
       });
       
       toast.success('A/B测试创建成功');
@@ -361,7 +361,7 @@ const CreateTestModal: React.FC<CreateTestModalProps> = ({
   isOpen,
   onClose,
   onSubmit,
-  isLoading
+  isLoading,
 }) => {
   const [formData, setFormData] = useState({
     name: '',
@@ -370,7 +370,7 @@ const CreateTestModal: React.FC<CreateTestModalProps> = ({
     traffic_allocation: 50,
     variant_a: { name: '原始版本', description: '', content: '' },
     variant_b: { name: '测试版本', description: '', content: '' },
-    success_metrics: ['response_quality', 'user_satisfaction']
+    success_metrics: ['response_quality', 'user_satisfaction'],
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -488,7 +488,7 @@ const CreateTestModal: React.FC<CreateTestModalProps> = ({
                     value={formData.variant_a.name}
                     onChange={(e) => setFormData({
                       ...formData,
-                      variant_a: { ...formData.variant_a, name: e.target.value }
+                      variant_a: { ...formData.variant_a, name: e.target.value },
                     })}
                     className="input-primary w-full"
                     placeholder="版本名称"
@@ -499,7 +499,7 @@ const CreateTestModal: React.FC<CreateTestModalProps> = ({
                     value={formData.variant_a.description}
                     onChange={(e) => setFormData({
                       ...formData,
-                      variant_a: { ...formData.variant_a, description: e.target.value }
+                      variant_a: { ...formData.variant_a, description: e.target.value },
                     })}
                     className="input-primary w-full h-20"
                     placeholder="版本描述"
@@ -515,7 +515,7 @@ const CreateTestModal: React.FC<CreateTestModalProps> = ({
                     value={formData.variant_b.name}
                     onChange={(e) => setFormData({
                       ...formData,
-                      variant_b: { ...formData.variant_b, name: e.target.value }
+                      variant_b: { ...formData.variant_b, name: e.target.value },
                     })}
                     className="input-primary w-full"
                     placeholder="版本名称"
@@ -526,7 +526,7 @@ const CreateTestModal: React.FC<CreateTestModalProps> = ({
                     value={formData.variant_b.description}
                     onChange={(e) => setFormData({
                       ...formData,
-                      variant_b: { ...formData.variant_b, description: e.target.value }
+                      variant_b: { ...formData.variant_b, description: e.target.value },
                     })}
                     className="input-primary w-full h-20"
                     placeholder="版本描述"
@@ -569,7 +569,7 @@ interface TestResultsModalProps {
 const TestResultsModal: React.FC<TestResultsModalProps> = ({
   test,
   results,
-  onClose
+  onClose,
 }) => {
   if (!test || !results) return null;
 

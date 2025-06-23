@@ -89,7 +89,7 @@ export class DatabaseService {
         errorCode: categoriesError?.code,
         errorMessage: categoriesError?.message,
         dataLength: categoriesData?.length || 0,
-        data: categoriesData?.slice(0, 3) // 只显示前3个用于调试
+        data: categoriesData?.slice(0, 3), // 只显示前3个用于调试
       });
   
       // 如果查询成功且有数据，返回字符串数组
@@ -107,7 +107,7 @@ export class DatabaseService {
           code: categoriesError.code,
           message: categoriesError.message,
           details: categoriesError.details,
-          hint: categoriesError.hint
+          hint: categoriesError.hint,
         });
       }
   
@@ -130,7 +130,7 @@ export class DatabaseService {
       '通用', '学术', '职业', '文案', '设计', 
       '教育', '情感', '娱乐', '游戏', '生活',
       '商业', '办公', '编程', '翻译', '绘画',
-      '视频', '播客', '音乐', '健康', '科技'
+      '视频', '播客', '音乐', '健康', '科技',
     ];
   
     console.log('使用默认分类名称，数量:', defaultCategoryNames.length);
@@ -162,7 +162,7 @@ export class DatabaseService {
       { id: '17', name: '播客', name_en: 'Podcast', sort_order: 17, is_active: true },
       { id: '18', name: '音乐', name_en: 'Music', sort_order: 18, is_active: true },
       { id: '19', name: '健康', name_en: 'Health', sort_order: 19, is_active: true },
-      { id: '20', name: '科技', name_en: 'Technology', sort_order: 20, is_active: true }
+      { id: '20', name: '科技', name_en: 'Technology', sort_order: 20, is_active: true },
     ];
   
     console.log('使用默认分类，数量:', defaultCategories.length);
@@ -279,7 +279,7 @@ export class DatabaseService {
         compatible_models: prompt.compatible_models || [], // 保持数据原始性，不添加假的默认值
         allow_collaboration: Boolean(prompt.is_public), // 基于是否公开来设置
         edit_permission: 'owner_only' as const, // 修复：改为前端期望的值
-        author: authorName
+        author: authorName,
       };
 
       console.log('getPromptByName - 最终处理的数据:', {
@@ -290,14 +290,14 @@ export class DatabaseService {
         edit_permission: promptDetails.edit_permission,
         author: promptDetails.author,
         user_id: promptDetails.user_id,
-        contentLength: content.length
+        contentLength: content.length,
       });
 
       console.log('getPromptByName - 详细调试信息:', {
         prompt_user_id: prompt.user_id,
         // prompt_created_by 属性不存在，已移除
         final_author: authorName,
-        prompt_is_public: prompt.is_public
+        prompt_is_public: prompt.is_public,
       });
 
       return promptDetails;
@@ -319,12 +319,12 @@ export class DatabaseService {
       tags: promptData.tags,
       messages: promptData.content ? [{
         role: 'system',
-        content: promptData.content
+        content: promptData.content,
       }] : promptData.messages,
       is_public: promptData.is_public,
       user_id: promptData.user_id,
       version: promptData.version ? Number(promptData.version) : 1.0, // 新建提示词默认版本为1.0
-      compatible_models: promptData.compatible_models // 添加兼容模型字段
+      compatible_models: promptData.compatible_models, // 添加兼容模型字段
     };
 
     return await this.adapter.createPrompt(prompt);
@@ -360,7 +360,7 @@ export class DatabaseService {
       if (promptData.content !== undefined) {
         updateData.messages = [{
           role: 'system',
-          content: promptData.content
+          content: promptData.content,
         }];
       }
 
@@ -445,7 +445,7 @@ export class DatabaseService {
         (data || []).map(async (comment) => {
           const replies = await this.getCommentReplies(comment.id);
           return { ...comment, replies };
-        })
+        }),
       );
 
       return {
@@ -453,7 +453,7 @@ export class DatabaseService {
         total: count || 0,
         page,
         pageSize,
-        totalPages: Math.ceil((count || 0) / pageSize)
+        totalPages: Math.ceil((count || 0) / pageSize),
       };
     } catch (error) {
       console.error('获取评论失败:', error);
@@ -645,7 +645,7 @@ export class DatabaseService {
           .insert({
             template_id: templateId,
             user_id: userId,
-            used_at: new Date().toISOString()
+            used_at: new Date().toISOString(),
           });
       }
     } catch (error) {
@@ -662,7 +662,7 @@ export class DatabaseService {
           user_id: userId,
           rating,
           comment,
-          updated_at: new Date().toISOString()
+          updated_at: new Date().toISOString(),
         });
 
       // 更新模板平均评分
@@ -721,8 +721,8 @@ export class DatabaseService {
         name: categoryInfo.name,
         display_name: categoryInfo.display_name,
         icon: categoryInfo.icon,
-        color: categoryInfo.color
-      } : undefined
+        color: categoryInfo.color,
+      } : undefined,
     };
   }
 
@@ -760,9 +760,9 @@ export class DatabaseService {
             total_input: 0,
             total_output: 0,
             input_avg: 0,
-            output_avg: 0
+            output_avg: 0,
           },
-          version_distribution: {}
+          version_distribution: {},
         };
       }
 
@@ -796,12 +796,12 @@ export class DatabaseService {
           total_input: totalInputTokens,
           total_output: totalOutputTokens,
           input_avg: totalUsage > 0 ? Math.round(totalInputTokens / totalUsage) : 0,
-          output_avg: totalUsage > 0 ? Math.round(totalOutputTokens / totalUsage) : 0
+          output_avg: totalUsage > 0 ? Math.round(totalOutputTokens / totalUsage) : 0,
         },
-        version_distribution: versionDistribution
+        version_distribution: versionDistribution,
       };
 
-      console.log(`[DatabaseService] 性能数据聚合完成:`, result);
+      console.log('[DatabaseService] 性能数据聚合完成:', result);
       return result;
     } catch (error) {
       console.error('获取提示词性能数据失败:', error);
@@ -862,7 +862,7 @@ export class DatabaseService {
           name: prompt.name,
           description: prompt.description,
           category: prompt.category,
-          version: prompt.version
+          version: prompt.version,
         },
         currentVersion: prompt.version,
         performance: {
@@ -870,15 +870,15 @@ export class DatabaseService {
           averageRating: performanceData.average_rating,
           averageLatency: performanceData.average_latency,
           totalTokens: performanceData.token_stats.total_input + performanceData.token_stats.total_output,
-          estimatedCost: this.calculateEstimatedCost(performanceData.token_stats)
+          estimatedCost: this.calculateEstimatedCost(performanceData.token_stats),
         },
         versionComparison: [performanceData], // 简化版本比较
         recentUsage: recentUsage || [],
         feedbackThemes: this.analyzeFeedbackThemes(feedbackData || []),
-        optimizationSuggestions: suggestions
+        optimizationSuggestions: suggestions,
       };
 
-      console.log(`[DatabaseService] 性能报告生成完成`);
+      console.log('[DatabaseService] 性能报告生成完成');
       return report;
     } catch (error) {
       console.error('生成性能报告失败:', error);
@@ -901,7 +901,7 @@ export class DatabaseService {
     client_metadata?: any;
   }): Promise<string | null> {
     try {
-      console.log(`[DatabaseService] 记录提示词使用:`, usageData);
+      console.log('[DatabaseService] 记录提示词使用:', usageData);
 
       const { data, error } = await this.adapter.supabase
         .from('prompt_usage')
@@ -914,7 +914,7 @@ export class DatabaseService {
           input_tokens: usageData.input_tokens,
           output_tokens: usageData.output_tokens,
           latency_ms: usageData.latency_ms,
-          client_metadata: usageData.client_metadata || {}
+          client_metadata: usageData.client_metadata || {},
         }])
         .select('id')
         .single();
@@ -971,7 +971,7 @@ export class DatabaseService {
       // 计算指标
       const metrics = this.calculateMetrics(usageData || [], feedbackData || [], timeRange);
 
-      console.log(`[DatabaseService] 性能指标计算完成`);
+      console.log('[DatabaseService] 性能指标计算完成');
       return metrics;
     } catch (error) {
       console.error('获取性能指标失败:', error);
@@ -1022,7 +1022,7 @@ export class DatabaseService {
     if (!matches) return [];
 
     return Array.from(new Set(
-      matches.map(match => match.replace(/^\{\{|\}\}$/g, '').trim())
+      matches.map(match => match.replace(/^\{\{|\}\}$/g, '').trim()),
     )).filter(variable => variable.length > 0);
   }
 
@@ -1088,8 +1088,8 @@ export class DatabaseService {
       time_series: timeSeriesData,
       usage_distribution: {
         labels: ['今日', '昨日', '本周', '本月'],
-        values: [totalUsage, 0, totalUsage, totalUsage] // 简化数据
-      }
+        values: [totalUsage, 0, totalUsage, totalUsage], // 简化数据
+      },
     };
   }
 
@@ -1118,14 +1118,14 @@ export class DatabaseService {
       responseTimes.push(
         dayData.length > 0
           ? dayData.reduce((sum, u) => sum + (u.latency_ms || 0), 0) / dayData.length / 1000
-          : 0
+          : 0,
       );
     }
 
     return {
       labels,
       response_times: responseTimes,
-      usage_counts: usageCounts
+      usage_counts: usageCounts,
     };
   }
 
@@ -1166,7 +1166,7 @@ export class DatabaseService {
         description: '当前平均响应时间较长，建议优化提示词长度或模型选择',
         priority: 'high',
         expected_improvement: '减少30-50%响应时间',
-        implementation_effort: 'medium'
+        implementation_effort: 'medium',
       });
     }
 
@@ -1177,7 +1177,7 @@ export class DatabaseService {
         description: '用户评分偏低，建议优化提示词内容和结构',
         priority: 'high',
         expected_improvement: '提升用户满意度20-30%',
-        implementation_effort: 'high'
+        implementation_effort: 'high',
       });
     }
 
@@ -1188,7 +1188,7 @@ export class DatabaseService {
         description: '使用量较低，建议增加推广或改进提示词描述',
         priority: 'medium',
         expected_improvement: '增加50%使用量',
-        implementation_effort: 'low'
+        implementation_effort: 'low',
       });
     }
 

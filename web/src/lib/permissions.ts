@@ -10,7 +10,7 @@ export const checkEditPermission = (prompt: PromptDetails, user: User | null): P
     return {
       canEdit: false,
       reason: 'no_permission',
-      message: '请先登录'
+      message: '请先登录',
     };
   }
 
@@ -22,7 +22,7 @@ export const checkEditPermission = (prompt: PromptDetails, user: User | null): P
     return {
       canEdit: true,
       reason: 'owner',
-      message: '您是此提示词的创建者'
+      message: '您是此提示词的创建者',
     };
   }
 
@@ -31,7 +31,7 @@ export const checkEditPermission = (prompt: PromptDetails, user: User | null): P
     return {
       canEdit: true,
       reason: 'admin',
-      message: '管理员权限'
+      message: '管理员权限',
     };
   }
 
@@ -40,7 +40,7 @@ export const checkEditPermission = (prompt: PromptDetails, user: User | null): P
     return {
       canEdit: true,
       reason: 'contributor',
-      message: '贡献者可以编辑公开的协作提示词'
+      message: '贡献者可以编辑公开的协作提示词',
     };
   }
 
@@ -49,7 +49,7 @@ export const checkEditPermission = (prompt: PromptDetails, user: User | null): P
     return {
       canEdit: true,
       reason: 'collaborator',
-      message: '您被授权为协作者'
+      message: '您被授权为协作者',
     };
   }
 
@@ -57,7 +57,7 @@ export const checkEditPermission = (prompt: PromptDetails, user: User | null): P
   return {
     canEdit: false,
     reason: 'no_permission',
-    message: '您没有编辑此提示词的权限'
+    message: '您没有编辑此提示词的权限',
   };
 };
 
@@ -100,7 +100,7 @@ export const checkDeletePermission = (prompt: PromptDetails, user: User | null):
     return {
       canEdit: false,
       reason: 'no_permission',
-      message: '请先登录'
+      message: '请先登录',
     };
   }
 
@@ -112,7 +112,7 @@ export const checkDeletePermission = (prompt: PromptDetails, user: User | null):
     return {
       canEdit: true,
       reason: 'owner',
-      message: '您是此提示词的创建者'
+      message: '您是此提示词的创建者',
     };
   }
 
@@ -120,21 +120,21 @@ export const checkDeletePermission = (prompt: PromptDetails, user: User | null):
     return {
       canEdit: true,
       reason: 'admin',
-      message: '管理员权限'
+      message: '管理员权限',
     };
   }
 
   return {
     canEdit: false,
     reason: 'no_permission',
-    message: '只有创建者和管理员可以删除提示词'
+    message: '只有创建者和管理员可以删除提示词',
   };
 };
 
 // 检查字段编辑权限
 export const checkFieldPermission = (
   field: string, 
-  permissionCheck: PermissionCheck | null
+  permissionCheck: PermissionCheck | null,
 ): boolean => {
   if (!permissionCheck?.canEdit) {
     return false;
@@ -231,24 +231,24 @@ export const canViewAuditLogs = (prompt: PromptDetails, user: User | null): bool
 export const PERMISSION_LEVELS = {
   OWNER_ONLY: 'owner_only',
   COLLABORATORS: 'collaborators',
-  PUBLIC: 'public'
+  PUBLIC: 'public',
 } as const;
 
 export const COLLABORATOR_PERMISSIONS = {
   EDIT: 'edit',
   REVIEW: 'review',
-  ADMIN: 'admin'
+  ADMIN: 'admin',
 } as const;
 
 // 权限级别描述
 export const PERMISSION_LEVEL_DESCRIPTIONS = {
   [PERMISSION_LEVELS.OWNER_ONLY]: '仅创建者可编辑',
   [PERMISSION_LEVELS.COLLABORATORS]: '协作者可编辑',
-  [PERMISSION_LEVELS.PUBLIC]: '公开编辑'
+  [PERMISSION_LEVELS.PUBLIC]: '公开编辑',
 };
 
 export const COLLABORATOR_PERMISSION_DESCRIPTIONS = {
   [COLLABORATOR_PERMISSIONS.EDIT]: '可以编辑内容',
   [COLLABORATOR_PERMISSIONS.REVIEW]: '可以查看和评论',
-  [COLLABORATOR_PERMISSIONS.ADMIN]: '可以管理协作者'
+  [COLLABORATOR_PERMISSIONS.ADMIN]: '可以管理协作者',
 }; 

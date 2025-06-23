@@ -22,7 +22,7 @@ import {
   TagIcon,
   DocumentTextIcon,
   UserIcon,
-  CpuChipIcon
+  CpuChipIcon,
 } from '@heroicons/react/24/outline';
 import { AIAnalyzeButton, AIAnalysisResultDisplay } from '@/components/AIAnalyzeButton';
 import { AIAnalysisResult } from '@/lib/ai-analyzer';
@@ -33,7 +33,7 @@ import {
   getPermissionDescription,
   getPermissionColor,
   PERMISSION_LEVELS,
-  PERMISSION_LEVEL_DESCRIPTIONS
+  PERMISSION_LEVEL_DESCRIPTIONS,
 } from '@/lib/permissions';
 import { 
   validateVersionFormat,
@@ -42,7 +42,7 @@ import {
   formatVersionFromInt,
   parseVersionToInt,
   getVersionValidationMessage,
-  formatVersionDisplay
+  formatVersionDisplay,
 } from '@/lib/version-utils';
 // @ts-ignore
 import { pinyin } from 'pinyin-pro';
@@ -157,7 +157,7 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
       'podcast': '播客',
       'music': '音乐',
       'health': '健康',
-      'technology': '科技'
+      'technology': '科技',
     };
     
     // 检查是否为英文分类，如果是则映射为中文
@@ -229,7 +229,7 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
       } catch (err) {
         console.error('获取分类失败:', err);
         setCategories([
-          '通用', '创意写作', '代码辅助', '数据分析', '营销', '学术研究', '教育'
+          '通用', '创意写作', '代码辅助', '数据分析', '营销', '学术研究', '教育',
         ]);
       } finally {
         setCategoriesLoading(false);
@@ -272,7 +272,7 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
       is_public: safePromptData.is_public,
       allow_collaboration: safePromptData.allow_collaboration,
       edit_permission: safePromptData.edit_permission,
-    }
+    },
   });
 
   // 监听表单内容变化，确保AI按钮能够正确获取内容 - 修复AI按钮问题
@@ -316,7 +316,7 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
       const matches = safePromptData.content.match(/\{\{([^}]+)\}\}/g);
       if (matches) {
         finalVariables = Array.from(new Set(
-          matches.map(match => match.replace(/^\{\{|\}\}$/g, '').trim())
+          matches.map(match => match.replace(/^\{\{|\}\}$/g, '').trim()),
         )).filter(variable => variable.length > 0);
       }
     }
@@ -387,7 +387,7 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
     
     if (matches) {
       const detectedVars = Array.from(new Set(
-        matches.map(match => match.replace(/^\{\{|\}\}$/g, '').trim())
+        matches.map(match => match.replace(/^\{\{|\}\}$/g, '').trim()),
       )).filter(variable => variable.length > 0);
       
       if (detectedVars.length > 0) {
@@ -463,7 +463,7 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
     return {
       isNewPrompt: false, // 编辑页面不是新提示词
       existingVersions: [], // 不再使用版本比较
-      currentVersion: undefined // 不再使用当前版本比较
+      currentVersion: undefined, // 不再使用当前版本比较
     };
   };
 
@@ -478,7 +478,7 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
       当前分类: currentValues.category,
       AI建议分类: data.category,
       当前标签: tags,
-      AI建议标签: data.tags
+      AI建议标签: data.tags,
     });
 
     // 智能分类建议 - 直接应用，不显示建议提示
@@ -502,7 +502,7 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
       console.log('标签详情:', { 
         原有: tags, 
         AI建议: data.tags, 
-        最终应用: data.tags 
+        最终应用: data.tags, 
       });
     }
     
@@ -526,7 +526,7 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
       console.log('变量详情:', { 
         原有: variables, 
         AI建议: data.variables, 
-        最终应用: data.variables 
+        最终应用: data.variables, 
       });
     }
     
@@ -540,7 +540,7 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
       console.log('兼容模型详情:', { 
         原有: models, 
         AI建议: data.compatibleModels, 
-        最终应用: data.compatibleModels 
+        最终应用: data.compatibleModels, 
       });
     }
 
@@ -585,7 +585,7 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
       console.log('提交的表单数据:', {
         原始版本: data.version,
         处理后版本: versionInt,
-        其他数据: { ...data, content: data.content?.substring(0, 100) + '...' }
+        其他数据: { ...data, content: data.content?.substring(0, 100) + '...' },
       });
       
       // 获取token
@@ -912,7 +912,7 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
                   />
                   
                   <div className="absolute top-3 right-3 text-xs text-gray-500">
-                    使用 {`{{变量名}}`} 定义变量
+                    使用 {'{{变量名}}'} 定义变量
                   </div>
                 </div>
                 
@@ -957,7 +957,7 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
                     id="edit-author"
                     {...register('author')}
                     type="text"
-                    placeholder={user?.username || "您的名字"}
+                    placeholder={user?.username || '您的名字'}
                     className="input-primary w-full"
                     autoComplete="name"
                   />
@@ -1236,7 +1236,7 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
                             setTags(newTags);
                             setValue('tags', newTags);
                           }}
-                          className={`px-3 py-1 rounded-full text-sm border transition-all duration-300 bg-dark-bg-secondary/50 text-gray-400 border-gray-600 hover:border-neon-purple hover:text-neon-purple`}
+                          className={'px-3 py-1 rounded-full text-sm border transition-all duration-300 bg-dark-bg-secondary/50 text-gray-400 border-gray-600 hover:border-neon-purple hover:text-neon-purple'}
                         >
                           {tag}
                         </button>

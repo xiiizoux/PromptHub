@@ -41,7 +41,7 @@ import {
   MicrophoneIcon,
   MusicalNoteIcon,
   HeartIcon as HealthIcon,
-  CpuChipIcon
+  CpuChipIcon,
 } from '@heroicons/react/24/outline';
 import { StarIcon as SolidStarIcon } from '@heroicons/react/24/solid';
 import { trackPromptUsage } from '@/lib/api';
@@ -161,7 +161,7 @@ export default function PromptDetailsPage({ prompt }: PromptDetailsPageProps) {
   const updateVariableValue = (variable: string, value: string) => {
     setVariableValues(prev => ({
       ...prev,
-      [variable]: value
+      [variable]: value,
     }));
   };
 
@@ -181,7 +181,7 @@ export default function PromptDetailsPage({ prompt }: PromptDetailsPageProps) {
             input_tokens: processedContent.length / 4, // 粗略估算
             output_tokens: 0,
             latency: 0,
-            success: true
+            success: true,
           });
           setUsageTracked(true);
         } catch (error) {
@@ -202,7 +202,7 @@ export default function PromptDetailsPage({ prompt }: PromptDetailsPageProps) {
     return date.toLocaleDateString('zh-CN', { 
       year: 'numeric', 
       month: 'long', 
-      day: 'numeric' 
+      day: 'numeric', 
     });
   };
 
@@ -258,12 +258,12 @@ export default function PromptDetailsPage({ prompt }: PromptDetailsPageProps) {
     
     const info = categoryMap[category || ''] || { 
       color: 'from-neon-purple to-neon-blue', 
-      icon: SparklesIcon 
+      icon: SparklesIcon, 
     };
     
     return {
       name: category || '通用',
-      ...info
+      ...info,
     };
   };
 
@@ -277,7 +277,7 @@ export default function PromptDetailsPage({ prompt }: PromptDetailsPageProps) {
         <SolidStarIcon 
           key={i} 
           className={`h-5 w-5 ${i <= ratingValue ? 'text-neon-yellow' : 'text-gray-600'}`} 
-        />
+        />,
       );
     }
     
@@ -378,7 +378,7 @@ export default function PromptDetailsPage({ prompt }: PromptDetailsPageProps) {
         name: tag.name,
         color: tag.color,
         type: getModelTypeLabel(tag.type),
-        description: tag.description
+        description: tag.description,
       };
     }
     // 自定义模型
@@ -386,7 +386,7 @@ export default function PromptDetailsPage({ prompt }: PromptDetailsPageProps) {
       name: modelId,
       color: 'text-gray-400',
       type: '自定义模型',
-      description: '用户添加的自定义模型'
+      description: '用户添加的自定义模型',
     };
   };
 

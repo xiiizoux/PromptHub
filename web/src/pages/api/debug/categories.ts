@@ -36,7 +36,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     console.log('所有分类查询结果:', {
       error: allError,
       count: allCategories?.length || 0,
-      data: allCategories
+      data: allCategories,
     });
     
     // 测试3: 只获取激活的分类
@@ -50,7 +50,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     console.log('激活分类查询结果:', {
       error: activeError,
       count: activeCategories?.length || 0,
-      data: activeCategories
+      data: activeCategories,
     });
     
     // 测试4: 检查RLS策略
@@ -67,30 +67,30 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         connection: {
           success: !connectionError,
           error: connectionError,
-          count: connectionTest
+          count: connectionTest,
         },
         allCategories: {
           success: !allError,
           error: allError,
           count: allCategories?.length || 0,
-          data: allCategories
+          data: allCategories,
         },
         activeCategories: {
           success: !activeError,
           error: activeError,
           count: activeCategories?.length || 0,
-          data: activeCategories
+          data: activeCategories,
         },
         rls: {
           success: !rlsError,
           error: rlsError,
-          data: rlsTest
-        }
+          data: rlsTest,
+        },
       },
       environment: {
         supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL ? 'configured' : 'missing',
-        supabaseKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? 'configured' : 'missing'
-      }
+        supabaseKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? 'configured' : 'missing',
+      },
     };
     
     console.log('=== 调试完成 ===');
@@ -98,7 +98,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(200).json({
       success: true,
       message: '调试信息获取成功',
-      debug: debugInfo
+      debug: debugInfo,
     });
     
   } catch (error: any) {
@@ -110,8 +110,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       details: {
         message: error.message,
         stack: error.stack,
-        name: error.name
-      }
+        name: error.name,
+      },
     });
   }
 }

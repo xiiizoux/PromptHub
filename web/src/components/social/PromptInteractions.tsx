@@ -43,14 +43,14 @@ const PromptInteractions: React.FC<PromptInteractionsProps> = ({ promptId, initi
     userInteraction: initialInteractions?.userInteraction || {
       liked: false,
       bookmarked: false,
-      shared: false
-    }
+      shared: false,
+    },
   });
   
   const [loading, setLoading] = useState({
     like: false,
     bookmark: false,
-    share: false
+    share: false,
   });
 
   // 加载互动数据
@@ -69,7 +69,7 @@ const PromptInteractions: React.FC<PromptInteractionsProps> = ({ promptId, initi
     
     return {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`
+      'Authorization': `Bearer ${token}`,
     };
   };
 
@@ -77,7 +77,7 @@ const PromptInteractions: React.FC<PromptInteractionsProps> = ({ promptId, initi
   const fetchInteractions = async () => {
     try {
       const headers: any = {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
       };
       
       // 如果用户已登录，添加认证头以获取用户状态
@@ -93,7 +93,7 @@ const PromptInteractions: React.FC<PromptInteractionsProps> = ({ promptId, initi
       }
       
       const response = await fetch(`/api/social/interactions?promptId=${promptId}`, {
-        headers
+        headers,
       });
       
       const data = await response.json();
@@ -131,7 +131,7 @@ const PromptInteractions: React.FC<PromptInteractionsProps> = ({ promptId, initi
       const interactionStateMap: Record<InteractionType, keyof typeof interactions.userInteraction> = {
         like: 'liked',
         bookmark: 'bookmarked',
-        share: 'shared'
+        share: 'shared',
       };
       
       const interactionKey = interactionStateMap[type];
@@ -142,7 +142,7 @@ const PromptInteractions: React.FC<PromptInteractionsProps> = ({ promptId, initi
       const response = await fetch('/api/social/interactions', {
         method,
         headers,
-        body: JSON.stringify({ promptId, type })
+        body: JSON.stringify({ promptId, type }),
       });
       
       const data = await response.json();
@@ -156,7 +156,7 @@ const PromptInteractions: React.FC<PromptInteractionsProps> = ({ promptId, initi
         setInteractions(prev => {
           const userInteraction = {
             ...prev.userInteraction,
-            [interactionStateMap[type] as string]: !isActive
+            [interactionStateMap[type] as string]: !isActive,
           };
           
           // 使用类型安全的方式更新计数
@@ -210,7 +210,7 @@ const PromptInteractions: React.FC<PromptInteractionsProps> = ({ promptId, initi
             ? 'text-gray-400 cursor-not-allowed' 
             : 'text-gray-700 dark:text-gray-300 hover:text-red-500'
         }`}
-        aria-label={interactions.userInteraction?.liked ? "取消点赞" : "点赞"}
+        aria-label={interactions.userInteraction?.liked ? '取消点赞' : '点赞'}
       >
         {interactions.userInteraction?.liked ? (
           <FaHeart className="text-red-500" />
@@ -230,7 +230,7 @@ const PromptInteractions: React.FC<PromptInteractionsProps> = ({ promptId, initi
             ? 'text-gray-400 cursor-not-allowed' 
             : 'text-gray-700 dark:text-gray-300 hover:text-blue-500'
         }`}
-        aria-label={interactions.userInteraction?.bookmarked ? "取消收藏" : "收藏"}
+        aria-label={interactions.userInteraction?.bookmarked ? '取消收藏' : '收藏'}
       >
         {interactions.userInteraction?.bookmarked ? (
           <FaBookmark className="text-blue-500" />
@@ -252,7 +252,7 @@ const PromptInteractions: React.FC<PromptInteractionsProps> = ({ promptId, initi
         }`}
         aria-label="分享"
       >
-        <FaShare className={interactions.userInteraction?.shared ? "text-green-500" : ""} />
+        <FaShare className={interactions.userInteraction?.shared ? 'text-green-500' : ''} />
         <span>{interactions.shares}</span>
         {loading.share && <span className="text-xs ml-1">...</span>}
       </button>

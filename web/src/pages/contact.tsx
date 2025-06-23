@@ -11,7 +11,7 @@ import {
   PaperAirplaneIcon,
   CheckCircleIcon,
   CommandLineIcon,
-  DocumentTextIcon
+  DocumentTextIcon,
 } from '@heroicons/react/24/outline';
 
 export default function ContactPage() {
@@ -20,7 +20,7 @@ export default function ContactPage() {
     email: '',
     subject: '',
     message: '',
-    type: 'general'
+    type: 'general',
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -40,13 +40,13 @@ export default function ContactPage() {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value
+      [e.target.name]: e.target.value,
     });
   };
 
   const cardVariants = {
     hidden: { opacity: 0, y: 30 },
-    visible: { opacity: 1, y: 0 }
+    visible: { opacity: 1, y: 0 },
   };
 
   if (submitted) {
@@ -121,7 +121,7 @@ export default function ContactPage() {
                       email: '',
                       subject: '',
                       message: '',
-                      type: 'general'
+                      type: 'general',
                     });
                   }}
                   className="inline-flex items-center px-6 py-3 bg-dark-bg-secondary border border-neon-purple text-neon-purple rounded-xl font-medium hover:bg-neon-purple/10 transition-all duration-300 group"
@@ -192,28 +192,28 @@ export default function ContactPage() {
                   {[
                                          {
                        icon: EnvelopeIcon,
-                       title: "邮箱",
-                       description: "我们通常在24小时内回复",
-                       link: "contact@prompt-hub.cc",
-                       href: "mailto:contact@prompt-hub.cc",
-                       gradient: "from-neon-cyan to-neon-purple"
+                       title: '邮箱',
+                       description: '我们通常在24小时内回复',
+                       link: 'contact@prompt-hub.cc',
+                       href: 'mailto:contact@prompt-hub.cc',
+                       gradient: 'from-neon-cyan to-neon-purple',
                      },
                     {
                       icon: ChatBubbleLeftRightIcon,
-                      title: "GitHub讨论",
-                      description: "社区讨论和问答",
-                      link: "GitHub Discussions",
-                      href: "https://github.com/xiiizoux/PromptHub/discussions",
-                      gradient: "from-neon-purple to-neon-pink"
+                      title: 'GitHub讨论',
+                      description: '社区讨论和问答',
+                      link: 'GitHub Discussions',
+                      href: 'https://github.com/xiiizoux/PromptHub/discussions',
+                      gradient: 'from-neon-purple to-neon-pink',
                     },
                     {
                       icon: BugAntIcon,
-                      title: "Bug报告",
-                      description: "报告Bug或请求新功能",
-                      link: "GitHub Issues",
-                      href: "https://github.com/xiiizoux/PromptHub/issues",
-                      gradient: "from-neon-pink to-neon-cyan"
-                    }
+                      title: 'Bug报告',
+                      description: '报告Bug或请求新功能',
+                      link: 'GitHub Issues',
+                      href: 'https://github.com/xiiizoux/PromptHub/issues',
+                      gradient: 'from-neon-pink to-neon-cyan',
+                    },
                   ].map((contact, index) => (
                     <motion.div
                       key={contact.title}
@@ -262,9 +262,9 @@ export default function ContactPage() {
                   </div>
                   <div className="space-y-3">
                     {[
-                      { href: "/docs", text: "查看文档" },
-                      { href: "/docs/api-integration", text: "API参考" },
-                      { href: "/prompts", text: "快速开始" }
+                      { href: '/docs', text: '查看文档' },
+                      { href: '/docs/api-integration', text: 'API参考' },
+                      { href: '/prompts', text: '快速开始' },
                     ].map((link, index) => (
                       <motion.div
                         key={link.href}

@@ -8,7 +8,7 @@ import { withApiAuth } from '@/middleware/withApiAuth';
 export default withApiAuth(async function handler(
   req: NextApiRequest,
   res: NextApiResponse,
-  userId: string
+  userId: string,
 ) {
   // 只允许PUT方法
   if (req.method !== 'PUT') {
@@ -22,7 +22,7 @@ export default withApiAuth(async function handler(
     if (!username && !email && !newPassword) {
       return res.status(400).json({ 
         success: false, 
-        message: '至少需要提供一个要更新的字段' 
+        message: '至少需要提供一个要更新的字段', 
       });
     }
 
@@ -34,20 +34,20 @@ export default withApiAuth(async function handler(
       username,
       email,
       currentPassword,
-      newPassword
+      newPassword,
     });
 
     return res.status(200).json({ 
       success: true, 
       message: '用户资料更新成功',
-      user: result
+      user: result,
     });
     
   } catch (error: any) {
     console.error('更新用户资料失败:', error);
     return res.status(400).json({ 
       success: false, 
-      message: error.message || '更新用户资料失败' 
+      message: error.message || '更新用户资料失败', 
     });
   }
 });

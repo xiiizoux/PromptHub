@@ -34,7 +34,7 @@ export default apiHandler(async (req: NextApiRequest, res: NextApiResponse) => {
         page: query.page ? parseInt(query.page) : 1,
         pageSize: query.pageSize ? parseInt(query.pageSize) : 20,
         sortBy: query.sortBy || 'latest' as const,
-        isPublic: query.isPublic !== 'false' // 默认只显示公开的提示词
+        isPublic: query.isPublic !== 'false', // 默认只显示公开的提示词
       };
 
       console.log('获取提示词列表，过滤条件:', filters);
@@ -79,5 +79,5 @@ export default apiHandler(async (req: NextApiRequest, res: NextApiResponse) => {
   return errorResponse(res, `不支持的方法: ${req.method}`);
 }, {
   allowedMethods: ['GET', 'POST'],
-  requireAuth: false // GET请求不需要认证，POST请求在内部处理认证
+  requireAuth: false, // GET请求不需要认证，POST请求在内部处理认证
 });

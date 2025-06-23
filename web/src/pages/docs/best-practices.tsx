@@ -29,116 +29,116 @@ const BestPracticesPage: React.FC = () => {
 
 请确保你的回答基于实际经验，提供具体、可操作的建议。`;
 
-  const badPromptExample = `帮我写个东西`;
+  const badPromptExample = '帮我写个东西';
 
   const principles = [
     {
-      title: "明确具体",
-      description: "提供清晰、具体的指令和上下文",
+      title: '明确具体',
+      description: '提供清晰、具体的指令和上下文',
       icon: <LightBulbIcon className="h-6 w-6" />,
-      color: "cyan" as const,
+      color: 'cyan' as const,
       tips: [
-        { title: "明确角色", description: "定义 AI 应该扮演的具体角色" },
-        { title: "详细需求", description: "提供具体的任务要求和期望" },
-        { title: "上下文信息", description: "包含相关的背景信息和约束条件" }
-      ]
+        { title: '明确角色', description: '定义 AI 应该扮演的具体角色' },
+        { title: '详细需求', description: '提供具体的任务要求和期望' },
+        { title: '上下文信息', description: '包含相关的背景信息和约束条件' },
+      ],
     },
     {
-      title: "结构化设计",
-      description: "使用清晰的结构组织提示词内容",
+      title: '结构化设计',
+      description: '使用清晰的结构组织提示词内容',
       icon: <CogIcon className="h-6 w-6" />,
-      color: "purple" as const,
+      color: 'purple' as const,
       tips: [
-        { title: "分层组织", description: "使用标题和列表组织内容" },
-        { title: "步骤化", description: "将复杂任务分解为具体步骤" },
-        { title: "格式要求", description: "明确指定输出格式和样式" }
-      ]
+        { title: '分层组织', description: '使用标题和列表组织内容' },
+        { title: '步骤化', description: '将复杂任务分解为具体步骤' },
+        { title: '格式要求', description: '明确指定输出格式和样式' },
+      ],
     },
     {
-      title: "迭代优化",
-      description: "通过测试和反馈持续改进提示词",
+      title: '迭代优化',
+      description: '通过测试和反馈持续改进提示词',
       icon: <RocketLaunchIcon className="h-6 w-6" />,
-      color: "pink" as const,
+      color: 'pink' as const,
       tips: [
-        { title: "A/B 测试", description: "比较不同版本的效果" },
-        { title: "收集反馈", description: "记录使用效果和改进点" },
-        { title: "版本管理", description: "跟踪变更历史和效果对比" }
-      ]
-    }
+        { title: 'A/B 测试', description: '比较不同版本的效果' },
+        { title: '收集反馈', description: '记录使用效果和改进点' },
+        { title: '版本管理', description: '跟踪变更历史和效果对比' },
+      ],
+    },
   ];
 
   const antiPatterns = [
     {
-      title: "过于宽泛",
-      description: "避免模糊不清的指令",
-      example: "帮我写点什么",
-      solution: "明确指定写作类型、目标受众和具体要求"
+      title: '过于宽泛',
+      description: '避免模糊不清的指令',
+      example: '帮我写点什么',
+      solution: '明确指定写作类型、目标受众和具体要求',
     },
     {
-      title: "缺乏上下文",
-      description: "没有提供足够的背景信息",
-      example: "翻译这个",
-      solution: "提供原文语言、目标语言、专业领域和语境"
+      title: '缺乏上下文',
+      description: '没有提供足够的背景信息',
+      example: '翻译这个',
+      solution: '提供原文语言、目标语言、专业领域和语境',
     },
     {
-      title: "指令冲突",
-      description: "包含相互矛盾的要求",
-      example: "要详细但要简洁",
-      solution: "明确优先级或分别处理不同需求"
+      title: '指令冲突',
+      description: '包含相互矛盾的要求',
+      example: '要详细但要简洁',
+      solution: '明确优先级或分别处理不同需求',
     },
     {
-      title: "忽视约束",
-      description: "没有考虑实际限制条件",
-      example: "生成10000字的内容",
-      solution: "考虑模型输出限制，合理设置长度要求"
-    }
+      title: '忽视约束',
+      description: '没有考虑实际限制条件',
+      example: '生成10000字的内容',
+      solution: '考虑模型输出限制，合理设置长度要求',
+    },
   ];
 
   const categories = [
     {
-      title: "创意写作",
+      title: '创意写作',
       icon: <ChatBubbleLeftRightIcon className="h-6 w-6" />,
-      color: "cyan" as const,
+      color: 'cyan' as const,
       practices: [
-        "提供清晰的写作风格指导",
-        "定义目标受众和语调",
-        "包含具体的内容要求",
-        "设置合适的长度限制"
-      ]
+        '提供清晰的写作风格指导',
+        '定义目标受众和语调',
+        '包含具体的内容要求',
+        '设置合适的长度限制',
+      ],
     },
     {
-      title: "数据分析",
+      title: '数据分析',
       icon: <CogIcon className="h-6 w-6" />,
-      color: "purple" as const,
+      color: 'purple' as const,
       practices: [
-        "明确数据来源和格式",
-        "指定分析方法和指标",
-        "定义输出格式要求",
-        "包含解释和建议"
-      ]
+        '明确数据来源和格式',
+        '指定分析方法和指标',
+        '定义输出格式要求',
+        '包含解释和建议',
+      ],
     },
     {
-      title: "代码生成",
+      title: '代码生成',
       icon: <StarIcon className="h-6 w-6" />,
-      color: "pink" as const,
+      color: 'pink' as const,
       practices: [
-        "指定编程语言和版本",
-        "描述功能需求和约束",
-        "要求代码注释和文档",
-        "包含错误处理机制"
-      ]
+        '指定编程语言和版本',
+        '描述功能需求和约束',
+        '要求代码注释和文档',
+        '包含错误处理机制',
+      ],
     },
     {
-      title: "教育培训",
+      title: '教育培训',
       icon: <LightBulbIcon className="h-6 w-6" />,
-      color: "green" as const,
+      color: 'green' as const,
       practices: [
-        "明确学习对象和水平",
-        "设计渐进式学习路径",
-        "包含实例和练习",
-        "提供评估标准"
-      ]
-    }
+        '明确学习对象和水平',
+        '设计渐进式学习路径',
+        '包含实例和练习',
+        '提供评估标准',
+      ],
+    },
   ];
 
   return (
@@ -146,8 +146,8 @@ const BestPracticesPage: React.FC = () => {
       title="最佳实践指南"
       description="掌握高质量提示词设计的核心原则和实用技巧，提升 AI 交互效果和工作效率"
       breadcrumbs={[
-        { name: "文档", href: "/docs" },
-        { name: "最佳实践", href: "/docs/best-practices" }
+        { name: '文档', href: '/docs' },
+        { name: '最佳实践', href: '/docs/best-practices' },
       ]}
     >
       {/* 核心原则 */}
@@ -283,7 +283,7 @@ const BestPracticesPage: React.FC = () => {
                 <DocList 
                   items={category.practices.map(practice => ({ 
                     title: practice, 
-                    description: "" 
+                    description: '', 
                   }))}
                   className="mt-4"
                 />
@@ -309,10 +309,10 @@ const BestPracticesPage: React.FC = () => {
             >
               <DocList 
                 items={[
-                  { title: "准确性评分", description: "回答的正确程度" },
-                  { title: "相关性评分", description: "与需求的匹配度" },
-                  { title: "完整性评分", description: "信息的全面性" },
-                  { title: "可用性评分", description: "实际应用价值" }
+                  { title: '准确性评分', description: '回答的正确程度' },
+                  { title: '相关性评分', description: '与需求的匹配度' },
+                  { title: '完整性评分', description: '信息的全面性' },
+                  { title: '可用性评分', description: '实际应用价值' },
                 ]}
                 className="mt-4"
               />
@@ -326,10 +326,10 @@ const BestPracticesPage: React.FC = () => {
             >
               <DocList 
                 items={[
-                  { title: "响应时间", description: "AI 处理速度" },
-                  { title: "用户满意度", description: "使用体验评价" },
-                  { title: "错误率统计", description: "失败案例分析" },
-                  { title: "改进建议", description: "用户反馈收集" }
+                  { title: '响应时间', description: 'AI 处理速度' },
+                  { title: '用户满意度', description: '使用体验评价' },
+                  { title: '错误率统计', description: '失败案例分析' },
+                  { title: '改进建议', description: '用户反馈收集' },
                 ]}
                 className="mt-4"
               />
@@ -343,10 +343,10 @@ const BestPracticesPage: React.FC = () => {
             >
               <DocList 
                 items={[
-                  { title: "版本对比", description: "A/B 测试分析" },
-                  { title: "增量改进", description: "小步快跑优化" },
-                  { title: "回归测试", description: "确保改进有效" },
-                  { title: "文档更新", description: "记录最佳配置" }
+                  { title: '版本对比', description: 'A/B 测试分析' },
+                  { title: '增量改进', description: '小步快跑优化' },
+                  { title: '回归测试', description: '确保改进有效' },
+                  { title: '文档更新', description: '记录最佳配置' },
                 ]}
                 className="mt-4"
               />

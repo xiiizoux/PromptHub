@@ -10,7 +10,7 @@ import {
   PromptFilterParams,
   PromptApi, 
   UserApi, 
-  McpApi 
+  McpApi, 
 } from '@/types/api';
 import { Prompt, PromptVersion } from '../../../supabase/lib/types';
 
@@ -90,7 +90,7 @@ const addResponseInterceptor = (client: AxiosInstance) => {
       
       console.error('API请求错误:', error.response?.data || error.message);
       return Promise.reject(error);
-    }
+    },
   );
 };
 
@@ -155,10 +155,10 @@ export const promptsApi = {
   // 恢复到之前的版本
   restoreVersion: async (promptId: string, version: number): Promise<Prompt> => {
     const response = await apiClient.post<PromptApi.RestoreVersionResponse>(
-      `/prompts/restore/${promptId}/${version}`
+      `/prompts/restore/${promptId}/${version}`,
     );
     return response.data.data!;
-  }
+  },
 };
 
 /**
@@ -169,7 +169,7 @@ export const authApi = {
   signIn: async (email: string, password: string): Promise<UserApi.SignInResponse['data']> => {
     const response = await apiClient.post<UserApi.SignInResponse>(
       '/auth/signin', 
-      { email, password }
+      { email, password },
     );
     
     if (response.data.success && response.data.data) {
@@ -185,7 +185,7 @@ export const authApi = {
   signUp: async (email: string, password: string, displayName?: string): Promise<UserApi.SignUpResponse['data']> => {
     const response = await apiClient.post<UserApi.SignUpResponse>(
       '/auth/signup', 
-      { email, password, displayName }
+      { email, password, displayName },
     );
     
     if (response.data.success && response.data.data) {
@@ -224,7 +224,7 @@ export const authApi = {
   createApiKey: async (name: string, expiresInDays?: number) => {
     const response = await apiClient.post<UserApi.CreateApiKeyResponse>(
       '/keys', 
-      { name, expiresInDays }
+      { name, expiresInDays },
     );
     return response.data.data?.key;
   },
@@ -233,7 +233,7 @@ export const authApi = {
   deleteApiKey: async (keyId: string) => {
     const response = await apiClient.delete<UserApi.DeleteApiKeyResponse>(`/keys/${keyId}`);
     return response.data.data?.deleted || false;
-  }
+  },
 };
 
 /**
@@ -250,11 +250,11 @@ export const mcpApi = {
   getTools: async (): Promise<any[]> => {
     const response = await apiClient.get<ApiResponse<any[]>>('/mcp/tools');
     return response.data.data || [];
-  }
+  },
 };
 
 export default {
   prompts: promptsApi,
   auth: authApi,
-  mcp: mcpApi
+  mcp: mcpApi,
 };

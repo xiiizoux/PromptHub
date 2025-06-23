@@ -56,9 +56,9 @@ class WebSocketServer {
     this.io = new SocketIOServer(httpServer, {
       cors: {
         origin: process.env.CORS_ORIGIN || '*',
-        methods: ['GET', 'POST']
+        methods: ['GET', 'POST'],
       },
-      path: '/api/ws'
+      path: '/api/ws',
     });
     
     // 设置连接处理器

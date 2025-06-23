@@ -26,7 +26,7 @@ export default function AnalyticsPage() {
         const response = await getPrompts({ 
           sortBy: 'latest', 
           page: currentPage,
-          pageSize: pageSize 
+          pageSize: pageSize, 
         });
         const promptList = response.data || [];
         setPrompts(promptList);
@@ -37,7 +37,7 @@ export default function AnalyticsPage() {
         const performancePromises = promptsWithId.map(prompt => 
           getPromptPerformance(prompt.id!)
             .then(data => ({ id: prompt.id!, data }))
-            .catch(() => ({ id: prompt.id!, data: null }))
+            .catch(() => ({ id: prompt.id!, data: null })),
         );
         
         const performanceResults = await Promise.all(performancePromises);
@@ -458,10 +458,10 @@ export default function AnalyticsPage() {
                   </h2>
                   <div className="space-y-4">
                     {[
-                      "定期分析性能数据，关注成功率低于80%的提示词，考虑优化其指令或增加示例",
-                      "检查平均响应时间较长的提示词，尝试简化其复杂度或分解为多个步骤",
-                      "收集并分析用户反馈，了解评分的原因，有针对性地改进提示词",
-                      "对于常用提示词，考虑创建更多版本来针对不同的使用场景"
+                      '定期分析性能数据，关注成功率低于80%的提示词，考虑优化其指令或增加示例',
+                      '检查平均响应时间较长的提示词，尝试简化其复杂度或分解为多个步骤',
+                      '收集并分析用户反馈，了解评分的原因，有针对性地改进提示词',
+                      '对于常用提示词，考虑创建更多版本来针对不同的使用场景',
                     ].map((suggestion, index) => (
                       <motion.div
                         key={index}

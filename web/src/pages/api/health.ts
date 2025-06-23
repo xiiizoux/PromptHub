@@ -20,15 +20,15 @@ export default apiHandler(async (req: NextApiRequest, res: NextApiResponse) => {
       memory: {
         used: Math.round(process.memoryUsage().heapUsed / 1024 / 1024),
         total: Math.round(process.memoryUsage().heapTotal / 1024 / 1024),
-        external: Math.round(process.memoryUsage().external / 1024 / 1024)
-      }
+        external: Math.round(process.memoryUsage().external / 1024 / 1024),
+      },
     };
 
     // 可以在这里添加更多的健康检查，比如数据库连接等
     // 但要注意不要暴露敏感信息
 
     logger.info('健康检查请求', {
-      ip: req.headers['x-forwarded-for'] || req.socket.remoteAddress
+      ip: req.headers['x-forwarded-for'] || req.socket.remoteAddress,
     });
 
     return successResponse(res, healthStatus);
@@ -38,5 +38,5 @@ export default apiHandler(async (req: NextApiRequest, res: NextApiResponse) => {
   }
 }, {
   allowedMethods: ['GET'],
-  requireAuth: false
+  requireAuth: false,
 });

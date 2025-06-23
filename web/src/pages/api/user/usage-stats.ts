@@ -3,7 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
+  process.env.SUPABASE_SERVICE_ROLE_KEY!,
 );
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -80,7 +80,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       .map(([promptId, data]) => ({
         prompt_id: promptId,
         prompt_name: data.name,
-        usage_count: data.count
+        usage_count: data.count,
       }))
       .sort((a, b) => b.usage_count - a.usage_count)
       .slice(0, 5);
@@ -100,7 +100,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const modelStats = Array.from(modelUsageMap.entries())
       .map(([model, count]) => ({
         model,
-        usage_count: count
+        usage_count: count,
       }))
       .sort((a, b) => b.usage_count - a.usage_count);
 
@@ -110,13 +110,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       thisWeekUsage: thisWeekUsage || 0,
       thisMonthUsage: thisMonthUsage || 0,
       favoritePrompts,
-      modelStats
+      modelStats,
     });
   } catch (error: any) {
     console.error('获取使用统计失败:', error);
     res.status(500).json({ 
       success: false, 
-      error: error.message || '服务器内部错误' 
+      error: error.message || '服务器内部错误', 
     });
   }
 } 

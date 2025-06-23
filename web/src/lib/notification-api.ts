@@ -22,10 +22,10 @@ export const notificationApi = {
     page: number = 1,
     pageSize: number = 20,
     unreadOnly: boolean = false,
-    grouped: boolean = false
+    grouped: boolean = false,
   ): Promise<PaginatedResponse<Notification> | PaginatedResponse<Notification[]>> => {
     const response = await axios.get<NotificationApi.GetNotificationsResponse>('/api/social/notifications', {
-      params: { page, pageSize, unreadOnly, grouped }
+      params: { page, pageSize, unreadOnly, grouped },
     });
     return response.data.data!;
   },
@@ -45,7 +45,7 @@ export const notificationApi = {
   markAsRead: async (notificationId?: string): Promise<{ success: boolean }> => {
     const request: NotificationApi.MarkAsReadRequest = {
       notificationId,
-      allNotifications: !notificationId
+      allNotifications: !notificationId,
     };
     const response = await axios.post<NotificationApi.MarkAsReadResponse>('/api/social/notifications', request);
     return { success: response.data.success };
@@ -75,8 +75,8 @@ export const notificationApi = {
   updatePreferences: async (preferences: Partial<NotificationPreference>): Promise<NotificationPreference> => {
     const response = await axios.put<NotificationApi.UpdatePreferencesResponse>(
       '/api/social/notifications/preferences',
-      preferences
+      preferences,
     );
     return response.data.data!;
-  }
+  },
 };

@@ -17,8 +17,8 @@ export const apiClient = axios.create({
   baseURL: API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
-    'x-api-key': API_KEY
-  }
+    'x-api-key': API_KEY,
+  },
 });
 
 // 身份验证中间件
@@ -31,7 +31,7 @@ export const withAuth = (handler: NextApiHandler): NextApiHandler => {
       if (!authHeader || !authHeader.startsWith('Bearer ')) {
         return res.status(401).json({ 
           success: false, 
-          message: '未授权访问，请提供有效的认证令牌' 
+          message: '未授权访问，请提供有效的认证令牌', 
         });
       }
       
@@ -42,7 +42,7 @@ export const withAuth = (handler: NextApiHandler): NextApiHandler => {
       if (!token) {
         return res.status(401).json({ 
           success: false, 
-          message: '认证令牌无效' 
+          message: '认证令牌无效', 
         });
       }
       
@@ -52,7 +52,7 @@ export const withAuth = (handler: NextApiHandler): NextApiHandler => {
         id: '1',
         username: 'demo_user',
         email: 'demo@example.com',
-        role: 'user'
+        role: 'user',
       };
       
       // 继续处理请求
@@ -61,7 +61,7 @@ export const withAuth = (handler: NextApiHandler): NextApiHandler => {
       console.error('身份验证错误:', error);
       return res.status(500).json({ 
         success: false, 
-        message: '身份验证过程中发生错误' 
+        message: '身份验证过程中发生错误', 
       });
     }
   };
@@ -77,20 +77,20 @@ export const proxyApiRequest = async (
     method?: 'GET' | 'POST' | 'PUT' | 'DELETE';
     transformRequest?: (data: any) => any;
     transformResponse?: (data: any) => any;
-  } = {}
+  } = {},
 ) => {
   const {
     requireAuth = false,
     method = req.method as 'GET' | 'POST' | 'PUT' | 'DELETE',
     transformRequest = (data) => data,
-    transformResponse = (data) => data
+    transformResponse = (data) => data,
   } = options;
 
   try {
     // 设置请求头
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
-      'x-api-key': API_KEY
+      'x-api-key': API_KEY,
     };
 
     // 如果需要身份验证，添加认证令牌到请求头
@@ -115,7 +115,7 @@ export const proxyApiRequest = async (
       method,
       url,
       data: requestData,
-      headers
+      headers,
     });
 
     // 转换响应数据
@@ -131,7 +131,7 @@ export const proxyApiRequest = async (
       return res.status(error.response.status).json({
         success: false,
         message: error.response.data.message || '请求处理失败',
-        error: error.response.data
+        error: error.response.data,
       });
     }
     
@@ -139,7 +139,7 @@ export const proxyApiRequest = async (
     return res.status(500).json({
       success: false,
       message: '与API服务器通信时发生错误',
-      error: error.message
+      error: error.message,
     });
   }
 };

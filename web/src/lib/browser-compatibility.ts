@@ -58,11 +58,11 @@ export class BrowserCompatibilityManager {
         firefox: 55,
         safari: 12,
         edge: 79,
-        ie: 11
+        ie: 11,
       },
       polyfills: [
         'core-js/stable',
-        'regenerator-runtime/runtime'
+        'regenerator-runtime/runtime',
       ],
       fallbacks: {
         fetch: 'XMLHttpRequest',
@@ -70,9 +70,9 @@ export class BrowserCompatibilityManager {
         es6: 'es5',
         webSockets: 'polling',
         flexbox: 'float',
-        grid: 'flexbox'
+        grid: 'flexbox',
       },
-      ...config
+      ...config,
     };
   }
 
@@ -92,12 +92,12 @@ export class BrowserCompatibilityManager {
     const tempBrowser: BrowserInfo = {
       ...browserInfo,
       features,
-      supported: false // 临时值，稍后会被正确设置
+      supported: false, // 临时值，稍后会被正确设置
     };
     
     this.currentBrowser = {
       ...tempBrowser,
-      supported: this.isBrowserSupported(tempBrowser)
+      supported: this.isBrowserSupported(tempBrowser),
     };
 
     return this.currentBrowser;
@@ -176,7 +176,7 @@ export class BrowserCompatibilityManager {
       supported: browser.supported,
       missingFeatures,
       recommendedPolyfills: this.getRequiredPolyfills(),
-      warnings
+      warnings,
     };
   }
 
@@ -215,9 +215,9 @@ export class BrowserCompatibilityManager {
         headers: [
           'Content-Type',
           'Authorization',
-          'X-Requested-With'
+          'X-Requested-With',
         ],
-        methods: ['GET', 'POST', 'PUT', 'DELETE']
+        methods: ['GET', 'POST', 'PUT', 'DELETE'],
       };
     }
 
@@ -231,9 +231,9 @@ export class BrowserCompatibilityManager {
         'X-Session-ID',
         'Accept',
         'Origin',
-        'User-Agent'
+        'User-Agent',
       ],
-      methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH']
+      methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
     };
   }
 
@@ -245,7 +245,7 @@ export class BrowserCompatibilityManager {
     const headers: Record<string, string> = {
       'X-Content-Type-Options': 'nosniff',
       'X-Frame-Options': 'DENY',
-      'Referrer-Policy': 'strict-origin-when-cross-origin'
+      'Referrer-Policy': 'strict-origin-when-cross-origin',
     };
 
     // 根据浏览器版本调整CSP
@@ -260,13 +260,13 @@ export class BrowserCompatibilityManager {
         "media-src 'self'",
         "object-src 'none'",
         "base-uri 'self'",
-        "form-action 'self'"
+        "form-action 'self'",
       ];
 
       // 现代浏览器支持更多指令
       if (this.supportsModernCsp(browser)) {
         cspDirectives.push("frame-ancestors 'none'");
-        cspDirectives.push("upgrade-insecure-requests");
+        cspDirectives.push('upgrade-insecure-requests');
       }
 
       headers['Content-Security-Policy'] = cspDirectives.join('; ');
@@ -294,7 +294,7 @@ export class BrowserCompatibilityManager {
       { name: 'Firefox', pattern: /Firefox\/(\d+)/ },
       { name: 'Safari', pattern: /Version\/(\d+).*Safari/ },
       { name: 'Edge', pattern: /Edg\/(\d+)/ },
-      { name: 'IE', pattern: /MSIE (\d+)|Trident.*rv:(\d+)/ }
+      { name: 'IE', pattern: /MSIE (\d+)|Trident.*rv:(\d+)/ },
     ];
 
     for (const browser of browsers) {
@@ -305,7 +305,7 @@ export class BrowserCompatibilityManager {
           version: match[1] || match[2] || '0',
           engine: this.getEngine(browser.name),
           platform: this.getPlatform(userAgent),
-          mobile: /Mobile|Android|iPhone|iPad/.test(userAgent)
+          mobile: /Mobile|Android|iPhone|iPad/.test(userAgent),
         };
       }
     }
@@ -315,7 +315,7 @@ export class BrowserCompatibilityManager {
       version: '0',
       engine: 'Unknown',
       platform: 'Unknown',
-      mobile: false
+      mobile: false,
     };
   }
 
@@ -338,7 +338,7 @@ export class BrowserCompatibilityManager {
       flexbox: this.supportsFlexbox(),
       grid: this.supportsGrid(),
       customElements: typeof customElements !== 'undefined',
-      shadowDOM: typeof ShadowRoot !== 'undefined'
+      shadowDOM: typeof ShadowRoot !== 'undefined',
     };
   }
 
@@ -423,7 +423,7 @@ export class BrowserCompatibilityManager {
       'Firefox': 'Gecko',
       'Safari': 'WebKit',
       'Edge': 'Blink',
-      'IE': 'Trident'
+      'IE': 'Trident',
     };
     return engines[browserName] || 'Unknown';
   }
@@ -445,7 +445,7 @@ export class BrowserCompatibilityManager {
       platform: 'Server',
       mobile: false,
       supported: true,
-      features: this.getDefaultFeatures()
+      features: this.getDefaultFeatures(),
     };
   }
 
@@ -464,7 +464,7 @@ export class BrowserCompatibilityManager {
       flexbox: true,
       grid: true,
       customElements: false,
-      shadowDOM: false
+      shadowDOM: false,
     };
   }
 

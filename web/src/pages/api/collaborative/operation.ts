@@ -3,7 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
+  process.env.SUPABASE_SERVICE_ROLE_KEY!,
 );
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -17,7 +17,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (!promptId || !operation) {
       return res.status(400).json({ 
         success: false, 
-        error: '提示词ID和操作数据不能为空' 
+        error: '提示词ID和操作数据不能为空', 
       });
     }
 
@@ -25,7 +25,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (!operation.id || !operation.type || !operation.userId) {
       return res.status(400).json({ 
         success: false, 
-        error: '操作数据格式不正确' 
+        error: '操作数据格式不正确', 
       });
     }
 
@@ -40,7 +40,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (sessionError) {
       return res.status(404).json({ 
         success: false, 
-        error: '未找到活跃的协作会话' 
+        error: '未找到活跃的协作会话', 
       });
     }
 
@@ -56,7 +56,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (participantError) {
       return res.status(403).json({ 
         success: false, 
-        error: '用户不是会话参与者' 
+        error: '用户不是会话参与者', 
       });
     }
 
@@ -71,7 +71,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         position: operation.position,
         content: operation.content,
         timestamp: operation.timestamp,
-        cursor_position: operation.cursor ? JSON.stringify(operation.cursor) : null
+        cursor_position: operation.cursor ? JSON.stringify(operation.cursor) : null,
       });
 
     if (operationError) throw operationError;
@@ -81,7 +81,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       .from('collaborative_participants')
       .update({ 
         last_seen: new Date().toISOString(),
-        cursor_position: operation.cursor ? JSON.stringify(operation.cursor) : null
+        cursor_position: operation.cursor ? JSON.stringify(operation.cursor) : null,
       })
       .eq('session_id', session.id)
       .eq('user_id', operation.userId);
@@ -107,13 +107,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       success: true,
       operationId: operation.id,
       transformed: transformedOperation,
-      conflicts: conflicts.length > 0 ? conflicts : undefined
+      conflicts: conflicts.length > 0 ? conflicts : undefined,
     });
   } catch (error: any) {
     console.error('处理协作操作失败:', error);
     res.status(500).json({ 
       success: false, 
-      error: error.message || '处理协作操作失败' 
+      error: error.message || '处理协作操作失败', 
     });
   }
 }
@@ -144,7 +144,7 @@ async function detectConflicts(sessionId: string, operation: any) {
           conflictingOperationId: recentOp.id,
           type: 'position_overlap',
           description: '操作位置重叠',
-          timestamp: new Date()
+          timestamp: new Date(),
         });
       }
     }
@@ -156,7 +156,7 @@ async function detectConflicts(sessionId: string, operation: any) {
         .insert(conflicts.map(conflict => ({
           ...conflict,
           session_id: sessionId,
-          status: 'pending'
+          status: 'pending',
         })));
     }
 
@@ -192,7 +192,7 @@ async function applyOperationalTransform(sessionId: string, operation: any) {
 
     if (error) throw error;
 
-    let transformedOp = { ...operation };
+    const transformedOp = { ...operation };
 
     // 简化的操作变换
     for (const precedingOp of precedingOps || []) {
@@ -216,7 +216,7 @@ async function updatePromptContent(promptId: string, content: string) {
       .from('prompts')
       .update({ 
         content,
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
       })
       .eq('id', promptId);
   } catch (error) {

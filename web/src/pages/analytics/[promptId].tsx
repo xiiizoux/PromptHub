@@ -16,7 +16,7 @@ import {
   CubeTransparentIcon,
   ChartPieIcon,
   BoltIcon,
-  PresentationChartLineIcon
+  PresentationChartLineIcon,
 } from '@heroicons/react/24/outline';
 import { getPromptPerformance, getPerformanceReport } from '@/lib/api';
 import { databaseService } from '@/lib/database-service';
@@ -45,7 +45,7 @@ export default function PromptAnalyticsPage({ prompt, performance: initialPerfor
           setLoading(true);
           const [performanceData, reportData] = await Promise.all([
             getPromptPerformance(prompt.id),
-            getPerformanceReport(prompt.id)
+            getPerformanceReport(prompt.id),
           ]);
           setPerformance(performanceData);
           setReport(reportData);
@@ -81,7 +81,7 @@ export default function PromptAnalyticsPage({ prompt, performance: initialPerfor
     return date.toLocaleDateString('zh-CN', { 
       year: 'numeric', 
       month: 'short', 
-      day: 'numeric' 
+      day: 'numeric', 
     });
   };
 
@@ -217,7 +217,7 @@ export default function PromptAnalyticsPage({ prompt, performance: initialPerfor
                     { key: 'day', label: '今日', icon: '📅' },
                     { key: 'week', label: '本周', icon: '📊' },
                     { key: 'month', label: '本月', icon: '📈' },
-                    { key: 'all', label: '全部', icon: '🌟' }
+                    { key: 'all', label: '全部', icon: '🌟' },
                   ].map((item, index) => (
                     <motion.button
                       key={item.key}
@@ -696,29 +696,29 @@ export default function PromptAnalyticsPage({ prompt, performance: initialPerfor
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {[
                     { 
-                      title: "性能优化", 
-                      content: "监控响应时间，优化提示词长度和复杂度",
+                      title: '性能优化', 
+                      content: '监控响应时间，优化提示词长度和复杂度',
                       icon: BoltIcon,
-                      color: "neon-yellow"
+                      color: 'neon-yellow',
                     },
                     { 
-                      title: "用户体验", 
-                      content: "收集用户反馈，持续改进提示词质量",
+                      title: '用户体验', 
+                      content: '收集用户反馈，持续改进提示词质量',
                       icon: StarIcon,
-                      color: "neon-pink"
+                      color: 'neon-pink',
                     },
                     { 
-                      title: "成功率提升", 
-                      content: "分析失败案例，调整指令结构和示例",
+                      title: '成功率提升', 
+                      content: '分析失败案例，调整指令结构和示例',
                       icon: CheckCircleIcon,
-                      color: "neon-green"
+                      color: 'neon-green',
                     },
                     { 
-                      title: "版本管理", 
-                      content: "定期发布新版本，A/B测试不同方案",
+                      title: '版本管理', 
+                      content: '定期发布新版本，A/B测试不同方案',
                       icon: SparklesIcon,
-                      color: "neon-cyan"
-                    }
+                      color: 'neon-cyan',
+                    },
                   ].map((item, index) => (
                     <motion.div
                       key={index}
@@ -774,7 +774,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       props: {
         prompt: promptDetails,
         performance: null, // 将在客户端加载
-        report: null // 将在客户端加载
+        report: null, // 将在客户端加载
       },
     };
   } catch (error) {

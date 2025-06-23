@@ -51,7 +51,7 @@ export default apiHandler(async (req: NextApiRequest, res: NextApiResponse, user
       return res.status(200).json({
         success: true,
         data: newApiKey,
-        message: '创建API密钥成功'
+        message: '创建API密钥成功',
       });
     } catch (error: any) {
       console.error('创建API密钥失败:', error);
@@ -79,5 +79,5 @@ export default apiHandler(async (req: NextApiRequest, res: NextApiResponse, user
   return errorResponse(res, `不支持的方法: ${req.method}`, ErrorCode.BAD_REQUEST);
 }, {
   allowedMethods: ['GET', 'POST', 'DELETE'],
-  requireAuth: true
+  requireAuth: true,
 });

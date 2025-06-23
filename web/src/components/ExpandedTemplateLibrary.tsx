@@ -16,7 +16,7 @@ import {
   AcademicCapIcon,
   LightBulbIcon,
   ChartBarIcon,
-  GlobeAltIcon
+  GlobeAltIcon,
 } from '@heroicons/react/24/outline';
 import { useUserLevel } from '@/hooks/useUserLevel';
 
@@ -90,7 +90,7 @@ const ExpandedTemplateLibrary: React.FC = () => {
         premium: false,
         estimatedTime: '5分钟',
         language: 'zh-CN',
-        isNew: false
+        isNew: false,
       },
       {
         id: 'writing-002',
@@ -110,7 +110,7 @@ const ExpandedTemplateLibrary: React.FC = () => {
         premium: false,
         estimatedTime: '3分钟',
         language: 'zh-CN',
-        isNew: true
+        isNew: true,
       },
       // 创意设计类
       {
@@ -131,7 +131,7 @@ const ExpandedTemplateLibrary: React.FC = () => {
         premium: true,
         estimatedTime: '15分钟',
         language: 'zh-CN',
-        isNew: false
+        isNew: false,
       },
       // 商务应用类
       {
@@ -152,7 +152,7 @@ const ExpandedTemplateLibrary: React.FC = () => {
         premium: false,
         estimatedTime: '8分钟',
         language: 'zh-CN',
-        isNew: true
+        isNew: true,
       },
       // 教育培训类
       {
@@ -173,8 +173,8 @@ const ExpandedTemplateLibrary: React.FC = () => {
         premium: true,
         estimatedTime: '20分钟',
         language: 'zh-CN',
-        isNew: false
-      }
+        isNew: false,
+      },
     ];
 
     return templateData;
@@ -194,9 +194,9 @@ const ExpandedTemplateLibrary: React.FC = () => {
           { id: 'article', name: '文章写作', count: 25 },
           { id: 'email', name: '邮件撰写', count: 18 },
           { id: 'report', name: '报告撰写', count: 22 },
-          { id: 'creative', name: '创意写作', count: 20 }
+          { id: 'creative', name: '创意写作', count: 20 },
         ],
-        featured: templates.filter(t => t.category === 'writing').slice(0, 3)
+        featured: templates.filter(t => t.category === 'writing').slice(0, 3),
       },
       {
         id: 'creative',
@@ -209,9 +209,9 @@ const ExpandedTemplateLibrary: React.FC = () => {
           { id: 'branding', name: '品牌设计', count: 15 },
           { id: 'content', name: '内容创作', count: 20 },
           { id: 'idea', name: '创意构思', count: 12 },
-          { id: 'story', name: '故事创作', count: 15 }
+          { id: 'story', name: '故事创作', count: 15 },
         ],
-        featured: templates.filter(t => t.category === 'creative').slice(0, 3)
+        featured: templates.filter(t => t.category === 'creative').slice(0, 3),
       },
       {
         id: 'business',
@@ -224,9 +224,9 @@ const ExpandedTemplateLibrary: React.FC = () => {
           { id: 'meeting', name: '会议管理', count: 18 },
           { id: 'analysis', name: '数据分析', count: 22 },
           { id: 'planning', name: '项目规划', count: 25 },
-          { id: 'communication', name: '商务沟通', count: 29 }
+          { id: 'communication', name: '商务沟通', count: 29 },
         ],
-        featured: templates.filter(t => t.category === 'business').slice(0, 3)
+        featured: templates.filter(t => t.category === 'business').slice(0, 3),
       },
       {
         id: 'education',
@@ -239,9 +239,9 @@ const ExpandedTemplateLibrary: React.FC = () => {
           { id: 'curriculum', name: '课程设计', count: 20 },
           { id: 'assessment', name: '评估测试', count: 18 },
           { id: 'explanation', name: '知识讲解', count: 15 },
-          { id: 'exercise', name: '练习题目', count: 20 }
+          { id: 'exercise', name: '练习题目', count: 20 },
         ],
-        featured: templates.filter(t => t.category === 'education').slice(0, 3)
+        featured: templates.filter(t => t.category === 'education').slice(0, 3),
       },
       {
         id: 'analysis',
@@ -254,9 +254,9 @@ const ExpandedTemplateLibrary: React.FC = () => {
           { id: 'data', name: '数据分析', count: 16 },
           { id: 'research', name: '研究报告', count: 14 },
           { id: 'market', name: '市场分析', count: 15 },
-          { id: 'trend', name: '趋势预测', count: 13 }
+          { id: 'trend', name: '趋势预测', count: 13 },
         ],
-        featured: templates.filter(t => t.category === 'analysis').slice(0, 3)
+        featured: templates.filter(t => t.category === 'analysis').slice(0, 3),
       },
       {
         id: 'communication',
@@ -269,9 +269,9 @@ const ExpandedTemplateLibrary: React.FC = () => {
           { id: 'presentation', name: '演讲稿', count: 18 },
           { id: 'negotiation', name: '谈判沟通', count: 12 },
           { id: 'customer', name: '客户服务', count: 20 },
-          { id: 'social', name: '社交媒体', count: 17 }
+          { id: 'social', name: '社交媒体', count: 17 },
         ],
-        featured: templates.filter(t => t.category === 'communication').slice(0, 3)
+        featured: templates.filter(t => t.category === 'communication').slice(0, 3),
       },
       {
         id: 'technical',
@@ -284,9 +284,9 @@ const ExpandedTemplateLibrary: React.FC = () => {
           { id: 'documentation', name: '技术文档', count: 12 },
           { id: 'code', name: '代码注释', count: 10 },
           { id: 'api', name: 'API设计', count: 9 },
-          { id: 'testing', name: '测试用例', count: 10 }
+          { id: 'testing', name: '测试用例', count: 10 },
         ],
-        featured: templates.filter(t => t.category === 'technical').slice(0, 3)
+        featured: templates.filter(t => t.category === 'technical').slice(0, 3),
       },
       {
         id: 'personal',
@@ -299,10 +299,10 @@ const ExpandedTemplateLibrary: React.FC = () => {
           { id: 'planning', name: '规划总结', count: 12 },
           { id: 'learning', name: '学习笔记', count: 10 },
           { id: 'health', name: '健康管理', count: 8 },
-          { id: 'travel', name: '旅行规划', count: 9 }
+          { id: 'travel', name: '旅行规划', count: 9 },
         ],
-        featured: templates.filter(t => t.category === 'personal').slice(0, 3)
-      }
+        featured: templates.filter(t => t.category === 'personal').slice(0, 3),
+      },
     ];
   };
 
@@ -322,7 +322,7 @@ const ExpandedTemplateLibrary: React.FC = () => {
       filtered = filtered.filter(template =>
         template.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         template.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        template.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()))
+        template.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase())),
       );
     }
 
@@ -345,7 +345,7 @@ const ExpandedTemplateLibrary: React.FC = () => {
     if (userLevel === 'beginner') {
       filtered = filtered.filter(template => 
         template.difficulty === 'beginner' || 
-        (template.difficulty === 'intermediate' && template.rating >= 4.5)
+        (template.difficulty === 'intermediate' && template.rating >= 4.5),
       );
     }
 

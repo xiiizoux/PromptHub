@@ -153,7 +153,7 @@ export const useUserLevel = (): UserLevelHookReturn => {
         averageQuality: Math.floor(Math.random() * 40) + 60,
         advancedFeaturesUsed: Math.floor(Math.random() * 10),
         timeOnPlatform: Math.floor(Math.random() * 120) + 1,
-        collaborations: Math.floor(Math.random() * 8)
+        collaborations: Math.floor(Math.random() * 8),
       };
 
       // 尝试从localStorage获取用户数据
@@ -173,7 +173,7 @@ export const useUserLevel = (): UserLevelHookReturn => {
         nextLevelProgress: calculateNextLevelProgress(score, finalLevel),
         factors,
         achievements: generateAchievements(factors, finalLevel),
-        recommendations: generateRecommendations(factors, finalLevel)
+        recommendations: generateRecommendations(factors, finalLevel),
       };
 
       setUserLevel(finalLevel);
@@ -195,10 +195,10 @@ export const useUserLevel = (): UserLevelHookReturn => {
           averageQuality: 0,
           advancedFeaturesUsed: 0,
           timeOnPlatform: 0,
-          collaborations: 0
+          collaborations: 0,
         },
         achievements: [],
-        recommendations: ['开始创建您的第一个提示词']
+        recommendations: ['开始创建您的第一个提示词'],
       });
     } finally {
       setIsLoading(false);
@@ -215,7 +215,7 @@ export const useUserLevel = (): UserLevelHookReturn => {
         ...levelData,
         level,
         nextLevelProgress: calculateNextLevelProgress(levelData.score, level),
-        recommendations: generateRecommendations(levelData.factors, level)
+        recommendations: generateRecommendations(levelData.factors, level),
       };
       setLevelData(updatedData);
     }
@@ -248,6 +248,6 @@ export const useUserLevel = (): UserLevelHookReturn => {
     levelData,
     isLoading,
     updateUserLevel,
-    setManualLevel: handleSetManualLevel
+    setManualLevel: handleSetManualLevel,
   };
 }; 

@@ -36,7 +36,7 @@ const getSupabaseClient = () => {
       },
       global: {
         headers: {
-          'x-application-name': 'PromptHub'
+          'x-application-name': 'PromptHub',
         },
       },
       // 添加请求超时
@@ -48,7 +48,7 @@ const getSupabaseClient = () => {
           eventsPerSecond: 10,
         },
       },
-    }
+    },
   );
   
   // 添加全局错误监听器
@@ -89,7 +89,7 @@ export const clearAuthState = () => {
     const keysToRemove = [
       'prompthub-auth-token',
       'auth_token',
-      'user'
+      'user',
     ];
     
     keysToRemove.forEach(key => {

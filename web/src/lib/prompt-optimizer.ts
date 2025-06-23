@@ -64,7 +64,7 @@ const OPTIMIZATION_TEMPLATES = {
       
       {prompt}
       
-      {requirements}`
+      {requirements}`,
         },
       
         creative: {
@@ -83,7 +83,7 @@ const OPTIMIZATION_TEMPLATES = {
       
       {prompt}
       
-      特殊要求：{requirements}`
+      特殊要求：{requirements}`,
         },
       
         technical: {
@@ -102,7 +102,7 @@ const OPTIMIZATION_TEMPLATES = {
       
       {prompt}
       
-      技术要求：{requirements}`
+      技术要求：{requirements}`,
         },
       
         iteration: {
@@ -128,7 +128,7 @@ const OPTIMIZATION_TEMPLATES = {
       
       迭代类型：{type}
       
-      请根据以上信息对提示词进行迭代优化。`
+      请根据以上信息对提示词进行迭代优化。`,
         },
       
         analysis: {
@@ -162,7 +162,7 @@ const OPTIMIZATION_TEMPLATES = {
           
           user: `请分析以下提示词的质量：
       
-      {prompt}`
+      {prompt}`,
         },
       
         business: {
@@ -181,7 +181,7 @@ const OPTIMIZATION_TEMPLATES = {
       
       {prompt}
       
-      商业要求：{requirements}`
+      商业要求：{requirements}`,
         },
       
         educational: {
@@ -200,7 +200,7 @@ const OPTIMIZATION_TEMPLATES = {
       
       {prompt}
       
-      教学要求：{requirements}`
+      教学要求：{requirements}`,
         },
 
         drawing: {
@@ -248,8 +248,8 @@ const OPTIMIZATION_TEMPLATES = {
         
               特殊要求：{requirements}
         
-              请提供一个通用的高质量优化版本，适合各种AI绘图模型使用。`
-                }
+              请提供一个通用的高质量优化版本，适合各种AI绘图模型使用。`,
+                },
 
       };
 ;
@@ -325,7 +325,7 @@ export class PromptOptimizer {
         
         const response = await this.callLLM(
           template.system,
-          template.user.replace('{prompt}', request.prompt).replace('{requirements}', requirements)
+          template.user.replace('{prompt}', request.prompt).replace('{requirements}', requirements),
         );
   
         // 解析响应
@@ -338,7 +338,7 @@ export class PromptOptimizer {
           optimizedPrompt,
           improvements,
           score,
-          suggestions
+          suggestions,
         };
       } catch (error) {
         console.error('提示词优化失败:', error);
@@ -378,7 +378,7 @@ export class PromptOptimizer {
       
       const response = await this.callLLM(
         template.system,
-        template.user.replace('{prompt}', prompt)
+        template.user.replace('{prompt}', prompt),
       );
 
       // 尝试解析JSON格式的分析结果
@@ -390,7 +390,7 @@ export class PromptOptimizer {
             clarity: analysis.clarity || calculateScore(prompt).clarity,
             specificity: analysis.specificity || calculateScore(prompt).specificity,
             completeness: analysis.completeness || calculateScore(prompt).completeness,
-            overall: analysis.overall || calculateScore(prompt).overall
+            overall: analysis.overall || calculateScore(prompt).overall,
           };
         }
       } catch (parseError) {
@@ -415,7 +415,7 @@ export class PromptOptimizer {
         requirements?: string,
         context?: string,
         complexity?: 'simple' | 'medium' | 'complex'
-      } = {}
+      } = {},
     ): Promise<OptimizationResult & { analysisScore: OptimizationResult['score'] }> {
       try {
         // 首先分析提示词类型和复杂度
@@ -434,7 +434,7 @@ export class PromptOptimizer {
           template.system,
           template.user
             .replace('{prompt}', prompt)
-            .replace('{requirements}', requirements + context)
+            .replace('{requirements}', requirements + context),
         );
   
         // 解析响应
@@ -448,7 +448,7 @@ export class PromptOptimizer {
           improvements,
           score,
           suggestions,
-          analysisScore
+          analysisScore,
         };
       } catch (error) {
         console.error('智能优化失败:', error);
@@ -465,7 +465,7 @@ export class PromptOptimizer {
         technical: ['代码', '编程', '技术', '算法', '系统', '开发', 'code', 'programming', 'algorithm', 'system', 'development'],
         business: ['商业', '营销', '销售', '市场', '策略', '管理', 'business', 'marketing', 'sales', 'strategy', 'management'],
         educational: ['教学', '学习', '教育', '培训', '课程', 'teaching', 'learning', 'education', 'training', 'course'],
-        drawing: ['绘图', '绘画', '画', '图像', '图片', '画面', '艺术风格', '构图', '色彩', '光影', 'midjourney', 'stable diffusion', 'dall-e', 'drawing', 'painting', 'image', 'artwork', 'style', 'composition', 'lighting', 'portrait', 'landscape', 'character', 'fantasy', 'realistic', 'cartoon', 'anime', '油画', '水彩', '素描', '卡通', '动漫', '写实', '抽象', '肖像', '风景', '人物', '角色']
+        drawing: ['绘图', '绘画', '画', '图像', '图片', '画面', '艺术风格', '构图', '色彩', '光影', 'midjourney', 'stable diffusion', 'dall-e', 'drawing', 'painting', 'image', 'artwork', 'style', 'composition', 'lighting', 'portrait', 'landscape', 'character', 'fantasy', 'realistic', 'cartoon', 'anime', '油画', '水彩', '素描', '卡通', '动漫', '写实', '抽象', '肖像', '风景', '人物', '角色'],
       };
   
       const lowerPrompt = prompt.toLowerCase();
@@ -498,7 +498,7 @@ export class PromptOptimizer {
           context?: string;
           complexity?: 'simple' | 'medium' | 'complex';
         };
-      }>
+      }>,
     ): Promise<Array<OptimizationResult & { analysisScore: OptimizationResult['score'] }>> {
       const results = [];
       
@@ -516,7 +516,7 @@ export class PromptOptimizer {
             improvements: [`优化失败: ${error instanceof Error ? error.message : '未知错误'}`],
             score: calculateScore(prompt),
             suggestions: [],
-            analysisScore: calculateScore(prompt)
+            analysisScore: calculateScore(prompt),
           });
         }
       }
@@ -528,14 +528,14 @@ export class PromptOptimizer {
       const response = await fetch('/api/ai/optimize', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           prompt: userPrompt, // 传递用户提示词
           optimizationType: 'general', // 默认优化类型
           requirements: '', // 可以从系统提示词中提取需求
-          context: systemPrompt // 将系统提示词作为上下文
-        })
+          context: systemPrompt, // 将系统提示词作为上下文
+        }),
       });
   
       if (!response.ok) {
@@ -572,7 +572,7 @@ export async function createPromptOptimizer(): Promise<PromptOptimizer | null> {
     // 前端不需要直接检查API key，这应该由后端API处理
     return new PromptOptimizer({
       apiKey: '', // 通过API端点处理，不需要直接传递
-      baseURL: '' // 使用相对路径调用
+      baseURL: '', // 使用相对路径调用
     });
   } catch (error) {
     console.error('创建优化器失败:', error);
@@ -585,7 +585,7 @@ export async function createPromptOptimizer(): Promise<PromptOptimizer | null> {
 export async function optimizePrompt(
   prompt: string, 
   requirements?: string,
-  type: OptimizationRequest['type'] = 'general'
+  type: OptimizationRequest['type'] = 'general',
 ): Promise<OptimizationResult | null> {
   try {
     const optimizer = await createPromptOptimizer();
@@ -603,7 +603,7 @@ export async function iteratePrompt(
   originalPrompt: string,
   currentPrompt: string,
   requirements: string,
-  type: IterationRequest['type'] = 'refine'
+  type: IterationRequest['type'] = 'refine',
 ): Promise<string | null> {
   try {
     const optimizer = await createPromptOptimizer();
@@ -624,12 +624,12 @@ export async function analyzePrompt(prompt: string): Promise<OptimizationResult[
     const response = await fetch('/api/ai/analyze', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
       },
       body: JSON.stringify({
         prompt,
-        action: 'analyze_quality'
-      })
+        action: 'analyze_quality',
+      }),
     });
 
     if (!response.ok) {
@@ -665,7 +665,7 @@ export async function optimizePromptAdvanced(
     context?: string,
     complexity?: 'simple' | 'medium' | 'complex',
     includeAnalysis?: boolean
-  } = {}
+  } = {},
 ): Promise<{
   original: string;
   optimized: string;
@@ -681,7 +681,7 @@ export async function optimizePromptAdvanced(
     const response = await fetch('/api/ai/optimize-advanced', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
       },
       body: JSON.stringify({
         prompt,
@@ -689,8 +689,8 @@ export async function optimizePromptAdvanced(
         requirements: options.requirements || '',
         context: options.context || '',
         complexity: options.complexity || 'medium',
-        includeAnalysis: options.includeAnalysis || false
-      })
+        includeAnalysis: options.includeAnalysis || false,
+      }),
     });
 
     if (!response.ok) {
@@ -718,7 +718,7 @@ export async function optimizePromptBatch(
     prompt: string;
     type?: 'general' | 'creative' | 'technical' | 'business' | 'educational' | 'drawing';
     requirements?: string;
-  }>
+  }>,
 ): Promise<Array<OptimizationResult | null>> {
   const results = [];
   
@@ -747,7 +747,7 @@ export async function optimizePromptIntelligently(
     requirements?: string;
     context?: string;
     autoDetectType?: boolean;
-  } = {}
+  } = {},
 ): Promise<OptimizationResult | null> {
   try {
     // 如果启用自动检测，先检测提示词类型
@@ -763,7 +763,7 @@ export async function optimizePromptIntelligently(
       requirements: options.requirements,
       context: options.context,
       complexity: 'medium',
-      includeAnalysis: true
+      includeAnalysis: true,
     });
 
     if (!result) return null;
@@ -773,7 +773,7 @@ export async function optimizePromptIntelligently(
       optimizedPrompt: result.optimized,
       improvements: result.improvements,
       score: calculateScore(result.optimized),
-      suggestions: result.techniques || []
+      suggestions: result.techniques || [],
     };
   } catch (error) {
     console.error('智能优化失败:', error);
@@ -790,7 +790,7 @@ function detectPromptType(prompt: string): 'general' | 'creative' | 'technical' 
     technical: ['代码', '编程', '技术', '算法', '系统', '开发', 'code', 'programming', 'algorithm', 'system', 'development'],
     business: ['商业', '营销', '销售', '市场', '策略', '管理', 'business', 'marketing', 'sales', 'strategy', 'management'],
     educational: ['教学', '学习', '教育', '培训', '课程', 'teaching', 'learning', 'education', 'training', 'course'],
-    drawing: ['绘图', '绘画', '画', '图像', '图片', '画面', '艺术风格', '构图', '色彩', '光影', 'midjourney', 'stable diffusion', 'dall-e', 'drawing', 'painting', 'image', 'artwork', 'style', 'composition', 'lighting', 'portrait', 'landscape', 'character', 'fantasy', 'realistic', 'cartoon', 'anime', '油画', '水彩', '素描', '卡通', '动漫', '写实', '抽象', '肖像', '风景', '人物', '角色']
+    drawing: ['绘图', '绘画', '画', '图像', '图片', '画面', '艺术风格', '构图', '色彩', '光影', 'midjourney', 'stable diffusion', 'dall-e', 'drawing', 'painting', 'image', 'artwork', 'style', 'composition', 'lighting', 'portrait', 'landscape', 'character', 'fantasy', 'realistic', 'cartoon', 'anime', '油画', '水彩', '素描', '卡通', '动漫', '写实', '抽象', '肖像', '风景', '人物', '角色'],
   };
 
   const lowerPrompt = prompt.toLowerCase();

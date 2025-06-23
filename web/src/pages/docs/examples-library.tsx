@@ -113,77 +113,77 @@ const ExamplesLibraryPage: React.FC = () => {
 
   const examples = [
     {
-      category: "技术开发",
-      title: "代码审查助手",
-      description: "专业的代码质量分析和改进建议",
-      tags: ["代码", "审查", "质量"],
-      difficulty: "中级",
-      useCase: "代码质量检查、团队协作、技术培训",
-      prompt: codeReviewExample
+      category: '技术开发',
+      title: '代码审查助手',
+      description: '专业的代码质量分析和改进建议',
+      tags: ['代码', '审查', '质量'],
+      difficulty: '中级',
+      useCase: '代码质量检查、团队协作、技术培训',
+      prompt: codeReviewExample,
     },
     {
-      category: "商务办公", 
-      title: "商务邮件撰写",
-      description: "根据场景和需求生成专业邮件",
-      tags: ["邮件", "商务", "沟通"],
-      difficulty: "初级",
-      useCase: "商务沟通、客户服务、团队协作",
-      prompt: emailWriterExample
+      category: '商务办公', 
+      title: '商务邮件撰写',
+      description: '根据场景和需求生成专业邮件',
+      tags: ['邮件', '商务', '沟通'],
+      difficulty: '初级',
+      useCase: '商务沟通、客户服务、团队协作',
+      prompt: emailWriterExample,
     },
     {
-      category: "教育培训",
-      title: "个性化教学助手", 
-      description: "根据学生水平定制教学内容",
-      tags: ["教学", "个性化", "教育"],
-      difficulty: "高级",
-      useCase: "在线教育、培训课程、知识传授",
-      prompt: tutorExample
-    }
+      category: '教育培训',
+      title: '个性化教学助手', 
+      description: '根据学生水平定制教学内容',
+      tags: ['教学', '个性化', '教育'],
+      difficulty: '高级',
+      useCase: '在线教育、培训课程、知识传授',
+      prompt: tutorExample,
+    },
   ];
 
   const categories = [
     {
-      title: "创意写作",
+      title: '创意写作',
       icon: <DocumentTextIcon className="h-6 w-6" />,
-      color: "cyan" as const,
+      color: 'cyan' as const,
       count: 25,
-      description: "文案创作、故事写作、内容生成"
+      description: '文案创作、故事写作、内容生成',
     },
     {
-      title: "技术开发",
+      title: '技术开发',
       icon: <CodeBracketIcon className="h-6 w-6" />,
-      color: "purple" as const,
+      color: 'purple' as const,
       count: 32,
-      description: "代码生成、架构设计、技术分析"
+      description: '代码生成、架构设计、技术分析',
     },
     {
-      title: "商务办公",
+      title: '商务办公',
       icon: <BriefcaseIcon className="h-6 w-6" />,
-      color: "pink" as const,
+      color: 'pink' as const,
       count: 18,
-      description: "邮件撰写、报告生成、会议管理"
+      description: '邮件撰写、报告生成、会议管理',
     },
     {
-      title: "教育培训",
+      title: '教育培训',
       icon: <AcademicCapIcon className="h-6 w-6" />,
-      color: "green" as const,
+      color: 'green' as const,
       count: 21,
-      description: "课程设计、知识问答、学习指导"
+      description: '课程设计、知识问答、学习指导',
     },
     {
-      title: "数据分析",
+      title: '数据分析',
       icon: <BeakerIcon className="h-6 w-6" />,
-      color: "yellow" as const,
+      color: 'yellow' as const,
       count: 15,
-      description: "数据处理、图表生成、趋势分析"
+      description: '数据处理、图表生成、趋势分析',
     },
     {
-      title: "客户服务",
+      title: '客户服务',
       icon: <ChatBubbleLeftRightIcon className="h-6 w-6" />,
-      color: "purple" as const,
+      color: 'purple' as const,
       count: 12,
-      description: "客户支持、问题解答、服务咨询"
-    }
+      description: '客户支持、问题解答、服务咨询',
+    },
   ];
 
   return (
@@ -191,8 +191,8 @@ const ExamplesLibraryPage: React.FC = () => {
       title="示例库"
       description="精选的提示词示例集合，涵盖各种应用场景和行业需求，为您的项目提供灵感和参考"
       breadcrumbs={[
-        { name: "文档", href: "/docs" },
-        { name: "示例库", href: "/docs/examples-library" }
+        { name: '文档', href: '/docs' },
+        { name: '示例库', href: '/docs/examples-library' },
       ]}
     >
       {/* 分类概览 */}

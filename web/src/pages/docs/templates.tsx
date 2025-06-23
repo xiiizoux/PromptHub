@@ -7,60 +7,60 @@ import { DocSection, DocGrid, DocCard, DocCodeBlock, DocHighlight } from '@/comp
 const TemplatesPage: React.FC = () => {
   const templateCategories = [
     {
-      title: "通用模板",
-      description: "适用于各种场景的基础模板",
+      title: '通用模板',
+      description: '适用于各种场景的基础模板',
       icon: <DocumentTextIcon className="h-6 w-6" />,
-      color: "cyan" as const,
-      count: 15
+      color: 'cyan' as const,
+      count: 15,
     },
     {
-      title: "商务模板", 
-      description: "商务沟通和办公场景专用",
+      title: '商务模板', 
+      description: '商务沟通和办公场景专用',
       icon: <BriefcaseIcon className="h-6 w-6" />,
-      color: "purple" as const,
-      count: 12
+      color: 'purple' as const,
+      count: 12,
     },
     {
-      title: "教育模板",
-      description: "教学和学习场景的专业模板", 
+      title: '教育模板',
+      description: '教学和学习场景的专业模板', 
       icon: <AcademicCapIcon className="h-6 w-6" />,
-      color: "pink" as const,
-      count: 18
+      color: 'pink' as const,
+      count: 18,
     },
     {
-      title: "技术模板",
-      description: "编程和技术开发相关模板",
+      title: '技术模板',
+      description: '编程和技术开发相关模板',
       icon: <CodeBracketIcon className="h-6 w-6" />,
-      color: "green" as const,
-      count: 25
-    }
+      color: 'green' as const,
+      count: 25,
+    },
   ];
 
   const featuredTemplates = [
     {
-      title: "通用助手",
-      description: "多功能AI助手的基础模板",
-      category: "通用",
-      tags: ["对话", "助手", "通用"]
+      title: '通用助手',
+      description: '多功能AI助手的基础模板',
+      category: '通用',
+      tags: ['对话', '助手', '通用'],
     },
     {
-      title: "代码审查",
-      description: "代码质量检查和改进建议",
-      category: "技术",
-      tags: ["代码", "审查", "质量"]
+      title: '代码审查',
+      description: '代码质量检查和改进建议',
+      category: '技术',
+      tags: ['代码', '审查', '质量'],
     },
     {
-      title: "邮件撰写",
-      description: "专业商务邮件模板",
-      category: "商务",
-      tags: ["邮件", "商务", "沟通"]
+      title: '邮件撰写',
+      description: '专业商务邮件模板',
+      category: '商务',
+      tags: ['邮件', '商务', '沟通'],
     },
     {
-      title: "课程设计",
-      description: "教学课程规划和设计",
-      category: "教育",
-      tags: ["课程", "教学", "设计"]
-    }
+      title: '课程设计',
+      description: '教学课程规划和设计',
+      category: '教育',
+      tags: ['课程', '教学', '设计'],
+    },
   ];
 
   const exampleTemplate = `你是一位专业的{{role}}，具有丰富的{{domain}}经验。
@@ -86,8 +86,8 @@ const TemplatesPage: React.FC = () => {
       title="提示词模板库"
       description="精选的提示词模板，涵盖各种应用场景和行业需求，帮助您快速开始创建高质量的提示词"
       breadcrumbs={[
-        { name: "文档", href: "/docs" },
-        { name: "模板库", href: "/docs/templates" }
+        { name: '文档', href: '/docs' },
+        { name: '模板库', href: '/docs/templates' },
       ]}
     >
       {/* 模板分类导航 */}

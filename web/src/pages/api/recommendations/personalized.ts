@@ -3,7 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
+  process.env.SUPABASE_SERVICE_ROLE_KEY!,
 );
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -17,7 +17,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (!userId) {
       return res.status(400).json({ 
         success: false, 
-        error: '用户ID不能为空' 
+        error: '用户ID不能为空', 
       });
     }
 
@@ -28,13 +28,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       success: true,
       recommendations,
       algorithm: 'personalized',
-      generated_at: new Date().toISOString()
+      generated_at: new Date().toISOString(),
     });
   } catch (error: any) {
     console.error('获取个性化推荐失败:', error);
     res.status(500).json({ 
       success: false, 
-      error: error.message || '获取个性化推荐失败' 
+      error: error.message || '获取个性化推荐失败', 
     });
   }
 }
@@ -117,7 +117,7 @@ async function getUserBehavior(userId: string) {
     usageHistory: usageHistory || [],
     bookmarks: bookmarks || [],
     ratings: ratings || [],
-    preferences
+    preferences,
   };
 }
 
@@ -185,7 +185,7 @@ function analyzeUserPreferences(usageHistory: any[], bookmarks: any[], ratings: 
     favoriteTags,
     averageRating: ratingCount > 0 ? totalRating / ratingCount : 0,
     activityLevel: usageHistory.length + bookmarks.length,
-    recentActivity: usageHistory.slice(0, 10)
+    recentActivity: usageHistory.slice(0, 10),
   };
 }
 
@@ -228,7 +228,7 @@ async function scorePrompts(candidates: any[], userBehavior: any) {
 
     // 类别匹配分数
     const categoryMatch = preferences.favoriteCategories.find(
-      (fav: any) => fav.category === prompt.category
+      (fav: any) => fav.category === prompt.category,
     );
     if (categoryMatch) {
       score += Math.min(categoryMatch.weight * 0.1, 0.3);
@@ -276,11 +276,11 @@ async function scorePrompts(candidates: any[], userBehavior: any) {
         author: prompt.users?.display_name || prompt.users?.email || '匿名用户',
         likes: socialStats.likes,
         usage_count: socialStats.usage_count,
-        average_rating: socialStats.average_rating
+        average_rating: socialStats.average_rating,
       },
       score: Math.min(score, 1),
       reason,
-      algorithm: 'personalized_ml'
+      algorithm: 'personalized_ml',
     };
   }));
 
@@ -315,7 +315,7 @@ async function getPromptSocialStats(promptId: string) {
   return {
     likes: likes || 0,
     usage_count: usage_count || 0,
-    average_rating: Math.round(average_rating * 10) / 10
+    average_rating: Math.round(average_rating * 10) / 10,
   };
 }
 
@@ -345,7 +345,7 @@ function generateRecommendationReason(prompt: any, preferences: any, socialStats
 
   // 类别匹配
   const categoryMatch = preferences.favoriteCategories.find(
-    (fav: any) => fav.category === prompt.category
+    (fav: any) => fav.category === prompt.category,
   );
   if (categoryMatch) {
     reasons.push('符合偏好类别');
@@ -354,7 +354,7 @@ function generateRecommendationReason(prompt: any, preferences: any, socialStats
   // 标签匹配
   if (prompt.tags) {
     const hasMatchingTag = prompt.tags.some((tag: string) =>
-      preferences.favoriteTags.some((fav: any) => fav.tag === tag)
+      preferences.favoriteTags.some((fav: any) => fav.tag === tag),
     );
     if (hasMatchingTag) {
       reasons.push('标签匹配');

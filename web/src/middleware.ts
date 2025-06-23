@@ -25,7 +25,7 @@ const PROTECTED_ROUTES = [
   '/api/user/',
   '/api/collaborative/',
   '/api/performance/track',
-  '/api/social/'
+  '/api/social/',
 ];
 
 // 公开访问的API路由（不需要认证）
@@ -39,7 +39,7 @@ const PUBLIC_ROUTES = [
   '/api/categories',
   '/api/tags',
   '/api/public-prompts',
-  '/api/templates'
+  '/api/templates',
 ];
 
 // 检查路径是否需要认证
@@ -76,7 +76,7 @@ export function middleware(request: NextRequest) {
         if (!apiKey) {
           const response = NextResponse.json(
             { success: false, message: '未授权访问，请提供有效的认证令牌或API密钥' },
-            { status: 401 }
+            { status: 401 },
           );
           return addSecurityHeaders(response);
         }

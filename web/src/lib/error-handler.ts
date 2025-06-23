@@ -15,7 +15,7 @@ export class ApiError extends Error {
     message: string, 
     statusCode: number = ErrorCode.INTERNAL_SERVER_ERROR,
     code: string = 'UNKNOWN_ERROR',
-    context?: Record<string, any>
+    context?: Record<string, any>,
   ) {
     super(message);
     this.name = 'ApiError';
@@ -106,9 +106,9 @@ class ConsoleLogger implements Logger {
         ...(error instanceof ApiError && {
           statusCode: error.statusCode,
           code: error.code,
-          context: error.context
-        })
-      })
+          context: error.context,
+        }),
+      }),
     };
     
     console.error(`[ERROR] ${message}`, error, this.formatMeta(combinedMeta));
@@ -123,9 +123,9 @@ class ConsoleLogger implements Logger {
         ...(error instanceof ApiError && {
           statusCode: error.statusCode,
           code: error.code,
-          context: error.context
-        })
-      })
+          context: error.context,
+        }),
+      }),
     };
     
     console.error(`[FATAL] ${message}`, error, this.formatMeta(combinedMeta));
@@ -150,27 +150,27 @@ export const createErrorHandler = () => {
         method: req.method,
         query: req.query,
         body: req.body,
-        userId: req.user?.id
+        userId: req.user?.id,
       });
       
       return res.status(error.statusCode).json({
         success: false,
         error: error.message,
         code: error.code,
-        statusCode: error.statusCode
+        statusCode: error.statusCode,
       });
     } else {
       // 记录未知错误
       logger.error(`未处理的错误: ${error.message}`, error, {
         path: req.path,
-        method: req.method
+        method: req.method,
       });
       
       return res.status(ErrorCode.INTERNAL_SERVER_ERROR).json({
         success: false,
         error: '服务器内部错误',
         code: 'INTERNAL_SERVER_ERROR',
-        statusCode: ErrorCode.INTERNAL_SERVER_ERROR
+        statusCode: ErrorCode.INTERNAL_SERVER_ERROR,
       });
     }
   };

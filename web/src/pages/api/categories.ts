@@ -41,5 +41,5 @@ export default apiHandler(async (req: NextApiRequest, res: NextApiResponse) => {
   allowedMethods: ['GET'],
   requireAuth: false,
   enableCache: true,
-  cacheTTL: 300 // 缓存5分钟
+  cacheTTL: 300, // 缓存5分钟
 });

@@ -68,7 +68,7 @@ export const MODEL_TAGS: ModelTag[] = [
     capabilities: [ModelCapability.CHAT, ModelCapability.REASONING, ModelCapability.CREATIVE],
     scale: ModelScale.XLARGE,
     deployment: DeploymentType.API,
-    color: 'text-blue-400'
+    color: 'text-blue-400',
   },
   {
     id: 'llm-medium',
@@ -78,7 +78,7 @@ export const MODEL_TAGS: ModelTag[] = [
     capabilities: [ModelCapability.CHAT, ModelCapability.COMPLETION, ModelCapability.CREATIVE],
     scale: ModelScale.LARGE,
     deployment: DeploymentType.OPEN_SOURCE,
-    color: 'text-green-400'
+    color: 'text-green-400',
   },
   {
     id: 'llm-small',
@@ -88,7 +88,7 @@ export const MODEL_TAGS: ModelTag[] = [
     capabilities: [ModelCapability.CHAT, ModelCapability.COMPLETION],
     scale: ModelScale.SMALL,
     deployment: DeploymentType.LOCAL,
-    color: 'text-yellow-400'
+    color: 'text-yellow-400',
   },
   
   // 代码模型
@@ -98,7 +98,7 @@ export const MODEL_TAGS: ModelTag[] = [
     description: '专门针对编程任务优化的模型',
     type: ModelType.CODE,
     capabilities: [ModelCapability.CODING, ModelCapability.ANALYSIS],
-    color: 'text-cyan-400'
+    color: 'text-cyan-400',
   },
   
   // 图像模型
@@ -108,7 +108,7 @@ export const MODEL_TAGS: ModelTag[] = [
     description: '文本转图像生成模型',
     type: ModelType.IMAGE,
     capabilities: [ModelCapability.GENERATION, ModelCapability.CREATIVE],
-    color: 'text-purple-400'
+    color: 'text-purple-400',
   },
   {
     id: 'image-analysis',
@@ -116,7 +116,7 @@ export const MODEL_TAGS: ModelTag[] = [
     description: '图像分析和理解模型',
     type: ModelType.IMAGE,
     capabilities: [ModelCapability.VISION, ModelCapability.ANALYSIS],
-    color: 'text-pink-400'
+    color: 'text-pink-400',
   },
   
   // 多模态模型
@@ -126,7 +126,7 @@ export const MODEL_TAGS: ModelTag[] = [
     description: '同时处理文本和图像的多模态模型',
     type: ModelType.MULTIMODAL,
     capabilities: [ModelCapability.VISION, ModelCapability.CHAT, ModelCapability.ANALYSIS],
-    color: 'text-indigo-400'
+    color: 'text-indigo-400',
   },
   
   // 音频模型
@@ -136,7 +136,7 @@ export const MODEL_TAGS: ModelTag[] = [
     description: '语音识别和转录模型',
     type: ModelType.AUDIO,
     capabilities: [ModelCapability.AUDIO_TO_TEXT],
-    color: 'text-orange-400'
+    color: 'text-orange-400',
   },
   {
     id: 'audio-tts',
@@ -144,7 +144,7 @@ export const MODEL_TAGS: ModelTag[] = [
     description: '文本转语音合成模型',
     type: ModelType.AUDIO,
     capabilities: [ModelCapability.TEXT_TO_AUDIO],
-    color: 'text-red-400'
+    color: 'text-red-400',
   },
   {
     id: 'audio-generation',
@@ -152,7 +152,7 @@ export const MODEL_TAGS: ModelTag[] = [
     description: '音乐和音效生成模型',
     type: ModelType.AUDIO,
     capabilities: [ModelCapability.GENERATION, ModelCapability.CREATIVE],
-    color: 'text-amber-400'
+    color: 'text-amber-400',
   },
   
   // 视频模型
@@ -162,7 +162,7 @@ export const MODEL_TAGS: ModelTag[] = [
     description: '文本转视频和视频编辑模型',
     type: ModelType.VIDEO,
     capabilities: [ModelCapability.GENERATION, ModelCapability.CREATIVE],
-    color: 'text-emerald-400'
+    color: 'text-emerald-400',
   },
   
   // 特殊能力
@@ -172,7 +172,7 @@ export const MODEL_TAGS: ModelTag[] = [
     description: '专门针对翻译任务优化的模型',
     type: ModelType.TEXT,
     capabilities: [ModelCapability.TRANSLATION],
-    color: 'text-teal-400'
+    color: 'text-teal-400',
   },
   {
     id: 'reasoning-specialized',
@@ -180,8 +180,8 @@ export const MODEL_TAGS: ModelTag[] = [
     description: '专门针对逻辑推理和数学计算的模型',
     type: ModelType.TEXT,
     capabilities: [ModelCapability.REASONING, ModelCapability.ANALYSIS],
-    color: 'text-violet-400'
-  }
+    color: 'text-violet-400',
+  },
 ];
 
 // 根据类型获取模型标签
@@ -199,7 +199,7 @@ export const getModelTypeOptions = () => {
   return Object.values(ModelType).map(type => ({
     value: type,
     label: getModelTypeLabel(type),
-    description: getModelTypeDescription(type)
+    description: getModelTypeDescription(type),
   }));
 };
 

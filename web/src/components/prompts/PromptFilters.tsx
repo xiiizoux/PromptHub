@@ -257,7 +257,7 @@ const PromptFilters: React.FC<PromptFiltersProps> = ({
           initial={{ opacity: 0, height: 0 }}
           animate={{ 
             opacity: 1,
-            height: 'auto'
+            height: 'auto',
           }}
           exit={{ opacity: 0, height: 0 }}
           className={`${showMobileFilters ? 'block' : 'hidden'} md:block`}
@@ -325,7 +325,7 @@ const PromptFilters: React.FC<PromptFiltersProps> = ({
                       { value: 'latest', label: '最新' },
                       { value: 'updated', label: '更新' },
                       { value: 'oldest', label: '最早' },
-                      { value: 'name', label: '名称' }
+                      { value: 'name', label: '名称' },
                     ].map((option) => (
                       <motion.button
                         key={option.value}
@@ -398,13 +398,13 @@ const PromptFilters: React.FC<PromptFiltersProps> = ({
                           scale: 1,
                           transition: { 
                             duration: 0.2, 
-                            delay: showAllTags ? index * 0.01 : Math.min(index * 0.02, 0.3) // 大幅减少延迟
-                          }
+                            delay: showAllTags ? index * 0.01 : Math.min(index * 0.02, 0.3), // 大幅减少延迟
+                          },
                         }}
                         exit={{ 
                           opacity: 0, 
                           scale: 0.9,
-                          transition: { duration: 0.1 }
+                          transition: { duration: 0.1 },
                         }}
                         whileHover={{ scale: 1.05, y: -1 }}
                         whileTap={{ scale: 0.95 }}
@@ -437,12 +437,12 @@ const PromptFilters: React.FC<PromptFiltersProps> = ({
                         animate={{ 
                           opacity: 1, 
                           scale: 1,
-                          transition: { duration: 0.15 } // 减少按钮动画时间
+                          transition: { duration: 0.15 }, // 减少按钮动画时间
                         }}
                         exit={{ 
                           opacity: 0, 
                           scale: 0.9,
-                          transition: { duration: 0.1 }
+                          transition: { duration: 0.1 },
                         }}
                         onClick={toggleShowAllTags}
                         whileHover={{ scale: 1.05, y: -2 }}
@@ -461,12 +461,12 @@ const PromptFilters: React.FC<PromptFiltersProps> = ({
                         animate={{ 
                           opacity: 1, 
                           scale: 1,
-                          transition: { duration: 0.15 } // 减少按钮动画时间
+                          transition: { duration: 0.15 }, // 减少按钮动画时间
                         }}
                         exit={{ 
                           opacity: 0, 
                           scale: 0.9,
-                          transition: { duration: 0.1 }
+                          transition: { duration: 0.1 },
                         }}
                         onClick={toggleShowAllTags}
                         whileHover={{ scale: 1.05, y: -2 }}
@@ -520,7 +520,7 @@ const PromptFilters: React.FC<PromptFiltersProps> = ({
                 { value: 'latest', label: '最新创建' },
                 { value: 'updated', label: '最近更新' },
                 { value: 'oldest', label: '最早创建' },
-                { value: 'name', label: '名称排序' }
+                { value: 'name', label: '名称排序' },
               ].map((option) => (
                 <motion.button
                   key={option.value}

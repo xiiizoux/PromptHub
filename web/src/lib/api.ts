@@ -34,7 +34,7 @@ const checkNetworkConnection = async (): Promise<boolean> => {
     // 简单的连通性测试
     const response = await fetch('/api/health', { 
       method: 'GET',
-      signal: AbortSignal.timeout(3000) // 3秒超时
+      signal: AbortSignal.timeout(3000), // 3秒超时
     });
     return response.ok;
   } catch (error) {
@@ -134,7 +134,7 @@ api.interceptors.response.use(
   (error) => {
     console.error('API请求错误:', error.response?.data || error.message);
     return Promise.reject(error);
-  }
+  },
 );
 
 /**
@@ -173,7 +173,7 @@ export const getCategories = async (): Promise<string[]> => {
                    '通用', '学术', '职业', '文案', '设计', 
                    '教育', '情感', '娱乐', '游戏', '生活',
                    '商业', '办公', '编程', '翻译', '绘画',
-                   '视频', '播客', '音乐', '健康', '科技'
+                   '视频', '播客', '音乐', '健康', '科技',
                  ];
                  console.log('前端API：使用默认分类数据');
                  return defaultCategories;
@@ -190,7 +190,7 @@ export const getCategories = async (): Promise<string[]> => {
                    '通用', '学术', '职业', '文案', '设计', 
                    '教育', '情感', '娱乐', '游戏', '生活',
                    '商业', '办公', '编程', '翻译', '绘画',
-                   '视频', '播客', '音乐', '健康', '科技'
+                   '视频', '播客', '音乐', '健康', '科技',
                  ];
                  console.log('前端API：网络错误，使用默认分类数据');
                  return defaultCategories;
@@ -313,7 +313,7 @@ export const getPrompts = async (filters?: PromptFilters): Promise<PaginatedResp
     // 使用新的REST API端点
     console.log('发送请求到:', `/public-prompts?${queryParams.toString()}`, '用户ID:', userId);
     const response = await api.get<any>(`/public-prompts?${queryParams.toString()}`, {
-      headers: userId ? { 'x-user-id': userId } : {}
+      headers: userId ? { 'x-user-id': userId } : {},
     });
     
     // 1. 验证响应的基础结构
@@ -449,7 +449,7 @@ export const trackPromptUsage = async (data: Omit<PromptUsage, 'usage_id' | 'cre
       input_tokens: data.input_tokens,
       output_tokens: data.output_tokens,
       latency_ms: data.latency, // 前端使用latency而后端使用latency_ms
-      session_id: 'frontend-session' // 前端没有这个字段，设置一个默认值
+      session_id: 'frontend-session', // 前端没有这个字段，设置一个默认值
     };
 
     // 使用新的解耦API而不是已弃用的MCP API
@@ -469,7 +469,7 @@ export const submitPromptFeedback = async (feedback: Omit<PromptFeedback, 'creat
       usage_id: feedback.usage_id,
       rating: feedback.rating,
       feedback_text: feedback.comments, // 前端使用comments而后端使用feedback_text
-      categories: [] // 前端没有这个字段，设置空数组
+      categories: [], // 前端没有这个字段，设置空数组
     };
 
     // 使用新的解耦API而不是已弃用的MCP API
@@ -504,19 +504,19 @@ export const getPromptPerformance = async (promptId: string): Promise<PromptPerf
           total_input: 0,
           total_output: 0,
           input_avg: 0,
-          output_avg: 0
+          output_avg: 0,
         },
-        version_distribution: performanceData.version_distribution || {}
+        version_distribution: performanceData.version_distribution || {},
       };
     }
     
     // 如果API没有返回数据，尝试从数据库直接获取
-    console.log(`API未返回数据，尝试从metrics端点获取`);
+    console.log('API未返回数据，尝试从metrics端点获取');
     const metricsResponse = await api.get(`/performance/metrics?promptId=${promptId}&timeRange=30d`);
     
     if (metricsResponse.data.success && metricsResponse.data.metrics) {
       const metrics = metricsResponse.data.metrics;
-      console.log(`从metrics获取到数据:`, metrics);
+      console.log('从metrics获取到数据:', metrics);
       
       return {
         prompt_id: promptId,
@@ -529,9 +529,9 @@ export const getPromptPerformance = async (promptId: string): Promise<PromptPerf
           total_input: 0,
           total_output: 0,
           input_avg: metrics.avg_tokens || 0,
-          output_avg: 0
+          output_avg: 0,
         },
-        version_distribution: {}
+        version_distribution: {},
       };
     }
     
@@ -549,9 +549,9 @@ export const getPromptPerformance = async (promptId: string): Promise<PromptPerf
         total_input: 0,
         total_output: 0,
         input_avg: 0,
-        output_avg: 0
+        output_avg: 0,
       },
-      version_distribution: {}
+      version_distribution: {},
     };
   } catch (error: any) {
     // 静默处理404错误，避免在控制台显示大量错误信息
@@ -571,9 +571,9 @@ export const getPromptPerformance = async (promptId: string): Promise<PromptPerf
         total_input: 0,
         total_output: 0,
         input_avg: 0,
-        output_avg: 0
+        output_avg: 0,
       },
-      version_distribution: {}
+      version_distribution: {},
     };
   }
 };
@@ -592,7 +592,7 @@ export const getPerformanceReport = async (promptId: string): Promise<any> => {
       
       return {
         suggestions: report.optimizationSuggestions || [
-          '基于真实数据的优化建议：请增加使用量以获得更准确的性能分析'
+          '基于真实数据的优化建议：请增加使用量以获得更准确的性能分析',
         ],
         insights: {
           most_common_issues: report.feedbackThemes ? Object.keys(report.feedbackThemes) : [],
@@ -601,31 +601,31 @@ export const getPerformanceReport = async (promptId: string): Promise<any> => {
               .sort((a: any, b: any) => (b.avgRating || 0) - (a.avgRating || 0))
               .slice(0, 3)
               .map((v: any) => `${v.promptVersion}.0`) : [],
-          recommended_models: ['gpt-4', 'gpt-3.5-turbo'] // 默认推荐模型
+          recommended_models: ['gpt-4', 'gpt-3.5-turbo'], // 默认推荐模型
         },
         performance: report.performance,
-        prompt: report.prompt
+        prompt: report.prompt,
       };
     }
     
     // 如果MCP API没有数据，尝试从性能指标API获取
-    console.log(`MCP API未返回报告数据，尝试从建议API获取`);
+    console.log('MCP API未返回报告数据，尝试从建议API获取');
     const suggestionsResponse = await api.get(`/performance/suggestions?promptId=${promptId}`);
     
     if (suggestionsResponse.data.success && suggestionsResponse.data.suggestions) {
       const suggestions = suggestionsResponse.data.suggestions;
-      console.log(`从建议API获取到数据:`, suggestions);
+      console.log('从建议API获取到数据:', suggestions);
       
       return {
         suggestions: suggestions.optimizationSuggestions || [
           '基于当前数据的优化建议',
-          '建议继续收集使用数据以获得更精确的分析'
+          '建议继续收集使用数据以获得更精确的分析',
         ],
         insights: {
           most_common_issues: suggestions.issues || [],
           best_performing_versions: suggestions.bestVersions || [],
-          recommended_models: suggestions.recommendedModels || ['gpt-4', 'gpt-3.5-turbo']
-        }
+          recommended_models: suggestions.recommendedModels || ['gpt-4', 'gpt-3.5-turbo'],
+        },
       };
     }
     
@@ -636,13 +636,13 @@ export const getPerformanceReport = async (promptId: string): Promise<any> => {
         '该提示词需要更多使用数据来生成准确的优化建议',
         '建议增加用户反馈收集以改进性能分析',
         '考虑添加更多使用示例来提高输出质量',
-        '监控响应时间并根据需要优化提示词长度'
+        '监控响应时间并根据需要优化提示词长度',
       ],
       insights: {
         most_common_issues: [],
         best_performing_versions: [],
-        recommended_models: ['gpt-4', 'gpt-3.5-turbo']
-      }
+        recommended_models: ['gpt-4', 'gpt-3.5-turbo'],
+      },
     };
   } catch (error: any) {
     // 静默处理404错误，避免在控制台显示大量错误信息
@@ -655,13 +655,13 @@ export const getPerformanceReport = async (promptId: string): Promise<any> => {
       suggestions: [
         '暂时无法获取性能数据，请稍后重试',
         '如果问题持续，请检查网络连接或联系技术支持',
-        '建议先确保提示词有使用记录后再查看性能分析'
+        '建议先确保提示词有使用记录后再查看性能分析',
       ],
       insights: {
         most_common_issues: ['数据获取失败'],
         best_performing_versions: [],
-        recommended_models: []
-      }
+        recommended_models: [],
+      },
     };
   }
 };
@@ -680,55 +680,55 @@ export const getPromptQualityAnalysis = async (promptId: string): Promise<Prompt
         clarity: {
           name: '清晰度',
           score: Math.floor(Math.random() * 30) + 70,
-          description: '指示词的表达是否清晰明确'
+          description: '指示词的表达是否清晰明确',
         },
         completeness: {
           name: '完整性', 
           score: Math.floor(Math.random() * 25) + 65,
-          description: '是否包含所有必要信息'
+          description: '是否包含所有必要信息',
         },
         professionalism: {
           name: '专业性',
           score: Math.floor(Math.random() * 35) + 65,
-          description: '用词和结构是否专业规范'
+          description: '用词和结构是否专业规范',
         },
         actionability: {
           name: '可操作性',
           score: Math.floor(Math.random() * 40) + 60,
-          description: 'AI能否根据指令采取具体行动'
-        }
+          description: 'AI能否根据指令采取具体行动',
+        },
       },
       strengths: [
         '指令结构清晰，逻辑性强',
         '使用了具体的示例和场景',
-        '语言表达简洁明了'
+        '语言表达简洁明了',
       ],
       weaknesses: [
         '可以增加更多上下文信息',
-        '某些术语需要进一步解释'
+        '某些术语需要进一步解释',
       ],
       recommendations: [
         '在开头添加简短的背景说明',
         '使用更具体的动词描述所需行为',
         '考虑添加输出格式的示例',
-        '增加约束条件以确保结果准确性'
+        '增加约束条件以确保结果准确性',
       ],
       comparisonWithCategory: {
         ranking: Math.floor(Math.random() * 50) + 1,
         totalInCategory: 150,
-        percentile: Math.floor(Math.random() * 30) + 70
+        percentile: Math.floor(Math.random() * 30) + 70,
       },
       historicalData: [
         { date: '2024-01-01', score: 65 },
         { date: '2024-01-15', score: 72 },
         { date: '2024-02-01', score: 78 },
-        { date: '2024-02-15', score: 82 }
+        { date: '2024-02-15', score: 82 },
       ],
       metadata: {
         analysisDate: new Date().toISOString(),
         modelVersion: 'v2.1.0',
-        confidence: 0.85
-      }
+        confidence: 0.85,
+      },
     };
 
     return mockData;
@@ -801,7 +801,7 @@ export async function toggleBookmark(promptId: string): Promise<{ bookmarked: bo
     if (currentState.userBookmarked) {
       // 取消收藏
       const response = await api.delete('/social/interactions', {
-        data: { promptId, type: 'bookmark' }
+        data: { promptId, type: 'bookmark' },
       });
       
       if (!response.data.success) {
@@ -813,7 +813,7 @@ export async function toggleBookmark(promptId: string): Promise<{ bookmarked: bo
       // 添加收藏
       const response = await api.post('/social/interactions', {
         promptId,
-        type: 'bookmark'
+        type: 'bookmark',
       });
       
       if (!response.data.success) {
@@ -836,7 +836,7 @@ export async function toggleLike(promptId: string): Promise<{ liked: boolean }> 
     if (currentState.userLiked) {
       // 取消点赞
       const response = await api.delete('/social/interactions', {
-        data: { promptId, type: 'like' }
+        data: { promptId, type: 'like' },
       });
       
       if (!response.data.success) {
@@ -848,7 +848,7 @@ export async function toggleLike(promptId: string): Promise<{ liked: boolean }> 
       // 添加点赞
       const response = await api.post('/social/interactions', {
         promptId,
-        type: 'like'
+        type: 'like',
       });
       
       if (!response.data.success) {
@@ -1072,7 +1072,7 @@ export async function getUserRating(promptId: string): Promise<Rating | null> {
 // 导入/导出相关
 export async function exportPrompts(promptIds: string[], format: 'json' | 'csv' | 'txt' = 'json'): Promise<Blob> {
   const response = await api.post('/prompts/export', { promptIds, format }, {
-    responseType: 'blob'
+    responseType: 'blob',
   });
   
   return response.data;
@@ -1191,7 +1191,7 @@ export interface RecommendationResult {
 export async function getRecommendations(
   type: RecommendationType, 
   userId?: string, 
-  limit: number = 10
+  limit: number = 10,
 ): Promise<RecommendationResult[]> {
   const response = await api.post('/recommendations/get', { type, userId, limit });
   
@@ -1204,7 +1204,7 @@ export async function getRecommendations(
 
 export async function getPersonalizedRecommendations(
   userId: string, 
-  limit: number = 10
+  limit: number = 10,
 ): Promise<RecommendationResult[]> {
   const response = await api.get(`/recommendations/personalized?userId=${userId}&limit=${limit}`);
   
@@ -1217,7 +1217,7 @@ export async function getPersonalizedRecommendations(
 
 export async function getSimilarPrompts(
   promptId: string, 
-  limit: number = 10
+  limit: number = 10,
 ): Promise<RecommendationResult[]> {
   const response = await api.get(`/recommendations/similar?promptId=${promptId}&limit=${limit}`);
   
@@ -1241,12 +1241,12 @@ export async function getTrendingPrompts(limit: number = 10): Promise<Recommenda
 export async function updateRecommendationFeedback(
   userId: string,
   promptId: string,
-  feedback: 'like' | 'dislike' | 'not_interested'
+  feedback: 'like' | 'dislike' | 'not_interested',
 ): Promise<void> {
   const response = await api.post('/recommendations/feedback', {
     userId,
     promptId,
-    feedback
+    feedback,
   });
   
   if (!response.data.success) {
@@ -1298,7 +1298,7 @@ export interface OptimizationSuggestion {
 
 export async function getPerformanceMetrics(
   promptId: string,
-  timeRange: '24h' | '7d' | '30d' | '90d' = '7d'
+  timeRange: '24h' | '7d' | '30d' | '90d' = '7d',
 ): Promise<PerformanceMetrics> {
   try {
     const response = await api.get(`/performance/metrics?promptId=${promptId}&timeRange=${timeRange}`);
@@ -1311,7 +1311,7 @@ export async function getPerformanceMetrics(
   } catch (error: any) {
     // 静默处理404错误
     if (error.response?.status !== 404) {
-      console.warn(`获取性能指标失败:`, error.message);
+      console.warn('获取性能指标失败:', error.message);
     }
 
     // 返回默认指标数据
@@ -1331,19 +1331,19 @@ export async function getPerformanceMetrics(
       time_series: {
         labels: [],
         response_times: [],
-        usage_counts: []
+        usage_counts: [],
       },
       usage_distribution: {
         labels: [],
-        values: []
-      }
+        values: [],
+      },
     };
   }
 }
 
 export async function getPerformanceAnalysis(
   promptId: string,
-  timeRange: '24h' | '7d' | '30d' | '90d' = '7d'
+  timeRange: '24h' | '7d' | '30d' | '90d' = '7d',
 ): Promise<PerformanceAnalysis> {
   try {
     const response = await api.get(`/performance/analysis?promptId=${promptId}&timeRange=${timeRange}`);
@@ -1356,7 +1356,7 @@ export async function getPerformanceAnalysis(
   } catch (error: any) {
     // 静默处理404错误
     if (error.response?.status !== 404) {
-      console.warn(`获取性能分析失败:`, error.message);
+      console.warn('获取性能分析失败:', error.message);
     }
 
     // 返回默认分析数据
@@ -1365,8 +1365,8 @@ export async function getPerformanceAnalysis(
       bottlenecks: [],
       performance_trends: {
         trend: 'stable',
-        factors: []
-      }
+        factors: [],
+      },
     };
   }
 }
@@ -1383,7 +1383,7 @@ export async function getOptimizationSuggestions(promptId: string): Promise<Opti
   } catch (error: any) {
     // 静默处理404错误
     if (error.response?.status !== 404) {
-      console.warn(`获取优化建议失败:`, error.message);
+      console.warn('获取优化建议失败:', error.message);
     }
 
     // 返回默认建议
@@ -1393,8 +1393,8 @@ export async function getOptimizationSuggestions(promptId: string): Promise<Opti
         description: '需要更多使用数据来生成个性化的优化建议',
         priority: 'medium',
         expected_improvement: '提高分析准确性',
-        implementation_effort: 'low'
-      }
+        implementation_effort: 'low',
+      },
     ];
   }
 }

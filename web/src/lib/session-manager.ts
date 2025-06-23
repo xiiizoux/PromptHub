@@ -40,7 +40,7 @@ class SessionManager {
       maxSessionDuration: 8 * 60 * 60 * 1000, // 8小时
       autoRenewal: true,
       warningTime: 2 * 60 * 1000,          // 2分钟
-      ...config
+      ...config,
     };
 
     // 启动清理定时器
@@ -62,7 +62,7 @@ class SessionManager {
       expiresAt: now + this.config.sessionTimeout,
       isValid: true,
       timeUntilExpiry: this.config.sessionTimeout,
-      needsRenewal: false
+      needsRenewal: false,
     };
 
     this.sessions.set(sessionId, session);
@@ -243,7 +243,7 @@ export const sessionManager = new SessionManager({
   renewalThreshold: 5 * 60 * 1000,     // 5分钟前自动续期
   maxSessionDuration: 8 * 60 * 60 * 1000, // 8小时最大时长
   autoRenewal: true,                    // 启用自动续期
-  warningTime: 2 * 60 * 1000           // 2分钟前警告
+  warningTime: 2 * 60 * 1000,           // 2分钟前警告
 });
 
 export default SessionManager;

@@ -3,7 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
+  process.env.SUPABASE_SERVICE_ROLE_KEY!,
 );
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -18,7 +18,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       promptId,
       model,
       dateFrom,
-      dateTo
+      dateTo,
     } = req.query;
 
     const authHeader = req.headers.authorization;
@@ -106,7 +106,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       output_tokens: item.output_tokens,
       latency_ms: item.latency_ms,
       created_at: item.created_at,
-      client_metadata: item.client_metadata
+      client_metadata: item.client_metadata,
     })) || [];
 
     const totalPages = Math.ceil((count || 0) / pageSizeNum);
@@ -117,13 +117,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       total: count || 0,
       page: pageNum,
       pageSize: pageSizeNum,
-      totalPages
+      totalPages,
     });
   } catch (error: any) {
     console.error('获取使用历史失败:', error);
     res.status(500).json({ 
       success: false, 
-      error: error.message || '服务器内部错误' 
+      error: error.message || '服务器内部错误', 
     });
   }
 } 

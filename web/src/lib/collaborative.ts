@@ -157,7 +157,7 @@ export async function joinCollaborativeSession(promptId: string, userId: string)
   try {
     const response = await api.post('/collaborative/join', {
       promptId,
-      userId
+      userId,
     });
 
     if (!response.data.success) {
@@ -178,7 +178,7 @@ export async function leaveCollaborativeSession(promptId: string, userId: string
   try {
     await api.post('/collaborative/leave', {
       promptId,
-      userId
+      userId,
     });
 
     // 断开WebSocket连接
@@ -197,7 +197,7 @@ export async function sendOperation(promptId: string, operation: Operation): Pro
     // 同时通过HTTP API发送（作为备份）
     await api.post('/collaborative/operation', {
       promptId,
-      operation
+      operation,
     });
   } catch (error: any) {
     console.error('发送操作失败:', error);
@@ -239,7 +239,7 @@ export async function lockSection(promptId: string, userId: string, startPos: nu
       promptId,
       userId,
       startPos,
-      endPos
+      endPos,
     });
 
     if (!response.data.success) {
@@ -250,7 +250,7 @@ export async function lockSection(promptId: string, userId: string, startPos: nu
     collaborativeWS.send('lock', {
       userId,
       range: [startPos, endPos],
-      timestamp: new Date()
+      timestamp: new Date(),
     });
   } catch (error: any) {
     console.error('锁定区域失败:', error);
@@ -264,7 +264,7 @@ export async function unlockSection(promptId: string, userId: string, startPos: 
       promptId,
       userId,
       startPos,
-      endPos
+      endPos,
     });
 
     if (!response.data.success) {
@@ -275,7 +275,7 @@ export async function unlockSection(promptId: string, userId: string, startPos: 
     collaborativeWS.send('unlock', {
       userId,
       range: [startPos, endPos],
-      timestamp: new Date()
+      timestamp: new Date(),
     });
   } catch (error: any) {
     console.error('解锁区域失败:', error);
@@ -289,7 +289,7 @@ export async function sendCursorPosition(promptId: string, userId: string, curso
     collaborativeWS.send('cursor', {
       userId,
       cursor,
-      timestamp: new Date()
+      timestamp: new Date(),
     });
   } catch (error: any) {
     console.error('发送光标位置失败:', error);
@@ -308,13 +308,13 @@ export class OperationalTransform {
         // op1在op2之前，调整op2的位置
         return [
           op1,
-          { ...op2, position: op2.position + op1.content.length }
+          { ...op2, position: op2.position + op1.content.length },
         ];
       } else {
         // op2在op1之前，调整op1的位置
         return [
           { ...op1, position: op1.position + op2.content.length },
-          op2
+          op2,
         ];
       }
     }
@@ -390,7 +390,7 @@ export async function saveVersion(promptId: string, content: string, message?: s
     const response = await api.post('/collaborative/version', {
       promptId,
       content,
-      message
+      message,
     });
 
     if (!response.data.success) {
@@ -423,7 +423,7 @@ export async function restoreVersion(promptId: string, versionId: string): Promi
   try {
     const response = await api.post('/collaborative/restore', {
       promptId,
-      versionId
+      versionId,
     });
 
     if (!response.data.success) {

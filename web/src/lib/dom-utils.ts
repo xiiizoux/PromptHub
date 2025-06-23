@@ -40,7 +40,7 @@ export const safeLocalStorage = {
       console.warn('无法删除localStorage项:', error);
       return false;
     }
-  }
+  },
 };
 
 // 安全地访问document
@@ -75,7 +75,7 @@ export const safeDocument = {
       console.warn('无法移除事件监听器:', error);
       return false;
     }
-  }
+  },
 };
 
 // 安全地访问window对象的属性
@@ -88,7 +88,7 @@ export const safeWindow = {
       console.warn(`无法访问window.${property}:`, error);
       return undefined;
     }
-  }
+  },
 };
 
 // 延迟执行，确保DOM已加载

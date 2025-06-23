@@ -27,7 +27,7 @@ interface TemplateWizardProps {
 export const TemplateWizard: React.FC<TemplateWizardProps> = ({
   template,
   onComplete,
-  onCancel
+  onCancel,
 }) => {
   const [currentStep, setCurrentStep] = useState(0);
   const [values, setValues] = useState<Record<string, string>>({});

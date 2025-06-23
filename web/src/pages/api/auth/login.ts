@@ -24,7 +24,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       username: email.split('@')[0],
       email,
       role: 'user',
-      created_at: new Date().toISOString()
+      created_at: new Date().toISOString(),
     };
 
     // 生成模拟令牌
@@ -35,7 +35,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       success: true,
       message: '登录成功',
       user: mockUser,
-      token
+      token,
     });
   } catch (error) {
     console.error('登录错误:', error);

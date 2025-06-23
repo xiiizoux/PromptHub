@@ -32,20 +32,20 @@ const RefreshButton: React.FC<RefreshButtonProps> = ({
   loading = false,
   className = '',
   size = 'md',
-  text = '刷新'
+  text = '刷新',
 }) => {
   // 根据尺寸确定样式
   const sizeClasses = {
     sm: 'text-xs py-1 px-2',
     md: 'text-sm py-2 px-3',
-    lg: 'text-base py-3 px-4'
+    lg: 'text-base py-3 px-4',
   };
 
   // 图标尺寸
   const iconSize = {
     sm: 'h-3 w-3',
     md: 'h-4 w-4',
-    lg: 'h-5 w-5'
+    lg: 'h-5 w-5',
   };
 
   return (

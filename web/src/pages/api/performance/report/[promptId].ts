@@ -13,7 +13,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   if (!promptId || typeof promptId !== 'string') {
     return res.status(400).json({
       success: false,
-      message: '必须提供有效的提示词ID'
+      message: '必须提供有效的提示词ID',
     });
   }
 
@@ -26,21 +26,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (!report) {
       return res.status(404).json({
         success: false,
-        message: '无法生成性能报告，可能是提示词不存在或没有足够的数据'
+        message: '无法生成性能报告，可能是提示词不存在或没有足够的数据',
       });
     }
 
     return res.status(200).json({
       success: true,
       data: {
-        report: report
-      }
+        report: report,
+      },
     });
   } catch (error) {
     console.error('获取性能报告错误:', error);
     return res.status(500).json({
       success: false,
-      message: '获取性能报告过程中发生错误'
+      message: '获取性能报告过程中发生错误',
     });
   }
 }

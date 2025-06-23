@@ -3,7 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
+  process.env.SUPABASE_SERVICE_ROLE_KEY!,
 );
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -21,13 +21,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       success: true,
       recommendations: trendingPrompts,
       algorithm: 'trending',
-      generated_at: new Date().toISOString()
+      generated_at: new Date().toISOString(),
     });
   } catch (error: any) {
     console.error('获取热门推荐失败:', error);
     res.status(500).json({ 
       success: false, 
-      error: error.message || '获取热门推荐失败' 
+      error: error.message || '获取热门推荐失败', 
     });
   }
 }
@@ -100,7 +100,7 @@ async function getTrendingPrompts(limit: number) {
     Object.entries(ratingStats).forEach(([prompt_id, { sum, count }]) => {
       ratingMap.set(prompt_id, {
         avg: count > 0 ? sum / count : 0,
-        count
+        count,
       });
     });
 
@@ -141,11 +141,11 @@ async function getTrendingPrompts(limit: number) {
           bookmarks: social.bookmarks,
           usage_count: usage,
           average_rating: rating.avg,
-          rating_count: rating.count
+          rating_count: rating.count,
         },
         score: Math.min(totalScore / 2, 1), // 归一化到0-1
         reason: generateTrendingReason(usage, social, rating),
-        algorithm: 'trending_weighted'
+        algorithm: 'trending_weighted',
       };
     }) || [];
 
@@ -163,7 +163,7 @@ async function getTrendingPrompts(limit: number) {
 function generateTrendingReason(
   usage: number, 
   social: { likes: number; bookmarks: number }, 
-  rating: { avg: number; count: number }
+  rating: { avg: number; count: number },
 ): string {
   const reasons = [];
   

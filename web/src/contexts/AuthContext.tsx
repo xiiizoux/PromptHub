@@ -69,7 +69,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           username: providedUsername,
           display_name: displayName,
           role: 'user',
-          created_at: authUser.created_at
+          created_at: authUser.created_at,
         };
 
         const { error: insertError } = await supabase
@@ -104,7 +104,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                      authUser.user_metadata?.name ||
                      authUser.email.split('@')[0],
         role: 'user',
-        created_at: authUser.created_at || new Date().toISOString()
+        created_at: authUser.created_at || new Date().toISOString(),
       };
 
       const appUser: User = {
@@ -113,7 +113,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         email: finalUserData.email,
         display_name: finalUserData.display_name,
         role: finalUserData.role as 'user' | 'admin' | 'contributor',
-        created_at: finalUserData.created_at
+        created_at: finalUserData.created_at,
       };
 
       if (mounted.current) {
@@ -153,7 +153,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                  session.user.email?.split('@')[0] || 'User',
         email: session.user.email || '',
         role: 'user',
-        created_at: session.user.created_at || new Date().toISOString()
+        created_at: session.user.created_at || new Date().toISOString(),
       };
       
       if (mounted.current) {
@@ -234,7 +234,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
-        password
+        password,
       });
       
       if (error) {
@@ -264,8 +264,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       email,
       password,
       options: {
-        data: { username }
-      }
+        data: { username },
+      },
     });
     
     if (error) {
@@ -275,7 +275,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const loginWithGoogle = useCallback(async (): Promise<void> => {
     const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'google'
+      provider: 'google',
     });
     
     if (error) {

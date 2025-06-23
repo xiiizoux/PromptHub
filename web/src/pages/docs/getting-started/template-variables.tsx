@@ -78,7 +78,7 @@ const TemplateVariablesPage: React.FC = () => {
                   <p className="text-sm text-neon-green font-medium mb-2">✅ 使用变量的提示词：</p>
                   <div className="bg-dark-bg-secondary rounded-lg border-l-4 border-neon-green p-4">
                     <code className="text-gray-300 text-sm">
-                      请帮我写一封关于<span className="text-neon-cyan font-semibold">{`{topic}`}</span>的<span className="text-neon-purple font-semibold">{`{email_type}`}</span>
+                      请帮我写一封关于<span className="text-neon-cyan font-semibold">{'{topic}'}</span>的<span className="text-neon-purple font-semibold">{'{email_type}'}</span>
                     </code>
                   </div>
                 </div>
@@ -112,7 +112,7 @@ const TemplateVariablesPage: React.FC = () => {
                   >
                     <p className="text-sm font-medium text-neon-cyan mb-3">花括号语法：</p>
                     <div className="bg-dark-bg-secondary rounded-lg p-3 border border-neon-cyan/20">
-                      <code className="text-neon-cyan font-mono">{`{variable_name}`}</code>
+                      <code className="text-neon-cyan font-mono">{'{variable_name}'}</code>
                     </div>
                   </motion.div>
                   <motion.div 
@@ -122,7 +122,7 @@ const TemplateVariablesPage: React.FC = () => {
                   >
                     <p className="text-sm font-medium text-neon-purple mb-3">双花括号语法：</p>
                     <div className="bg-dark-bg-secondary rounded-lg p-3 border border-neon-purple/20">
-                      <code className="text-neon-purple font-mono">{`{{variable_name}}`}</code>
+                      <code className="text-neon-purple font-mono">{'{{variable_name}}'}</code>
                     </div>
                   </motion.div>
                 </div>
@@ -181,9 +181,9 @@ const TemplateVariablesPage: React.FC = () => {
                     <span className="bg-neon-cyan/20 text-neon-cyan px-2 py-1 rounded text-xs font-semibold">TEXT</span>
                   </div>
                   <pre className="text-sm text-gray-300 leading-relaxed">
-{`你是一个专业的`}<span className="text-neon-cyan font-semibold">{`{role}`}</span>{`，请帮助用户解决`}<span className="text-neon-purple font-semibold">{`{problem_type}`}</span>{`相关的问题。
+{'你是一个专业的'}<span className="text-neon-cyan font-semibold">{'{role}'}</span>{'，请帮助用户解决'}<span className="text-neon-purple font-semibold">{'{problem_type}'}</span>{`相关的问题。
 
-用户问题：`}<span className="text-neon-pink font-semibold">{`{user_question}`}</span>{`
+用户问题：`}<span className="text-neon-pink font-semibold">{'{user_question}'}</span>{`
 
 请提供详细的解答。`}
                   </pre>
@@ -204,12 +204,12 @@ const TemplateVariablesPage: React.FC = () => {
                     <span className="bg-neon-purple/20 text-neon-purple px-2 py-1 rounded text-xs font-semibold">LIST</span>
                   </div>
                   <pre className="text-sm text-gray-300 leading-relaxed">
-{`请分析以下`}<span className="text-neon-cyan font-semibold">{`{analysis_type}`}</span>{`：
+{'请分析以下'}<span className="text-neon-cyan font-semibold">{'{analysis_type}'}</span>{`：
 
 项目列表：
-`}<span className="text-neon-purple font-semibold">{`{item_list}`}</span>{`
+`}<span className="text-neon-purple font-semibold">{'{item_list}'}</span>{`
 
-分析要求：`}<span className="text-neon-pink font-semibold">{`{requirements}`}</span>
+分析要求：`}<span className="text-neon-pink font-semibold">{'{requirements}'}</span>
                   </pre>
                 </div>
               </motion.div>
@@ -228,11 +228,11 @@ const TemplateVariablesPage: React.FC = () => {
                     <span className="bg-neon-pink/20 text-neon-pink px-2 py-1 rounded text-xs font-semibold">FORMAT</span>
                   </div>
                   <pre className="text-sm text-gray-300 leading-relaxed">
-{`请将以下内容转换为`}<span className="text-neon-cyan font-semibold">{`{output_format}`}</span>{`格式：
+{'请将以下内容转换为'}<span className="text-neon-cyan font-semibold">{'{output_format}'}</span>{`格式：
 
-原始内容：`}<span className="text-neon-purple font-semibold">{`{input_content}`}</span>{`
+原始内容：`}<span className="text-neon-purple font-semibold">{'{input_content}'}</span>{`
 
-输出要求：`}<span className="text-neon-pink font-semibold">{`{format_requirements}`}</span>
+输出要求：`}<span className="text-neon-pink font-semibold">{'{format_requirements}'}</span>
                   </pre>
                 </div>
               </motion.div>
@@ -261,15 +261,15 @@ const TemplateVariablesPage: React.FC = () => {
                   <pre className="text-sm text-gray-300 leading-relaxed whitespace-pre-wrap">
 {`你是一个专业的邮件写作助手。
 
-请帮我写一封`}<span className="text-neon-cyan font-semibold">{`{email_type}`}</span>{`邮件，内容如下：
+请帮我写一封`}<span className="text-neon-cyan font-semibold">{'{email_type}'}</span>{`邮件，内容如下：
 
-收件人：`}<span className="text-neon-purple font-semibold">{`{recipient}`}</span>{`
-主题：`}<span className="text-neon-pink font-semibold">{`{subject}`}</span>{`
-主要内容：`}<span className="text-neon-yellow font-semibold">{`{main_content}`}</span>{`
-语调：`}<span className="text-neon-green font-semibold">{`{tone}`}</span>{`
+收件人：`}<span className="text-neon-purple font-semibold">{'{recipient}'}</span>{`
+主题：`}<span className="text-neon-pink font-semibold">{'{subject}'}</span>{`
+主要内容：`}<span className="text-neon-yellow font-semibold">{'{main_content}'}</span>{`
+语调：`}<span className="text-neon-green font-semibold">{'{tone}'}</span>{`
 
 请确保邮件：
-1. 语言`}<span className="text-neon-green font-semibold">{`{tone}`}</span>{`且专业
+1. 语言`}<span className="text-neon-green font-semibold">{'{tone}'}</span>{`且专业
 2. 结构清晰
 3. 包含适当的开头和结尾
 4. 长度适中
@@ -313,15 +313,15 @@ const TemplateVariablesPage: React.FC = () => {
                     <span className="bg-neon-purple/20 text-neon-purple px-2 py-1 rounded text-xs font-semibold">CODE REVIEWER</span>
                   </div>
                   <pre className="text-sm text-gray-300 leading-relaxed whitespace-pre-wrap">
-{`你是一个经验丰富的`}<span className="text-neon-cyan font-semibold">{`{programming_language}`}</span>{`开发者和代码审查员。
+{'你是一个经验丰富的'}<span className="text-neon-cyan font-semibold">{'{programming_language}'}</span>{`开发者和代码审查员。
 
-请审查以下`}<span className="text-neon-purple font-semibold">{`{code_type}`}</span>{`代码：
+请审查以下`}<span className="text-neon-purple font-semibold">{'{code_type}'}</span>{`代码：
 
-\`\`\``}<span className="text-neon-cyan font-semibold">{`{programming_language}`}</span>{`
-`}<span className="text-neon-pink font-semibold">{`{code_content}`}</span>{`
+\`\`\``}<span className="text-neon-cyan font-semibold">{'{programming_language}'}</span>{`
+`}<span className="text-neon-pink font-semibold">{'{code_content}'}</span>{`
 \`\`\`
 
-审查重点：`}<span className="text-neon-yellow font-semibold">{`{review_focus}`}</span>{`
+审查重点：`}<span className="text-neon-yellow font-semibold">{'{review_focus}'}</span>{`
 
 请提供：
 1. 代码质量评估

@@ -97,7 +97,7 @@ class MemoryCache {
   async getOrSet<T>(
     key: string, 
     fetchFn: () => Promise<T>, 
-    ttlSeconds: number = 300
+    ttlSeconds: number = 300,
   ): Promise<T> {
     // 尝试从缓存获取
     const cachedData = this.get<T>(key);

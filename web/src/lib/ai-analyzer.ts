@@ -59,7 +59,7 @@ class AIAnalyzer {
       baseURL: this.baseURL,
       fullAnalysisModel: this.fullAnalysisModel,
       quickTasksModel: this.quickTasksModel,
-      hasApiKey: !!this.apiKey
+      hasApiKey: !!this.apiKey,
     });
   }
 
@@ -72,7 +72,7 @@ class AIAnalyzer {
     existingTags: string[] = [],
     currentVersion?: string,
     isNewPrompt: boolean = false,
-    existingVersions: string[] = []
+    existingVersions: string[] = [],
   ): Promise<AIAnalysisResult> {
     if (!this.apiKey) {
       throw new Error('AI分析服务未配置API密钥，请联系管理员配置');
@@ -83,7 +83,7 @@ class AIAnalyzer {
       includeSuggestions: true,
       language: 'zh',
       strictMode: false,
-      ...config
+      ...config,
     };
 
     try {
@@ -93,17 +93,17 @@ class AIAnalyzer {
           model: this.fullAnalysisModel,
           messages: [
             { role: 'system', content: this.buildSystemPrompt(finalConfig, existingTags) },
-            { role: 'user', content: this.buildUserPrompt(content, finalConfig) }
+            { role: 'user', content: this.buildUserPrompt(content, finalConfig) },
           ],
           temperature: 0.3,
-          max_tokens: 2000
+          max_tokens: 2000,
         },
         {
           headers: {
             'Authorization': `Bearer ${this.apiKey}`,
-            'Content-Type': 'application/json'
-          }
-        }
+            'Content-Type': 'application/json',
+          },
+        },
       );
 
       // 验证响应格式
@@ -155,7 +155,7 @@ class AIAnalyzer {
       
       // 20个预设分类（与数据库categories表完全一致，不包含"全部"这个UI选项）
       const categories = [
-        '通用', '学术', '职业', '文案', '设计', '绘画', '教育', '情感', '娱乐', '游戏', '生活', '商业', '办公', '编程', '翻译', '视频', '播客', '音乐', '健康', '科技'
+        '通用', '学术', '职业', '文案', '设计', '绘画', '教育', '情感', '娱乐', '游戏', '生活', '商业', '办公', '编程', '翻译', '视频', '播客', '音乐', '健康', '科技',
       ];
       
       // 预设的兼容模型选项（从MODEL_TAGS中获取）
@@ -163,12 +163,12 @@ class AIAnalyzer {
         id: tag.id,
         name: tag.name,
         description: tag.description,
-        type: tag.type
+        type: tag.type,
       }));
       
       // 构建模型选项字符串
       const modelOptionsText = compatibleModelOptions.map(model => 
-        `${model.id}(${model.name})`
+        `${model.id}(${model.name})`,
       ).join('、');
       
       // 构建已有标签提示
@@ -414,7 +414,7 @@ class AIAnalyzer {
         changeLevel,
         changeType,
         functionChanged,
-        suggestedIncrement
+        suggestedIncrement,
       };
     }
   
@@ -444,7 +444,7 @@ class AIAnalyzer {
     if (Array.isArray(result.compatibleModels)) {
       // 过滤出有效的模型ID
       finalCompatibleModels = result.compatibleModels.filter((model: string) => 
-        validModelIds.includes(model)
+        validModelIds.includes(model),
       );
     }
     
@@ -484,13 +484,13 @@ class AIAnalyzer {
       confidence: typeof result.confidence === 'number' 
         ? Math.max(0, Math.min(1, result.confidence)) : 0.8,
       suggestedTitle: result.suggestedTitle || '',
-      description: result.description || ''
+      description: result.description || '',
     };
 
     console.log('✅ 最终验证结果:', {
       version: validated.version,
       compatibleModels: validated.compatibleModels,
-      category: validated.category
+      category: validated.category,
     });
 
     return validated;
@@ -523,7 +523,7 @@ class AIAnalyzer {
         '办公': ['llm-medium', 'llm-large'],
         '教育': ['llm-large', 'llm-medium'],
         '游戏': ['llm-medium', 'llm-large'],
-        '默认': ['llm-large', 'llm-medium']
+        '默认': ['llm-large', 'llm-medium'],
       };
       
       // 获取基础推荐
@@ -550,7 +550,7 @@ class AIAnalyzer {
         // 创意相关关键词
         creative: ['创意', '创作', '创新', '想象', '原创', 'creative', 'original', 'innovative', 'imagination'],
         // 翻译相关关键词
-        translation: ['翻译', '转换', '语言', '中文', '英文', 'translate', 'translation', 'language', 'chinese', 'english']
+        translation: ['翻译', '转换', '语言', '中文', '英文', 'translate', 'translation', 'language', 'chinese', 'english'],
       };
       
       // 计算内容特征权重
@@ -699,39 +699,39 @@ class AIAnalyzer {
     }
     
     if (category === '编程') {
-      return `专业的编程开发工具，能够生成高质量代码和提供技术解决方案。支持多种编程语言和开发场景，帮助用户提升开发效率和代码质量。`;
+      return '专业的编程开发工具，能够生成高质量代码和提供技术解决方案。支持多种编程语言和开发场景，帮助用户提升开发效率和代码质量。';
     }
     
     if (category === '文案') {
-      return `创意文案创作助手，结合营销策略和用户心理生成吸引人的文案内容。适用于广告、营销、品牌传播等场景，帮助用户实现更好的传播效果。`;
+      return '创意文案创作助手，结合营销策略和用户心理生成吸引人的文案内容。适用于广告、营销、品牌传播等场景，帮助用户实现更好的传播效果。';
     }
     
     if (category === '翻译') {
-      return `智能多语言翻译工具，通过上下文理解和文化适配提供准确的翻译服务。支持多种语言对，帮助用户实现跨语言沟通和内容本地化。`;
+      return '智能多语言翻译工具，通过上下文理解和文化适配提供准确的翻译服务。支持多种语言对，帮助用户实现跨语言沟通和内容本地化。';
     }
     
     if (category === '设计') {
-      return `专业设计顾问工具，能够提供创意设计方案和视觉建议。结合美学原理和用户体验，帮助用户创造出色的设计作品。`;
+      return '专业设计顾问工具，能够提供创意设计方案和视觉建议。结合美学原理和用户体验，帮助用户创造出色的设计作品。';
     }
     
     if (category === '视频') {
-      return `专业视频制作助手，提供从策划到后期的全流程支持。擅长剪辑技巧、视觉效果和叙事结构，帮助用户创作引人入胜的视频内容。`;
+      return '专业视频制作助手，提供从策划到后期的全流程支持。擅长剪辑技巧、视觉效果和叙事结构，帮助用户创作引人入胜的视频内容。';
     }
     
     if (category === '音乐') {
-      return `智能音乐创作工具，能够协助旋律创作、歌词编写和编曲制作。结合音乐理论和情感表达，帮助用户创造动人的音乐作品。`;
+      return '智能音乐创作工具，能够协助旋律创作、歌词编写和编曲制作。结合音乐理论和情感表达，帮助用户创造动人的音乐作品。';
     }
     
     if (category === 'TTS音频') {
-      return `专业语音合成助手，提供自然流畅的语音生成服务。支持多种音色和情感表达，适用于有声读物、配音和语音导航等场景。`;
+      return '专业语音合成助手，提供自然流畅的语音生成服务。支持多种音色和情感表达，适用于有声读物、配音和语音导航等场景。';
     }
     
     if (category === '图片') {
-      return `智能图像设计工具，能够生成各类视觉内容和设计方案。结合美学原理和用户需求，帮助用户创作专业的图像作品。`;
+      return '智能图像设计工具，能够生成各类视觉内容和设计方案。结合美学原理和用户需求，帮助用户创作专业的图像作品。';
     }
     
     if (category === '播客') {
-      return `专业播客制作助手，提供节目策划、内容创作和制作指导。帮助用户打造高质量的音频节目，实现有效的知识传播和观众互动。`;
+      return '专业播客制作助手，提供节目策划、内容创作和制作指导。帮助用户打造高质量的音频节目，实现有效的知识传播和观众互动。';
     }
     
     // 通用描述模板
@@ -976,18 +976,18 @@ class AIAnalyzer {
       {
         patterns: ['模式', '觉察', '洞察', '系统', '规律', '结构'],
         roleIndicators: ['你拥有', '你是', '你的天赋', '你活着就是为了'],
-        titleTemplates: ['模式识别专家', '系统洞察大师', '规律发现者', '跨域分析师']
+        titleTemplates: ['模式识别专家', '系统洞察大师', '规律发现者', '跨域分析师'],
       },
       {
         patterns: ['思维', '分析', '理性', '逻辑', '推理'],
         roleIndicators: ['专家', '分析师', '顾问'],
-        titleTemplates: ['思维分析专家', '逻辑推理助手', '理性分析师', '深度思考者']
+        titleTemplates: ['思维分析专家', '逻辑推理助手', '理性分析师', '深度思考者'],
       },
       {
         patterns: ['创意', '创作', '灵感', '想象'],
         roleIndicators: ['创作者', '艺术家', '设计师'],
-        titleTemplates: ['创意思维激发器', '灵感创作助手', '想象力增强器']
-      }
+        titleTemplates: ['创意思维激发器', '灵感创作助手', '想象力增强器'],
+      },
     ];
 
     // 检查特殊模式
@@ -1009,10 +1009,10 @@ class AIAnalyzer {
       '设计': ['设计师', '创意总监', '视觉顾问'],
       '教学': ['教学助手', '学习导师', '知识传播者'],
       '咨询': ['专业顾问', '解决方案专家', '策略分析师'],
-      '管理': ['管理顾问', '项目专家', '效率优化师']
+      '管理': ['管理顾问', '项目专家', '效率优化师'],
     };
 
-    let foundKeyword = '';
+    const foundKeyword = '';
     for (const [keyword, titles] of Object.entries(functionKeywords)) {
       if (lowerContent.includes(keyword)) {
         return titles[0];
@@ -1033,7 +1033,7 @@ class AIAnalyzer {
       'TTS音频': ['语音合成专家', '音频制作师', '配音导师', '声音设计师'],
       '图片': ['图像设计师', '视觉创作者', '插画师助手', '图形设计专家'],
       '播客': ['播客制作人', '节目策划师', '音频内容创作者', '主播助手'],
-      '通用': ['智能助手', '问题解决专家', '多功能顾问', '通用分析师']
+      '通用': ['智能助手', '问题解决专家', '多功能顾问', '通用分析师'],
     };
 
     const titles = categoryTitles[category] || categoryTitles['通用'];
@@ -1057,7 +1057,7 @@ class AIAnalyzer {
     if (!matches) return [];
     
     const uniqueVariables = new Set(
-      matches.map(match => match.replace(/^\{\{|\}\}$/g, '').trim())
+      matches.map(match => match.replace(/^\{\{|\}\}$/g, '').trim()),
     );
     return Array.from(uniqueVariables).filter(variable => variable.length > 0);
   }
@@ -1083,7 +1083,7 @@ class AIAnalyzer {
       '音乐创作': ['音乐', '歌曲', '旋律', '歌词', '编曲', '作曲', '乐谱'],
       '语音合成': ['语音', '音频', 'tts', '朗读', '播音', '配音', '声音'],
       '图像设计': ['图片', '图像', '照片', '绘画', '插画', '海报', '设计图'],
-      '播客制作': ['播客', 'podcast', '电台', '广播', '节目', '主持']
+      '播客制作': ['播客', 'podcast', '电台', '广播', '节目', '主持'],
     };
 
     // 思维方式标签检测
@@ -1093,7 +1093,7 @@ class AIAnalyzer {
       '逻辑推理': ['逻辑', '推理', '推断', '演绎', '归纳', '因果'],
       '创意思维': ['创意', '创新', '想象', '灵感', '突破', '原创'],
       '批判思维': ['批判', '质疑', '评价', '判断', '辨析', '反思'],
-      '深度洞察': ['洞察', '觉察', '感知', '理解', '领悟', '透视']
+      '深度洞察': ['洞察', '觉察', '感知', '理解', '领悟', '透视'],
     };
 
     // 角色类标签检测
@@ -1103,7 +1103,7 @@ class AIAnalyzer {
       '顾问': ['顾问', '咨询师', '建议者', '指导者'],
       '助手': ['助手', '助理', '帮手', '支持者'],
       '导师': ['导师', '老师', '教练', '引路人'],
-      '分析师': ['分析师', '研究员', '调研员', '评估师']
+      '分析师': ['分析师', '研究员', '调研员', '评估师'],
     };
 
     // 应用场景标签检测
@@ -1113,7 +1113,7 @@ class AIAnalyzer {
       '创作': ['创作', '写作', '文学', '艺术', '内容'],
       '学习': ['学习', '教育', '培训', '知识', '技能'],
       '咨询': ['咨询', '服务', '客户', '解决方案'],
-      '娱乐': ['娱乐', '游戏', '趣味', '休闲', '放松']
+      '娱乐': ['娱乐', '游戏', '趣味', '休闲', '放松'],
     };
 
     // 特色标签检测
@@ -1122,7 +1122,7 @@ class AIAnalyzer {
       '个性化': ['个性化', '定制', '专属', '量身', '针对性'],
       '结构化': ['结构化', '有序', '条理', '系统性', '规范'],
       '互动式': ['互动', '对话', '交流', '沟通', '问答'],
-      '创意输出': ['创意', '新颖', '独特', '原创', '突破性']
+      '创意输出': ['创意', '新颖', '独特', '原创', '突破性'],
     };
 
     // 检测各类标签
@@ -1193,7 +1193,7 @@ class AIAnalyzer {
         '科技': ['科技', '技术', '创新', '人工智能', '机器学习', 'technology', 'innovation', 'ai', 'ml', '物联网', '区块链', '大数据'],
         '文案': ['文案', '写作', '内容', '文章', '广告', 'copywriting', 'writing', 'content', 'article', 'advertisement', '宣传', '推广'],
         '游戏': ['游戏', '娱乐', '玩法', '关卡', '角色', 'game', 'entertainment', 'gameplay', 'level', 'character', '剧情', '策略'],
-        '生活': ['生活', '日常', '家庭', '旅行', '美食', 'life', 'daily', 'family', 'travel', 'food', '购物', '时尚', '兴趣']
+        '生活': ['生活', '日常', '家庭', '旅行', '美食', 'life', 'daily', 'family', 'travel', 'food', '购物', '时尚', '兴趣'],
       };
       
       // 计算每个分类的匹配分数
@@ -1273,26 +1273,26 @@ class AIAnalyzer {
   - "分析这个商业计划的可行性" → 商业（核心功能是商业分析）
   - "设计一个健康主题的海报" → 设计（核心功能是设计工作）
   
-  只返回分类名称，不要其他内容。` 
+  只返回分类名称，不要其他内容。`, 
               },
-              { role: 'user', content: `请为以下提示词分类：\n\n${content}` }
+              { role: 'user', content: `请为以下提示词分类：\n\n${content}` },
             ],
             temperature: 0.1,
-            max_tokens: 50
+            max_tokens: 50,
           },
           {
             headers: {
               'Authorization': `Bearer ${this.apiKey}`,
-              'Content-Type': 'application/json'
-            }
-          }
+              'Content-Type': 'application/json',
+            },
+          },
         );
   
         const result = response.data.choices[0].message.content.trim();
         
         // 验证返回的分类是否在预设列表中
         const validCategories = [
-          '通用', '学术', '职业', '文案', '设计', '绘画', '教育', '情感', '娱乐', '游戏', '生活', '商业', '办公', '编程', '翻译', '视频', '播客', '音乐', '健康', '科技'
+          '通用', '学术', '职业', '文案', '设计', '绘画', '教育', '情感', '娱乐', '游戏', '生活', '商业', '办公', '编程', '翻译', '视频', '播客', '音乐', '健康', '科技',
         ];
         
         if (validCategories.includes(result)) {
@@ -1384,7 +1384,7 @@ class AIAnalyzer {
       '助手': ['ai', '智能', 'assistant'],
       '初学者': ['新手', '入门', 'beginner'],
       '高级': ['专业', '进阶', 'advanced'],
-      '自动化': ['automation', '自动']
+      '自动化': ['automation', '自动'],
     };
     
     for (const [synonym, alternatives] of Object.entries(synonyms)) {
@@ -1431,7 +1431,7 @@ class AIAnalyzer {
         matrix[j][i] = Math.min(
           matrix[j][i - 1] + 1,     // deletion
           matrix[j - 1][i] + 1,     // insertion
-          matrix[j - 1][i - 1] + indicator  // substitution
+          matrix[j - 1][i - 1] + indicator,  // substitution
         );
       }
     }
@@ -1476,19 +1476,19 @@ class AIAnalyzer {
   - 场景具体：学术写作、商业策划、日常办公
   - 特征突出：步骤指导、创意激发、问题解决
   
-  返回格式：用逗号分隔的标签列表，如：分析,角色扮演,学术研究,深度思考` 
+  返回格式：用逗号分隔的标签列表，如：分析,角色扮演,学术研究,深度思考`, 
               },
-              { role: 'user', content: `请为以下提示词提取标签：\n\n${content}` }
+              { role: 'user', content: `请为以下提示词提取标签：\n\n${content}` },
             ],
             temperature: 0.3,
-            max_tokens: 100
+            max_tokens: 100,
           },
           {
             headers: {
               'Authorization': `Bearer ${this.apiKey}`,
-              'Content-Type': 'application/json'
-            }
-          }
+              'Content-Type': 'application/json',
+            },
+          },
         );
   
         const result = response.data.choices[0].message.content.trim();
@@ -1498,7 +1498,7 @@ class AIAnalyzer {
         const validTags = aiTags.filter((tag: string) => 
           tag.length > 0 && 
           tag.length < 20 && 
-          !['AI', '助手', '工具'].includes(tag) // 过滤过于宽泛的标签
+          !['AI', '助手', '工具'].includes(tag), // 过滤过于宽泛的标签
         ).slice(0, 8);
         
         // 与现有标签智能合并
@@ -1531,7 +1531,7 @@ class AIAnalyzer {
     
     // 新提示词从1.0开始
     if (isNewPrompt) {
-      let baseVersion = '1.0';
+      const baseVersion = '1.0';
       
       // 确保版本号不重复
       let version = baseVersion;
@@ -1572,7 +1572,7 @@ class AIAnalyzer {
     }
 
     // 如果没有当前版本信息，默认为1.0
-    let baseVersion = '1.0';
+    const baseVersion = '1.0';
     
     // 确保版本号不重复
     let version = baseVersion;
@@ -1606,7 +1606,7 @@ class AIAnalyzer {
     // 基于关键词复杂度
     const complexKeywords = ['步骤', '规则', '约束', '条件', '格式', '要求'];
     const keywordCount = complexKeywords.filter(keyword => 
-      content.toLowerCase().includes(keyword.toLowerCase())
+      content.toLowerCase().includes(keyword.toLowerCase()),
     ).length;
     score += Math.min(keywordCount * 0.05, 0.2);
     
@@ -1628,7 +1628,7 @@ class AIAnalyzer {
           isHealthy: false,
           endpoint: this.baseURL,
           models: { full: this.fullAnalysisModel, quick: this.quickTasksModel },
-          error: 'API密钥未配置'
+          error: 'API密钥未配置',
         };
       }
 
@@ -1638,28 +1638,28 @@ class AIAnalyzer {
         {
           model: this.quickTasksModel,
           messages: [{ role: 'user', content: 'test' }],
-          max_tokens: 1
+          max_tokens: 1,
         },
         {
           headers: {
             'Authorization': `Bearer ${this.apiKey}`,
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
           },
-          timeout: 10000 // 10秒超时
-        }
+          timeout: 10000, // 10秒超时
+        },
       );
 
       return {
         isHealthy: true,
         endpoint: this.baseURL,
-        models: { full: this.fullAnalysisModel, quick: this.quickTasksModel }
+        models: { full: this.fullAnalysisModel, quick: this.quickTasksModel },
       };
     } catch (error: any) {
       return {
         isHealthy: false,
         endpoint: this.baseURL,
         models: { full: this.fullAnalysisModel, quick: this.quickTasksModel },
-        error: error.message || '连接失败'
+        error: error.message || '连接失败',
       };
     }
   }
@@ -1672,10 +1672,10 @@ class AIAnalyzer {
       endpoint: this.baseURL,
       models: {
         fullAnalysis: this.fullAnalysisModel,
-        quickTasks: this.quickTasksModel
+        quickTasks: this.quickTasksModel,
       },
       hasApiKey: !!this.apiKey,
-      isCustomEndpoint: this.baseURL !== 'https://api.openai.com/v1'
+      isCustomEndpoint: this.baseURL !== 'https://api.openai.com/v1',
     };
   }
 }

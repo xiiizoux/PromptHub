@@ -12,7 +12,7 @@ export const DocSection: React.FC<DocSectionProps> = ({
   title, 
   children, 
   className = '',
-  delay = 0 
+  delay = 0, 
 }) => {
   return (
     <motion.div
@@ -57,7 +57,7 @@ export const DocGrid: React.FC<DocGridProps> = ({ children, cols = 2, className 
     1: 'grid-cols-1',
     2: 'grid-cols-1 md:grid-cols-2',
     3: 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3',
-    4: 'grid-cols-1 md:grid-cols-2 lg:grid-cols-4'
+    4: 'grid-cols-1 md:grid-cols-2 lg:grid-cols-4',
   };
 
   return (
@@ -82,14 +82,14 @@ export const DocCard: React.FC<DocCardProps> = ({
   icon, 
   color = 'cyan',
   children,
-  className = '' 
+  className = '', 
 }) => {
   const colorClasses = {
     cyan: 'from-neon-cyan/20 to-neon-cyan/5 border-neon-cyan/30 text-neon-cyan',
     purple: 'from-neon-purple/20 to-neon-purple/5 border-neon-purple/30 text-neon-purple',
     pink: 'from-neon-pink/20 to-neon-pink/5 border-neon-pink/30 text-neon-pink',
     green: 'from-neon-green/20 to-neon-green/5 border-neon-green/30 text-neon-green',
-    yellow: 'from-neon-yellow/20 to-neon-yellow/5 border-neon-yellow/30 text-neon-yellow'
+    yellow: 'from-neon-yellow/20 to-neon-yellow/5 border-neon-yellow/30 text-neon-yellow',
   };
 
   return (
@@ -124,7 +124,7 @@ export const DocCodeBlock: React.FC<DocCodeBlockProps> = ({
   code, 
   language = 'text',
   title,
-  className = '' 
+  className = '', 
 }) => {
   return (
     <div className={`bg-dark-bg-primary/50 border border-dark-border/50 rounded-xl overflow-hidden ${className}`}>
@@ -198,13 +198,13 @@ interface DocHighlightProps {
 export const DocHighlight: React.FC<DocHighlightProps> = ({ 
   children, 
   type = 'info',
-  className = '' 
+  className = '', 
 }) => {
   const typeClasses = {
     info: 'border-neon-cyan/50 bg-neon-cyan/10 text-neon-cyan',
     warning: 'border-neon-yellow/50 bg-neon-yellow/10 text-neon-yellow',
     success: 'border-neon-green/50 bg-neon-green/10 text-neon-green',
-    error: 'border-neon-red/50 bg-neon-red/10 text-neon-red'
+    error: 'border-neon-red/50 bg-neon-red/10 text-neon-red',
   };
 
   return (

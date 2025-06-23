@@ -14,7 +14,7 @@ import {
   ArrowRightIcon,
   CommandLineIcon,
   CircleStackIcon,
-  BoltIcon
+  BoltIcon,
 } from '@heroicons/react/24/outline';
 import { PromptInfo } from '@/types';
 import PromptCard from '@/components/prompts/PromptCard';

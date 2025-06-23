@@ -40,13 +40,13 @@ function checkRateLimit(identifier: string): { allowed: boolean; remaining: numb
   if (!record || now > record.resetTime) {
     const newRecord = {
       count: 1,
-      resetTime: now + RATE_LIMIT_WINDOW
+      resetTime: now + RATE_LIMIT_WINDOW,
     };
     rateLimitStore.set(key, newRecord);
     return {
       allowed: true,
       remaining: RATE_LIMIT_MAX_REQUESTS - 1,
-      resetTime: newRecord.resetTime
+      resetTime: newRecord.resetTime,
     };
   }
 
@@ -54,7 +54,7 @@ function checkRateLimit(identifier: string): { allowed: boolean; remaining: numb
     return {
       allowed: false,
       remaining: 0,
-      resetTime: record.resetTime
+      resetTime: record.resetTime,
     };
   }
 
@@ -64,7 +64,7 @@ function checkRateLimit(identifier: string): { allowed: boolean; remaining: numb
   return {
     allowed: true,
     remaining: RATE_LIMIT_MAX_REQUESTS - record.count,
-    resetTime: record.resetTime
+    resetTime: record.resetTime,
   };
 }
 
@@ -78,7 +78,7 @@ function updateSessionActivity(sessionId: string, userId: string, ip: string, us
     lastActivity: now,
     expiresAt: now + SESSION_TIMEOUT,
     ip,
-    userAgent
+    userAgent,
   });
 }
 
@@ -106,7 +106,7 @@ export function withApiAuth(handler: Function) {
           success: false,
           message: '请求过于频繁，请稍后再试',
           retryAfter: Math.ceil((rateLimitResult.resetTime - Date.now()) / 1000),
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         });
       }
 
@@ -129,7 +129,7 @@ export function withApiAuth(handler: Function) {
           return res.status(401).json({
             success: false,
             message: '令牌无效或已过期',
-            timestamp: new Date().toISOString()
+            timestamp: new Date().toISOString(),
           });
         }
 
@@ -143,13 +143,13 @@ export function withApiAuth(handler: Function) {
         return res.status(401).json({
           success: false,
           message: 'API密钥认证暂不支持，请使用JWT令牌',
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         });
       } else {
         return res.status(401).json({
           success: false,
           message: '未提供认证令牌',
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         });
       }
 
@@ -170,7 +170,7 @@ export function withApiAuth(handler: Function) {
       return res.status(500).json({
         success: false,
         message: '服务器内部错误',
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
     }
   };
@@ -199,7 +199,7 @@ export function withOptionalAuth(handler: Function) {
           success: false,
           message: '请求过于频繁，请稍后再试',
           retryAfter: Math.ceil((rateLimitResult.resetTime - Date.now()) / 1000),
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         });
       }
 
@@ -241,7 +241,7 @@ export function withOptionalAuth(handler: Function) {
       return res.status(500).json({
         success: false,
         message: '服务器内部错误',
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
     }
   };

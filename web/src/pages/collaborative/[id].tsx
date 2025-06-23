@@ -8,7 +8,7 @@ import {
   EyeIcon,
   ShareIcon,
   DocumentDuplicateIcon,
-  BoltIcon
+  BoltIcon,
 } from '@heroicons/react/24/outline';
 import { useAuth } from '@/contexts/AuthContext';
 import { CollaborativeEditor } from '@/components/CollaborativeEditor';
@@ -81,7 +81,7 @@ export default function CollaborativePage() {
 
     try {
       const response = await api.put(`/prompts/${prompt.id}`, {
-        content
+        content,
       });
 
       if (response.data.success) {

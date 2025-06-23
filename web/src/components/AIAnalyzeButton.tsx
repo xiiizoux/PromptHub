@@ -29,7 +29,7 @@ export const AIAnalyzeButton: React.FC<AIAnalyzeButtonProps> = ({
   originalContent,
   existingCategory,
   existingTags,
-  existingModels
+  existingModels,
 }) => {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -38,23 +38,23 @@ export const AIAnalyzeButton: React.FC<AIAnalyzeButtonProps> = ({
     full: {
       text: '🤖 智能分析',
       action: 'full_analyze',
-      description: '完整AI分析：分类、标签、变量、建议等'
+      description: '完整AI分析：分类、标签、变量、建议等',
     },
     classify: {
       text: '🏷️ 智能分类',
       action: 'quick_classify',
-      description: '快速智能分类'
+      description: '快速智能分类',
     },
     tags: {
       text: '🔖 提取标签', 
       action: 'extract_tags',
-      description: 'AI提取相关标签'
+      description: 'AI提取相关标签',
     },
     variables: {
       text: '📝 提取变量',
       action: 'extract_variables',
-      description: '提取模板变量'
-    }
+      description: '提取模板变量',
+    },
   };
 
   const config = buttonConfig[variant];
@@ -71,7 +71,7 @@ export const AIAnalyzeButton: React.FC<AIAnalyzeButtonProps> = ({
       hasValidContent,
       isButtonDisabled,
       disabled,
-      isAnalyzing
+      isAnalyzing,
     });
   }
 
@@ -92,8 +92,8 @@ export const AIAnalyzeButton: React.FC<AIAnalyzeButtonProps> = ({
         config: {
           language: 'zh',
           includeImprovements: variant === 'full',
-          includeSuggestions: variant === 'full'
-        }
+          includeSuggestions: variant === 'full',
+        },
       };
 
       // 如果是编辑模式，添加增量分析参数
@@ -113,16 +113,16 @@ export const AIAnalyzeButton: React.FC<AIAnalyzeButtonProps> = ({
           当前内容长度: content.length,
           现有分类: existingCategory,
           现有标签数量: existingTags?.length || 0,
-          现有模型数量: existingModels?.length || 0
+          现有模型数量: existingModels?.length || 0,
         });
       }
 
       const response = await fetch('/api/ai/analyze', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
         },
-        body: JSON.stringify(requestBody)
+        body: JSON.stringify(requestBody),
       });
 
       const result = await response.json();
@@ -226,7 +226,7 @@ interface AIAnalysisResultDisplayProps {
 
 export const AIAnalysisResultDisplay: React.FC<AIAnalysisResultDisplayProps> = ({
   result,
-  onApplyResults
+  onApplyResults,
 }) => {
   const [appliedFields, setAppliedFields] = useState<Set<string>>(new Set());
   const [copiedField, setCopiedField] = useState<string | null>(null);
@@ -257,7 +257,7 @@ export const AIAnalysisResultDisplay: React.FC<AIAnalysisResultDisplayProps> = (
         variables: result.variables,
         compatibleModels: result.compatibleModels,
         suggestedTitle: result.suggestedTitle,
-        description: result.description
+        description: result.description,
       });
       setAppliedFields(new Set(['category', 'tags', 'version', 'variables', 'compatibleModels', 'suggestedTitle', 'description']));
     }

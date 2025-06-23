@@ -31,8 +31,8 @@ export default function RegisterPage() {
       email: '',
       password: '',
       confirmPassword: '',
-      agreeTerms: false
-    }
+      agreeTerms: false,
+    },
   });
 
   const password = watch('password');
@@ -233,15 +233,15 @@ export default function RegisterPage() {
                     required: '请输入用户名',
                     minLength: {
                       value: 4,
-                      message: '用户名必须至少包含4个字符'
+                      message: '用户名必须至少包含4个字符',
                     },
                     maxLength: {
                       value: 20,
-                      message: '用户名不能超过20个字符'
+                      message: '用户名不能超过20个字符',
                     },
                     pattern: {
                       value: /^[A-Za-z0-9_-]+$/,
-                      message: '用户名只能包含字母、数字、下划线和连字符'
+                      message: '用户名只能包含字母、数字、下划线和连字符',
                     },
                     validate: {
                       notReserved: value => {
@@ -251,12 +251,12 @@ export default function RegisterPage() {
                           'admin', 'administrator', 'root', 'superuser', 'super', 
                           'system', 'sysadmin', 'user', 'test', 'guest', 
                           'manager', 'support', 'service', 'security',
-                          'webmaster', 'postmaster', 'master', 'owner', 'staff'
+                          'webmaster', 'postmaster', 'master', 'owner', 'staff',
                         ];
                         return !reservedNames.includes(lowerValue) || 
                           '此用户名为系统保留名，请使用其他用户名';
-                      }
-                    }
+                      },
+                    },
                   })}
                 />
               </div>
@@ -299,8 +299,8 @@ export default function RegisterPage() {
                     required: '请输入电子邮件',
                     pattern: {
                       value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                      message: '请输入有效的电子邮件地址'
-                    }
+                      message: '请输入有效的电子邮件地址',
+                    },
                   })}
                 />
               </div>
@@ -330,7 +330,7 @@ export default function RegisterPage() {
                 </div>
                 <motion.input
                   id="password"
-                  type={showPassword ? "text" : "password"}
+                  type={showPassword ? 'text' : 'password'}
                   autoComplete="new-password"
                   whileFocus={{ scale: 1.02 }}
                   className={`w-full pl-12 pr-12 py-3 bg-dark-bg-secondary/50 border rounded-xl text-white placeholder-gray-500 transition-all duration-300 backdrop-blur-sm ${
@@ -343,12 +343,12 @@ export default function RegisterPage() {
                     required: '请输入密码',
                     minLength: {
                       value: 8,
-                      message: '密码必须至少包含8个字符'
+                      message: '密码必须至少包含8个字符',
                     },
                     pattern: {
                       value: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d@$!%*?&#\-_+=,.;:]{8,}$/,
-                      message: '密码必须包含至少一个大写字母、一个小写字母和一个数字'
-                    }
+                      message: '密码必须包含至少一个大写字母、一个小写字母和一个数字',
+                    },
                   })}
                 />
                 <button
@@ -389,7 +389,7 @@ export default function RegisterPage() {
                 </div>
                 <motion.input
                   id="confirmPassword"
-                  type={showConfirmPassword ? "text" : "password"}
+                  type={showConfirmPassword ? 'text' : 'password'}
                   autoComplete="new-password"
                   whileFocus={{ scale: 1.02 }}
                   className={`w-full pl-12 pr-12 py-3 bg-dark-bg-secondary/50 border rounded-xl text-white placeholder-gray-500 transition-all duration-300 backdrop-blur-sm ${
@@ -400,7 +400,7 @@ export default function RegisterPage() {
                   placeholder="再次输入您的密码"
                   {...register('confirmPassword', { 
                     required: '请确认密码',
-                    validate: value => value === password || '两次输入的密码不匹配'
+                    validate: value => value === password || '两次输入的密码不匹配',
                   })}
                 />
                 <button
@@ -440,7 +440,7 @@ export default function RegisterPage() {
                   errors.agreeTerms ? 'border-red-500' : ''
                 }`}
                 {...register('agreeTerms', { 
-                  required: '您必须同意服务条款和隐私政策'
+                  required: '您必须同意服务条款和隐私政策',
                 })}
               />
               <label htmlFor="agreeTerms" className="ml-3 block text-sm text-gray-300">

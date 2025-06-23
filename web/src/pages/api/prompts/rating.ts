@@ -3,7 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
+  process.env.SUPABASE_SERVICE_ROLE_KEY!,
 );
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -52,7 +52,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           .update({
             rating,
             comment: comment || null,
-            updated_at: new Date().toISOString()
+            updated_at: new Date().toISOString(),
           })
           .eq('prompt_id', promptId)
           .eq('user_id', user.id);
@@ -66,7 +66,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             prompt_id: promptId,
             user_id: user.id,
             rating,
-            comment: comment || null
+            comment: comment || null,
           });
 
         if (insertError) throw insertError;
@@ -86,7 +86,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         .update({
           rating,
           comment: comment || null,
-          updated_at: new Date().toISOString()
+          updated_at: new Date().toISOString(),
         })
         .eq('prompt_id', promptId)
         .eq('user_id', user.id);
@@ -112,7 +112,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     console.error('评分操作失败:', error);
     res.status(500).json({ 
       success: false, 
-      error: error.message || '服务器内部错误' 
+      error: error.message || '服务器内部错误', 
     });
   }
 } 

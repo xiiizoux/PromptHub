@@ -16,7 +16,7 @@ import {
   ClockIcon,
   TagIcon,
   EyeIcon,
-  FireIcon
+  FireIcon,
 } from '@heroicons/react/24/outline';
 import { HeartIcon as HeartSolidIcon, StarIcon as StarSolidIcon } from '@heroicons/react/24/solid';
 import type { PromptTemplate, TemplateCategory, TemplateFilters } from '@/types';
@@ -30,7 +30,7 @@ const ICON_MAP: Record<string, React.ComponentType<any>> = {
   ChartBarIcon,
   ChatBubbleLeftRightIcon,
   DocumentTextIcon,
-  UserGroupIcon
+  UserGroupIcon,
 };
 
 interface DatabaseTemplateLibraryProps {
@@ -40,7 +40,7 @@ interface DatabaseTemplateLibraryProps {
 
 const DatabaseTemplateLibrary: React.FC<DatabaseTemplateLibraryProps> = ({
   onSelectTemplate,
-  onUseTemplate
+  onUseTemplate,
 }) => {
   const [templates, setTemplates] = useState<PromptTemplate[]>([]);
   const [categories, setCategories] = useState<TemplateCategory[]>([]);
@@ -64,7 +64,7 @@ const DatabaseTemplateLibrary: React.FC<DatabaseTemplateLibraryProps> = ({
       setLoading(true);
       const [templatesResponse, categoriesResponse] = await Promise.all([
         fetch('/api/templates?limit=100'),
-        fetch('/api/templates/categories')
+        fetch('/api/templates/categories'),
       ]);
 
       const templatesResult = await templatesResponse.json();
@@ -104,7 +104,7 @@ const DatabaseTemplateLibrary: React.FC<DatabaseTemplateLibraryProps> = ({
       filtered = filtered.filter(t =>
         t.title.toLowerCase().includes(query) ||
         t.description.toLowerCase().includes(query) ||
-        t.tags.some(tag => tag.toLowerCase().includes(query))
+        t.tags.some(tag => tag.toLowerCase().includes(query)),
       );
     }
 
@@ -117,12 +117,12 @@ const DatabaseTemplateLibrary: React.FC<DatabaseTemplateLibraryProps> = ({
       await fetch(`/api/templates/${template.id}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'use' })
+        body: JSON.stringify({ action: 'use' }),
       });
 
       // 更新本地使用次数
       setTemplates(prev => prev.map(t =>
-        t.id === template.id ? { ...t, usage_count: t.usage_count + 1 } : t
+        t.id === template.id ? { ...t, usage_count: t.usage_count + 1 } : t,
       ));
 
       onUseTemplate?.(template);

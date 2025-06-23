@@ -28,8 +28,8 @@ async function handler(req: NextApiRequest, res: NextApiResponse, userId: string
 
       const { data } = await axios.get(`${MCP_SERVER_URL}${endpoint}`, {
         headers: {
-          Authorization: authHeader
-        }
+          Authorization: authHeader,
+        },
       });
       
       return res.status(200).json(data);
@@ -43,14 +43,14 @@ async function handler(req: NextApiRequest, res: NextApiResponse, userId: string
         `${MCP_SERVER_URL}/api/notifications/mark-read`,
         {
           notificationId,
-          allNotifications
+          allNotifications,
         },
         {
           headers: {
             Authorization: authHeader,
             'Content-Type': 'application/json',
-          }
-        }
+          },
+        },
       );
       
       return res.status(200).json(data);
@@ -63,7 +63,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse, userId: string
       if (!notificationId) {
         return res.status(400).json({
           success: false,
-          error: '缺少必要参数: notificationId'
+          error: '缺少必要参数: notificationId',
         });
       }
       
@@ -71,9 +71,9 @@ async function handler(req: NextApiRequest, res: NextApiResponse, userId: string
         `${MCP_SERVER_URL}/api/notifications/${notificationId}`,
         {
           headers: {
-            Authorization: authHeader
-          }
-        }
+            Authorization: authHeader,
+          },
+        },
       );
       
       return res.status(200).json(data);
@@ -84,7 +84,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse, userId: string
     console.error('通知API错误:', error);
     return res.status(500).json({
       success: false,
-      error: error instanceof Error ? error.message : '未知错误'
+      error: error instanceof Error ? error.message : '未知错误',
     });
   }
 }

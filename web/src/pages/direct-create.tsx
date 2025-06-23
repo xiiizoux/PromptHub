@@ -34,7 +34,7 @@ const DirectCreatePage: React.FC = () => {
         console.error('加载数据失败:', error);
         setMessage({
           text: '加载分类和标签失败',
-          type: 'error'
+          type: 'error',
         });
       } finally {
         setIsLoading(false);
@@ -53,7 +53,7 @@ const DirectCreatePage: React.FC = () => {
       const response = await fetch('/api/direct-create', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           name: promptName,
@@ -65,13 +65,13 @@ const DirectCreatePage: React.FC = () => {
               role: 'system',
               content: {
                 type: 'text',
-                text: content
-              }
-            }
+                text: content,
+              },
+            },
           ],
           is_public: true, // 设置为公开，这样所有用户都能看到
-          user_id: user?.id || null
-        })
+          user_id: user?.id || null,
+        }),
       });
       
       const result = await response.json();
@@ -79,7 +79,7 @@ const DirectCreatePage: React.FC = () => {
       if (result.success) {
         setMessage({
           text: '提示词创建成功！',
-          type: 'success'
+          type: 'success',
         });
         
         // 重置表单
@@ -91,14 +91,14 @@ const DirectCreatePage: React.FC = () => {
       } else {
         setMessage({
           text: `创建失败: ${result.error || '未知错误'}`,
-          type: 'error'
+          type: 'error',
         });
       }
     } catch (error) {
       console.error('创建提示词失败:', error);
       setMessage({
         text: '创建提示词失败，请稍后再试',
-        type: 'error'
+        type: 'error',
       });
     } finally {
       setIsLoading(false);

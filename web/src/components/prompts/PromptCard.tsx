@@ -29,7 +29,7 @@ import {
   MicrophoneIcon,
   MusicalNoteIcon,
   HeartIcon as HealthIcon,
-  CpuChipIcon
+  CpuChipIcon,
 } from '@heroicons/react/24/outline';
 import { StarIcon as StarSolidIcon } from '@heroicons/react/24/solid';
 import { InteractionButtons } from '@/components/BookmarkButton';
@@ -61,7 +61,7 @@ const CATEGORY_MAP: Record<string, { name: string; color: string; icon: any }> =
   '音乐': { name: '音乐', color: 'from-neon-purple to-neon-blue', icon: MusicalNoteIcon },
   '健康': { name: '健康', color: 'from-neon-green to-neon-cyan', icon: HealthIcon },
   '科技': { name: '科技', color: 'from-neon-cyan to-neon-blue', icon: CpuChipIcon },
-  'default': { name: '通用', color: 'from-neon-purple to-neon-blue', icon: SparklesIcon }
+  'default': { name: '通用', color: 'from-neon-purple to-neon-blue', icon: SparklesIcon },
 };
 
 // 格式化日期函数 - 移到组件外部
@@ -71,16 +71,12 @@ const formatDate = (dateString?: string) => {
   return date.toLocaleDateString('zh-CN', { 
     year: 'numeric', 
     month: 'short', 
-    day: 'numeric' 
+    day: 'numeric', 
   });
 };
 
 const PromptCard: React.FC<PromptCardProps> = React.memo(({ prompt }) => {
   // 如果没有id，不渲染卡片
-  if (!prompt.id) {
-    return null;
-  }
-
   // 使用useMemo缓存计算结果
   const categoryInfo = useMemo(() => {
     return CATEGORY_MAP[prompt.category || 'default'] || CATEGORY_MAP.default;
@@ -97,11 +93,15 @@ const PromptCard: React.FC<PromptCardProps> = React.memo(({ prompt }) => {
     if (!prompt.tags || prompt.tags.length === 0) return null;
     return {
       visible: prompt.tags.slice(0, 3),
-      remaining: Math.max(0, prompt.tags.length - 3)
+      remaining: Math.max(0, prompt.tags.length - 3),
     };
   }, [prompt.tags]);
 
   const CategoryIcon = categoryInfo.icon;
+
+  if (!prompt.id) {
+    return null;
+  }
 
   return (
     <div>
@@ -110,7 +110,7 @@ const PromptCard: React.FC<PromptCardProps> = React.memo(({ prompt }) => {
           {/* 背景渐变 */}
           <div className={clsx(
             'absolute inset-0 bg-gradient-to-br opacity-0 group-hover:opacity-5 transition-opacity duration-300',
-            categoryInfo.color
+            categoryInfo.color,
           )} />
           
           {/* 头部 - 只在符合条件时显示热门标签 */}
@@ -128,7 +128,7 @@ const PromptCard: React.FC<PromptCardProps> = React.memo(({ prompt }) => {
             <div className="flex items-start space-x-2 flex-1">
               <div className={clsx(
                 'inline-flex p-2 rounded-lg bg-gradient-to-br flex-shrink-0',
-                categoryInfo.color
+                categoryInfo.color,
               )}>
                 <CategoryIcon className="h-4 w-4 text-dark-bg-primary" />
               </div>
@@ -213,7 +213,7 @@ const PromptCard: React.FC<PromptCardProps> = React.memo(({ prompt }) => {
             <div className="absolute inset-0 rounded-2xl animate-border-beam" 
               style={{
                 background: 'linear-gradient(90deg, transparent, rgba(0, 255, 255, 0.3), transparent)',
-                backgroundSize: '200% 100%'
+                backgroundSize: '200% 100%',
               }}
             />
           </div>

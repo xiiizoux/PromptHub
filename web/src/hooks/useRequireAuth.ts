@@ -17,7 +17,7 @@ export const useRequireAuth = (options: UseRequireAuthOptions = {}) => {
   const { 
     redirectTo = '/auth/login', 
     showToast = true, 
-    returnUrl = true 
+    returnUrl = true, 
   } = options;
   
   const { isAuthenticated, isLoading } = useAuth();
@@ -51,7 +51,7 @@ export const useRequireAuth = (options: UseRequireAuthOptions = {}) => {
   return {
     isAuthenticated,
     isLoading,
-    isReady: !isLoading && isAuthenticated
+    isReady: !isLoading && isAuthenticated,
   };
 };
 
@@ -90,6 +90,6 @@ export const useAuthCheck = () => {
 
       // 已登录，执行操作
       action();
-    }
+    },
   };
 }; 

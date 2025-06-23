@@ -4,7 +4,7 @@ import { randomUUID } from 'crypto';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
+  process.env.SUPABASE_SERVICE_ROLE_KEY!,
 );
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -110,8 +110,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             .from('categories')
             .insert({
               name: prompt.category,
-              description: `从导入数据自动创建的分类`,
-              color: '#3B82F6'
+              description: '从导入数据自动创建的分类',
+              color: '#3B82F6',
             })
             .select('id')
             .single();
@@ -132,14 +132,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         is_public: prompt.is_public || false,
         user_id: user.id,
         created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
       });
     }
 
     if (validPrompts.length === 0) {
       return res.status(400).json({ 
         error: '没有有效的提示词可以导入',
-        errors 
+        errors, 
       });
     }
 
@@ -158,14 +158,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       imported_count: validPrompts.length,
       total_count: prompts.length,
       errors: errors.length > 0 ? errors : undefined,
-      prompts: insertedPrompts
+      prompts: insertedPrompts,
     });
 
   } catch (error: any) {
     console.error('导入失败:', error);
     res.status(500).json({ 
       success: false, 
-      error: error.message || '服务器内部错误' 
+      error: error.message || '服务器内部错误', 
     });
   }
 }

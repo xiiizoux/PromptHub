@@ -53,7 +53,7 @@ export default apiHandler(async (req: NextApiRequest, res: NextApiResponse) => {
         .insert({
           user_id: userId,
           prompt_id: promptId,
-          type: 'like'
+          type: 'like',
         });
 
       if (error) {
@@ -68,5 +68,5 @@ export default apiHandler(async (req: NextApiRequest, res: NextApiResponse) => {
   }
 }, {
   allowedMethods: ['POST'],
-  requireAuth: true
+  requireAuth: true,
 }); 

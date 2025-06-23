@@ -11,7 +11,7 @@ import {
   ChatBubbleLeftIcon,
   DocumentDuplicateIcon,
   LockClosedIcon,
-  LockOpenIcon
+  LockOpenIcon,
 } from '@heroicons/react/24/outline';
 import { useAuth } from '@/contexts/AuthContext';
 import { 
@@ -26,7 +26,7 @@ import {
   CollaborativeSession,
   Operation,
   CursorPosition,
-  ConflictResolution
+  ConflictResolution,
 } from '@/lib/collaborative';
 import toast from 'react-hot-toast';
 
@@ -53,7 +53,7 @@ export const CollaborativeEditor: React.FC<CollaborativeEditorProps> = ({
   initialContent,
   onContentChange,
   readOnly = false,
-  className = ''
+  className = '',
 }) => {
   const { user } = useAuth();
   const editorRef = useRef<HTMLTextAreaElement>(null);
@@ -71,7 +71,7 @@ export const CollaborativeEditor: React.FC<CollaborativeEditorProps> = ({
   // 协作者颜色映射
   const collaboratorColors = [
     'bg-neon-cyan', 'bg-neon-purple', 'bg-neon-pink', 'bg-neon-yellow',
-    'bg-blue-400', 'bg-green-400', 'bg-orange-400', 'bg-red-400'
+    'bg-blue-400', 'bg-green-400', 'bg-orange-400', 'bg-red-400',
   ];
 
   useEffect(() => {
@@ -132,7 +132,7 @@ export const CollaborativeEditor: React.FC<CollaborativeEditorProps> = ({
       
       toast.success(`${operation.userName} 更新了内容`, {
         duration: 2000,
-        icon: '👥'
+        icon: '👥',
       });
     } catch (error: any) {
       console.error('应用远程操作失败:', error);
@@ -155,7 +155,7 @@ export const CollaborativeEditor: React.FC<CollaborativeEditorProps> = ({
       userId: user.id,
       userName: user.email || '匿名用户',
       timestamp: new Date(),
-      cursor: { position: cursorPos, selection: [cursorPos, cursorPos] }
+      cursor: { position: cursorPos, selection: [cursorPos, cursorPos] },
     };
 
     // 添加到操作队列
@@ -172,7 +172,7 @@ export const CollaborativeEditor: React.FC<CollaborativeEditorProps> = ({
       // 发送光标位置
       await sendCursorPosition(promptId, user.id, {
         position: cursorPos,
-        selection: [cursorPos, cursorPos]
+        selection: [cursorPos, cursorPos],
       });
       
       setHasUnsavedChanges(false);
@@ -205,7 +205,7 @@ export const CollaborativeEditor: React.FC<CollaborativeEditorProps> = ({
       operations: [operation],
       resolvedBy: null,
       resolution: 'pending',
-      timestamp: new Date()
+      timestamp: new Date(),
     };
     
     setConflicts(prev => [...prev, conflict]);
@@ -258,7 +258,7 @@ export const CollaborativeEditor: React.FC<CollaborativeEditorProps> = ({
       const collaboratorList = status.collaborators.map((collab: any, index: number) => ({
         ...collab,
         color: collaboratorColors[index % collaboratorColors.length],
-        isActive: (Date.now() - new Date(collab.lastSeen).getTime()) < 30000 // 30秒内活跃
+        isActive: (Date.now() - new Date(collab.lastSeen).getTime()) < 30000, // 30秒内活跃
       }));
       setCollaborators(collaboratorList);
     } catch (error: any) {
@@ -271,8 +271,8 @@ export const CollaborativeEditor: React.FC<CollaborativeEditorProps> = ({
       prev.map(collab => 
         collab.id === userId 
           ? { ...collab, cursor, lastSeen: new Date() }
-          : collab
-      )
+          : collab,
+      ),
     );
   };
 
@@ -445,7 +445,7 @@ export const CollaborativeEditor: React.FC<CollaborativeEditorProps> = ({
           style={{
             fontFamily: 'Monaco, Menlo, Ubuntu Mono, monospace',
             fontSize: '14px',
-            lineHeight: '1.5'
+            lineHeight: '1.5',
           }}
         />
 
@@ -454,11 +454,11 @@ export const CollaborativeEditor: React.FC<CollaborativeEditorProps> = ({
           collaborator.cursor && collaborator.isActive && collaborator.id !== user?.id && (
             <div
               key={collaborator.id}
-              className={`absolute pointer-events-none`}
+              className={'absolute pointer-events-none'}
               style={{
                 // 简化的光标位置计算，实际需要更复杂的逻辑
                 top: `${Math.floor(collaborator.cursor.position / 50) * 21 + 16}px`,
-                left: `${(collaborator.cursor.position % 50) * 8 + 16}px`
+                left: `${(collaborator.cursor.position % 50) * 8 + 16}px`,
               }}
             >
               <div className={`w-0.5 h-5 ${collaborator.color}`} />
@@ -466,7 +466,7 @@ export const CollaborativeEditor: React.FC<CollaborativeEditorProps> = ({
                 {collaborator.name}
               </div>
             </div>
-          )
+          ),
         )}
 
         {/* 锁定区域显示 */}
@@ -483,7 +483,7 @@ export const CollaborativeEditor: React.FC<CollaborativeEditorProps> = ({
                 top: '16px',
                 left: '16px',
                 right: '16px',
-                bottom: '16px'
+                bottom: '16px',
               }}
             >
               <div className="absolute -top-6 left-0 text-xs text-yellow-400 flex items-center gap-1">

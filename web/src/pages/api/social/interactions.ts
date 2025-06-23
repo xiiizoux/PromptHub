@@ -36,7 +36,7 @@ const createSocialExtensions = (supabase: any) => ({
       .insert({
         user_id: userId,
         prompt_id: promptId,
-        type
+        type,
       })
       .select()
       .single();
@@ -82,7 +82,7 @@ const createSocialExtensions = (supabase: any) => ({
     const counts = {
       likes: data.filter((i: any) => i.type === 'like').length,
       bookmarks: data.filter((i: any) => i.type === 'bookmark').length,
-      shares: data.filter((i: any) => i.type === 'share').length
+      shares: data.filter((i: any) => i.type === 'share').length,
     };
 
     let userInteraction;
@@ -97,7 +97,7 @@ const createSocialExtensions = (supabase: any) => ({
         userInteraction = {
           liked: userInteractions.some((i: any) => i.type === 'like'),
           bookmarked: userInteractions.some((i: any) => i.type === 'bookmark'),
-          shared: userInteractions.some((i: any) => i.type === 'share')
+          shared: userInteractions.some((i: any) => i.type === 'share'),
         };
       }
     }
@@ -108,9 +108,9 @@ const createSocialExtensions = (supabase: any) => ({
       shares: counts.shares,
       userLiked: userInteraction?.liked || false,
       userBookmarked: userInteraction?.bookmarked || false,
-      userShared: userInteraction?.shared || false
+      userShared: userInteraction?.shared || false,
     };
-  }
+  },
 });
 
 export default apiHandler(async (req: NextApiRequest, res: NextApiResponse) => {
@@ -207,7 +207,7 @@ export default apiHandler(async (req: NextApiRequest, res: NextApiResponse) => {
       const interactions = await socialExt.getPromptInteractions(
         promptId as string, 
         type as string | undefined, 
-        userId
+        userId,
       );
       
       return successResponse(res, interactions);
@@ -220,5 +220,5 @@ export default apiHandler(async (req: NextApiRequest, res: NextApiResponse) => {
   return errorResponse(res, `不支持的方法: ${req.method}`);
 }, {
   allowedMethods: ['GET', 'POST', 'DELETE'],
-  requireAuth: false // 在处理函数中手动处理认证逻辑
+  requireAuth: false, // 在处理函数中手动处理认证逻辑
 });

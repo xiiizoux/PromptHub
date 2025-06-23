@@ -3,7 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
+  process.env.SUPABASE_SERVICE_ROLE_KEY!,
 );
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -17,7 +17,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       { count: totalPrompts },
       { data: recentUsers },
       { data: recentActivity },
-      { data: recentUsage }
+      { data: recentUsage },
     ] = await Promise.all([
       supabase.from('prompts').select('*', { count: 'exact', head: true }),
       supabase
@@ -38,7 +38,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       supabase
         .from('prompt_usage')
         .select('latency_ms, created_at')
-        .gte('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
+        .gte('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()),
     ]);
 
     // 计算活跃用户数
@@ -53,7 +53,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       
       if (validLatencies.length > 0) {
         avgResponseTime = Math.round(
-          validLatencies.reduce((a, b) => a + b, 0) / validLatencies.length
+          validLatencies.reduce((a, b) => a + b, 0) / validLatencies.length,
         );
       } else {
         // 如果没有实际延迟数据，使用合理的默认值
@@ -83,7 +83,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       timestamp: activity.updated_at || activity.created_at,
       prompt_name: activity.name,
       user_id: activity.user_id,
-      performance_score: Math.min(100, Math.max(60, 100 - Math.floor(avgResponseTime / 20))) // 基于响应时间计算性能分数
+      performance_score: Math.min(100, Math.max(60, 100 - Math.floor(avgResponseTime / 20))), // 基于响应时间计算性能分数
     })) || [];
 
     const systemData = {
@@ -93,7 +93,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       system_health: systemHealth,
       recent_activity: recentActivityFormatted,
       usage_in_last_24h: usageCount, // 添加24小时使用量
-      data_source: recentUsage && recentUsage.length > 0 ? 'real_data' : 'default_values'
+      data_source: recentUsage && recentUsage.length > 0 ? 'real_data' : 'default_values',
     };
 
     console.log('系统性能数据:', {
@@ -102,18 +102,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       avgResponseTime,
       systemHealth,
       usageCount,
-      dataSource: systemData.data_source
+      dataSource: systemData.data_source,
     });
 
     res.status(200).json({
       success: true,
-      data: systemData
+      data: systemData,
     });
   } catch (error: any) {
     console.error('获取系统性能数据失败:', error);
     res.status(500).json({ 
       success: false, 
-      error: error.message || '获取系统性能数据失败' 
+      error: error.message || '获取系统性能数据失败', 
     });
   }
 } 

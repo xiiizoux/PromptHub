@@ -12,7 +12,7 @@ import {
   EnvelopeIcon,
   AcademicCapIcon,
   LinkIcon,
-  RectangleStackIcon
+  RectangleStackIcon,
 } from '@heroicons/react/24/outline';
 
 const Footer: React.FC = () => {

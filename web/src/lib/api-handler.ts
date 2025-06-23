@@ -64,7 +64,7 @@ const generateCacheKey = (req: NextApiRequest): string => {
  */
 export const apiHandler = (
   handler: (req: NextApiRequest, res: NextApiResponse, userId?: string) => Promise<void>,
-  options: ApiHandlerOptions = {}
+  options: ApiHandlerOptions = {},
 ) => {
   // 合并默认选项
   const opts = { ...defaultOptions, ...options };
@@ -75,13 +75,13 @@ export const apiHandler = (
       if (!res.headersSent) {
         logger.error('API请求超时', new Error('Request timeout'), {
           method: req.method,
-          url: req.url
+          url: req.url,
         });
         res.status(408).json({
           success: false,
           error: '请求超时，请稍后重试',
           code: 'REQUEST_TIMEOUT',
-          statusCode: 408
+          statusCode: 408,
         });
       }
     }, 180000); // 增加到3分钟超时保护（比前端更长）
@@ -91,7 +91,7 @@ export const apiHandler = (
       method: req.method,
       url: req.url,
       query: req.query,
-      ip: req.headers['x-forwarded-for'] || req.socket.remoteAddress
+      ip: req.headers['x-forwarded-for'] || req.socket.remoteAddress,
     });
     
     try {
@@ -184,7 +184,7 @@ export const apiHandler = (
       logger.debug('API请求处理成功', {
         method: req.method,
         url: req.url,
-        statusCode: res.statusCode
+        statusCode: res.statusCode,
       });
     } catch (error: any) {
       // 清除超时定时器
@@ -192,7 +192,7 @@ export const apiHandler = (
       
       logger.error('API请求处理错误', error instanceof Error ? error : new Error(String(error)), {
         method: req.method,
-        url: req.url
+        url: req.url,
       });
       
       // 检查响应是否已发送
@@ -206,7 +206,7 @@ export const apiHandler = (
           success: false,
           error: error.message,
           code: error.code,
-          statusCode: error.statusCode
+          statusCode: error.statusCode,
         });
       }
       
@@ -217,7 +217,7 @@ export const apiHandler = (
         success: false,
         error: error.message || '服务器内部错误',
         code: 'INTERNAL_ERROR',
-        statusCode
+        statusCode,
       });
     }
   };
@@ -245,7 +245,7 @@ export const successResponse = <T>(res: NextApiResponse, data: T, message?: stri
 export const errorResponse = (
   res: NextApiResponse, 
   error: string, 
-  statusCode: ErrorCode = ErrorCode.BAD_REQUEST
+  statusCode: ErrorCode = ErrorCode.BAD_REQUEST,
 ) => {
   return res.status(statusCode).json({
     success: false,
@@ -256,7 +256,7 @@ export const errorResponse = (
           statusCode === ErrorCode.NOT_FOUND ? 'NOT_FOUND' :
           statusCode === ErrorCode.TOO_MANY_REQUESTS ? 'TOO_MANY_REQUESTS' :
           'INTERNAL_ERROR',
-    statusCode
+    statusCode,
   });
 };
 
@@ -266,7 +266,7 @@ export const errorResponse = (
 export const mcpProxy = async (
   endpoint: string,
   method: 'GET' | 'POST' | 'PUT' | 'DELETE' = 'POST',
-  data?: any
+  data?: any,
 ) => {
   const mcpUrl = process.env.MCP_URL || 'http://localhost:9010';
   const url = `${mcpUrl}${endpoint}`;

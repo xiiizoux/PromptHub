@@ -3,7 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
+  process.env.SUPABASE_SERVICE_ROLE_KEY!,
 );
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -17,12 +17,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (!promptId || !userId) {
       return res.status(400).json({ 
         success: false, 
-        error: '提示词ID和用户ID不能为空' 
+        error: '提示词ID和用户ID不能为空', 
       });
     }
 
     // 查找或创建协作会话
-    let { data: session, error: sessionError } = await supabase
+    const { data: initialSession, error: sessionError } = await supabase
       .from('collaborative_sessions')
       .select('*')
       .eq('prompt_id', promptId)
@@ -34,6 +34,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     // 如果没有活跃会话，创建新的
+    let session = initialSession;
     if (!session) {
       const { data: newSession, error: createError } = await supabase
         .from('collaborative_sessions')
@@ -42,7 +43,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           created_by: userId,
           is_active: true,
           created_at: new Date().toISOString(),
-          last_activity: new Date().toISOString()
+          last_activity: new Date().toISOString(),
         })
         .select()
         .single();
@@ -59,9 +60,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         user_id: userId,
         joined_at: new Date().toISOString(),
         last_seen: new Date().toISOString(),
-        is_active: true
+        is_active: true,
       }, {
-        onConflict: 'session_id,user_id'
+        onConflict: 'session_id,user_id',
       });
 
     if (participantError) throw participantError;
@@ -95,7 +96,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       promptId: session.prompt_id,
       createdAt: session.created_at,
       lastActivity: session.last_activity,
-      participants: participants?.map(p => p.user_id) || []
+      participants: participants?.map(p => p.user_id) || [],
     };
 
     res.status(200).json({
@@ -106,14 +107,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         name: (p.users as any)?.display_name || (p.users as any)?.email || '匿名用户',
         email: (p.users as any)?.email || '',
         lastSeen: p.last_seen,
-        isActive: p.is_active
-      })) || []
+        isActive: p.is_active,
+      })) || [],
     });
   } catch (error: any) {
     console.error('加入协作会话失败:', error);
     res.status(500).json({ 
       success: false, 
-      error: error.message || '加入协作会话失败' 
+      error: error.message || '加入协作会话失败', 
     });
   }
 } 

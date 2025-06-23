@@ -15,7 +15,7 @@ async function deletePromptHandler(req: NextApiRequest, res: NextApiResponse) {
   if (!id || typeof id !== 'string') {
     return res.status(400).json({ 
       success: false, 
-      message: '必须提供有效的提示词ID'
+      message: '必须提供有效的提示词ID',
     });
   }
 
@@ -26,7 +26,7 @@ async function deletePromptHandler(req: NextApiRequest, res: NextApiResponse) {
     if (!userId) {
       return res.status(401).json({
         success: false,
-        message: '未授权，请登录后再删除提示词'
+        message: '未授权，请登录后再删除提示词',
       });
     }
     
@@ -47,26 +47,26 @@ async function deletePromptHandler(req: NextApiRequest, res: NextApiResponse) {
       return res.status(500).json({ 
         success: false, 
         message: '删除提示词失败',
-        error: error.message
+        error: error.message,
       });
     }
     
     if (count === 0) {
       return res.status(404).json({
         success: false,
-        message: '未找到提示词或您没有权限删除该提示词'
+        message: '未找到提示词或您没有权限删除该提示词',
       });
     }
 
     return res.status(200).json({
       success: true,
-      message: '提示词删除成功'
+      message: '提示词删除成功',
     });
   } catch (error) {
     console.error('删除提示词错误:', error);
     return res.status(500).json({ 
       success: false, 
-      message: '删除提示词过程中发生错误' 
+      message: '删除提示词过程中发生错误', 
     });
   }
 }
@@ -74,5 +74,5 @@ async function deletePromptHandler(req: NextApiRequest, res: NextApiResponse) {
 // 使用API处理器包装我们的处理函数
 export default apiHandler(deletePromptHandler, {
   requireAuth: true,
-  allowedMethods: ['DELETE']
+  allowedMethods: ['DELETE'],
 });

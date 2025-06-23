@@ -34,7 +34,7 @@ export const PATTERNS = {
   USERNAME: /^[a-zA-Z0-9_-]{3,20}$/,
   PASSWORD: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d@$!%*?&]{8,}$/,
   PHONE: /^1[3-9]\d{9}$/,
-  URL: /^https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)$/
+  URL: /^https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)$/,
 };
 
 /**
@@ -80,7 +80,7 @@ export class DataSanitizer {
           '>': '&gt;',
           '"': '&quot;',
           "'": '&#x27;',
-          '&': '&amp;'
+          '&': '&amp;',
         };
         return entities[match] || match;
       });
@@ -262,7 +262,7 @@ export class InputValidator {
           sanitizedData[rule.field] = DataSanitizer.sanitizeString(value, {
             removeHtml: true,
             removeXss: true,
-            maxLength: rule.maxLength
+            maxLength: rule.maxLength,
           });
         } else {
           sanitizedData[rule.field] = value;
@@ -273,7 +273,7 @@ export class InputValidator {
     return {
       isValid: errors.length === 0,
       errors,
-      sanitizedData: errors.length === 0 ? sanitizedData : undefined
+      sanitizedData: errors.length === 0 ? sanitizedData : undefined,
     };
   }
 }
@@ -298,5 +298,5 @@ export const VALIDATION_PRESETS = {
   id: { field: 'id', required: true, type: 'uuid' as const },
   userId: { field: 'user_id', required: true, type: 'uuid' as const },
   isPublic: { field: 'is_public', required: false, type: 'boolean' as const },
-  version: { field: 'version', required: false, type: 'number' as const, min: 0, max: 999 }
+  version: { field: 'version', required: false, type: 'number' as const, min: 0, max: 999 },
 };

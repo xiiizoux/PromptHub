@@ -3,7 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
+  process.env.SUPABASE_SERVICE_ROLE_KEY!,
 );
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -15,7 +15,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const {
       promptId,
       page = '1',
-      pageSize = '10'
+      pageSize = '10',
     } = req.query;
 
     if (!promptId) {
@@ -82,8 +82,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       updated_at: item.updated_at || item.created_at,
       user: {
         display_name: item.users?.display_name,
-        email: item.users?.email
-      }
+        email: item.users?.email,
+      },
     })) || [];
 
     const totalPages = Math.ceil((count || 0) / pageSizeNum);
@@ -96,13 +96,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       pageSize: pageSizeNum,
       totalPages,
       averageRating: Math.round(averageRating * 10) / 10,
-      ratingDistribution
+      ratingDistribution,
     });
   } catch (error: any) {
     console.error('获取评分失败:', error);
     res.status(500).json({ 
       success: false, 
-      error: error.message || '服务器内部错误' 
+      error: error.message || '服务器内部错误', 
     });
   }
 } 

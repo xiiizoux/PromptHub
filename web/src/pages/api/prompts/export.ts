@@ -3,7 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
+  process.env.SUPABASE_SERVICE_ROLE_KEY!,
 );
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -76,8 +76,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         tags: prompt.tags || [],
         is_public: prompt.is_public,
         created_at: prompt.created_at,
-        updated_at: prompt.updated_at
-      }))
+        updated_at: prompt.updated_at,
+      })),
     };
 
     if (format === 'json') {
@@ -94,7 +94,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         `"${prompt.categories?.name || prompt.category || ''}"`,
         `"${(prompt.tags || []).join(', ')}"`,
         prompt.is_public ? '是' : '否',
-        prompt.created_at
+        prompt.created_at,
       ]);
 
       const csvContent = [csvHeaders.join(','), ...csvRows.map(row => row.join(','))].join('\n');
@@ -110,13 +110,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           `分类: ${prompt.categories?.name || prompt.category || '未分类'}`,
           `标签: ${(prompt.tags || []).join(', ') || '无'}`,
           `描述: ${prompt.description || '无描述'}`,
-          `内容:`,
+          '内容:',
           prompt.content,
           '',
           `创建时间: ${prompt.created_at}`,
           `更新时间: ${prompt.updated_at}`,
           ''.repeat(50),
-          ''
+          '',
         ].join('\n');
       }).join('\n');
 
@@ -131,7 +131,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     console.error('导出失败:', error);
     res.status(500).json({ 
       success: false, 
-      error: error.message || '服务器内部错误' 
+      error: error.message || '服务器内部错误', 
     });
   }
 } 

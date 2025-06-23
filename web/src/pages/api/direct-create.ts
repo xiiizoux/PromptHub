@@ -14,14 +14,14 @@ export default apiHandler(async (req: NextApiRequest, res: NextApiResponse, user
       { ...VALIDATION_PRESETS.promptTags, required: false },
       { field: 'messages', required: true, type: 'array' as const, minLength: 1 },
       { ...VALIDATION_PRESETS.userId, field: 'user_id', required: false },
-      { ...VALIDATION_PRESETS.isPublic, required: false }
+      { ...VALIDATION_PRESETS.isPublic, required: false },
     ];
 
     const validation = InputValidator.validate(req.body, validationRules);
     if (!validation.isValid) {
       logger.warn('创建提示词输入验证失败', {
         errors: validation.errors,
-        userId
+        userId,
       });
       return errorResponse(res, validation.errors.join('; '), ErrorCode.BAD_REQUEST);
     }
@@ -35,7 +35,7 @@ export default apiHandler(async (req: NextApiRequest, res: NextApiResponse, user
       tags,
       messages,
       is_public,
-      user_id
+      user_id,
     } = sanitizedData;
 
     // 使用提供的user_id或当前认证用户的ID
@@ -54,7 +54,7 @@ export default apiHandler(async (req: NextApiRequest, res: NextApiResponse, user
       messages,
       is_public: is_public !== undefined ? is_public : true,
       user_id: finalUserId,
-      version: 1
+      version: 1,
     };
 
     // 使用数据库服务创建提示词
@@ -63,7 +63,7 @@ export default apiHandler(async (req: NextApiRequest, res: NextApiResponse, user
     logger.info('提示词创建成功', {
       promptId: newPrompt.id,
       name: newPrompt.name,
-      userId: finalUserId
+      userId: finalUserId,
     });
 
     return successResponse(res, { prompt: newPrompt });
@@ -82,5 +82,5 @@ export default apiHandler(async (req: NextApiRequest, res: NextApiResponse, user
   }
 }, {
   allowedMethods: ['POST'],
-  requireAuth: false // 允许通过user_id参数或认证两种方式
+  requireAuth: false, // 允许通过user_id参数或认证两种方式
 });

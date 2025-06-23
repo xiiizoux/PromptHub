@@ -3,7 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
+  process.env.SUPABASE_SERVICE_ROLE_KEY!,
 );
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -17,7 +17,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (!promptId) {
       return res.status(400).json({ 
         success: false, 
-        error: '提示词ID不能为空' 
+        error: '提示词ID不能为空', 
       });
     }
 
@@ -40,8 +40,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           sessionId: null,
           isActive: false,
           collaborators: [],
-          lockedSections: []
-        }
+          lockedSections: [],
+        },
       });
     }
 
@@ -67,7 +67,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // 清理非活跃用户（超过5分钟未活动）
     const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
     const activeParticipants = participants?.filter(p => 
-      new Date(p.last_seen) > fiveMinutesAgo
+      new Date(p.last_seen) > fiveMinutesAgo,
     ) || [];
 
     // 更新非活跃用户状态
@@ -104,7 +104,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // 清理过期锁定（超过10分钟）
     const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000);
     const activeLocks = locks?.filter(lock => 
-      new Date(lock.created_at) > tenMinutesAgo
+      new Date(lock.created_at) > tenMinutesAgo,
     ) || [];
 
     if (locks && locks.length !== activeLocks.length) {
@@ -120,14 +120,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       name: (p.users as any)?.display_name || (p.users as any)?.email || '匿名用户',
       email: (p.users as any)?.email || '',
       lastSeen: new Date(p.last_seen),
-      cursor: p.cursor_position ? JSON.parse(p.cursor_position) : undefined
+      cursor: p.cursor_position ? JSON.parse(p.cursor_position) : undefined,
     }));
 
     const lockedSections = activeLocks.map(lock => ({
       range: [lock.start_position, lock.end_position] as [number, number],
       userId: lock.user_id,
       timestamp: new Date(lock.created_at),
-      userName: (lock.users as any)?.display_name || (lock.users as any)?.email || '匿名用户'
+      userName: (lock.users as any)?.display_name || (lock.users as any)?.email || '匿名用户',
     }));
 
     res.status(200).json({
@@ -136,14 +136,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         sessionId: session.id,
         isActive: true,
         collaborators,
-        lockedSections
-      }
+        lockedSections,
+      },
     });
   } catch (error: any) {
     console.error('获取协作状态失败:', error);
     res.status(500).json({ 
       success: false, 
-      error: error.message || '获取协作状态失败' 
+      error: error.message || '获取协作状态失败', 
     });
   }
 } 

@@ -45,7 +45,7 @@ import {
   MicrophoneIcon,
   MusicalNoteIcon,
   HeartIcon as HealthIcon,
-  CpuChipIcon
+  CpuChipIcon,
 } from '@heroicons/react/24/outline';
 
 // 定义与适配器返回的API密钥兼容的接口
@@ -100,7 +100,7 @@ const ProfilePage = () => {
     '音乐': { name: '音乐', color: 'from-neon-purple to-neon-blue', icon: MusicalNoteIcon },
     '健康': { name: '健康', color: 'from-neon-green to-neon-cyan', icon: HealthIcon },
     '科技': { name: '科技', color: 'from-neon-cyan to-neon-blue', icon: CpuChipIcon },
-    'default': { name: '通用', color: 'from-neon-purple to-neon-blue', icon: SparklesIcon }
+    'default': { name: '通用', color: 'from-neon-purple to-neon-blue', icon: SparklesIcon },
   };
   
   const [activeTab, setActiveTab] = useState('profile');
@@ -413,7 +413,7 @@ const ProfilePage = () => {
       if (token) {
         console.log('使用令牌请求API密钥端点');
         const response = await fetch('/api/profile/api-keys', {
-          headers: { 'Authorization': `Bearer ${token}` }
+          headers: { 'Authorization': `Bearer ${token}` },
         });
         
         if (response.ok) {
@@ -489,8 +489,8 @@ const ProfilePage = () => {
       const response = await fetch(`/api/profile/prompts?page=${page}&pageSize=${promptPageSize}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
+          'Content-Type': 'application/json',
+        },
       });
 
       if (!response.ok) {
@@ -516,7 +516,7 @@ const ProfilePage = () => {
           setPromptCounts({
             total: totalPrompts,
             public: publicPrompts,
-            private: privatePrompts
+            private: privatePrompts,
           });
         } else {
           throw new Error(data.message || '获取用户提示词失败');
@@ -566,9 +566,9 @@ const ProfilePage = () => {
       const response = await fetch('/api/user/bookmarks', {
         headers: {
           'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
         },
-        signal: abortController.signal
+        signal: abortController.signal,
       });
 
       // 检查请求是否被中止
@@ -590,7 +590,7 @@ const ProfilePage = () => {
         console.error('获取收藏夹失败:', {
           status: response.status,
           statusText: response.statusText,
-          error: errorData.error || '未知错误'
+          error: errorData.error || '未知错误',
         });
         
         if (!isMountedRef.current) return;
@@ -625,7 +625,7 @@ const ProfilePage = () => {
           console.error('收藏夹获取网络异常:', error.message);
           setErrors(prev => ({ 
             ...prev, 
-            bookmarks: `网络连接失败: ${error.message || '请检查网络连接'}` 
+            bookmarks: `网络连接失败: ${error.message || '请检查网络连接'}`, 
           }));
         }
         setBookmarks([]);
@@ -667,9 +667,9 @@ const ProfilePage = () => {
       const response = await fetch('/api/user/usage-history?pageSize=50', {
         headers: {
           'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
         },
-        signal: abortController.signal
+        signal: abortController.signal,
       });
 
       // 检查请求是否被中止
@@ -693,7 +693,7 @@ const ProfilePage = () => {
               model: item.model || '未知模型',
               input_tokens: item.input_tokens || 0,
               output_tokens: item.output_tokens || 0,
-              latency_ms: item.latency_ms || 0
+              latency_ms: item.latency_ms || 0,
             }));
             setUsageHistory(formattedHistory);
             console.log('使用历史数据获取成功:', formattedHistory.length);
@@ -707,7 +707,7 @@ const ProfilePage = () => {
         console.error('获取使用历史失败:', {
           status: response.status,
           statusText: response.statusText,
-          error: errorData.error || '未知错误'
+          error: errorData.error || '未知错误',
         });
         
         if (!isMountedRef.current) return;
@@ -740,7 +740,7 @@ const ProfilePage = () => {
           console.error('使用历史获取网络异常:', error.message);
           setErrors(prev => ({ 
             ...prev, 
-            usageHistory: `网络连接失败: ${error.message || '请检查网络连接'}` 
+            usageHistory: `网络连接失败: ${error.message || '请检查网络连接'}`, 
           }));
         }
         setUsageHistory([]);
@@ -784,9 +784,9 @@ const ProfilePage = () => {
               const response = await fetch('/api/user/ratings', {
                 headers: {
                   'Authorization': `Bearer ${token}`,
-                  'Content-Type': 'application/json'
+                  'Content-Type': 'application/json',
                 },
-                signal: abortController.signal
+                signal: abortController.signal,
               });
         
               // 检查请求是否被中止
@@ -807,7 +807,7 @@ const ProfilePage = () => {
                       prompt_name: item.prompt_name || '未知提示词',
                       rating: item.rating || 0,
                       review: item.comment || item.feedback_text || '',
-                      created_at: item.created_at
+                      created_at: item.created_at,
                     }));
                     setUserRatings(formattedRatings);
                     console.log('评分评论数据获取成功(API):', formattedRatings.length);
@@ -866,7 +866,7 @@ const ProfilePage = () => {
               const { createClient } = await import('@supabase/supabase-js');
               const supabase = createClient(
                 process.env.NEXT_PUBLIC_SUPABASE_URL!,
-                process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+                process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
               );
         
               // 检查用户是否存在
@@ -901,7 +901,7 @@ const ProfilePage = () => {
                   prompt_name: item.prompts?.name || '未知提示词',
                   rating: item.rating || 0,
                   review: item.comment || '',
-                  created_at: item.created_at
+                  created_at: item.created_at,
                 }));
                 
                 safeSetState(() => {
@@ -947,8 +947,8 @@ const ProfilePage = () => {
         ratings: userRatings,
         exported_at: new Date().toISOString(),
         user_id: user.id,
-        version: "1.0",
-        description: "PromptHub用户数据导出文件"
+        version: '1.0',
+        description: 'PromptHub用户数据导出文件',
       };
       
       // 创建下载文件
@@ -974,48 +974,48 @@ const ProfilePage = () => {
     const template = {
       prompts: [
         {
-          name: "示例提示词",
-          description: "这是一个示例提示词的描述",
-          category: "工作",
-          tags: ["示例", "模板"],
+          name: '示例提示词',
+          description: '这是一个示例提示词的描述',
+          category: '工作',
+          tags: ['示例', '模板'],
           messages: [
             {
-              role: "system",
-              content: "你是一个有用的AI助手。"
+              role: 'system',
+              content: '你是一个有用的AI助手。',
             },
             {
-              role: "user", 
-              content: "请帮我{{任务描述}}，要求{{具体要求}}。"
-            }
+              role: 'user', 
+              content: '请帮我{{任务描述}}，要求{{具体要求}}。',
+            },
           ],
           is_public: false,
-          version: 1
-        }
+          version: 1,
+        },
       ],
       bookmarks: [],
       usage_history: [],
       ratings: [],
-      version: "1.0",
-      description: "PromptHub导入模板文件 - 请填写您的提示词数据",
+      version: '1.0',
+      description: 'PromptHub导入模板文件 - 请填写您的提示词数据',
       template: true,
       instructions: {
-        prompts: "在此数组中添加您要导入的提示词",
+        prompts: '在此数组中添加您要导入的提示词',
         fields: {
-          name: "提示词名称（必填）",
-          description: "提示词描述（必填）",
-          category: "分类（可选，如：工作、学习、创意等）",
-          tags: "标签数组（可选）",
-          messages: "对话消息数组，包含system和user消息",
-          is_public: "是否公开（true/false）",
-          version: "版本号（默认为1）"
+          name: '提示词名称（必填）',
+          description: '提示词描述（必填）',
+          category: '分类（可选，如：工作、学习、创意等）',
+          tags: '标签数组（可选）',
+          messages: '对话消息数组，包含system和user消息',
+          is_public: '是否公开（true/false）',
+          version: '版本号（默认为1）',
         },
         notes: [
-          "请保持JSON格式正确",
-          "必填字段不能为空",
-          "messages数组至少包含一个user消息",
-          "导入前会验证数据格式"
-        ]
-      }
+          '请保持JSON格式正确',
+          '必填字段不能为空',
+          'messages数组至少包含一个user消息',
+          '导入前会验证数据格式',
+        ],
+      },
     };
 
     const blob = new Blob([JSON.stringify(template, null, 2)], { type: 'application/json' });
@@ -1121,7 +1121,7 @@ const ProfilePage = () => {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
+                'Authorization': `Bearer ${token}`,
               },
               body: JSON.stringify({
                 name: promptData.name,
@@ -1130,8 +1130,8 @@ const ProfilePage = () => {
                 tags: promptData.tags || [],
                 messages: promptData.messages,
                 is_public: promptData.is_public || false,
-                version: promptData.version || 1
-              })
+                version: promptData.version || 1,
+              }),
             });
 
             if (response.ok) {
@@ -1193,7 +1193,7 @@ const ProfilePage = () => {
         const result = await supabaseAdapter.getPrompts({
           userId: user.id,
           page: 1,
-          pageSize: 1000  // 大量传输以便统计
+          pageSize: 1000,  // 大量传输以便统计
         });
         
         const promptsList = result.data || [];
@@ -1206,7 +1206,7 @@ const ProfilePage = () => {
         setPromptCounts({
           total: totalCount,
           public: publicCount,
-          private: privateCount
+          private: privateCount,
         });
       } catch (adapterError) {
         console.error('通过适配器获取提示词计数失败:', adapterError);
@@ -1221,8 +1221,8 @@ const ProfilePage = () => {
         
         const response = await fetch('/api/profile/prompts?pageSize=1000', {
           headers: {
-            'Authorization': `Bearer ${token}`
-          }
+            'Authorization': `Bearer ${token}`,
+          },
         });
         
         if (response.ok) {
@@ -1234,7 +1234,7 @@ const ProfilePage = () => {
           setPromptCounts({
             total: totalCount,
             public: publicCount,
-            private: privateCount
+            private: privateCount,
           });
         } else {
           setPromptCounts({ total: 0, public: 0, private: 0 });
@@ -1283,7 +1283,7 @@ const ProfilePage = () => {
           // 使用浏览器API复制到剪贴板
           try {
             await navigator.clipboard.writeText(newKey.key);
-            alert(`API密钥创建成功并已复制到剪贴板！\n\n注意：这是唯一一次显示完整密钥的机会，请立即保存！`);
+            alert('API密钥创建成功并已复制到剪贴板！\n\n注意：这是唯一一次显示完整密钥的机会，请立即保存！');
           } catch (e) {
             alert(`API密钥创建成功。请手动复制密钥：\n${newKey.key}\n\n注意：这是唯一一次显示完整密钥的机会，请立即保存！`);
           }
@@ -1302,13 +1302,13 @@ const ProfilePage = () => {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
+            'Authorization': `Bearer ${token}`,
           },
           body: JSON.stringify({
             name: newKeyName,
             expiresInDays: newKeyExpiry,
-            expires_in_days: newKeyExpiry
-          })
+            expires_in_days: newKeyExpiry,
+          }),
         });
         
         if (response.ok) {
@@ -1392,8 +1392,8 @@ const ProfilePage = () => {
         const response = await fetch(`/api/auth/api-keys?id=${keyId}`, {
           method: 'DELETE',
           headers: {
-            'Authorization': `Bearer ${token}`
-          }
+            'Authorization': `Bearer ${token}`,
+          },
         });
         
         if (response.ok) {
@@ -1544,8 +1544,8 @@ const ProfilePage = () => {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
+          'Content-Type': 'application/json',
+        },
       });
       
       if (response.ok) {
@@ -1555,7 +1555,7 @@ const ProfilePage = () => {
         // 更新提示词计数统计
       setPromptCounts(prev => ({
         ...prev,
-        total: Math.max(0, prev.total - 1)
+        total: Math.max(0, prev.total - 1),
       }));
         alert('提示词已成功删除');
       } else {
@@ -1608,7 +1608,7 @@ const ProfilePage = () => {
                       <motion.div
                         layoutId="activeTab"
                         className="absolute inset-0 rounded-lg bg-neon-cyan/10"
-                        transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                        transition={{ type: 'spring', bounce: 0.2, duration: 0.6 }}
                       />
                     )}
                   </button>
@@ -1920,7 +1920,7 @@ const ProfilePage = () => {
                                     <>
                                       <div className={clsx(
                                         'inline-flex p-2 rounded-lg bg-gradient-to-br flex-shrink-0',
-                                        categoryInfo.color
+                                        categoryInfo.color,
                                       )}>
                                         <CategoryIcon className="h-4 w-4 text-dark-bg-primary" />
                                       </div>

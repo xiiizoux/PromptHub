@@ -3,7 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
+  process.env.SUPABASE_SERVICE_ROLE_KEY!,
 );
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -17,7 +17,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (!promptId) {
       return res.status(400).json({ 
         success: false, 
-        error: '提示词ID不能为空' 
+        error: '提示词ID不能为空', 
       });
     }
 
@@ -26,13 +26,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     res.status(200).json({
       success: true,
       suggestions,
-      generated_at: new Date().toISOString()
+      generated_at: new Date().toISOString(),
     });
   } catch (error: any) {
     console.error('获取优化建议失败:', error);
     res.status(500).json({ 
       success: false, 
-      error: error.message || '获取优化建议失败' 
+      error: error.message || '获取优化建议失败', 
     });
   }
 }
@@ -91,7 +91,7 @@ async function getPerformanceData(promptId: string) {
   return {
     usage: usageData || [],
     ratings: ratingData || [],
-    social: socialData || []
+    social: socialData || [],
   };
 }
 
@@ -111,7 +111,7 @@ function generateSuggestions(prompt: any, performanceData: any) {
       description: '当前平均响应时间较长，建议优化提示词长度和复杂度',
       priority: 'high',
       expected_improvement: '减少50%响应时间',
-      implementation_effort: 'medium'
+      implementation_effort: 'medium',
     });
   } else if (avgResponseTime > 1000) {
     suggestions.push({
@@ -119,7 +119,7 @@ function generateSuggestions(prompt: any, performanceData: any) {
       description: '考虑简化提示词结构，减少不必要的指令',
       priority: 'medium',
       expected_improvement: '提升25%响应速度',
-      implementation_effort: 'low'
+      implementation_effort: 'low',
     });
   }
 
@@ -135,7 +135,7 @@ function generateSuggestions(prompt: any, performanceData: any) {
       description: 'Token消耗过高，建议精简提示词内容和示例',
       priority: 'high',
       expected_improvement: '节省30%Token成本',
-      implementation_effort: 'medium'
+      implementation_effort: 'medium',
     });
   }
 
@@ -150,7 +150,7 @@ function generateSuggestions(prompt: any, performanceData: any) {
       description: '用户评分偏低，建议重新设计提示词逻辑和输出格式',
       priority: 'high',
       expected_improvement: '提高50%用户满意度',
-      implementation_effort: 'high'
+      implementation_effort: 'high',
     });
   } else if (avgRating < 4 && ratings.length >= 3) {
     suggestions.push({
@@ -158,7 +158,7 @@ function generateSuggestions(prompt: any, performanceData: any) {
       description: '增加更多示例和使用说明，提升提示词易用性',
       priority: 'medium',
       expected_improvement: '提升用户满意度',
-      implementation_effort: 'low'
+      implementation_effort: 'low',
     });
   }
 
@@ -169,7 +169,7 @@ function generateSuggestions(prompt: any, performanceData: any) {
       description: '使用频率较低，建议添加更多相关标签和改进描述',
       priority: 'medium',
       expected_improvement: '增加50%使用量',
-      implementation_effort: 'low'
+      implementation_effort: 'low',
     });
   }
 
@@ -183,7 +183,7 @@ function generateSuggestions(prompt: any, performanceData: any) {
       description: '使用量不错但点赞较少，考虑改进输出质量和实用性',
       priority: 'medium',
       expected_improvement: '提升社交互动',
-      implementation_effort: 'medium'
+      implementation_effort: 'medium',
     });
   }
 
@@ -195,7 +195,7 @@ function generateSuggestions(prompt: any, performanceData: any) {
       description: '提示词过长可能影响效果，建议保留核心指令',
       priority: 'medium',
       expected_improvement: '提升执行效率',
-      implementation_effort: 'medium'
+      implementation_effort: 'medium',
     });
   }
 
@@ -206,7 +206,7 @@ function generateSuggestions(prompt: any, performanceData: any) {
       description: '添加更多相关标签提高发现性',
       priority: 'low',
       expected_improvement: '提升10%发现率',
-      implementation_effort: 'low'
+      implementation_effort: 'low',
     });
   }
 
@@ -220,7 +220,7 @@ function generateSuggestions(prompt: any, performanceData: any) {
       description: '提示词较长时间未更新，建议根据用户反馈优化',
       priority: 'low',
       expected_improvement: '保持内容新鲜度',
-      implementation_effort: 'medium'
+      implementation_effort: 'medium',
     });
   }
 
@@ -231,7 +231,7 @@ function generateSuggestions(prompt: any, performanceData: any) {
       description: '继续收集用户反馈，定期调整和改进提示词',
       priority: 'low',
       expected_improvement: '长期提升效果',
-      implementation_effort: 'low'
+      implementation_effort: 'low',
     });
   }
 

@@ -3,7 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
+  process.env.SUPABASE_SERVICE_ROLE_KEY!,
 );
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -17,7 +17,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (!query?.trim()) {
       return res.status(400).json({ 
         success: false, 
-        error: '搜索查询不能为空' 
+        error: '搜索查询不能为空', 
       });
     }
 
@@ -39,13 +39,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       results: searchResults,
       mode,
       query,
-      count: searchResults.length
+      count: searchResults.length,
     });
   } catch (error: any) {
     console.error('搜索失败:', error);
     res.status(500).json({ 
       success: false, 
-      error: error.message || '搜索失败' 
+      error: error.message || '搜索失败', 
     });
   }
 }
@@ -109,7 +109,7 @@ async function performSemanticSearch(query: string, limit: number, filters?: any
     const resultsWithScore = data?.map(prompt => ({
       ...prompt,
       author: (prompt.users as any)?.display_name || (prompt.users as any)?.email || '匿名用户',
-      relevanceScore: calculateRelevanceScore(prompt, searchTerms)
+      relevanceScore: calculateRelevanceScore(prompt, searchTerms),
     })) || [];
 
     // 按相关性排序
@@ -146,7 +146,7 @@ async function performKeywordSearch(query: string, limit: number, filters?: any)
     // 精确关键词匹配
     const keywords = query.trim().split(/\s+/);
     const searchConditions = keywords.map(keyword => 
-      `name.ilike.%${keyword}%,description.ilike.%${keyword}%,tags.cs.{${keyword}}`
+      `name.ilike.%${keyword}%,description.ilike.%${keyword}%,tags.cs.{${keyword}}`,
     ).join(',');
 
     if (searchConditions) {
@@ -172,7 +172,7 @@ async function performKeywordSearch(query: string, limit: number, filters?: any)
 
     return data?.map(prompt => ({
       ...prompt,
-      author: (prompt.users as any)?.display_name || (prompt.users as any)?.email || '匿名用户'
+      author: (prompt.users as any)?.display_name || (prompt.users as any)?.email || '匿名用户',
     })) || [];
   } catch (error) {
     console.error('关键词搜索失败:', error);
@@ -243,7 +243,7 @@ async function recordSearchQuery(query: string, mode: string, req: NextApiReques
         search_mode: mode,
         user_id: userId,
         search_time: new Date().toISOString(),
-        ip_address: req.headers['x-forwarded-for'] || req.connection.remoteAddress
+        ip_address: req.headers['x-forwarded-for'] || req.connection.remoteAddress,
       });
   } catch (error) {
     // 记录搜索统计失败不影响主要功能

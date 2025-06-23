@@ -12,13 +12,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       requirements = '',
       context = '',
       complexity = 'medium',
-      includeAnalysis = false
+      includeAnalysis = false,
     } = req.body;
     
     if (!prompt || typeof prompt !== 'string') {
       return res.status(400).json({
         success: false,
-        error: '请提供有效的提示词内容'
+        error: '请提供有效的提示词内容',
       });
     }
 
@@ -29,7 +29,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (!apiKey) {
       return res.status(500).json({
         success: false,
-        error: 'OpenAI API未配置，请联系管理员'
+        error: 'OpenAI API未配置，请联系管理员',
       });
     }
 
@@ -51,17 +51,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${apiKey}`,
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
       },
       body: JSON.stringify({
         model,
         messages: [
           { role: 'system', content: systemPrompt },
-          { role: 'user', content: userPrompt }
+          { role: 'user', content: userPrompt },
         ],
         max_tokens: complexity === 'complex' ? 3000 : 2000,
-        temperature: optimizationType === 'creative' ? 0.8 : 0.7
-      })
+        temperature: optimizationType === 'creative' ? 0.8 : 0.7,
+      }),
     });
 
     if (!response.ok) {
@@ -69,7 +69,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       console.error('OpenAI API错误:', response.status, errorData);
       return res.status(500).json({
         success: false,
-        error: `AI服务暂时不可用: ${response.status} ${response.statusText}`
+        error: `AI服务暂时不可用: ${response.status} ${response.statusText}`,
       });
     }
 
@@ -78,7 +78,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (!data.choices || !data.choices[0] || !data.choices[0].message) {
       return res.status(500).json({
         success: false,
-        error: 'AI服务返回了无效的响应'
+        error: 'AI服务返回了无效的响应',
       });
     }
 
@@ -93,15 +93,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         optimizationType,
         complexity,
         analysis,
-        usage: data.usage
-      }
+        usage: data.usage,
+      },
     });
 
   } catch (error: any) {
     console.error('高级AI优化器错误:', error);
     return res.status(500).json({
       success: false,
-      error: `优化失败: ${error.message}`
+      error: `优化失败: ${error.message}`,
     });
   }
 }
@@ -173,7 +173,7 @@ function buildAdvancedSystemPrompt(type: string, complexity: string): string {
 - 复杂任务的分解和串联
 - 多阶段处理流程的设计
 - 异常情况和回退策略
-- 质量控制和验证机制`
+- 质量控制和验证机制`,
   };
 
   return basePrompt + (typeSpecific[type as keyof typeof typeSpecific] || '');
@@ -197,7 +197,7 @@ async function performQualityAnalysis(prompt: string, apiKey: string, baseURL: s
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${apiKey}`,
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
       },
       body: JSON.stringify({
         model: 'gpt-4o-mini',
@@ -215,11 +215,11 @@ ${prompt}
   "structure": 分数,
   "overall": 总分,
   "comments": "简要评价"
-}`
+}`,
         }],
         max_tokens: 500,
-        temperature: 0.3
-      })
+        temperature: 0.3,
+      }),
     });
 
     if (response.ok) {
@@ -244,7 +244,7 @@ function parseAdvancedOptimizationResult(content: string) {
     improvements: extractListSection(content, '✨ 关键改进点'),
     techniques: extractListSection(content, '🔧 高级技巧'),
     guide: extractListSection(content, '📋 使用指南'),
-    parameters: extractSection(content, '🎛️ 参数建议')
+    parameters: extractSection(content, '🎛️ 参数建议'),
   };
 
   return {
@@ -253,7 +253,7 @@ function parseAdvancedOptimizationResult(content: string) {
     improvements: sections.improvements || [],
     techniques: sections.techniques || [],
     guide: sections.guide || [],
-    parameters: sections.parameters || ''
+    parameters: sections.parameters || '',
   };
 }
 

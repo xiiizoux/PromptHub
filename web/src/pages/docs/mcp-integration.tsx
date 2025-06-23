@@ -171,72 +171,72 @@ curl -X POST "https://mcp.prompt-hub.cc/tools/unified_search/invoke" \\
 
   const features = [
     {
-      title: "工具调用",
-      description: "调用 MCP 服务器提供的各种 AI 工具和功能",
+      title: '工具调用',
+      description: '调用 MCP 服务器提供的各种 AI 工具和功能',
       icon: <CogIcon className="h-6 w-6" />,
-      color: "cyan" as const
+      color: 'cyan' as const,
     },
     {
-      title: "实时通信",
-      description: "基于 WebSocket 的实时双向通信",
+      title: '实时通信',
+      description: '基于 WebSocket 的实时双向通信',
       icon: <BoltIcon className="h-6 w-6" />,
-      color: "purple" as const
+      color: 'purple' as const,
     },
     {
-      title: "安全认证",
-      description: "多种认证方式确保连接安全",
+      title: '安全认证',
+      description: '多种认证方式确保连接安全',
       icon: <ShieldCheckIcon className="h-6 w-6" />,
-      color: "pink" as const
+      color: 'pink' as const,
     },
     {
-      title: "云端服务",
-      description: "支持本地和云端 MCP 服务器",
+      title: '云端服务',
+      description: '支持本地和云端 MCP 服务器',
       icon: <CloudIcon className="h-6 w-6" />,
-      color: "green" as const
-    }
+      color: 'green' as const,
+    },
   ];
 
   const tools = [
     {
-      name: "search",
-      description: "🔍 快速搜索提示词（推荐）",
-      params: ["query", "limit", "category"]
+      name: 'search',
+      description: '🔍 快速搜索提示词（推荐）',
+      params: ['query', 'limit', 'category'],
     },
     {
-      name: "unified_search",
-      description: "🎯 统一搜索引擎，支持多种算法",
-      params: ["query", "algorithm", "limit", "include_content"]
+      name: 'unified_search',
+      description: '🎯 统一搜索引擎，支持多种算法',
+      params: ['query', 'algorithm', 'limit', 'include_content'],
     },
     {
-      name: "quick_store",
-      description: "⚡ 一键快速存储提示词",
-      params: ["content", "title", "category", "tags"]
+      name: 'quick_store',
+      description: '⚡ 一键快速存储提示词',
+      params: ['content', 'title', 'category', 'tags'],
     },
     {
-      name: "smart_store",
-      description: "🧠 智能存储提示词，自动分析",
-      params: ["content", "auto_analyze", "confirm_before_save"]
+      name: 'smart_store',
+      description: '🧠 智能存储提示词，自动分析',
+      params: ['content', 'auto_analyze', 'confirm_before_save'],
     },
     {
-      name: "get_categories",
-      description: "📂 获取所有可用分类",
-      params: []
+      name: 'get_categories',
+      description: '📂 获取所有可用分类',
+      params: [],
     },
     {
-      name: "get_prompt_names",
-      description: "📋 获取提示词名称列表",
-      params: ["category", "limit"]
+      name: 'get_prompt_names',
+      description: '📋 获取提示词名称列表',
+      params: ['category', 'limit'],
     },
     {
-      name: "get_prompt_details",
-      description: "📄 获取特定提示词详细信息",
-      params: ["name"]
+      name: 'get_prompt_details',
+      description: '📄 获取特定提示词详细信息',
+      params: ['name'],
     },
     {
-      name: "track_prompt_usage",
-      description: "📊 跟踪提示词使用情况",
-      params: ["prompt_id", "usage_context", "feedback"]
-    }
+      name: 'track_prompt_usage',
+      description: '📊 跟踪提示词使用情况',
+      params: ['prompt_id', 'usage_context', 'feedback'],
+    },
   ];
 
   return (
@@ -244,8 +244,8 @@ curl -X POST "https://mcp.prompt-hub.cc/tools/unified_search/invoke" \\
       title="🚀 MCP 简化集成指南"
       description="了解如何通过简单的HTTP API调用使用PromptHub MCP服务，无需复杂配置，只要URL和API密钥即可"
       breadcrumbs={[
-        { name: "文档", href: "/docs" },
-        { name: "MCP 集成", href: "/docs/mcp-integration" }
+        { name: '文档', href: '/docs' },
+        { name: 'MCP 集成', href: '/docs/mcp-integration' },
       ]}
     >
       {/* MCP 简介 */}
@@ -465,10 +465,10 @@ API_KEY=your-api-key npx prompthub-mcp-adapter`}
             >
               <DocList
                 items={[
-                  { title: "一键安装", description: "npx 自动处理" },
-                  { title: "30个工具", description: "完整工具集" },
-                  { title: "自动更新", description: "始终最新版本" },
-                  { title: "跨平台", description: "全平台支持" }
+                  { title: '一键安装', description: 'npx 自动处理' },
+                  { title: '30个工具', description: '完整工具集' },
+                  { title: '自动更新', description: '始终最新版本' },
+                  { title: '跨平台', description: '全平台支持' },
                 ]}
                 className="mt-4"
               />
@@ -482,10 +482,10 @@ API_KEY=your-api-key npx prompthub-mcp-adapter`}
             >
               <DocList
                 items={[
-                  { title: "简单配置", description: "只需URL+API密钥" },
-                  { title: "通用兼容", description: "任何HTTP客户端" },
-                  { title: "易于调试", description: "使用常见工具" },
-                  { title: "性能优秀", description: "响应快速稳定" }
+                  { title: '简单配置', description: '只需URL+API密钥' },
+                  { title: '通用兼容', description: '任何HTTP客户端' },
+                  { title: '易于调试', description: '使用常见工具' },
+                  { title: '性能优秀', description: '响应快速稳定' },
                 ]}
                 className="mt-4"
               />
@@ -499,9 +499,9 @@ API_KEY=your-api-key npx prompthub-mcp-adapter`}
             >
               <DocList
                 items={[
-                  { title: "标准协议", description: "MCP官方标准" },
-                  { title: "SDK支持", description: "TypeScript支持" },
-                  { title: "生态兼容", description: "MCP生态系统" }
+                  { title: '标准协议', description: 'MCP官方标准' },
+                  { title: 'SDK支持', description: 'TypeScript支持' },
+                  { title: '生态兼容', description: 'MCP生态系统' },
                 ]}
                 className="mt-4"
               />
@@ -515,9 +515,9 @@ API_KEY=your-api-key npx prompthub-mcp-adapter`}
             >
               <DocList
                 items={[
-                  { title: "实时更新", description: "服务器推送" },
-                  { title: "长连接", description: "保持状态同步" },
-                  { title: "轻量协议", description: "低开销通信" }
+                  { title: '实时更新', description: '服务器推送' },
+                  { title: '长连接', description: '保持状态同步' },
+                  { title: '轻量协议', description: '低开销通信' },
                 ]}
                 className="mt-4"
               />
@@ -679,9 +679,9 @@ API_KEY=your-api-key npx prompthub-mcp-adapter`}
             >
               <DocList 
                 items={[
-                  { title: "检查网络连接", description: "确保网络正常" },
-                  { title: "验证服务器地址", description: "确认 URL 正确" },
-                  { title: "检查防火墙设置", description: "允许相关端口" }
+                  { title: '检查网络连接', description: '确保网络正常' },
+                  { title: '验证服务器地址', description: '确认 URL 正确' },
+                  { title: '检查防火墙设置', description: '允许相关端口' },
                 ]}
                 className="mt-4"
               />
@@ -695,9 +695,9 @@ API_KEY=your-api-key npx prompthub-mcp-adapter`}
             >
               <DocList 
                 items={[
-                  { title: "验证 API 密钥", description: "确认密钥正确" },
-                  { title: "检查权限", description: "确认访问权限" },
-                  { title: "更新密钥", description: "使用最新密钥" }
+                  { title: '验证 API 密钥', description: '确认密钥正确' },
+                  { title: '检查权限', description: '确认访问权限' },
+                  { title: '更新密钥', description: '使用最新密钥' },
                 ]}
                 className="mt-4"
               />
@@ -722,10 +722,10 @@ API_KEY=your-api-key npx prompthub-mcp-adapter`}
             >
                              <DocList 
                  items={[
-                   { title: "Web 应用", description: "浏览器端应用" },
-                   { title: "移动应用", description: "移动端应用" },
-                   { title: "桌面应用", description: "桌面端应用" },
-                   { title: "命令行工具", description: "CLI 工具" }
+                   { title: 'Web 应用', description: '浏览器端应用' },
+                   { title: '移动应用', description: '移动端应用' },
+                   { title: '桌面应用', description: '桌面端应用' },
+                   { title: '命令行工具', description: 'CLI 工具' },
                  ]}
                  className="mt-4"
                />
@@ -739,10 +739,10 @@ API_KEY=your-api-key npx prompthub-mcp-adapter`}
             >
                              <DocList 
                  items={[
-                   { title: "工具调用", description: "处理工具调用请求" },
-                   { title: "状态管理", description: "维护连接状态" },
-                   { title: "权限控制", description: "管理访问权限" },
-                   { title: "数据处理", description: "处理数据传输" }
+                   { title: '工具调用', description: '处理工具调用请求' },
+                   { title: '状态管理', description: '维护连接状态' },
+                   { title: '权限控制', description: '管理访问权限' },
+                   { title: '数据处理', description: '处理数据传输' },
                  ]}
                  className="mt-4"
                />
@@ -756,10 +756,10 @@ API_KEY=your-api-key npx prompthub-mcp-adapter`}
             >
                              <DocList 
                  items={[
-                   { title: "GPT 系列", description: "OpenAI 模型" },
-                   { title: "Claude 系列", description: "Anthropic 模型" },
-                   { title: "本地模型", description: "本地部署模型" },
-                   { title: "自定义模型", description: "用户自定义模型" }
+                   { title: 'GPT 系列', description: 'OpenAI 模型' },
+                   { title: 'Claude 系列', description: 'Anthropic 模型' },
+                   { title: '本地模型', description: '本地部署模型' },
+                   { title: '自定义模型', description: '用户自定义模型' },
                  ]}
                  className="mt-4"
                />

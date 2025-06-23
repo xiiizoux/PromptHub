@@ -3,7 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
+  process.env.SUPABASE_SERVICE_ROLE_KEY!,
 );
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -17,7 +17,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (!promptId) {
       return res.status(400).json({ 
         success: false, 
-        error: '提示词ID不能为空' 
+        error: '提示词ID不能为空', 
       });
     }
 
@@ -28,13 +28,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       success: true,
       recommendations,
       algorithm: 'content_similarity',
-      generated_at: new Date().toISOString()
+      generated_at: new Date().toISOString(),
     });
   } catch (error: any) {
     console.error('获取相似推荐失败:', error);
     res.status(500).json({ 
       success: false, 
-      error: error.message || '获取相似推荐失败' 
+      error: error.message || '获取相似推荐失败', 
     });
   }
 }
@@ -104,13 +104,13 @@ async function getSimilarPrompts(promptId: string, limit: number) {
             author: authorName,
             likes: socialStats.likes,
             usage_count: socialStats.usage_count,
-            average_rating: socialStats.average_rating
+            average_rating: socialStats.average_rating,
           },
           score: similarity.total,
           reason: similarity.reason,
-          algorithm: 'content_similarity'
+          algorithm: 'content_similarity',
         };
-      })
+      }),
     );
 
     // 按相似度排序并返回top N
@@ -144,7 +144,7 @@ function calculateSimilarity(source: any, candidate: any) {
   // 3. 内容相似度 (权重: 20%)
   const contentSimilarity = calculateContentSimilarity(
     source.content || '', 
-    candidate.content || ''
+    candidate.content || '',
   );
   totalScore += contentSimilarity * 0.2;
   if (contentSimilarity > 0.3) {
@@ -154,7 +154,7 @@ function calculateSimilarity(source: any, candidate: any) {
   // 4. 描述相似度 (权重: 15%)
   const descriptionSimilarity = calculateTextSimilarity(
     source.description || '', 
-    candidate.description || ''
+    candidate.description || '',
   );
   totalScore += descriptionSimilarity * 0.15;
   if (descriptionSimilarity > 0.3) {
@@ -164,7 +164,7 @@ function calculateSimilarity(source: any, candidate: any) {
   // 5. 名称相似度 (权重: 10%)
   const nameSimilarity = calculateTextSimilarity(
     source.name || '', 
-    candidate.name || ''
+    candidate.name || '',
   );
   totalScore += nameSimilarity * 0.1;
 
@@ -179,8 +179,8 @@ function calculateSimilarity(source: any, candidate: any) {
       tags: tagSimilarity * 0.25,
       content: contentSimilarity * 0.2,
       description: descriptionSimilarity * 0.15,
-      name: nameSimilarity * 0.1
-    }
+      name: nameSimilarity * 0.1,
+    },
   };
 }
 
@@ -243,7 +243,7 @@ function extractKeywords(text: string): string[] {
     .split(/\s+/)
     .filter(word => 
       word.length > 3 && 
-      !isStopWord(word)
+      !isStopWord(word),
     );
 
   // 计算词频
@@ -264,7 +264,7 @@ function isStopWord(word: string): boolean {
     'the', 'is', 'at', 'which', 'on', 'and', 'a', 'to', 'as', 'are', 'was', 'will', 'be',
     'have', 'has', 'had', 'do', 'does', 'did', 'can', 'could', 'should', 'would', 'may',
     'might', 'must', 'shall', 'need', 'dare', 'ought', 'used', 'able', 'like', 'want',
-    '的', '了', '在', '是', '我', '有', '和', '就', '不', '人', '都', '一', '一个', '上', '也', '很', '到', '说', '要', '去', '你', '会', '着', '没有', '看', '好', '自己', '这'
+    '的', '了', '在', '是', '我', '有', '和', '就', '不', '人', '都', '一', '一个', '上', '也', '很', '到', '说', '要', '去', '你', '会', '着', '没有', '看', '好', '自己', '这',
   ]);
   
   return stopWords.has(word);
@@ -299,14 +299,14 @@ async function getPromptSocialStats(promptId: string) {
     return {
       likes: likes || 0,
       usage_count: usage_count || 0,
-      average_rating: Math.round(average_rating * 10) / 10
+      average_rating: Math.round(average_rating * 10) / 10,
     };
   } catch (error) {
     console.error('获取社交统计失败:', error);
     return {
       likes: 0,
       usage_count: 0,
-      average_rating: 0
+      average_rating: 0,
     };
   }
 } 

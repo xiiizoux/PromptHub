@@ -8,7 +8,7 @@ export default async function handler(
     data?: PromptTemplate;
     error?: string;
     message?: string;
-  }>
+  }>,
 ) {
   const { id } = req.query;
 
@@ -33,7 +33,7 @@ export default async function handler(
 async function handleGetTemplate(
   req: NextApiRequest,
   res: NextApiResponse,
-  templateId: string
+  templateId: string,
 ) {
   try {
     const template = await databaseService.getTemplateById(templateId);
@@ -44,13 +44,13 @@ async function handleGetTemplate(
 
     res.status(200).json({
       data: template,
-      message: '获取模板详情成功'
+      message: '获取模板详情成功',
     });
   } catch (error) {
     console.error('获取模板详情失败:', error);
     res.status(500).json({ 
       error: '获取模板详情失败',
-      message: error instanceof Error ? error.message : '未知错误'
+      message: error instanceof Error ? error.message : '未知错误',
     });
   }
 }
@@ -59,7 +59,7 @@ async function handleGetTemplate(
 async function handleTemplateAction(
   req: NextApiRequest,
   res: NextApiResponse,
-  templateId: string
+  templateId: string,
 ) {
   try {
     const { action, user_id, rating, comment } = req.body;
@@ -86,13 +86,13 @@ async function handleTemplateAction(
     }
 
     res.status(200).json({
-      message: '操作成功'
+      message: '操作成功',
     });
   } catch (error) {
     console.error('模板操作失败:', error);
     res.status(500).json({ 
       error: '操作失败',
-      message: error instanceof Error ? error.message : '未知错误'
+      message: error instanceof Error ? error.message : '未知错误',
     });
   }
 } 

@@ -3,7 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
+  process.env.SUPABASE_SERVICE_ROLE_KEY!,
 );
 
 interface ApiResponse {
@@ -26,7 +26,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       total: 0,
       page: 1,
       pageSize: 0,
-      totalPages: 0
+      totalPages: 0,
     });
   }
 
@@ -125,7 +125,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         total: 0,
         page: currentPage,
         pageSize: currentPageSize,
-        totalPages: 0
+        totalPages: 0,
       });
     }
 
@@ -139,7 +139,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         total: count || 0,
         page: currentPage,
         pageSize: currentPageSize,
-        totalPages: count ? Math.ceil(count / currentPageSize) : 0
+        totalPages: count ? Math.ceil(count / currentPageSize) : 0,
       });
     }
 
@@ -147,7 +147,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     const userIds = Array.from(new Set(
       promptsData
         .map(p => p.user_id || p.created_by)
-        .filter(Boolean)
+        .filter(Boolean),
     ));
 
     console.log('需要获取用户信息的用户ID:', userIds);
@@ -173,7 +173,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
 
     // 获取所有提示词的评分数据
     const promptIds = promptsData.map(p => p.id).filter(Boolean);
-    let ratingsMap = new Map<string, { average: number; count: number }>();
+    const ratingsMap = new Map<string, { average: number; count: number }>();
     
     if (promptIds.length > 0) {
       try {
@@ -197,7 +197,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
           Object.entries(ratingStats).forEach(([promptId, stats]) => {
             ratingsMap.set(promptId, {
               average: Math.round((stats.sum / stats.count) * 10) / 10,
-              count: stats.count
+              count: stats.count,
             });
           });
 
@@ -222,7 +222,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         author: authorName,
         average_rating: ratingInfo.average,
         rating_count: ratingInfo.count,
-        rating: ratingInfo.average // 为了兼容前端组件，同时提供rating字段
+        rating: ratingInfo.average, // 为了兼容前端组件，同时提供rating字段
       };
     });
 
@@ -234,7 +234,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       page: currentPage,
       pageSize: currentPageSize,
       totalPages: totalPages,
-      dataLength: formattedPrompts.length
+      dataLength: formattedPrompts.length,
     });
 
     return res.status(200).json({
@@ -243,7 +243,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       total: count || 0,
       page: currentPage,
       pageSize: currentPageSize,
-      totalPages: totalPages
+      totalPages: totalPages,
     });
 
   } catch (error) {
@@ -255,7 +255,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       total: 0,
       page: 1,
       pageSize: 21,
-      totalPages: 0
+      totalPages: 0,
     });
   }
 }

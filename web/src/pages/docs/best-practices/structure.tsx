@@ -132,7 +132,7 @@ const StructurePage: React.FC = () => {
                     <h4 className="text-md font-medium text-red-600 mb-2">❌ 模糊的角色定义</h4>
                     <div className="bg-red-50 p-3 rounded-lg">
                       <pre className="text-sm text-red-800">
-{`你是一个助手，帮助用户解决问题。`}
+{'你是一个助手，帮助用户解决问题。'}
                       </pre>
                     </div>
                   </div>
@@ -162,7 +162,7 @@ const StructurePage: React.FC = () => {
                     <h4 className="text-md font-medium text-red-600 mb-2">❌ 模糊的任务描述</h4>
                     <div className="bg-red-50 p-3 rounded-lg">
                       <pre className="text-sm text-red-800">
-{`帮助用户改进代码。`}
+{'帮助用户改进代码。'}
                       </pre>
                     </div>
                   </div>

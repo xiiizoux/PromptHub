@@ -15,14 +15,14 @@ export default apiHandler(async (req: NextApiRequest, res: NextApiResponse) => {
     // 使用验证系统
     const validationRules = [
       { field: 'email', required: true, type: 'string' as const, maxLength: 255 },
-      { field: 'password', required: true, type: 'string' as const, minLength: 1, maxLength: 128 }
+      { field: 'password', required: true, type: 'string' as const, minLength: 1, maxLength: 128 },
     ];
 
     const validation = InputValidator.validate(req.body, validationRules);
     if (!validation.isValid) {
       logger.warn('登录输入验证失败', {
         errors: validation.errors,
-        email: req.body.email?.substring(0, 3) + '***'
+        email: req.body.email?.substring(0, 3) + '***',
       });
       return errorResponse(res, validation.errors.join('; '), ErrorCode.BAD_REQUEST);
     }
@@ -39,12 +39,12 @@ export default apiHandler(async (req: NextApiRequest, res: NextApiResponse) => {
     // 返回用户信息和令牌
     return successResponse(res, {
       user: authResult.user,
-      token: authResult.token || ''
+      token: authResult.token || '',
     }, '登录成功');
   } catch (error: any) {
     console.error('登录失败:', error);
     return errorResponse(res, `登录失败: ${error.message}`, ErrorCode.INTERNAL_SERVER_ERROR);
   }
 }, {
-  allowedMethods: ['POST']
+  allowedMethods: ['POST'],
 });

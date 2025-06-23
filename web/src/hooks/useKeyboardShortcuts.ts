@@ -120,7 +120,7 @@ export const useGlobalKeyboardShortcuts = () => {
         (closeButton as HTMLElement).click();
         toast.success('已关闭弹窗');
       }
-    }
+    },
   };
 
   useKeyboardShortcuts(shortcuts);
@@ -212,7 +212,7 @@ export const usePromptEditorShortcuts = (actions: {
     },
     'ctrl+d': () => {
       actions.duplicate?.();
-    }
+    },
   };
 
   useKeyboardShortcuts(shortcuts);

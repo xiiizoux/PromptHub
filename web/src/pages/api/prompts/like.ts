@@ -3,14 +3,14 @@ import { createClient } from '@supabase/supabase-js';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
+  process.env.SUPABASE_SERVICE_ROLE_KEY!,
 );
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
     return res.status(405).json({ 
       success: false, 
-      error: 'Method not allowed' 
+      error: 'Method not allowed', 
     });
   }
 
@@ -21,14 +21,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (!promptId) {
       return res.status(400).json({ 
         success: false, 
-        error: '提示词ID不能为空' 
+        error: '提示词ID不能为空', 
       });
     }
 
     if (!userId) {
       return res.status(401).json({ 
         success: false, 
-        error: '需要登录才能点赞' 
+        error: '需要登录才能点赞', 
       });
     }
 
@@ -62,7 +62,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         .insert({
           prompt_id: promptId,
           user_id: userId,
-          created_at: new Date().toISOString()
+          created_at: new Date().toISOString(),
         });
 
       if (insertError) throw insertError;
@@ -72,13 +72,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     res.status(200).json({
       success: true,
       liked,
-      message: liked ? '点赞成功' : '取消点赞成功'
+      message: liked ? '点赞成功' : '取消点赞成功',
     });
   } catch (error: any) {
     console.error('点赞操作失败:', error);
     res.status(500).json({ 
       success: false, 
-      error: error.message || '点赞操作失败' 
+      error: error.message || '点赞操作失败', 
     });
   }
 } 

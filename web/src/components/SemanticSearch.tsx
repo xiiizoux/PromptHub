@@ -6,7 +6,7 @@ import {
   ClockIcon, 
   TagIcon,
   XMarkIcon,
-  LightBulbIcon
+  LightBulbIcon,
 } from '@heroicons/react/24/outline';
 import { useDebounce } from '@/hooks/useDebounce';
 import { performSemanticSearch, getSearchSuggestions, saveSearchQuery } from '@/lib/api';
@@ -31,10 +31,10 @@ interface SearchSuggestion {
 export const SemanticSearch: React.FC<SemanticSearchProps> = ({
   onResults,
   onSearchStateChange,
-  placeholder = "描述您想要的提示词，例如：帮我写邮件的AI助手...",
+  placeholder = '描述您想要的提示词，例如：帮我写邮件的AI助手...',
   showSuggestions = true,
   showHistory = true,
-  className = ''
+  className = '',
 }) => {
   const [query, setQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
@@ -76,7 +76,7 @@ export const SemanticSearch: React.FC<SemanticSearchProps> = ({
       const results = await performSemanticSearch({
         query: searchQuery,
         mode: semanticMode ? 'semantic' : 'keyword',
-        limit: 20
+        limit: 20,
       });
 
       onResults?.(results);
@@ -128,7 +128,7 @@ export const SemanticSearch: React.FC<SemanticSearchProps> = ({
       case 'ArrowDown':
         e.preventDefault();
         setSelectedSuggestionIndex(prev => 
-          prev < suggestions.length - 1 ? prev + 1 : prev
+          prev < suggestions.length - 1 ? prev + 1 : prev,
         );
         break;
       case 'ArrowUp':

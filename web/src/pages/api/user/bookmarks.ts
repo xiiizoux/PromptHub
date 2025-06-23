@@ -3,7 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
+  process.env.SUPABASE_SERVICE_ROLE_KEY!,
 );
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -113,7 +113,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return {
         ...prompt,
         author: author?.display_name || '匿名用户',
-        bookmarked_at: bookmark.created_at
+        bookmarked_at: bookmark.created_at,
       };
     }).filter(Boolean);
 

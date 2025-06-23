@@ -48,7 +48,7 @@ async function searchHandler(req: NextApiRequest, res: NextApiResponse, userId?:
           tags: searchTags,
           page: pageNumber,
           limit: limitNumber,
-          userId
+          userId,
         });
         
         // 调用数据库适配器进行搜索
@@ -59,7 +59,7 @@ async function searchHandler(req: NextApiRequest, res: NextApiResponse, userId?:
           page: pageNumber,
           pageSize: limitNumber,
           isPublic: true,
-          userId
+          userId,
         });
         
         // 记录搜索统计 (暂时跳过，避免构建错误)
@@ -67,14 +67,14 @@ async function searchHandler(req: NextApiRequest, res: NextApiResponse, userId?:
           // TODO: 重新实现搜索统计记录
           logger.info('搜索完成', {
             query: searchQuery,
-            resultsCount: results.total
+            resultsCount: results.total,
           });
           
           // 通过WebSocket发送搜索统计更新
           websocketServer.emit('search:stats', WebSocketEvents.NOTIFICATION, {
             type: 'search',
             query: searchQuery,
-            resultsCount: results.total
+            resultsCount: results.total,
           });
         } catch (statsError) {
           logger.warn('记录搜索统计失败', statsError as Error);
@@ -83,7 +83,7 @@ async function searchHandler(req: NextApiRequest, res: NextApiResponse, userId?:
         return results;
       },
       // 热门搜索缓存10分钟，其他搜索缓存5分钟
-      searchQuery ? 300 : 600
+      searchQuery ? 300 : 600,
     );
     
     // 返回搜索结果
@@ -92,7 +92,7 @@ async function searchHandler(req: NextApiRequest, res: NextApiResponse, userId?:
     logger.error('提示词搜索失败', error instanceof Error ? error : new Error(String(error)), {
       query: searchQuery,
       category: searchCategory,
-      tags: searchTags
+      tags: searchTags,
     });
     
     if (error instanceof ApiError) {
@@ -102,7 +102,7 @@ async function searchHandler(req: NextApiRequest, res: NextApiResponse, userId?:
     throw ApiError.internal('搜索提示词时发生错误', 'SEARCH_ERROR', {
       query: searchQuery,
       category: searchCategory,
-      tags: searchTags
+      tags: searchTags,
     });
   }
 }
@@ -124,5 +124,5 @@ const withRateLimit = (handler: (req: NextApiRequest, res: NextApiResponse, user
 
 // 应用API处理器
 export default apiHandler(withRateLimit(searchHandler), {
-  allowedMethods: ['GET']
+  allowedMethods: ['GET'],
 });

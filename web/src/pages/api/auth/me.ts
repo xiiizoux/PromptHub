@@ -15,7 +15,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     
     return res.status(200).json({
       success: true,
-      user
+      user,
     });
   } catch (error) {
     console.error('获取用户信息错误:', error);

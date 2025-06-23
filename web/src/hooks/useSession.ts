@@ -32,7 +32,7 @@ export function useSession(options: UseSessionOptions = {}): UseSessionReturn {
     showWarnings = true,
     onSessionExpired,
     onSessionWarning,
-    onSessionRenewed
+    onSessionRenewed,
   } = options;
 
   const [session, setSession] = useState<SessionInfo | null>(null);
@@ -184,7 +184,7 @@ export function useSession(options: UseSessionOptions = {}): UseSessionReturn {
         } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
           await initializeSession();
         }
-      }
+      },
     );
 
     return () => subscription.unsubscribe();
@@ -237,6 +237,6 @@ export function useSession(options: UseSessionOptions = {}): UseSessionReturn {
     needsRenewal: session?.needsRenewal || false,
     renewSession,
     logout,
-    updateActivity
+    updateActivity,
   };
 }

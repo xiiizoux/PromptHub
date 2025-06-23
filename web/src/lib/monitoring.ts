@@ -70,7 +70,7 @@ export class WebMonitor {
       const session = this.activeSessions.get(sessionId) || {
         startTime: timestamp,
         lastActivity: timestamp,
-        pageViews: 0
+        pageViews: 0,
       };
       session.lastActivity = timestamp;
       session.pageViews++;
@@ -85,7 +85,7 @@ export class WebMonitor {
       action: 'page_view',
       page,
       userAgent: userAgent || 'unknown',
-      ip: ip || 'unknown'
+      ip: ip || 'unknown',
     });
 
     this.cleanupOldData();
@@ -103,7 +103,7 @@ export class WebMonitor {
       page,
       data,
       userAgent: userAgent || 'unknown',
-      ip: ip || 'unknown'
+      ip: ip || 'unknown',
     });
 
     this.cleanupOldData();
@@ -115,7 +115,7 @@ export class WebMonitor {
   trackPerformance(metrics: Omit<PerformanceMetric, 'timestamp'>): void {
     this.performanceMetrics.push({
       timestamp: Date.now(),
-      ...metrics
+      ...metrics,
     });
 
     this.cleanupOldData();
@@ -127,7 +127,7 @@ export class WebMonitor {
   reportError(error: Omit<ErrorReport, 'timestamp'>): void {
     this.errorReports.push({
       timestamp: Date.now(),
-      ...error
+      ...error,
     });
 
     // 根据严重程度记录日志
@@ -137,7 +137,7 @@ export class WebMonitor {
       page: error.page,
       severity: error.severity,
       userId: error.userId,
-      sessionId: error.sessionId
+      sessionId: error.sessionId,
     });
 
     this.cleanupOldData();
@@ -190,7 +190,7 @@ export class WebMonitor {
       sessionDuration: Math.round(avgSessionDuration),
       bounceRate: Math.round(bounceRate * 100) / 100,
       errorRate: Math.round(errorRate * 100) / 100,
-      loadTime: Math.round(avgLoadTime)
+      loadTime: Math.round(avgLoadTime),
     };
   }
 
@@ -220,7 +220,7 @@ export class WebMonitor {
       .map(([page, stats]) => ({
         page,
         views: stats.views,
-        uniqueUsers: stats.users.size
+        uniqueUsers: stats.users.size,
       }))
       .sort((a, b) => b.views - a.views)
       .slice(0, 10);
@@ -272,7 +272,7 @@ export class WebMonitor {
       topPages,
       topActions,
       userFlow,
-      deviceTypes
+      deviceTypes,
     };
   }
 
@@ -298,7 +298,7 @@ export class WebMonitor {
         averageLCP: 0,
         averageCLS: 0,
         averageFID: 0,
-        slowestPages: []
+        slowestPages: [],
       };
     }
 
@@ -321,7 +321,7 @@ export class WebMonitor {
       .map(([page, stats]) => ({
         page,
         avgLoadTime: Math.round(stats.totalTime / stats.count),
-        count: stats.count
+        count: stats.count,
       }))
       .sort((a, b) => b.avgLoadTime - a.avgLoadTime)
       .slice(0, 10);
@@ -332,7 +332,7 @@ export class WebMonitor {
       averageLCP: Math.round(averageLCP),
       averageCLS: Math.round(averageCLS * 1000) / 1000,
       averageFID: Math.round(averageFID),
-      slowestPages
+      slowestPages,
     };
   }
 
@@ -364,7 +364,7 @@ export class WebMonitor {
       .map(([page, stats]) => ({
         page,
         count: stats.count,
-        severity: this.getMostSevereSeverity(stats.severities)
+        severity: this.getMostSevereSeverity(stats.severities),
       }))
       .sort((a, b) => b.count - a.count)
       .slice(0, 10);
@@ -384,7 +384,7 @@ export class WebMonitor {
       totalErrors,
       errorsByPage,
       errorsBySeverity,
-      recentErrors
+      recentErrors,
     };
   }
 
@@ -402,7 +402,7 @@ export class WebMonitor {
       // 记录API调用
       this.trackUserAction('api_call', req.url || 'unknown', {
         method: req.method,
-        query: req.query
+        query: req.query,
       }, userId, sessionId, userAgent, ip);
 
       // 监听响应完成
@@ -417,7 +417,7 @@ export class WebMonitor {
           firstContentfulPaint: 0,
           largestContentfulPaint: 0,
           cumulativeLayoutShift: 0,
-          firstInputDelay: 0
+          firstInputDelay: 0,
         });
 
         // 记录错误
@@ -428,7 +428,7 @@ export class WebMonitor {
             userAgent,
             userId,
             sessionId,
-            severity: res.statusCode >= 500 ? 'high' : 'medium'
+            severity: res.statusCode >= 500 ? 'high' : 'medium',
           });
         }
       });
@@ -454,7 +454,7 @@ export class WebMonitor {
     return severities.reduce((most, current) => 
       (severityOrder[current as keyof typeof severityOrder] || 0) > (severityOrder[most as keyof typeof severityOrder] || 0) 
         ? current 
-        : most
+        : most,
     );
   }
 

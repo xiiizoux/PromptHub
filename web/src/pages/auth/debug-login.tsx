@@ -65,7 +65,7 @@ export default function DebugLogin() {
                         data.user.user_metadata?.full_name || 
                         data.user.email?.split('@')[0] || 'User',
             role: 'user',
-            created_at: data.user.created_at
+            created_at: data.user.created_at,
           };
           
           const { error: insertError } = await supabase

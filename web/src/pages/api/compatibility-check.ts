@@ -33,7 +33,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse<CompatibilityCh
     return res.status(405).json({
       success: false,
       message: '方法不被允许',
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   }
 
@@ -44,7 +44,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse<CompatibilityCh
     // 模拟浏览器检测（在服务端环境中）
     const mockWindow = {
       navigator: { userAgent },
-      location: { protocol: 'https:' }
+      location: { protocol: 'https:' },
     };
     
     // 检测浏览器信息
@@ -65,9 +65,9 @@ async function handler(req: NextApiRequest, res: NextApiResponse<CompatibilityCh
         warnings: report.warnings,
         corsConfig,
         securityHeaders,
-        recommendations
+        recommendations,
       },
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
 
   } catch (error) {
@@ -75,7 +75,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse<CompatibilityCh
     return res.status(500).json({
       success: false,
       message: '兼容性检查失败',
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   }
 }

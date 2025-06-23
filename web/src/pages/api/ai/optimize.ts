@@ -11,7 +11,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (!prompt || typeof prompt !== 'string') {
       return res.status(400).json({
         success: false,
-        error: '请提供有效的提示词内容'
+        error: '请提供有效的提示词内容',
       });
     }
 
@@ -22,7 +22,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (!apiKey) {
       return res.status(500).json({
         success: false,
-        error: 'OpenAI API未配置，请联系管理员'
+        error: 'OpenAI API未配置，请联系管理员',
       });
     }
 
@@ -35,23 +35,23 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${apiKey}`,
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
       },
       body: JSON.stringify({
         model,
         messages: [
           {
             role: 'system',
-            content: getSystemPrompt(optimizationType)
+            content: getSystemPrompt(optimizationType),
           },
           {
             role: 'user',
-            content: optimizationPrompt
-          }
+            content: optimizationPrompt,
+          },
         ],
         max_tokens: optimizationType === 'complex' ? 2000 : 1000,
-        temperature: 0.7
-      })
+        temperature: 0.7,
+      }),
     });
 
     if (!response.ok) {
@@ -59,7 +59,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       console.error('OpenAI API错误:', response.status, errorData);
       return res.status(500).json({
         success: false,
-        error: `AI服务暂时不可用: ${response.status} ${response.statusText}`
+        error: `AI服务暂时不可用: ${response.status} ${response.statusText}`,
       });
     }
 
@@ -68,7 +68,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (!data.choices || !data.choices[0] || !data.choices[0].message) {
       return res.status(500).json({
         success: false,
-        error: 'AI服务返回了无效的响应'
+        error: 'AI服务返回了无效的响应',
       });
     }
 
@@ -85,15 +85,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         improvements,
         suggestions,
         optimizationType,
-        usage: data.usage
-      }
+        usage: data.usage,
+      },
     });
 
   } catch (error: any) {
     console.error('AI优化器错误:', error);
     return res.status(500).json({
       success: false,
-      error: `优化失败: ${error.message}`
+      error: `优化失败: ${error.message}`,
     });
   }
 }
@@ -184,7 +184,7 @@ function getSystemPrompt(optimizationType: string): string {
 - 环境背景：详细描述场景、背景元素、时间地点、氛围
 - 质量增强：添加质量增强关键词，优化画面构图和视觉效果
 - 通用适配：提供一个高质量的通用优化版本，适合各种AI绘图模型使用
-- 技术建议：在使用建议中包含技术参数和高级技巧指导`
+- 技术建议：在使用建议中包含技术参数和高级技巧指导`,
   };
 
   return basePrompt + (typeSpecificPrompts[optimizationType as keyof typeof typeSpecificPrompts] || '');

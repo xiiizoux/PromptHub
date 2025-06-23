@@ -12,7 +12,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   children,
   title,
   subtitle,
-  className = ''
+  className = '',
 }) => {
   return (
     <div className={`min-h-screen bg-dark-bg-primary ${className}`}>

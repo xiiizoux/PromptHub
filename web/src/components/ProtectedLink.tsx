@@ -23,7 +23,7 @@ export const ProtectedLink: React.FC<ProtectedLinkProps> = ({
   className = '',
   showLoginToast = true,
   requireLogin = true,
-  onClick
+  onClick,
 }) => {
   const { isAuthenticated, isLoading } = useAuth();
   const router = useRouter();
@@ -91,7 +91,7 @@ export const ProtectedButton: React.FC<ProtectedButtonProps> = ({
   className = '',
   showLoginToast = true,
   requireLogin = true,
-  disabled = false
+  disabled = false,
 }) => {
   const { isAuthenticated, isLoading } = useAuth();
   const router = useRouter();

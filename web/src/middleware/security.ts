@@ -24,7 +24,7 @@ function getSecurityConfig(): SecurityConfig {
     enableHSTS: process.env.ENABLE_HSTS !== 'false' && !isDevelopment,
     enableCORS: process.env.ENABLE_CORS !== 'false',
     allowedOrigins: getAllowedOrigins(),
-    isDevelopment
+    isDevelopment,
   };
 }
 
@@ -54,7 +54,7 @@ function getAllowedOrigins(): string[] {
       'http://127.0.0.1:8080',
       'http://localhost:3001',
       'http://localhost:5173',  // Vite
-      'http://localhost:4173'   // Vite preview
+      'http://localhost:4173',   // Vite preview
     ];
   } else if (nodeEnv === 'production') {
     const allowedOrigins = [
@@ -64,7 +64,7 @@ function getAllowedOrigins(): string[] {
       'http://localhost:9010',  // 本地MCP服务
       'http://localhost:9011',  // 本地Web服务
       'http://127.0.0.1:9010',
-      'http://127.0.0.1:9011'
+      'http://127.0.0.1:9011',
     ];
     
     if (process.env.FRONTEND_URL) {
@@ -82,7 +82,7 @@ function getAllowedOrigins(): string[] {
     'http://localhost:9010',
     'http://localhost:9011',
     'http://127.0.0.1:9010',
-    'http://127.0.0.1:9011'
+    'http://127.0.0.1:9011',
   ];
 }
 
@@ -261,7 +261,7 @@ export function getSecurityReport(): {
     'X-Frame-Options', 
     'X-XSS-Protection',
     'Referrer-Policy',
-    'Permissions-Policy'
+    'Permissions-Policy',
   ];
   
   if (config.enableCSP) headers.push('Content-Security-Policy');
@@ -282,6 +282,6 @@ export function getSecurityReport(): {
   return {
     config,
     headers,
-    recommendations
+    recommendations,
   };
 }

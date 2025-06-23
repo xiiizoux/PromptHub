@@ -63,5 +63,5 @@ export default apiHandler(async (req: NextApiRequest, res: NextApiResponse, user
   return errorResponse(res, `不支持的方法: ${req.method}`, ErrorCode.BAD_REQUEST);
 }, {
   allowedMethods: ['GET', 'POST', 'DELETE'],
-  requireAuth: true
+  requireAuth: true,
 }); 

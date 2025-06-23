@@ -4,7 +4,7 @@ import { useRouter } from 'next/router';
 import { useForm } from 'react-hook-form';
 import {
   PERMISSION_LEVELS,
-  PERMISSION_LEVEL_DESCRIPTIONS
+  PERMISSION_LEVEL_DESCRIPTIONS,
 } from '@/lib/permissions';
 import { motion, AnimatePresence } from 'framer-motion';
 import { createPrompt, getCategories, getTags, Category } from '@/lib/api';
@@ -21,7 +21,7 @@ import {
   DocumentTextIcon,
   UserIcon,
   CpuChipIcon,
-  ShieldExclamationIcon
+  ShieldExclamationIcon,
 } from '@heroicons/react/24/outline';
 import { AIAnalyzeButton, AIAnalysisResultDisplay } from '@/components/AIAnalyzeButton';
 import { AIAnalysisResult } from '@/lib/ai-analyzer';
@@ -50,10 +50,10 @@ function CreatePromptPage() {
   const [tagInput, setTagInput] = useState('');
   const [models, setModels] = useState<string[]>([]);
   const [categories, setCategories] = useState<string[]>([
-    '通用', '学术', '职业', '文案', '设计', '绘画', '教育', '情感', '娱乐', '游戏', '生活', '商业', '办公', '编程', '翻译', '视频', '播客', '音乐', '健康', '科技'
+    '通用', '学术', '职业', '文案', '设计', '绘画', '教育', '情感', '娱乐', '游戏', '生活', '商业', '办公', '编程', '翻译', '视频', '播客', '音乐', '健康', '科技',
   ]);
   const [suggestedTags, setSuggestedTags] = useState<string[]>([
-    'GPT-4', 'GPT-3.5', 'Claude', 'Gemini', '初学者', '高级', '长文本', '结构化输出', '翻译', '润色'
+    'GPT-4', 'GPT-3.5', 'Claude', 'Gemini', '初学者', '高级', '长文本', '结构化输出', '翻译', '润色',
   ]);
   
   // 数据加载状态
@@ -121,7 +121,7 @@ function CreatePromptPage() {
       console.log('AI标签应用:', { 
         原有标签: currentTags, 
         AI建议标签: data.tags, 
-        最终应用: data.tags 
+        最终应用: data.tags, 
       });
     }
     
@@ -133,7 +133,7 @@ function CreatePromptPage() {
       console.log('AI变量应用:', { 
         原有变量: currentVariables, 
         AI建议变量: data.variables, 
-        最终应用: data.variables 
+        最终应用: data.variables, 
       });
     }
     
@@ -145,7 +145,7 @@ function CreatePromptPage() {
       console.log('兼容模型应用:', { 
         原有模型: currentModels, 
         AI建议模型: data.compatibleModels, 
-        最终应用: data.compatibleModels 
+        最终应用: data.compatibleModels, 
       });
     }
 
@@ -341,7 +341,7 @@ function CreatePromptPage() {
       input_variables: [],
       tags: [],
       compatible_models: [],
-    }
+    },
   });
 
   // 监听表单内容变化，确保AI按钮能够正确获取内容
@@ -486,7 +486,7 @@ function CreatePromptPage() {
       // 显示成功提示
       toast.success('提示词创建成功！正在跳转...', {
         duration: 3000,
-        position: 'top-center'
+        position: 'top-center',
       });
       
       // 导航到新提示词页面
@@ -525,7 +525,7 @@ function CreatePromptPage() {
       // 显示错误提示
       toast.error(errorMessage, {
         duration: 5000,
-        position: 'top-center'
+        position: 'top-center',
       });
       
       // 根据错误类型决定是否显示重试选项
@@ -700,7 +700,7 @@ function CreatePromptPage() {
                   />
                   
                   <div className="absolute top-3 right-3 text-xs text-gray-500">
-                    使用 {`{{变量名}}`} 定义变量
+                    使用 {'{{变量名}}'} 定义变量
                   </div>
                 </div>
                 
@@ -745,7 +745,7 @@ function CreatePromptPage() {
                     id="author"
                     {...register('author')}
                     type="text"
-                    placeholder={user?.username || "您的名字"}
+                    placeholder={user?.username || '您的名字'}
                     className="input-primary w-full"
                     autoComplete="name"
                   />

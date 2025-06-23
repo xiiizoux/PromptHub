@@ -11,7 +11,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (!originalPrompt || !currentPrompt || !requirements) {
       return res.status(400).json({
         success: false,
-        error: '请提供完整的迭代参数'
+        error: '请提供完整的迭代参数',
       });
     }
 
@@ -22,7 +22,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (!apiKey) {
       return res.status(500).json({
         success: false,
-        error: 'OpenAI API未配置，请联系管理员'
+        error: 'OpenAI API未配置，请联系管理员',
       });
     }
 
@@ -47,19 +47,19 @@ ${requirements}
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${apiKey}`,
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
       },
       body: JSON.stringify({
         model: 'gpt-4o-mini',
         messages: [
           {
             role: 'user',
-            content: iterationPrompt
-          }
+            content: iterationPrompt,
+          },
         ],
         max_tokens: 1000,
-        temperature: 0.7
-      })
+        temperature: 0.7,
+      }),
     });
 
     if (!response.ok) {
@@ -67,7 +67,7 @@ ${requirements}
       console.error('OpenAI API错误:', response.status, errorData);
       return res.status(500).json({
         success: false,
-        error: `AI服务暂时不可用: ${response.status} ${response.statusText}`
+        error: `AI服务暂时不可用: ${response.status} ${response.statusText}`,
       });
     }
 
@@ -76,7 +76,7 @@ ${requirements}
     if (!data.choices || !data.choices[0] || !data.choices[0].message) {
       return res.status(500).json({
         success: false,
-        error: 'AI服务返回了无效的响应'
+        error: 'AI服务返回了无效的响应',
       });
     }
 
@@ -89,15 +89,15 @@ ${requirements}
         optimized: optimizedPrompt,
         requirements,
         type,
-        usage: data.usage
-      }
+        usage: data.usage,
+      },
     });
 
   } catch (error: any) {
     console.error('AI迭代优化错误:', error);
     return res.status(500).json({
       success: false,
-      error: `迭代失败: ${error.message}`
+      error: `迭代失败: ${error.message}`,
     });
   }
 } 

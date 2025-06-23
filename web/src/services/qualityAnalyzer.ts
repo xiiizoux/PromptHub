@@ -9,14 +9,14 @@ const DIMENSION_WEIGHTS = {
   actionability: 0.20,  // 可操作性 20%
   creativity: 0.10,     // 创新性 10%
   universality: 0.10,   // 通用性 10%
-  safety: 0.10         // 安全性 10%
+  safety: 0.10,         // 安全性 10%
 };
 
 // 质量等级阈值
 const QUALITY_THRESHOLDS = {
   excellent: 85,
   good: 70,
-  fair: 55
+  fair: 55,
 };
 
 export class PromptQualityAnalyzer {
@@ -40,8 +40,8 @@ export class PromptQualityAnalyzer {
       metadata: {
         analysisDate: new Date().toISOString(),
         modelVersion: '1.0',
-        confidence: 0.95
-      }
+        confidence: 0.95,
+      },
     };
   }
 
@@ -61,7 +61,7 @@ export class PromptQualityAnalyzer {
       actionability: await this.evaluateActionability(content),
       creativity: await this.evaluateCreativity(content, description),
       universality: await this.evaluateUniversality(content, tags),
-      safety: await this.evaluateSafety(content)
+      safety: await this.evaluateSafety(content),
     };
   }
 
@@ -107,7 +107,7 @@ export class PromptQualityAnalyzer {
       score: Math.min(100, Math.max(0, score)),
       weight: DIMENSION_WEIGHTS.clarity,
       description: '提示词表达是否清楚、逻辑是否清晰',
-      suggestions
+      suggestions,
     };
   }
 
@@ -147,7 +147,7 @@ export class PromptQualityAnalyzer {
       score: Math.min(100, Math.max(0, score)),
       weight: DIMENSION_WEIGHTS.completeness,
       description: '提示词是否包含必要的信息和上下文',
-      suggestions
+      suggestions,
     };
   }
 
@@ -161,7 +161,7 @@ export class PromptQualityAnalyzer {
     // 根据类别检查专业术语
     const categoryKeywords = this.getCategoryKeywords(category);
     const hasRelevantTerms = categoryKeywords.some(keyword => 
-      content.toLowerCase().includes(keyword.toLowerCase())
+      content.toLowerCase().includes(keyword.toLowerCase()),
     );
 
     if (hasRelevantTerms) {
@@ -187,7 +187,7 @@ export class PromptQualityAnalyzer {
       score: Math.min(100, Math.max(0, score)),
       weight: DIMENSION_WEIGHTS.professionalism,
       description: '是否符合领域专业标准',
-      suggestions
+      suggestions,
     };
   }
 
@@ -227,7 +227,7 @@ export class PromptQualityAnalyzer {
       score: Math.min(100, Math.max(0, score)),
       weight: DIMENSION_WEIGHTS.actionability,
       description: '是否给出具体可执行的指导',
-      suggestions
+      suggestions,
     };
   }
 
@@ -263,7 +263,7 @@ export class PromptQualityAnalyzer {
       score: Math.min(100, Math.max(0, score)),
       weight: DIMENSION_WEIGHTS.creativity,
       description: '是否具有独特的创意或方法',
-      suggestions
+      suggestions,
     };
   }
 
@@ -299,7 +299,7 @@ export class PromptQualityAnalyzer {
       score: Math.min(100, Math.max(0, score)),
       weight: DIMENSION_WEIGHTS.universality,
       description: '是否适用于多种场景',
-      suggestions
+      suggestions,
     };
   }
 
@@ -328,7 +328,7 @@ export class PromptQualityAnalyzer {
       score: Math.min(100, Math.max(0, score)),
       weight: DIMENSION_WEIGHTS.safety,
       description: '是否避免了有害或敏感内容',
-      suggestions
+      suggestions,
     };
   }
 
@@ -425,7 +425,7 @@ export class PromptQualityAnalyzer {
       categoryAverage: 72,
       ranking,
       totalInCategory,
-      percentile
+      percentile,
     };
   }
 
@@ -439,7 +439,7 @@ export class PromptQualityAnalyzer {
       '学术': ['研究', '分析', '理论', '方法', '数据', '结论', '参考'],
       '商业': ['策略', '市场', '客户', '价值', '竞争', '盈利', '增长'],
       '设计': ['视觉', '布局', '色彩', '字体', '用户体验', '界面', '创意'],
-      '教育': ['学习', '教学', '知识', '技能', '培训', '课程', '评估']
+      '教育': ['学习', '教学', '知识', '技能', '培训', '课程', '评估'],
     };
 
     return keywords[category] || ['专业', '质量', '效果', '方法'];

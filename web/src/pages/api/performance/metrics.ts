@@ -5,7 +5,7 @@ import { createClient } from '@supabase/supabase-js';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
+  process.env.SUPABASE_SERVICE_ROLE_KEY!,
 );
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -19,7 +19,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (!promptId) {
       return res.status(400).json({ 
         success: false, 
-        error: '提示词ID不能为空' 
+        error: '提示词ID不能为空', 
       });
     }
 
@@ -30,13 +30,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     res.status(200).json({
       success: true,
       metrics,
-      generated_at: new Date().toISOString()
+      generated_at: new Date().toISOString(),
     });
   } catch (error: any) {
     console.error('获取性能指标失败:', error);
     res.status(500).json({ 
       success: false, 
-      error: error.message || '获取性能指标失败' 
+      error: error.message || '获取性能指标失败', 
     });
   }
 }
@@ -46,7 +46,7 @@ async function getPerformanceMetrics(promptId: string, timeRange: string) {
     '24h': 1,
     '7d': 7,
     '30d': 30,
-    '90d': 90
+    '90d': 90,
   };
 
   const days = timeRangeMap[timeRange as keyof typeof timeRangeMap] || 7;
@@ -140,7 +140,7 @@ function calculateMetrics(usageData: any[], ratingData: any[], days: number) {
     avgResponseTime,
     successRate,
     userSatisfaction,
-    usageCount: usageData.length
+    usageCount: usageData.length,
   });
 
   return {
@@ -157,7 +157,7 @@ function calculateMetrics(usageData: any[], ratingData: any[], days: number) {
     satisfaction_trend: satisfactionTrend,
     satisfaction_count: ratings.length,
     time_series: timeSeriesData,
-    usage_distribution: usageDistribution
+    usage_distribution: usageDistribution,
   };
 }
 
@@ -209,7 +209,7 @@ function generateTimeSeries(usageData: any[], days: number) {
   return {
     labels,
     response_times: response_times.map(t => t || 0),
-    usage_counts
+    usage_counts,
   };
 }
 

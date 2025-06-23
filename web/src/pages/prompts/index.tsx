@@ -454,7 +454,7 @@ export default function PromptsPage() {
                               transition={{ 
                                 duration: 0.6, 
                                 delay: 1.2 + index * 0.1,
-                                ease: "easeOut"
+                                ease: 'easeOut',
                               }}
                             >
                               <PromptCard prompt={prompt} />

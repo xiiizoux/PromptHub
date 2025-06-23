@@ -8,7 +8,7 @@ import {
   getUserRating, 
   updateRating, 
   deleteRating,
-  Rating 
+  Rating, 
 } from '@/lib/api';
 import { useAuth } from '@/contexts/AuthContext';
 import { formatDistanceToNow } from 'date-fns';
@@ -22,7 +22,7 @@ interface RatingSystemProps {
 
 export const RatingSystem: React.FC<RatingSystemProps> = ({ 
   promptId, 
-  className = '' 
+  className = '', 
 }) => {
   const { user } = useAuth();
   const [userRating, setUserRating] = useState<Rating | null>(null);
@@ -51,7 +51,7 @@ export const RatingSystem: React.FC<RatingSystemProps> = ({
       setIsLoading(true);
       const response = await getPromptRatings(promptId, {
         page: currentPage,
-        pageSize: 5
+        pageSize: 5,
       });
       
       setRatings(response.data);
@@ -99,14 +99,14 @@ export const RatingSystem: React.FC<RatingSystemProps> = ({
         console.log('更新现有评分...');
         await updateRating(promptId, {
           rating: newRating,
-          comment: newComment
+          comment: newComment,
         });
         toast.success('评分已更新');
       } else {
         console.log('提交新评分...');
         await submitRating(promptId, {
           rating: newRating,
-          comment: newComment
+          comment: newComment,
         });
         toast.success('评分已提交');
       }
@@ -342,7 +342,7 @@ export const RatingSystem: React.FC<RatingSystemProps> = ({
                       <span className="text-xs text-gray-500">
                         {formatDistanceToNow(new Date(rating.created_at), { 
                           addSuffix: true, 
-                          locale: zhCN 
+                          locale: zhCN, 
                         })}
                       </span>
                     </div>

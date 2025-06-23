@@ -64,7 +64,7 @@ export default apiHandler(async (req: NextApiRequest, res: NextApiResponse, user
     // 返回包含作者信息的提示词数据
     const promptWithAuthor = {
       ...prompt,
-      author: authorName
+      author: authorName,
     };
 
     return successResponse(res, promptWithAuthor);
@@ -73,7 +73,7 @@ export default apiHandler(async (req: NextApiRequest, res: NextApiResponse, user
     return errorResponse(
       res,
       `获取提示词详情失败: ${error.message}`,
-      ErrorCode.INTERNAL_SERVER_ERROR
+      ErrorCode.INTERNAL_SERVER_ERROR,
     );
   }
 });

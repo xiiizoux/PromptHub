@@ -8,52 +8,52 @@ import { DocSection, DocGrid, DocCard, DocCodeBlock, DocList, DocHighlight } fro
 const GettingStartedPage: React.FC = () => {
   const quickStartItems = [
     {
-      title: "点击「创建提示词」按钮",
-      description: "开始创建您的第一个提示词"
+      title: '点击「创建提示词」按钮',
+      description: '开始创建您的第一个提示词',
     },
     {
-      title: "填写基本信息",
-      description: "名称、描述、类别和标签"
+      title: '填写基本信息',
+      description: '名称、描述、类别和标签',
     },
     {
-      title: "编写提示词内容",
-      description: "根据需要使用模板变量"
+      title: '编写提示词内容',
+      description: '根据需要使用模板变量',
     },
     {
-      title: "添加使用示例",
-      description: "包括输入和预期输出"
+      title: '添加使用示例',
+      description: '包括输入和预期输出',
     },
     {
-      title: "设置兼容的模型",
-      description: "选择适合的AI模型"
+      title: '设置兼容的模型',
+      description: '选择适合的AI模型',
     },
     {
-      title: "点击「保存」完成创建",
-      description: "提示词即可使用"
-    }
+      title: '点击「保存」完成创建',
+      description: '提示词即可使用',
+    },
   ];
 
   const coreFeatures = [
-    { title: "提示词创建和管理", description: "直观的编辑界面" },
-    { title: "模板变量和动态内容", description: "提高复用性" },
-    { title: "版本控制与协作", description: "团队协作功能" },
-    { title: "性能分析和优化", description: "数据驱动改进" },
-    { title: "API集成", description: "无缝系统对接" }
+    { title: '提示词创建和管理', description: '直观的编辑界面' },
+    { title: '模板变量和动态内容', description: '提高复用性' },
+    { title: '版本控制与协作', description: '团队协作功能' },
+    { title: '性能分析和优化', description: '数据驱动改进' },
+    { title: 'API集成', description: '无缝系统对接' },
   ];
 
   const useCases = [
-    { title: "内容创作和营销", description: "智能文案生成" },
-    { title: "客户服务自动化", description: "提升服务效率" },
-    { title: "知识管理和检索", description: "智能知识库" },
-    { title: "代码开发辅助", description: "提升开发效率" },
-    { title: "教育和培训", description: "个性化学习" }
+    { title: '内容创作和营销', description: '智能文案生成' },
+    { title: '客户服务自动化', description: '提升服务效率' },
+    { title: '知识管理和检索', description: '智能知识库' },
+    { title: '代码开发辅助', description: '提升开发效率' },
+    { title: '教育和培训', description: '个性化学习' },
   ];
 
   const variableTypes = [
-    { title: "字符串类型", description: "基础文本内容", href: "/docs/getting-started/template-variables#string" },
-    { title: "数组类型", description: "列表和多选项", href: "/docs/getting-started/template-variables#array" },
-    { title: "对象类型", description: "复杂结构数据", href: "/docs/getting-started/template-variables#object" },
-    { title: "布尔类型", description: "条件判断", href: "/docs/getting-started/template-variables#boolean" }
+    { title: '字符串类型', description: '基础文本内容', href: '/docs/getting-started/template-variables#string' },
+    { title: '数组类型', description: '列表和多选项', href: '/docs/getting-started/template-variables#array' },
+    { title: '对象类型', description: '复杂结构数据', href: '/docs/getting-started/template-variables#object' },
+    { title: '布尔类型', description: '条件判断', href: '/docs/getting-started/template-variables#boolean' },
   ];
 
   return (
@@ -61,8 +61,8 @@ const GettingStartedPage: React.FC = () => {
       title="入门指南"
       description="快速了解 Prompt Hub 的基本概念和功能，开始创建和管理你的AI提示词"
       breadcrumbs={[
-        { name: "文档", href: "/docs" },
-        { name: "入门指南", href: "/docs/getting-started" }
+        { name: '文档', href: '/docs' },
+        { name: '入门指南', href: '/docs/getting-started' },
       ]}
     >
       {/* 什么是Prompt Hub */}

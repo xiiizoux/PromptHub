@@ -94,8 +94,8 @@ export function createSupabaseAdminClient(): SupabaseClient {
   return createClient(supabaseUrl, supabaseServiceKey, {
     auth: {
       autoRefreshToken: false,
-      persistSession: false
-    }
+      persistSession: false,
+    },
   });
 }
 
@@ -127,7 +127,7 @@ export class SupabaseAdapter {
       console.log('categories表查询结果:', {
         error: categoriesError,
         count: categoriesData?.length || 0,
-        sample: categoriesData?.slice(0, 3)
+        sample: categoriesData?.slice(0, 3),
       });
 
       if (!categoriesError && categoriesData && categoriesData.length > 0) {
@@ -226,7 +226,7 @@ export class SupabaseAdapter {
         userId,
         page = 1,
         pageSize = 20,
-        sortBy = 'latest'
+        sortBy = 'latest',
       } = filters || {};
 
       // 警告：管理员权限已被移除。这里的查询现在会失败，
@@ -289,7 +289,7 @@ export class SupabaseAdapter {
           total: 0,
           page,
           pageSize,
-          totalPages: 0
+          totalPages: 0,
         };
       }
 
@@ -300,13 +300,13 @@ export class SupabaseAdapter {
           total: count || 0,
           page,
           pageSize,
-          totalPages: count ? Math.ceil(count / pageSize) : 0
+          totalPages: count ? Math.ceil(count / pageSize) : 0,
         };
       }
 
       // 获取所有提示词的评分数据
       const promptIds = data.map(p => p.id).filter(Boolean);
-      let ratingsMap = new Map<string, { average: number; count: number }>();
+      const ratingsMap = new Map<string, { average: number; count: number }>();
       
       if (promptIds.length > 0) {
         try {
@@ -330,7 +330,7 @@ export class SupabaseAdapter {
             Object.entries(ratingStats).forEach(([promptId, stats]) => {
               ratingsMap.set(promptId, {
                 average: Math.round((stats.sum / stats.count) * 10) / 10,
-                count: stats.count
+                count: stats.count,
               });
             });
 
@@ -348,7 +348,7 @@ export class SupabaseAdapter {
           ...prompt,
           average_rating: ratingInfo.average,
           rating_count: ratingInfo.count,
-          rating: ratingInfo.average // 为了兼容前端组件，同时提供rating字段
+          rating: ratingInfo.average, // 为了兼容前端组件，同时提供rating字段
         };
       });
 
@@ -359,7 +359,7 @@ export class SupabaseAdapter {
         total: count || 0,
         page,
         pageSize,
-        totalPages
+        totalPages,
       };
     } catch (err) {
       console.error('获取提示词列表时出错:', err);
@@ -368,7 +368,7 @@ export class SupabaseAdapter {
         total: 0,
         page: filters?.page || 1,
         pageSize: filters?.pageSize || 20,
-        totalPages: 0
+        totalPages: 0,
       };
     }
   }
@@ -426,9 +426,9 @@ export class SupabaseAdapter {
         password,
         options: {
           data: {
-            display_name: displayName || email.split('@')[0]
-          }
-        }
+            display_name: displayName || email.split('@')[0],
+          },
+        },
       });
       
       if (authError) {
@@ -444,7 +444,7 @@ export class SupabaseAdapter {
         .insert({
           id: authData.user.id,
           email: email,
-          display_name: displayName || email.split('@')[0]
+          display_name: displayName || email.split('@')[0],
         });
         
       if (userError) {
@@ -458,9 +458,9 @@ export class SupabaseAdapter {
           username: displayName || email.split('@')[0],
           display_name: displayName || email.split('@')[0],
           created_at: new Date().toISOString(),
-          role: 'user'
+          role: 'user',
         },
-        token: authData.session?.access_token
+        token: authData.session?.access_token,
       };
     } catch (err: any) {
       console.error('注册用户时出错:', err);
@@ -472,7 +472,7 @@ export class SupabaseAdapter {
     try {
       const { data, error } = await this.supabase.auth.signInWithPassword({
         email,
-        password
+        password,
       });
       
       if (error) {
@@ -496,9 +496,9 @@ export class SupabaseAdapter {
           username: userData?.display_name || email.split('@')[0],
           display_name: userData?.display_name || email.split('@')[0],
           created_at: data.user.created_at,
-          role: userData?.role || 'user'
+          role: userData?.role || 'user',
         },
-        token: data.session?.access_token
+        token: data.session?.access_token,
       };
     } catch (err: any) {
       console.error('用户登录时出错:', err);
@@ -540,7 +540,7 @@ export class SupabaseAdapter {
         username: userData.display_name || userData.email.split('@')[0],
         display_name: userData.display_name,
         created_at: userData.created_at,
-        role: userData.role || 'user'
+        role: userData.role || 'user',
       };
     } catch (err) {
       console.error('验证API密钥时出错:', err);
@@ -607,7 +607,7 @@ export class SupabaseAdapter {
           email: data.user.email || '',
           username: data.user.email?.split('@')[0] || '',
           created_at: data.user.created_at || new Date().toISOString(),
-          role: 'user'
+          role: 'user',
         };
       }
       
@@ -621,7 +621,7 @@ export class SupabaseAdapter {
         username: userInfo.username || data.user.email?.split('@')[0] || '',
         display_name: userInfo.display_name,
         created_at: userInfo.created_at || data.user.created_at,
-        role: userInfo.role || 'user'
+        role: userInfo.role || 'user',
       };
     } catch (error) {
       console.error('验证token时出错:', error);
@@ -653,7 +653,7 @@ export class SupabaseAdapter {
         username: userData?.display_name || data.user.email?.split('@')[0] || '',
         display_name: userData?.display_name || data.user.email?.split('@')[0] || '',
         created_at: data.user.created_at,
-        role: userData?.role || 'user'
+        role: userData?.role || 'user',
       };
     } catch (err) {
       console.error('获取当前用户时出错:', err);
@@ -673,7 +673,7 @@ export class SupabaseAdapter {
       // 如果要更改密码，先验证当前密码
       if (currentPassword && newPassword) {
         const { error: passwordError } = await this.supabase.auth.updateUser({
-          password: newPassword
+          password: newPassword,
         });
         
         if (passwordError) {
@@ -715,7 +715,7 @@ export class SupabaseAdapter {
         username: userData.display_name,
         display_name: userData.display_name,
         created_at: userData.created_at,
-        role: userData.role || 'user'
+        role: userData.role || 'user',
       };
     } catch (err: any) {
       console.error('更新用户资料时出错:', err);
@@ -749,7 +749,7 @@ export class SupabaseAdapter {
           user_id: userId,
           name,
           key_hash: keyHash,
-          expires_at: expiresAt
+          expires_at: expiresAt,
         })
         .select('id, name, created_at, expires_at')
         .single();
@@ -764,7 +764,7 @@ export class SupabaseAdapter {
         key: apiKey, // 返回真实的API密钥（仅在创建时）
         user_id: userId,
         created_at: data.created_at,
-        expires_in_days: expiresInDays || -1
+        expires_in_days: expiresInDays || -1,
       };
     } catch (err: any) {
       console.error('生成API密钥时出错:', err);
@@ -814,7 +814,7 @@ export class SupabaseAdapter {
           user_id: userId,
           created_at: key.created_at,
           last_used_at: key.last_used_at,
-          expires_in_days
+          expires_in_days,
         };
       });
     } catch (err: any) {
@@ -889,13 +889,13 @@ export class SupabaseAdapter {
         // 如果没有messages字段，但有content字段，则创建一个system消息
         messagesValue = [{
           role: 'system',
-          content: (promptData as any).content
+          content: (promptData as any).content,
         }];
       } else {
         // 默认空消息
         messagesValue = [{
           role: 'system',
-          content: ''
+          content: '',
         }];
       }
       
@@ -923,7 +923,7 @@ export class SupabaseAdapter {
         userId: promptToCreate.user_id,
         category: promptToCreate.category,
         compatible_models: promptToCreate.compatible_models,
-        tags: promptToCreate.tags
+        tags: promptToCreate.tags,
       });
       
       // 创建管理员客户端以绕过RLS策略

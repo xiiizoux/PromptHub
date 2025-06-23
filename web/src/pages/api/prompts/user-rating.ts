@@ -3,7 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
+  process.env.SUPABASE_SERVICE_ROLE_KEY!,
 );
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -54,7 +54,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (!rating) {
       return res.status(200).json({
         success: true,
-        rating: null
+        rating: null,
       });
     }
 
@@ -69,19 +69,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       updated_at: rating.updated_at || rating.created_at,
       user: {
         display_name: user.user_metadata?.display_name,
-        email: user.email
-      }
+        email: user.email,
+      },
     };
 
     res.status(200).json({
       success: true,
-      rating: formattedRating
+      rating: formattedRating,
     });
   } catch (error: any) {
     console.error('获取用户评分失败:', error);
     res.status(500).json({ 
       success: false, 
-      error: error.message || '服务器内部错误' 
+      error: error.message || '服务器内部错误', 
     });
   }
 } 

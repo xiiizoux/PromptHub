@@ -8,7 +8,7 @@ import {
   UserGroupIcon,
   DocumentTextIcon,
   ArrowTrendingUpIcon,
-  Cog6ToothIcon
+  Cog6ToothIcon,
 } from '@heroicons/react/24/outline';
 import DashboardLayout from '@/components/DashboardLayout';
 import { RecommendationEngine } from '@/components/RecommendationEngine';
@@ -45,7 +45,7 @@ const AnalyticsPage: NextPage = () => {
       { id: '1', name: '代码助手' },
       { id: '2', name: '文案创作' },
       { id: '3', name: '数据分析' },
-      { id: '4', name: '教学辅导' }
+      { id: '4', name: '教学辅导' },
     ]);
   };
 
@@ -55,22 +55,22 @@ const AnalyticsPage: NextPage = () => {
       name: '智能推荐',
       icon: SparklesIcon,
       description: '发现相关内容和个性化推荐',
-      color: 'text-neon-cyan'
+      color: 'text-neon-cyan',
     },
     {
       id: 'performance',
       name: '性能监控',
       icon: ChartBarIcon,
       description: '提示词性能分析和优化建议',
-      color: 'text-neon-purple'
+      color: 'text-neon-purple',
     },
     {
       id: 'system',
       name: '系统概览',
       icon: CpuChipIcon,
       description: '平台整体运行状态',
-      color: 'text-neon-pink'
-    }
+      color: 'text-neon-pink',
+    },
   ];
 
   if (isLoading) {

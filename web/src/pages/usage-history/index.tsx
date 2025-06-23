@@ -6,7 +6,7 @@ import {
   CalendarIcon,
   ChartBarIcon,
   CpuChipIcon,
-  DocumentTextIcon
+  DocumentTextIcon,
 } from '@heroicons/react/24/outline';
 import { getUserUsageHistory, getUsageStats, UsageRecord } from '@/lib/api';
 import { useAuth, withAuth } from '@/contexts/AuthContext';
@@ -41,7 +41,7 @@ const UsageHistoryPage: React.FC = () => {
         pageSize: 20,
         ...(selectedModel !== 'all' && { model: selectedModel }),
         ...(dateRange.from && { dateFrom: dateRange.from }),
-        ...(dateRange.to && { dateTo: dateRange.to })
+        ...(dateRange.to && { dateTo: dateRange.to }),
       };
       
       const response = await getUserUsageHistory(params);
@@ -313,7 +313,7 @@ const UsageHistoryPage: React.FC = () => {
                             <span>
                               {formatDistanceToNow(new Date(record.created_at), { 
                                 addSuffix: true, 
-                                locale: zhCN 
+                                locale: zhCN, 
                               })}
                             </span>
                           </div>

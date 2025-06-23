@@ -6,7 +6,7 @@ import { supabaseAdapter } from '@/lib/supabase-adapter';
  */
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse
+  res: NextApiResponse,
 ) {
   // 只允许GET方法
   if (req.method !== 'GET') {
@@ -19,7 +19,7 @@ export default async function handler(
     if (!author || typeof author !== 'string') {
       return res.status(400).json({ 
         success: false, 
-        message: '缺少author参数' 
+        message: '缺少author参数', 
       });
     }
 
@@ -62,7 +62,7 @@ export default async function handler(
     if (!userData) {
       return res.status(404).json({ 
         success: false, 
-        message: '用户不存在' 
+        message: '用户不存在', 
       });
     }
 
@@ -70,19 +70,19 @@ export default async function handler(
     const result = await supabaseAdapter.getPrompts({
       userId: userData.id,
       isPublic: false, // 获取用户所有的提示词（包括私有的）
-      pageSize: 1000 // 设置一个大的页面大小来获取总数
+      pageSize: 1000, // 设置一个大的页面大小来获取总数
     });
 
     return res.status(200).json({ 
       success: true, 
-      count: result.total
+      count: result.total,
     });
     
   } catch (error: any) {
     console.error('获取提示词数量失败:', error);
     return res.status(500).json({ 
       success: false, 
-      message: error.message || '获取提示词数量失败' 
+      message: error.message || '获取提示词数量失败', 
     });
   }
 } 

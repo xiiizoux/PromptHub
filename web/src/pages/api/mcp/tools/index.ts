@@ -34,7 +34,7 @@ export default apiHandler(async (req: NextApiRequest, res: NextApiResponse) => {
       
       // 将MCP响应格式转换为API响应格式
       const responseData = {
-        content: result.content || { type: 'text', text: '' }
+        content: result.content || { type: 'text', text: '' },
       };
       
       return successResponse(res, responseData);
@@ -48,5 +48,5 @@ export default apiHandler(async (req: NextApiRequest, res: NextApiResponse) => {
 }, {
   allowedMethods: ['GET', 'POST'],
   // 可以选择是否需要认证
-  requireAuth: false
+  requireAuth: false,
 });

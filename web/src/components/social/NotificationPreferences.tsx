@@ -3,7 +3,7 @@ import { Switch } from '@headlessui/react';
 import {
   notificationApi,
   NotificationPreference,
-  DigestFrequency
+  DigestFrequency,
 } from '../../lib/notification-api';
 
 interface NotificationPreferencesProps {

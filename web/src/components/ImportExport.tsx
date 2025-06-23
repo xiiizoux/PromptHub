@@ -8,7 +8,7 @@ import {
   CodeBracketIcon,
   XMarkIcon,
   CheckCircleIcon,
-  ExclamationTriangleIcon
+  ExclamationTriangleIcon,
 } from '@heroicons/react/24/outline';
 import { exportPrompts, importPrompts } from '@/lib/api';
 import { useAuth } from '@/contexts/AuthContext';
@@ -23,7 +23,7 @@ interface ImportExportProps {
 export const ImportExport: React.FC<ImportExportProps> = ({
   selectedPrompts = [],
   onImportComplete,
-  className = ''
+  className = '',
 }) => {
   const { user } = useAuth();
   const [showExportModal, setShowExportModal] = useState(false);
@@ -35,7 +35,7 @@ export const ImportExport: React.FC<ImportExportProps> = ({
   const [importFile, setImportFile] = useState<File | null>(null);
   const [importOptions, setImportOptions] = useState({
     allowDuplicates: false,
-    skipDuplicates: true
+    skipDuplicates: true,
   });
   const [importResult, setImportResult] = useState<any>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -131,7 +131,7 @@ export const ImportExport: React.FC<ImportExportProps> = ({
   const formatOptions = [
     { value: 'json', label: 'JSON', icon: CodeBracketIcon, description: '标准JSON格式，包含完整元数据' },
     { value: 'csv', label: 'CSV', icon: TableCellsIcon, description: '表格格式，便于在Excel中查看' },
-    { value: 'txt', label: 'TXT', icon: DocumentTextIcon, description: '纯文本格式，易于阅读' }
+    { value: 'txt', label: 'TXT', icon: DocumentTextIcon, description: '纯文本格式，易于阅读' },
   ];
 
   return (
@@ -310,7 +310,7 @@ export const ImportExport: React.FC<ImportExportProps> = ({
                           checked={importOptions.skipDuplicates}
                           onChange={(e) => setImportOptions(prev => ({
                             ...prev,
-                            skipDuplicates: e.target.checked
+                            skipDuplicates: e.target.checked,
                           }))}
                           className="rounded border-gray-600 bg-gray-800 text-neon-purple focus:ring-neon-purple"
                         />
@@ -322,7 +322,7 @@ export const ImportExport: React.FC<ImportExportProps> = ({
                           checked={importOptions.allowDuplicates}
                           onChange={(e) => setImportOptions(prev => ({
                             ...prev,
-                            allowDuplicates: e.target.checked
+                            allowDuplicates: e.target.checked,
                           }))}
                           className="rounded border-gray-600 bg-gray-800 text-neon-purple focus:ring-neon-purple"
                         />

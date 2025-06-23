@@ -3,7 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
+  process.env.SUPABASE_SERVICE_ROLE_KEY!,
 );
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -17,7 +17,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (!query || typeof query !== 'string' || query.trim().length < 2) {
       return res.status(200).json({
         success: true,
-        suggestions: []
+        suggestions: [],
       });
     }
 
@@ -26,13 +26,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     res.status(200).json({
       success: true,
       suggestions,
-      query
+      query,
     });
   } catch (error: any) {
     console.error('获取搜索建议失败:', error);
     res.status(500).json({ 
       success: false, 
-      error: error.message || '获取搜索建议失败' 
+      error: error.message || '获取搜索建议失败', 
     });
   }
 }
@@ -94,7 +94,7 @@ async function getKeywordSuggestions(query: string) {
       suggestions.push({
         text: prompt.name,
         type: 'keyword',
-        confidence: 0.9
+        confidence: 0.9,
       });
     }
 
@@ -105,7 +105,7 @@ async function getKeywordSuggestions(query: string) {
         suggestions.push({
           text: word,
           type: 'keyword',
-          confidence: 0.7
+          confidence: 0.7,
         });
       }
     });
@@ -116,7 +116,7 @@ async function getKeywordSuggestions(query: string) {
         suggestions.push({
           text: tag,
           type: 'keyword',
-          confidence: 0.8
+          confidence: 0.8,
         });
       }
     });
@@ -144,7 +144,7 @@ async function getCategorySuggestions(query: string) {
   return categories.map(category => ({
     text: category,
     type: 'category' as const,
-    confidence: 0.8
+    confidence: 0.8,
   }));
 }
 
@@ -161,7 +161,7 @@ async function getSemanticSuggestions(query: string) {
     { keywords: ['代码', '编程', 'code'], suggestions: ['代码生成助手', '编程问题解答', '代码审查工具'] },
     { keywords: ['分析', '总结', '解析'], suggestions: ['文档分析工具', '内容总结助手', '数据分析指南'] },
     { keywords: ['学习', '教育', '教学'], suggestions: ['学习计划制定', '教学内容设计', '知识点解释'] },
-    { keywords: ['营销', '推广', '广告'], suggestions: ['营销文案生成', '广告创意助手', '推广策略制定'] }
+    { keywords: ['营销', '推广', '广告'], suggestions: ['营销文案生成', '广告创意助手', '推广策略制定'] },
   ];
 
   const queryLower = query.toLowerCase();
@@ -172,7 +172,7 @@ async function getSemanticSuggestions(query: string) {
         suggestions.push({
           text: suggestion,
           type: 'semantic',
-          confidence: 0.9
+          confidence: 0.9,
         });
       });
     }
@@ -210,7 +210,7 @@ async function getHistorySuggestions(query: string) {
       .map(([queryText, count]) => ({
         text: queryText,
         type: 'history' as const,
-        confidence: Math.min(0.8, 0.5 + count * 0.1)
+        confidence: Math.min(0.8, 0.5 + count * 0.1),
       }));
   } catch (error) {
     console.error('获取历史建议失败:', error);
@@ -236,7 +236,7 @@ function deduplicateAndScore(suggestions: any[]) {
     semantic: 3,
     keyword: 2,
     category: 1.5,
-    history: 1
+    history: 1,
   };
 
   return unique.sort((a, b) => {

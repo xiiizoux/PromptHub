@@ -11,7 +11,7 @@ import {
   AdjustmentsHorizontalIcon,
   InformationCircleIcon,
   DocumentPlusIcon,
-  BeakerIcon
+  BeakerIcon,
 } from '@heroicons/react/24/outline';
 import { StarIcon } from '@heroicons/react/24/solid';
 import {
@@ -20,7 +20,7 @@ import {
   IterationRequest,
   optimizePrompt,
   iteratePrompt,
-  analyzePrompt
+  analyzePrompt,
 } from '@/lib/prompt-optimizer';
 import { AIAnalyzeButton, AIAnalysisResultDisplay } from '@/components/AIAnalyzeButton';
 import { AIAnalysisResult } from '@/lib/ai-analyzer';
@@ -35,7 +35,7 @@ interface PromptOptimizerProps {
 export const PromptOptimizerComponent: React.FC<PromptOptimizerProps> = ({
   initialPrompt = '',
   onOptimizedPrompt,
-  className = ''
+  className = '',
 }) => {
   const router = useRouter();
   const [prompt, setPrompt] = useState(initialPrompt);
@@ -92,7 +92,7 @@ export const PromptOptimizerComponent: React.FC<PromptOptimizerProps> = ({
           type: 'general',
           requirements: requirements || '',
           complexity: 'medium',
-          includeAnalysis: true
+          includeAnalysis: true,
         });
         
         if (result) {
@@ -100,7 +100,7 @@ export const PromptOptimizerComponent: React.FC<PromptOptimizerProps> = ({
             optimizedPrompt: result.optimized,
             improvements: result.improvements,
             score: { clarity: 8, specificity: 8, completeness: 8, overall: 8 }, // 临时评分
-            suggestions: result.techniques || []
+            suggestions: result.techniques || [],
           };
         }
       } else {
@@ -108,7 +108,7 @@ export const PromptOptimizerComponent: React.FC<PromptOptimizerProps> = ({
         optimizationResult = await optimizePrompt(
           prompt,
           requirements || undefined,
-          optimizationType as 'general' | 'creative' | 'technical' | 'business' | 'educational' | 'drawing'
+          optimizationType as 'general' | 'creative' | 'technical' | 'business' | 'educational' | 'drawing',
         );
       }
 
@@ -145,7 +145,7 @@ export const PromptOptimizerComponent: React.FC<PromptOptimizerProps> = ({
         prompt,
         optimizedPrompt,
         iterationRequirements,
-        iterationType
+        iterationType,
       );
 
       if (iteratedPrompt) {
@@ -179,7 +179,7 @@ export const PromptOptimizerComponent: React.FC<PromptOptimizerProps> = ({
         if (result) {
           setResult({
             ...result,
-            score
+            score,
           });
         }
         toast.success('质量分析完成！');
@@ -212,7 +212,7 @@ export const PromptOptimizerComponent: React.FC<PromptOptimizerProps> = ({
     
     // 构建URL参数 - 传递优化后的内容
     const params = new URLSearchParams({
-      optimizedContent: encodeURIComponent(contentToUse)
+      optimizedContent: encodeURIComponent(contentToUse),
     });
     
     // 跳转到创建提示词页面
@@ -255,7 +255,7 @@ export const PromptOptimizerComponent: React.FC<PromptOptimizerProps> = ({
         {[
           { key: 'optimize', label: '智能优化', icon: SparklesIcon },
           { key: 'iterate', label: '迭代改进', icon: ArrowPathIcon },
-          { key: 'analyze', label: '质量分析', icon: ChartBarIcon }
+          { key: 'analyze', label: '质量分析', icon: ChartBarIcon },
         ].map(tab => (
           <button
             key={tab.key}
@@ -644,7 +644,7 @@ export const PromptOptimizerComponent: React.FC<PromptOptimizerProps> = ({
                       month: '2-digit',
                       day: '2-digit',
                       hour: '2-digit',
-                      minute: '2-digit'
+                      minute: '2-digit',
                     })}`;
                     
                     const suggestedDesc = aiAnalysisResult.description || '通过AI优化生成的提示词，经过智能分析和结构化优化处理';
@@ -654,7 +654,7 @@ export const PromptOptimizerComponent: React.FC<PromptOptimizerProps> = ({
                       optimizedContent: encodeURIComponent(contentToUse),
                       aiAnalysisResult: encodeURIComponent(JSON.stringify(aiAnalysisResult)),
                       suggestedName: encodeURIComponent(suggestedName),
-                      suggestedDesc: encodeURIComponent(suggestedDesc)
+                      suggestedDesc: encodeURIComponent(suggestedDesc),
                     });
                     
                     // 跳转到创建提示词页面

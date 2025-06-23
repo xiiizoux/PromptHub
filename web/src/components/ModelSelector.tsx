@@ -6,14 +6,14 @@ import {
   ModelType, 
   getModelTagsByType, 
   getModelTypeOptions,
-  getModelTypeLabel 
+  getModelTypeLabel, 
 } from '@/constants/ai-models';
 import {
   ChevronDownIcon,
   PlusIcon,
   XMarkIcon,
   CpuChipIcon,
-  TagIcon
+  TagIcon,
 } from '@heroicons/react/24/outline';
 
 interface ModelSelectorProps {
@@ -27,7 +27,7 @@ export const ModelSelector: React.FC<ModelSelectorProps> = ({
   selectedModels,
   onChange,
   className = '',
-  placeholder = '选择兼容模型...'
+  placeholder = '选择兼容模型...',
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedType, setSelectedType] = useState<ModelType | 'all'>('all');

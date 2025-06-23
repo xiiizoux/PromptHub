@@ -3,7 +3,7 @@ import { aiAnalyzer, AIAnalysisResult } from '@/lib/ai-analyzer';
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse
+  res: NextApiResponse,
 ) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: '仅支持POST请求' });
@@ -31,7 +31,7 @@ export default async function handler(
           originalContent,
           existingCategory,
           existingTags: promptExistingTags,
-          existingModels
+          existingModels,
         } = req.body;
         
         // 增强配置，包含现有参数信息
@@ -41,7 +41,7 @@ export default async function handler(
           originalContent: originalContent || '',
           existingCategory: existingCategory || '',
           existingTags: promptExistingTags || [],
-          existingModels: existingModels || []
+          existingModels: existingModels || [],
         };
         
         const fullResult = await aiAnalyzer.analyzePrompt(
@@ -50,7 +50,7 @@ export default async function handler(
           existingTags, 
           fullAnalysisCurrentVersion, 
           fullAnalysisIsNewPrompt, 
-          fullAnalysisExistingVersions
+          fullAnalysisExistingVersions,
         );
         
         return res.status(200).json({ success: true, data: fullResult });
@@ -78,7 +78,7 @@ export default async function handler(
         if (!apiKey) {
           return res.status(500).json({
             success: false,
-            error: 'OpenAI API未配置，请联系管理员'
+            error: 'OpenAI API未配置，请联系管理员',
           });
         }
 
@@ -153,19 +153,19 @@ ${content}
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${apiKey}`,
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
           },
           body: JSON.stringify({
             model: 'gpt-4o-mini',
             messages: [
               {
                 role: 'user',
-                content: analysisPrompt
-              }
+                content: analysisPrompt,
+              },
             ],
             max_tokens: 1000,
-            temperature: 0.3
-          })
+            temperature: 0.3,
+          }),
         });
 
         if (!response.ok) {
@@ -173,7 +173,7 @@ ${content}
           console.error('OpenAI API错误:', response.status, errorData);
           return res.status(500).json({
             success: false,
-            error: `AI服务暂时不可用: ${response.status} ${response.statusText}`
+            error: `AI服务暂时不可用: ${response.status} ${response.statusText}`,
           });
         }
 
@@ -182,7 +182,7 @@ ${content}
         if (!data.choices || !data.choices[0] || !data.choices[0].message) {
           return res.status(500).json({
             success: false,
-            error: 'AI服务返回了无效的响应'
+            error: 'AI服务返回了无效的响应',
           });
         }
 
@@ -202,13 +202,13 @@ ${content}
                 structure: parsed.structure || 5,
                 creativity: parsed.creativity || 5,
                 applicability: parsed.applicability || 5,
-                overall: parsed.overall || 5
+                overall: parsed.overall || 5,
               },
               strengths: parsed.strengths || [],
               improvements: parsed.improvements || [],
               useCases: parsed.useCases || [],
               risks: parsed.risks || [],
-              analysis: parsed.analysis || ''
+              analysis: parsed.analysis || '',
             };
           } else {
             // 降级处理：如果无法解析JSON，提供基础评分
@@ -218,7 +218,7 @@ ${content}
               improvements: ['建议提供更详细的指令', '考虑增加具体示例'],
               useCases: ['通用场景'],
               risks: ['可能存在理解歧义'],
-              analysis: '分析结果解析失败，使用默认评估'
+              analysis: '分析结果解析失败，使用默认评估',
             };
           }
         } catch (parseError) {
@@ -229,7 +229,7 @@ ${content}
             improvements: ['建议提供更详细的指令', '考虑增加具体示例'],
             useCases: ['通用场景'],
             risks: ['可能存在理解歧义'],
-            analysis: '分析结果解析失败，使用默认评估'
+            analysis: '分析结果解析失败，使用默认评估',
           };
         }
         
@@ -239,8 +239,8 @@ ${content}
             prompt: content,
             analysis: analysisData,
             rawAnalysis: analysisResult,
-            usage: data.usage
-          }
+            usage: data.usage,
+          },
         });
       }
 
@@ -280,7 +280,7 @@ ${content}
 
     return res.status(500).json({ 
       error: errorMessage,
-      fallback: true 
+      fallback: true, 
     });
   }
 }

@@ -6,7 +6,7 @@ import {
   ExclamationTriangleIcon,
   CheckCircleIcon,
   LightBulbIcon,
-  ShieldCheckIcon
+  ShieldCheckIcon,
 } from '@heroicons/react/24/outline';
 import { PromptQualityAnalysis } from '@/types/performance';
 
@@ -86,7 +86,7 @@ const QualityAnalysisPanel: React.FC<QualityAnalysisPanelProps> = ({ promptId, c
   };
 
   const DimensionBar: React.FC<{ name: string; score: number; description: string; suggestions?: string[] }> = ({
-    name, score, description, suggestions = []
+    name, score, description, suggestions = [],
   }) => (
     <motion.div
       initial={{ opacity: 0, x: -20 }}

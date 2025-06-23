@@ -22,7 +22,7 @@ export default apiHandler(async (req: NextApiRequest, res: NextApiResponse, user
       pageSize = '10',
       search = '',
       category = '',
-      isPublic = 'false' // 默认获取用户所有提示词（包括私有）
+      isPublic = 'false', // 默认获取用户所有提示词（包括私有）
     } = req.query;
 
     // 构建过滤器
@@ -33,7 +33,7 @@ export default apiHandler(async (req: NextApiRequest, res: NextApiResponse, user
       search: search as string || undefined,
       category: category as string || undefined,
       isPublic: false, // false表示获取该用户的所有提示词（包括私有）
-      sortBy: 'latest' as const
+      sortBy: 'latest' as const,
     };
 
     // 获取用户的提示词
@@ -45,8 +45,8 @@ export default apiHandler(async (req: NextApiRequest, res: NextApiResponse, user
         total: result.total,
         page: result.page,
         pageSize: result.pageSize,
-        totalPages: result.totalPages
-      }
+        totalPages: result.totalPages,
+      },
     });
 
   } catch (error: any) {
@@ -55,5 +55,5 @@ export default apiHandler(async (req: NextApiRequest, res: NextApiResponse, user
   }
 }, {
   allowedMethods: ['GET'],
-  requireAuth: true
+  requireAuth: true,
 }); 

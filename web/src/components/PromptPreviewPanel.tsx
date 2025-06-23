@@ -8,7 +8,7 @@ import {
   CurrencyDollarIcon,
   ExclamationTriangleIcon,
   CheckCircleIcon,
-  ArrowPathIcon
+  ArrowPathIcon,
 } from '@heroicons/react/24/outline';
 import { AIAnalyzeButton } from './AIAnalyzeButton';
 import toast from 'react-hot-toast';
@@ -32,7 +32,7 @@ interface PreviewResult {
 export const PromptPreviewPanel: React.FC<PromptPreviewPanelProps> = ({
   content,
   variables = {},
-  className = ''
+  className = '',
 }) => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [previewResult, setPreviewResult] = useState<PreviewResult | null>(null);
@@ -102,14 +102,14 @@ export const PromptPreviewPanel: React.FC<PromptPreviewPanelProps> = ({
         tokensUsed: mockPreview.tokens,
         estimatedCost: mockPreview.cost,
         responseTime,
-        warnings: generateWarnings(processedPrompt)
+        warnings: generateWarnings(processedPrompt),
       });
 
     } catch (error: any) {
       setPreviewResult({
         success: false,
         error: error.message || '预览生成失败',
-        warnings: []
+        warnings: [],
       });
     } finally {
       setIsGenerating(false);

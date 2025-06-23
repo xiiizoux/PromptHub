@@ -19,7 +19,7 @@ export const BookmarkButton: React.FC<BookmarkButtonProps> = React.memo(({
   variant = 'bookmark',
   showCount = true,
   size = 'md',
-  className = ''
+  className = '',
 }) => {
   const { user } = useAuth();
   const [isActive, setIsActive] = useState(false);
@@ -95,13 +95,13 @@ export const BookmarkButton: React.FC<BookmarkButtonProps> = React.memo(({
   const sizeClasses = {
     sm: 'h-4 w-4',
     md: 'h-5 w-5',
-    lg: 'h-6 w-6'
+    lg: 'h-6 w-6',
   };
 
   const buttonSizeClasses = {
     sm: 'px-2 py-1 text-xs',
     md: 'px-3 py-2 text-sm',
-    lg: 'px-4 py-3 text-base'
+    lg: 'px-4 py-3 text-base',
   };
 
   return (
@@ -126,7 +126,7 @@ export const BookmarkButton: React.FC<BookmarkButtonProps> = React.memo(({
       <motion.div
         animate={{ 
           scale: isActive ? [1, 1.2, 1] : 1,
-          rotate: variant === 'like' && isActive ? [0, 10, -10, 0] : 0
+          rotate: variant === 'like' && isActive ? [0, 10, -10, 0] : 0,
         }}
         transition={{ duration: 0.3 }}
       >

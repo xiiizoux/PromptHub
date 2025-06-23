@@ -13,18 +13,18 @@ export const RatingDisplay: React.FC<RatingDisplayProps> = ({
   rating,
   count,
   size = 'sm',
-  className = ''
+  className = '',
 }) => {
   const sizeClasses = {
     sm: 'h-3 w-3',
     md: 'h-4 w-4',
-    lg: 'h-5 w-5'
+    lg: 'h-5 w-5',
   };
 
   const textSizeClasses = {
     sm: 'text-xs',
     md: 'text-sm',
-    lg: 'text-base'
+    lg: 'text-base',
   };
 
   const renderStars = () => {

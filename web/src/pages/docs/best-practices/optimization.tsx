@@ -15,7 +15,7 @@ import {
   ShieldCheckIcon,
   EyeIcon,
   CogIcon,
-  RocketLaunchIcon
+  RocketLaunchIcon,
 } from '@heroicons/react/24/outline';
 import DocLayout from '@/components/DocLayout';
 import { DocSection, DocGrid, DocCard, DocCodeBlock, DocList, DocHighlight } from '@/components/DocContent';
@@ -23,47 +23,47 @@ import { DocSection, DocGrid, DocCard, DocCodeBlock, DocList, DocHighlight } fro
 const OptimizationPage: React.FC = () => {
   const optimizationStrategies = [
     {
-      title: "数据驱动优化",
+      title: '数据驱动优化',
       icon: <ChartBarIcon className="h-6 w-6" />,
-      color: "cyan" as const,
-      description: "基于量化指标持续改进提示词性能",
+      color: 'cyan' as const,
+      description: '基于量化指标持续改进提示词性能',
       techniques: [
-        "分析性能指标和响应质量",
-        "监控错误模式和失败案例",
-        "收集用户反馈和满意度数据",
-        "建立A/B测试对比框架"
-      ]
+        '分析性能指标和响应质量',
+        '监控错误模式和失败案例',
+        '收集用户反馈和满意度数据',
+        '建立A/B测试对比框架',
+      ],
     },
     {
-      title: "技术结构优化",
+      title: '技术结构优化',
       icon: <CogIcon className="h-6 w-6" />,
-      color: "purple" as const,
-      description: "通过技术手段提升提示词执行效率",
+      color: 'purple' as const,
+      description: '通过技术手段提升提示词执行效率',
       techniques: [
-        "精简指令语言，去除冗余表达",
-        "优化示例质量和相关性",
-        "调整参数设置和约束条件",
-        "改进输出格式和结构设计"
-      ]
+        '精简指令语言，去除冗余表达',
+        '优化示例质量和相关性',
+        '调整参数设置和约束条件',
+        '改进输出格式和结构设计',
+      ],
     },
     {
-      title: "用户体验优化",
+      title: '用户体验优化',
       icon: <RocketLaunchIcon className="h-6 w-6" />,
-      color: "pink" as const,
-      description: "从用户角度提升交互体验和实用价值",
+      color: 'pink' as const,
+      description: '从用户角度提升交互体验和实用价值',
       techniques: [
-        "提升响应速度和处理效率",
-        "增强输出一致性和可预测性",
-        "减少错误率和异常情况",
-        "改善内容可读性和实用性"
-      ]
-    }
+        '提升响应速度和处理效率',
+        '增强输出一致性和可预测性',
+        '减少错误率和异常情况',
+        '改善内容可读性和实用性',
+      ],
+    },
   ];
 
   const performanceTechniques = [
     {
-      title: "精简和聚焦",
-      description: "移除冗余信息，专注于核心任务，提高处理效率",
+      title: '精简和聚焦',
+      description: '移除冗余信息，专注于核心任务，提高处理效率',
       badExample: `你是一个非常专业的、经验丰富的、
 具有多年工作经验的高级软件工程师，
 同时也是一个代码审查专家，拥有
@@ -76,12 +76,12 @@ const OptimizationPage: React.FC = () => {
 1. 代码质量
 2. 性能问题  
 3. 安全漏洞`,
-      improvement: "字数减少70%，核心信息更清晰"
+      improvement: '字数减少70%，核心信息更清晰',
     },
     {
-      title: "结构化输出",
-      description: "使用结构化格式提高输出的可解析性和一致性",
-      badExample: "请分析这个产品的优缺点。",
+      title: '结构化输出',
+      description: '使用结构化格式提高输出的可解析性和一致性',
+      badExample: '请分析这个产品的优缺点。',
       goodExample: `请按以下JSON格式分析产品：
 {
   "overall_score": 0-10,
@@ -90,12 +90,12 @@ const OptimizationPage: React.FC = () => {
   "recommendation": "推荐/不推荐",
   "reason": "推荐理由"
 }`,
-      improvement: "输出格式标准化，便于程序处理"
+      improvement: '输出格式标准化，便于程序处理',
     },
     {
-      title: "分步骤处理",
-      description: "将复杂任务分解为多个简单步骤，提高准确性",
-      badExample: "分析这份文档并给出建议。",
+      title: '分步骤处理',
+      description: '将复杂任务分解为多个简单步骤，提高准确性',
+      badExample: '分析这份文档并给出建议。',
       goodExample: `请按以下步骤分析文档：
 
 步骤1：提取关键信息
@@ -109,14 +109,14 @@ const OptimizationPage: React.FC = () => {
 步骤3：生成总结
 - 概括主要内容
 - 提出改进建议`,
-      improvement: "任务分解明确，执行精度提升40%"
-    }
+      improvement: '任务分解明确，执行精度提升40%',
+    },
   ];
 
   const advancedTechniques = [
     {
-      title: "动态提示词",
-      description: "根据输入内容和上下文动态调整提示词内容",
+      title: '动态提示词',
+      description: '根据输入内容和上下文动态调整提示词内容',
       code: `// 动态提示词生成示例
 function generatePrompt(inputType, complexity, userLevel) {
   let basePrompt = "你是一个专业助手。";
@@ -135,11 +135,11 @@ function generatePrompt(inputType, complexity, userLevel) {
   
   return basePrompt;
 }`,
-      benefits: ["适应性强", "针对性高", "效率提升", "用户体验好"]
+      benefits: ['适应性强', '针对性高', '效率提升', '用户体验好'],
     },
     {
-      title: "链式提示词",
-      description: "将复杂任务分解为多个相互关联的提示词",
+      title: '链式提示词',
+      description: '将复杂任务分解为多个相互关联的提示词',
       code: `# 提示词链示例：文档分析
 
 ## 第一步：信息提取
@@ -159,11 +159,11 @@ function generatePrompt(inputType, complexity, userLevel) {
 - 核心要点总结
 - 优劣势分析
 - 具体改进建议`,
-      benefits: ["逻辑清晰", "准确度高", "可追溯", "易调试"]
+      benefits: ['逻辑清晰', '准确度高', '可追溯', '易调试'],
     },
     {
-      title: "自我验证机制",
-      description: "让AI检查自己的输出，提高准确性",
+      title: '自我验证机制',
+      description: '让AI检查自己的输出，提高准确性',
       code: `请完成任务并进行自我检查：
 
 1. 首先完成主要任务
@@ -183,45 +183,45 @@ function generatePrompt(inputType, complexity, userLevel) {
   },
   "corrections": "如有修正，说明修正内容"
 }`,
-      benefits: ["质量保证", "自动纠错", "可靠性高", "减少人工审核"]
-    }
+      benefits: ['质量保证', '自动纠错', '可靠性高', '减少人工审核'],
+    },
   ];
 
   const performanceMetrics = [
-    { name: "准确率", target: ">90%", color: "neon-green" },
-    { name: "响应时间", target: "<2s", color: "neon-cyan" },
-    { name: "格式一致性", target: ">95%", color: "neon-purple" },
-    { name: "用户满意度", target: ">4.5/5", color: "neon-pink" }
+    { name: '准确率', target: '>90%', color: 'neon-green' },
+    { name: '响应时间', target: '<2s', color: 'neon-cyan' },
+    { name: '格式一致性', target: '>95%', color: 'neon-purple' },
+    { name: '用户满意度', target: '>4.5/5', color: 'neon-pink' },
   ];
 
   const optimizationWorkflow = [
-    { step: 1, title: "基线建立", description: "测试当前提示词性能，建立基准指标", icon: <ChartBarIcon className="h-5 w-5" /> },
-    { step: 2, title: "问题识别", description: "分析错误模式，识别改进机会", icon: <EyeIcon className="h-5 w-5" /> },
-    { step: 3, title: "方案设计", description: "制定具体的优化方案和测试计划", icon: <LightBulbIcon className="h-5 w-5" /> },
-    { step: 4, title: "实施测试", description: "实施优化方案，进行A/B测试", icon: <CogIcon className="h-5 w-5" /> },
-    { step: 5, title: "效果评估", description: "分析测试结果，决定是否采用新方案", icon: <CheckCircleIcon className="h-5 w-5" /> },
-    { step: 6, title: "持续监控", description: "部署后持续监控，准备下一轮优化", icon: <ArrowPathIcon className="h-5 w-5" /> }
+    { step: 1, title: '基线建立', description: '测试当前提示词性能，建立基准指标', icon: <ChartBarIcon className="h-5 w-5" /> },
+    { step: 2, title: '问题识别', description: '分析错误模式，识别改进机会', icon: <EyeIcon className="h-5 w-5" /> },
+    { step: 3, title: '方案设计', description: '制定具体的优化方案和测试计划', icon: <LightBulbIcon className="h-5 w-5" /> },
+    { step: 4, title: '实施测试', description: '实施优化方案，进行A/B测试', icon: <CogIcon className="h-5 w-5" /> },
+    { step: 5, title: '效果评估', description: '分析测试结果，决定是否采用新方案', icon: <CheckCircleIcon className="h-5 w-5" /> },
+    { step: 6, title: '持续监控', description: '部署后持续监控，准备下一轮优化', icon: <ArrowPathIcon className="h-5 w-5" /> },
   ];
 
   const errorPatterns = [
     {
-      type: "格式错误",
-      symptom: "输出格式不一致或不符合要求",
-      solution: "添加更明确的格式示例和约束",
-      color: "orange"
+      type: '格式错误',
+      symptom: '输出格式不一致或不符合要求',
+      solution: '添加更明确的格式示例和约束',
+      color: 'orange',
     },
     {
-      type: "理解偏差", 
-      symptom: "AI误解任务要求或上下文",
-      solution: "重新表述指令，增加澄清说明",
-      color: "red"
+      type: '理解偏差', 
+      symptom: 'AI误解任务要求或上下文',
+      solution: '重新表述指令，增加澄清说明',
+      color: 'red',
     },
     {
-      type: "质量不稳定",
-      symptom: "输出质量波动较大，不够稳定",
-      solution: "增加质量标准和检查点",
-      color: "yellow"
-    }
+      type: '质量不稳定',
+      symptom: '输出质量波动较大，不够稳定',
+      solution: '增加质量标准和检查点',
+      color: 'yellow',
+    },
   ];
 
   return (
@@ -229,9 +229,9 @@ function generatePrompt(inputType, complexity, userLevel) {
       title="提示词优化技巧"
       description="掌握高级的提示词优化方法，提升AI模型的性能和输出质量"
       breadcrumbs={[
-        { name: "文档", href: "/docs" },
-        { name: "最佳实践", href: "/docs/best-practices" },
-        { name: "优化技巧", href: "/docs/best-practices/optimization" }
+        { name: '文档', href: '/docs' },
+        { name: '最佳实践', href: '/docs/best-practices' },
+        { name: '优化技巧', href: '/docs/best-practices/optimization' },
       ]}
     >
       {/* 返回按钮 */}
@@ -363,7 +363,7 @@ function generatePrompt(inputType, complexity, userLevel) {
 
                 <DocCodeBlock 
                   code={technique.code}
-                  language={technique.title === "动态提示词" ? "javascript" : "text"}
+                  language={technique.title === '动态提示词' ? 'javascript' : 'text'}
                   className="mb-6"
                 />
 
@@ -415,10 +415,10 @@ function generatePrompt(inputType, complexity, userLevel) {
             >
               <DocList 
                 items={[
-                  { title: "自动化测试套件", description: "定期执行标准化测试" },
-                  { title: "实时性能监控", description: "持续跟踪关键指标" },
-                  { title: "用户反馈收集", description: "收集真实使用体验" },
-                  { title: "错误日志分析", description: "识别和解决问题" }
+                  { title: '自动化测试套件', description: '定期执行标准化测试' },
+                  { title: '实时性能监控', description: '持续跟踪关键指标' },
+                  { title: '用户反馈收集', description: '收集真实使用体验' },
+                  { title: '错误日志分析', description: '识别和解决问题' },
                 ]}
                 className="mt-4"
               />
@@ -502,10 +502,10 @@ function generatePrompt(inputType, complexity, userLevel) {
               </h4>
               <div className="space-y-3">
                 {[
-                  "数据驱动的决策过程",
-                  "小步快跑的迭代优化", 
-                  "用户体验优先考虑",
-                  "持续监控和改进"
+                  '数据驱动的决策过程',
+                  '小步快跑的迭代优化', 
+                  '用户体验优先考虑',
+                  '持续监控和改进',
                 ].map((principle, index) => (
                   <div key={index} className="flex items-center gap-3 text-dark-text-secondary">
                     <CheckCircleIcon className="h-4 w-4 text-neon-green flex-shrink-0" />
@@ -522,10 +522,10 @@ function generatePrompt(inputType, complexity, userLevel) {
               </h4>
               <div className="space-y-3">
                 {[
-                  "精简语言，聚焦核心任务",
-                  "结构化输出格式设计",
-                  "系统性A/B测试验证",
-                  "自动化质量检查机制"
+                  '精简语言，聚焦核心任务',
+                  '结构化输出格式设计',
+                  '系统性A/B测试验证',
+                  '自动化质量检查机制',
                 ].map((tip, index) => (
                   <div key={index} className="flex items-center gap-3 text-dark-text-secondary">
                     <SparklesIcon className="h-4 w-4 text-neon-purple flex-shrink-0" />

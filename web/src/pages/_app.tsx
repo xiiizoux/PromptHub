@@ -15,13 +15,13 @@ export default function App({ Component, pageProps }: AppProps) {
         filename: event.filename,
         lineno: event.lineno,
         colno: event.colno,
-        stack: event.error?.stack
+        stack: event.error?.stack,
       });
     };
 
     const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
       logger.error('未处理的Promise拒绝', new Error(String(event.reason)), {
-        reason: event.reason
+        reason: event.reason,
       });
     };
 

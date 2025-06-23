@@ -3,7 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
+  process.env.SUPABASE_SERVICE_ROLE_KEY!,
 );
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -20,13 +20,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       outputTokens = 0,
       latencyMs = 0,
       sessionId,
-      userId
+      userId,
     } = req.body;
 
     if (!promptId) {
       return res.status(400).json({ 
         success: false, 
-        error: 'Missing promptId' 
+        error: 'Missing promptId', 
       });
     }
 
@@ -42,7 +42,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         latency_ms: latencyMs,
         session_id: sessionId,
         user_id: userId,
-        created_at: new Date().toISOString()
+        created_at: new Date().toISOString(),
       })
       .select()
       .single();
@@ -54,7 +54,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         return res.json({ 
           success: true, 
           message: '功能暂未启用，但操作已记录',
-          usageId: `temp-${Date.now()}`
+          usageId: `temp-${Date.now()}`,
         });
       }
       throw usageError;
@@ -62,13 +62,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     return res.json({ 
       success: true, 
-      usageId: usageData.id 
+      usageId: usageData.id, 
     });
   } catch (error) {
     console.error('追踪使用数据时出错:', error);
     return res.status(500).json({ 
       success: false, 
-      error: '服务器内部错误' 
+      error: '服务器内部错误', 
     });
   }
 } 

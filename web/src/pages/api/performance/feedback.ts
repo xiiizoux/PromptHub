@@ -14,7 +14,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (!usage_id || rating === undefined) {
       return res.status(400).json({ 
         success: false, 
-        message: 'usage_id和rating是必需的参数' 
+        message: 'usage_id和rating是必需的参数', 
       });
     }
     
@@ -26,15 +26,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         return {
           usage_id: data.usage_id,
           rating: data.rating,
-          comments: data.comments || ''
+          comments: data.comments || '',
         };
-      }
+      },
     });
   } catch (error) {
     console.error('提交提示词反馈错误:', error);
     return res.status(500).json({ 
       success: false, 
-      message: '提交提示词反馈过程中发生错误' 
+      message: '提交提示词反馈过程中发生错误', 
     });
   }
 }

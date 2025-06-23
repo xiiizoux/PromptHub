@@ -41,8 +41,8 @@ const PromptDetails = () => {
         // 从私有API获取提示词详情
         const response = await fetch(`/api/profile/prompt/${id}`, {
           headers: {
-            'Authorization': `Bearer ${parsedToken}`
-          }
+            'Authorization': `Bearer ${parsedToken}`,
+          },
         });
         
         if (!response.ok) {
@@ -79,7 +79,7 @@ const PromptDetails = () => {
     return date.toLocaleDateString('zh-CN', { 
       year: 'numeric', 
       month: 'long', 
-      day: 'numeric' 
+      day: 'numeric', 
     });
   };
   

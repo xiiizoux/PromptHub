@@ -14,7 +14,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse, userId: string
     if (!authHeader) {
       return res.status(401).json({ 
         success: false, 
-        error: '未授权访问' 
+        error: '未授权访问', 
       });
     }
 
@@ -22,7 +22,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse, userId: string
     if (method !== 'GET') {
       return res.status(405).json({ 
         success: false, 
-        error: '方法不允许' 
+        error: '方法不允许', 
       });
     }
 
@@ -31,9 +31,9 @@ async function handler(req: NextApiRequest, res: NextApiResponse, userId: string
       `${MCP_SERVER_URL}/api/notifications/unread-count`,
       {
         headers: {
-          Authorization: authHeader
-        }
-      }
+          Authorization: authHeader,
+        },
+      },
     );
     
     return res.status(200).json(data);
@@ -42,7 +42,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse, userId: string
     return res.status(500).json({
       success: false,
       data: { count: 0 },
-      error: error instanceof Error ? error.message : '未知错误'
+      error: error instanceof Error ? error.message : '未知错误',
     });
   }
 }

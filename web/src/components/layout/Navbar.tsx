@@ -13,7 +13,7 @@ import {
   ArrowRightOnRectangleIcon,
   UserIcon,
   KeyIcon,
-  RectangleStackIcon
+  RectangleStackIcon,
 } from '@heroicons/react/24/outline';
 import { useAuth } from '@/contexts/AuthContext';
 import clsx from 'clsx';
@@ -90,7 +90,7 @@ const Navbar: React.FC = () => {
       transition={{ duration: 0.5 }}
       className={clsx(
         'fixed top-0 left-0 right-0 z-50 transition-all duration-300',
-        scrolled ? 'glass shadow-2xl backdrop-blur-xl' : 'bg-transparent'
+        scrolled ? 'glass shadow-2xl backdrop-blur-xl' : 'bg-transparent',
       )}
     >
       <nav className="container-custom mx-auto flex items-center justify-between py-4">
@@ -172,7 +172,7 @@ const Navbar: React.FC = () => {
                     'group relative px-4 py-2 flex items-center space-x-2 rounded-lg transition-all duration-300',
                     isActive(item.href)
                       ? 'text-neon-cyan'
-                      : 'text-gray-400 hover:text-neon-cyan'
+                      : 'text-gray-400 hover:text-neon-cyan',
                   )}
                 >
                   <Icon className="h-5 w-5" />
@@ -181,7 +181,7 @@ const Navbar: React.FC = () => {
                     <motion.div
                       layoutId="activeTab"
                       className="absolute inset-0 bg-neon-cyan/10 rounded-lg border border-neon-cyan/30"
-                      transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                      transition={{ type: 'spring', bounce: 0.2, duration: 0.6 }}
                     />
                   )}
                   <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-neon-cyan/0 via-neon-cyan/10 to-neon-cyan/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-xl" />
@@ -201,7 +201,7 @@ const Navbar: React.FC = () => {
                 whileTap={{ scale: 0.95 }}
                 className={clsx(
                   'flex items-center space-x-2 px-4 py-2 rounded-lg glass transition-all duration-300',
-                  'text-gray-300 hover:text-neon-cyan hover:border-neon-cyan/30'
+                  'text-gray-300 hover:text-neon-cyan hover:border-neon-cyan/30',
                 )}
                 onClick={() => setUserMenuOpen(!userMenuOpen)}
               >
@@ -307,7 +307,7 @@ const Navbar: React.FC = () => {
                       'flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200',
                       isActive(item.href)
                         ? 'bg-neon-cyan/10 text-neon-cyan border border-neon-cyan/30'
-                        : 'text-gray-400 hover:text-neon-cyan hover:bg-neon-cyan/5'
+                        : 'text-gray-400 hover:text-neon-cyan hover:bg-neon-cyan/5',
                     )}
                     onClick={() => setMobileMenuOpen(false)}
                   >

@@ -9,7 +9,7 @@ import {
   LightBulbIcon,
   ClockIcon,
   SparklesIcon,
-  FireIcon
+  FireIcon,
 } from '@heroicons/react/24/outline';
 import { getPromptQualityAnalysis } from '@/lib/api';
 import { PromptQualityAnalysis } from '@/types/performance';
@@ -70,11 +70,11 @@ const PerformanceExplanation: React.FC<{
         case 'score':
           return `Quality Score: ${score}/100. Calculated using weighted metrics across multiple dimensions with statistical confidence intervals.`;
         case 'dimension':
-          return `Performance dimension analyzed using ML-based scoring with comparative benchmarking against category baselines.`;
+          return 'Performance dimension analyzed using ML-based scoring with comparative benchmarking against category baselines.';
         case 'ranking':
-          return `Percentile ranking based on multi-variate analysis of performance metrics within category cohort.`;
+          return 'Percentile ranking based on multi-variate analysis of performance metrics within category cohort.';
         case 'improvement':
-          return `Data-driven optimization recommendations generated using performance correlation analysis and best practice patterns.`;
+          return 'Data-driven optimization recommendations generated using performance correlation analysis and best practice patterns.';
       }
     }
     return '';
@@ -102,21 +102,21 @@ const PerformanceTrend: React.FC<{
           icon: <TrophyIcon className="h-5 w-5 text-yellow-400" />,
           title: '您的提示词很优秀！',
           description: '继续保持这种质量，可以尝试创建更多类似的提示词。',
-          color: 'text-yellow-400'
+          color: 'text-yellow-400',
         };
       } else if (data.overallScore >= 70) {
         return {
           icon: <FireIcon className="h-5 w-5 text-orange-400" />,
           title: '您正在进步！',
           description: '提示词质量不错，再优化几个细节就能达到优秀水平。',
-          color: 'text-orange-400'
+          color: 'text-orange-400',
         };
       } else {
         return {
           icon: <LightBulbIcon className="h-5 w-5 text-blue-400" />,
           title: '学习机会来了！',
           description: '每个专家都是从新手开始的，按照建议改进就能快速提升。',
-          color: 'text-blue-400'
+          color: 'text-blue-400',
         };
       }
     } else {
@@ -124,7 +124,7 @@ const PerformanceTrend: React.FC<{
         icon: <ChartBarIcon className="h-5 w-5 text-neon-cyan" />,
         title: '性能分析',
         description: '基于多维度评估的综合性能报告',
-        color: 'text-neon-cyan'
+        color: 'text-neon-cyan',
       };
     }
   };
@@ -147,7 +147,7 @@ const PerformanceTrend: React.FC<{
 const EnhancedPerformanceMonitor: React.FC<EnhancedPerformanceMonitorProps> = ({ 
   promptId, 
   showExplanations = true,
-  userLevel: propUserLevel
+  userLevel: propUserLevel,
 }) => {
   const { userLevel: hookUserLevel } = useUserLevel();
   const userLevel = propUserLevel || hookUserLevel;
@@ -231,7 +231,7 @@ const EnhancedPerformanceMonitor: React.FC<EnhancedPerformanceMonitorProps> = ({
       'excellent': userLevel === 'beginner' ? '🌟 太棒了' : '优秀',
       'good': userLevel === 'beginner' ? '👍 很好' : '良好',
       'fair': userLevel === 'beginner' ? '📈 还不错' : '中等',
-      'poor': userLevel === 'beginner' ? '💪 待改进' : '需要改进'
+      'poor': userLevel === 'beginner' ? '💪 待改进' : '需要改进',
     };
     return levels[level as keyof typeof levels] || level;
   };
@@ -258,7 +258,7 @@ const EnhancedPerformanceMonitor: React.FC<EnhancedPerformanceMonitorProps> = ({
             {[
               { key: 'overview', label: userLevel === 'beginner' ? '总体评分' : '概览' },
               { key: 'dimensions', label: userLevel === 'beginner' ? '各项得分' : '维度分析' },
-              { key: 'suggestions', label: userLevel === 'beginner' ? '改进建议' : '优化建议' }
+              { key: 'suggestions', label: userLevel === 'beginner' ? '改进建议' : '优化建议' },
             ].map((tab) => (
               <button
                 key={tab.key}

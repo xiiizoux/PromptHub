@@ -98,11 +98,11 @@ export default function AuthCallback() {
             className="flex justify-center mb-6"
             animate={{ 
               rotate: status === 'loading' ? 360 : 0,
-              scale: status !== 'loading' ? [1, 1.1, 1] : 1
+              scale: status !== 'loading' ? [1, 1.1, 1] : 1,
             }}
             transition={{ 
-              rotate: { duration: 2, repeat: status === 'loading' ? Infinity : 0, ease: "linear" },
-              scale: { duration: 0.5 }
+              rotate: { duration: 2, repeat: status === 'loading' ? Infinity : 0, ease: 'linear' },
+              scale: { duration: 0.5 },
             }}
           >
             {getIcon()}
@@ -135,8 +135,8 @@ export default function AuthCallback() {
               <motion.div 
                 className="bg-gradient-to-r from-neon-cyan to-neon-pink h-2 rounded-full"
                 initial={{ width: 0 }}
-                animate={{ width: "100%" }}
-                transition={{ duration: 3, ease: "easeInOut" }}
+                animate={{ width: '100%' }}
+                transition={{ duration: 3, ease: 'easeInOut' }}
               />
             </div>
           )}

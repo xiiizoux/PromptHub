@@ -14,7 +14,7 @@ import {
   CircleStackIcon,
   BoltIcon,
   CubeTransparentIcon,
-  BeakerIcon
+  BeakerIcon,
 } from '@heroicons/react/24/outline';
 import { useRouter } from 'next/router';
 import { useAuth } from '@/contexts/AuthContext';
@@ -50,7 +50,7 @@ const OptimizerPage: React.FC = () => {
 
     // 构建URL参数 - 只传递优化后的内容
     const params = new URLSearchParams({
-      optimizedContent: encodeURIComponent(optimizedPrompt)
+      optimizedContent: encodeURIComponent(optimizedPrompt),
     });
     
     // 跳转到创建提示词页面
@@ -86,7 +86,7 @@ const OptimizerPage: React.FC = () => {
 
 ⚙️ 智能变量：AI自动识别
 
-确认继续吗？您可以在创建页面修改这些信息。`
+确认继续吗？您可以在创建页面修改这些信息。`,
     );
 
     if (!confirmed) {
@@ -100,7 +100,7 @@ const OptimizerPage: React.FC = () => {
       const response = await fetch('/api/ai/analyze', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           content: optimizedPrompt,
@@ -108,9 +108,9 @@ const OptimizerPage: React.FC = () => {
           config: {
             language: 'zh',
             includeImprovements: true,
-            includeSuggestions: true
-          }
-        })
+            includeSuggestions: true,
+          },
+        }),
       });
 
       const result = await response.json();
@@ -124,7 +124,7 @@ const OptimizerPage: React.FC = () => {
           month: '2-digit',
           day: '2-digit',
           hour: '2-digit',
-          minute: '2-digit'
+          minute: '2-digit',
         })}`;
         
         const suggestedDesc = analysisResult.description || '通过AI优化生成的提示词，经过智能分析和结构化优化处理';
@@ -133,7 +133,7 @@ const OptimizerPage: React.FC = () => {
           optimizedContent: encodeURIComponent(optimizedPrompt),
           suggestedName: encodeURIComponent(suggestedName),
           suggestedDesc: encodeURIComponent(suggestedDesc),
-          aiAnalysisResult: encodeURIComponent(JSON.stringify(analysisResult))
+          aiAnalysisResult: encodeURIComponent(JSON.stringify(analysisResult)),
         });
         
         // 跳转到创建提示词页面
@@ -156,21 +156,21 @@ const OptimizerPage: React.FC = () => {
       title: '智能优化',
       description: 'AI分析您的提示词结构和内容，提供专业的优化建议和改进版本',
       color: 'from-neon-cyan to-neon-cyan-dark',
-      stats: '准确率95%'
+      stats: '准确率95%',
     },
     {
       icon: CpuChipIcon,
       title: '迭代改进',
       description: '根据您的具体需求，对已优化的提示词进行精细调整和进一步改进',
       color: 'from-neon-purple to-neon-pink',
-      stats: '效率提升80%'
+      stats: '效率提升80%',
     },
     {
       icon: ChartBarIcon,
       title: '质量分析',
       description: '多维度评估提示词质量，包括清晰性、具体性、完整性等关键指标',
       color: 'from-neon-yellow to-neon-green',
-      stats: '多维度评分'
+      stats: '多维度评分',
     },
   ];
 
@@ -206,7 +206,7 @@ const OptimizerPage: React.FC = () => {
                 style={{
                   left: `${Math.random() * 100}%`,
                   animationDelay: `${Math.random() * 3}s`,
-                  animationDuration: `${3 + Math.random() * 2}s`
+                  animationDuration: `${3 + Math.random() * 2}s`,
                 }}
               />
             ))}
@@ -350,7 +350,7 @@ const OptimizerPage: React.FC = () => {
                     '提供充足的上下文信息',
                     '明确指定期望的输出格式',
                     '使用具体而非抽象的描述',
-                    '包含相关示例或约束条件'
+                    '包含相关示例或约束条件',
                   ].map((tip, index) => (
                     <motion.div
                       key={index}
@@ -376,7 +376,7 @@ const OptimizerPage: React.FC = () => {
                     '需要配置OpenAI API密钥',
                     '支持多种优化类型选择',
                     '可添加特殊要求或约束',
-                    '优化结果可直接保存使用'
+                    '优化结果可直接保存使用',
                   ].map((config, index) => (
                     <motion.div
                       key={index}

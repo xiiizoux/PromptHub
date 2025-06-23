@@ -5,13 +5,13 @@ import {
   HomeIcon, 
   BookmarkIcon, 
   ClockIcon, 
-  Squares2X2Icon 
+  Squares2X2Icon, 
 } from '@heroicons/react/24/outline';
 import { 
   HomeIcon as HomeSolidIcon, 
   BookmarkIcon as BookmarkSolidIcon, 
   ClockIcon as ClockSolidIcon, 
-  Squares2X2Icon as Squares2X2SolidIcon 
+  Squares2X2Icon as Squares2X2SolidIcon, 
 } from '@heroicons/react/24/solid';
 
 const Navigation: React.FC = () => {

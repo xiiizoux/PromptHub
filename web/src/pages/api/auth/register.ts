@@ -12,14 +12,14 @@ export default apiHandler(async (req: NextApiRequest, res: NextApiResponse) => {
     const validationRules = [
       VALIDATION_PRESETS.email,
       VALIDATION_PRESETS.password,
-      { ...VALIDATION_PRESETS.username, required: false } // 用户名可选
+      { ...VALIDATION_PRESETS.username, required: false }, // 用户名可选
     ];
 
     const validation = InputValidator.validate(req.body, validationRules);
     if (!validation.isValid) {
       logger.warn('注册输入验证失败', {
         errors: validation.errors,
-        email: email?.substring(0, 3) + '***' // 只记录邮箱前缀用于调试
+        email: email?.substring(0, 3) + '***', // 只记录邮箱前缀用于调试
       });
       return errorResponse(res, validation.errors.join('; '), ErrorCode.BAD_REQUEST);
     }
@@ -29,7 +29,7 @@ export default apiHandler(async (req: NextApiRequest, res: NextApiResponse) => {
     const result = await supabaseAdapter.signUp(
       sanitizedData.email,
       sanitizedData.password,
-      sanitizedData.username
+      sanitizedData.username,
     );
 
     if (!result.user) {
@@ -38,16 +38,16 @@ export default apiHandler(async (req: NextApiRequest, res: NextApiResponse) => {
 
     logger.info('用户注册成功', {
       userId: result.user.id,
-      email: email.substring(0, 3) + '***'
+      email: email.substring(0, 3) + '***',
     });
 
     return successResponse(res, {
       user: {
         id: result.user.id,
         email: result.user.email,
-        username: username
+        username: username,
       },
-      message: '注册成功，请检查邮箱进行验证'
+      message: '注册成功，请检查邮箱进行验证',
     });
 
   } catch (error: any) {
@@ -61,5 +61,5 @@ export default apiHandler(async (req: NextApiRequest, res: NextApiResponse) => {
     return errorResponse(res, '注册过程中发生错误，请稍后重试', ErrorCode.INTERNAL_SERVER_ERROR);
   }
 }, {
-  allowedMethods: ['POST']
+  allowedMethods: ['POST'],
 });

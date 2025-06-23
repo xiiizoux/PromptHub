@@ -193,7 +193,7 @@ const PromptsAPIPage: React.FC = () => {
                       { name: 'category', type: 'string', required: false, desc: '分类筛选' },
                       { name: 'tags', type: 'string[]', required: false, desc: '标签筛选' },
                       { name: 'search', type: 'string', required: false, desc: '搜索关键词' },
-                      { name: 'is_public', type: 'boolean', required: false, desc: '是否公开' }
+                      { name: 'is_public', type: 'boolean', required: false, desc: '是否公开' },
                     ].map((param, index) => (
                       <div key={param.name} className="px-6 py-3 border-b border-neon-green/10 hover:bg-neon-green/5 transition-colors">
                         <div className="grid grid-cols-4 gap-4 text-gray-300 text-sm">
@@ -544,7 +544,7 @@ const PromptsAPIPage: React.FC = () => {
                       { code: '403', desc: 'Forbidden - 权限不足' },
                       { code: '404', desc: 'Not Found - 资源不存在' },
                       { code: '422', desc: 'Validation Error - 数据验证失败' },
-                      { code: '500', desc: 'Internal Server Error - 服务器内部错误' }
+                      { code: '500', desc: 'Internal Server Error - 服务器内部错误' },
                     ].map((error) => (
                       <div key={error.code} className="cyber-card p-4">
                         <div className="flex items-center justify-between">

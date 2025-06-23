@@ -12,18 +12,18 @@ import {
   ShieldCheckIcon,
   CubeIcon,
   BeakerIcon,
-  CommandLineIcon
+  CommandLineIcon,
 } from '@heroicons/react/24/outline';
 
 export default function AboutPage() {
   const cardVariants = {
     hidden: { opacity: 0, y: 30 },
-    visible: { opacity: 1, y: 0 }
+    visible: { opacity: 1, y: 0 },
   };
 
   const featureVariants = {
     hidden: { opacity: 0, scale: 0.9 },
-    visible: { opacity: 1, scale: 1 }
+    visible: { opacity: 1, scale: 1 },
   };
 
   return (
@@ -100,22 +100,22 @@ export default function AboutPage() {
               {[
                 {
                   icon: SparklesIcon,
-                  title: "创新驱动",
-                  description: "持续探索AI提示词的最佳实践，为用户提供最前沿的工具和功能。",
-                  gradient: "from-neon-cyan to-neon-purple"
+                  title: '创新驱动',
+                  description: '持续探索AI提示词的最佳实践，为用户提供最前沿的工具和功能。',
+                  gradient: 'from-neon-cyan to-neon-purple',
                 },
                 {
                   icon: UserGroupIcon,
-                  title: "社区协作",
-                  description: "构建开放的社区环境，让用户能够分享经验、互相学习、共同成长。",
-                  gradient: "from-neon-purple to-neon-pink"
+                  title: '社区协作',
+                  description: '构建开放的社区环境，让用户能够分享经验、互相学习、共同成长。',
+                  gradient: 'from-neon-purple to-neon-pink',
                 },
                 {
                   icon: RocketLaunchIcon,
-                  title: "效率提升",
-                  description: "通过智能化的管理工具和性能分析，帮助用户提高AI应用的效率和质量。",
-                  gradient: "from-neon-pink to-neon-cyan"
-                }
+                  title: '效率提升',
+                  description: '通过智能化的管理工具和性能分析，帮助用户提高AI应用的效率和质量。',
+                  gradient: 'from-neon-pink to-neon-cyan',
+                },
               ].map((mission, index) => (
                 <motion.div
                   key={mission.title}
@@ -161,24 +161,24 @@ export default function AboutPage() {
               {[
                 {
                   icon: CodeBracketIcon,
-                  title: "提示词管理",
-                  description: "创建、编辑、版本控制和组织您的AI提示词库"
+                  title: '提示词管理',
+                  description: '创建、编辑、版本控制和组织您的AI提示词库',
                 },
                 {
                   icon: LightBulbIcon,
-                  title: "智能优化",
-                  description: "基于使用数据和反馈的智能提示词优化建议"
+                  title: '智能优化',
+                  description: '基于使用数据和反馈的智能提示词优化建议',
                 },
                 {
                   icon: GlobeAltIcon,
-                  title: "MCP集成",
-                  description: "支持Model Context Protocol，与各种AI工具无缝集成"
+                  title: 'MCP集成',
+                  description: '支持Model Context Protocol，与各种AI工具无缝集成',
                 },
                 {
                   icon: ShieldCheckIcon,
-                  title: "安全可靠",
-                  description: "企业级安全保障，支持权限管理和数据保护"
-                }
+                  title: '安全可靠',
+                  description: '企业级安全保障，支持权限管理和数据保护',
+                },
               ].map((feature, index) => (
                 <motion.div
                   key={feature.title}
@@ -234,10 +234,10 @@ export default function AboutPage() {
                 </div>
                 <div className="space-y-4">
                   {[
-                    { name: "Next.js - React框架", color: "bg-blue-500" },
-                    { name: "TypeScript - 类型安全", color: "bg-blue-400" },
-                    { name: "Tailwind CSS - 样式框架", color: "bg-cyan-500" },
-                    { name: "React Hook Form - 表单管理", color: "bg-purple-500" }
+                    { name: 'Next.js - React框架', color: 'bg-blue-500' },
+                    { name: 'TypeScript - 类型安全', color: 'bg-blue-400' },
+                    { name: 'Tailwind CSS - 样式框架', color: 'bg-cyan-500' },
+                    { name: 'React Hook Form - 表单管理', color: 'bg-purple-500' },
                   ].map((tech, index) => (
                     <motion.div
                       key={tech.name}
@@ -270,10 +270,10 @@ export default function AboutPage() {
                 </div>
                 <div className="space-y-4">
                   {[
-                    { name: "Node.js - 运行环境", color: "bg-green-500" },
-                    { name: "Express.js - Web框架", color: "bg-red-500" },
-                    { name: "Supabase - 数据库和认证", color: "bg-green-600" },
-                    { name: "MCP Protocol - AI工具集成", color: "bg-orange-500" }
+                    { name: 'Node.js - 运行环境', color: 'bg-green-500' },
+                    { name: 'Express.js - Web框架', color: 'bg-red-500' },
+                    { name: 'Supabase - 数据库和认证', color: 'bg-green-600' },
+                    { name: 'MCP Protocol - AI工具集成', color: 'bg-orange-500' },
                   ].map((tech, index) => (
                     <motion.div
                       key={tech.name}

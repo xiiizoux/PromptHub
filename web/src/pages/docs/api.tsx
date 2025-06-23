@@ -39,7 +39,7 @@ const ApiDocsPage: React.FC = () => {
                     <p className="text-sm font-medium text-gray-700">1. 请求头</p>
                     <pre className="mt-1 bg-gray-800 text-white p-3 rounded-md overflow-auto text-sm">
                       <code>
-                        {`x-api-key: your-api-key`}
+                        {'x-api-key: your-api-key'}
                       </code>
                     </pre>
                   </div>
@@ -47,7 +47,7 @@ const ApiDocsPage: React.FC = () => {
                     <p className="text-sm font-medium text-gray-700">2. Bearer令牌</p>
                     <pre className="mt-1 bg-gray-800 text-white p-3 rounded-md overflow-auto text-sm">
                       <code>
-                        {`Authorization: Bearer your-api-key`}
+                        {'Authorization: Bearer your-api-key'}
                       </code>
                     </pre>
                   </div>
@@ -55,7 +55,7 @@ const ApiDocsPage: React.FC = () => {
                     <p className="text-sm font-medium text-gray-700">3. 查询参数</p>
                     <pre className="mt-1 bg-gray-800 text-white p-3 rounded-md overflow-auto text-sm">
                       <code>
-                        {`https://your-server.com/api/prompts?api_key=your-api-key`}
+                        {'https://your-server.com/api/prompts?api_key=your-api-key'}
                       </code>
                     </pre>
                   </div>

@@ -19,7 +19,7 @@ import {
   PlayIcon,
   BookOpenIcon,
   ArrowRightIcon,
-  TrophyIcon
+  TrophyIcon,
 } from '@heroicons/react/24/outline';
 import { useAuth } from '@/contexts/AuthContext';
 import toast from 'react-hot-toast';
@@ -93,7 +93,7 @@ const LearningPath: React.FC<{
       description: '简单易懂的基础提示词',
       color: 'text-green-400',
       bgColor: 'bg-green-400/10',
-      borderColor: 'border-green-400/30'
+      borderColor: 'border-green-400/30',
     },
     {
       level: 'intermediate' as const,
@@ -101,7 +101,7 @@ const LearningPath: React.FC<{
       description: '功能丰富的实用提示词',
       color: 'text-orange-400',
       bgColor: 'bg-orange-400/10',
-      borderColor: 'border-orange-400/30'
+      borderColor: 'border-orange-400/30',
     },
     {
       level: 'advanced' as const,
@@ -109,8 +109,8 @@ const LearningPath: React.FC<{
       description: '复杂专业的高级提示词',
       color: 'text-purple-400',
       bgColor: 'bg-purple-400/10',
-      borderColor: 'border-purple-400/30'
-    }
+      borderColor: 'border-purple-400/30',
+    },
   ];
 
   return (
@@ -145,18 +145,18 @@ const DifficultyBadge: React.FC<{ difficulty: 'beginner' | 'intermediate' | 'adv
     beginner: {
       label: '新手',
       icon: '🌱',
-      color: 'text-green-400 bg-green-400/10 border-green-400/30'
+      color: 'text-green-400 bg-green-400/10 border-green-400/30',
     },
     intermediate: {
       label: '进阶',
       icon: '🔥',
-      color: 'text-orange-400 bg-orange-400/10 border-orange-400/30'
+      color: 'text-orange-400 bg-orange-400/10 border-orange-400/30',
     },
     advanced: {
       label: '专家',
       icon: '⚡',
-      color: 'text-purple-400 bg-purple-400/10 border-purple-400/30'
-    }
+      color: 'text-purple-400 bg-purple-400/10 border-purple-400/30',
+    },
   };
 
   const config = configs[difficulty];
@@ -176,20 +176,20 @@ const LearningTip: React.FC<{ tip: string; type: 'info' | 'success' | 'warning' 
       icon: <LightBulbIcon className="h-4 w-4 text-blue-400" />,
       bgColor: 'bg-blue-900/20',
       borderColor: 'border-blue-500/30',
-      textColor: 'text-blue-300'
+      textColor: 'text-blue-300',
     },
     success: {
       icon: <ShieldCheckIcon className="h-4 w-4 text-green-400" />,
       bgColor: 'bg-green-900/20',
       borderColor: 'border-green-500/30',
-      textColor: 'text-green-300'
+      textColor: 'text-green-300',
     },
     warning: {
       icon: <SparklesIcon className="h-4 w-4 text-yellow-400" />,
       bgColor: 'bg-yellow-900/20',
       borderColor: 'border-yellow-500/30',
-      textColor: 'text-yellow-300'
-    }
+      textColor: 'text-yellow-300',
+    },
   };
 
   const config = configs[type];
@@ -210,7 +210,7 @@ export const BeginnerFriendlyRecommendations: React.FC<BeginnerFriendlyRecommend
   maxRecommendations = 9,
   className = '',
   userLevel = 'beginner',
-  showLearningPath = true
+  showLearningPath = true,
 }) => {
   const { user } = useAuth();
   const { levelData, isLoading: userLevelLoading } = useUserLevel();
@@ -228,14 +228,14 @@ export const BeginnerFriendlyRecommendations: React.FC<BeginnerFriendlyRecommend
       label: '为您推荐',
       icon: SparklesIcon,
       description: '根据您的兴趣推荐',
-      color: 'text-neon-cyan'
+      color: 'text-neon-cyan',
     },
     {
       type: 'trending' as RecommendationType,
       label: '热门精选',
       icon: RocketLaunchIcon,
       description: '大家都在用的提示词',
-      color: 'text-neon-pink'
+      color: 'text-neon-pink',
     },
     {
       type: 'similar' as RecommendationType,
@@ -243,8 +243,8 @@ export const BeginnerFriendlyRecommendations: React.FC<BeginnerFriendlyRecommend
       icon: UserGroupIcon,
       description: '与当前提示词相似',
       color: 'text-neon-purple',
-      disabled: !currentPromptId
-    }
+      disabled: !currentPromptId,
+    },
   ];
 
   // 添加缺失的辅助函数
@@ -252,7 +252,7 @@ export const BeginnerFriendlyRecommendations: React.FC<BeginnerFriendlyRecommend
     const configs = {
       beginner: 'text-green-400 bg-green-400/10 border-green-400/30',
       intermediate: 'text-orange-400 bg-orange-400/10 border-orange-400/30',
-      advanced: 'text-purple-400 bg-purple-400/10 border-purple-400/30'
+      advanced: 'text-purple-400 bg-purple-400/10 border-purple-400/30',
     };
     return configs[difficulty];
   };
@@ -261,7 +261,7 @@ export const BeginnerFriendlyRecommendations: React.FC<BeginnerFriendlyRecommend
     const configs = {
       beginner: '新手',
       intermediate: '进阶',
-      advanced: '专家'
+      advanced: '专家',
     };
     return configs[difficulty];
   };
@@ -271,7 +271,7 @@ export const BeginnerFriendlyRecommendations: React.FC<BeginnerFriendlyRecommend
       read: <BookOpenIcon className="h-3 w-3" />,
       practice: <PlayIcon className="h-3 w-3" />,
       create: <SparklesIcon className="h-3 w-3" />,
-      review: <CheckCircleIcon className="h-3 w-3" />
+      review: <CheckCircleIcon className="h-3 w-3" />,
     };
     return icons[type];
   };
@@ -441,7 +441,7 @@ export const BeginnerFriendlyRecommendations: React.FC<BeginnerFriendlyRecommend
         {[
           { key: 'paths', label: userLevel === 'beginner' ? '学习路径' : '学习路径', icon: <AcademicCapIcon className="h-4 w-4" /> },
           { key: 'recommendations', label: userLevel === 'beginner' ? '个性推荐' : '智能推荐', icon: <SparklesIcon className="h-4 w-4" /> },
-          { key: 'achievements', label: userLevel === 'beginner' ? '我的成就' : '成就系统', icon: <TrophyIcon className="h-4 w-4" /> }
+          { key: 'achievements', label: userLevel === 'beginner' ? '我的成就' : '成就系统', icon: <TrophyIcon className="h-4 w-4" /> },
         ].map((tab) => (
           <button
             key={tab.key}
@@ -471,7 +471,7 @@ export const BeginnerFriendlyRecommendations: React.FC<BeginnerFriendlyRecommend
               { key: 'all', label: '全部' },
               { key: 'beginner', label: '新手友好' },
               { key: 'intermediate', label: '进阶' },
-              { key: 'advanced', label: '高级' }
+              { key: 'advanced', label: '高级' },
             ].map((filterOption) => (
               <button
                 key={filterOption.key}

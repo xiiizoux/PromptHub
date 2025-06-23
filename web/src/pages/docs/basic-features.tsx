@@ -6,37 +6,37 @@ import { DocSection, DocGrid, DocCard, DocCodeBlock, DocList, DocHighlight } fro
 
 const BasicFeaturesPage: React.FC = () => {
   const createFeatures = [
-    { title: "直观的编辑界面", description: "所见即所得的提示词编辑器" },
-    { title: "模板变量支持", description: "动态内容和可重用设计" },
-    { title: "示例管理", description: "输入输出示例展示" },
-    { title: "版本控制", description: "变更历史和回滚功能" }
+    { title: '直观的编辑界面', description: '所见即所得的提示词编辑器' },
+    { title: '模板变量支持', description: '动态内容和可重用设计' },
+    { title: '示例管理', description: '输入输出示例展示' },
+    { title: '版本控制', description: '变更历史和回滚功能' },
   ];
 
   const searchFeatures = [
-    { title: "全文搜索", description: "智能内容检索" },
-    { title: "分类筛选", description: "按类别快速定位" },
-    { title: "标签过滤", description: "多维度筛选条件" },
-    { title: "高级筛选", description: "复合条件查询" }
+    { title: '全文搜索', description: '智能内容检索' },
+    { title: '分类筛选', description: '按类别快速定位' },
+    { title: '标签过滤', description: '多维度筛选条件' },
+    { title: '高级筛选', description: '复合条件查询' },
   ];
 
   const analyzeFeatures = [
-    { title: "自动分类和标签提取", description: "AI智能识别" },
-    { title: "模板变量识别", description: "动态内容检测" },
-    { title: "版本号建议", description: "智能版本管理" },
-    { title: "改进建议生成", description: "优化方案推荐" }
+    { title: '自动分类和标签提取', description: 'AI智能识别' },
+    { title: '模板变量识别', description: '动态内容检测' },
+    { title: '版本号建议', description: '智能版本管理' },
+    { title: '改进建议生成', description: '优化方案推荐' },
   ];
 
   const optimizeFeatures = [
-    { title: "智能分类建议", description: "精准分类推荐" },
-    { title: "标签自动提取", description: "关键词智能识别" },
-    { title: "变量模式识别", description: "模板结构分析" },
-    { title: "使用场景分析", description: "应用领域识别" }
+    { title: '智能分类建议', description: '精准分类推荐' },
+    { title: '标签自动提取', description: '关键词智能识别' },
+    { title: '变量模式识别', description: '模板结构分析' },
+    { title: '使用场景分析', description: '应用领域识别' },
   ];
 
   const exportFormats = [
-    { title: "JSON格式", description: "完整数据保留、程序化处理、API集成友好、版本信息完整" },
-    { title: "Markdown格式", description: "人类可读、文档生成、版本控制友好、跨平台兼容" },
-    { title: "CSV格式", description: "表格数据导出、批量处理、数据分析、Excel兼容" }
+    { title: 'JSON格式', description: '完整数据保留、程序化处理、API集成友好、版本信息完整' },
+    { title: 'Markdown格式', description: '人类可读、文档生成、版本控制友好、跨平台兼容' },
+    { title: 'CSV格式', description: '表格数据导出、批量处理、数据分析、Excel兼容' },
   ];
 
   return (
@@ -44,8 +44,8 @@ const BasicFeaturesPage: React.FC = () => {
       title="基础功能"
       description="掌握 Prompt Hub 的核心功能，提升AI提示词管理效率"
       breadcrumbs={[
-        { name: "文档", href: "/docs" },
-        { name: "基础功能", href: "/docs/basic-features" }
+        { name: '文档', href: '/docs' },
+        { name: '基础功能', href: '/docs/basic-features' },
       ]}
     >
       {/* 创建和编辑 */}

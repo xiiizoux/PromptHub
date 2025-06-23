@@ -8,7 +8,7 @@ import {
   EyeIcon,
   ChartBarIcon,
   AdjustmentsHorizontalIcon,
-  ArrowPathIcon
+  ArrowPathIcon,
 } from '@heroicons/react/24/outline';
 import { useAuth } from '@/contexts/AuthContext';
 import { 
@@ -17,7 +17,7 @@ import {
   getSimilarPrompts,
   getPersonalizedRecommendations,
   RecommendationResult,
-  RecommendationType 
+  RecommendationType, 
 } from '@/lib/api';
 import { PromptDetails } from '@/types';
 import Link from 'next/link';
@@ -34,7 +34,7 @@ export const RecommendationEngine: React.FC<RecommendationEngineProps> = ({
   currentPromptId,
   userId,
   maxRecommendations = 12,
-  className = ''
+  className = '',
 }) => {
   const { user } = useAuth();
   const [recommendations, setRecommendations] = useState<RecommendationResult[]>([]);
@@ -48,29 +48,29 @@ export const RecommendationEngine: React.FC<RecommendationEngineProps> = ({
       label: '个性化推荐',
       icon: SparklesIcon,
       description: '基于您的使用习惯推荐',
-      color: 'text-neon-cyan'
+      color: 'text-neon-cyan',
     },
     {
       type: 'similar' as RecommendationType,
       label: '相似推荐',
       icon: UserGroupIcon,
       description: '与当前提示词相似的内容',
-      color: 'text-neon-purple'
+      color: 'text-neon-purple',
     },
     {
       type: 'trending' as RecommendationType,
       label: '热门推荐',
       icon: ArrowTrendingUpIcon,
       description: '最受欢迎的提示词',
-      color: 'text-neon-pink'
+      color: 'text-neon-pink',
     },
     {
       type: 'collaborative' as RecommendationType,
       label: '协同推荐',
       icon: HeartIcon,
       description: '相似用户喜欢的内容',
-      color: 'text-neon-yellow'
-    }
+      color: 'text-neon-yellow',
+    },
   ];
 
   useEffect(() => {
@@ -328,7 +328,7 @@ interface RecommendationSettingsProps {
 
 const RecommendationSettings: React.FC<RecommendationSettingsProps> = ({
   userId,
-  onSettingsChange
+  onSettingsChange,
 }) => {
   const [showSettings, setShowSettings] = useState(false);
   const [settings, setSettings] = useState({
@@ -336,7 +336,7 @@ const RecommendationSettings: React.FC<RecommendationSettingsProps> = ({
     excludeCategories: [] as string[],
     minRating: 0,
     preferRecent: true,
-    diversityFactor: 0.5
+    diversityFactor: 0.5,
   });
 
   if (!userId) return null;
@@ -371,7 +371,7 @@ const RecommendationSettings: React.FC<RecommendationSettingsProps> = ({
                 value={settings.minRating}
                 onChange={(e) => setSettings({
                   ...settings,
-                  minRating: parseFloat(e.target.value)
+                  minRating: parseFloat(e.target.value),
                 })}
                 className="w-full"
               />
@@ -394,7 +394,7 @@ const RecommendationSettings: React.FC<RecommendationSettingsProps> = ({
                 value={settings.diversityFactor}
                 onChange={(e) => setSettings({
                   ...settings,
-                  diversityFactor: parseFloat(e.target.value)
+                  diversityFactor: parseFloat(e.target.value),
                 })}
                 className="w-full"
               />
@@ -412,7 +412,7 @@ const RecommendationSettings: React.FC<RecommendationSettingsProps> = ({
                   checked={settings.preferRecent}
                   onChange={(e) => setSettings({
                     ...settings,
-                    preferRecent: e.target.checked
+                    preferRecent: e.target.checked,
                   })}
                   className="rounded border-gray-600 bg-dark-bg-secondary text-neon-cyan"
                 />

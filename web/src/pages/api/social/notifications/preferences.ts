@@ -21,9 +21,9 @@ async function handler(req: NextApiRequest, res: NextApiResponse, userId: string
         `${MCP_SERVER_URL}/api/notifications/preferences`,
         {
           headers: {
-            Authorization: authHeader
-          }
-        }
+            Authorization: authHeader,
+          },
+        },
       );
       
       return res.status(200).json(data);
@@ -40,8 +40,8 @@ async function handler(req: NextApiRequest, res: NextApiResponse, userId: string
           headers: {
             Authorization: authHeader,
             'Content-Type': 'application/json',
-          }
-        }
+          },
+        },
       );
       
       return res.status(200).json(data);
@@ -52,7 +52,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse, userId: string
     console.error('通知偏好设置API错误:', error);
     return res.status(500).json({
       success: false,
-      error: error instanceof Error ? error.message : '未知错误'
+      error: error instanceof Error ? error.message : '未知错误',
     });
   }
 }

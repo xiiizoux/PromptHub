@@ -98,7 +98,7 @@ export default apiHandler(async (req: NextApiRequest, res: NextApiResponse, user
   }
 }, {
   allowedMethods: ['GET', 'PUT', 'DELETE'],
-  requireAuth: false // 在内部根据方法判断是否需要认证
+  requireAuth: false, // 在内部根据方法判断是否需要认证
 });
 
 async function getPrompt(req: NextApiRequest, res: NextApiResponse, id: string, userId?: string) {
@@ -137,7 +137,7 @@ async function updatePrompt(req: NextApiRequest, res: NextApiResponse, id: strin
       logger.warn('更新提示词输入验证失败', {
         errors: validation.errors,
         promptId: id,
-        userId
+        userId,
       });
       return errorResponse(res, validation.errors.join('; '), ErrorCode.BAD_REQUEST);
     }
@@ -149,7 +149,7 @@ async function updatePrompt(req: NextApiRequest, res: NextApiResponse, id: strin
 
     return successResponse(res, {
       prompt: updatedPrompt,
-      message: '提示词更新成功'
+      message: '提示词更新成功',
     });
   } catch (error: any) {
     logger.error('更新提示词失败', error, { promptId: id, userId });
@@ -177,7 +177,7 @@ async function deletePrompt(req: NextApiRequest, res: NextApiResponse, id: strin
     logger.info('提示词删除成功', { promptId: id, userId });
 
     return successResponse(res, {
-      message: '提示词删除成功'
+      message: '提示词删除成功',
     });
   } catch (error: any) {
     logger.error('删除提示词失败', error, { promptId: id, userId });

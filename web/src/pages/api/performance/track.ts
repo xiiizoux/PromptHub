@@ -18,7 +18,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       latency_ms,
       user_id,
       session_id,
-      client_metadata
+      client_metadata,
     } = req.body;
 
     if (!prompt_id) {
@@ -32,7 +32,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (input_tokens === undefined || output_tokens === undefined || latency_ms === undefined) {
       return res.status(400).json({
         success: false,
-        message: 'input_tokens, output_tokens, latency_ms是必需的参数'
+        message: 'input_tokens, output_tokens, latency_ms是必需的参数',
       });
     }
 
@@ -48,27 +48,27 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       latency_ms: parseInt(latency_ms) || 0,
       user_id,
       session_id,
-      client_metadata
+      client_metadata,
     });
 
     if (!usageId) {
       return res.status(500).json({
         success: false,
-        message: '记录使用数据失败'
+        message: '记录使用数据失败',
       });
     }
 
     return res.status(200).json({
       success: true,
       data: {
-        usageId: usageId
-      }
+        usageId: usageId,
+      },
     });
   } catch (error) {
     console.error('追踪提示词使用错误:', error);
     return res.status(500).json({
       success: false,
-      message: '追踪提示词使用过程中发生错误'
+      message: '追踪提示词使用过程中发生错误',
     });
   }
 }

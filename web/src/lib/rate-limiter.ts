@@ -23,7 +23,7 @@ interface RequestRecord {
 // 默认配置
 const DEFAULT_CONFIG: RateLimitConfig = {
   maxRequests: 100,  // 默认每个窗口允许100个请求
-  windowSizeSeconds: 60  // 默认窗口为1分钟
+  windowSizeSeconds: 60,  // 默认窗口为1分钟
 };
 
 class RateLimiter {
@@ -128,7 +128,7 @@ class RateLimiter {
         return errorResponse(
           res,
           '请求过于频繁，请稍后再试',
-          ErrorCode.TOO_MANY_REQUESTS
+          ErrorCode.TOO_MANY_REQUESTS,
         ) as any;
       }
       
@@ -148,20 +148,20 @@ export const rateLimiters = {
   // 认证路由：每分钟30个请求
   auth: globalRateLimiter.middleware.bind(globalRateLimiter, {
     maxRequests: 30,
-    windowSizeSeconds: 60
+    windowSizeSeconds: 60,
   }),
   
   // 公共API：每分钟300个请求
   public: globalRateLimiter.middleware.bind(globalRateLimiter, {
     maxRequests: 300,
-    windowSizeSeconds: 60
+    windowSizeSeconds: 60,
   }),
   
   // MCP工具：每分钟50个请求
   mcpTools: globalRateLimiter.middleware.bind(globalRateLimiter, {
     maxRequests: 50,
-    windowSizeSeconds: 60
-  })
+    windowSizeSeconds: 60,
+  }),
 };
 
 // TOO_MANY_REQUESTS错误码已在ErrorCode中定义
