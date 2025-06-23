@@ -63,6 +63,14 @@ import {
   optimizedSemanticSearchToolDef,
   handleOptimizedSemanticSearch
 } from '../tools/optimized-semantic-search.js';
+import {
+  unifiedSearchToolDef,
+  handleUnifiedSearch as handleUnifiedSearchNew
+} from '../tools/unified-search.js';
+import {
+  unifiedStoreToolDef,
+  handleUnifiedStore
+} from '../tools/unified-store.js';
 
 // 创建路由器
 const router = express.Router();
@@ -340,11 +348,13 @@ router.get('/tools', authenticateRequest, (req, res) => {
     multiFieldSearchToolDef,
     smartFilterToolDef,
     
-    // 🔍 统一搜索引擎 - 整合所有搜索功能
+    // 🚀 统一入口工具 (⭐⭐⭐⭐⭐ 终极推荐)
+    unifiedSearchToolDef,    // 统一搜索入口 - 智能路由搜索
+    unifiedStoreToolDef,     // 统一存储入口 - AI智能分析存储
+    
+    // 🔍 其他搜索选项 (通过统一搜索自动选择)
     unifiedSearchEngineToolDef,
     quickSearchToolDef,
-    
-    // 🎯 优化语义搜索 - 智能简洁的搜索体验 (推荐使用)
     optimizedSemanticSearchToolDef,
     
     // 性能分析工具
@@ -623,15 +633,32 @@ router.post('/tools/:name/invoke', optionalAuthMiddleware, async (req, res) => {
         result = await handleQuickAccess(params, req?.user?.id);
         break;
       
-      // 🔍 统一搜索引擎处理
-      case 'unified_search':
+      // 🔍 统一搜索引擎处理 (已弃用，推荐使用unified_search)
+      case 'unified_search_engine':
         result = await handleUnifiedSearch(params, req?.user?.id);
         break;
       case 'search':
         result = await handleQuickSearch(params, req?.user?.id);
         break;
       
-      // 🎯 优化语义搜索处理 (推荐使用)
+      // 🚀 统一搜索处理 (强烈推荐优先使用)
+      case 'unified_search':
+        result = await handleUnifiedSearchNew(params, {
+          userId: req?.user?.id,
+          requestId: req?.headers?.['x-request-id'],
+          userAgent: req?.headers?.['user-agent']
+        });
+        break;
+      
+      case 'unified_store':
+        result = await handleUnifiedStore(params, {
+          userId: req?.user?.id,
+          requestId: req?.headers?.['x-request-id'],
+          userAgent: req?.headers?.['user-agent']
+        });
+        break;
+      
+      // 🎯 优化语义搜索处理 (通过统一搜索自动调用)
       case 'smart_semantic_search':
         result = await handleOptimizedSemanticSearch(params, {
           userId: req?.user?.id,

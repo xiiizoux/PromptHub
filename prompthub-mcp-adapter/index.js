@@ -108,10 +108,49 @@ class PromptHubMCPAdapter {
    */
   loadPredefinedTools() {
     this.tools = [
-      // ============= 🎯 优化语义搜索 (强烈推荐优先使用) =============
+      // ============= 🚀 统一入口工具 (终极推荐) =============
+      {
+        name: 'unified_search',
+        description: '🚀 统一搜索 - 智能路由到最适合的搜索方式，一个工具满足所有搜索需求 (⭐⭐⭐⭐⭐ 终极推荐)',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            query: { type: 'string', description: '搜索查询，支持自然语言描述，例如："写商务邮件"、"分析代码问题"等' },
+            mode: { type: 'string', description: '搜索模式：auto(自动选择) | semantic(语义) | advanced(高级) | intelligent(智能) | basic(基础)' },
+            category: { type: 'string', description: '分类筛选' },
+            tags: { type: 'array', items: { type: 'string' }, description: '标签筛选' },
+            max_results: { type: 'number', description: '最大结果数，默认5个' },
+            sort_by: { type: 'string', description: '排序方式：relevance | name | created_at | category' }
+          },
+          required: ['query']
+        }
+      },
+      
+      {
+        name: 'unified_store',
+        description: '🤖 智能存储 - AI分析提示词内容，自动补全参数并保存到数据库 (⭐⭐⭐⭐⭐ 终极推荐)',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            content: { type: 'string', description: '要保存的提示词内容' },
+            instruction: { type: 'string', description: '用户的存储指令，如"保存此提示词，使用xxx标题，存储到教育分类"等自然语言指令' },
+            title: { type: 'string', description: '提示词标题（用户指定时优先使用）' },
+            category: { type: 'string', description: '分类（用户指定时优先使用）' },
+            description: { type: 'string', description: '描述（用户指定时优先使用）' },
+            tags: { type: 'array', items: { type: 'string' }, description: '标签列表（用户指定时优先使用）' },
+            is_public: { type: 'boolean', description: '是否公开，默认true（用户指定时优先使用）' },
+            allow_collaboration: { type: 'boolean', description: '是否允许协作编辑，默认true（用户指定时优先使用）' },
+            collaborative_level: { type: 'string', description: '协作级别：creator_only(默认)|invite_only|public_edit（用户指定时优先使用）' },
+            auto_analyze: { type: 'boolean', description: '是否启用AI自动分析，默认true' }
+          },
+          required: ['content']
+        }
+      },
+      
+      // ============= 🎯 其他搜索选项 (通过统一搜索自动调用) =============
       {
         name: 'smart_semantic_search',
-        description: '🎯 智能语义搜索 - 用自然语言描述需求，快速找到最相关的提示词 (⭐⭐⭐ 强烈推荐)',
+        description: '🎯 智能语义搜索 - 用自然语言描述需求，快速找到最相关的提示词 (统一搜索会自动调用)',
         inputSchema: {
           type: 'object',
           properties: {
@@ -212,7 +251,7 @@ class PromptHubMCPAdapter {
       // ============= 其他搜索选项 =============
       {
         name: 'search_prompts',
-        description: '基础关键词搜索',
+        description: '基础关键词搜索 (建议使用unified_search)',
         inputSchema: {
           type: 'object',
           properties: {
@@ -224,7 +263,7 @@ class PromptHubMCPAdapter {
       },
       {
         name: 'enhanced_search_prompts',
-        description: '高级搜索 - 支持多条件筛选',
+        description: '高级搜索 - 支持多条件筛选 (建议使用unified_search)',
         inputSchema: {
           type: 'object',
           properties: {
@@ -240,7 +279,7 @@ class PromptHubMCPAdapter {
       // ============= 智能AI工具 =============
       {
         name: 'intelligent_prompt_selection',
-        description: '智能提示词选择和推荐',
+        description: '智能提示词选择和推荐 (建议使用unified_search)',
         inputSchema: {
           type: 'object',
           properties: {
@@ -276,10 +315,10 @@ class PromptHubMCPAdapter {
           required: ['prompt_content']
         }
       },
-      // 自动存储工具
+      // ============= 📦 其他存储选项 (建议使用unified_store) =============
       {
         name: 'quick_store',
-        description: '快速存储提示词',
+        description: '快速存储提示词 (建议使用unified_store)',
         inputSchema: {
           type: 'object',
           properties: {
@@ -292,7 +331,7 @@ class PromptHubMCPAdapter {
       },
       {
         name: 'smart_store',
-        description: '智能存储提示词',
+        description: '智能存储提示词 (建议使用unified_store)',
         inputSchema: {
           type: 'object',
           properties: {
@@ -305,7 +344,7 @@ class PromptHubMCPAdapter {
       },
       {
         name: 'analyze_and_store',
-        description: '分析并存储提示词',
+        description: '分析并存储提示词 (建议使用unified_store)',
         inputSchema: {
           type: 'object',
           properties: {
@@ -502,7 +541,7 @@ class PromptHubMCPAdapter {
       method: method,
       headers: {
         'Content-Type': 'application/json',
-        'User-Agent': 'PromptHub-MCP-Adapter/1.1.0'
+        'User-Agent': 'PromptHub-MCP-Adapter/1.3.0'
       }
     };
 
@@ -577,7 +616,7 @@ async function handleMessage(message) {
             },
             serverInfo: {
               name: 'prompthub-mcp-adapter',
-              version: '1.1.0'
+              version: '1.3.0'
             }
           }
         });

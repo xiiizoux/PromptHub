@@ -6,6 +6,7 @@
 import { BaseMCPTool, ToolContext, ToolResult } from '../shared/base-tool.js';
 import { ToolDescription, ToolParameter, Prompt } from '../types.js';
 import { MCPAIAnalysisResult } from '../ai/mcp-ai-analyzer.js';
+import { unifiedStoreTool } from './unified-store.js';
 
 /**
  * 一键存储工具类 - 最简化的存储体验
@@ -51,48 +52,36 @@ export class QuickStoreTool extends BaseMCPTool {
       isPublic
     });
 
+    // 迁移到使用unified_store核心实现
     try {
-      const storage = this.getStorage();
-      const aiAnalyzer = this.getAIAnalyzer();
-
-      const existingTags = await storage.getTags();
-      const analysisResult = await aiAnalyzer.analyzePrompt(
-        content,
-        { includeImprovements: false, includeSuggestions: true, language: 'zh' },
-        existingTags,
-        undefined,
-        true,
-        []
-      );
-
-      const promptData: Prompt = {
-        name: title || analysisResult.suggestedTitle || `AI提示词_${new Date().toLocaleDateString()}`,
-        description: analysisResult.description || '通过MCP一键存储创建',
-        category: analysisResult.category,
-        tags: analysisResult.tags,
-        messages: [{ role: 'user' as const, content: { type: 'text', text: content.trim() } }],
-        version: 1.0,
+      const unifiedParams = {
+        content: content,
+        title: title,
         is_public: isPublic,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        auto_analyze: true,
+        skip_ai_analysis: false
       };
 
-      const savedPrompt = await storage.createPrompt(promptData);
-
-      return {
-        success: true,
-        data: {
-          prompt_id: savedPrompt.id,
-          prompt_name: savedPrompt.name,
-          is_public: isPublic,
-          analysis_summary: {
-            category: analysisResult.category,
-            tags_count: analysisResult.tags?.length || 0
-          }
-        },
-        message: `✅ 提示词已成功存储: ${savedPrompt.name}`
-      };
-
+      const result = await unifiedStoreTool.execute(unifiedParams, context);
+      
+      if (result.success) {
+        // 转换为QuickStore格式的返回数据
+        return {
+          success: true,
+          data: {
+            prompt_id: result.data?.prompt?.id,
+            prompt_name: result.data?.prompt?.name,
+            is_public: isPublic,
+            analysis_summary: {
+              category: result.data?.final_params?.category,
+              tags_count: result.data?.final_params?.tags?.length || 0
+            }
+          },
+          message: `✅ 提示词已成功存储: ${result.data?.prompt?.name}`
+        };
+      } else {
+        return result;
+      }
     } catch (error) {
       return {
         success: false,
@@ -142,61 +131,34 @@ export class SmartStoreTool extends BaseMCPTool {
     const { content, auto_analyze = true, make_public } = params;
     this.logExecution('智能存储', context, { contentLength: content.length, auto_analyze });
 
+    // 迁移到使用unified_store核心实现
     try {
-      const storage = this.getStorage();
-      const aiAnalyzer = this.getAIAnalyzer();
-
-      let analysisResult: MCPAIAnalysisResult;
-      if (auto_analyze) {
-        const existingTags = await storage.getTags();
-        analysisResult = await aiAnalyzer.analyzePrompt(content, 
-          { includeImprovements: true, includeSuggestions: true, language: 'zh' },
-          existingTags, undefined, true, []
-        );
-      } else {
-        analysisResult = {
-          suggestedTitle: `提示词_${Date.now()}`,
-          description: '智能存储创建',
-          category: 'general',
-          tags: [], 
-          improvements: [],
-          difficulty: 'intermediate',
-          estimatedTokens: 100,
-          variables: [],
-          useCases: [],
-          compatibleModels: [],
-          version: '1.0',
-          confidence: 0.8
-        };
-      }
-
       const isPublic = make_public !== undefined ? make_public : this.detectPrivacyPreference(content);
       
-      const promptData: Prompt = {
-        name: analysisResult.suggestedTitle || `智能提示词_${Date.now()}`,
-        description: analysisResult.description || '通过智能存储创建',
-        category: analysisResult.category,
-        tags: analysisResult.tags,
-        messages: [{ role: 'user' as const, content: content.trim() }],
-        version: 1.0,
+      const unifiedParams = {
+        content: content,
         is_public: isPublic,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        auto_analyze: auto_analyze,
+        skip_ai_analysis: !auto_analyze
       };
 
-      const savedPrompt = await storage.createPrompt(promptData);
-
-      return {
-        success: true,
-        data: {
-          prompt_id: savedPrompt.id,
-          prompt_name: savedPrompt.name,
-          analysis_result: analysisResult,
-          is_public: isPublic
-        },
-        message: `✅ 智能存储完成: ${savedPrompt.name}`
-      };
-
+      const result = await unifiedStoreTool.execute(unifiedParams, context);
+      
+      if (result.success) {
+        // 转换为SmartStore格式的返回数据
+        return {
+          success: true,
+          data: {
+            prompt_id: result.data?.prompt?.id,
+            prompt_name: result.data?.prompt?.name,
+            analysis_result: result.data?.analysis_report?.ai_analysis,
+            is_public: isPublic
+          },
+          message: `✅ 智能存储完成: ${result.data?.prompt?.name}`
+        };
+      } else {
+        return result;
+      }
     } catch (error) {
       return { success: false, message: '智能存储失败，请重试' };
     }
@@ -234,52 +196,69 @@ export class AnalyzeAndStoreTool extends BaseMCPTool {
     const { content, analysis_only = false, analysis_result } = params;
     this.logExecution('分析并存储', context, { contentLength: content.length, analysis_only });
 
+    // 迁移到使用unified_store核心实现
     try {
-      const storage = this.getStorage();
-      const aiAnalyzer = this.getAIAnalyzer();
-
       if (analysis_only) {
-        const existingTags = await storage.getTags();
-        const result = await aiAnalyzer.analyzePrompt(content,
-          { includeImprovements: true, includeSuggestions: true, language: 'zh' },
-          existingTags, undefined, true, []
-        );
-
-        return {
-          success: true,
-          data: {
-            analysis_result: result,
-            content_stats: { length: content.length, estimated_category: result.category },
-            next_steps: ['确认分析结果', '调整设置', '执行存储']
-          },
-          message: '分析完成，可查看结果并决定是否存储'
+        // 仅分析模式：使用unified_store的AI分析能力，但不存储
+        const unifiedParams = {
+          content: content,
+          skip_ai_analysis: false
         };
+
+        // 先获取AI分析结果（模拟分析）
+        const dummyContext = { ...context, userId: 'analysis_only' };
+        const result = await unifiedStoreTool.execute({
+          ...unifiedParams,
+          title: 'temp_analysis',
+          auto_analyze: true
+        }, dummyContext);
+
+        if (result.success) {
+          return {
+            success: true,
+            data: {
+              analysis_result: result.data?.analysis_report?.ai_analysis,
+              content_stats: { 
+                length: content.length, 
+                estimated_category: result.data?.final_params?.category 
+              },
+              next_steps: ['确认分析结果', '调整设置', '执行存储']
+            },
+            message: '分析完成，可查看结果并决定是否存储'
+          };
+        }
       }
 
       if (analysis_result) {
-        const promptData: Prompt = {
-          name: analysis_result.suggestedTitle || `分析提示词_${Date.now()}`,
-          description: analysis_result.description || '通过分析存储创建',
-          category: analysis_result.category || 'general',
-          tags: analysis_result.tags || [],
-          messages: [{ role: 'user' as const, content: content.trim() }],
-          version: 1.0,
+        // 使用已有分析结果存储
+        const unifiedParams = {
+          content: content,
+          title: analysis_result.suggestedTitle,
+          category: analysis_result.category,
+          description: analysis_result.description,
+          tags: analysis_result.tags,
           is_public: this.detectPrivacyPreference(content),
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
+          skip_ai_analysis: true  // 跳过AI分析，使用提供的结果
         };
 
-        const savedPrompt = await storage.createPrompt(promptData);
-
-        return {
-          success: true,
-          data: {
-            prompt_id: savedPrompt.id,
-            prompt_name: savedPrompt.name,
-            final_settings: { category: promptData.category, tags: promptData.tags }
-          },
-          message: `✅ 分析并存储完成: ${savedPrompt.name}`
-        };
+        const result = await unifiedStoreTool.execute(unifiedParams, context);
+        
+        if (result.success) {
+          return {
+            success: true,
+            data: {
+              prompt_id: result.data?.prompt?.id,
+              prompt_name: result.data?.prompt?.name,
+              final_settings: { 
+                category: result.data?.final_params?.category, 
+                tags: result.data?.final_params?.tags 
+              }
+            },
+            message: `✅ 分析并存储完成: ${result.data?.prompt?.name}`
+          };
+        } else {
+          return result;
+        }
       }
 
       return { success: false, message: '请提供要分析的内容或分析结果' };
