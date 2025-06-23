@@ -20,8 +20,7 @@ import {
   DocumentTextIcon,
   UserIcon,
   CpuChipIcon,
-  ShieldExclamationIcon,
-  PlusCircleIcon
+  ShieldExclamationIcon
 } from '@heroicons/react/24/outline';
 import { AIAnalyzeButton, AIAnalysisResultDisplay } from '@/components/AIAnalyzeButton';
 import { AIAnalysisResult } from '@/lib/ai-analyzer';
@@ -674,7 +673,7 @@ function CreatePromptPage() {
                     placeholder="在这里编写您的提示词内容。您可以使用 {{变量名}} 来定义动态变量..."
                     className="input-primary w-full font-mono text-sm resize-none"
                     onChange={detectVariables}
-                    autocomplete="off"
+                    autoComplete="off"
                   />
                   
                   <div className="absolute top-3 right-3 text-xs text-gray-500">
@@ -707,7 +706,7 @@ function CreatePromptPage() {
                     type="text"
                     placeholder="为您的提示词起个响亮的名字"
                     className="input-primary w-full"
-                    autocomplete="off"
+                    autoComplete="off"
                   />
                   {errors.name && (
                     <p className="text-neon-red text-sm mt-1">{errors.name.message}</p>
@@ -725,7 +724,7 @@ function CreatePromptPage() {
                     type="text"
                     placeholder={user?.username || "您的名字"}
                     className="input-primary w-full"
-                    autocomplete="name"
+                    autoComplete="name"
                   />
                 </div>
               </motion.div>
@@ -746,7 +745,7 @@ function CreatePromptPage() {
                     id="category"
                     {...register('category', { required: '请选择分类' })}
                     className="input-primary w-full"
-                    autocomplete="off"
+                    autoComplete="off"
                   >
                     <option value="">选择分类</option>
                     {categories.map((category) => (
@@ -776,7 +775,7 @@ function CreatePromptPage() {
                     })()}
                     onChange={e => setValue('version', e.target.value as any)}
                     className="input-primary w-full"
-                    autocomplete="off"
+                    autoComplete="off"
                   />
                 </div>
               </motion.div>
@@ -798,7 +797,7 @@ function CreatePromptPage() {
                   rows={3}
                   placeholder="简要描述您的提示词的用途和特点..."
                   className="input-primary w-full resize-none"
-                  autocomplete="off"
+                  autoComplete="off"
                 />
                 {errors.description && (
                   <p className="text-neon-red text-sm mt-1">{errors.description.message}</p>
@@ -827,7 +826,7 @@ function CreatePromptPage() {
                     placeholder="添加新变量..."
                     className="input-primary flex-1"
                     onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addVariable())}
-                    autocomplete="off"
+                    autoComplete="off"
                   />
                   <motion.button
                     type="button"
@@ -894,7 +893,7 @@ function CreatePromptPage() {
                     placeholder="添加新标签..."
                     className="input-primary flex-1"
                     onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addTag())}
-                    autocomplete="off"
+                    autoComplete="off"
                   />
                   <motion.button
                     type="button"
@@ -1069,7 +1068,7 @@ function CreatePromptPage() {
                     value={watch('edit_permission') || PERMISSION_LEVELS.OWNER_ONLY}
                     onChange={(e) => setValue('edit_permission', e.target.value as any)}
                     className="input-primary w-full"
-                    autocomplete="off"
+                    autoComplete="off"
                   >
                     {Object.entries(PERMISSION_LEVEL_DESCRIPTIONS).map(([key, description]) => (
                       <option key={key} value={key}>

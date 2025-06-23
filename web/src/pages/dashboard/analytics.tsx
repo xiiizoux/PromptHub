@@ -8,8 +8,7 @@ import {
   UserGroupIcon,
   DocumentTextIcon,
   ArrowTrendingUpIcon,
-  Cog6ToothIcon,
-  ChartBarIcon
+  Cog6ToothIcon
 } from '@heroicons/react/24/outline';
 import DashboardLayout from '@/components/DashboardLayout';
 import { RecommendationEngine } from '@/components/RecommendationEngine';
