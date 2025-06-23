@@ -11,7 +11,8 @@ import {
   InformationCircleIcon,
   EnvelopeIcon,
   AcademicCapIcon,
-  LinkIcon
+  LinkIcon,
+  RectangleStackIcon
 } from '@heroicons/react/24/outline';
 
 const Footer: React.FC = () => {
@@ -26,7 +27,7 @@ const Footer: React.FC = () => {
 
   const footerLinks = {
     产品: [
-      { name: '浏览提示词', href: '/prompts', icon: SparklesIcon },
+      { name: '浏览提示词', href: '/prompts', icon: RectangleStackIcon },
       { name: '创建提示词', href: '/prompts/create', icon: CodeBracketIcon },
       { name: '性能分析', href: '/analytics', icon: ChartBarIcon },
     ],

@@ -12,14 +12,15 @@ import {
   PlusCircleIcon,
   ArrowRightOnRectangleIcon,
   UserIcon,
-  KeyIcon
+  KeyIcon,
+  RectangleStackIcon
 } from '@heroicons/react/24/outline';
 import { useAuth } from '@/contexts/AuthContext';
 import clsx from 'clsx';
 
 const navigation = [
   { name: '首页', href: '/', icon: HomeIcon },
-  { name: '浏览提示词', href: '/prompts', icon: SparklesIcon },
+  { name: '浏览提示词', href: '/prompts', icon: RectangleStackIcon },
   { name: '创建提示词', href: '/create', icon: PlusCircleIcon },
   { name: 'AI优化器', href: '/optimizer', icon: SparklesIcon },
   { name: '性能分析', href: '/analytics', icon: ChartBarIcon },

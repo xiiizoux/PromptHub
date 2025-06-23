@@ -94,8 +94,8 @@ const AnalyticsPage: NextPage = () => {
         {/* 页面标题 */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-4xl md:text-6xl font-bold text-neon-cyan mb-4">
-              <ChartBarIcon className="h-8 w-8 md:h-12 md:w-12 text-neon-cyan mr-4 inline" />
+            <h1 className="text-4xl md:text-6xl font-bold text-neon-purple mb-4">
+              <ChartBarIcon className="h-8 w-8 md:h-12 md:w-12 text-neon-purple mr-4 inline" />
               数据分析
             </h1>
             <p className="text-gray-400 mt-2">
