@@ -116,6 +116,15 @@ const ProfilePage = () => {
   const [promptsLoading, setPromptsLoading] = useState(false);
   const [promptCounts, setPromptCounts] = useState<{total: number, public: number, private: number}>({total: 0, public: 0, private: 0});
   
+  // 错误状态管理
+  const [errors, setErrors] = useState<{
+    apiKeys?: string;
+    prompts?: string;
+    bookmarks?: string;
+    usageHistory?: string;
+    ratings?: string;
+  }>({});
+  
   // 新增分页状态
   const [promptCurrentPage, setPromptCurrentPage] = useState(1);
   const [promptTotalPages, setPromptTotalPages] = useState(1);
@@ -169,12 +178,21 @@ const ProfilePage = () => {
   // 加载API密钥
   useEffect(() => {
     if (activeTab === 'api-keys' && user) {
+      // 使用abort controller防止竞态条件
+      const abortController = new AbortController();
+      
       // 等待页面加载完成后再执行请求
       const timer = setTimeout(() => {
-        console.log('正在获取API密钥, 用户ID:', user.id);
-        fetchApiKeys();
-      }, 500);
-      return () => clearTimeout(timer);
+        if (!abortController.signal.aborted) {
+          console.log('正在获取API密钥, 用户ID:', user.id);
+          fetchApiKeys();
+        }
+      }, 300);
+      
+      return () => {
+        clearTimeout(timer);
+        abortController.abort();
+      };
     }
   }, [activeTab, user]);
 
@@ -197,21 +215,48 @@ const ProfilePage = () => {
   // 加载收藏夹
   useEffect(() => {
     if (activeTab === 'bookmarks' && user) {
-      fetchBookmarks();
+      const cleanup = fetchBookmarks();
+      return () => {
+        if (cleanup && typeof cleanup.then === 'function') {
+          cleanup.then(cleanupFn => {
+            if (cleanupFn && typeof cleanupFn === 'function') {
+              cleanupFn();
+            }
+          });
+        }
+      };
     }
   }, [activeTab, user]);
 
   // 加载使用历史
   useEffect(() => {
     if (activeTab === 'usage-history' && user) {
-      fetchUsageHistory();
+      const cleanup = fetchUsageHistory();
+      return () => {
+        if (cleanup && typeof cleanup.then === 'function') {
+          cleanup.then(cleanupFn => {
+            if (cleanupFn && typeof cleanupFn === 'function') {
+              cleanupFn();
+            }
+          });
+        }
+      };
     }
   }, [activeTab, user]);
 
   // 加载评分评论
   useEffect(() => {
     if (activeTab === 'ratings-reviews' && user) {
-      fetchUserRatings();
+      const cleanup = fetchUserRatings();
+      return () => {
+        if (cleanup && typeof cleanup.then === 'function') {
+          cleanup.then(cleanupFn => {
+            if (cleanupFn && typeof cleanupFn === 'function') {
+              cleanupFn();
+            }
+          });
+        }
+      };
     }
   }, [activeTab, user]);
 
@@ -261,6 +306,13 @@ const ProfilePage = () => {
   };
 
   const fetchApiKeys = async () => {
+    // 检查用户是否存在
+    if (!user?.id) {
+      console.log('用户未登录，无法获取API密钥');
+      setApiKeys([]);
+      return;
+    }
+
     // 防止重复请求
     if (loading) {
       console.log('已经在加载中，跳过重复请求');
@@ -489,18 +541,23 @@ const ProfilePage = () => {
 
   // 获取收藏夹
   const fetchBookmarks = async () => {
-    setBookmarksLoading(true);
+    if (!isMountedRef.current) return;
+    
+    safeSetState(() => setBookmarksLoading(true));
+    
+    const abortController = new AbortController();
+    
     try {
       if (!user?.id) {
         console.log('用户未登录，跳过获取收藏夹');
-        setBookmarks([]);
+        safeSetState(() => setBookmarks([]));
         return;
       }
       
       const token = await getToken();
       if (!token) {
         console.error('无法获取认证令牌，请重新登录');
-        setBookmarks([]);
+        safeSetState(() => setBookmarks([]));
         return;
       }
 
@@ -510,13 +567,24 @@ const ProfilePage = () => {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
-        }
+        },
+        signal: abortController.signal
       });
+
+      // 检查请求是否被中止
+      if (abortController.signal.aborted) {
+        console.log('收藏夹请求被中止');
+        return;
+      }
 
       if (response.ok) {
         const data = await response.json();
-        setBookmarks(data || []);
-        console.log('收藏夹数据获取成功:', data?.length || 0);
+        if (!isMountedRef.current) return;
+        
+        safeSetState(() => {
+          setBookmarks(Array.isArray(data) ? data : []);
+          console.log('收藏夹数据获取成功:', Array.isArray(data) ? data.length : 0);
+        });
       } else {
         const errorData = await response.json().catch(() => ({}));
         console.error('获取收藏夹失败:', {
@@ -525,193 +593,346 @@ const ProfilePage = () => {
           error: errorData.error || '未知错误'
         });
         
-        // 如果是401错误，提示用户重新登录
-        if (response.status === 401) {
-          console.warn('认证已过期，请重新登录');
-        }
+        if (!isMountedRef.current) return;
         
-        setBookmarks([]);
+        // 根据错误类型提供不同的降级处理
+        safeSetState(() => {
+          let errorMessage = '获取收藏夹失败';
+          if (response.status === 401) {
+            errorMessage = '登录已过期，请刷新页面重新登录';
+          } else if (response.status >= 500) {
+            errorMessage = '服务器暂时无法响应，请稍后重试';
+          } else if (response.status === 404) {
+            errorMessage = '收藏夹服务暂时不可用';
+          } else {
+            errorMessage = `加载失败 (${response.status}): ${errorData.error || '未知错误'}`;
+          }
+          
+          setErrors(prev => ({ ...prev, bookmarks: errorMessage }));
+          setBookmarks([]);
+        });
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('获取收藏夹网络错误:', error);
-      setBookmarks([]);
+      
+      if (!isMountedRef.current) return;
+      
+      // 区分不同类型的错误
+      safeSetState(() => {
+        if (error.name === 'AbortError') {
+          console.log('收藏夹请求被用户中止');
+        } else {
+          console.error('收藏夹获取网络异常:', error.message);
+          setErrors(prev => ({ 
+            ...prev, 
+            bookmarks: `网络连接失败: ${error.message || '请检查网络连接'}` 
+          }));
+        }
+        setBookmarks([]);
+      });
     } finally {
-      setBookmarksLoading(false);
+      safeSetState(() => setBookmarksLoading(false));
     }
+    
+    // 返回清理函数
+    return () => {
+      abortController.abort();
+    };
   };
 
   // 获取使用历史
   const fetchUsageHistory = async () => {
-    setHistoryLoading(true);
+    if (!isMountedRef.current) return;
+    
+    safeSetState(() => setHistoryLoading(true));
+    
+    const abortController = new AbortController();
+    
     try {
-      if (!user?.id) return;
+      if (!user?.id) {
+        console.log('用户未登录，跳过获取使用历史');
+        safeSetState(() => setUsageHistory([]));
+        return;
+      }
       
       const token = await getToken();
       if (!token) {
         console.error('无法获取认证令牌');
-        setUsageHistory([]);
+        safeSetState(() => setUsageHistory([]));
         return;
       }
 
+      console.log('开始获取使用历史，用户ID:', user.id);
+
       const response = await fetch('/api/user/usage-history?pageSize=50', {
         headers: {
-          'Authorization': `Bearer ${token}`
-        }
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        signal: abortController.signal
       });
+
+      // 检查请求是否被中止
+      if (abortController.signal.aborted) {
+        console.log('使用历史请求被中止');
+        return;
+      }
 
       if (response.ok) {
         const result = await response.json();
-        if (result.success) {
-          // 转换数据格式以匹配导出格式
-          const formattedHistory = result.data.map((item: any) => ({
-            id: item.id,
-            prompt_name: item.prompt_name,
-            used_at: item.created_at,
-            usage_count: 1, // 每条记录代表一次使用
-            model: item.model,
-            input_tokens: item.input_tokens,
-            output_tokens: item.output_tokens,
-            latency_ms: item.latency_ms
-          }));
-          setUsageHistory(formattedHistory);
-          console.log('使用历史数据获取成功:', formattedHistory.length);
-        } else {
-          console.error('获取使用历史失败:', result.error);
-          setUsageHistory([]);
-        }
+        if (!isMountedRef.current) return;
+        
+        safeSetState(() => {
+          if (result.success && Array.isArray(result.data)) {
+            // 转换数据格式以匹配导出格式
+            const formattedHistory = result.data.map((item: any) => ({
+              id: item.id,
+              prompt_name: item.prompt_name || '未知提示词',
+              used_at: item.created_at,
+              usage_count: 1, // 每条记录代表一次使用
+              model: item.model || '未知模型',
+              input_tokens: item.input_tokens || 0,
+              output_tokens: item.output_tokens || 0,
+              latency_ms: item.latency_ms || 0
+            }));
+            setUsageHistory(formattedHistory);
+            console.log('使用历史数据获取成功:', formattedHistory.length);
+          } else {
+            console.error('获取使用历史失败: 数据格式错误', result);
+            setUsageHistory([]);
+          }
+        });
       } else {
-        console.error('获取使用历史失败:', response.status);
-        setUsageHistory([]);
+        const errorData = await response.json().catch(() => ({}));
+        console.error('获取使用历史失败:', {
+          status: response.status,
+          statusText: response.statusText,
+          error: errorData.error || '未知错误'
+        });
+        
+        if (!isMountedRef.current) return;
+        
+        safeSetState(() => {
+          let errorMessage = '获取使用历史失败';
+          if (response.status === 401) {
+            errorMessage = '登录已过期，请刷新页面重新登录';
+          } else if (response.status >= 500) {
+            errorMessage = '服务器暂时无法响应，请稍后重试';
+          } else if (response.status === 404) {
+            errorMessage = '使用历史服务暂时不可用';
+          } else {
+            errorMessage = `加载失败 (${response.status}): ${errorData.error || '未知错误'}`;
+          }
+          
+          setErrors(prev => ({ ...prev, usageHistory: errorMessage }));
+          setUsageHistory([]);
+        });
       }
-    } catch (error) {
-      console.error('获取使用历史失败:', error);
-      setUsageHistory([]);
+    } catch (error: any) {
+      console.error('获取使用历史网络错误:', error);
+      
+      if (!isMountedRef.current) return;
+      
+      safeSetState(() => {
+        if (error.name === 'AbortError') {
+          console.log('使用历史请求被用户中止');
+        } else {
+          console.error('使用历史获取网络异常:', error.message);
+          setErrors(prev => ({ 
+            ...prev, 
+            usageHistory: `网络连接失败: ${error.message || '请检查网络连接'}` 
+          }));
+        }
+        setUsageHistory([]);
+      });
     } finally {
-      setHistoryLoading(false);
+      safeSetState(() => setHistoryLoading(false));
     }
+    
+    // 返回清理函数
+    return () => {
+      abortController.abort();
+    };
   };
 
   // 获取用户评分评论
   const fetchUserRatings = async () => {
-    setRatingsLoading(true);
-    try {
-      if (!user?.id) return;
-      
-      const token = await getToken();
-      if (!token) {
-        console.error('无法获取认证令牌');
-        setUserRatings([]);
-        return;
-      }
-
-      // 获取用户的所有评分
-      // 注意：我们需要查询用户评分的提示词，然后获取评分信息
-      const { default: supabaseAdapter } = await import('@/lib/supabase-adapter');
-      
-      try {
-        // 使用 Supabase 直接查询用户评分
-        const response = await fetch('/api/user/ratings', {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          if (data.success) {
-            // 转换数据格式以匹配导出格式
-            const formattedRatings = data.ratings.map((item: any) => ({
-              id: item.id,
-              prompt_name: item.prompt_name || '未知提示词',
-              rating: item.rating,
-              review: item.comment || item.feedback_text || '',
-              created_at: item.created_at
-            }));
-            setUserRatings(formattedRatings);
-            console.log('评分评论数据获取成功:', formattedRatings.length);
-          } else {
-            console.error('获取评分失败:', data.error);
-            setUserRatings([]);
-          }
-        } else {
-          // 如果没有专门的用户评分API，回退到空数组
-          console.log('暂无用户评分API，设置为空数组');
-          setUserRatings([]);
-        }
-      } catch (apiError) {
-        console.error('通过API获取评分失败，尝试直接数据库查询:', apiError);
-        
-        // 回退方案：直接查询数据库
-        const { createClient } = await import('@supabase/supabase-js');
-        const supabase = createClient(
-          process.env.NEXT_PUBLIC_SUPABASE_URL!,
-          process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-        );
-
-        // 先获取用户的所有评分
-        const { data: ratingsData, error } = await supabase
-          .from('prompt_feedback')
-          .select('id, rating, feedback_text, created_at, usage_id')
-          .eq('user_id', user.id)
-          .order('created_at', { ascending: false });
-
-        if (error) {
-          console.error('数据库查询评分失败:', error);
-          setUserRatings([]);
-          return;
-        }
-
-        // 如果有评分数据，获取对应的使用记录来找到prompt信息
-        let formattedRatings: any[] = [];
-        if (ratingsData && ratingsData.length > 0) {
-          const usageIds = ratingsData.map(r => r.usage_id).filter(Boolean);
+          if (!isMountedRef.current) return;
           
-          if (usageIds.length > 0) {
-            const { data: usageData } = await supabase
-              .from('prompt_usage')
-              .select('id, prompt_id')
-              .in('id', usageIds);
-
-            const promptIds = Array.from(new Set(usageData?.map(u => u.prompt_id).filter(Boolean) || []));
+          safeSetState(() => setRatingsLoading(true));
+          
+          const abortController = new AbortController();
+          
+          try {
+            if (!user?.id) {
+              console.log('用户未登录，跳过获取评分评论');
+              safeSetState(() => setUserRatings([]));
+              return;
+            }
             
-            if (promptIds.length > 0) {
-              const { data: promptsData } = await supabase
-                .from('prompts')
-                .select('id, name')
-                .in('id', promptIds);
+            const token = await getToken();
+            if (!token) {
+              console.error('无法获取认证令牌');
+              safeSetState(() => setUserRatings([]));
+              return;
+            }
+        
+            console.log('开始获取评分评论，用户ID:', user.id);
+        
+            try {
+              // 首先尝试使用API端点
+              const response = await fetch('/api/user/ratings', {
+                headers: {
+                  'Authorization': `Bearer ${token}`,
+                  'Content-Type': 'application/json'
+                },
+                signal: abortController.signal
+              });
+        
+              // 检查请求是否被中止
+              if (abortController.signal.aborted) {
+                console.log('评分评论请求被中止');
+                return;
+              }
+        
+              if (response.ok) {
+                const data = await response.json();
+                if (!isMountedRef.current) return;
+                
+                safeSetState(() => {
+                  if (data.success && Array.isArray(data.ratings)) {
+                    // 转换数据格式以匹配导出格式
+                    const formattedRatings = data.ratings.map((item: any) => ({
+                      id: item.id,
+                      prompt_name: item.prompt_name || '未知提示词',
+                      rating: item.rating || 0,
+                      review: item.comment || item.feedback_text || '',
+                      created_at: item.created_at
+                    }));
+                    setUserRatings(formattedRatings);
+                    console.log('评分评论数据获取成功(API):', formattedRatings.length);
+                  } else {
+                    console.warn('API返回数据格式错误:', data);
+                    setUserRatings([]);
+                  }
+                });
+              } else if (response.status === 404) {
+                // API端点不存在，使用空数组
+                console.log('评分API端点不存在，设置为空数组');
+                if (!isMountedRef.current) return;
+                safeSetState(() => setUserRatings([]));
+              } else {
+                // 其他错误，尝试降级处理
+                console.error('获取评分失败:', response.status);
+                if (!isMountedRef.current) return;
+                safeSetState(() => {
+                  setErrors(prev => ({ ...prev, ratings: `服务器错误 (${response.status})，尝试使用备用数据源...` }));
+                });
+                await handleRatingsFallback();
+              }
+            } catch (apiError: any) {
+              console.error('通过API获取评分失败:', apiError);
+              
+              if (apiError.name === 'AbortError') {
+                console.log('评分评论请求被用户中止');
+                return;
+              }
+              
+              // 设置API错误状态并尝试降级处理
+              if (!isMountedRef.current) return;
+              safeSetState(() => {
+                setErrors(prev => ({ ...prev, ratings: `API请求失败：${apiError.message || '网络错误'}，尝试备用数据源...` }));
+              });
+              await handleRatingsFallback();
+            }
+          } catch (error: any) {
+            console.error('获取评分评论失败:', error);
+            
+            if (!isMountedRef.current) return;
+            
+            safeSetState(() => {
+              setUserRatings([]);
+              setErrors(prev => ({ ...prev, ratings: `加载评分评论时发生错误：${error.message || '未知错误'}` }));
+            });
+          } finally {
+            safeSetState(() => setRatingsLoading(false));
+          }
+          
+          // 降级方案：直接查询数据库
+          async function handleRatingsFallback() {
+            try {
+              console.log('尝试使用降级方案获取评分数据');
+              
+              const { createClient } = await import('@supabase/supabase-js');
+              const supabase = createClient(
+                process.env.NEXT_PUBLIC_SUPABASE_URL!,
+                process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+              );
+        
+              // 检查用户是否存在
+              if (!user?.id) {
+                console.log('用户不存在，无法获取评分数据');
+                if (!isMountedRef.current) return;
+                safeSetState(() => setUserRatings([]));
+                return;
+              }
 
-              const promptMap = promptsData?.reduce((acc: any, p: any) => {
-                acc[p.id] = p.name;
-                return acc;
-              }, {}) || {};
-
-              const usageMap = usageData?.reduce((acc: any, u: any) => {
-                acc[u.id] = u.prompt_id;
-                return acc;
-              }, {}) || {};
-
-              formattedRatings = ratingsData.map((item: any) => ({
-                id: item.id,
-                prompt_name: item.usage_id && usageMap[item.usage_id] ? 
-                  promptMap[usageMap[item.usage_id]] || '未知提示词' : '未知提示词',
-                rating: item.rating,
-                review: item.feedback_text || '',
-                created_at: item.created_at
-              }));
+              // 尝试从prompt_ratings表获取数据（更可能存在的表）
+              const { data: ratingsData, error } = await supabase
+                .from('prompt_ratings')
+                .select(`
+                  id,
+                  rating,
+                  comment,
+                  created_at,
+                  prompt_id,
+                  prompts (
+                    name
+                  )
+                `)
+                .eq('user_id', user.id)
+                .order('created_at', { ascending: false });
+        
+              if (!error && ratingsData && ratingsData.length > 0) {
+                if (!isMountedRef.current) return;
+                
+                const formattedRatings = ratingsData.map((item: any) => ({
+                  id: item.id,
+                  prompt_name: item.prompts?.name || '未知提示词',
+                  rating: item.rating || 0,
+                  review: item.comment || '',
+                  created_at: item.created_at
+                }));
+                
+                safeSetState(() => {
+                  setUserRatings(formattedRatings);
+                  console.log('评分评论数据获取成功(降级):', formattedRatings.length);
+                });
+              } else {
+                // 如果还是失败，设置为空数组
+                console.log('降级方案也失败，设置为空数组');
+                if (!isMountedRef.current) return;
+                safeSetState(() => {
+                  setUserRatings([]);
+                  setErrors(prev => ({ ...prev, ratings: '无法加载评分评论数据，请稍后重试' }));
+                });
+              }
+            } catch (fallbackError) {
+              console.error('降级方案失败:', fallbackError);
+              if (!isMountedRef.current) return;
+              safeSetState(() => {
+                setUserRatings([]);
+                setErrors(prev => ({ ...prev, ratings: `加载评分评论失败，无法从备用数据源获取：${fallbackError instanceof Error ? fallbackError.message : '未知错误'}` }));
+              });
             }
           }
-        }
-
-        setUserRatings(formattedRatings);
-        console.log('评分评论数据获取成功（数据库）:', formattedRatings.length);
-      }
-    } catch (error) {
-      console.error('获取评分评论失败:', error);
-      setUserRatings([]);
-    } finally {
-      setRatingsLoading(false);
-    }
-  };
+          
+          // 返回清理函数
+          return () => {
+            abortController.abort();
+          };
+        };
+;
 
   // 导出数据
   const handleExportData = async () => {
@@ -1878,6 +2099,34 @@ const ProfilePage = () => {
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-neon-cyan mx-auto mb-4"></div>
                     <p className="text-gray-400">加载中...</p>
                   </div>
+                ) : errors.bookmarks ? (
+                  <div className="glass rounded-2xl p-8 border border-neon-red/20 text-center">
+                    <div className="w-16 h-16 bg-neon-red/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <svg className="w-8 h-8 text-neon-red" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                      </svg>
+                    </div>
+                    <h3 className="text-lg font-semibold text-white mb-2">加载收藏夹失败</h3>
+                    <p className="text-gray-400 mb-6">{errors.bookmarks}</p>
+                    <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                      <button
+                        onClick={() => {
+                          setErrors(prev => ({ ...prev, bookmarks: undefined }));
+                          fetchBookmarks();
+                        }}
+                        className="btn-primary flex items-center space-x-2"
+                      >
+                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                        </svg>
+                        <span>重试</span>
+                      </button>
+                      <Link href="/prompts" className="btn-secondary flex items-center space-x-2">
+                        <SparklesIcon className="h-5 w-5" />
+                        <span>浏览提示词</span>
+                      </Link>
+                    </div>
+                  </div>
                 ) : bookmarks.length === 0 ? (
                   <div className="glass rounded-2xl p-8 border border-neon-cyan/20 text-center">
                     <BookmarkIcon className="h-12 w-12 text-gray-500 mx-auto mb-4" />
@@ -1927,6 +2176,28 @@ const ProfilePage = () => {
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-neon-cyan mx-auto mb-4"></div>
                     <p className="text-gray-400">加载中...</p>
                   </div>
+                ) : errors.usageHistory ? (
+                  <div className="glass rounded-2xl p-8 border border-neon-red/20 text-center">
+                    <div className="w-16 h-16 bg-neon-red/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <svg className="w-8 h-8 text-neon-red" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                      </svg>
+                    </div>
+                    <h3 className="text-lg font-semibold text-white mb-2">加载使用历史失败</h3>
+                    <p className="text-gray-400 mb-6">{errors.usageHistory}</p>
+                    <button
+                      onClick={() => {
+                        setErrors(prev => ({ ...prev, usageHistory: undefined }));
+                        fetchUsageHistory();
+                      }}
+                      className="btn-primary flex items-center space-x-2"
+                    >
+                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                      </svg>
+                      <span>重试</span>
+                    </button>
+                  </div>
                 ) : usageHistory.length === 0 ? (
                   <div className="glass rounded-2xl p-8 border border-neon-cyan/20 text-center">
                     <ClockIcon className="h-12 w-12 text-gray-500 mx-auto mb-4" />
@@ -1973,6 +2244,28 @@ const ProfilePage = () => {
                   <div className="glass rounded-2xl p-8 border border-neon-cyan/20 text-center">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-neon-cyan mx-auto mb-4"></div>
                     <p className="text-gray-400">加载中...</p>
+                  </div>
+                ) : errors.ratings ? (
+                  <div className="glass rounded-2xl p-8 border border-neon-red/20 text-center">
+                    <div className="w-16 h-16 bg-neon-red/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <svg className="w-8 h-8 text-neon-red" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                      </svg>
+                    </div>
+                    <h3 className="text-lg font-semibold text-white mb-2">加载评分评论失败</h3>
+                    <p className="text-gray-400 mb-6">{errors.ratings}</p>
+                    <button
+                      onClick={() => {
+                        setErrors(prev => ({ ...prev, ratings: undefined }));
+                        fetchUserRatings();
+                      }}
+                      className="btn-primary flex items-center space-x-2"
+                    >
+                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                      </svg>
+                      <span>重试</span>
+                    </button>
                   </div>
                 ) : userRatings.length === 0 ? (
                   <div className="glass rounded-2xl p-8 border border-neon-cyan/20 text-center">
