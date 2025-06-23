@@ -11,7 +11,8 @@ import {
   ClipboardDocumentIcon,
   LightBulbIcon,
   AdjustmentsHorizontalIcon,
-  DocumentPlusIcon
+  DocumentPlusIcon,
+  BeakerIcon
 } from '@heroicons/react/24/outline';
 import { StarIcon } from '@heroicons/react/24/solid';
 import {
@@ -22,6 +23,8 @@ import {
   iteratePrompt,
   analyzePrompt
 } from '@/lib/prompt-optimizer';
+import { AIAnalyzeButton, AIAnalysisResultDisplay } from '@/components/AIAnalyzeButton';
+import { AIAnalysisResult } from '@/lib/ai-analyzer';
 import toast from 'react-hot-toast';
 import { useRouter } from 'next/router';
 
@@ -48,6 +51,11 @@ export const PromptOptimizer: React.FC<PromptOptimizerProps> = ({
   const [iterationRequirements, setIterationRequirements] = useState('');
   const [iterationType, setIterationType] = useState<IterationRequest['type']>('refine');
   const [result, setResult] = useState<OptimizationResult | null>(null);
+  const [analysisScore, setAnalysisScore] = useState<OptimizationResult['score'] | null>(null);
+  
+  // 添加智能分析相关状态
+  const [aiAnalysisResult, setAiAnalysisResult] = useState<AIAnalysisResult | null>(null);
+  const [showAiAnalysisResult, setShowAiAnalysisResult] = useState(false);
 
   // 同步外部prompt变化
   useEffect(() => {
@@ -56,12 +64,17 @@ export const PromptOptimizer: React.FC<PromptOptimizerProps> = ({
     }
   }, [initialPrompt]);
 
-  // 自动分析
+  // 当提示词改变时，清空之前的分析结果
   useEffect(() => {
     if (prompt.trim() && prompt.length > 10) {
-      handleAnalyze();
+      // 如果在分析标签页，自动分析
+      if (activeTab === 'analyze') {
+        handleAnalyze();
+      }
+    } else {
+      setAnalysisScore(null);
     }
-  }, [prompt]);
+  }, [prompt, activeTab]);
 
   const handleOptimize = async () => {
     if (!prompt.trim()) {
@@ -130,23 +143,61 @@ export const PromptOptimizer: React.FC<PromptOptimizerProps> = ({
   };
 
   const handleAnalyze = async () => {
-    if (!prompt.trim()) return;
+    if (!prompt.trim()) {
+      toast.error('请输入要分析的提示词');
+      return;
+    }
 
     setIsAnalyzing(true);
     try {
       const score = await analyzePrompt(prompt);
-      if (score && result) {
-        setResult({
-          ...result,
-          score
-        });
+      if (score) {
+        setAnalysisScore(score);
+        // 如果当前有结果，也更新结果中的评分
+        if (result) {
+          setResult({
+            ...result,
+            score
+          });
+        }
+        toast.success('质量分析完成！');
+      } else {
+        toast.error('分析失败：请检查API配置');
       }
     } catch (error) {
       console.error('分析失败:', error);
+      toast.error('分析失败：请检查网络连接');
     } finally {
       setIsAnalyzing(false);
     }
   };
+
+  // AI分析完成处理
+  const handleAIAnalysisComplete = (result: Partial<AIAnalysisResult>) => {
+    console.log('优化器收到AI分析结果:', result);
+    
+    if (result as AIAnalysisResult) {
+      setAiAnalysisResult(result as AIAnalysisResult);
+      setShowAiAnalysisResult(true);
+      toast.success('智能分析完成！');
+    }
+  };
+
+  // 评分条组件
+  const ScoreBar = ({ label, value, color }: { label: string; value: number; color: string }) => (
+    <div className="flex items-center justify-between">
+      <span className="text-sm text-gray-300">{label}</span>
+      <div className="flex items-center space-x-2">
+        <div className="w-32 h-2 bg-gray-700 rounded-full overflow-hidden">
+          <div 
+            className={`h-full ${color} transition-all duration-300`}
+            style={{ width: `${value}%` }}
+          />
+        </div>
+        <span className="text-sm font-medium text-white w-8">{value}</span>
+      </div>
+    </div>
+  );
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text).then(() => {
@@ -173,23 +224,6 @@ export const PromptOptimizer: React.FC<PromptOptimizerProps> = ({
     router.push(`/create?${params.toString()}`);
     toast.success('正在跳转到创建提示词页面...');
   };
-
-  const ScoreBar = ({ label, value, color }: { label: string; value: number; color: string }) => (
-    <div className="flex items-center justify-between">
-      <span className="text-sm text-gray-400">{label}</span>
-      <div className="flex items-center space-x-2">
-        <div className="w-20 h-2 bg-gray-700 rounded-full overflow-hidden">
-          <motion.div
-            className={`h-full ${color}`}
-            initial={{ width: 0 }}
-            animate={{ width: `${(value / 10) * 100}%` }}
-            transition={{ duration: 0.5, ease: 'easeOut' }}
-          />
-        </div>
-        <span className="text-sm font-medium text-white w-8">{value.toFixed(1)}</span>
-      </div>
-    </div>
-  );
 
   return (
     <div className={`space-y-6 ${className}`}>
@@ -276,10 +310,13 @@ export const PromptOptimizer: React.FC<PromptOptimizerProps> = ({
                   onChange={(e) => setOptimizationType(e.target.value as OptimizationRequest['type'])}
                   className="w-full bg-gray-800/50 border border-gray-600/50 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-neon-green/50"
                 >
-                  <option value="general">通用优化</option>
-                  <option value="specific">专业特定</option>
-                  <option value="creative">创意写作</option>
-                  <option value="analytical">分析推理</option>
+                  <option value="general">📝 通用优化</option>
+                  <option value="creative">🎨 创意优化</option>
+                  <option value="technical">💻 技术优化</option>
+                  <option value="business">💼 商业优化</option>
+                  <option value="educational">🎓 教育优化</option>
+                  <option value="advanced">🚀 高级优化</option>
+                  <option value="drawing">🎨 绘图优化</option>
                 </select>
               </div>
 
@@ -380,7 +417,7 @@ export const PromptOptimizer: React.FC<PromptOptimizerProps> = ({
           </motion.div>
         )}
 
-        {activeTab === 'analyze' && result?.score && (
+        {activeTab === 'analyze' && (
           <motion.div
             key="analyze"
             initial={{ opacity: 0, y: 20 }}
@@ -393,28 +430,136 @@ export const PromptOptimizer: React.FC<PromptOptimizerProps> = ({
               质量分析
             </h3>
 
-            <div className="space-y-4">
-              <ScoreBar 
-                label="清晰性" 
-                value={result.score.clarity} 
-                color="bg-gradient-to-r from-neon-green to-neon-cyan" 
-              />
-              <ScoreBar 
-                label="具体性" 
-                value={result.score.specificity} 
-                color="bg-gradient-to-r from-neon-cyan to-neon-blue" 
-              />
-              <ScoreBar 
-                label="完整性" 
-                value={result.score.completeness} 
-                color="bg-gradient-to-r from-neon-purple to-neon-pink" 
-              />
-              <ScoreBar 
-                label="综合评分" 
-                value={result.score.overall} 
-                color="bg-gradient-to-r from-neon-yellow to-neon-orange" 
-              />
+            {/* 分析按钮 */}
+            <div className="mb-6">
+              <button
+                onClick={handleAnalyze}
+                disabled={isAnalyzing || !prompt.trim()}
+                className="w-full bg-gradient-to-r from-neon-yellow to-neon-orange text-black font-medium py-2 px-4 rounded-lg hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+              >
+                {isAnalyzing ? (
+                  <>
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-black" />
+                    <span>正在分析...</span>
+                  </>
+                ) : (
+                  <>
+                    <ChartBarIcon className="h-5 w-5" />
+                    <span>开始质量分析</span>
+                  </>
+                )}
+              </button>
             </div>
+
+            {/* 分析结果显示 */}
+            {(analysisScore || result?.score) && (
+              <div className="space-y-4">
+                <ScoreBar 
+                  label="清晰性" 
+                  value={(analysisScore || result?.score)?.clarity || 0} 
+                  color="bg-gradient-to-r from-neon-green to-neon-cyan" 
+                />
+                <ScoreBar 
+                  label="具体性" 
+                  value={(analysisScore || result?.score)?.specificity || 0} 
+                  color="bg-gradient-to-r from-neon-cyan to-neon-blue" 
+                />
+                <ScoreBar 
+                  label="完整性" 
+                  value={(analysisScore || result?.score)?.completeness || 0} 
+                  color="bg-gradient-to-r from-neon-purple to-neon-pink" 
+                />
+                <ScoreBar 
+                  label="综合评分" 
+                  value={(analysisScore || result?.score)?.overall || 0} 
+                  color="bg-gradient-to-r from-neon-yellow to-neon-orange" 
+                />
+              </div>
+            )}
+
+            {/* AI智能分析按钮 */}
+            {(optimizedPrompt || prompt) && (
+              <div className="mt-6 p-4 bg-gray-800/30 rounded-lg border border-gray-700/50">
+                <div className="flex items-center justify-between mb-3">
+                  <h4 className="font-medium text-white">AI深度分析</h4>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <div title="对优化后的提示词进行智能分析">
+                    <AIAnalyzeButton
+                      content={optimizedPrompt || prompt}
+                      onAnalysisComplete={handleAIAnalysisComplete}
+                      variant="full"
+                      className="flex-1 !text-sm"
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* 如果没有分析结果，显示提示 */}
+            {!analysisScore && !result?.score && !isAnalyzing && (
+              <div className="text-center py-8">
+                <ChartBarIcon className="h-12 w-12 text-gray-600 mx-auto mb-4" />
+                <p className="text-gray-400 mb-2">
+                  {prompt.trim() ? '点击上方按钮开始分析提示词质量' : '请先在上方输入要分析的提示词'}
+                </p>
+                <p className="text-gray-500 text-sm">分析包括清晰性、具体性、完整性等多个维度</p>
+              </div>
+            )}
+
+            {/* AI智能分析结果显示 */}
+            <AnimatePresence>
+              {showAiAnalysisResult && aiAnalysisResult && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20, height: 0 }}
+                  animate={{ opacity: 1, y: 0, height: 'auto' }}
+                  exit={{ opacity: 0, y: -20, height: 0 }}
+                  className="mt-4 space-y-4"
+                >
+                  <div className="flex items-center justify-between">
+                    <h4 className="font-medium text-white flex items-center">
+                      <BeakerIcon className="h-4 w-4 text-neon-blue mr-2" />
+                      智能分析结果
+                    </h4>
+                    <button
+                      type="button"
+                      onClick={() => setShowAiAnalysisResult(false)}
+                      className="text-gray-400 hover:text-gray-600 transition-colors"
+                      title="关闭智能分析结果"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                  
+                  <AIAnalysisResultDisplay 
+                    result={aiAnalysisResult}
+                    onSave={() => {
+                      const contentToUse = optimizedPrompt || prompt;
+                      const suggestedName = `AI优化提示词_${new Date().toLocaleDateString('zh-CN', {
+                        month: '2-digit',
+                        day: '2-digit',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })}`;
+                      
+                      const suggestedDesc = aiAnalysisResult.description || '通过AI优化生成的提示词，经过智能分析和结构化优化处理';
+                      
+                      // 构建URL参数，包含优化内容、AI分析结果和标识参数
+                      const params = new URLSearchParams({
+                        optimizedContent: encodeURIComponent(contentToUse),
+                        aiAnalysisResult: encodeURIComponent(JSON.stringify(aiAnalysisResult)),
+                        suggestedName: encodeURIComponent(suggestedName),
+                        suggestedDesc: encodeURIComponent(suggestedDesc),
+                        source: 'ai_analysis'
+                      });
+                      
+                      const createUrl = `/create?${params.toString()}`;
+                      window.open(createUrl, '_blank');
+                    }}
+                  />
+                </motion.div>
+              )}
+            </AnimatePresence>
 
             {result.suggestions && result.suggestions.length > 0 && (
               <div className="mt-6">
