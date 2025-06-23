@@ -443,19 +443,19 @@ export const deletePrompt = async (id: string): Promise<void> => {
 export const trackPromptUsage = async (data: Omit<PromptUsage, 'usage_id' | 'created_at'>): Promise<{ usage_id: string }> => {
   try {
     const params = {
-      prompt_id: data.prompt_id,
-      prompt_version: data.version, // 前端使用version而后端使用prompt_version
+      promptId: data.prompt_id,  // 后端期望 promptId (驼峰格式)
+      promptVersion: data.version || 1,
       model: data.model || 'unknown',
-      input_tokens: data.input_tokens,
-      output_tokens: data.output_tokens,
-      latency_ms: data.latency, // 前端使用latency而后端使用latency_ms
-      session_id: 'frontend-session', // 前端没有这个字段，设置一个默认值
+      inputTokens: data.input_tokens || 0,  // 后端期望 inputTokens (驼峰格式)
+      outputTokens: data.output_tokens || 0,  // 后端期望 outputTokens (驼峰格式)
+      latencyMs: data.latency || 0,  // 后端期望 latencyMs (驼峰格式)
+      sessionId: 'frontend-session',  // 后端期望 sessionId (驼峰格式)
     };
 
     // 使用新的解耦API而不是已弃用的MCP API
-    const response = await api.post<any>('/usage/track', params);
+    const response = await api.post<any>('/performance/track-usage', params);
     const result = response.data;
-    return { usage_id: result.data?.usageId || 'unknown' };
+    return { usage_id: result.usageId || 'unknown' };
   } catch (error) {
     console.error('记录提示词使用失败:', error);
     return { usage_id: 'error' };

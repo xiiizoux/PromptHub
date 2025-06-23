@@ -12,6 +12,7 @@ import {
   PromptFilters
 } from '../types.js';
 import { performanceTools, performanceToolHandlers } from '../performance/performance-tools.js';
+import { performanceTracker } from '../performance/performance-tracker.js';
 // MCP服务器信息内联定义
 const getMcpServerInfo = () => ({
   name: 'MCP Prompt Server',
@@ -528,6 +529,51 @@ router.get('/tools', authenticateRequest, (req, res) => {
   });
 });
 
+// 自动统计MCP工具使用情况的辅助函数
+async function trackMCPToolUsage(toolName: string, params: any, userId?: string, startTime?: number): Promise<void> {
+  try {
+    // 只统计与提示词相关的操作
+    const trackableTools = [
+      'unified_search', 'smart_semantic_search', 'enhanced_search_prompts',
+      'get_prompt_details', 'quick_access_prompts', 'select_prompt_by_index'
+    ];
+    
+    if (!trackableTools.includes(toolName)) return;
+    
+    // 从结果中提取提示词ID (如果有)
+    let promptId = params.prompt_id || params.name;
+    
+    // 对于搜索类工具，记录为一般搜索使用
+    if (['unified_search', 'smart_semantic_search', 'enhanced_search_prompts'].includes(toolName)) {
+      promptId = 'search_operation'; // 搜索操作的特殊标识
+    }
+    
+    if (promptId) {
+      const endTime = Date.now();
+      const executionTime = startTime ? endTime - startTime : 0;
+      
+      await performanceTracker.trackUsage({
+        promptId: promptId,
+        promptVersion: 1.0, // 默认版本
+        model: 'mcp_tool', // 标识为MCP工具调用
+        inputTokens: JSON.stringify(params).length, // 近似输入大小
+        outputTokens: 100, // 估算输出大小
+        latencyMs: executionTime,
+        sessionId: `mcp_${toolName}_${Date.now()}`,
+        userId: userId || 'anonymous',
+        metadata: {
+          toolName: toolName,
+          source: 'mcp_server'
+        }
+      });
+      
+      console.log(`[MCP] 已记录工具使用: ${toolName} -> ${promptId}`);
+    }
+  } catch (error) {
+    console.warn(`[MCP] 统计使用失败:`, error);
+  }
+}
+
 // MCP 工具调用
 router.post('/tools/:name/invoke', optionalAuthMiddleware, async (req, res) => {
   try {
@@ -537,6 +583,9 @@ router.post('/tools/:name/invoke', optionalAuthMiddleware, async (req, res) => {
 
     console.log(`[MCP Router] 调用工具: ${name}`, params);
 
+    // 🔥 记录开始时间用于性能统计
+    const startTime = Date.now();
+    
     let result;
     switch (name) {
       case 'get_categories':
@@ -670,6 +719,10 @@ router.post('/tools/:name/invoke', optionalAuthMiddleware, async (req, res) => {
       default:
         throw new Error(`未知工具: ${name}`);
     }
+
+    // 🔥 自动统计MCP工具使用情况
+    const endTime = Date.now();
+    await trackMCPToolUsage(name, params, req?.user?.id, startTime);
 
     res.json({
       schema_version: 'v1',
