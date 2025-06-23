@@ -702,7 +702,7 @@ export class SupabaseAdapter implements StorageAdapter {
       let dbQuery = this.supabase
         .from('prompts')
         .select('*')
-        .or(`name.ilike.%${query}%,description.ilike.%${query}%,category.ilike.%${query}%`);
+        .or(`name.ilike.%${query}%,description.ilike.%${query}%,category.ilike.%${query}%,content.ilike.%${query}%`);
       
       // 添加访问控制
       if (userId) {

@@ -362,16 +362,48 @@ export class UnifiedStoreTool extends BaseMCPTool {
     // 基于内容特征进行分析
     const lowerContent = content.toLowerCase();
     
-    // 分析分类
+    // 分析分类（基于前端20个预设分类进行智能匹配）
     let category = '通用';
-    if (hints.includes('business') || /商务|业务|邮件|客户|合同/.test(lowerContent)) {
-      category = '商务';
-    } else if (hints.includes('technical') || /代码|编程|技术|开发|bug/.test(lowerContent)) {
-      category = '技术';
-    } else if (hints.includes('creative') || /创意|故事|文案|广告/.test(lowerContent)) {
-      category = '创意';
-    } else if (hints.includes('education') || /教学|教育|学习|解释/.test(lowerContent)) {
+    
+    // 根据内容特征和提示进行分类判断
+    if (hints.includes('business') || /商务|业务|邮件|客户|合同|市场|销售/.test(lowerContent)) {
+      category = '商业';
+    } else if (hints.includes('technical') || /代码|编程|技术|开发|bug|算法|数据库/.test(lowerContent)) {
+      category = '编程';
+    } else if (hints.includes('creative') || /创意|故事|文案|广告|设计|创作/.test(lowerContent)) {
+      category = '文案';
+    } else if (hints.includes('education') || /教学|教育|学习|解释|课程|培训/.test(lowerContent)) {
       category = '教育';
+    } else if (/学术|研究|论文|科研|理论/.test(lowerContent)) {
+      category = '学术';
+    } else if (/职业|工作|职场|面试|简历/.test(lowerContent)) {
+      category = '职业';
+    } else if (/设计|视觉|UI|UX|界面/.test(lowerContent)) {
+      category = '设计';
+    } else if (/绘画|画图|艺术|美术/.test(lowerContent)) {
+      category = '绘画';
+    } else if (/情感|心理|情绪|感情|关系/.test(lowerContent)) {
+      category = '情感';
+    } else if (/娱乐|游戏|休闲|趣味/.test(lowerContent)) {
+      category = '娱乐';
+    } else if (/游戏|电竞|玩法|攻略/.test(lowerContent)) {
+      category = '游戏';
+    } else if (/生活|日常|家庭|生活方式/.test(lowerContent)) {
+      category = '生活';
+    } else if (/办公|工作流|效率|文档/.test(lowerContent)) {
+      category = '办公';
+    } else if (/翻译|语言|转换/.test(lowerContent)) {
+      category = '翻译';
+    } else if (/视频|影像|剪辑|制作/.test(lowerContent)) {
+      category = '视频';
+    } else if (/播客|音频|广播|主播/.test(lowerContent)) {
+      category = '播客';
+    } else if (/音乐|音频|声音|音效/.test(lowerContent)) {
+      category = '音乐';
+    } else if (/健康|医疗|健身|养生/.test(lowerContent)) {
+      category = '健康';
+    } else if (/科技|技术|创新|前沿/.test(lowerContent)) {
+      category = '科技';
     }
 
     // 分析标题
@@ -574,9 +606,13 @@ export class UnifiedStoreTool extends BaseMCPTool {
       params.tags = params.tags.slice(0, 10);
     }
 
-    // 验证分类是否存在（简化版本）
-    const validCategories = ['商务', '技术', '创意', '教育', '通用'];
-    if (!validCategories.includes(params.category)) {
+    // 验证分类必须在20个预设分类中（与前端保持一致）
+    const PRESET_CATEGORIES = [
+      '通用', '学术', '职业', '文案', '设计', '绘画', '教育', '情感', '娱乐', '游戏', 
+      '生活', '商业', '办公', '编程', '翻译', '视频', '播客', '音乐', '健康', '科技'
+    ];
+    
+    if (!params.category || !PRESET_CATEGORIES.includes(params.category)) {
       params.category = '通用';
     }
 
