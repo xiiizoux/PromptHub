@@ -214,9 +214,8 @@ export async function startMCPServer() {
       logger.info('系统监控已启动');
       
       // 检查性能追踪状态
-      console.log('
-📊 =================== 性能追踪状态 ===================');
-      if (performanceTracker.isEnabled) {
+      console.log('📊 =================== 性能追踪状态 ===================');
+      if (performanceTracker.enabled) {
         console.log('✅ 性能追踪已启用，搜索和工具使用将被记录到数据库');
         console.log('🔍 搜索操作记录: 启用');
         console.log('📝 工具使用记录: 启用');
@@ -228,8 +227,7 @@ export async function startMCPServer() {
         console.log('   3. 可选: 设置 SUPABASE_SERVICE_ROLE_KEY 环境变量（推荐）');
         console.log('   4. 确保存储类型配置为 "supabase"');
       }
-      console.log('================================================
-');
+      console.log('================================================');
     });
     
     // 优雅关闭处理

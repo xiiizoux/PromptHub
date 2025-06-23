@@ -62,6 +62,12 @@ export interface ABTestConfig {
 export class PerformanceTracker {
   private supabase: SupabaseClient;
   private isEnabled: boolean = false;
+  /**
+   * 获取性能跟踪是否启用
+   */
+  public get enabled(): boolean {
+    return this.isEnabled;
+  }
 
   constructor() {
       // 初始化supabase客户端（避免初始化错误）

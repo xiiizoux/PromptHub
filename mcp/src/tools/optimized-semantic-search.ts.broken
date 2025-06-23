@@ -793,7 +793,10 @@ ${result.preview}
         }
         
         if (index < results.length - 1) {
-          output += '\n---\n\n';
+          output += '
+---
+
+';
         }
       });
   
