@@ -82,11 +82,35 @@ export const PromptOptimizerComponent: React.FC<PromptOptimizerProps> = ({
 
     setIsOptimizing(true);
     try {
-      const optimizationResult = await optimizePrompt(
-        prompt,
-        requirements || undefined,
-        optimizationType
-      );
+      // 根据优化类型选择API
+      let optimizationResult;
+      
+      if (optimizationType === 'advanced') {
+        // 使用高级优化API
+        const { optimizePromptAdvanced } = await import('@/lib/prompt-optimizer');
+        const result = await optimizePromptAdvanced(prompt, {
+          type: 'general',
+          requirements: requirements || '',
+          complexity: 'medium',
+          includeAnalysis: true
+        });
+        
+        if (result) {
+          optimizationResult = {
+            optimizedPrompt: result.optimized,
+            improvements: result.improvements,
+            score: { clarity: 8, specificity: 8, completeness: 8, overall: 8 }, // 临时评分
+            suggestions: result.techniques || []
+          };
+        }
+      } else {
+        // 使用标准优化API
+        optimizationResult = await optimizePrompt(
+          prompt,
+          requirements || undefined,
+          optimizationType as 'general' | 'creative' | 'technical' | 'business' | 'educational' | 'drawing'
+        );
+      }
 
       if (optimizationResult) {
         setResult(optimizationResult);
@@ -309,10 +333,13 @@ export const PromptOptimizerComponent: React.FC<PromptOptimizerProps> = ({
                   onChange={(e) => setOptimizationType(e.target.value as OptimizationRequest['type'])}
                   className="w-full bg-gray-800/50 border border-gray-600/50 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-neon-green/50"
                 >
-                  <option value="general">通用优化</option>
-                  <option value="specific">专业特定</option>
-                  <option value="creative">创意写作</option>
-                  <option value="analytical">分析推理</option>
+                  <option value="general">📝 通用优化</option>
+                  <option value="creative">🎨 创意优化</option>
+                  <option value="technical">💻 技术优化</option>
+                  <option value="business">💼 商业优化</option>
+                  <option value="educational">🎓 教育优化</option>
+                  <option value="advanced">🚀 高级优化</option>
+                  <option value="drawing">🎨 绘图优化</option>
                 </select>
               </div>
 

@@ -82,23 +82,70 @@ export default async function handler(
           });
         }
 
-        const analysisPrompt = `请分析以下提示词的质量，并给出评分：
+        const analysisPrompt = `请作为专业的AI提示词质量评估专家，对以下提示词进行深度质量分析：
 
 提示词：
 ${content}
 
 请从以下维度进行评分（1-10分）：
-1. 清晰性：指令是否明确清晰
-2. 具体性：要求是否具体详细
-3. 完整性：是否包含必要信息
-4. 整体质量：综合评价
+
+1. **清晰性（clarity）**：指令是否明确清晰，用户能否准确理解要求
+   - 语言表达的准确性
+   - 指令的明确程度
+   - 避免歧义的程度
+
+2. **具体性（specificity）**：要求是否具体详细，是否提供了足够的上下文
+   - 任务描述的详细程度
+   - 预期输出的明确程度
+   - 约束条件的完整性
+
+3. **完整性（completeness）**：是否包含必要信息，逻辑是否完整
+   - 关键信息的覆盖度
+   - 逻辑结构的完整性
+   - 缺失要素的识别
+
+4. **可执行性（actionability）**：AI模型能否理解并执行这个任务
+   - 任务的可操作性
+   - 技术实现的可行性
+   - 复杂度的合理性
+
+5. **结构性（structure）**：提示词的组织是否合理，结构是否清晰
+   - 信息组织的合理性
+   - 层次结构的清晰度
+   - 格式的规范性
+
+6. **创新性（creativity）**：提示词设计是否有创意，能否激发高质量输出
+   - 方法的新颖性
+   - 创意激发的潜力
+   - 独特性和原创性
+
+7. **适用性（applicability）**：提示词的实际应用价值和通用性
+   - 实际应用场景的广度
+   - 用户需求的匹配度
+   - 实用价值的高低
+
+8. **整体质量（overall）**：综合评价提示词的整体水平
+
+请同时提供：
+- **优势分析**：这个提示词做得好的地方
+- **改进建议**：具体的优化建议（3-5个）
+- **适用场景**：最适合的使用场景
+- **风险提示**：可能存在的问题或风险
 
 请以JSON格式返回评分结果：
 {
   "clarity": 数字,
   "specificity": 数字,
   "completeness": 数字,
+  "actionability": 数字,
+  "structure": 数字,
+  "creativity": 数字,
+  "applicability": 数字,
   "overall": 数字,
+  "strengths": ["优势1", "优势2", "优势3"],
+  "improvements": ["改进建议1", "改进建议2", "改进建议3"],
+  "useCases": ["适用场景1", "适用场景2"],
+  "risks": ["风险提示1", "风险提示2"],
   "analysis": "简要分析说明"
 }`;
 
@@ -116,7 +163,7 @@ ${content}
                 content: analysisPrompt
               }
             ],
-            max_tokens: 500,
+            max_tokens: 1000,
             temperature: 0.3
           })
         });
@@ -141,31 +188,57 @@ ${content}
 
         const analysisResult = data.choices[0].message.content.trim();
         
-        let score;
+        let analysisData;
         try {
           const jsonMatch = analysisResult.match(/\{[\s\S]*\}/);
           if (jsonMatch) {
             const parsed = JSON.parse(jsonMatch[0]);
-            score = {
-              clarity: parsed.clarity || 5,
-              specificity: parsed.specificity || 5,
-              completeness: parsed.completeness || 5,
-              overall: parsed.overall || 5
+            analysisData = {
+              scores: {
+                clarity: parsed.clarity || 5,
+                specificity: parsed.specificity || 5,
+                completeness: parsed.completeness || 5,
+                actionability: parsed.actionability || 5,
+                structure: parsed.structure || 5,
+                creativity: parsed.creativity || 5,
+                applicability: parsed.applicability || 5,
+                overall: parsed.overall || 5
+              },
+              strengths: parsed.strengths || [],
+              improvements: parsed.improvements || [],
+              useCases: parsed.useCases || [],
+              risks: parsed.risks || [],
+              analysis: parsed.analysis || ''
             };
           } else {
-            score = { clarity: 6, specificity: 6, completeness: 6, overall: 6 };
+            // 降级处理：如果无法解析JSON，提供基础评分
+            analysisData = {
+              scores: { clarity: 6, specificity: 6, completeness: 6, actionability: 6, structure: 6, creativity: 6, applicability: 6, overall: 6 },
+              strengths: ['基础功能完整'],
+              improvements: ['建议提供更详细的指令', '考虑增加具体示例'],
+              useCases: ['通用场景'],
+              risks: ['可能存在理解歧义'],
+              analysis: '分析结果解析失败，使用默认评估'
+            };
           }
         } catch (parseError) {
-          console.warn('无法解析AI分析结果，使用默认评分');
-          score = { clarity: 6, specificity: 6, completeness: 6, overall: 6 };
+          console.warn('无法解析AI分析结果，使用降级评分');
+          analysisData = {
+            scores: { clarity: 6, specificity: 6, completeness: 6, actionability: 6, structure: 6, creativity: 6, applicability: 6, overall: 6 },
+            strengths: ['基础功能完整'],
+            improvements: ['建议提供更详细的指令', '考虑增加具体示例'],
+            useCases: ['通用场景'],
+            risks: ['可能存在理解歧义'],
+            analysis: '分析结果解析失败，使用默认评估'
+          };
         }
         
         return res.status(200).json({
           success: true,
           data: {
             prompt: content,
-            score,
-            analysis: analysisResult,
+            analysis: analysisData,
+            rawAnalysis: analysisResult,
             usage: data.usage
           }
         });
@@ -219,4 +292,4 @@ export const config = {
       sizeLimit: '1mb',
     },
   },
-} 
+};

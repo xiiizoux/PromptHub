@@ -151,145 +151,286 @@ class AIAnalyzer {
    * 构建系统提示词 - 支持增量分析
    */
   private buildSystemPrompt(config: AnalysisConfig, existingTags: string[] = []): string {
-    const language = config.language === 'zh' ? '中文' : 'English';
-    
-    // 20个预设分类（与数据库categories表完全一致，不包含"全部"这个UI选项）
-    const categories = [
-      '通用', '学术', '职业', '文案', '设计', '绘画', '教育', '情感', '娱乐', '游戏', '生活', '商业', '办公', '编程', '翻译', '视频', '播客', '音乐', '健康', '科技'
-    ];
-    
-    // 预设的兼容模型选项（从MODEL_TAGS中获取）
-    const compatibleModelOptions = MODEL_TAGS.map(tag => ({
-      id: tag.id,
-      name: tag.name,
-      description: tag.description,
-      type: tag.type
-    }));
-    
-    // 构建模型选项字符串
-    const modelOptionsText = compatibleModelOptions.map(model => 
-      `${model.id}(${model.name})`
-    ).join('、');
-    
-    // 构建已有标签提示
-    const existingTagsHint = existingTags.length > 0 
-      ? `\n\n系统中已有以下标签，请优先使用这些标签（如果相关的话）：${existingTags.slice(0, 20).join('、')}`
-      : '';
+      const language = config.language === 'zh' ? '中文' : 'English';
+      
+      // 20个预设分类（与数据库categories表完全一致，不包含"全部"这个UI选项）
+      const categories = [
+        '通用', '学术', '职业', '文案', '设计', '绘画', '教育', '情感', '娱乐', '游戏', '生活', '商业', '办公', '编程', '翻译', '视频', '播客', '音乐', '健康', '科技'
+      ];
+      
+      // 预设的兼容模型选项（从MODEL_TAGS中获取）
+      const compatibleModelOptions = MODEL_TAGS.map(tag => ({
+        id: tag.id,
+        name: tag.name,
+        description: tag.description,
+        type: tag.type
+      }));
+      
+      // 构建模型选项字符串
+      const modelOptionsText = compatibleModelOptions.map(model => 
+        `${model.id}(${model.name})`
+      ).join('、');
+      
+      // 构建已有标签提示
+      const existingTagsHint = existingTags.length > 0 
+        ? `\n\n系统中已有以下标签，请优先使用这些标签（如果相关的话）：${existingTags.slice(0, 20).join('、')}`
+        : '';
+  
+      // 构建增量分析提示
+      const incrementalAnalysisHint = config.incrementalAnalysis 
+        ? `\n\n【增量分析模式】
+  这是对现有提示词的修改分析，请考虑以下现有参数：
+  - 原始分类：${config.existingCategory || '未知'}
+  - 现有标签：${config.existingTags?.join('、') || '无'}
+  - 兼容模型：${config.existingModels?.join('、') || '无'}
+  
+  分析策略：
+  1. **分类判断**：基于提示词的实际功能和用途判断分类，而不是基于修改程度
+     - 健康类提示词即使修改90%，只要功能还是健康相关，就应保持健康分类
+     - 只有当提示词的核心功能发生根本性改变时，才建议更换分类
+     - 如果现有分类不准确，可以建议更合适的分类
+  
+  2. **标签策略**：
+     - 保留现有的相关标签
+     - 根据内容变化添加新的合适标签
+     - 移除明显不再适用的标签
+  
+  3. **描述更新**：根据内容变化程度调整描述详细程度
+     - 轻微变化：保持原描述或微调
+     - 中等变化：适当更新描述
+     - 重大变化：重新撰写描述
+  
+  4. **版本号建议**：轻微变化+0.1，中等变化+0.5，重大变化+1.0` 
+        : '';
+      
+      return `你是一个专业的AI提示词分析专家。请根据提供的提示词内容，生成合适的分类、标签、标题、描述等分析结果。${incrementalAnalysisHint}
+  
+  ## 分析任务
+  
+  请根据提供的提示词内容，深入理解其核心功能和用途，然后生成以下分析结果：
+  
+  ### 1. 分类（category）
+  请根据提示词的主要功能和用途，从以下分类中选择最合适的一个：
+  ${categories.join('、')}
+  
+  **分类原则**：
+  - 优先考虑提示词的核心功能领域，而非表面词汇
+  - 如果提示词涉及多个领域，选择最主要的功能领域
+  - 避免被提示词中的比喻性或示例性词汇误导
+  - 考虑实际使用场景和目标用户群体
+  
+  ### 2. 兼容模型（compatibleModels）
+  请根据提示词的复杂度和能力需求，从以下模型中选择1-3个最适合的：
+  ${modelOptionsText}
+  
+  **选择原则**：
+  - 简单文本生成：优选中等规模模型
+  - 复杂推理任务：需要大规模或推理专用模型
+  - 代码相关任务：优先选择代码专用模型
+  - 多模态内容：必须包含相应多模态模型
+  - 专业领域：考虑领域专用模型
+  
+  返回格式：模型ID数组，如 ["llm-large", "reasoning-specialized"]
+  
+  ### 3. 标签（tags）
+  请提供4-8个能够准确描述提示词特征的标签，包括：
+  - 功能类型（如：分析、创作、翻译、编程等）
+  - 应用场景（如：办公、学习、研究等）
+  - 特色功能（如：角色扮演、深度分析等）
+  - 技能水平（如：初学者、高级等）
+  - 输出特征（如：长文本、结构化输出等）
+  
+  **标签原则**：
+  - 标签要具有描述性和搜索价值
+  - 避免过于宽泛的标签（如"AI"、"助手"）
+  - 优先使用用户常用的搜索关键词
+  - 保持标签的一致性和规范性
+  
+  ### 4. 其他字段
+  - 难度级别（difficulty）：beginner/intermediate/advanced
+    - beginner：简单指令，直接输出
+    - intermediate：需要一定理解和转换
+    - advanced：复杂推理、多步骤或专业知识
+  - 变量提取（variables）：找出所有{{变量名}}格式的变量
+  - 预估token数（estimatedTokens）：预估处理所需token数量
+  - 置信度（confidence）：分析结果的置信度（0-1）
+  
+  ${config.includeSuggestions ? `
+  ### 5. 建议内容
+  - **标题建议（suggestedTitle）**：请根据提示词的核心价值生成一个准确、吸引人的标题（10-25字）
+    - 突出核心功能和价值
+    - 使用用户易懂的词汇
+    - 避免过于技术性的表述
+  - **描述建议（description）**：请概括提示词的核心能力和价值（60-150字），说明它能帮助用户解决什么问题
+    - 明确说明主要功能
+    - 突出独特价值和优势
+    - 描述适用场景和用户群体
+  - **使用场景（useCases）**：请列出3-5个典型的应用场景
+    - 具体而非抽象的场景描述
+    - 涵盖不同的使用情况
+    - 体现提示词的实用价值` : ''}
+  
+  ${config.includeImprovements ? `
+  - **改进建议（improvements）**：请提供3-5个具体的优化建议，帮助提升提示词的效果
+    - 结构优化建议
+    - 表达清晰度改进
+    - 功能扩展建议
+    - 适用性提升方案` : ''}
+  
+  ${existingTagsHint}
+  
+  ## 分析要求
+  - 请仔细理解提示词的实际功能，而不是被表面词汇误导
+  - 如果提示词中的某些词汇是比喻性使用，请根据实际功能进行分类
+  - 分析时要考虑提示词的完整性和实用性
+  - 请用${language}回复，返回有效的JSON格式
+  
+  ## 返回格式示例
+  {
+    "category": "学术",
+    "compatibleModels": ["llm-large", "reasoning-specialized"],
+    "tags": ["模式识别", "系统思维", "角色扮演", "分析", "洞察"],
+    "difficulty": "advanced",
+    "variables": [],
+    "estimatedTokens": 300,
+    "confidence": 0.92,
+    "improvements": ["可以增加具体应用示例", "建议明确输出格式"],
+    "useCases": ["复杂问题分析", "系统性思维训练", "创新思维启发"],
+    "suggestedTitle": "跨域模式识别思维专家",
+    "description": "具有深度洞察能力的AI角色，专门用于发现复杂系统中的隐藏模式和规律。通过独特的觉察视角，帮助用户在看似无关的事物间建立联系，从而获得更高层次的系统性理解。"
+  }`;
+    }
 
-    // 构建增量分析提示
-    const incrementalAnalysisHint = config.incrementalAnalysis 
-      ? `\n\n【增量分析模式】
-这是对现有提示词的修改分析，请考虑以下现有参数：
-- 原始分类：${config.existingCategory || '未知'}
-- 现有标签：${config.existingTags?.join('、') || '无'}
-- 兼容模型：${config.existingModels?.join('、') || '无'}
-
-分析策略：
-1. **分类判断**：基于提示词的实际功能和用途判断分类，而不是基于修改程度
-   - 健康类提示词即使修改90%，只要功能还是健康相关，就应保持健康分类
-   - 只有当提示词的核心功能发生根本性改变时，才建议更换分类
-   - 如果现有分类不准确，可以建议更合适的分类
-
-2. **标签策略**：
-   - 保留现有的相关标签
-   - 根据内容变化添加新的合适标签
-   - 移除明显不再适用的标签
-
-3. **描述更新**：根据内容变化程度调整描述详细程度
-   - 轻微变化：保持原描述或微调
-   - 中等变化：适当更新描述
-   - 重大变化：重新撰写描述
-
-4. **版本号建议**：轻微变化+0.1，中等变化+0.5，重大变化+1.0` 
-      : '';
-    
-    return `你是一个专业的AI提示词分析专家。请根据提供的提示词内容，生成合适的分类、标签、标题、描述等分析结果。${incrementalAnalysisHint}
-
-## 分析任务
-
-请根据提供的提示词内容，理解其核心功能和用途，然后生成以下分析结果：
-
-### 1. 分类（category）
-请根据提示词的主要功能和用途，从以下分类中选择最合适的一个：
-${categories.join('、')}
-
-### 2. 兼容模型（compatibleModels）
-请根据提示词的复杂度和能力需求，从以下模型中选择1-3个最适合的：
-${modelOptionsText}
-返回格式：模型ID数组，如 ["llm-large", "reasoning-specialized"]
-
-### 3. 标签（tags）
-请提取3-8个能够准确描述提示词特征的标签，包括：
-- 功能类型（如：分析、创作、翻译、编程等）
-- 应用场景（如：办公、学习、研究等）
-- 特色功能（如：角色扮演、深度分析等）
-
-### 4. 其他字段
-- 难度级别（difficulty）：beginner/intermediate/advanced
-- 变量提取（variables）：找出所有{{变量名}}格式的变量
-- 预估token数（estimatedTokens）：预估处理所需token数量
-- 置信度（confidence）：分析结果的置信度（0-1）
-
-${config.includeSuggestions ? `
-### 5. 建议内容
-- **标题建议（suggestedTitle）**：请根据提示词的核心价值生成一个准确、吸引人的标题（10-25字）
-- **描述建议（description）**：请概括提示词的核心能力和价值（60-150字），说明它能帮助用户解决什么问题
-- **使用场景（useCases）**：请列出3-5个典型的应用场景` : ''}
-
-${config.includeImprovements ? `
-- **改进建议（improvements）**：请提供3-5个具体的优化建议，帮助提升提示词的效果` : ''}
-
-${existingTagsHint}
-
-## 分析要求
-- 请仔细理解提示词的实际功能，而不是被表面词汇误导
-- 如果提示词中的某些词汇是比喻性使用，请根据实际功能进行分类
-- 请用${language}回复，返回有效的JSON格式
-
-## 返回格式示例
-{
-  "category": "学术",
-  "compatibleModels": ["llm-large", "reasoning-specialized"],
-  "tags": ["模式识别", "系统思维", "角色扮演", "分析", "洞察"],
-  "difficulty": "advanced",
-  "variables": [],
-  "estimatedTokens": 300,
-  "confidence": 0.92,
-  "improvements": ["可以增加具体应用示例", "建议明确输出格式"],
-  "useCases": ["复杂问题分析", "系统性思维训练", "创新思维启发"],
-  "suggestedTitle": "跨域模式识别思维专家",
-  "description": "具有深度洞察能力的AI角色，专门用于发现复杂系统中的隐藏模式和规律。通过独特的觉察视角，帮助用户在看似无关的事物间建立联系，从而获得更高层次的系统性理解。"
-}`;
-  }
 
   /**
    * 构建用户提示词 - 支持增量分析
    */
   private buildUserPrompt(content: string, config: AnalysisConfig): string {
-    let prompt = `请分析以下提示词：
-
-\`\`\`
-${content}
-\`\`\``;
-
-    // 如果是增量分析，提供原始内容比较
-    if (config.incrementalAnalysis && config.originalContent) {
+      let prompt = `请分析以下提示词：
+  
+  \`\`\`
+  ${content}
+  \`\`\`
+  
+  内容特征：
+  - 长度：${content.length}字符
+  - 复杂度：${this.assessComplexity(content)}
+  - 包含变量：${this.extractVariables(content).length > 0 ? '是' : '否'}`;
+  
+      // 如果是增量分析，提供原始内容比较
+      if (config.incrementalAnalysis && config.originalContent) {
+        const changes = this.analyzeContentChanges(config.originalContent, content);
+        prompt += `
+  
+  【原始内容】（用于比较分析）：
+  \`\`\`
+  ${config.originalContent}
+  \`\`\`
+  
+  变化分析：
+  - 内容变化程度：${changes.changeLevel}
+  - 主要变化类型：${changes.changeType}
+  - 核心功能是否改变：${changes.functionChanged ? '是' : '否'}
+  - 建议版本增量：${changes.suggestedIncrement}
+  
+  请比较新旧内容，评估变化程度，并根据变化程度决定是否需要更新分类、标签、兼容模型等参数。
+  特别注意：如果核心功能没有根本性改变，请保持原有分类不变。`;
+      }
+  
       prompt += `
-
-【原始内容】（用于比较分析）：
-\`\`\`
-${config.originalContent}
-\`\`\`
-
-请比较新旧内容，评估变化程度，并根据变化程度决定是否需要更新分类、标签、兼容模型等参数。`;
+  
+  请返回JSON格式的分析结果，包含所有必需字段。确保JSON格式正确且可解析。
+  
+  分析重点：
+  1. 深入理解提示词的实际用途和核心价值
+  2. 根据功能本质而非表面词汇进行分类
+  3. 选择最匹配的兼容模型
+  4. 提取具有搜索价值的标签
+  5. 生成吸引人且准确的标题和描述`;
+  
+      return prompt;
     }
-
-    prompt += `
-
-请返回JSON格式的分析结果，包含所有必需字段。确保JSON格式正确且可解析。`;
-
-    return prompt;
-  }
+  
+    /**
+     * 评估提示词复杂度
+     */
+    private assessComplexity(content: string): string {
+      const length = content.length;
+      const complexWords = ['分析', '详细', '步骤', '系统', '深入', 'analysis', 'detailed', 'step', 'comprehensive'];
+      const hasComplexWords = complexWords.some(word => content.toLowerCase().includes(word));
+      const hasVariables = this.extractVariables(content).length > 0;
+      const hasMultipleRequests = content.split(/[。！？\n]/).filter(s => s.trim()).length > 3;
+      
+      if (length > 300 || (hasComplexWords && hasMultipleRequests) || hasVariables) {
+        return '高';
+      } else if (length > 100 || hasComplexWords || hasMultipleRequests) {
+        return '中';
+      } else {
+        return '低';
+      }
+    }
+  
+    /**
+     * 分析内容变化
+     */
+    private analyzeContentChanges(originalContent: string, newContent: string): {
+      changeLevel: string;
+      changeType: string;
+      functionChanged: boolean;
+      suggestedIncrement: string;
+    } {
+      // 计算内容相似度
+      const similarity = this.calculateSimilarity(originalContent, newContent);
+      const lengthChange = Math.abs(newContent.length - originalContent.length) / originalContent.length;
+      
+      let changeLevel: string;
+      let suggestedIncrement: string;
+      
+      if (similarity > 0.8 && lengthChange < 0.2) {
+        changeLevel = '轻微';
+        suggestedIncrement = '+0.1';
+      } else if (similarity > 0.5 && lengthChange < 0.5) {
+        changeLevel = '中等';
+        suggestedIncrement = '+0.5';
+      } else {
+        changeLevel = '重大';
+        suggestedIncrement = '+1.0';
+      }
+      
+      // 判断变化类型
+      let changeType = '内容修改';
+      if (lengthChange > 0.3) {
+        changeType = newContent.length > originalContent.length ? '内容扩展' : '内容简化';
+      } else if (similarity < 0.6) {
+        changeType = '结构重组';
+      }
+      
+      // 判断核心功能是否改变（基于关键词分析）
+      const originalCategory = this.classifyByKeywords(originalContent);
+      const newCategory = this.classifyByKeywords(newContent);
+      const functionChanged = originalCategory !== newCategory && newCategory !== '通用';
+      
+      return {
+        changeLevel,
+        changeType,
+        functionChanged,
+        suggestedIncrement
+      };
+    }
+  
+    /**
+     * 计算两个文本的相似度
+     */
+    private calculateSimilarity(text1: string, text2: string): number {
+      // 简单的基于单词重叠的相似度计算
+      const words1 = new Set(text1.toLowerCase().split(/\s+/));
+      const words2 = new Set(text2.toLowerCase().split(/\s+/));
+      
+      const intersection = new Set([...words1].filter(word => words2.has(word)));
+      const union = new Set([...words1, ...words2]);
+      
+      return intersection.size / union.size;
+    }
 
   /**
    * 验证和格式化分析结果
@@ -359,105 +500,162 @@ ${config.originalContent}
    * 推荐兼容的模型
    */
   private recommendCompatibleModels(category: string, content: string): string[] {
-    const recommendations: string[] = [];
-    
-    // 从预设的MODEL_TAGS中获取模型ID
-    const availableModels = MODEL_TAGS.map(tag => tag.id);
-    
-    // 基于分类推荐
-    switch (category) {
-      case '编程':
-        recommendations.push('code-specialized', 'llm-large');
-        break;
-      case '文案':
-      case '创意写作':
-        recommendations.push('llm-large', 'llm-medium');
-        break;
-      case '翻译':
-        recommendations.push('translation-specialized', 'llm-large');
-        break;
-      case '设计':
-        recommendations.push('image-generation', 'multimodal-vision');
-        break;
-      case '绘画':
-        recommendations.push('image-generation');
-        break;
-      case '视频':
-        recommendations.push('video-generation', 'multimodal-vision');
-        break;
-      case '播客':
-      case '音乐':
-        recommendations.push('audio-generation', 'audio-tts');
-        break;
-      case '学术':
-        recommendations.push('llm-large', 'reasoning-specialized');
-        break;
-      case '健康':
-      case '科技':
-        recommendations.push('llm-large', 'reasoning-specialized');
-        break;
-      default:
-        recommendations.push('llm-large', 'llm-medium');
-    }
-    
-    // 基于内容特征推荐
-    const lowerContent = content.toLowerCase();
-    
-    // 检测图像相关内容
-    if (lowerContent.includes('图片') || lowerContent.includes('图像') || 
-        lowerContent.includes('画') || lowerContent.includes('设计')) {
-      if (!recommendations.includes('image-generation')) {
-        recommendations.push('image-generation');
+      const recommendations: string[] = [];
+      
+      // 从预设的MODEL_TAGS中获取模型ID
+      const availableModels = MODEL_TAGS.map(tag => tag.id);
+      
+      // 基于分类的初步推荐
+      const categoryRecommendations: { [key: string]: string[] } = {
+        '编程': ['code-specialized', 'llm-large'],
+        '文案': ['llm-large', 'llm-medium'],
+        '创意写作': ['llm-large', 'llm-medium'], 
+        '翻译': ['translation-specialized', 'llm-large'],
+        '设计': ['image-generation', 'multimodal-vision'],
+        '绘画': ['image-generation'],
+        '视频': ['video-generation', 'multimodal-vision'],
+        '播客': ['audio-generation', 'audio-tts'],
+        '音乐': ['audio-generation', 'audio-tts'],
+        '学术': ['llm-large', 'reasoning-specialized'],
+        '健康': ['llm-large', 'reasoning-specialized'],
+        '科技': ['llm-large', 'reasoning-specialized'],
+        '商业': ['llm-large', 'llm-medium'],
+        '办公': ['llm-medium', 'llm-large'],
+        '教育': ['llm-large', 'llm-medium'],
+        '游戏': ['llm-medium', 'llm-large'],
+        '默认': ['llm-large', 'llm-medium']
+      };
+      
+      // 获取基础推荐
+      const baseRecommendations = categoryRecommendations[category] || categoryRecommendations['默认'];
+      recommendations.push(...baseRecommendations);
+      
+      // 基于内容特征的智能推荐
+      const lowerContent = content.toLowerCase();
+      const contentFeatures = {
+        // 图像相关关键词（更全面）
+        image: ['图片', '图像', '画', '设计', '绘制', '视觉', '图表', '插画', '海报', '封面', 'image', 'draw', 'design', 'visual'],
+        // 音频相关关键词
+        audio: ['音频', '语音', '音乐', '声音', '录音', '播客', '配音', 'audio', 'voice', 'music', 'sound'],
+        // 视频相关关键词  
+        video: ['视频', '动画', '影片', '短片', '录制', 'video', 'animation', 'film'],
+        // 代码相关关键词（更精确）
+        code: ['代码', '编程', '函数', '算法', '脚本', '开发', 'code', 'program', 'function', 'script', 'development', 'python', 'javascript', 'java', 'c++'],
+        // 推理相关关键词
+        reasoning: ['推理', '逻辑', '数学', '计算', '分析', '证明', '推导', 'reasoning', 'logic', 'math', 'analysis', 'proof'],
+        // 多模态相关关键词
+        multimodal: ['视觉', '看图', '图片分析', '多模态', '理解图像', 'vision', 'multimodal', 'understand', 'analyze image'],
+        // 长文本相关关键词
+        longText: ['长文', '文章', '报告', '论文', '详细', '深入', 'long text', 'article', 'detailed', 'comprehensive'],
+        // 创意相关关键词
+        creative: ['创意', '创作', '创新', '想象', '原创', 'creative', 'original', 'innovative', 'imagination'],
+        // 翻译相关关键词
+        translation: ['翻译', '转换', '语言', '中文', '英文', 'translate', 'translation', 'language', 'chinese', 'english']
+      };
+      
+      // 计算内容特征权重
+      const featureScores: { [key: string]: number } = {};
+      Object.entries(contentFeatures).forEach(([feature, keywords]) => {
+        let score = 0;
+        keywords.forEach(keyword => {
+          // 完全匹配得2分，包含匹配得1分
+          if (lowerContent === keyword) score += 2;
+          else if (lowerContent.includes(keyword)) score += 1;
+        });
+        featureScores[feature] = score;
+      });
+      
+      // 根据特征分数进行智能推荐
+      if (featureScores.image > 0) {
+        if (!recommendations.includes('image-generation')) {
+          recommendations.push('image-generation');
+        }
+        if (featureScores.image > 2 && !recommendations.includes('multimodal-vision')) {
+          recommendations.push('multimodal-vision');
+        }
       }
-      if (!recommendations.includes('multimodal-vision')) {
-        recommendations.push('multimodal-vision');
+      
+      if (featureScores.audio > 0) {
+        if (!recommendations.includes('audio-generation')) {
+          recommendations.push('audio-generation');
+        }
+        if (featureScores.audio > 1 && !recommendations.includes('audio-tts')) {
+          recommendations.push('audio-tts');
+        }
       }
-    }
-    
-    // 检测音频相关内容
-    if (lowerContent.includes('音频') || lowerContent.includes('语音') || 
-        lowerContent.includes('音乐') || lowerContent.includes('录音')) {
-      if (!recommendations.includes('audio-generation')) {
-        recommendations.push('audio-generation');
+      
+      if (featureScores.video > 0) {
+        if (!recommendations.includes('video-generation')) {
+          recommendations.push('video-generation');
+        }
+        if (!recommendations.includes('multimodal-vision')) {
+          recommendations.push('multimodal-vision');
+        }
       }
-    }
-    
-    // 检测代码相关内容
-    if (lowerContent.includes('代码') || lowerContent.includes('编程') || 
-        lowerContent.includes('函数') || lowerContent.includes('算法')) {
-      if (!recommendations.includes('code-specialized')) {
-        recommendations.push('code-specialized');
+      
+      if (featureScores.code > 0) {
+        if (!recommendations.includes('code-specialized')) {
+          recommendations.unshift('code-specialized'); // 代码任务优先推荐代码模型
+        }
       }
-    }
-    
-    // 检测推理相关内容
-    if (lowerContent.includes('推理') || lowerContent.includes('逻辑') || 
-        lowerContent.includes('数学') || lowerContent.includes('计算')) {
-      if (!recommendations.includes('reasoning-specialized')) {
-        recommendations.push('reasoning-specialized');
+      
+      if (featureScores.reasoning > 2) {
+        if (!recommendations.includes('reasoning-specialized')) {
+          recommendations.push('reasoning-specialized');
+        }
       }
+      
+      if (featureScores.multimodal > 0) {
+        if (!recommendations.includes('multimodal-vision')) {
+          recommendations.push('multimodal-vision');
+        }
+      }
+      
+      if (featureScores.translation > 1) {
+        if (!recommendations.includes('translation-specialized')) {
+          recommendations.unshift('translation-specialized'); // 翻译任务优先推荐翻译模型
+        }
+      }
+      
+      // 基于内容长度和复杂度调整模型选择
+      const contentLength = content.length;
+      const complexityIndicators = ['步骤', '详细', '分析', 'step', 'detailed', 'analysis'];
+      const isComplex = complexityIndicators.some(indicator => lowerContent.includes(indicator));
+      
+      if (contentLength > 500 || isComplex) {
+        // 复杂任务优先推荐大模型
+        if (recommendations.includes('llm-medium')) {
+          const index = recommendations.indexOf('llm-medium');
+          recommendations.splice(index, 1);
+          recommendations.unshift('llm-large');
+        }
+        if (!recommendations.includes('llm-large')) {
+          recommendations.unshift('llm-large');
+        }
+      } else if (contentLength < 100 && !isComplex) {
+        // 简单任务可以使用中等模型
+        if (!recommendations.includes('llm-medium') && recommendations.includes('llm-large')) {
+          recommendations.push('llm-medium');
+        }
+      }
+      
+      // 过滤掉不在预设模型列表中的推荐
+      const validRecommendations = recommendations.filter(model => availableModels.includes(model));
+      
+      // 确保至少有一个推荐，如果没有有效推荐则使用默认模型
+      if (validRecommendations.length === 0) {
+        validRecommendations.push('llm-large');
+      }
+      
+      // 限制推荐数量并去重，优先保留前面的推荐
+      const uniqueRecommendations = Array.from(new Set(validRecommendations));
+      
+      // 根据任务类型限制推荐数量
+      const maxRecommendations = featureScores.multimodal > 0 || featureScores.image > 0 || featureScores.audio > 0 ? 3 : 2;
+      
+      return uniqueRecommendations.slice(0, maxRecommendations);
     }
 
-    // 检测多模态相关内容
-    if (lowerContent.includes('视觉') || lowerContent.includes('看图') || 
-        lowerContent.includes('图片分析') || lowerContent.includes('多模态')) {
-      if (!recommendations.includes('multimodal-vision')) {
-        recommendations.push('multimodal-vision');
-      }
-    }
-    
-    // 过滤掉不在预设模型列表中的推荐
-    const validRecommendations = recommendations.filter(model => availableModels.includes(model));
-    
-    // 确保至少有一个推荐，如果没有有效推荐则使用默认模型
-    if (validRecommendations.length === 0) {
-      validRecommendations.push('llm-large');
-    }
-    
-    // 限制推荐数量并去重
-    const uniqueRecommendations = Array.from(new Set(validRecommendations));
-    return uniqueRecommendations.slice(0, 4);
-  }
 
   /**
    * 智能生成描述
@@ -971,61 +1169,147 @@ ${config.originalContent}
 
     return sortedTags.slice(0, 8); // 最多8个标签
   }
-
+  
+    /**
+     * 基于关键词的本地分类算法（降级处理）
+     */
+    private classifyByKeywords(content: string): string {
+      const lowerContent = content.toLowerCase();
+      
+      // 定义分类关键词映射
+      const categoryKeywords = {
+        '编程': ['代码', '编程', '函数', '算法', '脚本', '开发', 'code', 'program', 'function', 'script', 'development', 'python', 'javascript', 'java', 'c++', 'html', 'css', 'api', '数据库', 'database'],
+        '翻译': ['翻译', '转换', '语言', '中文', '英文', 'translate', 'translation', 'language', 'chinese', 'english', '日语', '韩语', '法语', '德语'],
+        '设计': ['设计', '图片', '图像', '海报', '封面', '布局', 'design', 'image', 'poster', 'cover', 'layout', 'ui', 'ux', '界面', '视觉'],
+        '绘画': ['画', '绘制', '插画', '艺术', '创作', 'draw', 'painting', 'art', 'illustration', '素描', '水彩', '油画'],
+        '视频': ['视频', '动画', '影片', '短片', '录制', 'video', 'animation', 'film', '剪辑', '特效'],
+        '音乐': ['音乐', '歌曲', '作曲', '编曲', 'music', 'song', 'compose', '旋律', '和弦', '节奏'],
+        '播客': ['播客', '主播', '音频', '录音', 'podcast', 'audio', 'voice', '配音', '访谈'],
+        '学术': ['学术', '研究', '论文', '分析', '理论', 'academic', 'research', 'paper', 'analysis', 'theory', '科学', '实验', '数据'],
+        '商业': ['商业', '市场', '营销', '销售', '投资', 'business', 'market', 'marketing', 'sales', 'investment', '创业', '管理', '策略'],
+        '办公': ['办公', '会议', '报告', '文档', '表格', 'office', 'meeting', 'report', 'document', '邮件', '计划', '总结'],
+        '教育': ['教学', '教育', '课程', '学习', '培训', 'education', 'teaching', 'course', 'learning', 'training', '老师', '学生', '考试'],
+        '健康': ['健康', '医疗', '运动', '饮食', '心理', 'health', 'medical', 'exercise', 'diet', 'psychology', '治疗', '康复', '保健'],
+        '科技': ['科技', '技术', '创新', '人工智能', '机器学习', 'technology', 'innovation', 'ai', 'ml', '物联网', '区块链', '大数据'],
+        '文案': ['文案', '写作', '内容', '文章', '广告', 'copywriting', 'writing', 'content', 'article', 'advertisement', '宣传', '推广'],
+        '游戏': ['游戏', '娱乐', '玩法', '关卡', '角色', 'game', 'entertainment', 'gameplay', 'level', 'character', '剧情', '策略'],
+        '生活': ['生活', '日常', '家庭', '旅行', '美食', 'life', 'daily', 'family', 'travel', 'food', '购物', '时尚', '兴趣']
+      };
+      
+      // 计算每个分类的匹配分数
+      const scores: { [key: string]: number } = {};
+      
+      Object.entries(categoryKeywords).forEach(([category, keywords]) => {
+        let score = 0;
+        keywords.forEach(keyword => {
+          // 完全匹配得3分
+          if (lowerContent === keyword) {
+            score += 3;
+          }
+          // 独立词匹配得2分（前后有空格或标点）
+          else if (new RegExp(`\\b${keyword}\\b`, 'i').test(lowerContent)) {
+            score += 2;
+          }
+          // 包含匹配得1分
+          else if (lowerContent.includes(keyword)) {
+            score += 1;
+          }
+        });
+        scores[category] = score;
+      });
+      
+      // 找出得分最高的分类
+      const maxScore = Math.max(...Object.values(scores));
+      
+      if (maxScore > 0) {
+        const bestCategory = Object.entries(scores).find(([_, score]) => score === maxScore)?.[0];
+        if (bestCategory) {
+          return bestCategory;
+        }
+      }
+      
+      // 如果没有匹配到任何关键词，基于内容长度和复杂度判断
+      if (content.length > 200) {
+        // 长文本倾向于学术或商业
+        if (lowerContent.includes('分析') || lowerContent.includes('研究') || lowerContent.includes('analysis')) {
+          return '学术';
+        } else if (lowerContent.includes('计划') || lowerContent.includes('方案') || lowerContent.includes('strategy')) {
+          return '商业';
+        }
+      }
+      
+      // 默认分类
+      return '通用';
+    }
   /**
    * 快速分类（仅返回分类，不调用完整API）
    */
   async quickClassify(content: string): Promise<string> {
-    if (!this.apiKey) {
-      return '通用'; // 没有API密钥时返回默认分类
-    }
-
-    try {
-      const response = await axios.post(
-        `${this.baseURL}/chat/completions`,
-        {
-          model: this.quickTasksModel,
-          messages: [
-            { 
-              role: 'system', 
-              content: `你是一个AI提示词分类专家。请根据提示词内容，从以下分类中选择最合适的一个：
-通用、学术、职业、文案、设计、绘画、教育、情感、娱乐、游戏、生活、商业、办公、编程、翻译、视频、播客、音乐、健康、科技
-
-请仔细理解提示词的实际功能，而不是被表面词汇误导。如果提示词中的某些词汇是比喻性使用，请根据实际功能进行分类。
-
-只返回分类名称，不要其他内容。` 
-            },
-            { role: 'user', content: `请为以下提示词分类：\n\n${content}` }
-          ],
-          temperature: 0.1,
-          max_tokens: 50
-        },
-        {
-          headers: {
-            'Authorization': `Bearer ${this.apiKey}`,
-            'Content-Type': 'application/json'
-          }
-        }
-      );
-
-      const result = response.data.choices[0].message.content.trim();
-      
-      // 验证返回的分类是否在预设列表中
-      const validCategories = [
-        '通用', '学术', '职业', '文案', '设计', '绘画', '教育', '情感', '娱乐', '游戏', '生活', '商业', '办公', '编程', '翻译', '视频', '播客', '音乐', '健康', '科技'
-      ];
-      
-      if (validCategories.includes(result)) {
-        return result;
-      } else {
-        return '通用'; // 如果AI返回的分类不在预设列表中，返回默认分类
+      if (!this.apiKey) {
+        // 没有API密钥时使用本地智能分类算法
+        return this.classifyByKeywords(content);
       }
-
-    } catch (error) {
-      console.error('Quick classify failed:', error);
-      return '通用'; // API调用失败时返回默认分类
+  
+      try {
+        const response = await axios.post(
+          `${this.baseURL}/chat/completions`,
+          {
+            model: this.quickTasksModel,
+            messages: [
+              { 
+                role: 'system', 
+                content: `你是一个专业的AI提示词分类专家。请根据提示词内容，从以下分类中选择最合适的一个：
+  
+  通用、学术、职业、文案、设计、绘画、教育、情感、娱乐、游戏、生活、商业、办公、编程、翻译、视频、播客、音乐、健康、科技
+  
+  分类原则：
+  1. 优先考虑提示词的核心功能领域，而非表面词汇
+  2. 仔细理解提示词的实际功能，避免被比喻性或示例性词汇误导
+  3. 如果涉及多个领域，选择最主要的功能领域
+  4. 考虑实际使用场景和目标用户群体
+  
+  示例：
+  - "请帮我写一个健康管理的应用程序" → 编程（因为核心任务是编程开发）
+  - "分析这个商业计划的可行性" → 商业（核心功能是商业分析）
+  - "设计一个健康主题的海报" → 设计（核心功能是设计工作）
+  
+  只返回分类名称，不要其他内容。` 
+              },
+              { role: 'user', content: `请为以下提示词分类：\n\n${content}` }
+            ],
+            temperature: 0.1,
+            max_tokens: 50
+          },
+          {
+            headers: {
+              'Authorization': `Bearer ${this.apiKey}`,
+              'Content-Type': 'application/json'
+            }
+          }
+        );
+  
+        const result = response.data.choices[0].message.content.trim();
+        
+        // 验证返回的分类是否在预设列表中
+        const validCategories = [
+          '通用', '学术', '职业', '文案', '设计', '绘画', '教育', '情感', '娱乐', '游戏', '生活', '商业', '办公', '编程', '翻译', '视频', '播客', '音乐', '健康', '科技'
+        ];
+        
+        if (validCategories.includes(result)) {
+          return result;
+        } else {
+          // 如果AI返回的分类不在预设列表中，使用本地分类算法作为降级处理
+          console.warn(`AI返回了无效分类: ${result}，使用本地分类算法`);
+          return this.classifyByKeywords(content);
+        }
+  
+      } catch (error) {
+        console.error('Quick classify failed:', error);
+        // API调用失败时使用本地分类算法
+        return this.classifyByKeywords(content);
+      }
     }
-  }
+
 
   /**
    * 智能标签合并 - 优先使用已有的相似标签
@@ -1159,57 +1443,84 @@ ${config.originalContent}
    * 提取标签（仅返回标签列表）- 支持已有标签智能合并
    */
   async extractTags(content: string, existingTags: string[] = []): Promise<string[]> {
-    if (!this.apiKey) {
-      return this.extractTagsByKeywords(content); // 没有API密钥时使用基础关键词提取
-    }
-
-    try {
-      const response = await axios.post(
-        `${this.baseURL}/chat/completions`,
-        {
-          model: this.quickTasksModel,
-          messages: [
-            { 
-              role: 'system', 
-              content: `你是一个AI提示词标签提取专家。请为提示词提取3-8个准确的标签，标签应该体现提示词的核心特征。
-
-请提取以下类型的标签：
-- 功能类型（如：分析、创作、翻译、编程等）
-- 应用场景（如：办公、学习、研究等）
-- 特色功能（如：角色扮演、深度分析等）
-
-请仔细理解提示词的实际功能，而不是被表面词汇误导。
-
-返回格式：用逗号分隔的标签列表，如：分析,角色扮演,学术研究` 
-            },
-            { role: 'user', content: `请为以下提示词提取标签：\n\n${content}` }
-          ],
-          temperature: 0.3,
-          max_tokens: 100
-        },
-        {
-          headers: {
-            'Authorization': `Bearer ${this.apiKey}`,
-            'Content-Type': 'application/json'
-          }
-        }
-      );
-
-      const result = response.data.choices[0].message.content.trim();
-      const aiTags = result.split(',').map((tag: string) => tag.trim()).filter((tag: string) => tag.length > 0);
-      
-      // 与现有标签智能合并
-      if (existingTags.length > 0) {
-        return this.mergeTagsIntelligently(aiTags, existingTags);
+      if (!this.apiKey) {
+        return this.extractTagsByKeywords(content); // 没有API密钥时使用基础关键词提取
       }
-      
-      return aiTags.slice(0, 8); // 最多返回8个标签
-
-    } catch (error) {
-      console.error('AI tag extraction failed:', error);
-      return this.extractTagsByKeywords(content); // API调用失败时使用基础关键词提取
+  
+      try {
+        const response = await axios.post(
+          `${this.baseURL}/chat/completions`,
+          {
+            model: this.quickTasksModel,
+            messages: [
+              { 
+                role: 'system', 
+                content: `你是一个专业的AI提示词标签提取专家。请为提示词提取4-8个准确的标签，标签应该体现提示词的核心特征。
+  
+  请提取以下类型的标签：
+  - 功能类型（如：分析、创作、翻译、编程等）
+  - 应用场景（如：办公、学习、研究等）
+  - 特色功能（如：角色扮演、深度分析等）
+  - 技能水平（如：初学者、高级等）
+  - 输出特征（如：长文本、结构化输出等）
+  
+  标签要求：
+  1. 仔细理解提示词的实际功能，而不是被表面词汇误导
+  2. 标签要具有描述性和搜索价值
+  3. 避免过于宽泛的标签（如"AI"、"助手"）
+  4. 优先使用用户常用的搜索关键词
+  5. 保持标签的一致性和规范性
+  
+  示例好标签：
+  - 功能明确：数据分析、代码生成、文本润色
+  - 场景具体：学术写作、商业策划、日常办公
+  - 特征突出：步骤指导、创意激发、问题解决
+  
+  返回格式：用逗号分隔的标签列表，如：分析,角色扮演,学术研究,深度思考` 
+              },
+              { role: 'user', content: `请为以下提示词提取标签：\n\n${content}` }
+            ],
+            temperature: 0.3,
+            max_tokens: 100
+          },
+          {
+            headers: {
+              'Authorization': `Bearer ${this.apiKey}`,
+              'Content-Type': 'application/json'
+            }
+          }
+        );
+  
+        const result = response.data.choices[0].message.content.trim();
+        const aiTags = result.split(',').map((tag: string) => tag.trim()).filter((tag: string) => tag.length > 0);
+        
+        // 验证和清理AI返回的标签
+        const validTags = aiTags.filter((tag: string) => 
+          tag.length > 0 && 
+          tag.length < 20 && 
+          !['AI', '助手', '工具'].includes(tag) // 过滤过于宽泛的标签
+        ).slice(0, 8);
+        
+        // 与现有标签智能合并
+        if (existingTags.length > 0) {
+          return this.mergeTagsIntelligently(validTags, existingTags);
+        }
+        
+        // 如果AI返回的标签质量不高，补充关键词标签
+        if (validTags.length < 3) {
+          const keywordTags = this.extractTagsByKeywords(content);
+          const combinedTags = [...validTags, ...keywordTags];
+          return Array.from(new Set(combinedTags)).slice(0, 8);
+        }
+        
+        return validTags;
+  
+      } catch (error) {
+        console.error('AI tag extraction failed:', error);
+        return this.extractTagsByKeywords(content); // API调用失败时使用基础关键词提取
+      }
     }
-  }
+
 
   /**
    * 建议版本号
