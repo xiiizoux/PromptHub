@@ -623,40 +623,58 @@ export class UnifiedStoreTool extends BaseMCPTool {
    * 执行存储
    */
   private async performStorage(params: any, context: ToolContext): Promise<ToolResult> {
-    try {
-      const storage = this.getStorage();
-      
-      // 调用存储服务
-      const promptData = {
-        name: params.title,
-        description: params.description,
-        content: params.content,
-        messages: [{ role: 'user' as const, content: params.content }], // 添加必需的messages字段
-        category: params.category,
-        tags: params.tags,
-        difficulty: params.difficulty,
-        is_public: params.is_public || false,
-        // 扩展字段（暂时注释，等数据库模式更新）
-        // compatible_models: params.compatible_models,
-        // domain: params.domain,
-        // use_cases: params.use_cases,
-        allow_collaboration: params.allow_collaboration,
-        collaborative_level: params.collaborative_level,
-        created_by: context.userId,
-        created_at: new Date().toISOString()
-      };
-
-      const result = await storage.createPrompt(promptData);
-      
-      return {
-        success: true,
-        data: result,
-        message: '提示词保存成功'
-      };
-    } catch (error) {
-      throw new Error(`存储失败: ${error instanceof Error ? error.message : '未知错误'}`);
+      try {
+        const storage = this.getStorage();
+        
+        // 确保用户ID正确传递
+        const userId = context.userId || params.created_by || params.user_id;
+        
+        // 调用存储服务
+        const promptData = {
+          name: params.title,
+          description: params.description,
+          content: params.content,
+          messages: [{ role: 'user' as const, content: params.content }], // 添加必需的messages字段
+          category: params.category,
+          tags: params.tags,
+          difficulty: params.difficulty,
+          is_public: params.is_public || false,
+          // 扩展字段（暂时注释，等数据库模式更新）
+          // compatible_models: params.compatible_models,
+          // domain: params.domain,
+          // use_cases: params.use_cases,
+          allow_collaboration: params.allow_collaboration,
+          collaborative_level: params.collaborative_level,
+          user_id: userId, // 确保正确的字段名
+          created_at: new Date().toISOString()
+        };
+  
+        console.log('[UnifiedStore] 准备保存提示词:', {
+          title: params.title,
+          userId: userId,
+          category: params.category,
+          hasContent: !!params.content
+        });
+  
+        const result = await storage.createPrompt(promptData);
+        
+        console.log('[UnifiedStore] 提示词保存成功:', {
+          promptId: result.id,
+          userId: userId,
+          title: params.title
+        });
+  
+        return {
+          success: true,
+          data: result,
+          message: '提示词保存成功'
+        };
+      } catch (error) {
+        console.error('[UnifiedStore] 存储失败:', error);
+        throw new Error(`存储失败: ${error instanceof Error ? error.message : '未知错误'}`);
+      }
     }
-  }
+
 
   /**
    * 生成存储报告

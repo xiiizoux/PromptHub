@@ -67,6 +67,14 @@ export class PerformanceTracker {
       // 初始化supabase客户端（避免初始化错误）
       this.supabase = createClient('https://placeholder.supabase.co', 'placeholder-key');
       
+      console.log('\n🔍 [PerformanceTracker] 初始化诊断开始...');
+      console.log('🔧 [PerformanceTracker] 检查配置条件:');
+      console.log(`   - config.storage.type: "${config.storage.type}"`);
+      console.log(`   - config.supabase存在: ${!!config.supabase}`);
+      console.log(`   - config.supabase.url: "${config.supabase?.url || 'undefined'}"`);
+      console.log(`   - config.supabase.anonKey: "${config.supabase?.anonKey ? config.supabase.anonKey.substring(0, 10) + '...' : 'undefined'}"`);
+      console.log(`   - config.supabase.serviceKey: "${config.supabase?.serviceKey ? config.supabase.serviceKey.substring(0, 10) + '...' : 'undefined'}"`);
+      
       // 如果使用Supabase存储，则启用性能跟踪
       if (config.storage.type === 'supabase' && config.supabase && config.supabase.url && config.supabase.anonKey) {
         // 优先使用服务密钥，这样可以绕过RLS策略
@@ -74,15 +82,71 @@ export class PerformanceTracker {
         
         this.supabase = createClient(config.supabase.url, serviceKey);
         this.isEnabled = true;
-        console.log('提示词性能分析功能已启用');
+        console.log('✅ [PerformanceTracker] 性能分析功能已启用');
+        console.log(`🔑 [PerformanceTracker] 数据库URL: ${config.supabase.url}`);
         
         if (config.supabase.serviceKey) {
-          console.log('✅ 使用服务密钥，可绕过行级安全策略');
+          console.log('✅ [PerformanceTracker] 使用服务密钥，可绕过行级安全策略');
         } else {
-          console.log('⚠️  使用匿名密钥，受行级安全策略限制');
+          console.log('⚠️  [PerformanceTracker] 使用匿名密钥，受行级安全策略限制');
         }
+        
+        // 测试数据库连接
+        this.testDatabaseConnection();
       } else {
-        console.log('提示词性能分析功能需要Supabase存储，当前未启用');
+        console.log('❌ [PerformanceTracker] 性能分析功能未启用，原因:');
+        if (config.storage.type !== 'supabase') {
+          console.log(`   - 存储类型不是Supabase: "${config.storage.type}"`);
+        }
+        if (!config.supabase) {
+          console.log('   - 缺少Supabase配置');
+        }
+        if (!config.supabase?.url) {
+          console.log('   - 缺少SUPABASE_URL环境变量');
+        }
+        if (!config.supabase?.anonKey) {
+          console.log('   - 缺少SUPABASE_ANON_KEY环境变量');
+        }
+        console.log('💡 [PerformanceTracker] 要启用性能分析，请设置正确的Supabase环境变量');
+      }
+      
+      console.log(`🎯 [PerformanceTracker] 最终状态: isEnabled = ${this.isEnabled}`);
+      console.log('🔍 [PerformanceTracker] 初始化诊断完成\n');
+    }
+  
+    /**
+     * 测试数据库连接和表结构
+     */
+    private async testDatabaseConnection(): Promise<void> {
+      if (!this.isEnabled) return;
+      
+      try {
+        console.log('🔗 [PerformanceTracker] 测试数据库连接...');
+        
+        // 检查prompt_usage表是否存在
+        const { data, error } = await this.supabase
+          .from('prompt_usage')
+          .select('id')
+          .limit(1);
+        
+        if (error) {
+          console.error('❌ [PerformanceTracker] 数据库连接测试失败:', error.message);
+          console.error('   可能原因: 表不存在、权限不足或网络问题');
+          console.error('   请检查数据库模式和RLS策略');
+          
+          // 如果是权限问题，尝试降级处理
+          if (error.message.includes('permission') || error.message.includes('RLS')) {
+            console.log('⚠️  [PerformanceTracker] 检测到权限问题，可能需要服务密钥');
+          }
+          
+          return;
+        }
+        
+        console.log('✅ [PerformanceTracker] 数据库连接测试成功');
+        console.log(`📊 [PerformanceTracker] prompt_usage表可访问，当前记录数: ${data ? data.length : 0}`);
+        
+      } catch (err) {
+        console.error('❌ [PerformanceTracker] 数据库连接测试异常:', err);
       }
     }
 
@@ -93,67 +157,92 @@ export class PerformanceTracker {
    * @returns 新创建的记录ID或null
    */
   public async trackUsage(usage: PromptUsage): Promise<string | null> {
-      if (!this.isEnabled) return null;
+      console.log('🎯 [PerformanceTracker] trackUsage调用开始');
+      console.log(`   - isEnabled: ${this.isEnabled}`);
+      console.log(`   - promptId: ${usage.promptId}`);
+      console.log(`   - userId: ${usage.userId}`);
+      console.log(`   - toolName: ${usage.clientMetadata?.toolName || 'unknown'}`);
+      
+      if (!this.isEnabled) {
+        console.log('❌ [PerformanceTracker] 性能跟踪未启用，跳过记录');
+        return null;
+      }
   
       try {
         // 对于搜索操作，使用特殊的处理方式
         if (usage.promptId === '00000000-0000-4000-8000-000000000001') {
-          // 直接插入使用记录，不关联具体的提示词
+          console.log('🔍 [PerformanceTracker] 记录搜索操作到数据库...');
+          
+          const insertData = {
+            prompt_id: null, // 搜索操作不关联具体提示词
+            prompt_version: usage.promptVersion,
+            user_id: usage.userId === 'anonymous' ? null : usage.userId,
+            session_id: usage.sessionId || this.generateSessionId(),
+            model: usage.model,
+            input_tokens: usage.inputTokens,
+            output_tokens: usage.outputTokens,
+            latency_ms: usage.latencyMs,
+            client_metadata: {
+              ...usage.clientMetadata,
+              search_operation: true, // 标记为搜索操作
+              prompt_placeholder_id: usage.promptId // 保存原始的占位符ID
+            }
+          };
+          
+          console.log('📝 [PerformanceTracker] 插入数据:', JSON.stringify(insertData, null, 2));
+          
           const { data, error } = await this.supabase
             .from('prompt_usage')
-            .insert([{
-              prompt_id: null, // 搜索操作不关联具体提示词
-              prompt_version: usage.promptVersion,
-              user_id: usage.userId === 'anonymous' ? null : usage.userId,
-              session_id: usage.sessionId || this.generateSessionId(),
-              model: usage.model,
-              input_tokens: usage.inputTokens,
-              output_tokens: usage.outputTokens,
-              latency_ms: usage.latencyMs,
-              client_metadata: {
-                ...usage.clientMetadata,
-                search_operation: true, // 标记为搜索操作
-                prompt_placeholder_id: usage.promptId // 保存原始的占位符ID
-              }
-            }])
+            .insert([insertData])
             .select('id');
   
           if (error) {
-            console.error('记录搜索操作使用时出错:', error);
+            console.error('❌ [PerformanceTracker] 记录搜索操作使用时出错:', error);
+            console.error('   错误详情:', JSON.stringify(error, null, 2));
             return null;
           }
   
-          console.log('✅ 搜索操作使用记录已创建:', data?.[0]?.id);
-          return data && data[0] ? data[0].id : null;
+          const usageId = data && data[0] ? data[0].id : null;
+          console.log(`✅ [PerformanceTracker] 搜索操作使用记录已创建，ID: ${usageId}`);
+          return usageId;
         } else {
-          // 正常的提示词使用记录
+          console.log('📝 [PerformanceTracker] 记录普通提示词使用到数据库...');
+          
+          const insertData = {
+            prompt_id: usage.promptId,
+            prompt_version: usage.promptVersion,
+            user_id: usage.userId === 'anonymous' ? null : usage.userId,
+            session_id: usage.sessionId || this.generateSessionId(),
+            model: usage.model,
+            input_tokens: usage.inputTokens,
+            output_tokens: usage.outputTokens,
+            latency_ms: usage.latencyMs,
+            client_metadata: usage.clientMetadata || {}
+          };
+          
+          console.log('📝 [PerformanceTracker] 插入数据:', JSON.stringify(insertData, null, 2));
+          
           const { data, error } = await this.supabase
             .from('prompt_usage')
-            .insert([{
-              prompt_id: usage.promptId,
-              prompt_version: usage.promptVersion,
-              user_id: usage.userId === 'anonymous' ? null : usage.userId,
-              session_id: usage.sessionId || this.generateSessionId(),
-              model: usage.model,
-              input_tokens: usage.inputTokens,
-              output_tokens: usage.outputTokens,
-              latency_ms: usage.latencyMs,
-              client_metadata: usage.clientMetadata || {}
-            }])
+            .insert([insertData])
             .select('id');
   
           if (error) {
-            console.error('记录提示词使用时出错:', error);
+            console.error('❌ [PerformanceTracker] 记录提示词使用时出错:', error);
+            console.error('   错误详情:', JSON.stringify(error, null, 2));
             return null;
           }
   
-          return data && data[0] ? data[0].id : null;
+          const usageId = data && data[0] ? data[0].id : null;
+          console.log(`✅ [PerformanceTracker] 提示词使用记录已创建，ID: ${usageId}`);
+          return usageId;
         }
       } catch (err) {
-        console.error('跟踪提示词使用时出错:', err);
+        console.error('❌ [PerformanceTracker] 跟踪提示词使用时出错:', err);
         return null;
       }
     }
+
 
 
   /**

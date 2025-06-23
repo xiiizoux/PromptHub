@@ -74,11 +74,8 @@ export class OptimizedSemanticSearchTool extends BaseMCPTool {
   readonly description = '🎯 智能语义搜索 - 用自然语言描述需求，快速找到最相关的提示词';
 
   // 停词列表
-  private readonly stopWords = new Set([
-    '的', '了', '在', '是', '我', '有', '和', '就', '不', '人', '都', '一', '一个',
-    'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by',
-    '帮助', '帮我', '请', '可以', '能够', '需要', '想要', '希望', '用于', '关于'
-  ]);
+  private readonly stopWords = new Set([\n    // 中文停用词\n    '的', '了', '在', '是', '我', '有', '和', '就', '不', '人', '都', '一', '一个',\n    '这', '那', '他', '她', '它', '你', '我们', '他们', '她们', '这个', '那个',\n    '以', '及', '为', '与', '等', '或', '但', '从', '到', '对', '于', '给', '把',\n    '将', '让', '使', '被', '所', '可', '能', '会', '要', '想', '应该', '可以', '能够',\n    '需要', '想要', '希望', '用于', '关于', '帮助', '帮我', '请', '谢谢', '如何', '怎么',\n    \n    // 英文停用词\n    'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by',\n    'is', 'are', 'was', 'were', 'be', 'been', 'being', 'have', 'has', 'had', 'do', 'does', 'did',\n    'will', 'would', 'could', 'should', 'may', 'might', 'can', 'this', 'that', 'these', 'those',\n    'i', 'you', 'he', 'she', 'it', 'we', 'they', 'me', 'him', 'her', 'us', 'them',\n    'help', 'please', 'thank', 'thanks', 'how', 'what', 'when', 'where', 'why', 'who'\n  ]);
+
 
   // 意图识别关键词
   private readonly intentKeywords = {
@@ -264,102 +261,14 @@ export class OptimizedSemanticSearchTool extends BaseMCPTool {
   /**
    * 关键词提取
    */
-  private extractKeywords(query: string): string[] {
-    // 分词和清理
-    const words = query
-      .toLowerCase()
-      .replace(/[^\u4e00-\u9fff\w\s]/g, ' ')
-      .split(/\s+/)
-      .filter(word => word.length > 1 && !this.stopWords.has(word));
+  private extractKeywords(query: string): string[] {\n    // 保留原始查询作为主要关键词\n    const originalQuery = query.trim();\n    \n    // 分词和清理\n    const words = query\n      .toLowerCase()\n      .replace(/[^\\u4e00-\\u9fff\\w\\s]/g, ' ') // 保留中文、字母、数字和空格\n      .split(/\\s+/)\n      .filter(word => \n        word.length > 0 && \n        word.length >= 2 && // 至少2个字符\n        !this.stopWords.has(word) &&\n        !/^[0-9]+$/.test(word) // 排除纯数字\n      );\n    \n    // 构建关键词列表：原始查询 + 分词结果\n    const keywords = [originalQuery, ...words];\n    \n    // 去重并限制数量\n    const uniqueKeywords = [...new Set(keywords)].slice(0, 8);\n    \n    console.log(`[KeywordExtraction] 原始: \"${originalQuery}\", 提取: [${uniqueKeywords.join(', ')}]`);\n    \n    return uniqueKeywords;\n  }
 
-    // 去重并返回
-    return [...new Set(words)];
-  }
 
   /**
    * 第二层：多维度搜索执行
    */
-  private async executeMultiDimensionalSearch(
-    query: string, 
-    intent: UserIntent, 
-    userId?: string
-  ): Promise<Prompt[]> {
-    const storage = this.getStorage();
-    const allCandidates = new Set<Prompt>();
+  private async executeMultiDimensionalSearch(\n    query: string, \n    intent: UserIntent, \n    userId?: string\n  ): Promise<Prompt[]> {\n    const storage = this.getStorage();\n    const allCandidates = new Set<Prompt>();\n\n    try {\n      console.log(`[MultiDimensionalSearch] 开始搜索: \"${query}\", 意图: ${intent.category}, 领域: ${intent.domain}`);\n      \n      // 1. 主要搜索：使用改进后的搜索功能\n      const mainResults = await storage.searchPrompts(query, userId, true);\n      if (Array.isArray(mainResults)) {\n        mainResults.forEach(prompt => allCandidates.add(prompt));\n        console.log(`[MultiDimensionalSearch] 主搜索找到 ${mainResults.length} 个结果`);\n      }\n\n      // 2. 关键词补充搜索（仅搜索前2个高价值关键词）\n      const highValueKeywords = intent.keywords\n        .filter(keyword => keyword !== query && keyword.length >= 2)\n        .slice(0, 2);\n        \n      for (const keyword of highValueKeywords) {\n        try {\n          const keywordResults = await storage.searchPrompts(keyword, userId, true);\n          if (Array.isArray(keywordResults)) {\n            keywordResults.forEach(prompt => allCandidates.add(prompt));\n            console.log(`[MultiDimensionalSearch] 关键词 \"${keyword}\" 找到 ${keywordResults.length} 个结果`);\n          }\n        } catch (error) {\n          console.warn(`关键词搜索失败: ${keyword}`, error);\n        }\n      }\n\n      // 3. 分类搜索（如果领域明确且主搜索结果不足）\n      if (allCandidates.size < 5 && intent.domain !== 'general') {\n        try {\n          const categoryMapping: { [key: string]: string } = {\n            business: '商务',\n            technical: '编程',\n            creative: '创意', \n            academic: '学术',\n            communication: '文案',\n            legal: '通用',\n            health: '健康',\n            education: '教育',\n            lifestyle: '生活'\n          };\n          \n          const categoryName = categoryMapping[intent.domain];\n          if (categoryName) {\n            const categoryResults = await storage.getPrompts({ \n              category: categoryName,\n              isPublic: true,\n              pageSize: 10\n            });\n            if (categoryResults?.data) {\n              categoryResults.data.forEach(prompt => allCandidates.add(prompt));\n              console.log(`[MultiDimensionalSearch] 分类 \"${categoryName}\" 找到 ${categoryResults.data.length} 个结果`);\n            }\n          }\n        } catch (error) {\n          console.warn(`分类搜索失败: ${intent.domain}`, error);\n        }\n      }\n\n      // 4. 智能兜底策略（仅在结果极少时启用）\n      if (allCandidates.size < 3) {\n        try {\n          console.log('[MultiDimensionalSearch] 结果不足，启用兜底策略');\n          \n          // 基于意图分类的兜底搜索\n          const fallbackQueries = {\n            'find': ['常用', '推荐', '热门'],\n            'create': ['模板', '示例', '框架'],\n            'improve': ['优化', '改进', '提升'],\n            'analyze': ['分析', '总结', '评估'],\n            'other': ['通用', '实用', '效率']\n          };\n          \n          const fallbackKeywords = fallbackQueries[intent.category] || fallbackQueries['other'];\n          \n          for (const fallbackKeyword of fallbackKeywords.slice(0, 1)) { // 只用1个兜底关键词\n            const fallbackResults = await storage.searchPrompts(fallbackKeyword, userId, true);\n            if (Array.isArray(fallbackResults)) {\n              fallbackResults.slice(0, 5).forEach(prompt => allCandidates.add(prompt)); // 限制兜底结果数量\n            }\n          }\n        } catch (error) {\n          console.warn('兜底搜索失败', error);\n        }\n      }\n\n      // 转换为数组并限制候选集大小（性能考虑）\n      const candidatesArray = Array.from(allCandidates).slice(0, 50);\n      \n      console.log(`[MultiDimensionalSearch] 搜索完成，共收集 ${candidatesArray.length} 个候选结果`);\n      return candidatesArray;\n\n    } catch (error) {\n      console.error('[MultiDimensionalSearch] 搜索失败:', error);\n      // 返回空数组而不是抛出错误，保证系统稳定性\n      return [];\n    }\n  }
 
-    try {
-      // 1. 基础全文搜索
-      const basicResults = await storage.searchPrompts(query, userId, true);
-      if (Array.isArray(basicResults)) {
-        basicResults.forEach(prompt => allCandidates.add(prompt));
-      }
-
-      // 2. 关键词扩展搜索
-      for (const keyword of intent.keywords.slice(0, 3)) { // 限制前3个关键词避免过度搜索
-        try {
-          const keywordResults = await storage.searchPrompts(keyword, userId, true);
-          if (Array.isArray(keywordResults)) {
-            keywordResults.forEach(prompt => allCandidates.add(prompt));
-          }
-        } catch (error) {
-          console.warn(`关键词搜索失败: ${keyword}`, error);
-        }
-      }
-
-      // 3. 分类搜索（如果领域明确）
-      if (intent.domain !== 'general') {
-        try {
-          const categoryMapping: { [key: string]: string } = {
-            business: '商务',
-            technical: '技术',
-            creative: '创意',
-            academic: '学术',
-            communication: '沟通',
-            legal: '法律'
-          };
-          
-          const categoryName = categoryMapping[intent.domain];
-          if (categoryName) {
-            const categoryResults = await storage.getPrompts({ 
-              category: categoryName,
-              isPublic: true 
-            });
-            if (categoryResults?.data) {
-              categoryResults.data.forEach(prompt => allCandidates.add(prompt));
-            }
-          }
-        } catch (error) {
-          console.warn(`分类搜索失败: ${intent.domain}`, error);
-        }
-      }
-
-      // 4. 热门提示词兜底（如果结果太少）
-      if (allCandidates.size < 10) {
-        try {
-          const popularResults = await storage.getPrompts({ 
-            isPublic: true,
-            pageSize: 20
-          });
-          if (popularResults?.data) {
-            popularResults.data.forEach(prompt => allCandidates.add(prompt));
-          }
-        } catch (error) {
-          console.warn('热门提示词获取失败', error);
-        }
-      }
-
-      // 转换为数组并限制候选集大小（性能考虑）
-      const candidatesArray = Array.from(allCandidates).slice(0, 50);
-      
-      console.log(`[SearchEngine] 候选结果数量: ${candidatesArray.length}`);
-      return candidatesArray;
-
-    } catch (error) {
-      console.error('[SearchEngine] 多维度搜索失败:', error);
-      // 返回空数组而不是抛出错误，保证系统稳定性
-      return [];
-    }
-  }
 
   /**
    * 第三层：高级相关性评分

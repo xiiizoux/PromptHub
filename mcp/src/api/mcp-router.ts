@@ -531,13 +531,22 @@ router.get('/tools', authenticateRequest, (req, res) => {
 // 自动统计MCP工具使用情况的辅助函数
 async function trackMCPToolUsage(toolName: string, params: any, userId?: string, startTime?: number): Promise<void> {
   try {
+    console.log(`\n🚀 [trackMCPToolUsage] 开始处理工具: ${toolName}`);
+    console.log(`   - 用户ID: ${userId || 'anonymous'}`);
+    console.log(`   - 开始时间: ${startTime}`);
+    
     // 只统计与提示词相关的操作
     const trackableTools = [
       'unified_search', 'smart_semantic_search', 'enhanced_search_prompts',
       'get_prompt_details', 'quick_access_prompts', 'select_prompt_by_index'
     ];
     
-    if (!trackableTools.includes(toolName)) return;
+    if (!trackableTools.includes(toolName)) {
+      console.log(`⏭️  [trackMCPToolUsage] 工具 ${toolName} 不在跟踪列表中，跳过`);
+      return;
+    }
+    
+    console.log(`✅ [trackMCPToolUsage] 工具 ${toolName} 在跟踪列表中，开始记录`);
     
     // 从结果中提取提示词ID (如果有)
     let promptId = params.prompt_id || params.name;
@@ -546,13 +555,14 @@ async function trackMCPToolUsage(toolName: string, params: any, userId?: string,
     if (['unified_search', 'smart_semantic_search', 'enhanced_search_prompts'].includes(toolName)) {
       // 使用固定的UUID来标识搜索操作，这样可以在数据库中正确记录
       promptId = '00000000-0000-4000-8000-000000000001'; // 固定的搜索操作UUID
+      console.log(`🔍 [trackMCPToolUsage] 搜索操作，使用固定UUID: ${promptId}`);
     }
     
     if (promptId) {
       const endTime = Date.now();
       const executionTime = startTime ? endTime - startTime : 0;
       
-      await performanceTracker.trackUsage({
+      const usageData = {
         promptId: promptId,
         promptVersion: 1.0, // 默认版本
         model: 'mcp_tool', // 标识为MCP工具调用
@@ -563,16 +573,29 @@ async function trackMCPToolUsage(toolName: string, params: any, userId?: string,
         userId: userId || 'anonymous',
         clientMetadata: {
           toolName: toolName,
-          source: 'mcp_server'
+          source: 'mcp_server',
+          params_keys: Object.keys(params),
+          execution_time: executionTime
         }
-      });
+      };
       
-      console.log(`[MCP] 已记录工具使用: ${toolName} -> ${promptId}`);
+      console.log(`📊 [trackMCPToolUsage] 准备记录使用数据:`, JSON.stringify(usageData, null, 2));
+      
+      const usageId = await performanceTracker.trackUsage(usageData);
+      
+      if (usageId) {
+        console.log(`✅ [trackMCPToolUsage] 工具使用已记录: ${toolName} -> ${promptId}, 记录ID: ${usageId}`);
+      } else {
+        console.log(`❌ [trackMCPToolUsage] 工具使用记录失败: ${toolName} -> ${promptId}`);
+      }
+    } else {
+      console.log(`⚠️  [trackMCPToolUsage] 无法提取提示词ID，跳过记录: ${toolName}`);
     }
   } catch (error) {
-    console.warn(`[MCP] 统计使用失败:`, error);
+    console.error(`❌ [trackMCPToolUsage] 统计使用失败:`, error);
   }
 }
+
 
 
 // MCP 工具调用

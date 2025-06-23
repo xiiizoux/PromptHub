@@ -10,6 +10,7 @@ import logger from './utils/logger.js';
 import { securityHeadersMiddleware, rateLimitMiddleware } from './api/auth-middleware.js';
 import { systemMonitor } from './monitoring/system-monitor.js';
 import { accessLogger } from './monitoring/access-logger.js';
+import { performanceTracker } from './performance/performance-tracker.js';
 
 export async function startMCPServer() {
   try {
@@ -211,6 +212,24 @@ export async function startMCPServer() {
       // 启动系统监控
       systemMonitor.start(30000); // 每30秒收集一次指标
       logger.info('系统监控已启动');
+      
+      // 检查性能追踪状态
+      console.log('
+📊 =================== 性能追踪状态 ===================');
+      if (performanceTracker.isEnabled) {
+        console.log('✅ 性能追踪已启用，搜索和工具使用将被记录到数据库');
+        console.log('🔍 搜索操作记录: 启用');
+        console.log('📝 工具使用记录: 启用');
+      } else {
+        console.log('❌ 性能追踪未启用，搜索和工具使用不会被记录');
+        console.log('💡 要启用性能追踪，请确保:');
+        console.log('   1. 设置 SUPABASE_URL 环境变量');
+        console.log('   2. 设置 SUPABASE_ANON_KEY 环境变量');
+        console.log('   3. 可选: 设置 SUPABASE_SERVICE_ROLE_KEY 环境变量（推荐）');
+        console.log('   4. 确保存储类型配置为 "supabase"');
+      }
+      console.log('================================================
+');
     });
     
     // 优雅关闭处理

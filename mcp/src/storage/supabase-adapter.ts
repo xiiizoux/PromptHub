@@ -541,71 +541,98 @@ export class SupabaseAdapter implements StorageAdapter {
   }
 
   async createPrompt(prompt: Prompt): Promise<Prompt> {
-    try {
-      // 确保有用户ID
-      if (!prompt.user_id) {
-        const currentUser = await this.getCurrentUser();
-        if (currentUser) {
-          prompt.user_id = currentUser.id;
+      try {
+        // 确保有用户ID - 改进用户ID验证逻辑
+        let finalUserId = prompt.user_id;
+        
+        if (!finalUserId) {
+          console.log('[SupabaseAdapter] 提示词缺少用户ID，尝试获取当前用户');
+          const currentUser = await this.getCurrentUser();
+          if (currentUser) {
+            finalUserId = currentUser.id;
+            console.log('[SupabaseAdapter] 获取到当前用户ID:', finalUserId);
+          } else {
+            // 使用系统用户ID作为默认值
+            const systemUserId = '00000000-0000-5000-8000-000000000001';
+            finalUserId = systemUserId;
+            console.log('[SupabaseAdapter] 使用系统用户ID创建提示词:', systemUserId);
+          }
         } else {
-          // 使用系统用户ID作为默认值
-          const systemUserId = '00000000-0000-5000-8000-000000000001';
-          prompt.user_id = systemUserId;
-          console.log('使用系统用户ID创建提示词:', systemUserId);
+          console.log('[SupabaseAdapter] 使用传入的用户ID:', finalUserId);
         }
+        
+        const promptData = {
+          name: prompt.name,
+          description: prompt.description,
+          category: prompt.category || '通用',
+          tags: prompt.tags || [],
+          messages: prompt.messages,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          version: prompt.version ? Number(prompt.version) : 1.0, // 新建提示词默认版本为1.0
+          is_public: prompt.is_public !== undefined ? prompt.is_public : true, // 默认公开，便于分享和发现
+          allow_collaboration: prompt.allow_collaboration !== undefined ? prompt.allow_collaboration : false, // 默认不允许协作编辑，保护创建者权益
+          edit_permission: prompt.edit_permission || 'owner_only', // 默认仅创建者可编辑
+          user_id: finalUserId
+        };
+        
+        console.log('[SupabaseAdapter] 准备创建提示词:', {
+          name: promptData.name,
+          category: promptData.category,
+          user_id: promptData.user_id,
+          is_public: promptData.is_public
+        });
+        
+        // 创建提示词 - 如果是系统用户，使用管理员客户端绕过RLS
+        const isSystemUser = finalUserId === '00000000-0000-5000-8000-000000000001';
+        const client = isSystemUser && this.adminSupabase ? this.adminSupabase : this.supabase;
+  
+        const { data, error } = await client
+          .from('prompts')
+          .insert([promptData])
+          .select();
+  
+        if (error) {
+          console.error('[SupabaseAdapter] 创建提示词数据库错误:', error);
+          throw new Error(`创建提示词失败: ${error.message}`);
+        }
+        
+        if (!data || data.length === 0) {
+          console.error('[SupabaseAdapter] 创建提示词未返回数据');
+          throw new Error('创建提示词失败: 未返回数据');
+        }
+        
+        const createdPrompt = data[0];
+        console.log('[SupabaseAdapter] 提示词创建成功:', {
+          id: createdPrompt.id,
+          name: createdPrompt.name,
+          user_id: createdPrompt.user_id
+        });
+        
+        // 创建初始版本
+        try {
+          await this.createPromptVersion({
+            prompt_id: createdPrompt.id,
+            version: createdPrompt.version || 1.0, // 使用创建的提示词的版本号
+            messages: prompt.messages,
+            description: prompt.description,
+            category: prompt.category || '通用',
+            tags: prompt.tags || [],
+            user_id: finalUserId
+          });
+          console.log('[SupabaseAdapter] 初始版本创建成功');
+        } catch (versionError) {
+          console.warn('[SupabaseAdapter] 创建初始版本失败:', versionError);
+          // 版本创建失败不应该影响主要创建流程
+        }
+        
+        return createdPrompt;
+      } catch (err) {
+        console.error('[SupabaseAdapter] 创建提示词时出错:', err);
+        throw err;
       }
-      
-      const promptData = {
-        name: prompt.name,
-        description: prompt.description,
-        category: prompt.category || '通用',
-        tags: prompt.tags || [],
-        messages: prompt.messages,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        version: prompt.version ? Number(prompt.version) : 1.0, // 新建提示词默认版本为1.0
-        is_public: prompt.is_public !== undefined ? prompt.is_public : true, // 默认公开，便于分享和发现
-        allow_collaboration: prompt.allow_collaboration !== undefined ? prompt.allow_collaboration : false, // 默认不允许协作编辑，保护创建者权益
-        edit_permission: prompt.edit_permission || 'owner_only', // 默认仅创建者可编辑
-        user_id: prompt.user_id
-      };
-      
-      // 创建提示词 - 如果是系统用户，使用管理员客户端绕过RLS
-      const isSystemUser = prompt.user_id === '00000000-0000-5000-8000-000000000001';
-      const client = isSystemUser && this.adminSupabase ? this.adminSupabase : this.supabase;
-
-      const { data, error } = await client
-        .from('prompts')
-        .insert([promptData])
-        .select();
-
-      if (error) {
-        throw new Error(`创建提示词失败: ${error.message}`);
-      }
-      
-      if (!data || data.length === 0) {
-        throw new Error('创建提示词失败: 未返回数据');
-      }
-      
-      const createdPrompt = data[0];
-      
-      // 创建初始版本
-      await this.createPromptVersion({
-        prompt_id: createdPrompt.id,
-        version: createdPrompt.version || 1.0, // 使用创建的提示词的版本号
-        messages: prompt.messages,
-        description: prompt.description,
-        category: prompt.category || '通用',
-        tags: prompt.tags || [],
-        user_id: prompt.user_id
-      });
-      
-      return createdPrompt;
-    } catch (err) {
-      console.error('创建提示词时出错:', err);
-      throw err;
     }
-  }
+
 
   async updatePrompt(nameOrId: string, prompt: Partial<Prompt>, userId?: string): Promise<Prompt> {
     try {
@@ -696,41 +723,8 @@ export class SupabaseAdapter implements StorageAdapter {
     }
   }
 
-  async searchPrompts(query: string, userId?: string, includePublic: boolean = true): Promise<Prompt[]> {
-    try {
-      // 创建基本查询
-      let dbQuery = this.supabase
-        .from('prompts')
-        .select('*')
-        .or(`name.ilike.%${query}%,description.ilike.%${query}%,category.ilike.%${query}%,content.ilike.%${query}%`);
-      
-      // 添加访问控制
-      if (userId) {
-        if (includePublic) {
-          // 用户自己的提示词 + 公开提示词
-          dbQuery = dbQuery.or(`user_id.eq.${userId},is_public.eq.true`);
-        } else {
-          // 只查询用户自己的提示词
-          dbQuery = dbQuery.eq('user_id', userId);
-        }
-      } else {
-        // 没有用户ID时只返回公开内容
-        dbQuery = dbQuery.eq('is_public', true);
-      }
-      
-      const { data, error } = await dbQuery;
+  async searchPrompts(query: string, userId?: string, includePublic: boolean = true): Promise<Prompt[]> {\n    try {\n      // 数据清洗和关键词提取\n      const cleanQuery = query.trim().toLowerCase();\n      const keywords = this.extractSearchKeywords(cleanQuery);\n      \n      console.log(`[SearchPrompts] 原始查询: "${query}", 提取关键词: [${keywords.join(', ')}]`);\n      \n      // 1. 精确匹配搜索（最高优先级）\n      const exactResults = await this.executeExactSearch(cleanQuery, userId, includePublic);\n      \n      // 2. 关键词分词搜索\n      const keywordResults = await this.executeKeywordSearch(keywords, userId, includePublic);\n      \n      // 3. 模糊匹配搜索（兜底策略）\n      const fuzzyResults = await this.executeFuzzySearch(cleanQuery, userId, includePublic);\n      \n      // 合并和去重\n      const allResults = this.mergeSearchResults(exactResults, keywordResults, fuzzyResults);\n      \n      // 计算相关性评分并排序\n      const scoredResults = this.calculateRelevanceScore(allResults, cleanQuery, keywords);\n      \n      console.log(`[SearchPrompts] 搜索完成，共找到 ${scoredResults.length} 个结果`);\n      \n      return scoredResults;\n      \n    } catch (err) {\n      console.error('搜索提示词时出错:', err);\n      return [];\n    }\n  }\n  \n  /**\n   * 提取搜索关键词\n   */\n  private extractSearchKeywords(query: string): string[] {\n    // 移除停用词\n    const stopWords = ['的', '了', '和', '是', '在', '有', '以', '及', '为', '与', '等', '或', '但', '这', '那', '一个', '用于'];\n    \n    // 简单分词：按空格、标点分割\n    const words = query\n      .split(/[\\s,，。！？、；：\"\"''（）\\(\\)\\[\\]【】]+/)\n      .filter(word => \n        word.length > 0 && \n        word.length >= 2 && // 至少2个字符\n        !stopWords.includes(word) &&\n        !/^[0-9]+$/.test(word) // 排除纯数字\n      );\n    \n    // 去重并保持原始查询\n    const uniqueWords = Array.from(new Set([query, ...words]));\n    return uniqueWords.slice(0, 10); // 限制关键词数量\n  }\n  \n  /**\n   * 精确匹配搜索\n   */\n  private async executeExactSearch(query: string, userId?: string, includePublic: boolean = true): Promise<Prompt[]> {\n    try {\n      let dbQuery = this.supabase\n        .from('prompts')\n        .select('*')\n        .or(`name.ilike.%${query}%,description.ilike.%${query}%,content.ilike.%${query}%`);\n      \n      dbQuery = this.applyAccessControl(dbQuery, userId, includePublic);\n      \n      const { data, error } = await dbQuery.limit(50);\n      \n      if (error) {\n        console.warn('精确搜索失败:', error.message);\n        return [];\n      }\n      \n      return data || [];\n    } catch (err) {\n      console.warn('精确搜索出错:', err);\n      return [];\n    }\n  }\n  \n  /**\n   * 关键词分词搜索\n   */\n  private async executeKeywordSearch(keywords: string[], userId?: string, includePublic: boolean = true): Promise<Prompt[]> {\n    if (keywords.length === 0) return [];\n    \n    try {\n      const results = new Set<Prompt>();\n      \n      // 对每个关键词进行搜索（并行处理前3个关键词）\n      const searchPromises = keywords.slice(0, 3).map(async (keyword) => {\n        try {\n          let dbQuery = this.supabase\n            .from('prompts')\n            .select('*')\n            .or(`name.ilike.%${keyword}%,description.ilike.%${keyword}%,content.ilike.%${keyword}%,category.ilike.%${keyword}%`);\n          \n          dbQuery = this.applyAccessControl(dbQuery, userId, includePublic);\n          \n          const { data, error } = await dbQuery.limit(30);\n          \n          if (!error && data) {\n            data.forEach(prompt => results.add(prompt));\n          }\n        } catch (err) {\n          console.warn(`关键词 \"${keyword}\" 搜索失败:`, err);\n        }\n      });\n      \n      await Promise.all(searchPromises);\n      \n      return Array.from(results);\n    } catch (err) {\n      console.warn('关键词搜索出错:', err);\n      return [];\n    }\n  }\n  \n  /**\n   * 模糊匹配搜索\n   */\n  private async executeFuzzySearch(query: string, userId?: string, includePublic: boolean = true): Promise<Prompt[]> {\n    try {\n      // 生成模糊匹配查询\n      const fuzzyQuery = query.split('').join('%');\n      \n      let dbQuery = this.supabase\n        .from('prompts')\n        .select('*')\n        .or(`name.ilike.%${fuzzyQuery}%,description.ilike.%${fuzzyQuery}%,content.ilike.%${fuzzyQuery}%`);\n      \n      dbQuery = this.applyAccessControl(dbQuery, userId, includePublic);\n      \n      const { data, error } = await dbQuery.limit(20);\n      \n      if (error) {\n        console.warn('模糊搜索失败:', error.message);\n        return [];\n      }\n      \n      return data || [];\n    } catch (err) {\n      console.warn('模糊搜索出错:', err);\n      return [];\n    }\n  }\n  \n  /**\n   * 应用访问控制\n   */\n  private applyAccessControl(dbQuery: any, userId?: string, includePublic: boolean = true) {\n    if (userId) {\n      if (includePublic) {\n        // 用户自己的提示词 + 公开提示词\n        return dbQuery.or(`user_id.eq.${userId},is_public.eq.true`);\n      } else {\n        // 只查询用户自己的提示词\n        return dbQuery.eq('user_id', userId);\n      }\n    } else {\n      // 没有用户ID时只返回公开内容\n      return dbQuery.eq('is_public', true);\n    }\n  }\n  \n  /**\n   * 合并搜索结果并去重\n   */\n  private mergeSearchResults(...resultSets: Prompt[][]): Prompt[] {\n    const uniqueResults = new Map<string, Prompt>();\n    \n    resultSets.forEach(results => {\n      results.forEach(prompt => {\n        const key = `${prompt.id || prompt.name}`;\n        if (!uniqueResults.has(key)) {\n          uniqueResults.set(key, prompt);\n        }\n      });\n    });\n    \n    return Array.from(uniqueResults.values());\n  }\n  \n  /**\n   * 计算相关性评分并排序\n   */\n  private calculateRelevanceScore(prompts: Prompt[], originalQuery: string, keywords: string[]): Prompt[] {\n    return prompts\n      .map(prompt => {\n        let score = 0;\n        const query = originalQuery.toLowerCase();\n        \n        // 字段权重定义\n        const weights = {\n          name: 3.0,        // 标题权重最高\n          description: 2.0, // 描述权重中等\n          content: 1.5,     // 内容权重中等\n          category: 1.0     // 分类权重较低\n        };\n        \n        // 计算各字段匹配分数\n        const fields = {\n          name: prompt.name || '',\n          description: prompt.description || '',\n          content: prompt.content || '',\n          category: prompt.category || ''\n        };\n        \n        Object.entries(fields).forEach(([field, text]) => {\n          const fieldText = text.toLowerCase();\n          const weight = weights[field as keyof typeof weights];\n          \n          // 1. 精确匹配（最高分）\n          if (fieldText.includes(query)) {\n            score += weight * 10;\n          }\n          \n          // 2. 关键词匹配\n          keywords.forEach(keyword => {\n            if (keyword !== query && fieldText.includes(keyword.toLowerCase())) {\n              score += weight * 5;\n            }\n          });\n          \n          // 3. 位置权重（出现在开头得分更高）\n          const position = fieldText.indexOf(query);\n          if (position !== -1) {\n            const positionBonus = Math.max(0, 2 - position / 10);\n            score += weight * positionBonus;\n          }\n        });\n        \n        // 4. 长度惩罚（避免过长内容稀释关键词密度）\n        const totalLength = Object.values(fields).join('').length;\n        const lengthPenalty = Math.min(1, 500 / Math.max(totalLength, 100));\n        score *= lengthPenalty;\n        \n        return { ...prompt, _score: score };\n      })\n      .sort((a, b) => (b._score || 0) - (a._score || 0))\n      .map(({ _score, ...prompt }) => prompt); // 移除临时评分字段\n  }
 
-      if (error) {
-        console.error(`搜索提示词失败: ${error.message}`);
-        return [];
-      }
-
-      return data || [];
-    } catch (err) {
-      console.error('搜索提示词时出错:', err);
-      return [];
-    }
-  }
 
   // ========= 版本控制相关方法 =========
   
