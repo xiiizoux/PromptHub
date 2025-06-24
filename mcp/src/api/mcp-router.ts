@@ -45,27 +45,10 @@ import {
   handleSmartStore,
   handleAnalyzeAndStore
 } from '../tools/storage/auto-storage.js';
-import {
-  advancedSearchToolDef,
-  multiFieldSearchToolDef,
-  smartFilterToolDef,
-  handleAdvancedSearch as handleEnhancedSearch,
-  handleMultiFieldSearch as handlePromptSelection,
-  handleSmartFilter as handleQuickAccess
-} from '../tools/search/enhanced-search.js';
-import {
-  unifiedSearchEngineToolDef,
-  quickSearchToolDef,
-  handleUnifiedSearch,
-  handleQuickSearch
-} from '../tools/search/unified-engine.js';
-import {
-  optimizedSemanticSearchToolDef,
-  handleOptimizedSemanticSearch
-} from '../tools/search/semantic-optimized.js';
+// 导入统一搜索工具
 import {
   unifiedSearchToolDef,
-  handleUnifiedSearch as handleUnifiedSearchNew
+  handleUnifiedSearch
 } from '../tools/search/unified-search.js';
 import {
   unifiedStoreToolDef,
@@ -347,23 +330,15 @@ router.get('/tools', authenticateRequest, (req, res) => {
     smartStoreToolDef,
     analyzeAndStoreToolDef,
     
-    // 增强搜索和展示工具
-    advancedSearchToolDef,
-    multiFieldSearchToolDef,
-    smartFilterToolDef,
-    
-    // 🚀 统一入口工具 (⭐⭐⭐⭐⭐ 终极推荐)
-    unifiedSearchToolDef,    // 统一搜索入口 - 智能路由搜索
+    // 🚀 统一搜索工具 (⭐⭐⭐⭐⭐ 唯一推荐的搜索入口)
+    unifiedSearchToolDef,  // 统一搜索 - 语义理解，智能搜索，完美结果展示
+
+    // 🚀 统一存储工具
     unifiedStoreToolDef,     // 统一存储入口 - AI智能分析存储
-    
+
     // 🎯 提示词优化工具
     promptOptimizerMCPToolDef,  // 提示词优化器 - 为第三方AI客户端提供结构化优化指导
-    
-    // 🔍 其他搜索选项 (通过统一搜索自动选择)
-    unifiedSearchEngineToolDef,
-    quickSearchToolDef,
-    optimizedSemanticSearchToolDef,
-    
+
     // 性能分析工具
     {
       name: 'track_prompt_usage',
@@ -722,15 +697,15 @@ router.post('/tools/:name/invoke', optionalAuthMiddleware, async (req, res) => {
         result = await handleQuickSearch(params, req?.user?.id);
         break;
       
-      // 🚀 统一搜索处理 (强烈推荐优先使用)
+      // 🚀 统一搜索处理 (唯一推荐的搜索入口)
       case 'unified_search':
-        result = await handleUnifiedSearchNew(params, {
+        result = await handleUnifiedSearch(params, {
           userId: req?.user?.id,
-          requestId: Array.isArray(req?.headers?.['x-request-id']) 
-            ? req.headers['x-request-id'][0] 
+          requestId: Array.isArray(req?.headers?.['x-request-id'])
+            ? req.headers['x-request-id'][0]
             : req?.headers?.['x-request-id'],
-          userAgent: Array.isArray(req?.headers?.['user-agent']) 
-            ? req.headers['user-agent'][0] 
+          userAgent: Array.isArray(req?.headers?.['user-agent'])
+            ? req.headers['user-agent'][0]
             : req?.headers?.['user-agent']
         });
         break;

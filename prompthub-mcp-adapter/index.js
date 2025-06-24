@@ -108,19 +108,19 @@ class PromptHubMCPAdapter {
    */
   loadPredefinedTools() {
     this.tools = [
-      // ============= 🚀 统一入口工具 (终极推荐) =============
+      // ============= 🚀 统一搜索工具 (唯一推荐的搜索入口) =============
       {
         name: 'unified_search',
-        description: '🚀 统一搜索 - 智能路由到最适合的搜索方式，一个工具满足所有搜索需求 (⭐⭐⭐⭐⭐ 终极推荐)',
+        description: '🚀 统一搜索 - 语义理解，智能搜索提示词，完美结果展示 (⭐⭐⭐⭐⭐ 唯一推荐)',
         inputSchema: {
           type: 'object',
           properties: {
-            query: { type: 'string', description: '搜索查询，支持自然语言描述，例如："写商务邮件"、"分析代码问题"等' },
-            mode: { type: 'string', description: '搜索模式：auto(自动选择) | semantic(语义) | advanced(高级) | intelligent(智能) | basic(基础)' },
-            category: { type: 'string', description: '分类筛选' },
-            tags: { type: 'array', items: { type: 'string' }, description: '标签筛选' },
-            max_results: { type: 'number', description: '最大结果数，默认5个' },
-            sort_by: { type: 'string', description: '排序方式：relevance | name | created_at | category' }
+            query: { type: 'string', description: '搜索查询，支持自然语言描述，例如："写商务邮件"、"分析代码问题"、"创意文案"等' },
+            category: { type: 'string', description: '分类筛选（可选）' },
+            tags: { type: 'array', items: { type: 'string' }, description: '标签筛选（可选）' },
+            max_results: { type: 'number', description: '最大结果数，默认5个，最多20个' },
+            include_content: { type: 'boolean', description: '是否包含完整内容预览，默认true' },
+            sort_by: { type: 'string', description: '排序方式：relevance(相关性) | name(名称) | created_at(创建时间) | updated_at(更新时间)，默认relevance' }
           },
           required: ['query']
         }
@@ -182,19 +182,7 @@ class PromptHubMCPAdapter {
         }
       },
       
-      // ============= 🎯 其他搜索选项 (通过统一搜索自动调用) =============
-      {
-        name: 'smart_semantic_search',
-        description: '🎯 智能语义搜索 - 用自然语言描述需求，返回包含完整内容预览的相关提示词',
-        inputSchema: {
-          type: 'object',
-          properties: {
-            query: { type: 'string', description: '用自然语言描述您的需求，例如："写商务邮件"、"分析代码问题"、"创意文案"等' },
-            max_results: { type: 'number', description: '最多返回几个结果，默认5个' }
-          },
-          required: ['query']
-        }
-      },
+
       
       // ============= 核心提示词管理工具 =============
       {
@@ -283,48 +271,10 @@ class PromptHubMCPAdapter {
           required: []
         }
       },
-      // ============= 其他搜索选项 =============
-      {
-        name: 'search_prompts',
-        description: '基础关键词搜索 (建议使用unified_search)',
-        inputSchema: {
-          type: 'object',
-          properties: {
-            query: { type: 'string', description: '搜索关键词' },
-            includePublic: { type: 'boolean', description: '是否包含公开提示词' }
-          },
-          required: ['query']
-        }
-      },
-      {
-        name: 'enhanced_search_prompts',
-        description: '高级搜索 - 支持多条件筛选 (建议使用unified_search)',
-        inputSchema: {
-          type: 'object',
-          properties: {
-            query: { type: 'string', description: '搜索关键词' },
-            category: { type: 'string', description: '分类筛选' },
-            tags: { type: 'array', items: { type: 'string' }, description: '标签筛选' },
-            difficulty: { type: 'string', description: '难度级别' }
-          },
-          required: ['query']
-        }
-      },
+
       
       // ============= 智能AI工具 =============
-      {
-        name: 'intelligent_prompt_selection',
-        description: '智能提示词选择和推荐 (建议使用unified_search)',
-        inputSchema: {
-          type: 'object',
-          properties: {
-            context: { type: 'string', description: '使用场景描述' },
-            task_type: { type: 'string', description: '任务类型' },
-            preferences: { type: 'object', description: '用户偏好' }
-          },
-          required: ['context']
-        }
-      },
+
       {
         name: 'intelligent_prompt_storage',
         description: '智能提示词存储',

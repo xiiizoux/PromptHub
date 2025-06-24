@@ -3,7 +3,17 @@
 [![npm version](https://badge.fury.io/js/prompthub-mcp-adapter.svg)](https://badge.fury.io/js/prompthub-mcp-adapter)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-MCP (Model Context Protocol) adapter for connecting AI clients like Cursor and Claude Desktop to PromptHub server.
+🚀 **下一代智能提示词管理的MCP适配器** - 连接AI客户端（Cursor、Claude Desktop等）与PromptHub服务器
+
+## ✨ 核心特性
+
+- 🧠 **自然语言理解** - 真正理解用户意图，支持复杂的自然语言查询
+- 🔍 **语义搜索引擎** - 多维度相关性计算，精确匹配最相关的提示词
+- 📄 **完美结果展示** - 提示词内容完整显示，支持一键复制使用
+- 📝 **统一存储接口** - AI智能分析并存储提示词
+- 🎯 **提示词优化** - 为第三方AI客户端提供结构化优化指导
+- 🔧 **零配置安装** - 使用npx一键安装，无需复杂配置
+- 🌐 **跨平台兼容** - 支持所有主流AI客户端和操作系统
 
 ## 🚀 Quick Start
 
@@ -86,28 +96,20 @@ For local PromptHub server:
 
 ## 🛠️ Available Tools
 
-The adapter provides 30+ tools including:
+### 🚀 核心搜索工具 (推荐)
+- `unified_search` - **统一搜索引擎** - 语义理解，智能搜索，完美结果展示 ⭐⭐⭐⭐⭐
 
-### Basic Management
-- `get_categories` - Get all prompt categories
-- `get_tags` - Get all prompt tags
-- `get_prompt_names` - Get all available prompt names
-- `get_prompt_details` - Get specific prompt details
-- `create_prompt` - Create new prompt
-- `update_prompt` - Update existing prompt
-- `search_prompts` - Search prompts by keywords
+### 📝 提示词管理
+- `get_categories` - 获取所有提示词分类
+- `get_tags` - 获取所有提示词标签
+- `get_prompt_names` - 获取所有可用的提示词名称
+- `get_prompt_details` - 获取特定提示词详情
+- `create_prompt` - 创建新提示词
+- `update_prompt` - 更新现有提示词
 
-### Intelligent Features
-- `intelligent_prompt_selection` - Smart prompt recommendations
-- `intelligent_prompt_storage` - Smart prompt analysis and storage
-- `quick_store` - One-click prompt storage
-- `smart_store` - Intelligent prompt storage
-
-### Advanced Search
-- `unified_search` - Unified search engine
-- `advanced_search` - Advanced search with filters
-- `multi_field_search` - Multi-field search
-- `smart_filter` - Intelligent filtering
+### 🧠 智能功能
+- `unified_store` - **统一存储** - AI智能分析并存储提示词 ⭐⭐⭐⭐⭐
+- `prompt_optimizer` - **提示词优化器** - 为第三方AI客户端提供结构化优化指导 ⭐⭐⭐⭐⭐
 
 ### Performance Analytics
 - `track_prompt_usage` - Track prompt usage data
