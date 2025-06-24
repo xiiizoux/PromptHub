@@ -506,7 +506,7 @@ class PromptHubMCPAdapter {
       // 🚀 最重要：显示实际内容
       let content = this.extractPromptContent(result);
       if (content && content.trim()) {
-        output += `📄 **内容：**\n\`\`\`\n${content}\n\`\`\`\n`;
+        output += `📄 **提示词内容：**\n\`\`\`\n${content}\n\`\`\`\n`;
       }
       
       // 相关度和匹配原因
@@ -570,10 +570,10 @@ class PromptHubMCPAdapter {
               const msgContent = msg.content;
               // 处理content是对象的情况（如 {type: "text", text: "实际内容"}）
               if (typeof msgContent === 'object' && msgContent !== null && msgContent.text) {
-                return typeof msgContent.text === 'string' && msgContent.text.trim().length > 20;
+                return typeof msgContent.text === 'string' && msgContent.text.trim().length > 10;
               }
               // 处理content是字符串的情况
-              return typeof msgContent === 'string' && msgContent.trim().length > 20;
+              return typeof msgContent === 'string' && msgContent.trim().length > 10;
             }
             return false;
           });
@@ -627,7 +627,7 @@ class PromptHubMCPAdapter {
     }
     
     // 3. 如果还是没有内容，使用description作为备选
-    if (!content || content.trim().length < 20) {
+    if (!content || content.trim().length < 10) {
       content = prompt.description || '';
     }
     
@@ -711,7 +711,7 @@ class PromptHubMCPAdapter {
       method: method,
       headers: {
         'Content-Type': 'application/json',
-        'User-Agent': 'PromptHub-MCP-Adapter/2.1.0'
+        'User-Agent': 'PromptHub-MCP-Adapter/2.1.1'
       }
     };
 
@@ -786,7 +786,7 @@ async function handleMessage(message) {
             },
             serverInfo: {
               name: 'prompthub-mcp-adapter',
-              version: '2.1.0'
+              version: '2.1.1'
             }
           }
         });

@@ -145,10 +145,13 @@ export class UnifiedSearchTool extends BaseMCPTool {
       // 2. 计算相关性评分（现在是异步的）
       const scoredResults = await this.calculateRelevanceScores(searchResults, query);
 
-      // 3. 应用排序
-      const sortedResults = this.applySorting(scoredResults, sort_by);
+      // 3. 过滤低相关度结果（设置最低相关度阈值为30%）
+      const filteredResults = scoredResults.filter(result => result.relevanceScore >= 30);
 
-      // 4. 限制结果数量
+      // 4. 应用排序
+      const sortedResults = this.applySorting(filteredResults, sort_by);
+
+      // 5. 限制结果数量
       const limitedResults = sortedResults.slice(0, limitedMaxResults);
 
       // 5. 增强结果数据
@@ -1024,7 +1027,10 @@ export class UnifiedSearchTool extends BaseMCPTool {
 • 尝试使用更简单的关键词
 • 检查是否有拼写错误
 • 尝试使用同义词或相关词汇
-• 或者浏览相关分类目录`;
+• 或者浏览相关分类目录
+
+💡 **需要创建新的提示词吗？**
+如果您有相关的提示词内容想要保存，我可以帮您创建一个新的提示词。请告诉我您是否需要创建提示词。`;
     }
 
     let output = `🎯 为您找到 ${results.length} 个与"${query}"相关的提示词：\n\n`;
