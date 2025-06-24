@@ -276,65 +276,9 @@ export class WebMonitor {
     };
   }
 
-  /**
-   * 获取性能分析
-   */
-  getPerformanceAnalysis(timeRange?: { start: number; end: number }): {
-    averageLoadTime: number;
-    averageFCP: number;
-    averageLCP: number;
-    averageCLS: number;
-    averageFID: number;
-    slowestPages: Array<{ page: string; avgLoadTime: number; count: number }>;
-  } {
-    const relevantMetrics = timeRange 
-      ? this.performanceMetrics.filter(metric => metric.timestamp >= timeRange.start && metric.timestamp <= timeRange.end)
-      : this.performanceMetrics;
 
-    if (relevantMetrics.length === 0) {
-      return {
-        averageLoadTime: 0,
-        averageFCP: 0,
-        averageLCP: 0,
-        averageCLS: 0,
-        averageFID: 0,
-        slowestPages: [],
-      };
-    }
 
-    const averageLoadTime = relevantMetrics.reduce((sum, m) => sum + m.loadTime, 0) / relevantMetrics.length;
-    const averageFCP = relevantMetrics.reduce((sum, m) => sum + m.firstContentfulPaint, 0) / relevantMetrics.length;
-    const averageLCP = relevantMetrics.reduce((sum, m) => sum + m.largestContentfulPaint, 0) / relevantMetrics.length;
-    const averageCLS = relevantMetrics.reduce((sum, m) => sum + m.cumulativeLayoutShift, 0) / relevantMetrics.length;
-    const averageFID = relevantMetrics.reduce((sum, m) => sum + m.firstInputDelay, 0) / relevantMetrics.length;
 
-    // 最慢页面分析
-    const pagePerformance = new Map<string, { totalTime: number; count: number }>();
-    for (const metric of relevantMetrics) {
-      const stats = pagePerformance.get(metric.page) || { totalTime: 0, count: 0 };
-      stats.totalTime += metric.loadTime;
-      stats.count++;
-      pagePerformance.set(metric.page, stats);
-    }
-
-    const slowestPages = Array.from(pagePerformance.entries())
-      .map(([page, stats]) => ({
-        page,
-        avgLoadTime: Math.round(stats.totalTime / stats.count),
-        count: stats.count,
-      }))
-      .sort((a, b) => b.avgLoadTime - a.avgLoadTime)
-      .slice(0, 10);
-
-    return {
-      averageLoadTime: Math.round(averageLoadTime),
-      averageFCP: Math.round(averageFCP),
-      averageLCP: Math.round(averageLCP),
-      averageCLS: Math.round(averageCLS * 1000) / 1000,
-      averageFID: Math.round(averageFID),
-      slowestPages,
-    };
-  }
 
   /**
    * 获取错误分析

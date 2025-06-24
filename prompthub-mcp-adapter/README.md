@@ -111,11 +111,7 @@ For local PromptHub server:
 - `unified_store` - **统一存储** - AI智能分析并存储提示词 ⭐⭐⭐⭐⭐
 - `prompt_optimizer` - **提示词优化器** - 为第三方AI客户端提供结构化优化指导 ⭐⭐⭐⭐⭐
 
-### Performance Analytics
-- `track_prompt_usage` - Track prompt usage data
-- `get_prompt_performance` - Get prompt performance metrics
-- `generate_performance_report` - Generate performance reports
-- `create_ab_test` - Create A/B tests
+
 
 ## 🔍 Usage Examples
 

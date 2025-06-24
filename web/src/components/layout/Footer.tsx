@@ -29,7 +29,6 @@ const Footer: React.FC = () => {
     产品: [
       { name: '浏览提示词', href: '/prompts', icon: RectangleStackIcon },
       { name: '创建提示词', href: '/prompts/create', icon: CodeBracketIcon },
-      { name: '性能分析', href: '/analytics', icon: ChartBarIcon },
     ],
     资源: [
       { name: '文档', href: '/docs', icon: DocumentTextIcon },

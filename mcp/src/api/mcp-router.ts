@@ -10,8 +10,7 @@ import {
   StorageAdapter,
   PromptFilters
 } from '../types.js';
-import { performanceTools, performanceToolHandlers } from '../performance/performance-tools.js';
-import { performanceTracker } from '../performance/performance-tracker.js';
+
 // MCP服务器信息内联定义
 const getMcpServerInfo = () => ({
   name: 'MCP Prompt Server',
@@ -22,7 +21,6 @@ const getMcpServerInfo = () => ({
   capabilities: [
     'prompt_management',
     'version_control',
-    'performance_analysis',
     'intelligent_ai_tools',
     'enhanced_search',
     'unified_search_engine'
@@ -339,169 +337,8 @@ router.get('/tools', authenticateRequest, (req, res) => {
     // 🎯 提示词优化工具
     promptOptimizerMCPToolDef,  // 提示词优化器 - 为第三方AI客户端提供结构化优化指导
 
-    // 性能分析工具
-    {
-      name: 'track_prompt_usage',
-      description: '记录提示词使用数据',
-      schema_version: 'v1',
-      parameters: {
-        prompt_id: {
-          type: 'string',
-          description: '提示词ID',
-          required: true,
-        } as ToolParameter,
-        prompt_version: {
-          type: 'number',
-          description: '提示词版本',
-          required: false,
-        } as ToolParameter,
-        input_tokens: {
-          type: 'number',
-          description: '输入令牌数',
-          required: true,
-        } as ToolParameter,
-        output_tokens: {
-          type: 'number',
-          description: '输出令牌数',
-          required: true,
-        } as ToolParameter,
-        total_tokens: {
-          type: 'number',
-          description: '总令牌数',
-          required: true,
-        } as ToolParameter,
-        latency_ms: {
-          type: 'number',
-          description: '延迟时间（毫秒）',
-          required: true,
-        } as ToolParameter,
-        user_id: {
-          type: 'string',
-          description: '用户ID',
-          required: false,
-        } as ToolParameter,
-        session_id: {
-          type: 'string',
-          description: '会话ID',
-          required: false,
-        } as ToolParameter,
-        metadata: {
-          type: 'object',
-          description: '额外元数据',
-          required: false,
-        } as ToolParameter,
-      },
-    },
-    {
-      name: 'submit_prompt_feedback',
-      description: '提交提示词反馈',
-      schema_version: 'v1',
-      parameters: {
-        usage_id: {
-          type: 'string',
-          description: '使用记录ID',
-          required: true,
-        } as ToolParameter,
-        rating: {
-          type: 'number',
-          description: '评分（1-5）',
-          required: true,
-        } as ToolParameter,
-        comments: {
-          type: 'string',
-          description: '评论',
-          required: false,
-        } as ToolParameter,
-        user_id: {
-          type: 'string',
-          description: '用户ID',
-          required: false,
-        } as ToolParameter,
-      },
-    },
-    {
-      name: 'get_prompt_performance',
-      description: '获取提示词性能数据',
-      schema_version: 'v1',
-      parameters: {
-        prompt_id: {
-          type: 'string',
-          description: '提示词ID',
-          required: true,
-        } as ToolParameter,
-        version: {
-          type: 'number',
-          description: '提示词版本',
-          required: false,
-        } as ToolParameter,
-      },
-    },
-    {
-      name: 'generate_performance_report',
-      description: '生成提示词性能报告',
-      schema_version: 'v1',
-      parameters: {
-        prompt_id: {
-          type: 'string',
-          description: '提示词ID',
-          required: true,
-        } as ToolParameter,
-      },
-    },
-    {
-      name: 'create_ab_test',
-      description: '创建A/B测试',
-      schema_version: 'v1',
-      parameters: {
-        name: {
-          type: 'string',
-          description: '测试名称',
-          required: true,
-        } as ToolParameter,
-        description: {
-          type: 'string',
-          description: '测试描述',
-          required: false,
-        } as ToolParameter,
-        prompt_a: {
-          type: 'string',
-          description: '提示词A的ID',
-          required: true,
-        } as ToolParameter,
-        prompt_b: {
-          type: 'string',
-          description: '提示词B的ID',
-          required: true,
-        } as ToolParameter,
-        version_a: {
-          type: 'number',
-          description: '提示词A的版本',
-          required: false,
-        } as ToolParameter,
-        version_b: {
-          type: 'number',
-          description: '提示词B的版本',
-          required: false,
-        } as ToolParameter,
-        traffic_split: {
-          type: 'number',
-          description: '流量分配比例（0-1）',
-          required: false,
-        } as ToolParameter,
-      },
-    },
-    {
-      name: 'get_ab_test_results',
-      description: '获取A/B测试结果',
-      schema_version: 'v1',
-      parameters: {
-        test_id: {
-          type: 'string',
-          description: '测试ID',
-          required: true,
-        } as ToolParameter,
-      },
-    },
+
+
   ];
 
   res.json({
@@ -510,74 +347,7 @@ router.get('/tools', authenticateRequest, (req, res) => {
   });
 });
 
-// 自动统计MCP工具使用情况的辅助函数
-async function trackMCPToolUsage(toolName: string, params: any, userId?: string, startTime?: number): Promise<void> {
-  try {
-    console.log(`\n🚀 [trackMCPToolUsage] 开始处理工具: ${toolName}`);
-    console.log(`   - 用户ID: ${userId || 'anonymous'}`);
-    console.log(`   - 开始时间: ${startTime}`);
-    
-    // 只统计与提示词相关的操作
-    const trackableTools = [
-      'unified_search', 'smart_semantic_search', 'enhanced_search_prompts',
-      'get_prompt_details', 'quick_access_prompts', 'select_prompt_by_index',
-      'prompt_optimizer'
-    ];
-    
-    if (!trackableTools.includes(toolName)) {
-      console.log(`⏭️  [trackMCPToolUsage] 工具 ${toolName} 不在跟踪列表中，跳过`);
-      return;
-    }
-    
-    console.log(`✅ [trackMCPToolUsage] 工具 ${toolName} 在跟踪列表中，开始记录`);
-    
-    // 从结果中提取提示词ID (如果有)
-    let promptId = params.prompt_id || params.name;
-    
-    // 对于搜索类工具，使用固定的UUID来标识搜索操作
-    if (['unified_search', 'smart_semantic_search', 'enhanced_search_prompts'].includes(toolName)) {
-      // 使用固定的UUID来标识搜索操作，这样可以在数据库中正确记录
-      promptId = '00000000-0000-4000-8000-000000000001'; // 固定的搜索操作UUID
-      console.log(`🔍 [trackMCPToolUsage] 搜索操作，使用固定UUID: ${promptId}`);
-    }
-    
-    if (promptId) {
-      const endTime = Date.now();
-      const executionTime = startTime ? endTime - startTime : 0;
-      
-      const usageData = {
-        promptId: promptId,
-        promptVersion: 1.0, // 默认版本
-        model: 'mcp_tool', // 标识为MCP工具调用
-        inputTokens: JSON.stringify(params).length, // 近似输入大小
-        outputTokens: 100, // 估算输出大小
-        latencyMs: executionTime,
-        sessionId: `mcp_${toolName}_${Date.now()}`,
-        userId: userId || 'anonymous',
-        clientMetadata: {
-          toolName: toolName,
-          source: 'mcp_server',
-          params_keys: Object.keys(params),
-          execution_time: executionTime
-        }
-      };
-      
-      console.log(`📊 [trackMCPToolUsage] 准备记录使用数据:`, JSON.stringify(usageData, null, 2));
-      
-      const usageId = await performanceTracker.trackUsage(usageData);
-      
-      if (usageId) {
-        console.log(`✅ [trackMCPToolUsage] 工具使用已记录: ${toolName} -> ${promptId}, 记录ID: ${usageId}`);
-      } else {
-        console.log(`❌ [trackMCPToolUsage] 工具使用记录失败: ${toolName} -> ${promptId}`);
-      }
-    } else {
-      console.log(`⚠️  [trackMCPToolUsage] 无法提取提示词ID，跳过记录: ${toolName}`);
-    }
-  } catch (error) {
-    console.error(`❌ [trackMCPToolUsage] 统计使用失败:`, error);
-  }
-}
+
 
 
 
@@ -637,24 +407,7 @@ router.post('/tools/:name/invoke', optionalAuthMiddleware, async (req, res) => {
       case 'get_prompt_template':
         result = await handleGetPromptTemplate();
         break;
-      case 'track_prompt_usage':
-        result = await performanceToolHandlers.track_prompt_usage(params, req);
-        break;
-      case 'submit_prompt_feedback':
-        result = await performanceToolHandlers.submit_prompt_feedback(params, req);
-        break;
-      case 'get_prompt_performance':
-        result = await performanceToolHandlers.get_prompt_performance(params, req);
-        break;
-      case 'generate_performance_report':
-        result = await performanceToolHandlers.get_performance_report(params);
-        break;
-      case 'create_ab_test':
-        result = await performanceToolHandlers.create_ab_test(params, req);
-        break;
-      case 'get_ab_test_results':
-        result = await performanceToolHandlers.get_ab_test_results(params, req);
-        break;
+
       
       // 智能AI工具处理
       case 'intelligent_prompt_selection':
@@ -761,9 +514,7 @@ router.post('/tools/:name/invoke', optionalAuthMiddleware, async (req, res) => {
         throw new Error(`未知工具: ${name}`);
     }
 
-    // 🔥 自动统计MCP工具使用情况
-    const endTime = Date.now();
-    await trackMCPToolUsage(name, params, req?.user?.id, startTime);
+
 
     res.json({
       schema_version: 'v1',

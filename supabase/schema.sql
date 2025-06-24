@@ -74,86 +74,7 @@ CREATE TABLE prompt_versions (
   UNIQUE(prompt_id, version)
 );
 
--- =============================================
--- 性能分析表结构
--- =============================================
 
--- 提示词使用记录表
-CREATE TABLE prompt_usage (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  prompt_id UUID REFERENCES prompts(id),
-  prompt_version NUMERIC,
-  user_id UUID REFERENCES users(id),
-  session_id TEXT,
-  model TEXT,
-  input_tokens INTEGER,
-  output_tokens INTEGER,
-  latency_ms INTEGER,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  client_metadata JSONB
-);
-
--- 提示词使用历史表
-CREATE TABLE prompt_usage_history (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  prompt_id UUID NOT NULL REFERENCES prompts(id),
-  prompt_name TEXT NOT NULL,
-  prompt_version INTEGER DEFAULT 1,
-  user_id UUID NOT NULL REFERENCES users(id),
-  session_id TEXT,
-  model TEXT,
-  input_tokens INTEGER,
-  output_tokens INTEGER,
-  latency_ms INTEGER,
-  action TEXT DEFAULT 'use',
-  timestamp TIMESTAMPTZ DEFAULT NOW(),
-  client_metadata JSONB
-);
-
--- 性能反馈表
-CREATE TABLE prompt_feedback (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  usage_id UUID REFERENCES prompt_usage(id),
-  rating INTEGER CHECK (rating BETWEEN 1 AND 5),
-  feedback_text TEXT,
-  categories TEXT[],
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  user_id UUID REFERENCES users(id)
-);
-
--- 提示词性能汇总表
-CREATE TABLE prompt_performance (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  prompt_id UUID REFERENCES prompts(id),
-  prompt_version NUMERIC,
-  usage_count INTEGER DEFAULT 0,
-  avg_rating NUMERIC,
-  avg_latency_ms INTEGER,
-  avg_input_tokens INTEGER,
-  avg_output_tokens INTEGER,
-  feedback_count INTEGER DEFAULT 0,
-  last_used_at TIMESTAMPTZ,
-  updated_at TIMESTAMPTZ DEFAULT NOW(),
-  UNIQUE(prompt_id, prompt_version)
-);
-
--- 提示词A/B测试表
-CREATE TABLE prompt_ab_tests (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  name TEXT NOT NULL,
-  description TEXT,
-  prompt_id UUID REFERENCES prompts(id),
-  version_a NUMERIC NOT NULL,
-  version_b NUMERIC NOT NULL,
-  metric TEXT NOT NULL,
-  start_date TIMESTAMPTZ DEFAULT NOW(),
-  end_date TIMESTAMPTZ,
-  status TEXT DEFAULT 'active',
-  result JSONB,
-  created_by UUID REFERENCES users(id),
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW()
-);
 
 -- =============================================
 -- 权限管理表结构
@@ -400,20 +321,7 @@ CREATE INDEX idx_prompts_category_id ON prompts(category_id);
 -- 提示词版本表索引
 CREATE INDEX idx_prompt_versions_category_id ON prompt_versions(category_id);
 
--- 使用记录表索引
-CREATE INDEX idx_prompt_usage_prompt_id ON prompt_usage(prompt_id);
-CREATE INDEX idx_prompt_usage_created_at ON prompt_usage(created_at);
 
--- 使用历史表索引
-CREATE INDEX idx_prompt_usage_history_prompt_id ON prompt_usage_history(prompt_id);
-CREATE INDEX idx_prompt_usage_history_user_id ON prompt_usage_history(user_id);
-CREATE INDEX idx_prompt_usage_history_timestamp ON prompt_usage_history(timestamp);
-
--- 反馈表索引
-CREATE INDEX idx_prompt_feedback_usage_id ON prompt_feedback(usage_id);
-
--- 性能表索引
-CREATE INDEX idx_prompt_performance_prompt_id ON prompt_performance(prompt_id, prompt_version);
 
 -- 协作者表索引
 CREATE INDEX idx_prompt_collaborators_prompt_id ON prompt_collaborators(prompt_id);
@@ -617,11 +525,7 @@ ALTER TABLE users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE categories ENABLE ROW LEVEL SECURITY;
 ALTER TABLE prompts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE prompt_versions ENABLE ROW LEVEL SECURITY;
-ALTER TABLE prompt_usage ENABLE ROW LEVEL SECURITY;
-ALTER TABLE prompt_usage_history ENABLE ROW LEVEL SECURITY;
-ALTER TABLE prompt_feedback ENABLE ROW LEVEL SECURITY;
-ALTER TABLE prompt_performance ENABLE ROW LEVEL SECURITY;
-ALTER TABLE prompt_ab_tests ENABLE ROW LEVEL SECURITY;
+
 ALTER TABLE prompt_collaborators ENABLE ROW LEVEL SECURITY;
 ALTER TABLE prompt_audit_logs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE api_keys ENABLE ROW LEVEL SECURITY;
@@ -709,36 +613,7 @@ CREATE POLICY "Users can delete own prompt versions" ON prompt_versions
     auth.uid() IN (SELECT user_id FROM prompts WHERE id = prompt_id)
   );
 
--- 使用统计表策略
-CREATE POLICY "Users can view own usage stats" ON prompt_usage
-  FOR SELECT USING (auth.uid() = user_id);
 
-CREATE POLICY "Users can insert usage data" ON prompt_usage
-  FOR INSERT WITH CHECK (auth.uid() = user_id);
-
--- 使用历史表策略
-CREATE POLICY "Users can view own usage history" ON prompt_usage_history
-  FOR SELECT USING (auth.uid() = user_id);
-
-CREATE POLICY "Users can insert usage history" ON prompt_usage_history
-  FOR INSERT WITH CHECK (auth.uid() = user_id);
-
--- 反馈表策略
-CREATE POLICY "Users can view own feedback" ON prompt_feedback
-  FOR SELECT USING (auth.uid() = user_id);
-
-CREATE POLICY "Users can insert feedback" ON prompt_feedback
-  FOR INSERT WITH CHECK (auth.uid() = user_id);
-
--- 性能汇总表策略
-CREATE POLICY "Comprehensive performance view access" ON prompt_performance
-  FOR SELECT USING (
-    prompt_id IN (SELECT id FROM prompts WHERE user_id = auth.uid() OR is_public = true)
-  );
-
--- A/B测试表策略
-CREATE POLICY "Users comprehensive AB tests management" ON prompt_ab_tests
-  FOR ALL USING (created_by = auth.uid());
 
 -- 协作者表策略
 CREATE POLICY "Users can view their own collaborations" ON prompt_collaborators
@@ -919,11 +794,7 @@ COMMENT ON TABLE users IS '用户表 - 与auth.users同步';
 COMMENT ON TABLE categories IS '提示词类别管理表';
 COMMENT ON TABLE prompts IS '提示词主表';
 COMMENT ON TABLE prompt_versions IS '提示词版本历史表';
-COMMENT ON TABLE prompt_usage IS '提示词使用记录表';
-COMMENT ON TABLE prompt_usage_history IS '提示词使用历史表';
-COMMENT ON TABLE prompt_feedback IS '提示词反馈表';
-COMMENT ON TABLE prompt_performance IS '提示词性能汇总表';
-COMMENT ON TABLE prompt_ab_tests IS '提示词A/B测试表';
+
 COMMENT ON TABLE prompt_collaborators IS '提示词协作者表';
 COMMENT ON TABLE prompt_audit_logs IS '提示词操作审计日志表';
 COMMENT ON TABLE api_keys IS 'API密钥表';

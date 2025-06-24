@@ -32,5 +32,3 @@ export * from './enhanced-search.js';
 // 搜索缓存
 export * from './cache.js';
 
-// 性能监控
-export * from './performance-monitor.js';

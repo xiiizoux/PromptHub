@@ -55,43 +55,7 @@ export interface PromptVersion {
   notes?: string;
 }
 
-// 提示词使用数据
-export interface PromptUsage {
-  usage_id: string;
-  prompt_id: string;
-  version: number;  // 改为数字类型以匹配数据库结构
-  input_tokens: number;
-  output_tokens: number;
-  latency: number;
-  success: boolean;
-  created_at: string;
-  model?: string;
-}
 
-// 提示词反馈
-export interface PromptFeedback {
-  usage_id: string;
-  rating: number;
-  comments?: string;
-  created_at: string;
-}
-
-// 提示词性能报告
-export interface PromptPerformance {
-  prompt_id: string;
-  total_usage: number;
-  average_rating: number;
-  success_rate: number;
-  average_latency: number;
-  token_stats: {
-    input_avg: number;
-    output_avg: number;
-    total_input: number;
-    total_output: number;
-  };
-  feedback_count: number;
-  version_distribution?: Record<string, number>;
-}
 
 /**
  * 用户相关类型定义

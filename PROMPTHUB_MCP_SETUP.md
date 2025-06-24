@@ -108,11 +108,7 @@ curl -o prompthub-mcp.js https://raw.githubusercontent.com/xiiizoux/PromptHub/ma
 - `multi_field_search` - 多字段搜索
 - `smart_filter` - 智能过滤
 
-### 性能分析工具
-- `track_prompt_usage` - 记录提示词使用数据
-- `get_prompt_performance` - 获取提示词性能数据
-- `generate_performance_report` - 生成性能报告
-- `create_ab_test` - 创建A/B测试
+
 
 ## 🔍 故障排除
 

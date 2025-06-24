@@ -116,12 +116,7 @@ PromptHub/
 | `/mcp/src/storage/storage-factory.ts` | 存储工厂，创建存储适配器 |
 | `/mcp/src/storage/supabase-adapter.ts` | Supabase存储适配器 |
 
-##### 性能追踪
 
-| 文件 | 功能描述 |
-|------|----------|
-| `/mcp/src/performance/performance-tracker.ts` | 性能追踪实现 |
-| `/mcp/src/performance/performance-routes.ts` | 性能相关API路由 |
 
 #### 数据库 (supabase)
 

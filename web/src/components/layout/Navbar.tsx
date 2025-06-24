@@ -23,7 +23,6 @@ const navigation = [
   { name: '浏览提示词', href: '/prompts', icon: RectangleStackIcon },
   { name: '创建提示词', href: '/create', icon: PlusCircleIcon },
   { name: 'AI优化器', href: '/optimizer', icon: SparklesIcon },
-  { name: '性能分析', href: '/analytics', icon: ChartBarIcon },
   { name: '文档', href: '/docs', icon: DocumentTextIcon },
 ];
 
