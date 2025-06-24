@@ -3,8 +3,8 @@
  * 提供高级搜索、过滤和排序功能
  */
 
-import { BaseMCPTool, ToolContext, ToolResult } from '../shared/base-tool.js';
-import { ToolDescription, ToolParameter, Prompt } from '../types.js';
+import { BaseMCPTool, ToolContext, ToolResult } from '../../shared/base-tool.js';
+import { ToolDescription, ToolParameter, Prompt } from '../../types.js';
 
 /**
  * 高级搜索工具类

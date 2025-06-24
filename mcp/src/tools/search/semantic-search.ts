@@ -1,14 +1,9 @@
-/**
- * 语义化搜索工具 - 新基类版本
- * 基于向量相似度的精准提示词匹配，使用新的基类架构
- */
 
-import { BaseMCPTool, ToolContext, ToolResult } from '../shared/base-tool.js';
-import { ToolDescription, ToolParameter, Prompt } from '../types.js';
 
-/**
- * 语义搜索工具类
- */
+import { BaseMCPTool, ToolContext, ToolResult } from '../../shared/base-tool.js';
+import { ToolDescription, ToolParameter, Prompt } from '../../types.js';
+
+
 export class SemanticSearchTool extends BaseMCPTool {
   readonly name = 'semantic_search';
   readonly description = '基于语义理解的智能提示词搜索，理解用户意图而非仅匹配关键词';
@@ -110,9 +105,7 @@ export class SemanticSearchTool extends BaseMCPTool {
     }
   }
 
-  /**
-   * 分析用户意图
-   */
+  
   private async analyzeUserIntent(intent: string, context: string, domain?: string) {
     const keywords = this.extractKeywords(intent);
     const intentType = this.classifyIntent(intent);
@@ -128,9 +121,7 @@ export class SemanticSearchTool extends BaseMCPTool {
     };
   }
 
-  /**
-   * 多维度搜索
-   */
+  
   private async performMultiDimensionalSearch(analyzedIntent: any, outputStyle: string, userId?: string) {
     const storage = this.getStorage();
     
@@ -149,9 +140,7 @@ export class SemanticSearchTool extends BaseMCPTool {
     );
   }
 
-  /**
-   * 语义相似度排序
-   */
+  
   private async rankBySemanticSimilarity(prompts: Prompt[], userIntent: string, threshold: number) {
     return prompts
       .map(prompt => ({
@@ -257,122 +246,14 @@ export class SemanticSearchTool extends BaseMCPTool {
   }
 }
 
-/**
- * 智能推荐工具类
- */
-export class SmartRecommendationTool extends BaseMCPTool {
-  readonly name = 'smart_recommendation';
-  readonly description = '基于使用历史和偏好的智能推荐系统';
-
-  getToolDefinition(): ToolDescription {
-    return {
-      name: this.name,
-      description: this.description,
-      schema_version: 'v1',
-      parameters: {
-        user_profile: {
-          type: 'object',
-          description: '用户画像数据（可选）',
-          required: false,
-        } as ToolParameter,
-        recent_usage: {
-          type: 'array',
-          description: '最近使用的提示词ID列表',
-          items: { type: 'string' },
-          required: false,
-        } as ToolParameter,
-        current_task: {
-          type: 'string',
-          description: '当前任务类型',
-          required: false,
-        } as ToolParameter,
-      },
-    };
-  }
-
-  async execute(params: any, context: ToolContext): Promise<ToolResult> {
-    const {
-      user_profile = {},
-      recent_usage = [],
-      current_task = ''
-    } = params;
-
-    this.logExecution('开始智能推荐', context, { 
-      recent_count: recent_usage.length, 
-      current_task 
-    });
-
-    const storage = this.getStorage();
-
-    try {
-      // 基于使用历史的推荐逻辑（简化版本）
-      const recommendations = await this.generatePersonalizedRecommendations(
-        user_profile,
-        recent_usage,
-        current_task,
-        context.userId
-      );
-
-      return {
-        success: true,
-        data: {
-          recommendations,
-          personalization_score: this.calculatePersonalizationScore(user_profile, recent_usage),
-          suggestion_type: 'usage_based'
-        },
-        message: `生成了 ${recommendations.length} 个个性化推荐`
-      };
-
-    } catch (error) {
-      return {
-        success: false,
-        message: '智能推荐失败'
-      };
-    }
-  }
-
-  private async generatePersonalizedRecommendations(
-    userProfile: any,
-    recentUsage: string[],
-    currentTask: string,
-    userId?: string
-  ) {
-    const storage = this.getStorage();
-    
-    // 简化的推荐逻辑
-    const promptsResponse = await storage.getPrompts({ userId });
-    const allPrompts = Array.isArray(promptsResponse) ? promptsResponse : [];
-    
-    return allPrompts.slice(0, 5).map(prompt => ({
-      ...prompt,
-      recommendation_reason: '基于使用历史推荐',
-      confidence: 0.8
-    }));
-  }
-
-  private calculatePersonalizationScore(userProfile: any, recentUsage: string[]): number {
-    let score = 0.5; // 基础分数
-    
-    if (Object.keys(userProfile).length > 0) score += 0.2;
-    if (recentUsage.length > 0) score += 0.3;
-    
-    return Math.min(score, 1.0);
-  }
-}
-
 // 创建工具实例
 export const semanticSearchTool = new SemanticSearchTool();
-export const smartRecommendationTool = new SmartRecommendationTool();
 
 // 向后兼容的函数导出（保持现有API不变）
 export async function handleSemanticSearch(params: any, userId?: string) {
   return semanticSearchTool.handleExecution(params, userId);
 }
 
-export async function handleSmartRecommendation(params: any, userId?: string) {
-  return smartRecommendationTool.handleExecution(params, userId);
-}
-
 // 工具定义导出（用于注册）
 export const semanticSearchToolDef = semanticSearchTool.getToolDefinition();
-export const smartRecommendationToolDef = smartRecommendationTool.getToolDefinition(); 
+ 

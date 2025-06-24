@@ -3,9 +3,9 @@
  * 专为第三方客户端设计的简化存储功能
  */
 
-import { BaseMCPTool, ToolContext, ToolResult } from '../shared/base-tool.js';
-import { ToolDescription, ToolParameter, Prompt } from '../types.js';
-import { MCPAIAnalysisResult } from '../ai/mcp-ai-analyzer.js';
+import { BaseMCPTool, ToolContext, ToolResult } from '../../shared/base-tool.js';
+import { ToolDescription, ToolParameter, Prompt } from '../../types.js';
+import { MCPAIAnalysisResult } from '../../ai/mcp-ai-analyzer.js';
 import { unifiedStoreTool } from './unified-store.js';
 
 /**

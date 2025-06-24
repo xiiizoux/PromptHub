@@ -3,8 +3,8 @@
  * 为用户提供智能的提示词推荐和发现功能
  */
 
-import { BaseMCPTool, ToolContext, ToolResult } from '../shared/base-tool.js';
-import { ToolDescription, ToolParameter, Prompt } from '../types.js';
+import { BaseMCPTool, ToolContext, ToolResult } from '../../shared/base-tool.js';
+import { ToolDescription, ToolParameter, Prompt } from '../../types.js';
 
 /**
  * 智能推荐工具类

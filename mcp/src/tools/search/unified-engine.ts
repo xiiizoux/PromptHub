@@ -3,10 +3,10 @@
  * 集成所有搜索算法，提供统一的搜索入口
  */
 
-import { BaseMCPTool, ToolContext, ToolResult } from '../shared/base-tool.js';
-import { ToolDescription, ToolParameter, Prompt } from '../types.js';
-import { searchCache, CacheKeys } from './enhanced-search-cache.js';
-import { searchPerformanceMonitor } from './search-performance-monitor.js';
+import { BaseMCPTool, ToolContext, ToolResult } from '../../shared/base-tool.js';
+import { ToolDescription, ToolParameter, Prompt } from '../../types.js';
+import { searchCache, CacheKeys } from './cache.js';
+import { searchPerformanceMonitor } from './performance-monitor.js';
 
 // 搜索结果接口
 interface SearchResult {

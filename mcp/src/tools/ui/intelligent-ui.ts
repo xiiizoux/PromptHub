@@ -3,9 +3,9 @@
  * 支持第三方客户端AI分析的智能提示词选择和存储功能
  */
 
-import { BaseMCPTool, ToolContext, ToolResult } from '../shared/base-tool.js';
-import { ToolDescription, ToolParameter, Prompt } from '../types.js';
-import { MCPAIAnalysisResult } from '../ai/mcp-ai-analyzer.js';
+import { BaseMCPTool, ToolContext, ToolResult } from '../../shared/base-tool.js';
+import { ToolDescription, ToolParameter, Prompt } from '../../types.js';
+import { MCPAIAnalysisResult } from '../../ai/mcp-ai-analyzer.js';
 
 // 智能选择匹配分数接口
 interface PromptMatchScore {

@@ -3,8 +3,8 @@
  * 为第三方AI客户端提供最佳体验：方便、简洁、易用、精准
  */
 
-import { BaseMCPTool, ToolContext, ToolResult } from '../shared/base-tool.js';
-import { ToolDescription, ToolParameter, Prompt } from '../types.js';
+import { BaseMCPTool, ToolContext, ToolResult } from '../../shared/base-tool.js';
+import { ToolDescription, ToolParameter, Prompt } from '../../types.js';
 
 /**
  * 一键智能搜索工具类

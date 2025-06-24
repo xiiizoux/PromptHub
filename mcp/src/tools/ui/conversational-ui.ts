@@ -3,8 +3,8 @@
  * 专为第三方AI客户端对话窗口设计的简洁高效呈现方式
  */
 
-import { BaseMCPTool, ToolContext, ToolResult } from '../shared/base-tool.js';
-import { ToolDescription, ToolParameter, Prompt } from '../types.js';
+import { BaseMCPTool, ToolContext, ToolResult } from '../../shared/base-tool.js';
+import { ToolDescription, ToolParameter, Prompt } from '../../types.js';
 
 /**
  * 简洁搜索工具类

@@ -3,9 +3,9 @@
  * 通过对话方式管理MCP服务配置
  */
 
-import { ToolDescription, ToolParameter, MCPToolResponse } from '../types.js';
-import { handleToolError, handleToolSuccess } from '../shared/error-handler.js';
-import { config } from '../config.js';
+import { ToolDescription, ToolParameter, MCPToolResponse } from '../../types.js';
+import { handleToolError, handleToolSuccess } from '../../shared/error-handler.js';
+import { config } from '../../config.js';
 
 /**
  * 配置管理工具定义

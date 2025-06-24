@@ -8,8 +8,8 @@
  * - 统一入口：一个工具满足所有存储需求
  */
 
-import { BaseMCPTool } from '../shared/base-tool.js';
-import { ToolDescription, ToolParameter } from '../types.js';
+import { BaseMCPTool } from '../../shared/base-tool.js';
+import { ToolDescription, ToolParameter } from '../../types.js';
 
 // 定义本地类型接口
 interface ToolResult {

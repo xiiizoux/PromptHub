@@ -3,7 +3,7 @@
  * 监控搜索性能、分析搜索模式、提供优化建议
  */
 
-import logger from '../utils/logger.js';
+import logger from '../../utils/logger.js';
 
 export interface SearchMetrics {
   query: string;

@@ -1,5 +1,5 @@
-import { BaseMCPTool } from '../shared/base-tool.js';
-import { ToolDescription, ToolParameter } from '../types.js';
+import { BaseMCPTool } from '../../shared/base-tool.js';
+import { ToolDescription, ToolParameter } from '../../types.js';
 
 // 定义本地类型接口
 interface ToolResult {

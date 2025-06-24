@@ -7,8 +7,8 @@
  * - 统一接口：一个工具满足所有搜索需求
  */
 
-import { BaseMCPTool } from '../shared/base-tool.js';
-import { ToolDescription, ToolParameter } from '../types.js';
+import { BaseMCPTool } from '../../shared/base-tool.js';
+import { ToolDescription, ToolParameter } from '../../types.js';
 
 // 定义本地类型接口
 interface ToolResult {
@@ -23,9 +23,9 @@ interface ToolContext {
   timestamp: number;
   userAgent?: string;
 }
-import { optimizedSemanticSearchTool } from './optimized-semantic-search.js';
-import { advancedSearchTool, multiFieldSearchTool } from './enhanced-search-new-style.js';
-import { intelligentPromptSelectionTool } from './intelligent-new-style.js';
+import { optimizedSemanticSearchTool } from './semantic-optimized.js';
+import { advancedSearchTool, multiFieldSearchTool } from './enhanced-search.js';
+import { intelligentPromptSelectionTool } from '../ui/intelligent-ui.js';
 
 /**
  * 搜索模式枚举

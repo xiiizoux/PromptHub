@@ -3,7 +3,7 @@
  * 提供多层缓存、智能预热、性能监控等功能
  */
 
-import logger from '../utils/logger.js';
+import logger from '../../utils/logger.js';
 
 export interface CacheEntry<T> {
   data: T;

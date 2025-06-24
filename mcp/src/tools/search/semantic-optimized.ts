@@ -9,8 +9,8 @@
  * 5. 简洁化对话展示层 - 用户友好展示
  */
 
-import { BaseMCPTool } from '../shared/base-tool.js';
-import { ToolDescription, ToolParameter, Prompt } from '../types.js';
+import { BaseMCPTool } from '../../shared/base-tool.js';
+import { ToolDescription, ToolParameter, Prompt } from '../../types.js';
 
 // 定义本地类型接口
 interface ToolResult {
@@ -793,10 +793,7 @@ ${result.preview}
         }
         
         if (index < results.length - 1) {
-          output += '
----
-
-';
+          output += '\n---\n\n';
         }
       });
   

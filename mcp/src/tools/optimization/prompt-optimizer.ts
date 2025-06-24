@@ -1,4 +1,4 @@
-import { BaseMCPTool } from '../shared/base-tool';
+import { BaseMCPTool } from '../../shared/base-tool.js';
 import type { ToolDescription, ToolParameter, ToolContext, ToolResult } from '../types';
 
 // 优化模板类型

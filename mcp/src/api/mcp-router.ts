@@ -36,7 +36,7 @@ import {
   handleIntelligentPromptSelection,
   handleIntelligentPromptStorage,
   handleExternalAIAnalysis
-} from '../tools/intelligent-new-style.js';
+} from '../tools/ui/intelligent-ui.js';
 import {
   quickStoreToolDef,
   smartStoreToolDef,
@@ -44,7 +44,7 @@ import {
   handleQuickStore,
   handleSmartStore,
   handleAnalyzeAndStore
-} from '../tools/auto-storage-new-style.js';
+} from '../tools/storage/auto-storage.js';
 import {
   advancedSearchToolDef,
   multiFieldSearchToolDef,
@@ -52,29 +52,29 @@ import {
   handleAdvancedSearch as handleEnhancedSearch,
   handleMultiFieldSearch as handlePromptSelection,
   handleSmartFilter as handleQuickAccess
-} from '../tools/enhanced-search-new-style.js';
+} from '../tools/search/enhanced-search.js';
 import {
   unifiedSearchEngineToolDef,
   quickSearchToolDef,
   handleUnifiedSearch,
   handleQuickSearch
-} from '../tools/unified-search-engine.js';
+} from '../tools/search/unified-engine.js';
 import {
   optimizedSemanticSearchToolDef,
   handleOptimizedSemanticSearch
-} from '../tools/optimized-semantic-search.js';
+} from '../tools/search/semantic-optimized.js';
 import {
   unifiedSearchToolDef,
   handleUnifiedSearch as handleUnifiedSearchNew
-} from '../tools/unified-search.js';
+} from '../tools/search/unified-search.js';
 import {
   unifiedStoreToolDef,
   handleUnifiedStore
-} from '../tools/unified-store.js';
+} from '../tools/storage/unified-store.js';
 import {
   promptOptimizerMCPToolDef,
   handlePromptOptimization
-} from '../tools/prompt-optimizer-mcp.js';
+} from '../tools/optimization/prompt-optimizer.js';
 
 // 创建路由器
 const router = express.Router();
