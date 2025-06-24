@@ -43,13 +43,36 @@ PromptHub/
 
 ### 开发者文档（docs文件夹）
 位置：`docs/`
-- `developer-guide.md` - 项目开发指南和架构说明
-- `docker-deployment.md` - Docker部署配置和说明
-- `database-structure.md` - 数据库设计和表结构
-- `security-guide.md` - 安全配置和最佳实践
-- `security-implementation.md` - 友好安全增强实施方案
-- `security-audit-fixes.md` - 安全审计报告与修复方案
-- `permission-management.md` - 权限管理系统设计
+
+#### 📦 安装配置
+- `setup/npm-quick-start.md` - NPM快速安装和使用指南
+- `setup/npm-package.md` - NPM包详细说明和配置
+- `setup/mcp-setup.md` - MCP适配器详细配置指南
+
+#### 🏗️ 部署运维
+- `deployment/docker-deployment.md` - Docker部署配置和说明
+
+#### 🛠️ 开发指南
+- `development/developer-guide.md` - 项目开发指南和架构说明
+- `development/database-structure.md` - 数据库设计和表结构
+
+#### 🔐 安全文档
+- `security/security-guide.md` - 安全配置和最佳实践
+- `security/security-implementation.md` - 友好安全增强实施方案
+- `security/security-audit-fixes.md` - 安全审计报告与修复方案
+- `security/permission-management.md` - 权限管理系统设计
+- `security/security-levels-config-guide.md` - 安全级别配置指南
+- `security/security-usage-guide.md` - 安全功能使用说明
+- `security/supabase-security-config.md` - Supabase安全配置
+
+#### 🔌 MCP集成
+- `mcp/mcp-zero-config-examples.md` - MCP零配置示例
+- `mcp/mcp-universal-config.md` - MCP通用配置指南
+- `mcp/mcp-simple-config.md` - MCP简化配置指南
+- `mcp/mcp-usage-guide.md` - MCP使用指南
+- `mcp/SEARCH_INTEGRATION_GUIDE.md` - 搜索集成指南
+- `mcp/UNIFIED_SEARCH_GUIDE.md` - 统一搜索指南
+- `mcp/UNIFIED_STORE_GUIDE.md` - 统一存储指南
 
 ## 🚀 快速开始
 
@@ -191,14 +214,30 @@ docker-compose -f docker-compose.prod.yml up -d
 
 ## 🔗 相关链接
 
+### 📚 在线文档
 - **在线文档**：[http://localhost:9011/docs](http://localhost:9011/docs)
 - **API参考**：[http://localhost:9011/docs/api-integration](http://localhost:9011/docs/api-integration)
 - **MCP集成**：[http://localhost:9011/docs/mcp-integration](http://localhost:9011/docs/mcp-integration)
-- **开发者指南**：[docs/developer-guide.md](docs/developer-guide.md)
-- **安全配置**：[docs/security-guide.md](docs/security-guide.md)
-- **安全实施方案**：[docs/security-implementation.md](docs/security-implementation.md)
-- **安全审计报告**：[docs/security-audit-fixes.md](docs/security-audit-fixes.md)
-- **安全使用指南**：[docs/security-usage-guide.md](docs/security-usage-guide.md)
+
+### 📖 快速开始
+- **NPM快速开始**：[docs/setup/npm-quick-start.md](docs/setup/npm-quick-start.md)
+- **MCP设置指南**：[docs/setup/mcp-setup.md](docs/setup/mcp-setup.md)
+- **Docker部署**：[docs/deployment/docker-deployment.md](docs/deployment/docker-deployment.md)
+
+### 🛠️ 开发文档
+- **开发者指南**：[docs/development/developer-guide.md](docs/development/developer-guide.md)
+- **数据库结构**：[docs/development/database-structure.md](docs/development/database-structure.md)
+
+### 🔐 安全文档
+- **安全配置**：[docs/security/security-guide.md](docs/security/security-guide.md)
+- **安全实施方案**：[docs/security/security-implementation.md](docs/security/security-implementation.md)
+- **安全审计报告**：[docs/security/security-audit-fixes.md](docs/security/security-audit-fixes.md)
+- **安全使用指南**：[docs/security/security-usage-guide.md](docs/security/security-usage-guide.md)
+
+### 🔌 MCP文档
+- **MCP零配置示例**：[docs/mcp/mcp-zero-config-examples.md](docs/mcp/mcp-zero-config-examples.md)
+- **MCP通用配置**：[docs/mcp/mcp-universal-config.md](docs/mcp/mcp-universal-config.md)
+- **统一搜索指南**：[docs/mcp/UNIFIED_SEARCH_GUIDE.md](docs/mcp/UNIFIED_SEARCH_GUIDE.md)
 
 ## 🤝 贡献指南
 
