@@ -17,7 +17,7 @@
  *      }
  *    }
  * 
- * 2. 重启AI客户端即可使用30+个PromptHub工具
+ * 2. 重启AI客户端即可使用24个PromptHub工具
  */
 
 // 检查Node.js版本
@@ -400,91 +400,7 @@ class PromptHubMCPAdapter {
           required: ['prompts']
         }
       },
-      // 性能分析工具
-      {
-        name: 'track_prompt_usage',
-        description: '记录提示词使用数据',
-        inputSchema: {
-          type: 'object',
-          properties: {
-            prompt_id: { type: 'string', description: '提示词ID' },
-            prompt_version: { type: 'number', description: '提示词版本' },
-            input_tokens: { type: 'number', description: '输入令牌数' },
-            output_tokens: { type: 'number', description: '输出令牌数' },
-            total_tokens: { type: 'number', description: '总令牌数' },
-            latency_ms: { type: 'number', description: '延迟时间（毫秒）' },
-            user_id: { type: 'string', description: '用户ID' },
-            session_id: { type: 'string', description: '会话ID' },
-            metadata: { type: 'object', description: '额外元数据' }
-          },
-          required: ['prompt_id', 'input_tokens', 'output_tokens', 'total_tokens', 'latency_ms']
-        }
-      },
-      {
-        name: 'submit_prompt_feedback',
-        description: '提交提示词反馈',
-        inputSchema: {
-          type: 'object',
-          properties: {
-            usage_id: { type: 'string', description: '使用记录ID' },
-            rating: { type: 'number', description: '评分（1-5）' },
-            comments: { type: 'string', description: '评论' },
-            user_id: { type: 'string', description: '用户ID' }
-          },
-          required: ['usage_id', 'rating']
-        }
-      },
-      {
-        name: 'get_prompt_performance',
-        description: '获取提示词性能数据',
-        inputSchema: {
-          type: 'object',
-          properties: {
-            prompt_id: { type: 'string', description: '提示词ID' },
-            version: { type: 'number', description: '提示词版本' }
-          },
-          required: ['prompt_id']
-        }
-      },
-      {
-        name: 'generate_performance_report',
-        description: '生成提示词性能报告',
-        inputSchema: {
-          type: 'object',
-          properties: {
-            prompt_id: { type: 'string', description: '提示词ID' }
-          },
-          required: ['prompt_id']
-        }
-      },
-      {
-        name: 'create_ab_test',
-        description: '创建A/B测试',
-        inputSchema: {
-          type: 'object',
-          properties: {
-            name: { type: 'string', description: '测试名称' },
-            description: { type: 'string', description: '测试描述' },
-            prompt_a: { type: 'string', description: '提示词A的ID' },
-            prompt_b: { type: 'string', description: '提示词B的ID' },
-            version_a: { type: 'number', description: '提示词A的版本' },
-            version_b: { type: 'number', description: '提示词B的版本' },
-            traffic_split: { type: 'number', description: '流量分配比例（0-1）' }
-          },
-          required: ['name', 'prompt_a', 'prompt_b']
-        }
-      },
-      {
-        name: 'get_ab_test_results',
-        description: '获取A/B测试结果',
-        inputSchema: {
-          type: 'object',
-          properties: {
-            test_id: { type: 'string', description: '测试ID' }
-          },
-          required: ['test_id']
-        }
-      }
+
     ];
 
     console.log(`[PromptHub MCP] 加载了 ${this.tools.length} 个预定义工具`);
@@ -767,7 +683,7 @@ class PromptHubMCPAdapter {
       method: method,
       headers: {
         'Content-Type': 'application/json',
-        'User-Agent': 'PromptHub-MCP-Adapter/1.6.0'
+        'User-Agent': 'PromptHub-MCP-Adapter/2.1.0'
       }
     };
 
@@ -842,7 +758,7 @@ async function handleMessage(message) {
             },
             serverInfo: {
               name: 'prompthub-mcp-adapter',
-              version: '1.3.0'
+              version: '2.1.0'
             }
           }
         });

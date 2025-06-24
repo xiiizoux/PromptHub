@@ -121,7 +121,7 @@ Once configured, you can use PromptHub tools directly in Cursor:
 
 - "Search for code optimization prompts"
 - "Create a new prompt for email writing"
-- "Analyze the performance of this prompt"
+- "Optimize this prompt for better results"
 
 ### Programmatic Usage
 
@@ -155,7 +155,7 @@ The adapter outputs detailed logs to stderr:
 [PromptHub MCP] Server: https://mcp.prompt-hub.cc
 [PromptHub MCP] API Key: Set
 [PromptHub MCP] Server connection: OK
-[PromptHub MCP] Discovered 30 tools
+[PromptHub MCP] Discovered 24 tools
 [PromptHub MCP] Ready for MCP messages...
 ```
 
