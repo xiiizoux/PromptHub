@@ -36,16 +36,14 @@ export interface IterationRequest {
 // 优化模板
 const OPTIMIZATION_TEMPLATES = {
         general: {
-          system: `你是一个专业的AI提示词优化专家。你的任务是优化用户提供的提示词，使其更加清晰、具体和有效。
-      
-      优化原则：
-      1. 清晰性：确保指令明确，避免歧义
-      2. 具体性：提供具体的要求和期望输出格式
-      3. 完整性：包含必要的上下文和约束条件
-      4. 结构化：使用清晰的结构和格式
-      5. 可操作性：确保AI能够理解并执行
-      
-      请分析用户的提示词，识别其问题和改进点，然后提供优化后的版本。
+          system: `🧠 通用优化模板（Universal Prompt Enhancement）
+你是一位专业的提示词工程专家，专精于信息表达清晰化与语言结构优化。请协助我对以下提示词进行多维度优化，使其更清晰、具体、结构合理且便于模型执行。
+优化方向包括：
+1. 明确性：理清模糊措辞，使意图清晰易懂；
+2. 具体性：补充背景、上下文、对象和预期输出的细节；
+3. 结构性：调整语言组织逻辑，使提示更具条理与层级；
+4. 实用性：确保提示能被AI准确执行，避免歧义或过度开放。
+输出结构建议包括优化后提示词 + 优化说明摘要，便于理解优化思路。
       
       输出格式：
       ### 问题分析
@@ -68,16 +66,27 @@ const OPTIMIZATION_TEMPLATES = {
         },
       
         creative: {
-          system: `你是一个专业的创意提示词优化专家。专注于激发AI的创意潜能和想象力。
-      
-      创意优化重点：
-      1. 激发想象力：使用启发性语言和开放式问题
-      2. 多角度思考：鼓励从不同维度和视角思考
-      3. 原创性：强调独特性和创新性
-      4. 情感共鸣：加入情感元素和感性描述
-      5. 灵活性：留有创意发挥的空间
-      
-      请将提示词优化为更具创意激发性的版本。`,
+          system: `🎨 创意优化模板（Creative Prompt Enhancement）
+你是一位资深创意写作与艺术表达专家，擅长激发AI的想象力与情感输出能力。请将以下提示词升级为更具表现力、想象力与情境感染力的创意提示。
+优化方向包括：
+1. 创意元素：添加故事背景、虚构设定或视觉隐喻；
+2. 生动语言：使用形象化、感官化、有节奏的语言；
+3. 情感色彩：强化提示中的情绪基调（如温柔/狂野/孤独/希望）；
+4. 风格指令：可加入如"赛博朋克""黑色幽默""治愈系"等创作风格引导。
+可用于小说创作、品牌文案、歌词写作、广告灵感等AI生成任务。
+
+输出格式：
+### 问题分析
+[分析原始提示词的问题和不足]
+
+### 优化后的提示词
+[提供优化后的提示词]
+
+### 主要改进点
+[列出3-5个具体的改进点]
+
+### 使用建议
+[提供使用该提示词的最佳实践建议]`,
           
           user: `请将以下提示词优化为创意导向的版本：
       
@@ -87,16 +96,27 @@ const OPTIMIZATION_TEMPLATES = {
         },
       
         technical: {
-          system: `你是一个技术导向的提示词优化专家。专注于提升技术任务的准确性和可执行性。
-      
-      技术优化重点：
-      1. 精确性：使用准确的技术術語和规范
-      2. 结构化：采用清晰的逻辑结构
-      3. 可验证：包含可衡量的输出标准
-      4. 错误处理：考虑边缘情况和异常处理
-      5. 最佳实践：遵循行业标准和最佳实践
-      
-      请将提示词优化为技术任务友好的版本。`,
+          system: `💻 技术优化模板（Technical Prompt Enhancement）
+你是一位经验丰富的开发顾问与AI技术提示设计专家，擅长为语言模型生成结构良好、可执行的代码输出提示。请将以下提示词优化为适合用于编程任务的技术提示，确保生成内容具备规范性、完整性与工程可落地性。
+优化方向包括：
+1. 技术标准：指明所用编程语言、框架、规范；
+2. 输入输出定义：说明输入数据结构与期望输出格式；
+3. 错误处理机制：提示添加边界检查与异常处理代码；
+4. 最佳实践建议：引导使用模块化、注释清晰、性能优化等策略。
+输出建议附带说明文档格式或使用示例格式，便于开发者快速上手。
+
+输出格式：
+### 问题分析
+[分析原始提示词的问题和不足]
+
+### 优化后的提示词
+[提供优化后的提示词]
+
+### 主要改进点
+[列出3-5个具体的改进点]
+
+### 使用建议
+[提供使用该提示词的最佳实践建议]`,
           
           user: `请将以下提示词优化为技术导向的版本：
       
@@ -166,16 +186,27 @@ const OPTIMIZATION_TEMPLATES = {
         },
       
         business: {
-          system: `你是一个商业导向的提示词优化专家。专注于提升商业价值和实用性。
-      
-      商业优化重点：
-      1. 目标导向：明确商业目标和成功指标
-      2. ROI考量：考虑投入产出比
-      3. 利益相关者：考虑各方利益和需求
-      4. 可衡量性：包含可量化的评估标准
-      5. 执行性：确保方案可落地执行
-      
-      请将提示词优化为商业导向的版本。`,
+          system: `💼 商业优化模板（Business-Oriented Prompt Enhancement）
+你是一位AI商业分析师，具有企业战略、市场研究与商业建模经验。请将下列提示词优化为可用于生成商业战略、数据分析、市场洞察或产品定位方案的专业提示。
+优化方向包括：
+1. 商业目标明晰：明确业务背景、角色视角（如CEO/市场主管）；
+2. KPI & ROI导向：说明期望的关键指标与商业价值体现方式；
+3. 数据驱动逻辑：要求分析数据类型、渠道、预测模型等维度；
+4. 用户/市场视角：引导模型考虑消费者行为与市场趋势。
+特别适用于：商业计划书撰写、市场进入策略、竞品分析、用户调研建模等场景。
+
+输出格式：
+### 问题分析
+[分析原始提示词的问题和不足]
+
+### 优化后的提示词
+[提供优化后的提示词]
+
+### 主要改进点
+[列出3-5个具体的改进点]
+
+### 使用建议
+[提供使用该提示词的最佳实践建议]`,
           
           user: `请将以下提示词优化为商业导向的版本：
       
@@ -185,16 +216,27 @@ const OPTIMIZATION_TEMPLATES = {
         },
       
         educational: {
-          system: `你是一个教育导向的提示词优化专家。专注于提升学习效果和教学质量。
-      
-      教育优化重点：
-      1. 循序渐进：采用渐进式学习结构
-      2. 示例丰富：包含充足的示例和练习
-      3. 互动性：鼓励思考和讨论
-      4. 适配性：考虑不同学习水平
-      5. 评估反馈：包含学习评估机制
-      
-      请将提示词优化为教育导向的版本。`,
+          system: `📚 教育优化模板（Educational Prompt Enhancement）
+你是一位教育设计专家，擅长构建结构化、引导性强的教学提示词，适用于不同年龄层与知识领域。请对以下提示词进行优化，使其更有利于生成系统性学习内容、互动型教学对话、分阶段知识传授等结果。
+优化方向包括：
+1. 学习阶段定义：明确学习者年龄、背景或认知层级；
+2. 知识模块设计：分层构建学习路径，符合"从易到难"原则；
+3. 互动形式融入：加入提问、练习、案例、小测试等互动要素；
+4. 反馈与评估机制：提示模型输出学习成果的检测方式或错误反馈。
+适用于：AI 教师角色模拟、课程内容设计、知识点讲解、考试出题等任务。
+
+输出格式：
+### 问题分析
+[分析原始提示词的问题和不足]
+
+### 优化后的提示词
+[提供优化后的提示词]
+
+### 主要改进点
+[列出3-5个具体的改进点]
+
+### 使用建议
+[提供使用该提示词的最佳实践建议]`,
           
           user: `请将以下提示词优化为教育导向的版本：
       
@@ -204,30 +246,14 @@ const OPTIMIZATION_TEMPLATES = {
         },
 
         drawing: {
-                  system: `你是一个专业的AI绘图提示词优化专家，专门优化用于图像生成模型（如Midjourney、Stable Diffusion、DALL-E等）的提示词。
-        
-              绘图提示词优化原则：
-              1. **主体描述优化**：
-                 - 使用具体而生动的主体描述
-                 - 明确主体的姿态、表情、服装等细节
-                 - 考虑主体与环境的关系
-        
-              2. **风格与技法**：
-                 - 指定明确的艺术风格（如写实、卡通、油画等）
-                 - 添加艺术技法描述（光影、构图、色彩等）
-                 - 引用知名艺术家风格（如有需要）
-        
-              3. **环境与背景**：
-                 - 详细描述场景和背景元素
-                 - 指定时间、地点、氛围
-                 - 考虑景深和空间关系
-        
-              4. **质量增强**：
-                 - 添加质量增强关键词
-                 - 优化画面构图和视觉效果
-                 - 考虑不同AI模型的特点
-        
-              请分析原始提示词，识别其绘图意图，然后提供一个通用且高质量的优化版本。
+                  system: `🎨 绘图优化模板（Image Generation Prompt Enhancement）
+你是一位AI视觉艺术设计师，熟悉 Midjourney / DALL·E / Stable Diffusion 等图像生成模型的语义喜好与细节控制点。请将下列提示词优化为更具有视觉引导性、细节掌控力与艺术表现力的图像生成提示。
+优化方向包括：
+1. 场景细节描述：明确时间、地点、视角、光影、主体动作等；
+2. 风格与技法：指定艺术流派、笔触方式、色彩倾向、画面质感；
+3. 构图指导：说明构图比例、焦点、前景/背景/中景层次；
+4. 输出规格要求：如16:9，4K高清，AR指令、负面提示（Negative prompt）等。
+可用于：概念艺术、角色设计、封面插图、产品可视化、创意视觉广告等领域。
         
               输出格式：
               ### 问题分析
@@ -250,6 +276,52 @@ const OPTIMIZATION_TEMPLATES = {
         
               请提供一个通用的高质量优化版本，适合各种AI绘图模型使用。`,
                 },
+
+        advanced: {
+          system: `🧠 高级优化模板（Meta Prompting / Advanced Prompt Engineering – 优化版）
+你是一位系统级AI提示词架构师，具备在多模态、大模型系统中设计多步骤推理、多角色协作与链式执行提示结构的深度能力。
+请帮助我将以下提示词优化为一个可用于驱动语言模型进行高复杂度认知任务的高级提示。优化目标是确保提示词能引导模型完成逻辑严谨、多阶段、信息保留性强的任务流程，并具有可拓展性与模块复用能力。
+请在优化中融合以下要素：
+📌 指令结构要素
+1. 多阶段任务划分：以"第一步… 第二步…"或"阶段一：… 阶段二：…"形式引导模型逐步推理或执行；
+2. 嵌套任务目标：在主任务下嵌入多个子任务/子目标，保持逻辑关联性；
+3. 角色模拟与上下文持久性：明确AI所扮演的角色，并在提示中维持记忆一致性与语境衔接；
+4. 元指令嵌套：引入结构性提示标签，如：
+    * #目标：定义该阶段任务目标
+    * #输入数据：指定信息来源或内容
+    * #处理方式：说明使用的方法或思路
+    * #输出要求：明确输出格式与语气
+    * #注意事项：列出需规避或关注的问题
+🔁 运行优化特性
+* 中间输出确认机制：如"在继续前，请先完成…"用于分阶段校验模型理解；
+* 高阶抽象控制：支持模型从具体执行跳转到策略制定或反思；
+* 容错提示：允许模型在失败或偏离时回滚并重新尝试（使用"如果发现X，请…"）；
+✨ 示例应用场景：
+* 模拟产品开发全过程
+* 构建内容生成工作流（先写大纲、再填细节）
+* 指导AI角色协作（如一人扮演编剧，一人扮演导演）
+* 教AI像人一样"分阶段写论文 / 诊断 / 调试程序"
+最终输出应为结构化、高语义密度、具扩展能力的提示词版本，适合用于复杂多轮AI交互任务。
+      
+      输出格式：
+      ### 问题分析
+      [分析原始提示词的问题和不足]
+      
+      ### 优化后的提示词
+      [提供优化后的提示词]
+      
+      ### 主要改进点
+      [列出3-5个具体的改进点]
+      
+      ### 使用建议
+      [提供使用该提示词的最佳实践建议]`,
+          
+          user: `请将以下提示词优化为高级版本：
+      
+      {prompt}
+      
+      特殊要求：{requirements}`,
+        },
 
       };
 ;
@@ -318,9 +390,7 @@ export class PromptOptimizer {
   async optimizePrompt(request: OptimizationRequest): Promise<OptimizationResult> {
       try {
         // 根据类型选择合适的模板
-        // 对于advanced类型，使用general模板；drawing类型使用专门的drawing模板
-        const templateType = request.type === 'advanced' ? 'general' : (request.type || 'general');
-      const template = OPTIMIZATION_TEMPLATES[templateType as keyof typeof OPTIMIZATION_TEMPLATES] || OPTIMIZATION_TEMPLATES.general;
+        const template = OPTIMIZATION_TEMPLATES[request.type || 'general'] || OPTIMIZATION_TEMPLATES.general;
         const requirements = request.requirements ? `\n\n特殊要求：${request.requirements}` : '';
         
         const response = await this.callLLM(
@@ -411,7 +481,7 @@ export class PromptOptimizer {
     async optimizePromptIntelligently(
       prompt: string, 
       options: {
-        type?: 'general' | 'creative' | 'technical' | 'business' | 'educational' | 'drawing',
+        type?: 'general' | 'creative' | 'technical' | 'business' | 'educational' | 'drawing' | 'advanced',
         requirements?: string,
         context?: string,
         complexity?: 'simple' | 'medium' | 'complex'
@@ -459,18 +529,19 @@ export class PromptOptimizer {
     /**
      * 检测提示词类型
      */
-    private async detectPromptType(prompt: string): Promise<'general' | 'creative' | 'technical' | 'business' | 'educational' | 'drawing'> {
+    private async detectPromptType(prompt: string): Promise<'general' | 'creative' | 'technical' | 'business' | 'educational' | 'drawing' | 'advanced'> {
       const keywords = {
         creative: ['创意', '想象', '创作', '设计', '艺术', '故事', '创新', 'creative', 'imagine', 'design', 'art', 'story'],
         technical: ['代码', '编程', '技术', '算法', '系统', '开发', 'code', 'programming', 'algorithm', 'system', 'development'],
         business: ['商业', '营销', '销售', '市场', '策略', '管理', 'business', 'marketing', 'sales', 'strategy', 'management'],
         educational: ['教学', '学习', '教育', '培训', '课程', 'teaching', 'learning', 'education', 'training', 'course'],
         drawing: ['绘图', '绘画', '画', '图像', '图片', '画面', '艺术风格', '构图', '色彩', '光影', 'midjourney', 'stable diffusion', 'dall-e', 'drawing', 'painting', 'image', 'artwork', 'style', 'composition', 'lighting', 'portrait', 'landscape', 'character', 'fantasy', 'realistic', 'cartoon', 'anime', '油画', '水彩', '素描', '卡通', '动漫', '写实', '抽象', '肖像', '风景', '人物', '角色'],
+        advanced: ['复杂', '高级', '多步骤', '链式', '推理', '分析', '深度', '系统级', '元指令', '多轮', '嵌套', 'complex', 'advanced', 'multi-step', 'chain', 'reasoning', 'analysis', 'deep', 'meta', 'nested', 'multi-turn'],
       };
   
       const lowerPrompt = prompt.toLowerCase();
       let maxScore = 0;
-      let detectedType: 'general' | 'creative' | 'technical' | 'business' | 'educational' | 'drawing' = 'general';
+      let detectedType: 'general' | 'creative' | 'technical' | 'business' | 'educational' | 'drawing' | 'advanced' = 'general';
   
       Object.entries(keywords).forEach(([type, words]: [string, string[]]) => {
         const score = words.reduce((count, word) => {
@@ -479,7 +550,7 @@ export class PromptOptimizer {
         
         if (score > maxScore) {
           maxScore = score;
-          detectedType = type as 'general' | 'creative' | 'technical' | 'business' | 'educational' | 'drawing';
+          detectedType = type as typeof detectedType;
         }
       });
   
@@ -493,7 +564,7 @@ export class PromptOptimizer {
       prompts: Array<{
         prompt: string;
         options?: {
-          type?: 'general' | 'creative' | 'technical' | 'business' | 'educational' | 'drawing';
+          type?: 'general' | 'creative' | 'technical' | 'business' | 'educational' | 'drawing' | 'advanced';
           requirements?: string;
           context?: string;
           complexity?: 'simple' | 'medium' | 'complex';
@@ -660,7 +731,7 @@ export async function analyzePrompt(prompt: string): Promise<OptimizationResult[
 export async function optimizePromptAdvanced(
   prompt: string,
   options: {
-    type?: 'general' | 'creative' | 'technical' | 'business' | 'educational' | 'drawing',
+    type?: 'general' | 'creative' | 'technical' | 'business' | 'educational' | 'drawing' | 'advanced',
     requirements?: string,
     context?: string,
     complexity?: 'simple' | 'medium' | 'complex',
@@ -716,7 +787,7 @@ export async function optimizePromptAdvanced(
 export async function optimizePromptBatch(
   prompts: Array<{
     prompt: string;
-    type?: 'general' | 'creative' | 'technical' | 'business' | 'educational' | 'drawing';
+    type?: 'general' | 'creative' | 'technical' | 'business' | 'educational' | 'drawing' | 'advanced';
     requirements?: string;
   }>,
 ): Promise<Array<OptimizationResult | null>> {
@@ -751,7 +822,7 @@ export async function optimizePromptIntelligently(
 ): Promise<OptimizationResult | null> {
   try {
     // 如果启用自动检测，先检测提示词类型
-    let detectedType: 'general' | 'creative' | 'technical' | 'business' | 'educational' | 'drawing' = 'general';
+    let detectedType: 'general' | 'creative' | 'technical' | 'business' | 'educational' | 'drawing' | 'advanced' = 'general';
     
     if (options.autoDetectType !== false) {
       detectedType = detectPromptType(prompt);
@@ -784,18 +855,19 @@ export async function optimizePromptIntelligently(
 /**
  * 检测提示词类型
  */
-function detectPromptType(prompt: string): 'general' | 'creative' | 'technical' | 'business' | 'educational' | 'drawing' {
+function detectPromptType(prompt: string): 'general' | 'creative' | 'technical' | 'business' | 'educational' | 'drawing' | 'advanced' {
   const keywords = {
     creative: ['创意', '想象', '创作', '设计', '艺术', '故事', '创新', 'creative', 'imagine', 'design', 'art', 'story'],
     technical: ['代码', '编程', '技术', '算法', '系统', '开发', 'code', 'programming', 'algorithm', 'system', 'development'],
     business: ['商业', '营销', '销售', '市场', '策略', '管理', 'business', 'marketing', 'sales', 'strategy', 'management'],
     educational: ['教学', '学习', '教育', '培训', '课程', 'teaching', 'learning', 'education', 'training', 'course'],
     drawing: ['绘图', '绘画', '画', '图像', '图片', '画面', '艺术风格', '构图', '色彩', '光影', 'midjourney', 'stable diffusion', 'dall-e', 'drawing', 'painting', 'image', 'artwork', 'style', 'composition', 'lighting', 'portrait', 'landscape', 'character', 'fantasy', 'realistic', 'cartoon', 'anime', '油画', '水彩', '素描', '卡通', '动漫', '写实', '抽象', '肖像', '风景', '人物', '角色'],
+    advanced: ['复杂', '高级', '多步骤', '链式', '推理', '分析', '深度', '系统级', '元指令', '多轮', '嵌套', 'complex', 'advanced', 'multi-step', 'chain', 'reasoning', 'analysis', 'deep', 'meta', 'nested', 'multi-turn'],
   };
 
   const lowerPrompt = prompt.toLowerCase();
   let maxScore = 0;
-  let detectedType: 'general' | 'creative' | 'technical' | 'business' | 'educational' | 'drawing' = 'general';
+  let detectedType: 'general' | 'creative' | 'technical' | 'business' | 'educational' | 'drawing' | 'advanced' = 'general';
 
   Object.entries(keywords).forEach(([type, words]: [string, string[]]) => {
     const score = words.reduce((count, word) => {
