@@ -1,7 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { 
+import {
   SparklesIcon,
   DocumentTextIcon,
   ChartBarIcon,
@@ -13,6 +13,7 @@ import {
   AcademicCapIcon,
   LinkIcon,
   RectangleStackIcon,
+  PlusCircleIcon,
 } from '@heroicons/react/24/outline';
 
 const Footer: React.FC = () => {
@@ -28,7 +29,8 @@ const Footer: React.FC = () => {
   const footerLinks = {
     产品: [
       { name: '浏览提示词', href: '/prompts', icon: RectangleStackIcon },
-      { name: '创建提示词', href: '/prompts/create', icon: CodeBracketIcon },
+      { name: '创建提示词', href: '/prompts/create', icon: PlusCircleIcon },
+      { name: 'AI优化器', href: '/optimizer', icon: SparklesIcon },
     ],
     资源: [
       { name: '文档', href: '/docs', icon: DocumentTextIcon },
