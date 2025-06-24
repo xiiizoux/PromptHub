@@ -540,6 +540,61 @@ export class SupabaseAdapter implements StorageAdapter {
     }
   }
 
+  /**
+   * 验证用户是否存在于数据库中
+   */
+  private async validateUserExists(userId: string): Promise<void> {
+    console.log(`[SupabaseAdapter] 开始验证用户ID: ${userId}`);
+    
+    const user = await this.getUser(userId);
+    if (!user) {
+      console.error(`[SupabaseAdapter] ❌ 用户验证失败: 用户ID ${userId} 在users表中不存在`);
+      
+      // 详细检查各个表的数据
+      try {
+        // 1. 检查API密钥表
+        const { data: apiKeyData, error: apiKeyError } = await this.supabase
+          .from('api_keys')
+          .select('user_id, name, created_at')
+          .eq('user_id', userId);
+        
+        console.error('[SupabaseAdapter] API密钥表查询:', {
+          data: apiKeyData,
+          error: apiKeyError?.message,
+          count: apiKeyData?.length || 0
+        });
+        
+        // 2. 检查users表
+        const { data: usersData, error: usersError } = await this.supabase
+          .from('users')
+          .select('id, email, display_name')
+          .eq('id', userId);
+          
+        console.error('[SupabaseAdapter] users表查询:', {
+          data: usersData,
+          error: usersError?.message,
+          count: usersData?.length || 0
+        });
+        
+        // 3. 检查prompts表的外键约束
+        const { data: constraintData, error: constraintError } = await this.supabase
+          .rpc('check_foreign_key_constraints', {});
+          
+        console.error('[SupabaseAdapter] 外键约束检查:', {
+          data: constraintData,
+          error: constraintError?.message
+        });
+        
+      } catch (debugError) {
+        console.error('[SupabaseAdapter] 调试查询失败:', debugError);
+      }
+      
+      throw new Error(`用户验证失败: 用户ID ${userId} 在数据库中不存在`);
+    }
+    
+    console.log(`[SupabaseAdapter] ✅ 用户验证成功: ${user.display_name} (${user.email})`);
+  }
+
   async createPrompt(prompt: Prompt): Promise<Prompt> {
       try {
         // 确保有用户ID - 改进用户ID验证逻辑
@@ -552,10 +607,8 @@ export class SupabaseAdapter implements StorageAdapter {
             finalUserId = currentUser.id;
             console.log('[SupabaseAdapter] 获取到当前用户ID:', finalUserId);
           } else {
-            // 使用系统用户ID作为默认值
-            const systemUserId = '00000000-0000-5000-8000-000000000001';
-            finalUserId = systemUserId;
-            console.log('[SupabaseAdapter] 使用系统用户ID创建提示词:', systemUserId);
+            // API密钥认证失败，无法创建提示词
+            throw new Error('无法确定用户身份，请检查API密钥认证');
           }
         } else {
           console.log('[SupabaseAdapter] 使用传入的用户ID:', finalUserId);
@@ -576,6 +629,11 @@ export class SupabaseAdapter implements StorageAdapter {
           user_id: finalUserId
         };
         
+        console.log('[SupabaseAdapter] 验证用户是否存在于数据库中
+        if (finalUserId) {
+          await this.validateUserExists(finalUserId);
+        }
+        
         console.log('[SupabaseAdapter] 准备创建提示词:', {
           name: promptData.name,
           category: promptData.category,
@@ -583,9 +641,8 @@ export class SupabaseAdapter implements StorageAdapter {
           is_public: promptData.is_public
         });
         
-        // 创建提示词 - 如果是系统用户，使用管理员客户端绕过RLS
-        const isSystemUser = finalUserId === '00000000-0000-5000-8000-000000000001';
-        const client = isSystemUser && this.adminSupabase ? this.adminSupabase : this.supabase;
+        // 创建提示词
+        const client = this.supabase;
   
         const { data, error } = await client
           .from('prompts')
@@ -643,7 +700,7 @@ export class SupabaseAdapter implements StorageAdapter {
       }
       
       // 检查权限
-      if (userId && existingPrompt.user_id !== userId && existingPrompt.user_id !== 'system-user') {
+      if (userId && existingPrompt.user_id !== userId) {
         throw new Error('无权更新此提示词');
       }
       
@@ -702,7 +759,7 @@ export class SupabaseAdapter implements StorageAdapter {
       }
       
       // 检查权限
-      if (userId && existingPrompt.user_id !== userId && existingPrompt.user_id !== 'system-user') {
+      if (userId && existingPrompt.user_id !== userId) {
         throw new Error('无权删除此提示词');
       }
       
@@ -1177,9 +1234,8 @@ export class SupabaseAdapter implements StorageAdapter {
         created_at: new Date().toISOString()
       };
       
-      // 如果是系统用户，使用管理员客户端绕过RLS
-      const isSystemUser = userId === '00000000-0000-5000-8000-000000000001';
-      const client = isSystemUser && this.adminSupabase ? this.adminSupabase : this.supabase;
+      // 使用标准客户端
+      const client = this.supabase;
 
       const { data, error } = await client
         .from('prompt_versions')
@@ -1216,7 +1272,7 @@ export class SupabaseAdapter implements StorageAdapter {
       }
       
       // 检查权限
-      if (userId && promptData.user_id !== userId && promptData.user_id !== 'system-user') {
+      if (userId && promptData.user_id !== userId) {
         throw new Error('无权恢复此提示词版本');
       }
       

@@ -552,20 +552,41 @@ class PromptHubMCPAdapter {
       // 使用REST API调用工具
       const response = await this.makeHttpRequest(`/tools/${name}/invoke`, 'POST', parameters);
       
-      // 🎯 优化输出格式：优先使用格式化的对话式文本
+      // 🎯 修复响应解析逻辑
       let displayText;
+      let parsedData = null;
       
-      // 1. 首先尝试使用专门的对话式格式化文本
-      if (response.data?.conversation_display) {
+      // 1. 首先尝试解析response.content.text中的JSON数据
+      if (response.content?.text) {
+        try {
+          // MCP服务器返回的文本可能是JSON字符串，需要解析
+          parsedData = JSON.parse(response.content.text);
+          
+          // 如果解析后的数据有results数组，则格式化显示
+          if (parsedData.results && Array.isArray(parsedData.results)) {
+            displayText = this.formatSearchResults({
+              data: parsedData,
+              query: parameters.query || ''
+            });
+          } else {
+            // 否则直接使用原始文本
+            displayText = response.content.text;
+          }
+        } catch (parseError) {
+          // 如果不是JSON，直接使用原始文本
+          displayText = response.content.text;
+        }
+      }
+      // 2. 检查是否有专门的对话式格式化文本
+      else if (response.data?.conversation_display) {
         displayText = response.data.conversation_display;
       }
-      // 2. 其次尝试使用现有的文本内容
-      else if (response.content?.text) {
-        displayText = response.content.text;
-      }
-      // 3. 如果是搜索结果且有数据，尝试格式化显示
-      else if (response.success && response.data?.results && Array.isArray(response.data.results)) {
-        displayText = this.formatSearchResults(response);
+      // 3. 直接的搜索结果格式
+      else if (response.data?.results && Array.isArray(response.data.results)) {
+        displayText = this.formatSearchResults({
+          data: response.data,
+          query: parameters.query || ''
+        });
       }
       // 4. 最后回退到JSON格式
       else {
@@ -591,7 +612,9 @@ class PromptHubMCPAdapter {
    * 确保用户能够看到完整的提示词内容，而不只是元数据
    */
   formatSearchResults(response) {
-    const { results = [], query = '', search_metadata = {} } = response.data || {};
+    // 兼容两种数据格式：直接的response.data 和 解析后的数据
+    const responseData = response.data || response;
+    const { results = [], query = '', search_metadata = {} } = responseData;
     
     if (results.length === 0) {
       return `😔 抱歉，没有找到与"${query}"相关的提示词。

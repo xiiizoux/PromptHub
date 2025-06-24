@@ -216,23 +216,12 @@ async function performAuthentication(req: Request, requireAuth: boolean = true):
         ip, userAgent, sessionId
       });
 
-      // 生成固定的系统用户UUID（基于固定字符串的UUID v5）
-      const systemUserId = '00000000-0000-5000-8000-000000000001'; // 固定的系统用户UUID
-
-      const systemUser: User = {
-        id: systemUserId,
-        email: 'system@mcp-server.local',
-        display_name: 'MCP System User'
-      };
-
-      // 更新会话活动
-      updateSessionActivity(sessionId, systemUserId, ip, userAgent, 'system');
-
-      logAuthActivity(systemUserId, AuditEventType.API_KEY_USED, true, {
+      // 系统级API密钥允许无用户访问
+      logAuthActivity(null, AuditEventType.API_KEY_USED, true, {
         ip, userAgent, sessionId, keyType: 'system'
       });
 
-      return { success: true, user: systemUser, method: 'system' };
+      return { success: true, user: null, method: 'system' };
     } else if (apiKey) {
       logger.debug('系统级API密钥验证失败', {
         hasConfigApiKey: !!config.apiKey,
