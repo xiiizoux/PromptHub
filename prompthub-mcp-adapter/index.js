@@ -753,13 +753,26 @@ class PromptHubMCPAdapter {
       
       if (!response.ok) {
         const errorText = await response.text();
+        console.error(`[PromptHub MCP] HTTP错误详情 - 状态: ${response.status}, 响应文本:`, errorText);
+
         let errorData;
         try {
           errorData = JSON.parse(errorText);
         } catch {
           errorData = { message: errorText };
         }
-        throw new Error(`HTTP ${response.status}: ${errorData.error || errorData.message || errorText}`);
+
+        console.error(`[PromptHub MCP] 解析后的错误数据:`, errorData);
+
+        // 更好的错误信息格式化
+        let errorMessage;
+        if (typeof errorData === 'object' && errorData !== null) {
+          errorMessage = errorData.error || errorData.message || JSON.stringify(errorData);
+        } else {
+          errorMessage = String(errorData);
+        }
+
+        throw new Error(`HTTP ${response.status}: ${errorMessage}`);
       }
 
       return await response.json();
@@ -787,9 +800,10 @@ class PromptHubMCPAdapter {
  * 处理MCP消息
  */
 async function handleMessage(message) {
+  let request = null;
   try {
-    const request = JSON.parse(message);
-    
+    request = JSON.parse(message);
+
     // 处理不同的MCP消息类型
     switch (request.method) {
       case 'initialize':
@@ -797,7 +811,7 @@ async function handleMessage(message) {
         if (!adapter.initialized) {
           await adapter.initialize();
         }
-        
+
         return JSON.stringify({
           jsonrpc: '2.0',
           id: request.id,
@@ -810,7 +824,7 @@ async function handleMessage(message) {
             },
             serverInfo: {
               name: 'prompthub-mcp-adapter',
-              version: '2.1.6'
+              version: '2.1.7'
             }
           }
         });
@@ -820,7 +834,7 @@ async function handleMessage(message) {
         if (!adapter.initialized) {
           await adapter.initialize();
         }
-        
+
         const tools = adapter.getAvailableTools();
         return JSON.stringify({
           jsonrpc: '2.0',
