@@ -892,13 +892,24 @@ export class UnifiedSearchTool extends BaseMCPTool {
           const contentMsg = prompt.messages.find(msg => {
             if (typeof msg === 'object' && msg !== null && 'content' in msg) {
               const msgContent = (msg as any).content;
+              // 处理content是对象的情况（如 {type: "text", text: "实际内容"}）
+              if (typeof msgContent === 'object' && msgContent !== null && msgContent.text) {
+                return typeof msgContent.text === 'string' && msgContent.text.trim().length > 10;
+              }
+              // 处理content是字符串的情况
               return typeof msgContent === 'string' && msgContent.trim().length > 10;
             }
             return false;
           });
 
           if (contentMsg) {
-            content = (contentMsg as any).content;
+            const msgContent = (contentMsg as any).content;
+            // 如果content是对象且有text字段，使用text字段
+            if (typeof msgContent === 'object' && msgContent !== null && msgContent.text) {
+              content = msgContent.text;
+            } else if (typeof msgContent === 'string') {
+              content = msgContent;
+            }
           } else if (prompt.messages.length > 0) {
             // 尝试获取第一个消息
             const firstMsg = prompt.messages[0];
@@ -906,14 +917,33 @@ export class UnifiedSearchTool extends BaseMCPTool {
               content = firstMsg;
             } else if (typeof firstMsg === 'object' && firstMsg !== null) {
               const msgObj = firstMsg as any;
-              content = msgObj.content || msgObj.text || msgObj.prompt || msgObj.message || '';
+              // 优先处理content字段
+              if (msgObj.content) {
+                if (typeof msgObj.content === 'object' && msgObj.content.text) {
+                  content = msgObj.content.text;
+                } else if (typeof msgObj.content === 'string') {
+                  content = msgObj.content;
+                }
+              } else {
+                // 备选字段
+                content = msgObj.text || msgObj.prompt || msgObj.message || '';
+              }
             }
           }
         } else if (typeof prompt.messages === 'string') {
           content = prompt.messages;
         } else if (typeof prompt.messages === 'object' && prompt.messages !== null) {
           const msgObj = prompt.messages as any;
-          content = msgObj.content || msgObj.text || msgObj.prompt || msgObj.message || '';
+          // 处理单个消息对象
+          if (msgObj.content) {
+            if (typeof msgObj.content === 'object' && msgObj.content.text) {
+              content = msgObj.content.text;
+            } else if (typeof msgObj.content === 'string') {
+              content = msgObj.content;
+            }
+          } else {
+            content = msgObj.text || msgObj.prompt || msgObj.message || '';
+          }
         }
       }
     } catch (error) {

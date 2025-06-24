@@ -121,7 +121,6 @@ const ProfilePage = () => {
     apiKeys?: string;
     prompts?: string;
     bookmarks?: string;
-    usageHistory?: string;
     ratings?: string;
   }>({});
   
@@ -133,12 +132,10 @@ const ProfilePage = () => {
   
   // 新增功能的状态
   const [bookmarks, setBookmarks] = useState<UserPrompt[]>([]);
-  const [usageHistory, setUsageHistory] = useState<any[]>([]);
   const [userRatings, setUserRatings] = useState<any[]>([]);
   const [exportData, setExportData] = useState<any>(null);
   const [importFile, setImportFile] = useState<File | null>(null);
   const [bookmarksLoading, setBookmarksLoading] = useState(false);
-  const [historyLoading, setHistoryLoading] = useState(false);
   const [ratingsLoading, setRatingsLoading] = useState(false);
 
   // 确保组件已挂载
@@ -161,7 +158,6 @@ const ProfilePage = () => {
     { id: 'profile', name: '个人资料', icon: UserIcon },
     { id: 'my-prompts', name: '我的提示词', icon: DocumentTextIcon },
     { id: 'bookmarks', name: '收藏夹', icon: BookmarkIcon },
-    { id: 'usage-history', name: '使用历史', icon: ClockIcon },
     { id: 'ratings-reviews', name: '评分评论', icon: StarIcon },
     { id: 'import-export', name: '导入导出', icon: ArrowUpTrayIcon },
     { id: 'api-keys', name: 'API密钥', icon: KeyIcon },
@@ -228,21 +224,7 @@ const ProfilePage = () => {
     }
   }, [activeTab, user]);
 
-  // 加载使用历史
-  useEffect(() => {
-    if (activeTab === 'usage-history' && user) {
-      const cleanup = fetchUsageHistory();
-      return () => {
-        if (cleanup && typeof cleanup.then === 'function') {
-          cleanup.then(cleanupFn => {
-            if (cleanupFn && typeof cleanupFn === 'function') {
-              cleanupFn();
-            }
-          });
-        }
-      };
-    }
-  }, [activeTab, user]);
+
 
   // 加载评分评论
   useEffect(() => {
@@ -640,120 +622,7 @@ const ProfilePage = () => {
     };
   };
 
-  // 获取使用历史
-  const fetchUsageHistory = async () => {
-    if (!isMountedRef.current) return;
-    
-    safeSetState(() => setHistoryLoading(true));
-    
-    const abortController = new AbortController();
-    
-    try {
-      if (!user?.id) {
-        console.log('用户未登录，跳过获取使用历史');
-        safeSetState(() => setUsageHistory([]));
-        return;
-      }
-      
-      const token = await getToken();
-      if (!token) {
-        console.error('无法获取认证令牌');
-        safeSetState(() => setUsageHistory([]));
-        return;
-      }
 
-      console.log('开始获取使用历史，用户ID:', user.id);
-
-      const response = await fetch('/api/user/usage-history?pageSize=50', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        signal: abortController.signal,
-      });
-
-      // 检查请求是否被中止
-      if (abortController.signal.aborted) {
-        console.log('使用历史请求被中止');
-        return;
-      }
-
-      if (response.ok) {
-        const result = await response.json();
-        if (!isMountedRef.current) return;
-        
-        safeSetState(() => {
-          if (result.success && Array.isArray(result.data)) {
-            // 转换数据格式以匹配导出格式
-            const formattedHistory = result.data.map((item: any) => ({
-              id: item.id,
-              prompt_name: item.prompt_name || '未知提示词',
-              used_at: item.created_at,
-              usage_count: 1, // 每条记录代表一次使用
-              model: item.model || '未知模型',
-              input_tokens: item.input_tokens || 0,
-              output_tokens: item.output_tokens || 0,
-              latency_ms: item.latency_ms || 0,
-            }));
-            setUsageHistory(formattedHistory);
-            console.log('使用历史数据获取成功:', formattedHistory.length);
-          } else {
-            console.error('获取使用历史失败: 数据格式错误', result);
-            setUsageHistory([]);
-          }
-        });
-      } else {
-        const errorData = await response.json().catch(() => ({}));
-        console.error('获取使用历史失败:', {
-          status: response.status,
-          statusText: response.statusText,
-          error: errorData.error || '未知错误',
-        });
-        
-        if (!isMountedRef.current) return;
-        
-        safeSetState(() => {
-          let errorMessage = '获取使用历史失败';
-          if (response.status === 401) {
-            errorMessage = '登录已过期，请刷新页面重新登录';
-          } else if (response.status >= 500) {
-            errorMessage = '服务器暂时无法响应，请稍后重试';
-          } else if (response.status === 404) {
-            errorMessage = '使用历史服务暂时不可用';
-          } else {
-            errorMessage = `加载失败 (${response.status}): ${errorData.error || '未知错误'}`;
-          }
-          
-          setErrors(prev => ({ ...prev, usageHistory: errorMessage }));
-          setUsageHistory([]);
-        });
-      }
-    } catch (error: any) {
-      console.error('获取使用历史网络错误:', error);
-      
-      if (!isMountedRef.current) return;
-      
-      safeSetState(() => {
-        if (error.name === 'AbortError') {
-          console.log('使用历史请求被用户中止');
-        } else {
-          console.error('使用历史获取网络异常:', error.message);
-          setErrors(prev => ({ 
-            ...prev, 
-            usageHistory: `网络连接失败: ${error.message || '请检查网络连接'}`, 
-          }));
-        }
-        setUsageHistory([]);
-      });
-    } finally {
-      safeSetState(() => setHistoryLoading(false));
-    }
-    
-    // 返回清理函数
-    return () => {
-      abortController.abort();
-    };
-  };
 
   // 获取用户评分评论
   const fetchUserRatings = async () => {
@@ -943,7 +812,6 @@ const ProfilePage = () => {
       const exportData = {
         prompts: userPrompts,
         bookmarks: bookmarks,
-        usage_history: usageHistory,
         ratings: userRatings,
         exported_at: new Date().toISOString(),
         user_id: user.id,
@@ -993,7 +861,6 @@ const ProfilePage = () => {
         },
       ],
       bookmarks: [],
-      usage_history: [],
       ratings: [],
       version: '1.0',
       description: 'PromptHub导入模板文件 - 请填写您的提示词数据',
@@ -2161,74 +2028,7 @@ const ProfilePage = () => {
               </div>
             )}
 
-            {/* 使用历史标签页 */}
-            {activeTab === 'usage-history' && (
-              <div className="space-y-6">
-                <div className="flex justify-between items-center">
-                  <div>
-                    <h2 className="text-2xl font-bold text-white">使用历史</h2>
-                    <p className="text-gray-400 mt-1">查看您的提示词使用记录</p>
-                  </div>
-                </div>
 
-                {historyLoading ? (
-                  <div className="glass rounded-2xl p-8 border border-neon-cyan/20 text-center">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-neon-cyan mx-auto mb-4"></div>
-                    <p className="text-gray-400">加载中...</p>
-                  </div>
-                ) : errors.usageHistory ? (
-                  <div className="glass rounded-2xl p-8 border border-neon-red/20 text-center">
-                    <div className="w-16 h-16 bg-neon-red/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <svg className="w-8 h-8 text-neon-red" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                      </svg>
-                    </div>
-                    <h3 className="text-lg font-semibold text-white mb-2">加载使用历史失败</h3>
-                    <p className="text-gray-400 mb-6">{errors.usageHistory}</p>
-                    <button
-                      onClick={() => {
-                        setErrors(prev => ({ ...prev, usageHistory: undefined }));
-                        fetchUsageHistory();
-                      }}
-                      className="btn-primary flex items-center space-x-2"
-                    >
-                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                      </svg>
-                      <span>重试</span>
-                    </button>
-                  </div>
-                ) : usageHistory.length === 0 ? (
-                  <div className="glass rounded-2xl p-8 border border-neon-cyan/20 text-center">
-                    <ClockIcon className="h-12 w-12 text-gray-500 mx-auto mb-4" />
-                    <p className="text-gray-400">暂无使用历史记录</p>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {usageHistory.map((history, index) => (
-                      <motion.div
-                        key={history.id}
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: index * 0.1 }}
-                        className="glass rounded-xl p-4 border border-neon-purple/20 hover:border-neon-purple/40 transition-all duration-300"
-                      >
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <h3 className="text-lg font-semibold text-white">{history.prompt_name}</h3>
-                            <p className="text-gray-400 text-sm">使用次数: {history.usage_count}</p>
-                          </div>
-                          <div className="text-right">
-                            <p className="text-gray-400 text-sm">最后使用</p>
-                            <p className="text-neon-purple">{formatDate(history.used_at)}</p>
-                          </div>
-                        </div>
-                      </motion.div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
 
             {/* 评分评论标签页 */}
             {activeTab === 'ratings-reviews' && (
@@ -2334,7 +2134,7 @@ const ProfilePage = () => {
                       </div>
                     </div>
                     <p className="text-gray-300 mb-4">
-                      导出包括您的提示词、收藏夹、使用历史和评分评论在内的所有数据。
+                      导出包括您的提示词、收藏夹和评分评论在内的所有数据。
                     </p>
                     <ProtectedButton
                       onClick={handleExportData}
@@ -2448,7 +2248,7 @@ const ProfilePage = () => {
                     <ChartBarIcon className="h-6 w-6 text-neon-cyan" />
                     <span>数据统计</span>
                   </h3>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="text-center p-3 bg-dark-bg-secondary/30 rounded-lg">
                       <div className="text-2xl font-bold text-neon-cyan">{promptCounts.total}</div>
                       <div className="text-sm text-gray-400">提示词</div>
@@ -2456,10 +2256,6 @@ const ProfilePage = () => {
                     <div className="text-center p-3 bg-dark-bg-secondary/30 rounded-lg">
                       <div className="text-2xl font-bold text-neon-pink">{bookmarks.length}</div>
                       <div className="text-sm text-gray-400">收藏</div>
-                    </div>
-                    <div className="text-center p-3 bg-dark-bg-secondary/30 rounded-lg">
-                      <div className="text-2xl font-bold text-neon-purple">{usageHistory.length}</div>
-                      <div className="text-sm text-gray-400">使用记录</div>
                     </div>
                     <div className="text-center p-3 bg-dark-bg-secondary/30 rounded-lg">
                       <div className="text-2xl font-bold text-neon-yellow">{userRatings.length}</div>

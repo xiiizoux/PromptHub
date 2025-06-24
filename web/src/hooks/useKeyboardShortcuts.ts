@@ -70,10 +70,6 @@ export const useGlobalKeyboardShortcuts = () => {
       router.push('/bookmarks');
       toast.success('跳转到书签');
     },
-    'ctrl+u': () => {
-      router.push('/usage-history');
-      toast.success('跳转到使用历史');
-    },
     'ctrl+n': () => {
       router.push('/prompts/create');
       toast.success('跳转到创建提示词');

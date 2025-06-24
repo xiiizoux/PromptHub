@@ -554,12 +554,12 @@ class PromptHubMCPAdapter {
    */
   extractPromptContent(prompt) {
     let content = '';
-    
+
     // 1. 优先从preview字段获取（如果已经格式化过）
     if (prompt.preview && prompt.preview.trim() && prompt.preview !== '暂无内容预览') {
       return prompt.preview;
     }
-    
+
     // 2. 尝试从messages字段提取
     if (prompt.messages) {
       try {
@@ -568,22 +568,42 @@ class PromptHubMCPAdapter {
           const contentMsg = prompt.messages.find(msg => {
             if (typeof msg === 'object' && msg !== null && 'content' in msg) {
               const msgContent = msg.content;
+              // 处理content是对象的情况（如 {type: "text", text: "实际内容"}）
+              if (typeof msgContent === 'object' && msgContent !== null && msgContent.text) {
+                return typeof msgContent.text === 'string' && msgContent.text.trim().length > 20;
+              }
+              // 处理content是字符串的情况
               return typeof msgContent === 'string' && msgContent.trim().length > 20;
             }
             return false;
           });
-          
+
           if (contentMsg) {
-            content = contentMsg.content;
+            const msgContent = contentMsg.content;
+            // 如果content是对象且有text字段，使用text字段
+            if (typeof msgContent === 'object' && msgContent !== null && msgContent.text) {
+              content = msgContent.text;
+            } else if (typeof msgContent === 'string') {
+              content = msgContent;
+            }
           } else if (prompt.messages.length > 0) {
             // 如果没找到content字段，尝试获取第一个非空消息
             const firstMsg = prompt.messages[0];
             if (typeof firstMsg === 'string') {
               content = firstMsg;
             } else if (typeof firstMsg === 'object' && firstMsg !== null) {
-              // 尝试各种可能的字段名
+              // 优先处理content字段
               const msgObj = firstMsg;
-              content = msgObj.content || msgObj.text || msgObj.prompt || msgObj.message || '';
+              if (msgObj.content) {
+                if (typeof msgObj.content === 'object' && msgObj.content.text) {
+                  content = msgObj.content.text;
+                } else if (typeof msgObj.content === 'string') {
+                  content = msgObj.content;
+                }
+              } else {
+                // 备选字段
+                content = msgObj.text || msgObj.prompt || msgObj.message || '';
+              }
             }
           }
         } else if (typeof prompt.messages === 'string') {
@@ -591,7 +611,15 @@ class PromptHubMCPAdapter {
         } else if (typeof prompt.messages === 'object' && prompt.messages !== null) {
           // 处理单个消息对象
           const msgObj = prompt.messages;
-          content = msgObj.content || msgObj.text || msgObj.prompt || msgObj.message || '';
+          if (msgObj.content) {
+            if (typeof msgObj.content === 'object' && msgObj.content.text) {
+              content = msgObj.content.text;
+            } else if (typeof msgObj.content === 'string') {
+              content = msgObj.content;
+            }
+          } else {
+            content = msgObj.text || msgObj.prompt || msgObj.message || '';
+          }
         }
       } catch (error) {
         console.warn('解析提示词消息内容失败:', error);

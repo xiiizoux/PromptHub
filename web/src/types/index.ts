@@ -283,18 +283,7 @@ export interface TemplateField {
   };
 }
 
-// 模板使用统计
-export interface TemplateUsageStats {
-  id: string;
-  template_id: string;
-  user_id?: string;
-  session_id?: string;
-  used_at: string;
-  variables_used?: Record<string, any>;
-  satisfaction_rating?: number;
-  feedback?: string;
-  created_at: string;
-}
+
 
 // 模板评分
 export interface TemplateRating {

@@ -1,17 +1,15 @@
 import React from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { 
-  HomeIcon, 
-  BookmarkIcon, 
-  ClockIcon, 
-  Squares2X2Icon, 
+import {
+  HomeIcon,
+  BookmarkIcon,
+  Squares2X2Icon,
 } from '@heroicons/react/24/outline';
-import { 
-  HomeIcon as HomeSolidIcon, 
-  BookmarkIcon as BookmarkSolidIcon, 
-  ClockIcon as ClockSolidIcon, 
-  Squares2X2Icon as Squares2X2SolidIcon, 
+import {
+  HomeIcon as HomeSolidIcon,
+  BookmarkIcon as BookmarkSolidIcon,
+  Squares2X2Icon as Squares2X2SolidIcon,
 } from '@heroicons/react/24/solid';
 
 const Navigation: React.FC = () => {
@@ -35,12 +33,6 @@ const Navigation: React.FC = () => {
       label: '收藏',
       icon: BookmarkIcon,
       activeIcon: BookmarkSolidIcon,
-    },
-    {
-      href: '/usage-history',
-      label: '使用历史',
-      icon: ClockIcon,
-      activeIcon: ClockSolidIcon,
     },
   ];
 

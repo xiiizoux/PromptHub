@@ -637,17 +637,6 @@ export class DatabaseService {
       // 增加使用次数
       await this.adapter.supabase
         .rpc('increment_template_usage', { template_id: templateId });
-
-      // 记录使用统计
-      if (userId) {
-        await this.adapter.supabase
-          .from('template_usage_stats')
-          .insert({
-            template_id: templateId,
-            user_id: userId,
-            used_at: new Date().toISOString(),
-          });
-      }
     } catch (error) {
       console.error('更新模板使用统计失败:', error);
     }
