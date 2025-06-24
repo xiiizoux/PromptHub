@@ -147,6 +147,41 @@ class PromptHubMCPAdapter {
         }
       },
       
+      // ============= 🎯 提示词优化工具 =============
+      {
+        name: 'prompt_optimizer',
+        description: '🎯 提示词优化器 - 为第三方AI客户端提供结构化的提示词优化指导和分析',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            content: { type: 'string', description: '要优化的提示词内容' },
+            optimization_type: { 
+              type: 'string', 
+              description: '优化类型：general(通用) | creative(创意) | technical(技术) | business(商务) | educational(教育) | drawing(绘图) | analysis(分析) | iteration(迭代)',
+              enum: ['general', 'creative', 'technical', 'business', 'educational', 'drawing', 'analysis', 'iteration']
+            },
+            requirements: { type: 'string', description: '特殊要求或限制条件' },
+            context: { type: 'string', description: '使用场景和上下文' },
+            complexity: { 
+              type: 'string', 
+              description: '复杂度级别：simple(简单) | medium(中等) | complex(复杂)',
+              enum: ['simple', 'medium', 'complex']
+            },
+            include_analysis: { type: 'boolean', description: '是否包含详细分析，默认true' },
+            language: { 
+              type: 'string', 
+              description: '输出语言：zh(中文) | en(英文)',
+              enum: ['zh', 'en']
+            },
+            // 迭代优化专用参数
+            original_prompt: { type: 'string', description: '原始提示词（用于迭代优化）' },
+            current_prompt: { type: 'string', description: '当前提示词（用于迭代优化）' },
+            iteration_type: { type: 'string', description: '迭代类型（用于迭代优化）' }
+          },
+          required: ['content']
+        }
+      },
+      
       // ============= 🎯 其他搜索选项 (通过统一搜索自动调用) =============
       {
         name: 'smart_semantic_search',
@@ -541,7 +576,7 @@ class PromptHubMCPAdapter {
       method: method,
       headers: {
         'Content-Type': 'application/json',
-        'User-Agent': 'PromptHub-MCP-Adapter/1.3.0'
+        'User-Agent': 'PromptHub-MCP-Adapter/1.6.0'
       }
     };
 
