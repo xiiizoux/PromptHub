@@ -47,17 +47,12 @@ curl -X GET "http://localhost:9010/tools" \\
 # ✅ 跨平台 - Windows、macOS、Linux 全支持
 # ✅ 零配置 - 只需设置 API 密钥
 
-# 备用：传统零配置MCP方案
+# 🏆 最推荐：NPM 包方式（推荐）
 {
   "mcpServers": {
-    "prompthub-legacy": {
-      "command": "curl",
-      "args": [
-        "-s",
-        "https://raw.githubusercontent.com/xiiizoux/PromptHub/main/mcp/src/adapters/auto-download-adapter.js",
-        "|",
-        "node"
-      ],
+    "prompthub": {
+      "command": "npx",
+      "args": ["prompthub-mcp-adapter"],
       "env": {
         "API_KEY": "your-api-key-here"
       }
