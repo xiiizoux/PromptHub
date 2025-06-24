@@ -857,33 +857,36 @@ SECURITY DEFINER
 SET search_path = public
 AS $$
 BEGIN
-  INSERT INTO prompt_performance (
-    prompt_id,
-    prompt_version,
-    usage_count,
-    avg_input_tokens,
-    avg_output_tokens,
-    avg_latency_ms,
-    last_used_at,
-    updated_at
-  )
-  VALUES (
-    NEW.prompt_id,
-    NEW.prompt_version,
-    1,
-    NEW.input_tokens,
-    NEW.output_tokens,
-    NEW.latency_ms,
-    NEW.created_at,
-    NOW()
-  )
-  ON CONFLICT (prompt_id, prompt_version) DO UPDATE SET
-    usage_count = prompt_performance.usage_count + 1,
-    avg_input_tokens = (prompt_performance.avg_input_tokens * prompt_performance.usage_count + NEW.input_tokens) / (prompt_performance.usage_count + 1),
-    avg_output_tokens = (prompt_performance.avg_output_tokens * prompt_performance.usage_count + NEW.output_tokens) / (prompt_performance.usage_count + 1),
-    avg_latency_ms = (prompt_performance.avg_latency_ms * prompt_performance.usage_count + NEW.latency_ms) / (prompt_performance.usage_count + 1),
-    last_used_at = NEW.created_at,
-    updated_at = NOW();
+  -- 只为有效的prompt_id创建性能记录，跳过搜索操作（prompt_id为null）
+  IF NEW.prompt_id IS NOT NULL THEN
+    INSERT INTO prompt_performance (
+      prompt_id,
+      prompt_version,
+      usage_count,
+      avg_input_tokens,
+      avg_output_tokens,
+      avg_latency_ms,
+      last_used_at,
+      updated_at
+    )
+    VALUES (
+      NEW.prompt_id,
+      NEW.prompt_version,
+      1,
+      NEW.input_tokens,
+      NEW.output_tokens,
+      NEW.latency_ms,
+      NEW.created_at,
+      NOW()
+    )
+    ON CONFLICT (prompt_id, prompt_version) DO UPDATE SET
+      usage_count = prompt_performance.usage_count + 1,
+      avg_input_tokens = (prompt_performance.avg_input_tokens * prompt_performance.usage_count + NEW.input_tokens) / (prompt_performance.usage_count + 1),
+      avg_output_tokens = (prompt_performance.avg_output_tokens * prompt_performance.usage_count + NEW.output_tokens) / (prompt_performance.usage_count + 1),
+      avg_latency_ms = (prompt_performance.avg_latency_ms * prompt_performance.usage_count + NEW.latency_ms) / (prompt_performance.usage_count + 1),
+      last_used_at = NEW.created_at,
+      updated_at = NOW();
+  END IF;
 
   RETURN NEW;
 END;
@@ -904,17 +907,20 @@ BEGIN
   FROM prompt_usage pu
   WHERE pu.id = NEW.usage_id;
 
-  UPDATE prompt_performance
-  SET
-    feedback_count = feedback_count + 1,
-    avg_rating = (
-      SELECT AVG(rating)::NUMERIC(3,2)
-      FROM prompt_feedback pf
-      JOIN prompt_usage pu ON pf.usage_id = pu.id
-      WHERE pu.prompt_id = prompt_id_val AND pu.prompt_version = prompt_version_val
-    ),
-    updated_at = NOW()
-  WHERE prompt_id = prompt_id_val AND prompt_version = prompt_version_val;
+  -- 只为有效的prompt_id更新性能记录，跳过搜索操作（prompt_id为null）
+  IF prompt_id_val IS NOT NULL THEN
+    UPDATE prompt_performance
+    SET
+      feedback_count = feedback_count + 1,
+      avg_rating = (
+        SELECT AVG(rating)::NUMERIC(3,2)
+        FROM prompt_feedback pf
+        JOIN prompt_usage pu ON pf.usage_id = pu.id
+        WHERE pu.prompt_id = prompt_id_val AND pu.prompt_version = prompt_version_val
+      ),
+      updated_at = NOW()
+    WHERE prompt_id = prompt_id_val AND prompt_version = prompt_version_val;
+  END IF;
 
   RETURN NEW;
 END;

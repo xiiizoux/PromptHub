@@ -10,6 +10,7 @@
 
 import { BaseMCPTool } from '../../shared/base-tool.js';
 import { ToolDescription, ToolParameter, Prompt } from '../../types.js';
+import { SearchPerformanceMonitor } from './performance-monitor.js';
 
 // 搜索结果接口
 interface EnhancedSearchResult {
@@ -57,6 +58,16 @@ export class UnifiedSearchTool extends BaseMCPTool {
   readonly name = 'unified_search';
   readonly description = '🚀 统一搜索 - 智能搜索提示词，自动优化结果展示，一个工具满足所有搜索需求';
 
+  // 性能监控器
+  private performanceMonitor = new SearchPerformanceMonitor();
+
+  /**
+   * 获取搜索性能统计
+   */
+  getPerformanceStats(timeRange?: { start: number; end: number }) {
+    return this.performanceMonitor.getPerformanceStats(timeRange);
+  }
+
   getToolDefinition(): ToolDescription {
     return {
       name: this.name,
@@ -99,7 +110,7 @@ export class UnifiedSearchTool extends BaseMCPTool {
 
   async execute(params: UnifiedSearchParams, context: ToolContext): Promise<ToolResult> {
     const startTime = performance.now();
-    
+
     // 参数验证和默认值设置
     const {
       query,
@@ -110,7 +121,17 @@ export class UnifiedSearchTool extends BaseMCPTool {
       sort_by = 'relevance'
     } = params;
 
+    // 开始性能监控
+    const searchTimer = this.performanceMonitor.startSearch(
+      query,
+      'unified_search',
+      context.userId,
+      { category, tags, max_results, sort_by }
+    );
+
     if (!query || query.trim().length === 0) {
+      // 记录失败的搜索
+      searchTimer.end(0, false, false, '搜索查询为空');
       return {
         success: false,
         message: '❌ 搜索查询不能为空，请输入您要搜索的内容'
@@ -157,6 +178,9 @@ export class UnifiedSearchTool extends BaseMCPTool {
 
       const executionTime = performance.now() - startTime;
 
+      // 记录成功的搜索性能
+      searchTimer.end(enhancedResults.length, false, true);
+
       return {
         success: true,
         data: {
@@ -179,9 +203,13 @@ export class UnifiedSearchTool extends BaseMCPTool {
 
     } catch (error) {
       const executionTime = performance.now() - startTime;
-      
+      const errorMessage = error instanceof Error ? error.message : String(error);
+
+      // 记录失败的搜索性能
+      searchTimer.end(0, false, false, errorMessage);
+
       this.logExecution('搜索失败', context, {
-        error: error instanceof Error ? error.message : String(error),
+        error: errorMessage,
         execution_time_ms: Math.round(executionTime)
       });
 

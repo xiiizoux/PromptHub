@@ -54,11 +54,12 @@ async function getPerformanceMetrics(promptId: string, timeRange: string) {
   startDate.setDate(startDate.getDate() - days);
 
   try {
-    // 获取使用数据
+    // 获取使用数据 - 只查询有效的prompt_id，排除搜索操作
     const { data: usageData, error: usageError } = await supabase
       .from('prompt_usage')
       .select('*')
       .eq('prompt_id', promptId)
+      .not('prompt_id', 'is', null) // 排除搜索操作
       .gte('created_at', startDate.toISOString())
       .order('created_at', { ascending: true });
 

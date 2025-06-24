@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { 
-  ChartBarIcon, 
+import {
+  ChartBarIcon,
   UsersIcon,
   DocumentTextIcon,
   ClockIcon,
@@ -10,8 +10,10 @@ import {
   ServerIcon,
   CpuChipIcon,
   GlobeAltIcon,
+  MagnifyingGlassIcon,
 } from '@heroicons/react/24/outline';
 import { getSystemPerformance } from '@/lib/api';
+import SearchOperationStats from './SearchOperationStats';
 import toast from 'react-hot-toast';
 
 interface SystemDashboardProps {
@@ -111,7 +113,7 @@ export const SystemDashboard: React.FC<SystemDashboardProps> = ({ className = ''
       </div>
 
       {/* 核心指标卡片 */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -188,6 +190,28 @@ export const SystemDashboard: React.FC<SystemDashboardProps> = ({ className = ''
             {healthInfo.label}
           </div>
           <div className="text-sm text-gray-500">综合评估</div>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+          className="glass rounded-xl border border-neon-green/20 p-6"
+        >
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <MagnifyingGlassIcon className="h-6 w-6 text-neon-green" />
+              <span className="text-gray-400">24h使用量</span>
+            </div>
+            <CheckCircleIcon className="h-5 w-5 text-green-400" />
+          </div>
+          <div className="text-3xl font-bold text-white mb-2">
+            {(systemData.usage_in_last_24h || 0).toLocaleString()}
+          </div>
+          <div className="text-sm text-gray-500">
+            搜索: {(systemData.search_operations_24h || 0).toLocaleString()} |
+            提示词: {(systemData.prompt_usage_24h || 0).toLocaleString()}
+          </div>
         </motion.div>
       </div>
 
@@ -305,6 +329,15 @@ export const SystemDashboard: React.FC<SystemDashboardProps> = ({ className = ''
           </div>
         </motion.div>
       </div>
+
+      {/* 搜索操作统计 */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.8 }}
+      >
+        <SearchOperationStats timeRange="24h" />
+      </motion.div>
     </div>
   );
-}; 
+};

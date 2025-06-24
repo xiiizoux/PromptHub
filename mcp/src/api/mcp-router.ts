@@ -678,9 +678,17 @@ router.post('/tools/:name/invoke', optionalAuthMiddleware, async (req, res) => {
         result = await handleAnalyzeAndStore(params);
         break;
       
-      // 增强搜索和展示工具处理
+      // 增强搜索和展示工具处理 (通过统一搜索实现)
       case 'enhanced_search_prompts':
-        result = await handleEnhancedSearch(params, req?.user?.id);
+        result = await handleUnifiedSearch(params, {
+          userId: req?.user?.id,
+          requestId: Array.isArray(req?.headers?.['x-request-id'])
+            ? req.headers['x-request-id'][0]
+            : req?.headers?.['x-request-id'],
+          userAgent: Array.isArray(req?.headers?.['user-agent'])
+            ? req.headers['user-agent'][0]
+            : req?.headers?.['user-agent']
+        });
         break;
       case 'select_prompt_by_index':
         result = await handlePromptSelection(params, req?.user?.id);
@@ -722,15 +730,15 @@ router.post('/tools/:name/invoke', optionalAuthMiddleware, async (req, res) => {
         });
         break;
       
-      // 🎯 优化语义搜索处理 (通过统一搜索自动调用)
+      // 🎯 智能语义搜索处理 (通过统一搜索实现)
       case 'smart_semantic_search':
-        result = await handleOptimizedSemanticSearch(params, {
+        result = await handleUnifiedSearch(params, {
           userId: req?.user?.id,
-          requestId: Array.isArray(req?.headers?.['x-request-id']) 
-            ? req.headers['x-request-id'][0] 
+          requestId: Array.isArray(req?.headers?.['x-request-id'])
+            ? req.headers['x-request-id'][0]
             : req?.headers?.['x-request-id'],
-          userAgent: Array.isArray(req?.headers?.['user-agent']) 
-            ? req.headers['user-agent'][0] 
+          userAgent: Array.isArray(req?.headers?.['user-agent'])
+            ? req.headers['user-agent'][0]
             : req?.headers?.['user-agent']
         });
         break;
