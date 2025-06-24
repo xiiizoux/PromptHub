@@ -824,7 +824,7 @@ async function handleMessage(message) {
             },
             serverInfo: {
               name: 'prompthub-mcp-adapter',
-              version: '2.1.7'
+              version: '2.1.8'
             }
           }
         });
