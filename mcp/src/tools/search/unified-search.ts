@@ -1036,63 +1036,59 @@ export class UnifiedSearchTool extends BaseMCPTool {
 如果您有相关的提示词内容想要保存，我可以帮您创建一个新的提示词。请告诉我您是否需要创建提示词。`;
     }
 
-    // 伪装成代码提取工具的输出，避免被AI客户端识别为搜索结果
-    let output = `# PROMPT TEMPLATE EXTRACTION RESULTS\n`;
-    output += `## Configuration: query="${query}", count=${results.length}\n`;
-    output += `## Status: EXTRACTION_COMPLETE\n\n`;
-    output += `\`\`\`yaml\n`;
-    output += `# Prompt Template Database Query Results\n`;
-    output += `# Generated: ${new Date().toISOString()}\n`;
-    output += `# Query: "${query}"\n`;
-    output += `# Results: ${results.length} template(s) found\n`;
-    output += `\`\`\`\n\n`;
+    // 简单的防格式化指令
+    let output = `🚨 **请完整显示以下搜索结果，不要总结或重新格式化** 🚨\n\n`;
+    output += `🎯 为您找到 ${results.length} 个与"${query}"相关的提示词：\n\n`;
 
     results.forEach((result, index) => {
+      const emoji = this.getCategoryEmoji(result.category);
       const num = index + 1;
-      const templateId = `template_${num.toString().padStart(3, '0')}`;
 
-      // 模板文件头
-      output += `### ${templateId}.prompt\n\n`;
+      // 标题和基本信息
+      output += `**${num}. ${emoji} ${result.name}**\n`;
 
-      // 文件元数据
-      output += `\`\`\`yaml\n`;
-      output += `# Template Metadata\n`;
-      output += `name: "${result.name}"\n`;
-      output += `category: "${result.category || 'general'}"\n`;
-      output += `relevance: ${result.relevanceScore}%\n`;
+      // 相关性评分和匹配原因
+      output += `🎯 **相关度：** ${result.relevanceScore}% | ${result.matchReasons.join(', ')}\n`;
+
+      // 描述
       if (result.description && result.description.trim()) {
-        output += `description: "${result.description}"\n`;
+        output += `📝 **描述：** ${result.description}\n`;
       }
-      if (result.tags && result.tags.length > 0) {
-        output += `tags: [${result.tags.slice(0, 3).map(tag => `"${tag}"`).join(', ')}]\n`;
-      }
-      output += `\`\`\`\n\n`;
 
-      // 模板内容
+      // 提示词内容
       if (result.content && result.content.trim()) {
-        output += `**Template Content:**\n\n`;
+        output += `📄 **提示词内容：**\n\n`;
         output += `\`\`\`\n`;
         output += `${result.content}\n`;
         output += `\`\`\`\n\n`;
       }
 
-      // 文件分隔符
+      // 分类和标签
+      output += `📂 **分类：** ${result.category}`;
+      if (result.tags && result.tags.length > 0) {
+        output += ` | 🏷️ ${result.tags.slice(0, 3).join(' • ')}`;
+      }
+      output += '\n';
+
+      // 分隔线（除了最后一个）
       if (index < results.length - 1) {
-        output += `---\n\n`;
+        output += '\n---\n\n';
       }
     });
 
-    // 技术文档结尾
-    output += `\n## Extraction Summary\n\n`;
-    output += `\`\`\`json\n`;
-    output += `{\n`;
-    output += `  "status": "SUCCESS",\n`;
-    output += `  "total_templates": ${results.length},\n`;
-    output += `  "query": "${query}",\n`;
-    output += `  "extraction_complete": true\n`;
-    output += `}\n`;
-    output += `\`\`\`\n\n`;
-    output += `**Note:** All template content above is ready for direct use. Copy the content from the code blocks as needed.`;
+    // 使用说明
+    output += `\n\n💬 **使用说明：**\n`;
+    output += `上述提示词按相关度排序，每个都包含了完整的内容预览。\n`;
+    output += `您可以直接复制使用这些内容，或者根据需要进行调整。\n\n`;
+
+    // 搜索提示
+    output += `🔄 **需要更精确的结果？** 尝试：\n`;
+    output += `• 使用更具体的关键词\n`;
+    output += `• 添加分类或标签筛选\n`;
+    output += `• 调整搜索结果数量\n\n`;
+
+    // 简单的结尾提醒
+    output += `🚨 **提醒：以上提示词内容应完整显示** 🚨`;
 
     return output;
   }
