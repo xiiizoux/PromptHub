@@ -810,23 +810,45 @@ export class SupabaseAdapter implements StorageAdapter {
     try {
       console.log(`[精确搜索] 查询: "${query}"`);
       
-      // 改进搜索查询，包含更多字段和更好的模糊匹配
+      // 修复：分开查询基础字段和messages字段
       let dbQuery = this.supabase
         .from('prompts')
         .select('*')
-        .or(`name.ilike.%${query}%,description.ilike.%${query}%,messages::text.ilike.%${query}%,tags::text.ilike.%${query}%,category.ilike.%${query}%`);
+        .or(`name.ilike.%${query}%,description.ilike.%${query}%,category.ilike.%${query}%`);
       
       dbQuery = this.applyAccessControl(dbQuery, userId, includePublic);
       
-      const { data, error } = await dbQuery.limit(100); // 增加限制数量
+      const { data: basicResults, error: basicError } = await dbQuery.limit(50);
       
-      if (error) {
-        console.warn('精确搜索失败:', error.message);
+      if (basicError) {
+        console.warn('基础字段搜索失败:', basicError.message);
         return [];
       }
       
-      console.log(`[精确搜索] 找到 ${data?.length || 0} 个结果`);
-      return data || [];
+      // 分开查询messages字段（JSONB类型）
+      let messagesQuery = this.supabase
+        .from('prompts')
+        .select('*')
+        .ilike('messages', `%${query}%`);
+      
+      messagesQuery = this.applyAccessControl(messagesQuery, userId, includePublic);
+      
+      const { data: messagesResults, error: messagesError } = await messagesQuery.limit(50);
+      
+      if (messagesError) {
+        console.warn('messages字段搜索失败:', messagesError.message);
+      }
+      
+      // 合并结果并去重
+      const allResults = new Map();
+      
+      basicResults?.forEach(prompt => allResults.set(prompt.id, prompt));
+      messagesResults?.forEach(prompt => allResults.set(prompt.id, prompt));
+      
+      const finalResults = Array.from(allResults.values());
+      
+      console.log(`[精确搜索] 找到 ${finalResults.length} 个结果`);
+      return finalResults;
     } catch (err) {
       console.warn('精确搜索出错:', err);
       return [];
@@ -846,19 +868,35 @@ export class SupabaseAdapter implements StorageAdapter {
       // 对每个关键词进行搜索（并行处理前5个关键词）
       const searchPromises = keywords.slice(0, 5).map(async (keyword) => {
         try {
+          // 基础字段搜索
           let dbQuery = this.supabase
             .from('prompts')
             .select('*')
-            .or(`name.ilike.%${keyword}%,description.ilike.%${keyword}%,messages::text.ilike.%${keyword}%,tags::text.ilike.%${keyword}%,category.ilike.%${keyword}%`);
+            .or(`name.ilike.%${keyword}%,description.ilike.%${keyword}%,category.ilike.%${keyword}%`);
           
           dbQuery = this.applyAccessControl(dbQuery, userId, includePublic);
           
-          const { data, error } = await dbQuery.limit(30);
+          const { data: basicData, error: basicError } = await dbQuery.limit(20);
           
-          if (!error && data) {
-            data.forEach(prompt => results.add(prompt));
-            console.log(`[关键词搜索] 关键词 "${keyword}" 找到 ${data.length} 个结果`);
+          if (!basicError && basicData) {
+            basicData.forEach(prompt => results.add(prompt));
           }
+          
+          // messages字段搜索
+          let messagesQuery = this.supabase
+            .from('prompts')
+            .select('*')
+            .ilike('messages', `%${keyword}%`);
+          
+          messagesQuery = this.applyAccessControl(messagesQuery, userId, includePublic);
+          
+          const { data: messagesData, error: messagesError } = await messagesQuery.limit(20);
+          
+          if (!messagesError && messagesData) {
+            messagesData.forEach(prompt => results.add(prompt));
+          }
+          
+          console.log(`[关键词搜索] 关键词 "${keyword}" 找到 ${(basicData?.length || 0) + (messagesData?.length || 0)} 个结果`);
         } catch (err) {
           console.warn(`关键词 "${keyword}" 搜索失败:`, err);
         }
@@ -884,22 +922,45 @@ export class SupabaseAdapter implements StorageAdapter {
       // 生成模糊匹配查询
       const fuzzyQuery = query.split('').join('%');
       
+      // 基础字段模糊搜索
       let dbQuery = this.supabase
         .from('prompts')
         .select('*')
-        .or(`name.ilike.%${fuzzyQuery}%,description.ilike.%${fuzzyQuery}%,messages::text.ilike.%${fuzzyQuery}%,tags::text.ilike.%${fuzzyQuery}%,category.ilike.%${fuzzyQuery}%`);
+        .or(`name.ilike.%${fuzzyQuery}%,description.ilike.%${fuzzyQuery}%,category.ilike.%${fuzzyQuery}%`);
       
       dbQuery = this.applyAccessControl(dbQuery, userId, includePublic);
       
-      const { data, error } = await dbQuery.limit(20);
+      const { data: basicData, error: basicError } = await dbQuery.limit(15);
       
-      if (error) {
-        console.warn('模糊搜索失败:', error.message);
+      if (basicError) {
+        console.warn('基础字段模糊搜索失败:', basicError.message);
         return [];
       }
       
-      console.log(`[模糊搜索] 找到 ${data?.length || 0} 个结果`);
-      return data || [];
+      // messages字段模糊搜索
+      let messagesQuery = this.supabase
+        .from('prompts')
+        .select('*')
+        .ilike('messages', `%${fuzzyQuery}%`);
+      
+      messagesQuery = this.applyAccessControl(messagesQuery, userId, includePublic);
+      
+      const { data: messagesData, error: messagesError } = await messagesQuery.limit(15);
+      
+      if (messagesError) {
+        console.warn('messages字段模糊搜索失败:', messagesError.message);
+      }
+      
+      // 合并结果并去重
+      const allResults = new Map();
+      
+      basicData?.forEach(prompt => allResults.set(prompt.id, prompt));
+      messagesData?.forEach(prompt => allResults.set(prompt.id, prompt));
+      
+      const finalResults = Array.from(allResults.values());
+      
+      console.log(`[模糊搜索] 找到 ${finalResults.length} 个结果`);
+      return finalResults;
     } catch (err) {
       console.warn('模糊搜索出错:', err);
       return [];
