@@ -59,51 +59,11 @@ interface PromptDetailsPageProps {
 
 export default function PromptDetailsPage({ prompt }: PromptDetailsPageProps) {
   const router = useRouter();
-  const [selectedVersion, setSelectedVersion] = useState<string>(prompt.version?.toString() || '1');
+  const [selectedVersion, setSelectedVersion] = useState<string>('1');
   const [copied, setCopied] = useState(false);
+  const [isClient, setIsClient] = useState(false);
 
-
-  // 如果没有提示词数据，显示加载状态
-  if (!prompt) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-neon-cyan mx-auto mb-4"></div>
-          <p className="text-gray-400">加载中...</p>
-        </div>
-      </div>
-    );
-  }
-  
-  // 从prompt数据中获取完整的内容
-  const getFullContent = () => {
-    // 首先尝试从content字段获取（API兼容性）
-    if (prompt.content && typeof prompt.content === 'string') {
-      return prompt.content;
-    }
-    
-    // 然后从messages获取内容
-    if (prompt.messages && Array.isArray(prompt.messages) && prompt.messages.length > 0) {
-      return prompt.messages.map((msg: any) => {
-        // 处理不同的消息内容格式
-        if (typeof msg.content === 'string') {
-          return msg.content;
-        } else if (msg.content && typeof msg.content === 'object') {
-          // 处理 {type: 'text', text: '...'} 格式
-          if (msg.content.text && typeof msg.content.text === 'string') {
-            return msg.content.text;
-          }
-          // 处理其他对象格式，转换为JSON字符串
-          return JSON.stringify(msg.content);
-        }
-        return '';
-      }).filter(content => content.trim()).join('\n\n');
-    }
-    
-    return '';
-  };
-
-  // 提取变量的函数
+  // 提取变量的函数 - 必须在使用之前定义
   const extractVariablesFromText = (text: string): string[] => {
     const regex = /\{\{([a-zA-Z0-9_\u4e00-\u9fa5]+)\}\}/g;
     const variables = new Set<string>();
@@ -114,24 +74,26 @@ export default function PromptDetailsPage({ prompt }: PromptDetailsPageProps) {
     return Array.from(variables);
   };
 
-  // 获取完整内容和提取变量
+  // 获取完整内容和提取变量 - 需要在hooks之前计算
+  const getFullContent = () => {
+    if (!prompt) return '';
+
+    if (prompt.messages && prompt.messages.length > 0) {
+      return prompt.messages.map(msg => {
+        const roleLabel = msg.role === 'user' ? '用户' : msg.role === 'assistant' ? '助手' : '系统';
+        return `${roleLabel}: ${msg.content}`;
+      }).join('\n\n');
+    }
+
+    return prompt.content || '';
+  };
+
   const fullContent = getFullContent();
-  const allVariables = prompt.input_variables && prompt.input_variables.length > 0 
-    ? prompt.input_variables 
+  const allVariables = prompt?.input_variables && prompt.input_variables.length > 0
+    ? prompt.input_variables
     : extractVariablesFromText(fullContent);
 
-  // 添加调试输出
-  useEffect(() => {
-    console.log('=== 提示词详情页面调试信息 ===');
-    console.log('原始prompt数据:', prompt);
-    console.log('提取的内容:', fullContent);
-    console.log('提取的变量:', allVariables);
-    console.log('prompt.messages:', prompt.messages);
-    console.log('prompt.content:', prompt.content);
-    console.log('prompt.input_variables:', prompt.input_variables);
-  }, []);
-
-  // 状态管理
+  // 状态管理 - 所有useState必须在条件渲染之前
   const [variableValues, setVariableValues] = useState<Record<string, string>>(() => {
     const initialValues: Record<string, string> = {};
     allVariables.forEach(variable => {
@@ -139,8 +101,21 @@ export default function PromptDetailsPage({ prompt }: PromptDetailsPageProps) {
     });
     return initialValues;
   });
-  
+
   const [processedContent, setProcessedContent] = useState<string>(fullContent);
+
+  // 确保客户端渲染一致性
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  // 处理路由变化时的状态重置
+  useEffect(() => {
+    if (prompt) {
+      setSelectedVersion(prompt.version?.toString() || '1');
+      setCopied(false);
+    }
+  }, [prompt]);
 
   // 当变量值变化时更新处理后的内容
   useEffect(() => {
@@ -151,6 +126,21 @@ export default function PromptDetailsPage({ prompt }: PromptDetailsPageProps) {
     });
     setProcessedContent(content);
   }, [variableValues, fullContent]);
+
+  // 如果是服务端渲染或没有提示词数据，显示加载状态
+  if (!isClient || !prompt) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-neon-cyan mx-auto mb-4"></div>
+          <p className="text-gray-400">加载中...</p>
+        </div>
+      </div>
+    );
+  }
+
+
+
 
   // 获取当前选中版本的内容（暂时简化，因为没有版本系统）
   const getVersionContent = () => {

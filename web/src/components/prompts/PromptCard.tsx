@@ -76,32 +76,32 @@ const formatDate = (dateString?: string) => {
 };
 
 const PromptCard: React.FC<PromptCardProps> = React.memo(({ prompt }) => {
-  // 如果没有id，不渲染卡片
+  // 如果没有必要的数据，不渲染
+  if (!prompt || !prompt.id) {
+    return null;
+  }
+
   // 使用useMemo缓存计算结果
   const categoryInfo = useMemo(() => {
-    return CATEGORY_MAP[prompt.category || 'default'] || CATEGORY_MAP.default;
-  }, [prompt.category]);
+    return CATEGORY_MAP[prompt?.category || 'default'] || CATEGORY_MAP.default;
+  }, [prompt?.category]);
 
   const rating = useMemo(() => {
     // 优先使用 average_rating，如果没有则使用 rating 字段
-    const ratingValue = prompt.average_rating !== undefined ? prompt.average_rating : (prompt.rating || 0);
+    const ratingValue = prompt?.average_rating !== undefined ? prompt.average_rating : (prompt?.rating || 0);
     const percentage = (ratingValue / 5) * 100;
     return { value: ratingValue, percentage };
-  }, [prompt.average_rating, prompt.rating]);
+  }, [prompt?.average_rating, prompt?.rating]);
 
   const tagsToShow = useMemo(() => {
-    if (!prompt.tags || prompt.tags.length === 0) return null;
+    if (!prompt?.tags || prompt.tags.length === 0) return null;
     return {
       visible: prompt.tags.slice(0, 3),
       remaining: Math.max(0, prompt.tags.length - 3),
     };
-  }, [prompt.tags]);
+  }, [prompt?.tags]);
 
   const CategoryIcon = categoryInfo.icon;
-
-  if (!prompt.id) {
-    return null;
-  }
 
   return (
     <div>

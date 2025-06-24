@@ -499,4 +499,18 @@ code, pre, .font-mono {
   .minimal-spacing {
     @apply space-y-2 sm:space-y-3 md:space-y-4;
   }
+
+  /* 提示词页面专用间距 */
+  .prompts-content-spacing {
+    @apply space-y-8 md:space-y-12;
+  }
+
+  .pagination-spacing {
+    @apply mt-8 md:mt-12 mb-6 md:mb-8;
+  }
+
+  /* 确保页面底部有足够空间 */
+  .page-bottom-padding {
+    @apply pb-8 md:pb-12;
+  }
 }

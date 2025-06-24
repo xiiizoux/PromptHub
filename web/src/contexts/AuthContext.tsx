@@ -284,8 +284,41 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const logout = useCallback(async (): Promise<void> => {
-    await supabase.auth.signOut();
-  }, []);
+    try {
+      console.log('开始登出...');
+      setIsLoading(true);
+
+      // 执行Supabase登出
+      const { error } = await supabase.auth.signOut();
+
+      if (error) {
+        console.error('Supabase登出失败:', error);
+        throw error;
+      }
+
+      // 立即更新本地状态
+      if (mounted.current) {
+        setUser(null);
+        setIsAuthenticated(false);
+        setError(null);
+      }
+
+      console.log('登出成功');
+    } catch (err: any) {
+      console.error('登出失败:', err);
+      // 即使登出失败，也清理本地状态
+      if (mounted.current) {
+        setUser(null);
+        setIsAuthenticated(false);
+        setError('登出时发生错误，但已清理本地状态');
+      }
+      throw err;
+    } finally {
+      if (mounted.current) {
+        setIsLoading(false);
+      }
+    }
+  }, [mounted]);
 
   const getToken = useCallback(async (): Promise<string | null> => {
     const { data: { session } } = await supabase.auth.getSession();

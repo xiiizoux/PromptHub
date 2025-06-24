@@ -126,61 +126,80 @@ export default function PromptsPage() {
   // 获取提示词数据
   useEffect(() => {
     if (!mounted) return;
-    
+
     const abortController = new AbortController();
-    
+
     const fetchPrompts = async () => {
       console.log('开始获取提示词数据，filters:', filters);
       setLoading(true);
       setError(null); // 重置错误状态
-      
-      try {
-        const response = await getPrompts(filters);
-        
-        // 检查请求是否被中止
-        if (abortController.signal.aborted) {
-          console.log('提示词数据请求被中止');
-          return;
+
+      // 添加重试机制
+      let retryCount = 0;
+      const maxRetries = 2;
+
+      while (retryCount <= maxRetries) {
+        try {
+          // 检查请求是否被中止
+          if (abortController.signal.aborted) {
+            console.log('提示词数据请求被中止');
+            return;
+          }
+
+          const response = await getPrompts(filters);
+
+          console.log('获取提示词响应:', response);
+
+          if (response && response.data && Array.isArray(response.data)) {
+            console.log('设置提示词数据，数量:', response.data.length);
+            setPrompts(response.data);
+            setTotalPages(response.totalPages || 1);
+            setTotalCount(response.total || 0);
+            setError(null);
+            setLoading(false); // 成功时立即停止加载状态
+            return; // 成功，退出重试循环
+          } else {
+            console.error('获取提示词数据格式错误:', response);
+            setPrompts([]);
+            setTotalPages(1);
+            setTotalCount(0);
+            setError('获取提示词数据格式错误，请刷新页面重试');
+            setLoading(false); // 数据格式错误时也停止加载状态
+            return; // 数据格式错误，不重试
+          }
+        } catch (err) {
+          // 检查请求是否被中止
+          if (abortController.signal.aborted) {
+            console.log('提示词数据请求被中止');
+            return;
+          }
+
+          retryCount++;
+          console.error(`获取提示词失败 (尝试 ${retryCount}/${maxRetries + 1}):`, err);
+
+          if (retryCount > maxRetries) {
+            // 重试次数用完，设置错误状态
+            setError('无法加载提示词，请检查网络连接后重试');
+            setPrompts([]);
+            setTotalPages(1);
+            setTotalCount(0);
+            break;
+          } else {
+            // 等待后重试，使用指数退避
+            await new Promise(resolve => setTimeout(resolve, 1000 * retryCount));
+          }
         }
-        
-        console.log('获取提示词响应:', response);
-        
-        if (response && response.data && Array.isArray(response.data)) {
-          console.log('设置提示词数据，数量:', response.data.length);
-          setPrompts(response.data);
-          setTotalPages(response.totalPages || 1);
-          setTotalCount(response.total || 0);
-          setError(null);
-        } else {
-          console.error('获取提示词数据格式错误:', response);
-          setPrompts([]);
-          setTotalPages(1);
-          setTotalCount(0);
-          setError('获取提示词数据格式错误，请刷新页面重试');
-        }
-      } catch (err) {
-        // 检查请求是否被中止
-        if (abortController.signal.aborted) {
-          console.log('提示词数据请求被中止');
-          return;
-        }
-        
-        console.error('获取提示词失败:', err);
-        setError('无法加载提示词，请检查网络连接后重试');
-        setPrompts([]);
-        setTotalPages(1);
-        setTotalCount(0);
-      } finally {
-        // 检查请求是否被中止
-        if (!abortController.signal.aborted) {
-          console.log('提示词数据加载完成');
-          setLoading(false);
-        }
+      }
+
+      // 确保在所有情况下都停止加载状态
+      if (!abortController.signal.aborted) {
+        console.log('提示词数据加载完成');
+        setLoading(false);
       }
     };
 
     fetchPrompts();
-    
+
     // 清理函数：当组件卸载或依赖项变化时中止请求
     return () => {
       abortController.abort();
@@ -283,7 +302,7 @@ export default function PromptsPage() {
       {/* 背景网格效果 */}
       <div className="fixed inset-0 bg-grid-pattern opacity-10 pointer-events-none"></div>
       
-      <div className="relative z-10 spacing-section">
+      <div className="relative z-10 spacing-section page-bottom-padding">
         <div className="container-custom">
           {/* 如果组件未挂载，显示加载状态 */}
           {!mounted ? (
@@ -383,19 +402,7 @@ export default function PromptsPage() {
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.8, delay: 0.8 }}
               >
-                {/* 调试信息 */}
-                {process.env.NODE_ENV === 'development' && (
-                  <div className="mb-4 p-4 bg-gray-800 rounded-lg text-xs text-gray-300">
-                    <div>mounted: {mounted.toString()}</div>
-                    <div>loading: {loading.toString()}</div>
-                    <div>prompts.length: {prompts.length}</div>
-                    <div>error: {error || 'null'}</div>
-                    <div>categories.length: {categories.length}</div>
-                    <div>totalCount: {totalCount}</div>
-                    <div>totalPages: {totalPages}</div>
-                    <div>filters: {JSON.stringify(filters)}</div>
-                  </div>
-                )}
+
                 
                 {/* 加载状态 */}
                 {loading ? (
@@ -440,8 +447,8 @@ export default function PromptsPage() {
                     ) :
                       <>
                         {/* 提示词网格 */}
-                        <motion.div 
-                          className="prompt-grid"
+                        <motion.div
+                          className="prompt-grid mb-8 md:mb-12"
                           initial={{ opacity: 0 }}
                           animate={{ opacity: 1 }}
                           transition={{ duration: 0.8, delay: 1 }}
@@ -451,8 +458,8 @@ export default function PromptsPage() {
                               key={prompt.id || prompt.name || `prompt-${index}`}
                               initial={{ opacity: 0, y: 30 }}
                               animate={{ opacity: 1, y: 0 }}
-                              transition={{ 
-                                duration: 0.6, 
+                              transition={{
+                                duration: 0.6,
                                 delay: 1.2 + index * 0.1,
                                 ease: 'easeOut',
                               }}
@@ -468,7 +475,7 @@ export default function PromptsPage() {
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ duration: 0.8, delay: 1.5 }}
-                            className="no-bottom-spacing"
+                            className="pagination-spacing"
                           >
                             {renderPagination()}
                           </motion.div>

@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Bars3Icon, 
-  XMarkIcon, 
+import {
+  Bars3Icon,
+  XMarkIcon,
   UserCircleIcon,
   SparklesIcon,
   DocumentTextIcon,
@@ -16,6 +16,7 @@ import {
   RectangleStackIcon,
 } from '@heroicons/react/24/outline';
 import { useAuth } from '@/contexts/AuthContext';
+import { toast } from 'react-hot-toast';
 import clsx from 'clsx';
 
 const navigation = [
@@ -31,6 +32,7 @@ const Navbar: React.FC = () => {
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const { user, signOut } = useAuth();
 
   useEffect(() => {
@@ -67,7 +69,7 @@ const Navbar: React.FC = () => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
         userMenuOpen &&
-        userMenuRef.current && 
+        userMenuRef.current &&
         userButtonRef.current &&
         !userMenuRef.current.contains(event.target as Node) &&
         !userButtonRef.current.contains(event.target as Node)
@@ -81,6 +83,35 @@ const Navbar: React.FC = () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [userMenuOpen]);
+
+  // 处理登出
+  const handleLogout = async () => {
+    if (isLoggingOut) return; // 防止重复点击
+
+    try {
+      setIsLoggingOut(true);
+      setUserMenuOpen(false);
+
+      // 显示加载提示
+      const loadingToast = toast.loading('正在退出登录...');
+
+      await signOut();
+
+      // 关闭加载提示并显示成功消息
+      toast.dismiss(loadingToast);
+      toast.success('已成功退出登录');
+
+      // 跳转到首页
+      if (typeof window !== 'undefined') {
+        window.location.href = '/';
+      }
+    } catch (error: any) {
+      console.error('登出失败:', error);
+      toast.error('退出登录失败，请重试');
+    } finally {
+      setIsLoggingOut(false);
+    }
+  };
 
   return (
     <motion.header 
@@ -238,17 +269,15 @@ const Navbar: React.FC = () => {
                     </Link>
                     <div className="border-t border-neon-cyan/10 my-1" />
                     <button
-                      onClick={() => {
-                        signOut();
-                        setUserMenuOpen(false);
-                        if (typeof window !== 'undefined') {
-                          window.location.href = '/';
-                        }
-                      }}
-                      className="flex items-center space-x-3 w-full px-4 py-3 text-neon-red hover:bg-neon-red/10 transition-all"
+                      onClick={handleLogout}
+                      disabled={isLoggingOut}
+                      className={clsx(
+                        "flex items-center space-x-3 w-full px-4 py-3 text-neon-red hover:bg-neon-red/10 transition-all",
+                        isLoggingOut && "opacity-50 cursor-not-allowed"
+                      )}
                     >
                       <ArrowRightOnRectangleIcon className="h-5 w-5" />
-                      <span>退出登录</span>
+                      <span>{isLoggingOut ? '退出中...' : '退出登录'}</span>
                     </button>
                   </motion.div>
                 )}
@@ -329,16 +358,17 @@ const Navbar: React.FC = () => {
                     </Link>
                     <button
                       onClick={() => {
-                        signOut();
                         setMobileMenuOpen(false);
-                        if (typeof window !== 'undefined') {
-                          window.location.href = '/';
-                        }
+                        handleLogout();
                       }}
-                      className="flex items-center space-x-3 w-full px-4 py-3 rounded-lg text-neon-red hover:bg-neon-red/10 transition-all"
+                      disabled={isLoggingOut}
+                      className={clsx(
+                        "flex items-center space-x-3 w-full px-4 py-3 rounded-lg text-neon-red hover:bg-neon-red/10 transition-all",
+                        isLoggingOut && "opacity-50 cursor-not-allowed"
+                      )}
                     >
                       <ArrowRightOnRectangleIcon className="h-5 w-5" />
-                      <span>退出登录</span>
+                      <span>{isLoggingOut ? '退出中...' : '退出登录'}</span>
                     </button>
                   </>
                 ) : (
