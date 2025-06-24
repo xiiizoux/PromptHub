@@ -1,0 +1,12 @@
+{
+  "name": "prompthub-test",
+  "version": "1.0.0",
+  "description": "Test scripts for PromptHub",
+  "main": "test-prompt-optimizer.js",
+  "scripts": {
+    "test": "node test-prompt-optimizer.js"
+  },
+  "dependencies": {
+    "axios": "^1.6.0"
+  }
+}

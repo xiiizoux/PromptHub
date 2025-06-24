@@ -12,7 +12,7 @@
   },
   "keywords": [
     "mcp",
-    "prompthub", 
+    "prompthub",
     "ai",
     "claude",
     "cursor",
@@ -41,5 +41,8 @@
     "index.js",
     "README.md",
     "LICENSE"
-  ]
-} 
+  ],
+  "dependencies": {
+    "axios": "^1.10.0"
+  }
+}
