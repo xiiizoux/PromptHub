@@ -426,6 +426,14 @@ class PromptHubMCPAdapter {
         // 🐛 关键修复：不要尝试解析已经格式化好的文本为JSON
         // MCP服务器的unified_search已经返回了完整格式化的文本，包含提示词内容
         displayText = response.content.text;
+
+        // 🔧 特殊处理：如果是搜索工具且AI客户端可能有渲染问题，尝试优化格式
+        if (name === 'unified_search' && displayText.includes('```')) {
+          // 将代码块格式改为更兼容的格式
+          // 使用更精确的正则表达式来匹配代码块
+          displayText = displayText.replace(/📄 \*\*提示词内容：\*\*\n```\n/g, '📄 **提示词内容：**\n\n--- 提示词内容开始 ---\n');
+          displayText = displayText.replace(/\n```\n📂/g, '\n--- 提示词内容结束 ---\n\n📂');
+        }
       }
       // 2. 检查是否有专门的对话式格式化文本
       else if (response.data?.conversation_display) {
@@ -698,7 +706,7 @@ class PromptHubMCPAdapter {
       method: method,
       headers: {
         'Content-Type': 'application/json',
-        'User-Agent': 'PromptHub-MCP-Adapter/2.1.3'
+        'User-Agent': 'PromptHub-MCP-Adapter/2.1.4'
       }
     };
 
@@ -773,7 +781,7 @@ async function handleMessage(message) {
             },
             serverInfo: {
               name: 'prompthub-mcp-adapter',
-              version: '2.1.3'
+              version: '2.1.4'
             }
           }
         });
