@@ -629,7 +629,7 @@ export class SupabaseAdapter implements StorageAdapter {
           user_id: finalUserId
         };
         
-        console.log('[SupabaseAdapter] 验证用户是否存在于数据库中
+        console.log('[SupabaseAdapter] 验证用户是否存在于数据库中');
         if (finalUserId) {
           await this.validateUserExists(finalUserId);
         }
