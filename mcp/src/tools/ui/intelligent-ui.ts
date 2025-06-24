@@ -136,9 +136,7 @@ export class IntelligentPromptSelectionTool extends BaseMCPTool {
       content = prompt.messages;
     }
     
-    if (!content && prompt.content) {
-      content = prompt.content;
-    }
+    // content字段已从Prompt接口中移除，内容存储在messages字段中
     
     if (content.length > 500) {
       content = content.substring(0, 500) + '...';

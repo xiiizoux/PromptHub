@@ -10,6 +10,13 @@
 
 import { BaseMCPTool } from '../../shared/base-tool.js';
 import { ToolDescription, ToolParameter } from '../../types.js';
+import { 
+  suggestModelTagsByContent, 
+  getDefaultModelTags,
+  getModelDisplayNames,
+  isValidModelTag,
+  MODEL_TAGS
+} from '../../constants/ai-models.js';
 
 // 定义本地类型接口
 interface ToolResult {
@@ -48,6 +55,7 @@ interface UserSpecifiedParams {
   category?: string;
   description?: string;
   tags?: string[];
+  compatible_models?: string[]; // 添加compatible_models字段
   difficulty?: string;
   is_public?: boolean;
   allow_collaboration?: boolean;
@@ -75,6 +83,7 @@ interface UnifiedStoreParams {
   category?: string;
   description?: string;
   tags?: string[];
+  compatible_models?: string[]; // 添加compatible_models字段
   difficulty?: string;
   is_public?: boolean;
   allow_collaboration?: boolean;
@@ -133,6 +142,13 @@ export class UnifiedStoreTool extends BaseMCPTool {
         tags: {
           type: 'array',
           description: '标签列表（用户指定时优先使用）',
+          required: false,
+          items: { type: 'string' },
+        } as ToolParameter,
+        
+        compatible_models: {
+          type: 'array',
+          description: '兼容模型标签列表，如["llm-large", "image-generation", "code-specialized"]，使用预设模型标签ID（用户指定时优先使用）',
           required: false,
           items: { type: 'string' },
         } as ToolParameter,
@@ -253,6 +269,7 @@ export class UnifiedStoreTool extends BaseMCPTool {
       params.category ||
       params.description ||
       params.tags?.length ||
+      params.compatible_models?.length || // 添加compatible_models检查
       params.difficulty ||
       params.is_public !== undefined
     );
@@ -271,6 +288,7 @@ export class UnifiedStoreTool extends BaseMCPTool {
     if (params.category) specified_params.category = params.category;
     if (params.description) specified_params.description = params.description;
     if (params.tags) specified_params.tags = params.tags;
+    if (params.compatible_models) specified_params.compatible_models = params.compatible_models; // 添加compatible_models支持
     if (params.difficulty) specified_params.difficulty = params.difficulty;
     if (params.is_public !== undefined) specified_params.is_public = params.is_public;
     if (params.allow_collaboration !== undefined) specified_params.allow_collaboration = params.allow_collaboration;
@@ -293,6 +311,12 @@ export class UnifiedStoreTool extends BaseMCPTool {
       const tagsMatch = instruction.match(/(?:标签为|tags为|标记为|tag[:\s]*[""']?)([^""'，。]+)(?:[""']?)/i);
       if (tagsMatch && !specified_params.tags) {
         specified_params.tags = tagsMatch[1].split(/[，,、\s]+/).map(tag => tag.trim()).filter(Boolean);
+      }
+
+      // 解析兼容模型指定
+      const modelsMatch = instruction.match(/(?:兼容模型|支持模型|适用模型|models?[:\s]*[""']?)([^""'，。]+)(?:[""']?)/i);
+      if (modelsMatch && !specified_params.compatible_models) {
+        specified_params.compatible_models = modelsMatch[1].split(/[，,、\s]+/).map(model => model.trim()).filter(Boolean);
       }
 
       // 解析公开设置
@@ -490,14 +514,7 @@ export class UnifiedStoreTool extends BaseMCPTool {
    * 分析兼容模型
    */
   private analyzeCompatibleModels(content: string): string[] {
-    const models = ['GPT-4', 'GPT-3.5', 'Claude', 'Gemini'];
-    
-    // 根据复杂度判断兼容模型
-    if (content.length > 1000 || /复杂|高级|专业/.test(content)) {
-      return ['GPT-4', 'Claude', 'Gemini'];
-    }
-    
-    return models;
+    return suggestModelTagsByContent(content);
   }
 
   /**
@@ -520,7 +537,7 @@ export class UnifiedStoreTool extends BaseMCPTool {
       '教育': 'education',
       '通用': 'general'
     };
-    return domainMap[category] || 'general';
+    return domainMap[category as keyof typeof domainMap] || 'general';
   }
 
   /**
@@ -548,7 +565,7 @@ export class UnifiedStoreTool extends BaseMCPTool {
       description: '用户提供的提示词',
       category: '通用',
       tags: ['通用'],
-      compatible_models: ['GPT-4', 'GPT-3.5', 'Claude'],
+      compatible_models: getDefaultModelTags(),
       difficulty: 'medium',
       domain: 'general',
       use_cases: ['通用场景'],
@@ -571,6 +588,7 @@ export class UnifiedStoreTool extends BaseMCPTool {
       category: userSpecified.category || aiAnalysis?.category || '通用',
       tags: userSpecified.tags || aiAnalysis?.tags || ['通用'],
       difficulty: userSpecified.difficulty || aiAnalysis?.difficulty || 'medium',
+      compatible_models: userSpecified.compatible_models || aiAnalysis?.compatible_models || getDefaultModelTags(), // 使用预设模型标签
       // 默认设置
       is_public: userSpecified.is_public !== undefined ? userSpecified.is_public : true,
       allow_collaboration: userSpecified.allow_collaboration !== undefined ? userSpecified.allow_collaboration : true,
@@ -639,10 +657,7 @@ export class UnifiedStoreTool extends BaseMCPTool {
           tags: params.tags,
           difficulty: params.difficulty,
           is_public: params.is_public || false,
-          // 扩展字段（暂时注释，等数据库模式更新）
-          // compatible_models: params.compatible_models,
-          // domain: params.domain,
-          // use_cases: params.use_cases,
+          compatible_models: params.compatible_models || [], // 添加compatible_models字段
           allow_collaboration: params.allow_collaboration,
           collaborative_level: params.collaborative_level,
           user_id: userId, // 确保正确的字段名
@@ -697,6 +712,7 @@ export class UnifiedStoreTool extends BaseMCPTool {
         category: instructionResult.specified_params.category ? 'user' : 'ai',
         description: instructionResult.specified_params.description ? 'user' : 'ai',
         tags: instructionResult.specified_params.tags ? 'user' : 'ai',
+        compatible_models: instructionResult.specified_params.compatible_models ? 'user' : 'ai', // 添加compatible_models来源
         difficulty: instructionResult.specified_params.difficulty ? 'user' : 'ai',
         is_public: instructionResult.specified_params.is_public !== undefined ? 'user' : 'default',
         allow_collaboration: instructionResult.specified_params.allow_collaboration !== undefined ? 'user' : 'default',
@@ -706,8 +722,8 @@ export class UnifiedStoreTool extends BaseMCPTool {
         suggested_title: aiAnalysis.title,
         suggested_category: aiAnalysis.category,
         suggested_tags: aiAnalysis.tags,
+        suggested_compatible_models: aiAnalysis.compatible_models, // 添加AI建议的兼容模型
         confidence: aiAnalysis.confidence,
-        // compatible_models: aiAnalysis.compatible_models,
         // domain: aiAnalysis.domain,
         // use_cases: aiAnalysis.use_cases
       } : null,
@@ -716,6 +732,7 @@ export class UnifiedStoreTool extends BaseMCPTool {
         category: finalParams.category,
         description: finalParams.description,
         tags: finalParams.tags,
+        compatible_models: finalParams.compatible_models, // 添加最终的兼容模型
         difficulty: finalParams.difficulty,
         is_public: finalParams.is_public,
         allow_collaboration: finalParams.allow_collaboration,

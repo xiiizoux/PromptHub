@@ -1,5 +1,6 @@
 import { BaseMCPTool } from '../../shared/base-tool.js';
-import type { ToolDescription, ToolParameter, ToolContext, ToolResult } from '../types';
+import type { ToolDescription, ToolParameter } from '../../types.js';
+import type { ToolContext, ToolResult } from '../../shared/base-tool.js';
 
 // 优化模板类型
 interface OptimizationTemplate {
@@ -8,6 +9,8 @@ interface OptimizationTemplate {
 }
 
 // 优化参数接口
+import { MODEL_TAGS, getModelTagsByType, ModelType } from '../../constants/ai-models.js';
+
 interface PromptOptimizationParams {
   content: string;
   optimization_type?: 'general' | 'creative' | 'technical' | 'business' | 'educational' | 'drawing' | 'analysis' | 'iteration';
@@ -164,7 +167,7 @@ export class PromptOptimizerMCPTool extends BaseMCPTool {
     },
 
     drawing: {
-      system: `你是一个专业的AI绘图提示词优化专家，专门优化用于图像生成模型（如Midjourney、Stable Diffusion、DALL-E等）的提示词。
+      system: `你是一个专业的AI绘图提示词优化专家，专门优化用于图像生成模型的提示词，支持所有主流图像生成模型。
 
 绘图提示词优化原则：
 1. **主体描述优化**：

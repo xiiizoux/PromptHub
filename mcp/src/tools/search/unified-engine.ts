@@ -845,10 +845,7 @@ export class UnifiedSearchEngine extends BaseMCPTool {
       content = prompt.messages;
     }
     
-    // 如果没有messages，尝试其他字段
-    if (!content && prompt.content) {
-      content = prompt.content;
-    }
+    // content字段已从Prompt接口中移除，内容存储在messages字段中
     
     // 限制预览长度
     if (content.length > 500) {

@@ -810,14 +810,15 @@ export class SupabaseAdapter implements StorageAdapter {
     try {
       console.log(`[精确搜索] 查询: "${query}"`);
       
+      // 改进搜索查询，包含更多字段和更好的模糊匹配
       let dbQuery = this.supabase
         .from('prompts')
         .select('*')
-        .or(`name.ilike.%${query}%,description.ilike.%${query}%,messages::text.ilike.%${query}%`);
+        .or(`name.ilike.%${query}%,description.ilike.%${query}%,messages::text.ilike.%${query}%,tags::text.ilike.%${query}%,category.ilike.%${query}%`);
       
       dbQuery = this.applyAccessControl(dbQuery, userId, includePublic);
       
-      const { data, error } = await dbQuery.limit(50);
+      const { data, error } = await dbQuery.limit(100); // 增加限制数量
       
       if (error) {
         console.warn('精确搜索失败:', error.message);
@@ -848,7 +849,7 @@ export class SupabaseAdapter implements StorageAdapter {
           let dbQuery = this.supabase
             .from('prompts')
             .select('*')
-            .or(`name.ilike.%${keyword}%,description.ilike.%${keyword}%,messages::text.ilike.%${keyword}%,category.ilike.%${keyword}%`);
+            .or(`name.ilike.%${keyword}%,description.ilike.%${keyword}%,messages::text.ilike.%${keyword}%,tags::text.ilike.%${keyword}%,category.ilike.%${keyword}%`);
           
           dbQuery = this.applyAccessControl(dbQuery, userId, includePublic);
           
@@ -886,7 +887,7 @@ export class SupabaseAdapter implements StorageAdapter {
       let dbQuery = this.supabase
         .from('prompts')
         .select('*')
-        .or(`name.ilike.%${fuzzyQuery}%,description.ilike.%${fuzzyQuery}%,messages::text.ilike.%${fuzzyQuery}%`);
+        .or(`name.ilike.%${fuzzyQuery}%,description.ilike.%${fuzzyQuery}%,messages::text.ilike.%${fuzzyQuery}%,tags::text.ilike.%${fuzzyQuery}%,category.ilike.%${fuzzyQuery}%`);
       
       dbQuery = this.applyAccessControl(dbQuery, userId, includePublic);
       

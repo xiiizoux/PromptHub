@@ -28,7 +28,7 @@ export const performanceTools = {
       {
         name: 'model',
         type: 'string',
-        description: '使用的模型，例如 "gpt-4"',
+        description: '使用的模型标签，如"llm-large"、"code-specialized"等预设模型标签',
         required: true
       },
       {

@@ -9,6 +9,13 @@ import { ToolDescription, ToolParameter, Prompt } from '../../types.js';
 /**
  * 一键智能搜索工具类
  */
+import { 
+  MODEL_TAGS, 
+  getModelTagsByType, 
+  ModelType,
+  SPECIFIC_MODEL_TO_TAG_MAP 
+} from '../../constants/ai-models.js';
+
 export class OneClickSearchTool extends BaseMCPTool {
   readonly name = 'one_click_search';
   readonly description = '🎯 一键智能搜索 - 输入需求，直接获得最匹配的提示词，支持自然语言描述';
@@ -225,7 +232,7 @@ export class ReadyToUseTool extends BaseMCPTool {
       parameters: {
         prompt_id: { type: 'string', description: '提示词ID或名称', required: true } as ToolParameter,
         variables: { type: 'object', description: '变量值', required: false } as ToolParameter,
-        target_ai: { type: 'string', description: '目标AI：gpt4、claude、gemini、custom', required: false } as ToolParameter,
+        target_ai: { type: 'string', description: '目标AI模型标签，如：llm-large、code-specialized、image-generation等，参考预设模型标签', required: false } as ToolParameter,
       },
     };
   }
@@ -313,15 +320,33 @@ export class ReadyToUseTool extends BaseMCPTool {
   }
 
   private optimizeForTargetAI(content: string, prompt: Prompt, targetAI: string): string {
-    switch (targetAI.toLowerCase()) {
-      case 'claude':
-        return `<instructions>\n${content}\n</instructions>\n\n请按照上述指示执行任务。`;
-      case 'gemini':
-        return `你好！我需要你帮我：\n\n${content}\n\n请详细回答，谢谢！`;
-      case 'gpt4':
-      default:
-        return content;
+    // 支持模型标签和具体模型名称
+    const lowerTarget = targetAI.toLowerCase();
+    
+    // 检查是否为预设模型标签
+    if (lowerTarget === 'reasoning-specialized' || lowerTarget.includes('reasoning')) {
+      return `请仔细分析以下问题，逐步推理：\n\n${content}\n\n请提供详细的推理过程和结论。`;
     }
+    
+    if (lowerTarget === 'image-generation' || lowerTarget.includes('image')) {
+      return `创建图像提示词：\n\n${content}\n\n请生成详细的视觉描述，包含风格、构图、色彩等要素。`;
+    }
+    
+    if (lowerTarget === 'code-specialized' || lowerTarget.includes('code')) {
+      return `代码任务：\n\n${content}\n\n请提供完整的代码实现，包含注释和说明。`;
+    }
+    
+    // 兼容旧的硬编码模型名称
+    if (lowerTarget.includes('claude')) {
+      return `<instructions>\n${content}\n</instructions>\n\n请按照上述指示执行任务。`;
+    }
+    
+    if (lowerTarget.includes('gemini')) {
+      return `你好！我需要你帮我：\n\n${content}\n\n请详细回答，谢谢！`;
+    }
+    
+    // 默认格式（适用于大部分模型）
+    return content;
   }
 
   private generateReadyToUseFormat(content: string, prompt: Prompt, targetAI: string): string {

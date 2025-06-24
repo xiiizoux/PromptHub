@@ -751,64 +751,51 @@ export class OptimizedSemanticSearchTool extends BaseMCPTool {
       intent: UserIntent
     ): string {
       if (results.length === 0) {
-        return `😔 抱歉，没有找到与"${query}"相关的提示词。
+        return `🚫 抱歉，没有找到与"${query}"相关的提示词。
 
 🔍 建议：
 • 尝试使用更简单的关键词
 • 检查是否有拼写错误
-• 或者浏览我们的分类目录`;
-      }
-  
-      let output = `🎯 为您找到 ${results.length} 个与"${query}"相关的提示词：
+• 或者浏览我们的分类目录
 
-`;
-  
+💡 需要创建新的提示词吗？
+如果您想创建一个关于"${query}"的新提示词，请告诉我是否需要帮助创建。我可以为您提供创建指导。`;
+      }
+
+      let output = `🎯 为您找到 ${results.length} 个与"${query}"相关的提示词：\n\n`;
+
       results.forEach((result, index) => {
         const emoji = this.getEmojiForCategory(result.category);
         const relevanceBar = this.getRelevanceBar(result.relevanceScore);
         
         // 核心：标题、描述、内容是必要的
-        output += `**${index + 1}. ${emoji} ${result.name}**
-`;
-        output += `📝 **描述：** ${result.description}
-`;
+        output += `**${index + 1}. ${emoji} ${result.name}**\n`;
+        output += `📝 **描述：** ${result.description}\n`;
         
         // 最重要：显示实际内容
         if (result.preview && result.preview.trim()) {
-          output += `📄 **内容：**
-\`\`\`
-${result.preview}
-\`\`\`
-`;
+          output += `📄 **内容：**\n\`\`\`\n${result.preview}\n\`\`\`\n`;
         }
         
         // 简化其他信息：相关度和匹配原因
-        output += `🎯 相关度 ${result.relevanceScore}% | ${result.matchReason}
-`;
+        output += `🎯 相关度 ${result.relevanceScore}% | ${result.matchReason}\n`;
         
         // 标签信息（可选）
         if (result.tags.length > 0) {
-          output += `🏷️ ${result.tags.slice(0, 3).join(' • ')}
-`;
+          output += `🏷️ ${result.tags.slice(0, 3).join(' • ')}\n`;
         }
         
         if (index < results.length - 1) {
           output += '\n---\n\n';
         }
       });
-  
-      output += `
 
-💬 **使用说明：**
-`;
-      output += `上述提示词按相关度排序，每个都包含了完整的内容预览。
-`;
-      output += `您可以直接使用这些内容，或者说"我要第X个提示词"获取更多详细信息。
-
-`;
+      output += `\n\n💬 **使用说明：**\n`;
+      output += `上述提示词按相关度排序，每个都包含了完整的内容预览。\n`;
+      output += `您可以直接使用这些内容，或者说"我要第X个提示词"获取更多详细信息。\n\n`;
       
       output += `🔄 **需要更多结果？** 尝试使用不同的搜索关键词或浏览相关分类。`;
-  
+
       return output;
     }
 

@@ -769,7 +769,8 @@ router.post('/tools/:name/invoke', optionalAuthMiddleware, async (req, res) => {
             : req?.headers?.['x-request-id'],
           userAgent: Array.isArray(req?.headers?.['user-agent']) 
             ? req.headers['user-agent'][0] 
-            : req?.headers?.['user-agent']
+            : req?.headers?.['user-agent'],
+          timestamp: Date.now()
         });
         break;
         
