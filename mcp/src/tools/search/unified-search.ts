@@ -306,30 +306,54 @@ export class UnifiedSearchTool extends BaseMCPTool {
   } {
     const lowerQuery = query.toLowerCase().trim();
     
-    // 自然语言指标
+    // 扩展的自然语言指标（中英文）
     const naturalLanguageIndicators = [
-      /^(请|帮|想|需要|希望|能|可以)/,
-      /(怎么|如何|什么|为什么|哪个)/,
-      /(写|创建|生成|制作|设计)/,
-      /(分析|检查|优化|改进)/,
+      // 中文自然语言指标
+      /^(请|帮|想|需要|希望|能|可以|如何|怎么|什么|为什么|哪个|求)/,
+      /^(写|创建|生成|制作|设计|开发|构建|编写)/,
+      /^(分析|检查|优化|改进|评估|审查|总结)/,
+      /(怎么|如何|什么|为什么|哪些|哪个|多少|何时|在哪)/,
+      /(帮我|给我|为我|让我|教我|告诉我)/,
+      // 英文自然语言指标
+      /^(help|write|create|generate|make|design|develop|build)/,
+      /^(analyze|check|optimize|improve|evaluate|review|summarize)/,
+      /(how|what|why|which|when|where|who)/,
+      /(help me|give me|tell me|show me|teach me)/,
+      // 复杂句式指标
+      /[，。！？,;.!?]/, // 包含标点符号
       /\s+/g, // 包含空格
+      /.{15,}/, // 长查询（15字符以上）
     ];
 
     const nlScore = naturalLanguageIndicators.reduce((score, pattern) => {
-      return score + (pattern.test(lowerQuery) ? 0.2 : 0);
+      return score + (pattern.test(lowerQuery) ? 0.15 : 0);
     }, 0);
 
-    // 简单关键词指标
+    // 简单关键词指标（更严格的判断）
     const isSimpleKeyword = (
-      lowerQuery.length < 10 &&
+      lowerQuery.length <= 8 &&
       !lowerQuery.includes(' ') &&
-      !/[，。！？]/.test(lowerQuery)
+      !/[，。！？,;.!?]/.test(lowerQuery) &&
+      !/^(请|帮|想|需要|希望|能|可以|如何|怎么|什么|为什么|哪个|help|write|create|how|what|why)/.test(lowerQuery)
     );
 
+    // 调整复杂度计算
+    let complexity = Math.min(1.0, nlScore);
+    
+    // 长度奖励（适当增加长查询的复杂度）
+    if (lowerQuery.length > 10) {
+      complexity += 0.1;
+    }
+    
+    // 中文查询奖励（中文往往更倾向于自然语言）
+    if (/[\u4e00-\u9fa5]/.test(lowerQuery)) {
+      complexity += 0.1;
+    }
+
     return {
-      isNaturalLanguage: nlScore > 0.4,
+      isNaturalLanguage: complexity > 0.3, // 降低阈值，更容易识别为自然语言
       isSimpleKeyword,
-      complexity: nlScore
+      complexity: Math.min(1.0, complexity)
     };
   }
 

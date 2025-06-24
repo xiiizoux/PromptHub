@@ -34,13 +34,14 @@ export interface Prompt {
   improvements?: string[]; // 新增：改进建议
   use_cases?: string[]; // 新增：使用场景
   estimated_tokens?: number; // 新增：预估token数
-  content?: string; // 新增：原始内容
   usage_count?: number; // 新增：使用次数
   examples?: Array<{
     input: string;
     output: string;
     description?: string;
   }>; // 新增：示例
+  // 注意：去除了content字段，因为数据库中没有此字段
+  // 提示词内容存储在messages字段中
 }
 
 export interface PromptVersion {

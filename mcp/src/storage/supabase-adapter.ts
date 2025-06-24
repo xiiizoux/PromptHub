@@ -760,22 +760,47 @@ export class SupabaseAdapter implements StorageAdapter {
    * 提取搜索关键词
    */
   private extractSearchKeywords(query: string): string[] {
-    // 移除停用词
-    const stopWords = ['的', '了', '和', '是', '在', '有', '以', '及', '为', '与', '等', '或', '但', '这', '那', '一个', '用于'];
+    // 扩展的中英文停用词列表
+    const stopWords = [
+      // 中文停用词
+      '的', '了', '和', '是', '在', '有', '以', '及', '为', '与', '等', '或', '但', '这', '那', 
+      '一个', '用于', '可以', '能够', '如何', '什么', '怎么', '哪些', '哪个', '一些', '这些', '那些',
+      '我们', '你们', '他们', '我的', '你的', '他的', '她的', '它的',
+      // 英文停用词
+      'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 
+      'by', 'from', 'up', 'about', 'into', 'through', 'during', 'before', 'after', 'above',
+      'below', 'between', 'among', 'this', 'that', 'these', 'those', 'i', 'you', 'he', 'she',
+      'it', 'we', 'they', 'my', 'your', 'his', 'her', 'its', 'our', 'their'
+    ];
     
-    // 简单分词：按空格、标点分割
+    // 智能分词：按多种分隔符分割
     const words = query
-      .split(/[\s,，。！？、；：""''（）\(\)\[\]【】]+/)
-      .filter(word => 
-        word.length > 0 && 
-        word.length >= 2 && // 至少2个字符
-        !stopWords.includes(word) &&
-        !/^[0-9]+$/.test(word) // 排除纯数字
-      );
+      .toLowerCase() // 转小写进行处理
+      .split(/[\s,，。！？、；：""\''（）\(\)\[\]【】\-_=+|\\\/\*&%$#@~`]+/)
+      .filter(word => {
+        // 过滤条件
+        if (word.length === 0) return false;
+        if (word.length < 2) return false; // 至少2个字符
+        if (stopWords.includes(word)) return false;
+        if (/^[0-9]+$/.test(word)) return false; // 排除纯数字
+        if (/^[^\u4e00-\u9fa5a-zA-Z]+$/.test(word)) return false; // 排除纯符号
+        return true;
+      });
     
-    // 去重并保持原始查询
-    const uniqueWords = Array.from(new Set([query, ...words]));
-    return uniqueWords.slice(0, 10); // 限制关键词数量
+    // 保持原始查询在第一位，然后添加去重的关键词
+    const uniqueWords = [query.trim()]; // 原始查询始终保留
+    
+    // 添加分词结果（去重）
+    words.forEach(word => {
+      if (!uniqueWords.includes(word) && word !== query.trim()) {
+        uniqueWords.push(word);
+      }
+    });
+    
+    console.log(`[关键词提取] 原始查询: "${query}" => 关键词: [${uniqueWords.join(', ')}]`);
+    
+    // 限制关键词数量以优化性能（原始查询 + 最多9个分词结果）
+    return uniqueWords.slice(0, 10);
   }
   
   /**
@@ -783,10 +808,12 @@ export class SupabaseAdapter implements StorageAdapter {
    */
   private async executeExactSearch(query: string, userId?: string, includePublic: boolean = true): Promise<Prompt[]> {
     try {
+      console.log(`[精确搜索] 查询: "${query}"`);
+      
       let dbQuery = this.supabase
         .from('prompts')
         .select('*')
-        .or(`name.ilike.%${query}%,description.ilike.%${query}%,content.ilike.%${query}%`);
+        .or(`name.ilike.%${query}%,description.ilike.%${query}%,messages::text.ilike.%${query}%`);
       
       dbQuery = this.applyAccessControl(dbQuery, userId, includePublic);
       
@@ -797,6 +824,7 @@ export class SupabaseAdapter implements StorageAdapter {
         return [];
       }
       
+      console.log(`[精确搜索] 找到 ${data?.length || 0} 个结果`);
       return data || [];
     } catch (err) {
       console.warn('精确搜索出错:', err);
@@ -811,15 +839,16 @@ export class SupabaseAdapter implements StorageAdapter {
     if (keywords.length === 0) return [];
     
     try {
+      console.log(`[关键词搜索] 关键词: [${keywords.join(', ')}]`);
       const results = new Set<Prompt>();
       
-      // 对每个关键词进行搜索（并行处理前3个关键词）
-      const searchPromises = keywords.slice(0, 3).map(async (keyword) => {
+      // 对每个关键词进行搜索（并行处理前5个关键词）
+      const searchPromises = keywords.slice(0, 5).map(async (keyword) => {
         try {
           let dbQuery = this.supabase
             .from('prompts')
             .select('*')
-            .or(`name.ilike.%${keyword}%,description.ilike.%${keyword}%,content.ilike.%${keyword}%,category.ilike.%${keyword}%`);
+            .or(`name.ilike.%${keyword}%,description.ilike.%${keyword}%,messages::text.ilike.%${keyword}%,category.ilike.%${keyword}%`);
           
           dbQuery = this.applyAccessControl(dbQuery, userId, includePublic);
           
@@ -827,6 +856,7 @@ export class SupabaseAdapter implements StorageAdapter {
           
           if (!error && data) {
             data.forEach(prompt => results.add(prompt));
+            console.log(`[关键词搜索] 关键词 "${keyword}" 找到 ${data.length} 个结果`);
           }
         } catch (err) {
           console.warn(`关键词 "${keyword}" 搜索失败:`, err);
@@ -835,6 +865,7 @@ export class SupabaseAdapter implements StorageAdapter {
       
       await Promise.all(searchPromises);
       
+      console.log(`[关键词搜索] 总共找到 ${results.size} 个去重结果`);
       return Array.from(results);
     } catch (err) {
       console.warn('关键词搜索出错:', err);
@@ -847,13 +878,15 @@ export class SupabaseAdapter implements StorageAdapter {
    */
   private async executeFuzzySearch(query: string, userId?: string, includePublic: boolean = true): Promise<Prompt[]> {
     try {
+      console.log(`[模糊搜索] 查询: "${query}"`);
+      
       // 生成模糊匹配查询
       const fuzzyQuery = query.split('').join('%');
       
       let dbQuery = this.supabase
         .from('prompts')
         .select('*')
-        .or(`name.ilike.%${fuzzyQuery}%,description.ilike.%${fuzzyQuery}%,content.ilike.%${fuzzyQuery}%`);
+        .or(`name.ilike.%${fuzzyQuery}%,description.ilike.%${fuzzyQuery}%,messages::text.ilike.%${fuzzyQuery}%`);
       
       dbQuery = this.applyAccessControl(dbQuery, userId, includePublic);
       
@@ -864,6 +897,7 @@ export class SupabaseAdapter implements StorageAdapter {
         return [];
       }
       
+      console.log(`[模糊搜索] 找到 ${data?.length || 0} 个结果`);
       return data || [];
     } catch (err) {
       console.warn('模糊搜索出错:', err);
@@ -920,15 +954,38 @@ export class SupabaseAdapter implements StorageAdapter {
         const weights = {
           name: 3.0,        // 标题权重最高
           description: 2.0, // 描述权重中等
-          content: 1.5,     // 内容权重中等
+          messages: 1.5,    // 提示词内容权重中等
           category: 1.0     // 分类权重较低
         };
+        
+        // 提取消息内容文本
+        let messagesText = '';
+        try {
+          if (typeof prompt.messages === 'string') {
+            messagesText = prompt.messages;
+          } else if (Array.isArray(prompt.messages)) {
+            messagesText = prompt.messages.map(msg => {
+              if (typeof msg === 'string') return msg;
+              if (typeof msg === 'object' && msg !== null) {
+                const msgObj = msg as any;
+                return msgObj.content?.text || msgObj.content || msgObj.text || '';
+              }
+              return '';
+            }).join(' ');
+          } else if (typeof prompt.messages === 'object' && prompt.messages !== null) {
+            const msgObj = prompt.messages as any;
+            messagesText = msgObj.content?.text || msgObj.content || msgObj.text || '';
+          }
+        } catch (error) {
+          console.warn('解析消息内容失败:', error);
+          messagesText = '';
+        }
         
         // 计算各字段匹配分数
         const fields = {
           name: prompt.name || '',
           description: prompt.description || '',
-          content: prompt.content || '',
+          messages: messagesText,
           category: prompt.category || ''
         };
         
@@ -954,12 +1011,26 @@ export class SupabaseAdapter implements StorageAdapter {
             const positionBonus = Math.max(0, 2 - position / 10);
             score += weight * positionBonus;
           }
+          
+          // 4. 关键词密度奖励
+          if (fieldText.length > 0) {
+            const keywordCount = keywords.filter(kw => fieldText.includes(kw.toLowerCase())).length;
+            const density = keywordCount / Math.max(fieldText.length / 100, 1);
+            score += weight * density;
+          }
         });
         
-        // 4. 长度惩罚（避免过长内容稀释关键词密度）
+        // 5. 长度惩罚（避免过长内容稀释关键词密度）
         const totalLength = Object.values(fields).join('').length;
         const lengthPenalty = Math.min(1, 500 / Math.max(totalLength, 100));
         score *= lengthPenalty;
+        
+        // 6. 公开性奖励（公开提示词略微提升排名）
+        if (prompt.is_public) {
+          score *= 1.1;
+        }
+        
+        console.log(`[相关性评分] "${prompt.name}" => ${score.toFixed(2)}`);
         
         return { ...prompt, _score: score };
       })

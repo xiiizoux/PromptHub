@@ -552,11 +552,31 @@ class PromptHubMCPAdapter {
       // 使用REST API调用工具
       const response = await this.makeHttpRequest(`/tools/${name}/invoke`, 'POST', parameters);
       
+      // 🎯 优化输出格式：优先使用格式化的对话式文本
+      let displayText;
+      
+      // 1. 首先尝试使用专门的对话式格式化文本
+      if (response.data?.conversation_display) {
+        displayText = response.data.conversation_display;
+      }
+      // 2. 其次尝试使用现有的文本内容
+      else if (response.content?.text) {
+        displayText = response.content.text;
+      }
+      // 3. 如果是搜索结果且有数据，尝试格式化显示
+      else if (response.success && response.data?.results && Array.isArray(response.data.results)) {
+        displayText = this.formatSearchResults(response);
+      }
+      // 4. 最后回退到JSON格式
+      else {
+        displayText = JSON.stringify(response, null, 2);
+      }
+      
       return {
         content: [
           {
             type: 'text',
-            text: response.content?.text || JSON.stringify(response, null, 2)
+            text: displayText
           }
         ]
       };
@@ -564,6 +584,204 @@ class PromptHubMCPAdapter {
       console.error(`[PromptHub MCP] 工具调用失败 (${name}):`, error.message);
       throw error;
     }
+  }
+
+  /**
+   * 🎨 格式化搜索结果为对话式文本
+   * 确保用户能够看到完整的提示词内容，而不只是元数据
+   */
+  formatSearchResults(response) {
+    const { results = [], query = '', search_metadata = {} } = response.data || {};
+    
+    if (results.length === 0) {
+      return `😔 抱歉，没有找到与"${query}"相关的提示词。
+
+🔍 建议：
+• 尝试使用更简单的关键词
+• 检查是否有拼写错误
+• 或者浏览我们的分类目录`;
+    }
+
+    let output = `🎯 为您找到 ${results.length} 个与"${query}"相关的提示词：\n\n`;
+
+    results.forEach((result, index) => {
+      const emoji = this.getEmojiForCategory(result.category || '通用');
+      
+      // 🎯 核心：标题、描述、内容是必要的
+      output += `**${index + 1}. ${emoji} ${result.name || '未命名提示词'}**\n`;
+      
+      if (result.description) {
+        output += `📝 **描述：** ${result.description}\n`;
+      }
+      
+      // 🚀 最重要：显示实际内容
+      let content = this.extractPromptContent(result);
+      if (content && content.trim()) {
+        output += `📄 **内容：**\n\`\`\`\n${content}\n\`\`\`\n`;
+      }
+      
+      // 相关度和匹配原因
+      if (result.relevanceScore !== undefined || result.matchReason) {
+        output += `🎯 相关度 ${result.relevanceScore || 'N/A'}%`;
+        if (result.matchReason) {
+          output += ` | ${result.matchReason}`;
+        }
+        output += '\n';
+      }
+      
+      // 标签信息（可选）
+      if (result.tags && result.tags.length > 0) {
+        output += `🏷️ ${result.tags.slice(0, 3).join(' • ')}\n`;
+      }
+      
+      if (index < results.length - 1) {
+        output += '\n---\n\n';
+      }
+    });
+
+    output += `\n\n💬 **使用说明：**\n`;
+    output += `上述提示词按相关度排序，每个都包含了完整的内容预览。\n`;
+    output += `您可以直接使用这些内容，或者说"我要第X个提示词"获取更多详细信息。\n\n`;
+    
+    // 添加搜索元数据信息
+    if (search_metadata.unified_search) {
+      const mode = search_metadata.unified_search.selected_mode;
+      const modeNames = {
+        'semantic': '智能语义搜索',
+        'advanced': '高级搜索',
+        'intelligent': '智能推荐',
+        'basic': '基础搜索'
+      };
+      output += `🔧 **搜索模式：** ${modeNames[mode] || mode}\n`;
+    }
+    
+    output += `🔄 **需要更多结果？** 尝试使用不同的搜索关键词或浏览相关分类。`;
+
+    return output;
+  }
+
+  /**
+   * 📄 从提示词对象中提取实际内容
+   */
+  extractPromptContent(prompt) {
+    let content = '';
+    
+    // 1. 优先从preview字段获取（如果已经格式化过）
+    if (prompt.preview && prompt.preview.trim() && prompt.preview !== '暂无内容预览') {
+      return prompt.preview;
+    }
+    
+    // 2. 尝试从messages字段提取
+    if (prompt.messages) {
+      try {
+        if (Array.isArray(prompt.messages)) {
+          // 查找包含实际提示词内容的消息
+          const contentMsg = prompt.messages.find(msg => {
+            if (typeof msg === 'object' && msg !== null && 'content' in msg) {
+              const msgContent = msg.content;
+              return typeof msgContent === 'string' && msgContent.trim().length > 20;
+            }
+            return false;
+          });
+          
+          if (contentMsg) {
+            content = contentMsg.content;
+          } else if (prompt.messages.length > 0) {
+            // 如果没找到content字段，尝试获取第一个非空消息
+            const firstMsg = prompt.messages[0];
+            if (typeof firstMsg === 'string') {
+              content = firstMsg;
+            } else if (typeof firstMsg === 'object' && firstMsg !== null) {
+              // 尝试各种可能的字段名
+              const msgObj = firstMsg;
+              content = msgObj.content || msgObj.text || msgObj.prompt || msgObj.message || '';
+            }
+          }
+        } else if (typeof prompt.messages === 'string') {
+          content = prompt.messages;
+        } else if (typeof prompt.messages === 'object' && prompt.messages !== null) {
+          // 处理单个消息对象
+          const msgObj = prompt.messages;
+          content = msgObj.content || msgObj.text || msgObj.prompt || msgObj.message || '';
+        }
+      } catch (error) {
+        console.warn('解析提示词消息内容失败:', error);
+      }
+    }
+    
+    // 3. 如果还是没有内容，使用description作为备选
+    if (!content || content.trim().length < 20) {
+      content = prompt.description || '';
+    }
+    
+    // 4. 如果内容太长，智能截断（保持完整句子）
+    content = content.trim();
+    if (content.length > 500) {
+      // 在句号、问号、感叹号处截断
+      const sentences = content.match(/[^.!?]*[.!?]/g) || [];
+      let truncated = '';
+      
+      for (const sentence of sentences) {
+        if ((truncated + sentence).length <= 500) {
+          truncated += sentence;
+        } else {
+          break;
+        }
+      }
+      
+      // 如果没有找到合适的句子边界，直接截断
+      if (truncated.length < 200) {
+        truncated = content.substring(0, 500);
+        // 尝试在词边界截断
+        const lastSpace = truncated.lastIndexOf(' ');
+        if (lastSpace > 400) {
+          truncated = truncated.substring(0, lastSpace);
+        }
+        truncated += '...';
+      }
+      
+      content = truncated;
+    }
+    
+    return content || '暂无内容预览';
+  }
+
+  /**
+   * 🎨 获取分类对应的表情符号
+   */
+  getEmojiForCategory(category) {
+    // 🎯 完整的20个系统预设分类emoji映射
+    const emojiMap = {
+      // 核心分类 (1-5)
+      '通用': '📄',     // General - 文档图标，表示通用性
+      '学术': '📚',     // Academic - 书籍图标，表示学术研究
+      '职业': '💼',     // Professional - 公文包图标，表示职业发展
+      '文案': '✍️',     // Copywriting - 写作图标，表示文案创作
+      '设计': '🎨',     // Design - 调色板图标，表示设计创意
+      
+      // 创作分类 (6-10)
+      '绘画': '🖌️',     // Drawing - 画笔图标，表示绘画艺术
+      '教育': '🎓',     // Education - 学士帽图标，表示教育培训
+      '情感': '💝',     // Emotional - 心形礼物图标，表示情感表达
+      '娱乐': '🎭',     // Entertainment - 戏剧面具图标，表示娱乐内容
+      '游戏': '🎮',     // Gaming - 游戏手柄图标，表示游戏相关
+      
+      // 生活分类 (11-15)
+      '生活': '🏠',     // Lifestyle - 房屋图标，表示日常生活
+      '商业': '💰',     // Business - 金钱图标，表示商业活动
+      '办公': '🗂️',     // Office - 文件夹图标，表示办公工作
+      '编程': '💻',     // Programming - 电脑图标，表示编程开发
+      '翻译': '🌐',     // Translation - 地球图标，表示语言翻译
+      
+      // 媒体分类 (16-20)
+      '视频': '📹',     // Video - 摄像机图标，表示视频制作
+      '播客': '🎙️',     // Podcast - 麦克风图标，表示播客录制
+      '音乐': '🎵',     // Music - 音符图标，表示音乐创作
+      '健康': '💊',     // Health - 药丸图标，表示健康医疗
+      '科技': '🔬'      // Technology - 显微镜图标，表示科技创新
+    };
+    
+    return emojiMap[category] || '📄';
   }
 
   /**
