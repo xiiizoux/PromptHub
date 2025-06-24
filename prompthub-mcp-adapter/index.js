@@ -833,7 +833,7 @@ async function handleMessage(message) {
             },
             serverInfo: {
               name: 'prompthub-mcp-adapter',
-              version: '2.1.9'
+              version: '2.2.0'
             }
           }
         });
