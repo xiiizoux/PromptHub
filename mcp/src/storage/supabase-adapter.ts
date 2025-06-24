@@ -599,17 +599,10 @@ export class SupabaseAdapter implements StorageAdapter {
       try {
         // 确保有用户ID - 改进用户ID验证逻辑
         let finalUserId = prompt.user_id;
-        
+
         if (!finalUserId) {
-          console.log('[SupabaseAdapter] 提示词缺少用户ID，尝试获取当前用户');
-          const currentUser = await this.getCurrentUser();
-          if (currentUser) {
-            finalUserId = currentUser.id;
-            console.log('[SupabaseAdapter] 获取到当前用户ID:', finalUserId);
-          } else {
-            // API密钥认证失败，无法创建提示词
-            throw new Error('无法确定用户身份，请检查API密钥认证');
-          }
+          console.log('[SupabaseAdapter] 提示词缺少用户ID，无法创建提示词');
+          throw new Error('无法确定用户身份，请检查API密钥认证');
         } else {
           console.log('[SupabaseAdapter] 使用传入的用户ID:', finalUserId);
         }
@@ -641,9 +634,9 @@ export class SupabaseAdapter implements StorageAdapter {
           is_public: promptData.is_public
         });
         
-        // 创建提示词
-        const client = this.supabase;
-  
+        // 创建提示词，使用管理员客户端绕过RLS策略
+        const client = this.adminSupabase || this.supabase;
+
         const { data, error } = await client
           .from('prompts')
           .insert([promptData])
@@ -1234,8 +1227,8 @@ export class SupabaseAdapter implements StorageAdapter {
         created_at: new Date().toISOString()
       };
       
-      // 使用标准客户端
-      const client = this.supabase;
+      // 使用管理员客户端绕过RLS策略
+      const client = this.adminSupabase || this.supabase;
 
       const { data, error } = await client
         .from('prompt_versions')
@@ -1613,8 +1606,13 @@ export class SupabaseAdapter implements StorageAdapter {
       const keyHash = crypto.createHash('sha256').update(apiKey).digest('hex');
       logger.debug('计算API密钥哈希', { hashPrefix: keyHash.substring(0, 16) + '...' });
 
+      // 使用管理员客户端进行API密钥验证，绕过RLS策略
+      const client = this.adminSupabase || this.supabase;
+
+
+
       // 查询有效的API密钥
-      const { data, error } = await this.supabase
+      const { data, error } = await client
         .from('api_keys')
         .select('user_id, name, expires_at')
         .eq('key_hash', keyHash)
@@ -1622,7 +1620,11 @@ export class SupabaseAdapter implements StorageAdapter {
         .single();
 
       if (error) {
-        logger.warn('API密钥查询失败', { error: error.message, code: error.code });
+        logger.warn('API密钥查询失败', {
+          error: error.message,
+          code: error.code,
+          searchHash: keyHash.substring(0, 16) + '...'
+        });
         return null;
       }
 
@@ -1637,8 +1639,8 @@ export class SupabaseAdapter implements StorageAdapter {
         expiresAt: data.expires_at
       });
 
-      // 获取用户信息
-      const { data: userData, error: userError } = await this.supabase
+      // 获取用户信息，使用管理员客户端
+      const { data: userData, error: userError } = await client
         .from('users')
         .select('*')
         .eq('id', data.user_id)
@@ -1745,7 +1747,11 @@ export class SupabaseAdapter implements StorageAdapter {
   async getUser(userId: string): Promise<User | null> {
     try {
       console.log(`[MCP Adapter] 获取用户信息，用户ID: ${userId}`);
-      const { data, error } = await this.supabase
+
+      // 使用管理员客户端绕过RLS策略
+      const client = this.adminSupabase || this.supabase;
+
+      const { data, error } = await client
         .from('users')
         .select('*')
         .eq('id', userId)

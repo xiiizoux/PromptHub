@@ -738,11 +738,11 @@ router.post('/tools/:name/invoke', optionalAuthMiddleware, async (req, res) => {
       case 'unified_store':
         result = await handleUnifiedStore(params, {
           userId: req?.user?.id,
-          requestId: Array.isArray(req?.headers?.['x-request-id']) 
-            ? req.headers['x-request-id'][0] 
+          requestId: Array.isArray(req?.headers?.['x-request-id'])
+            ? req.headers['x-request-id'][0]
             : req?.headers?.['x-request-id'],
-          userAgent: Array.isArray(req?.headers?.['user-agent']) 
-            ? req.headers['user-agent'][0] 
+          userAgent: Array.isArray(req?.headers?.['user-agent'])
+            ? req.headers['user-agent'][0]
             : req?.headers?.['user-agent']
         });
         break;

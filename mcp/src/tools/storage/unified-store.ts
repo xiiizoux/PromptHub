@@ -643,10 +643,14 @@ export class UnifiedStoreTool extends BaseMCPTool {
   private async performStorage(params: any, context: ToolContext): Promise<ToolResult> {
       try {
         const storage = this.getStorage();
-        
+
         // 确保用户ID正确传递
         const userId = context.userId || params.created_by || params.user_id;
-        
+
+        if (!userId) {
+          throw new Error('无法确定用户身份，请检查API密钥认证');
+        }
+
         // 调用存储服务
         const promptData = {
           name: params.title,
@@ -663,22 +667,22 @@ export class UnifiedStoreTool extends BaseMCPTool {
           user_id: userId, // 确保正确的字段名
           created_at: new Date().toISOString()
         };
-  
+
         console.log('[UnifiedStore] 准备保存提示词:', {
           title: params.title,
           userId: userId,
           category: params.category,
           hasContent: !!params.content
         });
-  
+
         const result = await storage.createPrompt(promptData);
-        
+
         console.log('[UnifiedStore] 提示词保存成功:', {
           promptId: result.id,
           userId: userId,
           title: params.title
         });
-  
+
         return {
           success: true,
           data: result,
