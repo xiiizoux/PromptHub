@@ -589,46 +589,62 @@ $$;
 
 -- 递增使用次数的函数
 CREATE OR REPLACE FUNCTION increment_usage_count(prompt_id UUID)
-RETURNS void AS $$
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
 BEGIN
     UPDATE prompts
     SET usage_count = COALESCE(usage_count, 0) + 1,
         updated_at = NOW()
     WHERE id = prompt_id;
 END;
-$$ LANGUAGE plpgsql;
+$$;
 
 -- 递增模板使用次数的函数
 CREATE OR REPLACE FUNCTION increment_template_usage(template_id UUID)
-RETURNS void AS $$
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
 BEGIN
     UPDATE prompt_templates
     SET usage_count = usage_count + 1,
         updated_at = NOW()
     WHERE id = template_id;
 END;
-$$ LANGUAGE plpgsql;
+$$;
 
 -- 更新模板评分的函数
 CREATE OR REPLACE FUNCTION update_template_rating(template_id UUID)
-RETURNS void AS $$
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
 DECLARE
     avg_rating DECIMAL(3,2);
 BEGIN
     SELECT AVG(rating)::DECIMAL(3,2) INTO avg_rating
     FROM template_ratings
-    WHERE template_id = template_id;
+    WHERE template_id = update_template_rating.template_id;
 
     UPDATE prompt_templates
     SET rating = COALESCE(avg_rating, 0.0),
         updated_at = NOW()
-    WHERE id = template_id;
+    WHERE id = update_template_rating.template_id;
 END;
-$$ LANGUAGE plpgsql;
+$$;
 
 -- 清理过期会话的函数
 CREATE OR REPLACE FUNCTION cleanup_inactive_sessions()
-RETURNS INTEGER AS $$
+RETURNS INTEGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
 DECLARE
   cleaned_count INTEGER;
 BEGIN
@@ -654,7 +670,7 @@ BEGIN
 
   RETURN cleaned_count;
 END;
-$$ LANGUAGE plpgsql;
+$$;
 
 -- 获取提示词公共统计的函数
 CREATE OR REPLACE FUNCTION get_prompt_public_stats(prompt_uuid uuid)
@@ -779,19 +795,24 @@ $$;
 
 -- 创建默认通知偏好的函数
 CREATE OR REPLACE FUNCTION create_default_notification_preferences()
-RETURNS TRIGGER AS $$
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
 BEGIN
   INSERT INTO notification_preferences (user_id)
   VALUES (NEW.id)
   ON CONFLICT (user_id) DO NOTHING;
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql;
+$$;
 
 -- 更新时间触发器函数
 CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS trigger
 LANGUAGE plpgsql
+SECURITY DEFINER
 SET search_path = public
 AS $$
 BEGIN
@@ -804,6 +825,7 @@ $$;
 CREATE OR REPLACE FUNCTION update_template_updated_at()
 RETURNS TRIGGER
 LANGUAGE plpgsql
+SECURITY DEFINER
 SET search_path = public
 AS $$
 BEGIN
@@ -814,14 +836,18 @@ $$;
 
 -- 协作会话活动更新函数
 CREATE OR REPLACE FUNCTION update_collaborative_session_activity()
-RETURNS TRIGGER AS $$
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
 BEGIN
   UPDATE collaborative_sessions
   SET last_activity = NOW()
   WHERE id = NEW.session_id;
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql;
+$$;
 
 -- 性能统计更新触发器函数
 CREATE OR REPLACE FUNCTION update_prompt_performance()
@@ -1459,9 +1485,17 @@ COMMENT ON COLUMN prompt_templates.estimated_time IS '预估使用时间，如"5
 COMMENT ON COLUMN prompt_templates.is_official IS '是否为系统官方提供的模板';
 
 -- 添加权限说明
-COMMENT ON FUNCTION increment_usage_count(UUID) IS '递增提示词使用次数';
-COMMENT ON FUNCTION increment_template_usage(UUID) IS '递增模板使用次数';
-COMMENT ON FUNCTION update_template_rating(UUID) IS '更新模板平均评分';
-COMMENT ON FUNCTION cleanup_inactive_sessions() IS '清理过期的协作会话';
-COMMENT ON FUNCTION get_prompt_public_stats(UUID) IS '获取提示词公共统计信息';
-COMMENT ON FUNCTION get_user_prompt_interactions(UUID, UUID) IS '获取用户与提示词的互动状态';
+COMMENT ON FUNCTION increment_usage_count(UUID) IS '安全函数：递增提示词使用次数';
+COMMENT ON FUNCTION increment_template_usage(UUID) IS '安全函数：递增模板使用次数';
+COMMENT ON FUNCTION update_template_rating(UUID) IS '安全函数：更新模板平均评分';
+COMMENT ON FUNCTION cleanup_inactive_sessions() IS '安全函数：清理过期的协作会话';
+COMMENT ON FUNCTION get_prompt_public_stats(UUID) IS '安全函数：获取提示词公共统计信息';
+COMMENT ON FUNCTION get_user_prompt_interactions(UUID, UUID) IS '安全函数：获取用户与提示词的互动状态';
+COMMENT ON FUNCTION handle_new_user() IS '安全函数：处理新用户注册';
+COMMENT ON FUNCTION create_default_notification_preferences() IS '安全函数：创建默认通知偏好';
+COMMENT ON FUNCTION update_updated_at_column() IS '安全函数：更新时间戳';
+COMMENT ON FUNCTION update_template_updated_at() IS '安全函数：更新模板时间戳';
+COMMENT ON FUNCTION update_collaborative_session_activity() IS '安全函数：更新协作会话活动';
+COMMENT ON FUNCTION update_prompt_performance() IS '安全函数：更新提示词性能统计';
+COMMENT ON FUNCTION update_prompt_performance_rating() IS '安全函数：更新提示词性能评分';
+COMMENT ON FUNCTION log_prompt_changes() IS '安全函数：记录提示词变更日志';
