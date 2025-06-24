@@ -444,18 +444,50 @@ router.post('/tools/:name/invoke', optionalAuthMiddleware, async (req, res) => {
         });
         break;
       case 'select_prompt_by_index':
-        result = await handlePromptSelection(params, req?.user?.id);
+        result = await handleUnifiedSearch(params, {
+          userId: req?.user?.id,
+          requestId: Array.isArray(req?.headers?.['x-request-id'])
+            ? req.headers['x-request-id'][0]
+            : req?.headers?.['x-request-id'],
+          userAgent: Array.isArray(req?.headers?.['user-agent'])
+            ? req.headers['user-agent'][0]
+            : req?.headers?.['user-agent']
+        });
         break;
       case 'quick_access_prompts':
-        result = await handleQuickAccess(params, req?.user?.id);
+        result = await handleUnifiedSearch(params, {
+          userId: req?.user?.id,
+          requestId: Array.isArray(req?.headers?.['x-request-id'])
+            ? req.headers['x-request-id'][0]
+            : req?.headers?.['x-request-id'],
+          userAgent: Array.isArray(req?.headers?.['user-agent'])
+            ? req.headers['user-agent'][0]
+            : req?.headers?.['user-agent']
+        });
         break;
       
       // 🔍 统一搜索引擎处理 (已弃用，推荐使用unified_search)
       case 'unified_search_engine':
-        result = await handleUnifiedSearch(params, req?.user?.id);
+        result = await handleUnifiedSearch(params, {
+          userId: req?.user?.id,
+          requestId: Array.isArray(req?.headers?.['x-request-id'])
+            ? req.headers['x-request-id'][0]
+            : req?.headers?.['x-request-id'],
+          userAgent: Array.isArray(req?.headers?.['user-agent'])
+            ? req.headers['user-agent'][0]
+            : req?.headers?.['user-agent']
+        });
         break;
       case 'search':
-        result = await handleQuickSearch(params, req?.user?.id);
+        result = await handleUnifiedSearch(params, {
+          userId: req?.user?.id,
+          requestId: Array.isArray(req?.headers?.['x-request-id'])
+            ? req.headers['x-request-id'][0]
+            : req?.headers?.['x-request-id'],
+          userAgent: Array.isArray(req?.headers?.['user-agent'])
+            ? req.headers['user-agent'][0]
+            : req?.headers?.['user-agent']
+        });
         break;
       
       // 🚀 统一搜索处理 (唯一推荐的搜索入口)
@@ -571,19 +603,10 @@ async function handleGetPromptDetails(params: any, req?: express.Request) {
     throw new Error(`提示词未找到: ${params.name}`);
   }
 
-  // 检查权限
-  if (req?.user?.id && prompt.user_id !== req.user.id) {
-    throw new Error(`无权恢复此提示词版本: ${params.name}`);
-  }
-
-  // 恢复到特定版本
-  const versionNum = typeof params.version === 'string' ? parseFloat(params.version) : params.version;
-  const restoredPrompt = await storage.restorePromptVersion(prompt.id, versionNum, req?.user?.id);
-
   return {
     content: {
       type: 'text',
-      text: `提示词 ${params.name} 已恢复到版本 ${versionNum}`,
+      text: JSON.stringify(prompt, null, 2),
     },
   };
 }
@@ -649,6 +672,158 @@ async function handleGetTags() {
   }
 }
 
+// 搜索提示词
+async function handleSearchPrompts(params: any, req?: express.Request) {
+  const { query, category, tags, limit = 20 } = params;
+
+  const filters: PromptFilters = {
+    search: query,
+    category,
+    tags,
+    isPublic: true,
+    userId: req?.user?.id,
+    pageSize: limit
+  };
+
+  const result = await storage.getPrompts(filters);
+
+  return {
+    content: {
+      type: 'text',
+      text: JSON.stringify(result, null, 2),
+    },
+  };
+}
+
+// 创建提示词
+async function handleCreatePrompt(params: any, req?: express.Request) {
+  if (!req?.user?.id) {
+    throw new Error('需要登录才能创建提示词');
+  }
+
+  const promptData = {
+    ...params,
+    user_id: req.user.id,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  };
+
+  const newPrompt = await storage.createPrompt(promptData);
+
+  return {
+    content: {
+      type: 'text',
+      text: JSON.stringify(newPrompt, null, 2),
+    },
+  };
+}
+
+// 更新提示词
+async function handleUpdatePrompt(params: any, req?: express.Request) {
+  if (!req?.user?.id) {
+    throw new Error('需要登录才能更新提示词');
+  }
+
+  if (!params.id && !params.name) {
+    throw new Error('缺少必需参数: id 或 name');
+  }
+
+  const promptId = params.id || params.name;
+  const updateData = { ...params };
+  delete updateData.id;
+  delete updateData.name;
+
+  const updatedPrompt = await storage.updatePrompt(promptId, updateData, req.user.id);
+
+  return {
+    content: {
+      type: 'text',
+      text: JSON.stringify(updatedPrompt, null, 2),
+    },
+  };
+}
+
+// 删除提示词
+async function handleDeletePrompt(params: any, req?: express.Request) {
+  if (!req?.user?.id) {
+    throw new Error('需要登录才能删除提示词');
+  }
+
+  if (!params.id && !params.name) {
+    throw new Error('缺少必需参数: id 或 name');
+  }
+
+  const promptId = params.id || params.name;
+  await storage.deletePrompt(promptId, req.user.id);
+
+  return {
+    content: {
+      type: 'text',
+      text: JSON.stringify({ success: true, message: '提示词删除成功' }, null, 2),
+    },
+  };
+}
+
+// 获取提示词版本
+async function handleGetPromptVersions(params: any, req?: express.Request) {
+  if (!params.name) {
+    throw new Error('缺少必需参数: name');
+  }
+
+  const versions = await storage.getPromptVersions(params.name, req?.user?.id);
+
+  return {
+    content: {
+      type: 'text',
+      text: JSON.stringify({ versions }, null, 2),
+    },
+  };
+}
+
+// 获取特定版本
+async function handleGetPromptVersion(params: any, req?: express.Request) {
+  if (!params.name || !params.version) {
+    throw new Error('缺少必需参数: name, version');
+  }
+
+  const prompt = await storage.getPromptVersion(params.name, params.version, req?.user?.id);
+
+  return {
+    content: {
+      type: 'text',
+      text: JSON.stringify(prompt, null, 2),
+    },
+  };
+}
+
+// 恢复提示词版本
+async function handleRestorePromptVersion(params: any, req?: express.Request) {
+  if (!params.name || !params.version) {
+    throw new Error('缺少必需参数: name, version');
+  }
+
+  const prompt = await storage.getPrompt(params.name, req?.user?.id);
+  if (!prompt) {
+    throw new Error(`提示词未找到: ${params.name}`);
+  }
+
+  // 检查权限
+  if (req?.user?.id && prompt.user_id !== req.user.id) {
+    throw new Error(`无权恢复此提示词版本: ${params.name}`);
+  }
+
+  // 恢复到特定版本
+  const versionNum = typeof params.version === 'string' ? parseFloat(params.version) : params.version;
+  const restoredPrompt = await storage.restorePromptVersion(prompt.id, versionNum, req?.user?.id);
+
+  return {
+    content: {
+      type: 'text',
+      text: `提示词 ${params.name} 已恢复到版本 ${versionNum}`,
+    },
+  };
+}
+
 // 获取提示词模板
 async function handleGetPromptTemplate() {
   const template = {
@@ -669,7 +844,7 @@ async function handleGetPromptTemplate() {
     allow_collaboration: false, // 默认不允许协作编辑，保护创建者权益
     edit_permission: 'owner_only' // 默认仅创建者可编辑
   };
-  
+
   return {
     content: {
       type: 'text',

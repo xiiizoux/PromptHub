@@ -24,7 +24,6 @@ const PROTECTED_ROUTES = [
   '/api/profile/',
   '/api/user/',
   '/api/collaborative/',
-  '/api/performance/track',
   '/api/social/',
 ];
 

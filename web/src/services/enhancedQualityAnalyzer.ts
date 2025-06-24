@@ -1,6 +1,5 @@
 import { PromptDetails } from '@/types';
-import { PromptQualityAnalysis, QualityDimension } from '@/types/performance';
-import { PromptQualityAnalyzer } from './qualityAnalyzer';
+import { PromptQualityAnalyzer, PromptQualityAnalysis, QualityDimension } from './qualityAnalyzer';
 
 // 扩展分析结果，添加普通用户友好的建议
 export interface EnhancedQualityAnalysis extends PromptQualityAnalysis {

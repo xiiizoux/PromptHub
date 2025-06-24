@@ -44,7 +44,7 @@ import {
   CpuChipIcon,
 } from '@heroicons/react/24/outline';
 import { StarIcon as SolidStarIcon } from '@heroicons/react/24/solid';
-import { trackPromptUsage } from '@/lib/api';
+
 import { databaseService } from '@/lib/database-service';
 import { PromptDetails, PromptExample, PromptVersion } from '@/types';
 import { MODEL_TAGS, getModelTypeLabel } from '@/constants/ai-models';
@@ -61,7 +61,7 @@ export default function PromptDetailsPage({ prompt }: PromptDetailsPageProps) {
   const router = useRouter();
   const [selectedVersion, setSelectedVersion] = useState<string>(prompt.version?.toString() || '1');
   const [copied, setCopied] = useState(false);
-  const [usageTracked, setUsageTracked] = useState(false);
+
 
   // 如果没有提示词数据，显示加载状态
   if (!prompt) {
@@ -172,23 +172,7 @@ export default function PromptDetailsPage({ prompt }: PromptDetailsPageProps) {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
       
-      // 追踪使用情况
-      if (!usageTracked) {
-        try {
-          await trackPromptUsage({
-            prompt_id: prompt.id,
-            version: parseFloat(selectedVersion) || 1.0,
-            input_tokens: processedContent.length / 4, // 粗略估算
-            output_tokens: 0,
-            latency: 0,
-            success: true,
-          });
-          setUsageTracked(true);
-        } catch (error) {
-          toast.error('追踪使用情况失败，但内容已复制');
-          console.error('追踪使用情况失败:', error);
-        }
-      }
+
     } catch (error) {
       toast.error('复制到剪贴板失败');
       console.error('复制失败:', error);

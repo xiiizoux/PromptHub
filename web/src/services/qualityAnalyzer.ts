@@ -1,5 +1,42 @@
 import { PromptDetails } from '@/types';
-import { PromptQualityAnalysis, QualityDimension } from '@/types/performance';
+
+// 质量维度接口
+export interface QualityDimension {
+  name: string;
+  score: number;
+  weight: number;
+  description: string;
+  suggestions?: string[];
+}
+
+// 提示词质量分析结果接口
+export interface PromptQualityAnalysis {
+  overallScore: number;
+  level: 'excellent' | 'good' | 'fair' | 'poor';
+  dimensions: {
+    clarity?: QualityDimension;
+    completeness?: QualityDimension;
+    professionalism?: QualityDimension;
+    actionability?: QualityDimension;
+    creativity?: QualityDimension;
+    universality?: QualityDimension;
+    safety?: QualityDimension;
+  };
+  strengths: string[];
+  weaknesses: string[];
+  recommendations: string[];
+  comparisonWithCategory: {
+    categoryAverage: number;
+    ranking: number;
+    totalInCategory: number;
+    percentile: number;
+  };
+  metadata: {
+    analysisDate: string;
+    modelVersion: string;
+    confidence: number;
+  };
+}
 
 // 质量评价权重配置
 const DIMENSION_WEIGHTS = {
