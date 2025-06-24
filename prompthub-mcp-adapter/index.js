@@ -418,36 +418,20 @@ class PromptHubMCPAdapter {
       // 使用REST API调用工具
       const response = await this.makeHttpRequest(`/tools/${name}/invoke`, 'POST', parameters);
       
-      // 🎯 修复响应解析逻辑
+      // 🎯 修复响应解析逻辑 - 优先使用已格式化的文本
       let displayText;
-      let parsedData = null;
-      
-      // 1. 首先尝试解析response.content.text中的JSON数据
+
+      // 1. 优先使用response.content.text（这通常是已经格式化好的对话式文本）
       if (response.content?.text) {
-        try {
-          // MCP服务器返回的文本可能是JSON字符串，需要解析
-          parsedData = JSON.parse(response.content.text);
-          
-          // 如果解析后的数据有results数组，则格式化显示
-          if (parsedData.results && Array.isArray(parsedData.results)) {
-            displayText = this.formatSearchResults({
-              data: parsedData,
-              query: parameters.query || ''
-            });
-          } else {
-            // 否则直接使用原始文本
-            displayText = response.content.text;
-          }
-        } catch (parseError) {
-          // 如果不是JSON，直接使用原始文本
-          displayText = response.content.text;
-        }
+        // 🐛 关键修复：不要尝试解析已经格式化好的文本为JSON
+        // MCP服务器的unified_search已经返回了完整格式化的文本，包含提示词内容
+        displayText = response.content.text;
       }
       // 2. 检查是否有专门的对话式格式化文本
       else if (response.data?.conversation_display) {
         displayText = response.data.conversation_display;
       }
-      // 3. 直接的搜索结果格式
+      // 3. 直接的搜索结果格式（需要格式化）
       else if (response.data?.results && Array.isArray(response.data.results)) {
         displayText = this.formatSearchResults({
           data: response.data,
@@ -714,7 +698,7 @@ class PromptHubMCPAdapter {
       method: method,
       headers: {
         'Content-Type': 'application/json',
-        'User-Agent': 'PromptHub-MCP-Adapter/2.1.2'
+        'User-Agent': 'PromptHub-MCP-Adapter/2.1.3'
       }
     };
 
@@ -789,7 +773,7 @@ async function handleMessage(message) {
             },
             serverInfo: {
               name: 'prompthub-mcp-adapter',
-              version: '2.1.2'
+              version: '2.1.3'
             }
           }
         });
