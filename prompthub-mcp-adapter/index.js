@@ -568,23 +568,26 @@ class PromptHubMCPAdapter {
           const contentMsg = prompt.messages.find(msg => {
             if (typeof msg === 'object' && msg !== null && 'content' in msg) {
               const msgContent = msg.content;
+              // 优先处理content是字符串的情况（这是我们数据库中的实际情况）
+              if (typeof msgContent === 'string' && msgContent.trim().length > 10) {
+                return true;
+              }
               // 处理content是对象的情况（如 {type: "text", text: "实际内容"}）
               if (typeof msgContent === 'object' && msgContent !== null && msgContent.text) {
                 return typeof msgContent.text === 'string' && msgContent.text.trim().length > 10;
               }
-              // 处理content是字符串的情况
-              return typeof msgContent === 'string' && msgContent.trim().length > 10;
             }
             return false;
           });
 
           if (contentMsg) {
             const msgContent = contentMsg.content;
-            // 如果content是对象且有text字段，使用text字段
-            if (typeof msgContent === 'object' && msgContent !== null && msgContent.text) {
-              content = msgContent.text;
-            } else if (typeof msgContent === 'string') {
+            // 优先处理content是字符串的情况
+            if (typeof msgContent === 'string') {
               content = msgContent;
+            } else if (typeof msgContent === 'object' && msgContent !== null && msgContent.text) {
+              // 如果content是对象且有text字段，使用text字段
+              content = msgContent.text;
             }
           } else if (prompt.messages.length > 0) {
             // 如果没找到content字段，尝试获取第一个非空消息
@@ -711,7 +714,7 @@ class PromptHubMCPAdapter {
       method: method,
       headers: {
         'Content-Type': 'application/json',
-        'User-Agent': 'PromptHub-MCP-Adapter/2.1.1'
+        'User-Agent': 'PromptHub-MCP-Adapter/2.1.2'
       }
     };
 
@@ -786,7 +789,7 @@ async function handleMessage(message) {
             },
             serverInfo: {
               name: 'prompthub-mcp-adapter',
-              version: '2.1.1'
+              version: '2.1.2'
             }
           }
         });
