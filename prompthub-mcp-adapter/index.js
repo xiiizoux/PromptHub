@@ -182,41 +182,7 @@ class PromptHubMCPAdapter {
         }
       },
 
-      {
-        name: 'optimize_and_save',
-        description: '🎯 优化并询问保存 - 优化提示词后询问用户是否保存到数据库（推荐工作流程）',
-        inputSchema: {
-          type: 'object',
-          properties: {
-            content: { type: 'string', description: '要优化的提示词内容' },
-            optimization_type: {
-              type: 'string',
-              description: '优化类型：general(通用) | creative(创意) | technical(技术) | business(商务) | educational(教育) | drawing(绘图) | analysis(分析) | iteration(迭代)',
-              enum: ['general', 'creative', 'technical', 'business', 'educational', 'drawing', 'analysis', 'iteration']
-            },
-            requirements: { type: 'string', description: '特殊要求或限制条件' },
-            context: { type: 'string', description: '使用场景和上下文' },
-            complexity: {
-              type: 'string',
-              description: '复杂度级别：simple(简单) | medium(中等) | complex(复杂)',
-              enum: ['simple', 'medium', 'complex']
-            },
-            include_analysis: { type: 'boolean', description: '是否包含详细分析，默认true' },
-            language: {
-              type: 'string',
-              description: '输出语言：zh(中文) | en(英文)',
-              enum: ['zh', 'en']
-            },
-            save_title: { type: 'string', description: '保存时使用的标题（可选）' },
-            save_category: { type: 'string', description: '保存时使用的分类（可选）' },
-            save_description: { type: 'string', description: '保存时使用的描述（可选）' },
-            save_tags: { type: 'array', items: { type: 'string' }, description: '保存时使用的标签列表（可选）' },
-            save_is_public: { type: 'boolean', description: '保存时是否公开，默认true（可选）' },
-            auto_save: { type: 'boolean', description: '是否自动保存优化结果，默认false（询问用户）' }
-          },
-          required: ['content']
-        }
-      },
+
 
 
       // ============= 核心提示词管理工具 =============
