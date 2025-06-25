@@ -266,7 +266,7 @@ export class UnifiedStoreTool extends BaseMCPTool {
   /**
    * 获取AI分析器实例
    */
-  private getAIAnalyzer(): MCPAIAnalyzer | null {
+  protected getAIAnalyzer(): MCPAIAnalyzer | null {
     if (!this.aiAnalyzer) {
       try {
         this.aiAnalyzer = new MCPAIAnalyzer();
@@ -284,6 +284,18 @@ export class UnifiedStoreTool extends BaseMCPTool {
   private generateTitle(content: string): string {
     const firstLine = content.split('\n')[0].substring(0, 50);
     return firstLine.replace(/^[#\*\-\s]+/, '').trim() || '自动生成的提示词';
+  }
+
+  /**
+   * 映射难度级别
+   */
+  private mapDifficulty(difficulty: 'beginner' | 'intermediate' | 'advanced'): 'simple' | 'medium' | 'complex' {
+    const difficultyMap = {
+      'beginner': 'simple' as const,
+      'intermediate': 'medium' as const,
+      'advanced': 'complex' as const
+    };
+    return difficultyMap[difficulty] || 'medium';
   }
 
   /**
@@ -411,9 +423,10 @@ export class UnifiedStoreTool extends BaseMCPTool {
           description: mcpAnalysis.description || this.generateDescription(content, mcpAnalysis.category),
           category: mcpAnalysis.category,
           tags: mcpAnalysis.tags,
-          difficulty: mcpAnalysis.difficulty,
+          difficulty: this.mapDifficulty(mcpAnalysis.difficulty),
           compatible_models: mcpAnalysis.compatibleModels,
           domain: this.analyzeDomain(content, mcpAnalysis.category),
+          use_cases: mcpAnalysis.useCases || this.analyzeUseCases(content, mcpAnalysis.category),
           confidence: mcpAnalysis.confidence
         };
       } else {

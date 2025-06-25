@@ -1057,10 +1057,9 @@ export class UnifiedSearchTool extends BaseMCPTool {
 
       // 提示词内容
       if (result.content && result.content.trim()) {
-        output += `📄 **提示词内容：**\n\n`;
-        output += `\`\`\`\n`;
-        output += `${result.content}\n`;
-        output += `\`\`\`\n\n`;
+        output += `📄 **提示词内容（可直接复制使用）：**\n\n`;
+        output += `${result.content}\n\n`;
+        output += `⬆️ 以上是完整的提示词内容，请完整显示并可复制使用\n\n`;
       }
 
       // 分类和标签

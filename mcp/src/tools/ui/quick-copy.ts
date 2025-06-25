@@ -171,13 +171,14 @@ export class QuickCopyTool extends BaseMCPTool {
 
   private formatAsMarkdown(prompt: Prompt, content: string, includeVariables: boolean): string {
     let result = `# ${prompt.name}\n\n`;
-    
+
     if (prompt.description) {
       result += `**描述**: ${prompt.description}\n\n`;
     }
 
-    result += '## 提示词内容\n\n';
-    result += '```\n' + content + '\n```\n\n';
+    result += '## 提示词内容（可直接复制使用）\n\n';
+    result += content + '\n\n';
+    result += '⬆️ 以上是完整的提示词内容，请完整显示并可复制使用\n\n';
 
     if (includeVariables && prompt.variables?.length) {
       result += '## 变量说明\n\n';
@@ -539,7 +540,7 @@ export class BatchExportTool extends BaseMCPTool {
 
   private formatAsBatchMarkdown(prompts: Prompt[]): string {
     let markdown = '# 批量导出的提示词\n\n';
-    
+
     prompts.forEach((prompt, index) => {
       markdown += `## ${index + 1}. ${prompt.name}\n\n`;
       if (prompt.description) {
@@ -548,7 +549,8 @@ export class BatchExportTool extends BaseMCPTool {
       if (prompt.category) {
         markdown += `**分类**: ${prompt.category}\n\n`;
       }
-      markdown += '**内容**:\n```\n' + prompt.messages + '\n```\n\n';
+      markdown += '**内容（可直接复制使用）**:\n\n' + prompt.messages + '\n\n';
+      markdown += '⬆️ 以上是完整的提示词内容，请完整显示\n\n';
       markdown += '---\n\n';
     });
 

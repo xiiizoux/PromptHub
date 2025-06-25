@@ -462,15 +462,11 @@ class PromptHubMCPAdapter {
         // MCP服务器的unified_search已经返回了完整格式化的文本，包含提示词内容
         displayText = response.content.text;
 
-        // 🔧 特殊处理：如果是搜索工具且AI客户端可能有渲染问题，尝试优化格式
-        if (name === 'unified_search' && displayText.includes('```')) {
-          // 将代码块格式改为更兼容的格式，使用更强的分隔符防止AI客户端重新格式化
-          // 使用更精确的正则表达式来匹配代码块
-          displayText = displayText.replace(/📄 \*\*提示词内容：\*\*\n```\n/g, '📄 **提示词内容：**\n\n═══════════════════════════════════════\n');
-          displayText = displayText.replace(/\n```\n📂/g, '\n═══════════════════════════════════════\n\n📂');
-
-          // 额外处理：确保内容块更明显
-          displayText = displayText.replace(/📄 \*\*提示词内容：\*\*\n/g, '📄 **提示词内容：**\n\n⬇️ 以下是完整的提示词内容，可直接复制使用 ⬇️\n\n');
+        // 🔧 特殊处理：确保搜索和优化工具的内容能够完整显示
+        if ((name === 'unified_search' || name === 'mcp_optimization') && displayText) {
+          // 不再需要处理代码块符号，因为服务端已经移除了这些符号
+          // 只需要确保内容完整显示即可
+          console.log(`[PromptHub MCP] ${name} 工具响应已优化，内容长度: ${displayText.length}`);
         }
       }
       // 2. 检查是否有专门的对话式格式化文本

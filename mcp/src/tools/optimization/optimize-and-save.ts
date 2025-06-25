@@ -8,7 +8,7 @@
  * 4. 如果用户确认，则保存到数据库
  */
 
-import { BaseMCPTool } from '../../shared/base-tool.js';
+import { BaseMCPTool, ToolContext } from '../../shared/base-tool.js';
 import { ToolDescription, ToolParameter } from '../../types.js';
 import { PromptOptimizerMCPTool } from './prompt-optimizer.js';
 import { UnifiedStoreTool } from '../storage/unified-store.js';
@@ -18,11 +18,6 @@ interface ToolResult {
   success: boolean;
   data?: any;
   message?: string;
-}
-
-interface ToolContext {
-  userId?: string;
-  requestId?: string;
 }
 
 /**
@@ -64,98 +59,91 @@ export class OptimizeAndSaveTool extends BaseMCPTool {
     this.storeTool = new UnifiedStoreTool();
   }
 
-  getDescription(): ToolDescription {
+  getToolDefinition(): ToolDescription {
     return {
       name: this.name,
       description: this.description,
-      parameters: [
-        {
-          name: 'content',
+      schema_version: 'v1',
+      parameters: {
+        content: {
           type: 'string',
           description: '要优化的提示词内容',
-          required: true
-        },
-        {
-          name: 'optimization_type',
+          required: true,
+        } as ToolParameter,
+        optimization_type: {
           type: 'string',
           description: '优化类型：general(通用) | creative(创意) | technical(技术) | business(商务) | educational(教育) | drawing(绘图) | analysis(分析) | iteration(迭代)',
-          required: false
-        },
-        {
-          name: 'requirements',
+          required: false,
+        } as ToolParameter,
+        requirements: {
           type: 'string',
           description: '特殊要求或限制条件',
-          required: false
-        },
-        {
-          name: 'context',
+          required: false,
+        } as ToolParameter,
+        context: {
           type: 'string',
           description: '使用场景和上下文',
-          required: false
-        },
-        {
-          name: 'complexity',
+          required: false,
+        } as ToolParameter,
+        complexity: {
           type: 'string',
           description: '复杂度级别：simple(简单) | medium(中等) | complex(复杂)',
-          required: false
-        },
-        {
-          name: 'include_analysis',
+          required: false,
+        } as ToolParameter,
+        include_analysis: {
           type: 'boolean',
           description: '是否包含详细分析，默认true',
-          required: false
-        },
-        {
-          name: 'language',
+          required: false,
+        } as ToolParameter,
+        language: {
           type: 'string',
           description: '输出语言：zh(中文) | en(英文)',
-          required: false
-        },
-        {
-          name: 'save_title',
+          required: false,
+        } as ToolParameter,
+        save_title: {
           type: 'string',
           description: '保存时使用的标题（可选）',
-          required: false
-        },
-        {
-          name: 'save_category',
+          required: false,
+        } as ToolParameter,
+        save_category: {
           type: 'string',
           description: '保存时使用的分类（可选）',
-          required: false
-        },
-        {
-          name: 'save_description',
+          required: false,
+        } as ToolParameter,
+        save_description: {
           type: 'string',
           description: '保存时使用的描述（可选）',
-          required: false
-        },
-        {
-          name: 'save_tags',
+          required: false,
+        } as ToolParameter,
+        save_tags: {
           type: 'array',
           description: '保存时使用的标签列表（可选）',
-          required: false
-        },
-        {
-          name: 'save_is_public',
+          required: false,
+        } as ToolParameter,
+        save_is_public: {
           type: 'boolean',
           description: '保存时是否公开，默认true（可选）',
-          required: false
-        },
-        {
-          name: 'auto_save',
+          required: false,
+        } as ToolParameter,
+        auto_save: {
           type: 'boolean',
           description: '是否自动保存优化结果，默认false（询问用户）',
-          required: false
-        }
-      ]
+          required: false,
+        } as ToolParameter,
+      },
     };
   }
 
   async execute(params: OptimizeAndSaveParams, context: ToolContext): Promise<ToolResult> {
     const startTime = performance.now();
-    
+
     try {
-      this.logExecution('优化并询问保存开始', context, {
+      const fullContext = {
+        ...context,
+        timestamp: Date.now()
+      };
+
+      this.logExecution('优化并询问保存开始', fullContext, {
         contentLength: params.content.length,
         optimizationType: params.optimization_type || 'general',
         autoSave: params.auto_save || false
@@ -170,7 +158,7 @@ export class OptimizeAndSaveTool extends BaseMCPTool {
         complexity: params.complexity,
         include_analysis: params.include_analysis,
         language: params.language
-      }, context);
+      }, fullContext);
 
       if (!optimizationResult.success) {
         return optimizationResult;
@@ -188,7 +176,7 @@ export class OptimizeAndSaveTool extends BaseMCPTool {
       // 3. 根据auto_save参数决定是否自动保存
       if (params.auto_save) {
         // 自动保存
-        const saveResult = await this.performSave(params, optimizationResult.data, context);
+        const saveResult = await this.performSave(params, optimizationResult.data, fullContext);
         if (saveResult.success) {
           responseMessage += '\n\n✅ **已自动保存优化后的提示词！**';
           responseMessage += `\n📝 保存信息：${saveResult.message}`;
@@ -212,7 +200,7 @@ export class OptimizeAndSaveTool extends BaseMCPTool {
         responseMessage += '\n```';
       }
 
-      this.logExecution('优化并询问保存完成', context, {
+      this.logExecution('优化并询问保存完成', fullContext, {
         optimizationType: params.optimization_type || 'general',
         autoSaved: params.auto_save || false,
         executionTime: `${(performance.now() - startTime).toFixed(2)}ms`
@@ -259,4 +247,87 @@ export class OptimizeAndSaveTool extends BaseMCPTool {
       auto_analyze: true // 启用AI分析来补全缺失的参数
     };
   }
+}
+
+// 导出工具定义和处理函数供MCP路由器使用
+export const optimizeAndSaveToolDef = {
+  name: 'optimize_and_save',
+  description: '🎯 优化并询问保存 - 优化提示词后询问用户是否保存到数据库',
+  schema_version: 'v1',
+  parameters: {
+    content: {
+      type: 'string' as const,
+      description: '要优化的提示词内容',
+      required: true,
+    } as ToolParameter,
+    optimization_type: {
+      type: 'string' as const,
+      description: '优化类型：general(通用) | creative(创意) | technical(技术) | business(商务) | educational(教育) | drawing(绘图) | analysis(分析) | iteration(迭代)',
+      required: false,
+    } as ToolParameter,
+    requirements: {
+      type: 'string' as const,
+      description: '特殊要求或限制条件',
+      required: false,
+    } as ToolParameter,
+    context: {
+      type: 'string' as const,
+      description: '使用场景和上下文',
+      required: false,
+    } as ToolParameter,
+    complexity: {
+      type: 'string' as const,
+      description: '复杂度级别：simple(简单) | medium(中等) | complex(复杂)',
+      required: false,
+    } as ToolParameter,
+    include_analysis: {
+      type: 'boolean' as const,
+      description: '是否包含详细分析，默认true',
+      required: false,
+    } as ToolParameter,
+    language: {
+      type: 'string' as const,
+      description: '输出语言：zh(中文) | en(英文)',
+      required: false,
+    } as ToolParameter,
+    save_title: {
+      type: 'string' as const,
+      description: '保存时使用的标题（可选）',
+      required: false,
+    } as ToolParameter,
+    save_category: {
+      type: 'string' as const,
+      description: '保存时使用的分类（可选）',
+      required: false,
+    } as ToolParameter,
+    save_description: {
+      type: 'string' as const,
+      description: '保存时使用的描述（可选）',
+      required: false,
+    } as ToolParameter,
+    save_tags: {
+      type: 'array' as const,
+      description: '保存时使用的标签列表（可选）',
+      required: false,
+    } as ToolParameter,
+    save_is_public: {
+      type: 'boolean' as const,
+      description: '保存时是否公开，默认true（可选）',
+      required: false,
+    } as ToolParameter,
+    auto_save: {
+      type: 'boolean' as const,
+      description: '是否自动保存优化结果，默认false（询问用户）',
+      required: false,
+    } as ToolParameter,
+  },
+};
+
+// 处理函数
+export async function handleOptimizeAndSave(params: any, userId?: string) {
+  const tool = new OptimizeAndSaveTool();
+  return await tool.execute(params, {
+    userId,
+    timestamp: Date.now()
+  });
 }

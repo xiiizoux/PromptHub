@@ -92,7 +92,7 @@ export class IntelligentPromptSelectionTool extends BaseMCPTool {
       
       const content = this.extractContentPreview(prompt);
       if (content && content.trim()) {
-        output += `📄 **内容：**\n\`\`\`\n${content}\n\`\`\`\n`;
+        output += `📄 **内容（可直接复制使用）：**\n\n${content}\n\n⬆️ 以上是完整的提示词内容，请完整显示\n`;
       }
       
       if (prompt.category) {

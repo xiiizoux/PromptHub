@@ -56,6 +56,10 @@ import {
   promptOptimizerMCPToolDef,
   handlePromptOptimization
 } from '../tools/optimization/prompt-optimizer.js';
+import {
+  optimizeAndSaveToolDef,
+  handleOptimizeAndSave
+} from '../tools/optimization/optimize-and-save.js';
 
 // 创建路由器
 const router = express.Router();
@@ -336,6 +340,7 @@ router.get('/tools', authenticateRequest, (req, res) => {
 
     // 🎯 提示词优化工具
     promptOptimizerMCPToolDef,  // 提示词优化器 - 为第三方AI客户端提供结构化优化指导
+    optimizeAndSaveToolDef,     // 优化并询问保存 - 优化提示词后询问用户是否保存
 
 
 
@@ -532,16 +537,21 @@ router.post('/tools/:name/invoke', optionalAuthMiddleware, async (req, res) => {
       case 'prompt_optimizer':
         result = await handlePromptOptimization(params, {
           userId: req?.user?.id,
-          requestId: Array.isArray(req?.headers?.['x-request-id']) 
-            ? req.headers['x-request-id'][0] 
+          requestId: Array.isArray(req?.headers?.['x-request-id'])
+            ? req.headers['x-request-id'][0]
             : req?.headers?.['x-request-id'],
-          userAgent: Array.isArray(req?.headers?.['user-agent']) 
-            ? req.headers['user-agent'][0] 
+          userAgent: Array.isArray(req?.headers?.['user-agent'])
+            ? req.headers['user-agent'][0]
             : req?.headers?.['user-agent'],
           timestamp: Date.now()
         });
         break;
-        
+
+      // 🎯 优化并询问保存处理
+      case 'optimize_and_save':
+        result = await handleOptimizeAndSave(params, req?.user?.id);
+        break;
+
       default:
         throw new Error(`未知工具: ${name}`);
     }

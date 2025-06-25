@@ -352,13 +352,15 @@ export class ReadyToUseTool extends BaseMCPTool {
   private generateReadyToUseFormat(content: string, prompt: Prompt, targetAI: string): string {
     let format = `📋 **${prompt.name}** (优化用于 ${targetAI.toUpperCase()})\n\n`;
     format += `📝 **说明**: ${prompt.description || '无描述'}\n\n`;
-    format += `💬 **即用内容**:\n\`\`\`\n${content}\n\`\`\`\n\n`;
+    format += `💬 **即用内容（请完整显示并可复制使用）**:\n\n`;
+    format += `${content}\n\n`;
+    format += `⬆️ 以上是完整的提示词内容，请完整显示\n\n`;
     format += `🔗 **使用提示**: 直接复制上述内容到 ${targetAI.toUpperCase()} 即可使用`;
-    
+
     if (prompt.tags?.length) {
       format += `\n🏷️ **标签**: ${prompt.tags.join(', ')}`;
     }
-    
+
     return format;
   }
 }
