@@ -4,10 +4,9 @@ import { ProtectedLink } from '@/components/ProtectedLink';
 import { motion } from 'framer-motion';
 import { useInView } from 'react-intersection-observer';
 import dynamic from 'next/dynamic';
-import { 
-  SparklesIcon, 
-  CodeBracketIcon, 
-  ChartBarIcon,
+import {
+  SparklesIcon,
+  CodeBracketIcon,
   LightBulbIcon,
   RocketLaunchIcon,
   CubeTransparentIcon,
@@ -60,12 +59,7 @@ export default function Home({ featuredPrompts }: HomeProps) {
       description: '动态变量和模板让您的提示词适应各种场景',
       color: 'from-neon-pink to-neon-yellow',
     },
-    {
-      icon: ChartBarIcon,
-      title: '深度性能分析',
-      description: '数据驱动的优化建议，让每个提示词都发挥最大效果',
-      color: 'from-neon-yellow to-neon-green',
-    },
+
   ];
 
   const stats = [

@@ -113,7 +113,7 @@ export default function AboutPage() {
                 {
                   icon: RocketLaunchIcon,
                   title: '效率提升',
-                  description: '通过智能化的管理工具和性能分析，帮助用户提高AI应用的效率和质量。',
+                  description: '通过智能化的管理工具和优化建议，帮助用户提高AI应用的效率和质量。',
                   gradient: 'from-neon-pink to-neon-cyan',
                 },
               ].map((mission, index) => (

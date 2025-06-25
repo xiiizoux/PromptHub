@@ -102,7 +102,7 @@ const generateRecommendations = (factors: UserLevelData['factors'], level: UserL
     recommendations.push('参与社区讨论，学习最佳实践');
   } else if (level === 'intermediate') {
     if (factors.advancedFeaturesUsed < 5) {
-      recommendations.push('探索更多高级功能，如A/B测试和性能分析');
+      recommendations.push('探索更多高级功能，如A/B测试和协作编辑');
     }
     if (factors.collaborations === 0) {
       recommendations.push('尝试协作功能，与他人共同创作');
