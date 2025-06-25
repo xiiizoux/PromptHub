@@ -1,6 +1,6 @@
 {
   "name": "prompthub-mcp-adapter",
-  "version": "2.2.3",
+  "version": "2.2.4",
   "description": "MCP adapter for connecting AI clients (Cursor, Claude Desktop) to PromptHub server with advanced semantic search and natural language understanding",
   "main": "index.js",
   "bin": {
