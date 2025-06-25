@@ -79,10 +79,8 @@ export default function PromptDetailsPage({ prompt }: PromptDetailsPageProps) {
     if (!prompt) return '';
 
     if (prompt.messages && prompt.messages.length > 0) {
-      return prompt.messages.map(msg => {
-        const roleLabel = msg.role === 'user' ? '用户' : msg.role === 'assistant' ? '助手' : '系统';
-        return `${roleLabel}: ${msg.content}`;
-      }).join('\n\n');
+      // 直接返回消息内容，不添加角色前缀
+      return prompt.messages.map(msg => msg.content).join('\n\n');
     }
 
     return prompt.content || '';

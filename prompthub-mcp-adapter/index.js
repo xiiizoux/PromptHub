@@ -686,13 +686,29 @@ class PromptHubMCPAdapter {
       content = prompt.description || '';
     }
     
-    // 4. 如果内容太长，智能截断（保持完整句子）
+    // 4. 清理可能的角色前缀（避免AI客户端显示"用户:"或"系统:"）
     content = content.trim();
+
+    // 移除常见的角色前缀
+    const rolePrefixes = [
+      /^用户:\s*/,
+      /^系统:\s*/,
+      /^User:\s*/i,
+      /^System:\s*/i,
+      /^Assistant:\s*/i,
+      /^助手:\s*/
+    ];
+
+    for (const prefix of rolePrefixes) {
+      content = content.replace(prefix, '');
+    }
+
+    // 5. 如果内容太长，智能截断（保持完整句子）
     if (content.length > 500) {
       // 在句号、问号、感叹号处截断
       const sentences = content.match(/[^.!?]*[.!?]/g) || [];
       let truncated = '';
-      
+
       for (const sentence of sentences) {
         if ((truncated + sentence).length <= 500) {
           truncated += sentence;

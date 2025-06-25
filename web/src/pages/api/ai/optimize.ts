@@ -194,18 +194,18 @@ function getSystemPrompt(optimizationType: string): string {
 function extractOptimizedPrompt(content: string): string {
   // 首先尝试匹配标准格式
   const standardMatch = content.match(/### 优化后的提示词\s*([\s\S]*?)\s*(?:###|$)/);
-  
+
   // 如果是绘图优化，尝试提取通用优化版本
   const drawingMatch = content.match(/### 通用优化版本\s*([\s\S]*?)\s*(?:###|$)/);
-  
+
   if (drawingMatch) {
     return drawingMatch[1].trim();
   }
-  
+
   if (standardMatch) {
     return standardMatch[1].trim();
   }
-  
+
   // 如果没有匹配到特定格式，返回完整内容
   return content.trim();
 }

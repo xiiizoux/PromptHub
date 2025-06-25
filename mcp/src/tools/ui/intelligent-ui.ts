@@ -175,7 +175,7 @@ export class IntelligentPromptStorageTool extends BaseMCPTool {
         description: '通过智能分析创建',
         category: 'general',
         tags: [],
-        messages: [{ role: 'user' as const, content }],
+        messages: [{ role: 'system' as const, content }], // 统一使用system角色，避免显示"用户:"前缀
         version: 1.0,
         is_public: true,
         created_at: new Date().toISOString(),

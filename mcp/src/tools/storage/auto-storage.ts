@@ -101,7 +101,7 @@ export class QuickStoreTool extends BaseMCPTool {
   }
 
   private convertContentToMessages(content: string) {
-    return [{ role: 'user' as const, content: content.trim() }];
+    return [{ role: 'system' as const, content: content.trim() }]; // 统一使用system角色，避免显示"用户:"前缀
   }
 }
 
