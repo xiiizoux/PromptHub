@@ -13,7 +13,7 @@ import { MODEL_TAGS, getModelTagsByType, ModelType } from '../../constants/ai-mo
 
 interface PromptOptimizationParams {
   content: string;
-  optimization_type?: 'general' | 'creative' | 'technical' | 'business' | 'educational' | 'drawing' | 'analysis' | 'iteration' | 'advanced';
+  optimization_type?: 'general' | 'creative' | 'technical' | 'business' | 'educational' | 'drawing' | 'analysis' | 'iteration' | 'advanced' | 'finance';
   requirements?: string;
   context?: string;
   complexity?: 'simple' | 'medium' | 'complex';
@@ -278,12 +278,45 @@ export class PromptOptimizerMCPTool extends BaseMCPTool {
 
 ### 使用建议
 [提供使用该提示词的最佳实践建议]`,
-      
+
       user: `请将以下提示词优化为高级版本：
 
 {prompt}
 
 特殊要求：{requirements}`,
+    },
+
+    finance: {
+      system: `💰 金融优化模板（Finance-Oriented Prompt Enhancement）
+你是一位AI金融顾问，具备股票外汇基金等投资组合管理、风险控制、财务建模与宏观经济研判能力。
+请将下列提示词优化为可用于生成投融资建议、财务分析报告、风险评估模型或资产配置策略的专业提示。
+
+优化方向包括：
+1. 金融视角设定：明确场景背景（如对冲基金经理、企业财务主管、个人投资者等），精确定义问题域（如估值分析、流动性优化、负债结构管理等）；
+2. 指标导向清晰：引导模型聚焦核心财务指标（如IRR、ROE、净利润率、夏普比率），并突出预期财务影响与收益/风险比；
+3. 量化逻辑强化：要求使用金融模型或定量方法（如DCF、CAPM、蒙特卡洛模拟、VAR分析），结合可用数据源（财报、市场数据、第三方评级等）；
+4. 策略/监管考量：引导模型结合监管环境、市场动态与投资者行为，形成可执行的建议方案或情境推演。
+
+特别适用于：投资决策支持、企业融资规划、财富管理建议、并购评估、财务健康诊断等场景。
+
+输出格式：
+### 问题分析
+[分析原始提示词的问题和不足]
+
+### 优化后的提示词
+[提供优化后的提示词]
+
+### 主要改进点
+[列出3-5个具体的改进点]
+
+### 使用建议
+[提供使用该提示词的最佳实践建议]`,
+
+      user: `请将以下提示词优化为金融导向的版本：
+
+{prompt}
+
+金融要求：{requirements}`,
     },
 
     analysis: {
@@ -374,7 +407,7 @@ export class PromptOptimizerMCPTool extends BaseMCPTool {
 
         optimization_type: {
           type: 'string',
-          description: '优化类型：general(通用)|creative(创意)|technical(技术)|business(商务)|educational(教育)|drawing(绘图)|analysis(分析)|iteration(迭代)|advanced(高级)',
+          description: '优化类型：general(通用)|creative(创意)|technical(技术)|business(商务)|educational(教育)|drawing(绘图)|analysis(分析)|iteration(迭代)|advanced(高级)|finance(金融)',
           required: false,
         } as ToolParameter,
 
@@ -450,7 +483,7 @@ export class PromptOptimizerMCPTool extends BaseMCPTool {
       if (!this.OPTIMIZATION_TEMPLATES[optimizationType]) {
         return {
           success: false,
-          message: `不支持的优化类型: ${optimizationType}。支持的类型: general, creative, technical, business, educational, drawing, analysis, iteration, advanced`
+          message: `不支持的优化类型: ${optimizationType}。支持的类型: general, creative, technical, business, educational, drawing, analysis, iteration, advanced, finance`
         };
       }
 
@@ -599,6 +632,12 @@ export class PromptOptimizerMCPTool extends BaseMCPTool {
         '添加元指令和指令标签',
         '设计递进式任务分解',
         '增强模型记忆保持能力'
+      ],
+      finance: [
+        '明确金融场景和角色定位',
+        '引入核心财务指标和量化方法',
+        '结合风险评估和监管要求',
+        '提供可执行的投资建议框架'
       ]
     };
 

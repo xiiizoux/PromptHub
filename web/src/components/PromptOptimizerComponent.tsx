@@ -340,6 +340,7 @@ export const PromptOptimizerComponent: React.FC<PromptOptimizerProps> = ({
                   <option value="educational">🎓 教育优化</option>
                   <option value="advanced">🚀 高级优化</option>
                   <option value="drawing">🎨 绘图优化</option>
+                  <option value="finance">💰 金融优化</option>
                 </select>
               </div>
 

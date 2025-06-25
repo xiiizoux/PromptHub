@@ -6,7 +6,7 @@
 // 类型定义
 export interface OptimizationRequest {
   prompt: string;
-  type: 'general' | 'creative' | 'technical' | 'business' | 'educational' | 'advanced' | 'drawing';
+  type: 'general' | 'creative' | 'technical' | 'business' | 'educational' | 'advanced' | 'drawing' | 'finance';
   language?: 'zh' | 'en';
   requirements?: string;
   context?: string;
@@ -323,6 +323,39 @@ const OPTIMIZATION_TEMPLATES = {
       特殊要求：{requirements}`,
         },
 
+        finance: {
+          system: `💰 金融优化模板（Finance-Oriented Prompt Enhancement）
+你是一位AI金融顾问，具备股票外汇基金等投资组合管理、风险控制、财务建模与宏观经济研判能力。
+请将下列提示词优化为可用于生成投融资建议、财务分析报告、风险评估模型或资产配置策略的专业提示。
+
+优化方向包括：
+1. 金融视角设定：明确场景背景（如对冲基金经理、企业财务主管、个人投资者等），精确定义问题域（如估值分析、流动性优化、负债结构管理等）；
+2. 指标导向清晰：引导模型聚焦核心财务指标（如IRR、ROE、净利润率、夏普比率），并突出预期财务影响与收益/风险比；
+3. 量化逻辑强化：要求使用金融模型或定量方法（如DCF、CAPM、蒙特卡洛模拟、VAR分析），结合可用数据源（财报、市场数据、第三方评级等）；
+4. 策略/监管考量：引导模型结合监管环境、市场动态与投资者行为，形成可执行的建议方案或情境推演。
+
+特别适用于：投资决策支持、企业融资规划、财富管理建议、并购评估、财务健康诊断等场景。
+
+输出格式：
+### 问题分析
+[分析原始提示词的问题和不足]
+
+### 优化后的提示词
+[提供优化后的提示词]
+
+### 主要改进点
+[列出3-5个具体的改进点]
+
+### 使用建议
+[提供使用该提示词的最佳实践建议]`,
+
+          user: `请将以下提示词优化为金融导向的版本：
+
+      {prompt}
+
+      金融要求：{requirements}`,
+        },
+
       };
 ;
 
@@ -481,7 +514,7 @@ export class PromptOptimizer {
     async optimizePromptIntelligently(
       prompt: string, 
       options: {
-        type?: 'general' | 'creative' | 'technical' | 'business' | 'educational' | 'drawing' | 'advanced',
+        type?: 'general' | 'creative' | 'technical' | 'business' | 'educational' | 'drawing' | 'advanced' | 'finance',
         requirements?: string,
         context?: string,
         complexity?: 'simple' | 'medium' | 'complex'
@@ -529,7 +562,7 @@ export class PromptOptimizer {
     /**
      * 检测提示词类型
      */
-    private async detectPromptType(prompt: string): Promise<'general' | 'creative' | 'technical' | 'business' | 'educational' | 'drawing' | 'advanced'> {
+    private async detectPromptType(prompt: string): Promise<'general' | 'creative' | 'technical' | 'business' | 'educational' | 'drawing' | 'advanced' | 'finance'> {
       const keywords = {
         creative: ['创意', '想象', '创作', '设计', '艺术', '故事', '创新', 'creative', 'imagine', 'design', 'art', 'story'],
         technical: ['代码', '编程', '技术', '算法', '系统', '开发', 'code', 'programming', 'algorithm', 'system', 'development'],
@@ -537,11 +570,12 @@ export class PromptOptimizer {
         educational: ['教学', '学习', '教育', '培训', '课程', 'teaching', 'learning', 'education', 'training', 'course'],
         drawing: ['绘图', '绘画', '画', '图像', '图片', '画面', '艺术风格', '构图', '色彩', '光影', 'midjourney', 'stable diffusion', 'dall-e', 'drawing', 'painting', 'image', 'artwork', 'style', 'composition', 'lighting', 'portrait', 'landscape', 'character', 'fantasy', 'realistic', 'cartoon', 'anime', '油画', '水彩', '素描', '卡通', '动漫', '写实', '抽象', '肖像', '风景', '人物', '角色'],
         advanced: ['复杂', '高级', '多步骤', '链式', '推理', '分析', '深度', '系统级', '元指令', '多轮', '嵌套', 'complex', 'advanced', 'multi-step', 'chain', 'reasoning', 'analysis', 'deep', 'meta', 'nested', 'multi-turn'],
+        finance: ['金融', '投资', '财务', '股票', '基金', '债券', '风险', '收益', '资产', '负债', '现金流', '估值', '财报', '银行', '保险', '证券', '期货', '外汇', 'finance', 'investment', 'financial', 'stock', 'fund', 'bond', 'risk', 'return', 'asset', 'liability', 'cash flow', 'valuation', 'banking', 'insurance', 'securities', 'forex', 'portfolio', 'ROI', 'ROE', 'IRR', 'DCF', 'CAPM', 'VAR'],
       };
   
       const lowerPrompt = prompt.toLowerCase();
       let maxScore = 0;
-      let detectedType: 'general' | 'creative' | 'technical' | 'business' | 'educational' | 'drawing' | 'advanced' = 'general';
+      let detectedType: 'general' | 'creative' | 'technical' | 'business' | 'educational' | 'drawing' | 'advanced' | 'finance' = 'general';
   
       Object.entries(keywords).forEach(([type, words]: [string, string[]]) => {
         const score = words.reduce((count, word) => {
@@ -822,7 +856,7 @@ export async function optimizePromptIntelligently(
 ): Promise<OptimizationResult | null> {
   try {
     // 如果启用自动检测，先检测提示词类型
-    let detectedType: 'general' | 'creative' | 'technical' | 'business' | 'educational' | 'drawing' | 'advanced' = 'general';
+    let detectedType: 'general' | 'creative' | 'technical' | 'business' | 'educational' | 'drawing' | 'advanced' | 'finance' = 'general';
     
     if (options.autoDetectType !== false) {
       detectedType = detectPromptType(prompt);
@@ -855,7 +889,7 @@ export async function optimizePromptIntelligently(
 /**
  * 检测提示词类型
  */
-function detectPromptType(prompt: string): 'general' | 'creative' | 'technical' | 'business' | 'educational' | 'drawing' | 'advanced' {
+function detectPromptType(prompt: string): 'general' | 'creative' | 'technical' | 'business' | 'educational' | 'drawing' | 'advanced' | 'finance' {
   const keywords = {
     creative: ['创意', '想象', '创作', '设计', '艺术', '故事', '创新', 'creative', 'imagine', 'design', 'art', 'story'],
     technical: ['代码', '编程', '技术', '算法', '系统', '开发', 'code', 'programming', 'algorithm', 'system', 'development'],
@@ -863,11 +897,12 @@ function detectPromptType(prompt: string): 'general' | 'creative' | 'technical' 
     educational: ['教学', '学习', '教育', '培训', '课程', 'teaching', 'learning', 'education', 'training', 'course'],
     drawing: ['绘图', '绘画', '画', '图像', '图片', '画面', '艺术风格', '构图', '色彩', '光影', 'midjourney', 'stable diffusion', 'dall-e', 'drawing', 'painting', 'image', 'artwork', 'style', 'composition', 'lighting', 'portrait', 'landscape', 'character', 'fantasy', 'realistic', 'cartoon', 'anime', '油画', '水彩', '素描', '卡通', '动漫', '写实', '抽象', '肖像', '风景', '人物', '角色'],
     advanced: ['复杂', '高级', '多步骤', '链式', '推理', '分析', '深度', '系统级', '元指令', '多轮', '嵌套', 'complex', 'advanced', 'multi-step', 'chain', 'reasoning', 'analysis', 'deep', 'meta', 'nested', 'multi-turn'],
+    finance: ['金融', '投资', '财务', '股票', '基金', '债券', '风险', '收益', '资产', '负债', '现金流', '估值', '财报', '银行', '保险', '证券', '期货', '外汇', 'finance', 'investment', 'financial', 'stock', 'fund', 'bond', 'risk', 'return', 'asset', 'liability', 'cash flow', 'valuation', 'banking', 'insurance', 'securities', 'forex', 'portfolio', 'ROI', 'ROE', 'IRR', 'DCF', 'CAPM', 'VAR'],
   };
 
   const lowerPrompt = prompt.toLowerCase();
   let maxScore = 0;
-  let detectedType: 'general' | 'creative' | 'technical' | 'business' | 'educational' | 'drawing' | 'advanced' = 'general';
+  let detectedType: 'general' | 'creative' | 'technical' | 'business' | 'educational' | 'drawing' | 'advanced' | 'finance' = 'general';
 
   Object.entries(keywords).forEach(([type, words]: [string, string[]]) => {
     const score = words.reduce((count, word) => {

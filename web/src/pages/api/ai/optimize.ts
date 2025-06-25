@@ -185,6 +185,15 @@ function getSystemPrompt(optimizationType: string): string {
 - 质量增强：添加质量增强关键词，优化画面构图和视觉效果
 - 通用适配：提供一个高质量的通用优化版本，适合各种AI绘图模型使用
 - 技术建议：在使用建议中包含技术参数和高级技巧指导`,
+
+    finance: `
+特别注重金融专业性优化：
+- 金融角色定位：明确金融专业角色（基金经理、财务分析师、投资顾问等）
+- 核心指标聚焦：突出关键财务指标（ROI、ROE、IRR、夏普比率、VAR等）
+- 量化方法应用：引入金融模型和定量分析方法（DCF、CAPM、蒙特卡洛模拟等）
+- 风险评估框架：包含风险识别、评估和管理的系统性方法
+- 监管合规考量：结合相关监管要求和行业标准
+- 实用性导向：确保建议具有可执行性和实际应用价值`,
   };
 
   return basePrompt + (typeSpecificPrompts[optimizationType as keyof typeof typeSpecificPrompts] || '');
