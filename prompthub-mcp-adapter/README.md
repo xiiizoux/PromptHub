@@ -109,7 +109,8 @@ For local PromptHub server:
 
 ### 🧠 智能功能
 - `unified_store` - **统一存储** - AI智能分析并存储提示词 ⭐⭐⭐⭐⭐
-- `prompt_optimizer` - **提示词优化器** - 为第三方AI客户端提供结构化优化指导 ⭐⭐⭐⭐⭐
+- `prompt_optimizer` - **提示词优化器** - 为第三方AI客户端提供结构化优化指导（仅提供建议，不自动保存） ⭐⭐⭐⭐⭐
+- `optimize_and_save` - **优化并询问保存** - 优化提示词后询问用户是否保存（推荐工作流程） ⭐⭐⭐⭐⭐
 
 
 

@@ -10,13 +10,14 @@
 
 import { BaseMCPTool } from '../../shared/base-tool.js';
 import { ToolDescription, ToolParameter } from '../../types.js';
-import { 
-  suggestModelTagsByContent, 
+import {
+  suggestModelTagsByContent,
   getDefaultModelTags,
   getModelDisplayNames,
   isValidModelTag,
   MODEL_TAGS
 } from '../../constants/ai-models.js';
+import { MCPAIAnalyzer } from '../../ai/mcp-ai-analyzer.js';
 
 // 定义本地类型接口
 interface ToolResult {
@@ -101,6 +102,8 @@ interface UnifiedStoreParams {
 export class UnifiedStoreTool extends BaseMCPTool {
   readonly name = 'unified_store';
   readonly description = '🤖 智能存储 - AI分析提示词内容，自动补全参数并保存到数据库';
+
+  private aiAnalyzer: MCPAIAnalyzer | null = null;
 
   getToolDefinition(): ToolDescription {
     return {
@@ -261,6 +264,29 @@ export class UnifiedStoreTool extends BaseMCPTool {
   }
 
   /**
+   * 获取AI分析器实例
+   */
+  private getAIAnalyzer(): MCPAIAnalyzer | null {
+    if (!this.aiAnalyzer) {
+      try {
+        this.aiAnalyzer = new MCPAIAnalyzer();
+      } catch (error) {
+        console.warn('[UnifiedStore] AI分析器初始化失败:', error);
+        return null;
+      }
+    }
+    return this.aiAnalyzer;
+  }
+
+  /**
+   * 生成标题
+   */
+  private generateTitle(content: string): string {
+    const firstLine = content.split('\n')[0].substring(0, 50);
+    return firstLine.replace(/^[#\*\-\s]+/, '').trim() || '自动生成的提示词';
+  }
+
+  /**
    * 检查是否有用户指定参数
    */
   private hasUserSpecifiedParams(params: UnifiedStoreParams): boolean {
@@ -370,9 +396,32 @@ export class UnifiedStoreTool extends BaseMCPTool {
    */
   private async performAIAnalysis(content: string, hints: string[]): Promise<AIAnalysisResult> {
     try {
-      // 模拟AI分析 - 在实际实现中应该调用真正的AI服务
-      const analysis = await this.simulateAIAnalysis(content, hints);
-      return analysis;
+      // 使用真正的AI分析器
+      const aiAnalyzer = this.getAIAnalyzer();
+      if (aiAnalyzer) {
+        const mcpAnalysis = await aiAnalyzer.analyzePrompt(content, {
+          includeImprovements: true,
+          includeSuggestions: true,
+          language: 'zh'
+        });
+
+        // 转换MCP分析结果为统一格式
+        return {
+          title: mcpAnalysis.suggestedTitle || this.generateTitle(content),
+          description: mcpAnalysis.description || this.generateDescription(content, mcpAnalysis.category),
+          category: mcpAnalysis.category,
+          tags: mcpAnalysis.tags,
+          difficulty: mcpAnalysis.difficulty,
+          compatible_models: mcpAnalysis.compatibleModels,
+          domain: this.analyzeDomain(content, mcpAnalysis.category),
+          confidence: mcpAnalysis.confidence
+        };
+      } else {
+        // 如果AI分析器不可用，使用模拟分析
+        console.warn('[UnifiedStore] AI分析器不可用，使用模拟分析');
+        const analysis = await this.simulateAIAnalysis(content, hints);
+        return analysis;
+      }
     } catch (error) {
       console.warn('[UnifiedStore] AI分析失败，使用默认分析:', error);
       return this.getDefaultAnalysis(content);
@@ -557,19 +606,48 @@ export class UnifiedStoreTool extends BaseMCPTool {
   }
 
   /**
-   * 获取默认分析结果
+   * 获取默认分析结果（基于内容的基本智能分析）
    */
   private getDefaultAnalysis(content: string): AIAnalysisResult {
+    // 基于内容进行基本的智能分析
+    const lowerContent = content.toLowerCase();
+
+    // 智能分类
+    let category = '通用';
+    if (/商务|业务|邮件|客户|合同|市场|销售|商业|公司|企业/.test(lowerContent)) {
+      category = '商业';
+    } else if (/代码|编程|技术|开发|bug|算法|数据库|程序|软件/.test(lowerContent)) {
+      category = '编程';
+    } else if (/创意|故事|文案|广告|设计|创作|写作|内容创作/.test(lowerContent)) {
+      category = '文案';
+    } else if (/教学|教育|学习|解释|课程|培训|教学助手|学习指导/.test(lowerContent)) {
+      category = '教育';
+    } else if (/学术|研究|论文|科研|理论|学术研究/.test(lowerContent)) {
+      category = '学术';
+    }
+
+    // 智能标题生成
+    const title = this.generateTitle(content);
+
+    // 智能描述生成
+    const description = this.generateDescription(content, category);
+
+    // 智能标签提取
+    const tags = this.extractTags(content, category);
+
+    // 智能模型推荐
+    const compatible_models = suggestModelTagsByContent(content);
+
     return {
-      title: '自动生成的提示词',
-      description: '用户提供的提示词',
-      category: '通用',
-      tags: ['通用'],
-      compatible_models: getDefaultModelTags(),
+      title,
+      description,
+      category,
+      tags,
+      compatible_models,
       difficulty: 'medium',
-      domain: 'general',
-      use_cases: ['通用场景'],
-      confidence: 0.5
+      domain: this.analyzeDomain(content, category),
+      use_cases: this.analyzeUseCases(content, category),
+      confidence: 0.7 // 基本智能分析的置信度
     };
   }
 

@@ -467,7 +467,14 @@ export class PromptOptimizerMCPTool extends BaseMCPTool {
       return {
         success: true,
         data: result,
-        message: `✅ 提示词优化指导已生成！类型：${optimizationType}${params.include_analysis ? '（包含详细分析）' : ''}`
+        message: `✅ 提示词优化指导已生成！类型：${optimizationType}${params.include_analysis ? '（包含详细分析）' : ''}
+
+📝 **重要提示：** 此工具仅提供优化建议，不会自动保存提示词。
+
+💡 **如需保存优化后的提示词，请：**
+1. 复制上述优化后的提示词内容
+2. 使用 unified_store 工具手动保存
+3. 示例：unified_store({content: "优化后的提示词内容", title: "自定义标题", category: "合适的分类"})`
       };
 
     } catch (error) {
