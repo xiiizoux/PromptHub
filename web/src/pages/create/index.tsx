@@ -298,7 +298,7 @@ function CreatePromptPage() {
           setCategories(data as string[]);
         }
       } catch (err) {
-        toast.error('获取分类列表失败，已使用默认列表');
+        toast.error('获取分类列表失败');
         console.error('获取分类失败:', err);
       } finally {
         setCategoriesLoading(false);

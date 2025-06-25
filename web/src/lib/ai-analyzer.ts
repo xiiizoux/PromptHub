@@ -153,9 +153,9 @@ class AIAnalyzer {
   private buildSystemPrompt(config: AnalysisConfig, existingTags: string[] = []): string {
       const language = config.language === 'zh' ? '中文' : 'English';
       
-      // 20个预设分类（与数据库categories表完全一致，不包含"全部"这个UI选项）
+      // 22个预设分类（与数据库categories表完全一致，不包含"全部"这个UI选项）
       const categories = [
-        '通用', '学术', '职业', '文案', '设计', '绘画', '教育', '情感', '娱乐', '游戏', '生活', '商业', '办公', '编程', '翻译', '视频', '播客', '音乐', '健康', '科技',
+        '通用', '学术', '职业', '文案', '设计', '绘画', '教育', '情感', '娱乐', '游戏', '生活', '商业', '办公', '编程', '翻译', '视频', '播客', '音乐', '健康', '科技', '金融', '写作',
       ];
       
       // 预设的兼容模型选项（从MODEL_TAGS中获取）
@@ -519,6 +519,8 @@ class AIAnalyzer {
         '学术': ['llm-large', 'reasoning-specialized'],
         '健康': ['llm-large', 'reasoning-specialized'],
         '科技': ['llm-large', 'reasoning-specialized'],
+        '金融': ['llm-large', 'reasoning-specialized'],
+        '写作': ['llm-large', 'llm-medium'],
         '商业': ['llm-large', 'llm-medium'],
         '办公': ['llm-medium', 'llm-large'],
         '教育': ['llm-large', 'llm-medium'],
@@ -1192,6 +1194,8 @@ class AIAnalyzer {
         '健康': ['健康', '医疗', '运动', '饮食', '心理', 'health', 'medical', 'exercise', 'diet', 'psychology', '治疗', '康复', '保健'],
         '科技': ['科技', '技术', '创新', '人工智能', '机器学习', 'technology', 'innovation', 'ai', 'ml', '物联网', '区块链', '大数据'],
         '文案': ['文案', '写作', '内容', '文章', '广告', 'copywriting', 'writing', 'content', 'article', 'advertisement', '宣传', '推广'],
+        '写作': ['写作', '文章', '创作', '文字', '内容', 'writing', 'article', 'creative', 'text', 'content', '小说', '散文', '诗歌'],
+        '金融': ['金融', '投资', '理财', '股票', '基金', 'finance', 'investment', 'money', 'stock', 'fund', '银行', '保险', '财务'],
         '游戏': ['游戏', '娱乐', '玩法', '关卡', '角色', 'game', 'entertainment', 'gameplay', 'level', 'character', '剧情', '策略'],
         '生活': ['生活', '日常', '家庭', '旅行', '美食', 'life', 'daily', 'family', 'travel', 'food', '购物', '时尚', '兴趣'],
       };
@@ -1292,7 +1296,7 @@ class AIAnalyzer {
         
         // 验证返回的分类是否在预设列表中
         const validCategories = [
-          '通用', '学术', '职业', '文案', '设计', '绘画', '教育', '情感', '娱乐', '游戏', '生活', '商业', '办公', '编程', '翻译', '视频', '播客', '音乐', '健康', '科技',
+          '通用', '学术', '职业', '文案', '设计', '绘画', '教育', '情感', '娱乐', '游戏', '生活', '商业', '办公', '编程', '翻译', '视频', '播客', '音乐', '健康', '科技', '金融', '写作',
         ];
         
         if (validCategories.includes(result)) {

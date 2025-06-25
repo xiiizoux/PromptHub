@@ -40,25 +40,25 @@ export class SupabaseAdapter {
    * @returns 分类列表
    */
   async getCategories(): Promise<string[]> {
-    try {
-      // 获取所有分类（从prompts表的category字段中提取唯一值）
-      const { data, error } = await this.supabase
-        .from('prompts')
-        .select('category')
-        .order('category');
+    // 从categories表获取分类
+    const { data, error } = await this.supabase
+      .from('categories')
+      .select('name, sort_order, is_active')
+      .eq('is_active', true)
+      .order('sort_order');
 
-      if (error) {
-        console.error('获取分类失败:', error);
-        return [];
-      }
-
-      // 提取唯一分类
-      const categories = Array.from(new Set(data.map(item => item.category).filter(Boolean)));
-      return categories as string[];
-    } catch (err) {
-      console.error('获取分类时出错:', err);
-      return [];
+    if (error) {
+      console.error('获取分类失败:', error);
+      throw new Error(`获取分类失败: ${error.message}`);
     }
+
+    if (!data || data.length === 0) {
+      throw new Error('categories表中没有数据');
+    }
+
+    // 提取分类名称
+    const categories = data.map(item => item.name).filter(Boolean);
+    return categories as string[];
   }
   
   /**

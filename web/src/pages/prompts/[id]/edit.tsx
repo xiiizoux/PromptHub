@@ -228,9 +228,7 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
 
       } catch (err) {
         console.error('获取分类失败:', err);
-        setCategories([
-          '通用', '创意写作', '代码辅助', '数据分析', '营销', '学术研究', '教育',
-        ]);
+        setCategories([]);
       } finally {
         setCategoriesLoading(false);
       }

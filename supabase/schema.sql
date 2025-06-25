@@ -963,7 +963,9 @@ INSERT INTO categories (name, name_en, icon, description, sort_order) VALUES
 
 -- 专业领域类别
 ('健康', 'health', 'heart-pulse', '健康咨询、医疗信息、养生建议类提示词', 180),
-('科技', 'technology', 'cpu-chip', '科技趋势、技术分析、创新思维类提示词', 190)
+('科技', 'technology', 'cpu-chip', '科技趋势、技术分析、创新思维类提示词', 190),
+('金融', 'finance', 'currency-dollar', '金融分析、投资理财、财务管理类提示词', 200),
+('写作', 'writing', 'pencil-square', '文章写作、内容创作、写作技巧类提示词', 210)
 
 ON CONFLICT (name) DO UPDATE SET
   name_en = EXCLUDED.name_en,

@@ -153,48 +153,21 @@ export interface Category {
 
 // 获取所有分类
 export const getCategories = async (): Promise<string[]> => {
-               try {
-                 console.log('前端API：开始获取分类数据');
-                 const response = await api.get<BackendApiResponse<string[]>>('/categories');
-                 
-                 console.log('前端API：分类API响应', response.data);
-                 
-                 if (response.data.success && Array.isArray(response.data.data)) {
-                   console.log('前端API：成功获取分类数据，数量:', response.data.data.length);
-                   return response.data.data;
-                 }
-                 
-                 // 如果API报告失败但没有抛出错误，记录警告并返回空数组
-                 console.warn('前端API：获取分类失败或返回数据格式不正确:', response.data.error || 'API未返回成功状态');
-                 
-                 // 返回默认分类以确保UI正常工作
-                 const defaultCategories = [
-                   '通用', '学术', '职业', '文案', '设计', 
-                   '教育', '情感', '娱乐', '游戏', '生活',
-                   '商业', '办公', '编程', '翻译', '绘画',
-                   '视频', '播客', '音乐', '健康', '科技',
-                 ];
-                 console.log('前端API：使用默认分类数据');
-                 return defaultCategories;
-                 
-               } catch (error) {
-                 console.error('前端API：获取分类时发生网络或服务器错误:', error);
-                 
-                 // 提供用户友好的错误信息
-                 const errorMessage = error instanceof Error ? error.message : '未知网络错误';
-                 console.error('前端API：分类获取失败详情:', errorMessage);
-                 
-                 // 即使出错也返回默认分类，确保UI不会崩溃
-                 const defaultCategories = [
-                   '通用', '学术', '职业', '文案', '设计', 
-                   '教育', '情感', '娱乐', '游戏', '生活',
-                   '商业', '办公', '编程', '翻译', '绘画',
-                   '视频', '播客', '音乐', '健康', '科技',
-                 ];
-                 console.log('前端API：网络错误，使用默认分类数据');
-                 return defaultCategories;
-               }
-             };
+  console.log('前端API：开始获取分类数据');
+  const response = await api.get<BackendApiResponse<string[]>>('/categories');
+
+  console.log('前端API：分类API响应', response.data);
+
+  if (response.data.success && Array.isArray(response.data.data)) {
+    console.log('前端API：成功获取分类数据，数量:', response.data.data.length);
+    return response.data.data;
+  }
+
+  // 如果API报告失败，抛出错误让调用方处理
+  const errorMessage = response.data.error || 'API未返回成功状态';
+  console.error('前端API：获取分类失败:', errorMessage);
+  throw new Error(`获取分类失败: ${errorMessage}`);
+};
 ;
 
 // 获取所有标签

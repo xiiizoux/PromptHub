@@ -16,11 +16,6 @@ export default apiHandler(async (req: NextApiRequest, res: NextApiResponse) => {
     // 使用数据库服务获取分类
     const categories = await databaseService.getCategories();
 
-    if (!categories || categories.length === 0) {
-      logger.warn('未找到任何分类数据');
-      return successResponse(res, []); // 返回空数组而不是错误
-    }
-
     logger.info('成功获取分类数据', { count: categories.length });
     return successResponse(res, categories);
 

@@ -264,33 +264,35 @@ export class SupabaseAdapter implements StorageAdapter {
       return cached;
     }
 
-    try {
-      const categoryResult = await this.executeWithRetry(
-        async () => await this.supabase
-          .from('prompts')
-          .select('category')
-          .not('category', 'is', null)
-          .order('category'),
-        'getCategories'
-      );
-      
-      const data = categoryResult || [];
+    // 从categories表获取分类
+    const categoryResult = await this.executeWithRetry(
+      async () => await this.supabase
+        .from('categories')
+        .select('name, sort_order, is_active')
+        .eq('is_active', true)
+        .order('sort_order'),
+      'getCategories'
+    );
 
-      // 提取唯一分类并过滤空值
-      const categories = Array.from(new Set(
-        (data as any[])
-          .map(item => item?.category)
-          .filter(category => category && typeof category === 'string' && category.trim())
-      )).sort() as string[];
-
-      // 缓存结果
-      this.setCachedResult(cacheKey, categories);
-
-      return categories;
-    } catch (error) {
-      logger.error('获取分类失败', { error: error.message });
-      return [];
+    if (!categoryResult) {
+      throw new Error('获取分类失败：数据库查询返回空结果');
     }
+
+    if (categoryResult.length === 0) {
+      throw new Error('categories表中没有数据');
+    }
+
+    const categories = (categoryResult as any[])
+      .map(item => item?.name)
+      .filter(name => name && typeof name === 'string' && name.trim()) as string[];
+
+    if (categories.length === 0) {
+      throw new Error('categories表中没有有效的分类数据');
+    }
+
+    // 缓存结果
+    this.setCachedResult(cacheKey, categories);
+    return categories;
   }
   
   /**

@@ -115,46 +115,31 @@ export class SupabaseAdapter {
 
   // 基本提示词管理
   async getCategories(): Promise<string[]> {
-    try {
-      console.log('=== SupabaseAdapter: 开始获取categories ===');
-      
-      // 警告：不再使用管理员权限。必须为'categories'表设置RLS策略。
-      const { data: categoriesData, error: categoriesError } = await this.supabase
-        .from('categories')
-        .select('name, sort_order, is_active')
-        .order('sort_order');
+    console.log('=== SupabaseAdapter: 开始获取categories ===');
 
-      console.log('categories表查询结果:', {
-        error: categoriesError,
-        count: categoriesData?.length || 0,
-        sample: categoriesData?.slice(0, 3),
-      });
+    const { data: categoriesData, error: categoriesError } = await this.supabase
+      .from('categories')
+      .select('name, sort_order, is_active')
+      .eq('is_active', true)
+      .order('sort_order');
 
-      if (!categoriesError && categoriesData && categoriesData.length > 0) {
-        console.log('成功从categories表获取数据');
-        return categoriesData.map(item => item.name);
-      }
+    console.log('categories表查询结果:', {
+      error: categoriesError,
+      count: categoriesData?.length || 0,
+      sample: categoriesData?.slice(0, 3),
+    });
 
-      console.log('categories表查询失败，回退到prompts表');
-      
-      // 警告：不再使用管理员权限。必须为'prompts'表设置RLS策略。
-      const { data, error } = await this.supabase
-        .from('prompts')
-        .select('category')
-        .order('category');
-
-      if (error) {
-        console.error('获取分类失败:', error);
-        return [];
-      }
-
-      const categories = Array.from(new Set(data.map(item => item.category).filter(Boolean)));
-      console.log('从prompts表提取的分类:', categories);
-      return categories as string[];
-    } catch (err) {
-      console.error('获取分类时出错:', err);
-      return [];
+    if (categoriesError) {
+      console.error('categories表查询失败:', categoriesError);
+      throw new Error(`获取分类失败: ${categoriesError.message}`);
     }
+
+    if (!categoriesData || categoriesData.length === 0) {
+      throw new Error('categories表中没有数据');
+    }
+
+    console.log('成功从categories表获取数据');
+    return categoriesData.map(item => item.name);
   }
 
   async getTags(): Promise<string[]> {

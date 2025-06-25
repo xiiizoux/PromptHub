@@ -33,7 +33,7 @@ const DirectCreatePage: React.FC = () => {
       } catch (error) {
         console.error('加载数据失败:', error);
         setMessage({
-          text: '加载分类和标签失败',
+          text: '加载分类和标签失败，请检查网络连接',
           type: 'error',
         });
       } finally {

@@ -50,8 +50,8 @@ export default function PromptsPage() {
           console.log('设置类别数据:', data);
           setCategories(data);
         } else {
-          console.log('类别数据为空，使用默认值');
-          setCategories(['通用', '学术', '职业', '文案', '设计']);
+          console.warn('类别数据为空');
+          setCategories([]);
         }
       } catch (err) {
         // 检查请求是否被中止
@@ -59,11 +59,10 @@ export default function PromptsPage() {
           console.log('分类数据请求被中止');
           return;
         }
-        
+
         console.error('获取分类失败:', err);
-        // 即使出错也提供默认分类，确保UI正常工作
-        setCategories(['通用', '学术', '职业', '文案', '设计']);
-        console.log('分类获取失败，已设置默认分类');
+        setCategories([]);
+        // 可以在这里显示错误提示给用户
       }
     };
 
