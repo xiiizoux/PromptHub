@@ -489,12 +489,12 @@ const ProfilePage = () => {
           const pagination = data.data.pagination;
           setPromptTotalPages(pagination?.totalPages || 1);
           setPromptTotalCount(pagination?.total || 0);
-          
+
           // 更新统计
           const totalPrompts = pagination?.total || 0;
           const publicPrompts = data.data.prompts?.filter((p: any) => p.is_public)?.length || 0;
           const privatePrompts = totalPrompts - publicPrompts;
-          
+
           setPromptCounts({
             total: totalPrompts,
             public: publicPrompts,
@@ -507,7 +507,7 @@ const ProfilePage = () => {
     } catch (error) {
       console.error('获取用户提示词失败:', error);
       if (!isMountedRef.current) return;
-      
+
       safeSetState(() => {
         setUserPrompts([]);
         setPromptTotalPages(1);
@@ -1045,61 +1045,56 @@ const ProfilePage = () => {
   };
 
   const fetchPromptCount = async () => {
+    if (!user?.id) {
+      console.warn('未登录用户无法获取提示词计数');
+      setPromptCounts({ total: 0, public: 0, private: 0 });
+      return;
+    }
+
     try {
-      // 直接使用Supabase适配器获取提示词计数
-      const { default: supabaseAdapter } = await import('@/lib/supabase-adapter');
-      
-      if (!user?.id) {
-        console.warn('未登录用户无法获取提示词计数');
+      console.log('开始获取提示词计数统计...');
+
+      // 直接使用API获取提示词计数，避免RLS策略限制
+      const token = await getToken();
+      if (!token) {
+        console.error('无法获取认证令牌');
         setPromptCounts({ total: 0, public: 0, private: 0 });
         return;
       }
-      
-      try {
-        // 使用适配器获取用户所有提示词
-        const result = await supabaseAdapter.getPrompts({
-          userId: user.id,
-          page: 1,
-          pageSize: 1000,  // 大量传输以便统计
-          isPublic: false,  // 获取该用户的所有提示词（包括私有）
-        });
-        
-        const promptsList = result.data || [];
-        const totalCount = promptsList.length;
-        const publicCount = promptsList.filter(p => p.is_public).length;
-        const privateCount = totalCount - publicCount;
-        
-        console.log('提示词计数统计:', { total: totalCount, public: publicCount, private: privateCount });
-        
-        setPromptCounts({
-          total: totalCount,
-          public: publicCount,
-          private: privateCount,
-        });
-      } catch (adapterError) {
-        console.error('通过适配器获取提示词计数失败:', adapterError);
-        
-        // 如果适配器方法失败，回退到直接API调用
-        const token = await getToken();
-        if (!token) {
-          console.error('无法获取认证令牌');
-          setPromptCounts({ total: 0, public: 0, private: 0 });
-          return;
-        }
-        
-        const response = await fetch('/api/profile/prompts?pageSize=1000', {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-          },
-        });
-        
-        if (response.ok) {
-          const data = await response.json();
-          // 使用修复后的数据结构
-          const prompts = data.success && data.data ? data.data.prompts : [];
-          const totalCount = prompts ? prompts.length : 0;
-          const publicCount = prompts ? prompts.filter((p: any) => p.is_public).length : 0;
+
+      console.log('认证令牌获取成功，发送API请求...');
+
+      const timestamp = Date.now();
+      const url = `/api/profile/prompts?page=1&pageSize=1000&_t=${timestamp}`;
+      console.log('请求URL:', url);
+
+      const response = await fetch(url, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      console.log('API响应状态:', response.status, response.statusText);
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log('API响应数据:', data);
+
+        if (data.success && data.data) {
+          console.log('详细数据结构:', JSON.stringify(data.data, null, 2));
+
+          // 修复数据结构嵌套问题：API返回的是 data.data.data.prompts
+          const actualData = data.data.data || data.data;
+          const prompts = actualData.prompts || [];
+          const totalCount = actualData.pagination?.total || prompts.length;
+          const publicCount = prompts.filter((p: any) => p.is_public).length;
           const privateCount = totalCount - publicCount;
+
+          console.log('实际数据:', actualData);
+          console.log('提示词数组:', prompts);
+          console.log('分页信息:', actualData.pagination);
+          console.log('提示词计数统计:', { total: totalCount, public: publicCount, private: privateCount });
 
           setPromptCounts({
             total: totalCount,
@@ -1107,8 +1102,13 @@ const ProfilePage = () => {
             private: privateCount,
           });
         } else {
-          setPromptCounts({ total: 0, public: 0, private: 0 });
+          console.error('API返回失败状态:', data);
+          throw new Error(data.message || '获取提示词计数失败');
         }
+      } else {
+        const errorText = await response.text();
+        console.error('API请求失败，响应内容:', errorText);
+        throw new Error(`API请求失败: ${response.status} - ${errorText}`);
       }
     } catch (error) {
       console.error('获取提示词统计失败:', error);

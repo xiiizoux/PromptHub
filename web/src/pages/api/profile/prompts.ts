@@ -39,7 +39,7 @@ export default apiHandler(async (req: NextApiRequest, res: NextApiResponse, user
     );
 
     // 创建适配器实例，使用用户认证的客户端
-    const adapter = new SupabaseAdapter();
+    const adapter = new SupabaseAdapter(false); // 不使用管理员权限
     adapter.supabase = userSupabase;
 
     // 获取查询参数

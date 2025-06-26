@@ -191,10 +191,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (sessionError || !session || !session.user) {
         clearUserFromStorage();
-        if (mounted.current) {
-          setUser(null);
-          setIsAuthenticated(false);
-        }
+        setUser(null);
+        setIsAuthenticated(false);
         return false;
       }
 
@@ -212,29 +210,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         created_at: session.user.created_at || new Date().toISOString(),
       };
 
-      if (mounted.current) {
-        setUser(appUser);
-        setIsAuthenticated(true);
-        setError(null);
-        // 更新localStorage中的用户信息
-        saveUserToStorage(appUser);
-      }
+      setUser(appUser);
+      setIsAuthenticated(true);
+      setError(null);
+      // 更新localStorage中的用户信息
+      saveUserToStorage(appUser);
       return true;
     } catch (err: any) {
       console.error('认证检查失败:', err);
       clearUserFromStorage();
-      if (mounted.current) {
-        setUser(null);
-        setIsAuthenticated(false);
-      }
+      setUser(null);
+      setIsAuthenticated(false);
       return false;
     }
   }, []);
 
-  // 初始化认证状态 - 简化逻辑
+  // 初始化认证状态 - 修复时序问题
   useEffect(() => {
     let authSubscription: any = null;
-    
+
     const initAuth = async () => {
       if (typeof window === 'undefined' || authInitialized.current) return;
 
@@ -243,28 +237,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       try {
         // 首先尝试快速恢复状态
         const quickRestored = quickRestoreAuth();
-        if (quickRestored) {
-          // 快速恢复成功，立即结束loading状态
-          if (mounted.current) {
-            setIsLoading(false);
-          }
-        }
 
-        // 异步验证Supabase session
-        setTimeout(async () => {
-          try {
-            await checkAuth();
-          } catch (error) {
-            console.error('异步认证验证失败:', error);
-          }
-        }, 100);
+        // 立即验证Supabase session，不使用setTimeout
+        const authResult = await checkAuth();
+
+        // 只有在认证检查完成后才结束loading状态
+        setIsLoading(false);
 
         // 监听认证状态变化
         const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event: any, session: any) => {
           if (!mounted.current) return;
 
           if (event === 'SIGNED_IN' && session?.user) {
-            await ensureUserInDatabase(session.user);
+            // 异步确保用户在数据库中，不阻塞认证流程
+            ensureUserInDatabase(session.user).catch(error => {
+              console.error('确保用户在数据库中失败:', error);
+            });
           } else if (event === 'SIGNED_OUT') {
             clearUserFromStorage();
             setUser(null);
@@ -279,10 +267,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (mounted.current) {
           setUser(null);
           setIsAuthenticated(false);
-        }
-      } finally {
-        // 如果没有快速恢复，则在这里结束loading状态
-        if (mounted.current && !user) {
           setIsLoading(false);
         }
       }
