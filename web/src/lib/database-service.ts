@@ -16,6 +16,7 @@ export interface PromptDetails extends Prompt {
   allow_collaboration?: boolean;
   edit_permission?: 'owner_only' | 'collaborators' | 'public';
   author?: string;
+  collaborators?: string[]; // 协作者用户名列表
 }
 
 // 移除社交功能相关接口 - MCP服务专注于提示词管理
@@ -193,6 +194,38 @@ export class DatabaseService {
         console.warn('[DatabaseService] 提示词没有 user_id 字段');
       }
 
+      // 获取协作者信息
+      let collaborators: string[] = [];
+      try {
+        console.log(`[DatabaseService] 开始获取协作者信息，提示词ID: ${prompt.id}`);
+        const { data: collaboratorData, error: collaboratorError } = await this.adapter.supabase
+          .from('prompt_collaborators')
+          .select(`
+            user_id,
+            users!prompt_collaborators_user_id_fkey (
+              username,
+              display_name,
+              email
+            )
+          `)
+          .eq('prompt_id', prompt.id);
+
+        if (collaboratorError) {
+          console.error(`[DatabaseService] 获取协作者信息失败:`, collaboratorError);
+        } else if (collaboratorData && collaboratorData.length > 0) {
+          collaborators = collaboratorData.map((collab: any) => {
+            const user = collab.users;
+            // 优先使用 username，然后是 display_name，最后是 email 的用户名部分
+            return user?.username || user?.display_name || user?.email?.split('@')[0] || '未知用户';
+          });
+          console.log(`[DatabaseService] 找到 ${collaborators.length} 个协作者: ${collaborators.join(', ')}`);
+        } else {
+          console.log(`[DatabaseService] 该提示词没有协作者`);
+        }
+      } catch (collaboratorError) {
+        console.error(`[DatabaseService] 获取协作者信息失败:`, collaboratorError);
+      }
+
       // 处理内容提取
       let content = '';
       if (prompt.messages && Array.isArray(prompt.messages) && prompt.messages.length > 0) {
@@ -222,9 +255,10 @@ export class DatabaseService {
         content: content,
         input_variables: this.extractInputVariables(content),
         compatible_models: prompt.compatible_models || [], // 保持数据原始性，不添加假的默认值
-        allow_collaboration: Boolean(prompt.is_public), // 基于是否公开来设置
-        edit_permission: 'owner_only' as const, // 修复：改为前端期望的值
+        allow_collaboration: Boolean(prompt.allow_collaboration), // 使用数据库中的实际值
+        edit_permission: (prompt.edit_permission as 'owner_only' | 'collaborators' | 'public') || 'owner_only',
         author: authorName,
+        collaborators: collaborators, // 添加协作者列表
       };
 
       console.log('getPromptByName - 最终处理的数据:', {

@@ -45,12 +45,25 @@ export const checkEditPermission = (prompt: PromptDetails, user: User | null): P
   }
 
   // 4. 协作者权限
-  if (prompt.collaborators && prompt.collaborators.includes(user.username || '')) {
-    return {
-      canEdit: true,
-      reason: 'collaborator',
-      message: '您被授权为协作者',
-    };
+  if (prompt.collaborators && prompt.collaborators.length > 0) {
+    // 检查用户的多种标识是否在协作者列表中
+    const userIdentifiers = [
+      user.username,
+      user.display_name,
+      user.email?.split('@')[0]
+    ].filter(Boolean); // 过滤掉空值
+
+    const isCollaborator = userIdentifiers.some(identifier =>
+      prompt.collaborators!.includes(identifier)
+    );
+
+    if (isCollaborator) {
+      return {
+        canEdit: true,
+        reason: 'collaborator',
+        message: '您被授权为协作者',
+      };
+    }
   }
 
   // 5. 默认：无权限
