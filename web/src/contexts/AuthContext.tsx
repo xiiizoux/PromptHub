@@ -473,7 +473,10 @@ export const withAuth = <P extends object>(Component: React.ComponentType<P>): R
       // 如果未登录且未在重定向中，重定向到登录页面
       if (!user && !redirecting) {
         setRedirecting(true);
-        const currentUrl = window.location.pathname + window.location.search;
+        // 安全地获取当前URL，避免SSR问题
+        const currentUrl = typeof window !== 'undefined'
+          ? window.location.pathname + window.location.search
+          : router.asPath;
         const redirectUrl = `/auth/login?returnUrl=${encodeURIComponent(currentUrl)}`;
         console.log('未登录用户访问受保护页面，重定向到:', redirectUrl);
         router.replace(redirectUrl);
