@@ -31,15 +31,15 @@ const getSupabaseClient = () => {
         detectSessionInUrl: true,
         storage: isServer ? undefined : localStorage,
         storageKey: 'prompthub-auth-token',
-        // 添加会话超时设置
         flowType: 'pkce',
+        // 改进会话管理设置
+        debug: process.env.NODE_ENV === 'development',
       },
       global: {
         headers: {
           'x-application-name': 'PromptHub',
         },
       },
-      // 添加请求超时
       db: {
         schema: 'public',
       },
@@ -81,29 +81,39 @@ const getSupabaseClient = () => {
 export const supabase = getSupabaseClient();
 
 // 工具函数：安全地清理认证状态
-export const clearAuthState = () => {
+export const clearAuthState = async () => {
   if (typeof window === 'undefined') return;
-  
+
   try {
-    // 清理所有相关的localStorage项
+    console.log('开始清理认证状态...');
+
+    // 首先尝试正常登出
+    try {
+      await supabase.auth.signOut();
+      console.log('正常登出成功');
+    } catch (signOutError) {
+      console.warn('正常登出失败，继续清理本地状态:', signOutError);
+    }
+
+    // 清理localStorage中的认证相关数据
     const keysToRemove = [
       'prompthub-auth-token',
       'auth_token',
       'user',
     ];
-    
+
     keysToRemove.forEach(key => {
       localStorage.removeItem(key);
     });
-    
-    // 清理所有supabase相关的keys
+
+    // 清理所有supabase相关的keys（更谨慎的方式）
     Object.keys(localStorage).forEach(key => {
-      if (key.includes('supabase') || key.includes('auth-token')) {
+      if (key.startsWith('sb-') || key.includes('supabase') || key.includes('auth-token')) {
         localStorage.removeItem(key);
       }
     });
-    
-    console.log('认证状态已清理');
+
+    console.log('认证状态清理完成');
   } catch (e) {
     console.warn('清理认证状态失败:', e);
   }
@@ -112,17 +122,28 @@ export const clearAuthState = () => {
 // 工具函数：检查会话是否有效
 export const isSessionValid = async (): Promise<boolean> => {
   try {
-    const { data: { session }, error } = await supabase.auth.getSession();
-    
-    if (error || !session) {
+    // 确保只在客户端运行
+    if (typeof window === 'undefined') {
       return false;
     }
-    
-    // 检查是否过期
+
+    const { data: { session }, error } = await supabase.auth.getSession();
+
+    if (error) {
+      console.warn('获取会话时出错:', error);
+      return false;
+    }
+
+    if (!session) {
+      return false;
+    }
+
+    // 检查是否过期（提前5分钟判断为即将过期）
     const now = Math.floor(Date.now() / 1000);
     const expiresAt = session.expires_at || 0;
-    
-    return expiresAt > now;
+    const timeUntilExpiry = expiresAt - now;
+
+    return timeUntilExpiry > 300; // 5分钟缓冲时间
   } catch (e) {
     console.error('检查会话有效性失败:', e);
     return false;

@@ -41,7 +41,7 @@ export default function App({ Component, pageProps }: AppProps) {
       <Head>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </Head>
-      {/* 添加认证刷新组件，自动维持会话有效性 */}
+      {/* 智能认证刷新组件，自动维持会话有效性 */}
       <AuthRefresher />
       <Layout>
         <Component {...pageProps} />

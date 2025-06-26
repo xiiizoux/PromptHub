@@ -23,6 +23,47 @@ export interface AuthContextType {
 // 创建认证上下文
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// localStorage操作函数
+const USER_STORAGE_KEY = 'prompthub-user';
+
+const saveUserToStorage = (user: User): void => {
+  try {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(user));
+      console.log('用户信息已保存到localStorage');
+    }
+  } catch (error) {
+    console.warn('保存用户信息到localStorage失败:', error);
+  }
+};
+
+const getUserFromStorage = (): User | null => {
+  try {
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem(USER_STORAGE_KEY);
+      if (stored) {
+        const user = JSON.parse(stored);
+        console.log('从localStorage恢复用户信息:', user.email);
+        return user;
+      }
+    }
+  } catch (error) {
+    console.warn('从localStorage读取用户信息失败:', error);
+  }
+  return null;
+};
+
+const clearUserFromStorage = (): void => {
+  try {
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem(USER_STORAGE_KEY);
+      console.log('已清理localStorage中的用户信息');
+    }
+  } catch (error) {
+    console.warn('清理localStorage中的用户信息失败:', error);
+  }
+};
+
 // 认证提供者组件
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
@@ -120,50 +161,73 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setUser(appUser);
         setIsAuthenticated(true);
         setError(null);
+        // 保存用户信息到localStorage
+        saveUserToStorage(appUser);
       }
     } catch (err) {
       console.error('确保用户数据同步失败:', err);
     }
   }, []);
 
+  // 快速恢复认证状态（从localStorage）
+  const quickRestoreAuth = useCallback((): boolean => {
+    try {
+      const storedUser = getUserFromStorage();
+      if (storedUser && mounted.current) {
+        setUser(storedUser);
+        setIsAuthenticated(true);
+        setError(null);
+        console.log('快速恢复认证状态成功');
+        return true;
+      }
+    } catch (error) {
+      console.warn('快速恢复认证状态失败:', error);
+    }
+    return false;
+  }, []);
+
   // 简化的认证检查函数
   const checkAuth = useCallback(async (): Promise<boolean> => {
     try {
       console.log('开始认证检查...');
-      
+
       if (typeof window === 'undefined') {
         return false;
       }
-      
+
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-      
+
       if (sessionError || !session || !session.user) {
-        console.log('无有效会话');
+        console.log('无有效会话，清理localStorage');
+        clearUserFromStorage();
         if (mounted.current) {
           setUser(null);
           setIsAuthenticated(false);
         }
         return false;
       }
-      
+
       const appUser: User = {
         id: session.user.id,
-        username: session.user.user_metadata?.display_name || 
-                 session.user.user_metadata?.username || 
+        username: session.user.user_metadata?.display_name ||
+                 session.user.user_metadata?.username ||
                  session.user.email?.split('@')[0] || 'User',
         email: session.user.email || '',
         role: 'user',
         created_at: session.user.created_at || new Date().toISOString(),
       };
-      
+
       if (mounted.current) {
         setUser(appUser);
         setIsAuthenticated(true);
         setError(null);
+        // 更新localStorage中的用户信息
+        saveUserToStorage(appUser);
       }
       return true;
     } catch (err: any) {
       console.error('认证检查失败:', err);
+      clearUserFromStorage();
       if (mounted.current) {
         setUser(null);
         setIsAuthenticated(false);
@@ -178,22 +242,40 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     
     const initAuth = async () => {
       if (typeof window === 'undefined' || authInitialized.current) return;
-      
+
       authInitialized.current = true;
       console.log('初始化认证状态检查...');
-      
+
       try {
-        await checkAuth();
-        
+        // 首先尝试快速恢复状态
+        const quickRestored = quickRestoreAuth();
+        if (quickRestored) {
+          console.log('使用localStorage快速恢复认证状态');
+          // 快速恢复成功，立即结束loading状态
+          if (mounted.current) {
+            setIsLoading(false);
+          }
+        }
+
+        // 异步验证Supabase session
+        setTimeout(async () => {
+          try {
+            await checkAuth();
+          } catch (error) {
+            console.error('异步认证验证失败:', error);
+          }
+        }, 100);
+
         // 监听认证状态变化
         const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event: any, session: any) => {
           if (!mounted.current) return;
-          
+
           console.log('认证状态变化:', event);
-          
+
           if (event === 'SIGNED_IN' && session?.user) {
             await ensureUserInDatabase(session.user);
           } else if (event === 'SIGNED_OUT') {
+            clearUserFromStorage();
             setUser(null);
             setIsAuthenticated(false);
             setError(null);
@@ -208,7 +290,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setIsAuthenticated(false);
         }
       } finally {
-        if (mounted.current) {
+        // 如果没有快速恢复，则在这里结束loading状态
+        if (mounted.current && !user) {
           setIsLoading(false);
         }
       }
@@ -222,7 +305,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         authSubscription.unsubscribe();
       }
     };
-  }, [checkAuth, ensureUserInDatabase]);
+  }, [checkAuth, ensureUserInDatabase, quickRestoreAuth]);
 
   // 登录函数
   const login = useCallback(async (email: string, password: string, remember = false): Promise<void> => {
@@ -296,7 +379,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         throw error;
       }
 
-      // 立即更新本地状态
+      // 立即更新本地状态并清理localStorage
+      clearUserFromStorage();
       if (mounted.current) {
         setUser(null);
         setIsAuthenticated(false);
@@ -307,6 +391,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch (err: any) {
       console.error('登出失败:', err);
       // 即使登出失败，也清理本地状态
+      clearUserFromStorage();
       if (mounted.current) {
         setUser(null);
         setIsAuthenticated(false);
@@ -337,7 +422,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       throw error;
     }
     
-    setUser(prev => prev ? { ...prev, ...data } : null);
+    const updatedUser = user ? { ...user, ...data } : null;
+    setUser(updatedUser);
+    if (updatedUser) {
+      saveUserToStorage(updatedUser);
+    }
   }, [user]);
 
   const value: AuthContextType = {
@@ -372,47 +461,69 @@ export const useAuth = (): AuthContextType => {
 };
 
 export const withAuth = <P extends object>(Component: React.ComponentType<P>): React.FC<P> => {
-               const AuthComponent: React.FC<P> = (props) => {
-                 const { user, isLoading } = useAuth();
-                 const router = useRouter();
-             
-                 useEffect(() => {
-                   // 如果还在加载认证状态，不做任何操作
-                   if (isLoading) return;
-             
-                   // 如果未登录，重定向到登录页面
-                   if (!user) {
-                     const currentUrl = window.location.pathname + window.location.search;
-                     const redirectUrl = `/auth/login?returnUrl=${encodeURIComponent(currentUrl)}`;
-                     router.replace(redirectUrl);
-                   }
-                 }, [user, isLoading, router]);
-             
-                 if (isLoading) {
-                   return (
-                     <div className="min-h-screen bg-dark-bg-primary flex items-center justify-center">
-                       <div className="flex flex-col items-center space-y-4">
-                         <div className="w-8 h-8 border-2 border-neon-cyan/30 border-t-neon-cyan rounded-full animate-spin"></div>
-                         <p className="text-gray-400">正在验证身份...</p>
-                       </div>
-                     </div>
-                   );
-                 }
-             
-                 if (!user) {
-                   return (
-                     <div className="min-h-screen bg-dark-bg-primary flex items-center justify-center">
-                       <div className="flex flex-col items-center space-y-4">
-                         <div className="w-8 h-8 border-2 border-neon-cyan/30 border-t-neon-cyan rounded-full animate-spin"></div>
-                         <p className="text-gray-400">正在跳转到登录页面...</p>
-                       </div>
-                     </div>
-                   );
-                 }
-             
-                 return <Component {...props} />;
-               };
-             
-               return AuthComponent;
-             };
-;
+  const AuthComponent: React.FC<P> = (props) => {
+    const { user, isLoading, isAuthenticated } = useAuth();
+    const router = useRouter();
+    const [redirecting, setRedirecting] = useState(false);
+
+    useEffect(() => {
+      // 如果还在加载认证状态，不做任何操作
+      if (isLoading) return;
+
+      // 如果未登录且未在重定向中，重定向到登录页面
+      if (!user && !redirecting) {
+        setRedirecting(true);
+        const currentUrl = window.location.pathname + window.location.search;
+        const redirectUrl = `/auth/login?returnUrl=${encodeURIComponent(currentUrl)}`;
+        console.log('未登录用户访问受保护页面，重定向到:', redirectUrl);
+        router.replace(redirectUrl);
+      }
+    }, [user, isLoading, router, redirecting]);
+
+    // 显示加载状态
+    if (isLoading || (!user && !redirecting)) {
+      return (
+        <div className="min-h-screen bg-dark-bg-primary flex items-center justify-center relative overflow-hidden">
+          <div className="absolute inset-0">
+            <div className="absolute top-1/4 -right-48 w-96 h-96 bg-gradient-to-br from-neon-cyan/20 to-neon-purple/20 rounded-full blur-3xl"></div>
+            <div className="absolute bottom-1/4 -left-48 w-96 h-96 bg-gradient-to-tr from-neon-pink/20 to-neon-purple/20 rounded-full blur-3xl"></div>
+          </div>
+
+          <div className="relative z-10 text-center">
+            <div className="relative mx-auto mb-8">
+              <div className="w-16 h-16 border-4 border-neon-cyan/30 rounded-full animate-spin">
+                <div className="absolute top-0 left-0 w-full h-full border-4 border-transparent border-t-neon-cyan rounded-full animate-pulse"></div>
+              </div>
+              <div className="absolute inset-0 w-16 h-16 border-4 border-neon-purple/20 rounded-full animate-ping"></div>
+            </div>
+
+            <div className="space-y-2">
+              <h3 className="text-xl font-bold gradient-text">
+                {isLoading ? '验证身份中' : '正在跳转到登录页面'}
+              </h3>
+              <p className="text-gray-400 text-sm">
+                {isLoading ? '正在连接到服务器...' : '请稍候...'}
+              </p>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // 如果正在重定向，显示重定向状态
+    if (redirecting) {
+      return (
+        <div className="min-h-screen bg-dark-bg-primary flex items-center justify-center">
+          <div className="flex flex-col items-center space-y-4">
+            <div className="w-8 h-8 border-2 border-neon-cyan/30 border-t-neon-cyan rounded-full animate-spin"></div>
+            <p className="text-gray-400">正在跳转到登录页面...</p>
+          </div>
+        </div>
+      );
+    }
+
+    return <Component {...props} />;
+  };
+
+  return AuthComponent;
+};

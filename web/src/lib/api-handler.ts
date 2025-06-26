@@ -102,42 +102,51 @@ export const apiHandler = (
 
       // 处理认证
       let userId: string | undefined;
-      if (opts.requireAuth) {
-        try {
-          // 从请求头中获取认证信息
-          const authHeader = req.headers.authorization;
-          const apiKey = req.headers['x-api-key'] as string;
 
-          let user = null;
+      // 尝试获取认证信息（无论是否要求认证）
+      try {
+        // 从请求头中获取认证信息
+        const authHeader = req.headers.authorization;
+        const apiKey = req.headers['x-api-key'] as string;
 
-          // 优先使用Bearer Token
-          if (authHeader && authHeader.startsWith('Bearer ')) {
-            const token = authHeader.substring(7);
-            user = await supabaseAdapter.verifyToken(token);
-          } 
-          // 如果没有token但有API密钥，尝试使用API密钥认证
-          else if (apiKey) {
-            user = await supabaseAdapter.verifyApiKey(apiKey);
-            
-            // 更新API密钥使用时间
-            if (user) {
-              await supabaseAdapter.updateApiKeyLastUsed(apiKey);
-            }
+        let user = null;
+
+        // 优先使用Bearer Token
+        if (authHeader && authHeader.startsWith('Bearer ')) {
+          const token = authHeader.substring(7);
+          user = await supabaseAdapter.verifyToken(token);
+        }
+        // 如果没有token但有API密钥，尝试使用API密钥认证
+        else if (apiKey) {
+          user = await supabaseAdapter.verifyApiKey(apiKey);
+
+          // 更新API密钥使用时间
+          if (user) {
+            await supabaseAdapter.updateApiKeyLastUsed(apiKey);
           }
+        }
 
-          if (!user) {
-            throw ApiError.unauthorized('未授权，请登录或提供有效的API密钥', 'UNAUTHORIZED');
-          }
-
+        if (user) {
           userId = user.id;
-          
+
           // 将用户信息附加到请求对象
           (req as any).user = user;
-          
+
           logger.debug('用户已认证', { userId });
-        } catch (error) {
+        }
+
+        // 如果要求认证但没有用户，抛出错误
+        if (opts.requireAuth && !user) {
+          throw ApiError.unauthorized('未授权，请登录或提供有效的API密钥', 'UNAUTHORIZED');
+        }
+      } catch (error) {
+        // 如果要求认证，认证失败时抛出错误
+        if (opts.requireAuth) {
           logger.error('认证错误', error instanceof Error ? error : new Error(String(error)));
           throw ApiError.unauthorized('认证失败', 'AUTH_ERROR');
+        } else {
+          // 如果不要求认证，认证失败时只记录警告
+          logger.warn('可选认证失败', error instanceof Error ? error : new Error(String(error)));
         }
       }
 
