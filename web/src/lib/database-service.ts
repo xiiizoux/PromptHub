@@ -78,7 +78,7 @@ export class DatabaseService {
 
     const { data: categoriesData, error: categoriesError } = await this.adapter.supabase
       .from('categories')
-      .select('id, name, name_en, alias, description, sort_order, is_active')
+      .select('id, name, name_en, description, sort_order, is_active')
       .eq('is_active', true)
       .order('sort_order');
 
