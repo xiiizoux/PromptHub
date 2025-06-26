@@ -213,6 +213,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                  session.user.user_metadata?.username ||
                  session.user.email?.split('@')[0] || 'User',
         email: session.user.email || '',
+        display_name: session.user.user_metadata?.display_name ||
+                     session.user.user_metadata?.full_name ||
+                     session.user.user_metadata?.name ||
+                     session.user.email?.split('@')[0] || 'User',
         role: 'user',
         created_at: session.user.created_at || new Date().toISOString(),
       };

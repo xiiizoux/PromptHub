@@ -68,6 +68,24 @@ function CreatePromptPage() {
   // 用户状态检查
   const [userReady, setUserReady] = useState(false);
 
+  // 表单管理 - 必须在使用 setValue 的 useEffect 之前定义
+  const { register, handleSubmit, formState: { errors }, setValue, watch } = useForm<PromptFormData>({
+    defaultValues: {
+      name: '',
+      description: '',
+      content: '',  // 会被转换为messages JSONB格式
+      category: '通用', // 与数据库默认值保持一致
+      version: 1.0,  // 默认版本1.0，支持小数格式
+      is_public: true, // 默认公开，便于分享和发现
+      allow_collaboration: true, // 默认允许协作编辑，鼓励社区协作
+      edit_permission: 'owner_only', // 默认仅创建者可编辑
+      template_format: 'text',
+      input_variables: [],
+      tags: [],
+      compatible_models: [],
+    },
+  });
+
   // 智能分类映射函数 - 改进安全性，与编辑页面保持一致
   function matchCategory(aiCategory: string, availableCategories: string[]): string | null {
     if (!aiCategory) return null;
@@ -199,7 +217,7 @@ function CreatePromptPage() {
       setUserReady(false);
       console.log('用户未登录，等待认证处理...');
     }
-  }, [user, isLoading, setValue, watch]);
+  }, [user, isLoading, setValue]);
 
   // 添加处理URL参数的功能
   useEffect(() => {
@@ -353,22 +371,7 @@ function CreatePromptPage() {
     fetchTags();
   }, []);
 
-  const { register, handleSubmit, formState: { errors }, setValue, watch } = useForm<PromptFormData>({
-    defaultValues: {
-      name: '',
-      description: '',
-      content: '',  // 会被转换为messages JSONB格式
-      category: '通用', // 与数据库默认值保持一致
-      version: 1.0,  // 默认版本1.0，支持小数格式
-      is_public: true, // 默认公开，便于分享和发现
-      allow_collaboration: true, // 默认允许协作编辑，鼓励社区协作
-      edit_permission: 'owner_only', // 默认仅创建者可编辑
-      template_format: 'text',
-      input_variables: [],
-      tags: [],
-      compatible_models: [],
-    },
-  });
+
 
   // 监听表单内容变化，确保AI按钮能够正确获取内容
   useEffect(() => {
