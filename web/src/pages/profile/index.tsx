@@ -1061,6 +1061,7 @@ const ProfilePage = () => {
           userId: user.id,
           page: 1,
           pageSize: 1000,  // 大量传输以便统计
+          isPublic: false,  // 获取该用户的所有提示词（包括私有）
         });
         
         const promptsList = result.data || [];
