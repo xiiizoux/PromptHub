@@ -1084,16 +1084,14 @@ const ProfilePage = () => {
         if (data.success && data.data) {
           console.log('详细数据结构:', JSON.stringify(data.data, null, 2));
 
-          // 修复数据结构嵌套问题：API返回的是 data.data.data.prompts
-          const actualData = data.data.data || data.data;
-          const prompts = actualData.prompts || [];
-          const totalCount = actualData.pagination?.total || prompts.length;
+          // API现在返回正确的结构：data.data.prompts
+          const prompts = data.data.prompts || [];
+          const totalCount = data.data.pagination?.total || prompts.length;
           const publicCount = prompts.filter((p: any) => p.is_public).length;
           const privateCount = totalCount - publicCount;
 
-          console.log('实际数据:', actualData);
           console.log('提示词数组:', prompts);
-          console.log('分页信息:', actualData.pagination);
+          console.log('分页信息:', data.data.pagination);
           console.log('提示词计数统计:', { total: totalCount, public: publicCount, private: privateCount });
 
           setPromptCounts({

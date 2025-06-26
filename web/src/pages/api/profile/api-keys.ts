@@ -19,7 +19,7 @@ export default apiHandler(async (req: NextApiRequest, res: NextApiResponse, user
   if (req.method === 'GET') {
     try {
       const keys = await supabaseAdapter.listApiKeys(userId);
-      return successResponse(res, { keys });
+      return successResponse(res, keys);
     } catch (error: any) {
       console.error('获取API密钥失败:', error);
       return errorResponse(res, `获取API密钥失败: ${error.message}`, ErrorCode.INTERNAL_SERVER_ERROR);

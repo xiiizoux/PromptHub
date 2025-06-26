@@ -66,14 +66,12 @@ export default apiHandler(async (req: NextApiRequest, res: NextApiResponse, user
     const result = await adapter.getPrompts(filters);
 
     return successResponse(res, {
-      data: {
-        prompts: result.data,
-        pagination: {
-          total: result.total,
-          page: result.page,
-          pageSize: result.pageSize,
-          totalPages: result.totalPages,
-        },
+      prompts: result.data,
+      pagination: {
+        total: result.total,
+        page: result.page,
+        pageSize: result.pageSize,
+        totalPages: result.totalPages,
       },
     });
 
