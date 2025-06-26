@@ -97,8 +97,8 @@ export default function PromptsPage() {
           setTags(data);
           console.log('标签数据设置成功，数量:', data.length);
         } else {
-          console.log('标签数据为空，使用默认值');
-          setTags(['GPT-4', 'GPT-3.5', 'Claude', 'Gemini', '初学者']);
+          console.log('标签数据为空');
+          setTags([]);
         }
       } catch (err) {
         // 检查请求是否被中止
@@ -106,11 +106,10 @@ export default function PromptsPage() {
           console.log('标签数据请求被中止');
           return;
         }
-        
+
         console.error('获取标签失败:', err);
-        // 即使出错也提供默认标签，确保UI正常工作
-        setTags(['GPT-4', 'GPT-3.5', 'Claude', 'Gemini', '初学者', '高级', '长文本', '结构化输出', '翻译', '润色']);
-        console.log('标签获取失败，已设置默认标签');
+        setTags([]);
+        console.log('标签获取失败');
       }
     };
 

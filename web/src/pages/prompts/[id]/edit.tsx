@@ -246,7 +246,7 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
         }
       } catch (err) {
         console.error('获取标签失败:', err);
-        setSuggestedTags(['GPT-4', 'GPT-3.5', 'Claude', 'Gemini', '初学者', '高级', '长文本', '结构化输出', '翻译', '润色']);
+        setSuggestedTags([]);
       } finally {
         setTagsLoading(false);
       }

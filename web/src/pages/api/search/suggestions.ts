@@ -128,10 +128,11 @@ async function getKeywordSuggestions(query: string) {
 // 分类建议
 async function getCategorySuggestions(query: string) {
   const { data, error } = await supabase
-    .from('prompts')
-    .select('category')
-    .eq('is_public', true)
-    .ilike('category', `%${query}%`)
+    .from('categories')
+    .select('name')
+    .eq('is_active', true)
+    .ilike('name', `%${query}%`)
+    .order('sort_order')
     .limit(20);
 
   if (error) {
@@ -139,8 +140,8 @@ async function getCategorySuggestions(query: string) {
     return [];
   }
 
-  const categories = Array.from(new Set(data?.map(item => item.category) || []));
-  
+  const categories = data?.map(item => item.name) || [];
+
   return categories.map(category => ({
     text: category,
     type: 'category' as const,

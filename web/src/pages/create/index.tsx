@@ -49,12 +49,8 @@ function CreatePromptPage() {
   const [tags, setTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState('');
   const [models, setModels] = useState<string[]>([]);
-  const [categories, setCategories] = useState<string[]>([
-    '通用', '学术', '职业', '文案', '设计', '绘画', '教育', '情感', '娱乐', '游戏', '生活', '商业', '办公', '编程', '翻译', '视频', '播客', '音乐', '健康', '科技',
-  ]);
-  const [suggestedTags, setSuggestedTags] = useState<string[]>([
-    'GPT-4', 'GPT-3.5', 'Claude', 'Gemini', '初学者', '高级', '长文本', '结构化输出', '翻译', '润色',
-  ]);
+  const [categories, setCategories] = useState<string[]>([]);
+  const [suggestedTags, setSuggestedTags] = useState<string[]>([]);
   
   // 数据加载状态
   const [categoriesLoading, setCategoriesLoading] = useState(false);
@@ -315,10 +311,10 @@ function CreatePromptPage() {
       try {
         const data = await getTags();
         if (data && data.length > 0) {
-          setSuggestedTags(prev => Array.from(new Set([...prev, ...(data as string[])])));
+          setSuggestedTags(data as string[]);
         }
       } catch (err) {
-        toast.error('获取标签建议失败，已使用默认列表');
+        toast.error('获取标签建议失败');
         console.error('获取标签失败:', err);
       } finally {
         setTagsLoading(false);

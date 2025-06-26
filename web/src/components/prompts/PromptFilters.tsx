@@ -37,8 +37,8 @@ const PromptFilters: React.FC<PromptFiltersProps> = ({
         setPopularTags(popular);
       } catch (error) {
         console.error('获取热门标签失败:', error);
-        // 如果获取失败，回退到简单的逻辑
-        setPopularTags(tags.slice().sort().slice(0, 8));
+        // 如果获取失败，使用空数组
+        setPopularTags([]);
       }
     };
 

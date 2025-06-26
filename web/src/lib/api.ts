@@ -172,38 +172,21 @@ export const getCategories = async (): Promise<string[]> => {
 
 // 获取所有标签
 export const getTags = async (): Promise<string[]> => {
-               try {
-                 console.log('前端API：开始获取标签数据');
-                 const response = await api.get<BackendApiResponse<string[]>>('/tags');
-                 
-                 console.log('前端API：标签API响应', response.data);
-                 
-                 if (response.data.success && Array.isArray(response.data.data)) {
-                   console.log('前端API：成功获取标签数据，数量:', response.data.data.length);
-                   return response.data.data;
-                 }
-                 
-                 // API报告失败或数据格式不正确
-                 console.warn('前端API：获取标签失败或返回数据格式不正确:', response.data.error || 'API未返回成功状态');
-                 
-                 // 返回默认标签以确保UI正常工作
-                 const defaultTags = ['GPT-4', 'GPT-3.5', 'Claude', 'Gemini', '初学者', '高级', '长文本', '结构化输出', '翻译', '润色'];
-                 console.log('前端API：使用默认标签数据');
-                 return defaultTags;
-                 
-               } catch (error) {
-                 console.error('前端API：获取标签时发生网络或服务器错误:', error);
-                 
-                 // 提供用户友好的错误信息
-                 const errorMessage = error instanceof Error ? error.message : '未知网络错误';
-                 console.error('前端API：标签获取失败详情:', errorMessage);
-                 
-                 // 即使出错也返回默认标签，确保UI不会崩溃
-                 const defaultTags = ['GPT-4', 'GPT-3.5', 'Claude', 'Gemini', '初学者', '高级', '长文本', '结构化输出', '翻译', '润色'];
-                 console.log('前端API：网络错误，使用默认标签数据');
-                 return defaultTags;
-               }
-             };
+  console.log('前端API：开始获取标签数据');
+  const response = await api.get<BackendApiResponse<string[]>>('/tags');
+
+  console.log('前端API：标签API响应', response.data);
+
+  if (response.data.success && Array.isArray(response.data.data)) {
+    console.log('前端API：成功获取标签数据，数量:', response.data.data.length);
+    return response.data.data;
+  }
+
+  // 如果API报告失败，抛出错误让调用方处理
+  const errorMessage = response.data.error || 'API未返回成功状态';
+  console.error('前端API：获取标签失败:', errorMessage);
+  throw new Error(`获取标签失败: ${errorMessage}`);
+};
 ;
 
 // 获取带使用频率的标签统计
