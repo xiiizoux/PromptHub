@@ -1057,9 +1057,9 @@ export class UnifiedSearchTool extends BaseMCPTool {
 
       // 提示词内容
       if (result.content && result.content.trim()) {
-        output += `📄 **提示词内容（可直接复制使用）：**\n\n`;
+        output += `📄 **提示词内容（点击右上角复制按钮即可一键复制）：**\n\n`;
         output += `${result.content}\n\n`;
-        output += `⬆️ 以上是完整的提示词内容，请完整显示并可复制使用\n\n`;
+        output += `⬆️ 以上是完整的提示词内容，请在内容区域右上角点击复制按钮进行一键复制\n\n`;
       }
 
       // 分类和标签
@@ -1078,7 +1078,7 @@ export class UnifiedSearchTool extends BaseMCPTool {
     // 使用说明
     output += `\n\n💬 **使用说明：**\n`;
     output += `上述提示词按相关度排序，每个都包含了完整的内容预览。\n`;
-    output += `您可以直接复制使用这些内容，或者根据需要进行调整。\n\n`;
+    output += `您可以在提示词内容区域右上角点击复制按钮进行一键复制，或者根据需要进行调整。\n\n`;
 
     // 搜索提示
     output += `🔄 **需要更精确的结果？** 尝试：\n`;

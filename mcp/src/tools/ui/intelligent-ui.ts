@@ -92,7 +92,7 @@ export class IntelligentPromptSelectionTool extends BaseMCPTool {
       
       const content = this.extractContentPreview(prompt);
       if (content && content.trim()) {
-        output += `📄 **内容（可直接复制使用）：**\n\n${content}\n\n⬆️ 以上是完整的提示词内容，请完整显示\n`;
+        output += `📄 **内容（点击右上角复制按钮即可一键复制）：**\n\n${content}\n\n⬆️ 以上是完整的提示词内容，请在内容区域右上角点击复制按钮进行一键复制\n`;
       }
       
       if (prompt.category) {
@@ -110,7 +110,7 @@ export class IntelligentPromptSelectionTool extends BaseMCPTool {
 
     output += `\n\n💬 **使用说明：**\n`;
     output += `上述提示词经过智能分析推荐，每个都包含了完整的内容预览。\n`;
-    output += `您可以直接使用这些内容，或者说"我要第X个提示词"获取更多详细信息。`;
+    output += `您可以在提示词内容区域右上角点击复制按钮进行一键复制，或者说"我要第X个提示词"获取更多详细信息。`;
 
     return output;
   }

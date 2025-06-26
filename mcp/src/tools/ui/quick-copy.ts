@@ -176,9 +176,9 @@ export class QuickCopyTool extends BaseMCPTool {
       result += `**描述**: ${prompt.description}\n\n`;
     }
 
-    result += '## 提示词内容（可直接复制使用）\n\n';
+          result += '## 提示词内容（点击右上角复制按钮即可一键复制）\n\n';
     result += content + '\n\n';
-    result += '⬆️ 以上是完整的提示词内容，请完整显示并可复制使用\n\n';
+          result += '⬆️ 以上是完整的提示词内容，请在内容区域右上角点击复制按钮进行一键复制\n\n';
 
     if (includeVariables && prompt.variables?.length) {
       result += '## 变量说明\n\n';
@@ -549,8 +549,8 @@ export class BatchExportTool extends BaseMCPTool {
       if (prompt.category) {
         markdown += `**分类**: ${prompt.category}\n\n`;
       }
-      markdown += '**内容（可直接复制使用）**:\n\n' + prompt.messages + '\n\n';
-      markdown += '⬆️ 以上是完整的提示词内容，请完整显示\n\n';
+              markdown += '**内容（点击右上角复制按钮即可一键复制）**:\n\n' + prompt.messages + '\n\n';
+              markdown += '⬆️ 以上是完整的提示词内容，请在内容区域右上角点击复制按钮进行一键复制\n\n';
       markdown += '---\n\n';
     });
 
