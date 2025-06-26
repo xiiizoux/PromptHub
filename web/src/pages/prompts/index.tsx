@@ -35,34 +35,26 @@ export default function PromptsPage() {
     
     const fetchCategories = async () => {
       try {
-        console.log('开始获取类别数据...');
         const data = await getCategories();
-        
+
         // 检查请求是否被中止
         if (abortController.signal.aborted) {
-          console.log('分类数据请求被中止');
           return;
         }
-        
-        console.log('获取到的类别数据:', data);
-        
+
         if (data && Array.isArray(data) && data.length > 0) {
-          console.log('设置类别数据:', data);
           setCategories(data);
         } else {
-          console.warn('类别数据为空');
           setCategories([]);
         }
       } catch (err) {
         // 检查请求是否被中止
         if (abortController.signal.aborted) {
-          console.log('分类数据请求被中止');
           return;
         }
 
         console.error('获取分类失败:', err);
         setCategories([]);
-        // 可以在这里显示错误提示给用户
       }
     };
 
@@ -82,34 +74,26 @@ export default function PromptsPage() {
     
     const fetchTags = async () => {
       try {
-        console.log('开始获取标签数据...');
         const data = await getTags();
-        
+
         // 检查请求是否被中止
         if (abortController.signal.aborted) {
-          console.log('标签数据请求被中止');
           return;
         }
-        
-        console.log('获取到的标签数据:', data);
-        
+
         if (data && Array.isArray(data) && data.length > 0) {
           setTags(data);
-          console.log('标签数据设置成功，数量:', data.length);
         } else {
-          console.log('标签数据为空');
           setTags([]);
         }
       } catch (err) {
         // 检查请求是否被中止
         if (abortController.signal.aborted) {
-          console.log('标签数据请求被中止');
           return;
         }
 
         console.error('获取标签失败:', err);
         setTags([]);
-        console.log('标签获取失败');
       }
     };
 
@@ -128,7 +112,6 @@ export default function PromptsPage() {
     const abortController = new AbortController();
 
     const fetchPrompts = async () => {
-      console.log('开始获取提示词数据，filters:', filters);
       setLoading(true);
       setError(null); // 重置错误状态
 
@@ -140,16 +123,12 @@ export default function PromptsPage() {
         try {
           // 检查请求是否被中止
           if (abortController.signal.aborted) {
-            console.log('提示词数据请求被中止');
             return;
           }
 
           const response = await getPrompts(filters);
 
-          console.log('获取提示词响应:', response);
-
           if (response && response.data && Array.isArray(response.data)) {
-            console.log('设置提示词数据，数量:', response.data.length);
             setPrompts(response.data);
             setTotalPages(response.totalPages || 1);
             setTotalCount(response.total || 0);
@@ -157,7 +136,6 @@ export default function PromptsPage() {
             setLoading(false); // 成功时立即停止加载状态
             return; // 成功，退出重试循环
           } else {
-            console.error('获取提示词数据格式错误:', response);
             setPrompts([]);
             setTotalPages(1);
             setTotalCount(0);
@@ -168,7 +146,6 @@ export default function PromptsPage() {
         } catch (err) {
           // 检查请求是否被中止
           if (abortController.signal.aborted) {
-            console.log('提示词数据请求被中止');
             return;
           }
 
@@ -191,7 +168,6 @@ export default function PromptsPage() {
 
       // 确保在所有情况下都停止加载状态
       if (!abortController.signal.aborted) {
-        console.log('提示词数据加载完成');
         setLoading(false);
       }
     };

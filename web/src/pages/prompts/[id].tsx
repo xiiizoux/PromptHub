@@ -54,14 +54,59 @@ import PromptInteractions from '@/components/social/PromptInteractions';
 import { toast } from 'react-hot-toast';
 
 interface PromptDetailsPageProps {
-  prompt: PromptDetails;
+  // 移除 prompt prop，改为客户端获取
 }
 
-export default function PromptDetailsPage({ prompt }: PromptDetailsPageProps) {
+export default function PromptDetailsPage() {
   const router = useRouter();
+  const { id } = router.query;
+
+  // 添加客户端数据获取状态
+  const [prompt, setPrompt] = useState<PromptDetails | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
   const [selectedVersion, setSelectedVersion] = useState<string>('1');
   const [copied, setCopied] = useState(false);
   const [isClient, setIsClient] = useState(false);
+
+  // 客户端数据获取
+  useEffect(() => {
+    if (!id || typeof id !== 'string') return;
+
+    const fetchPrompt = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        // 使用 API 获取提示词详情
+        const response = await fetch(`/api/prompts/${id}`);
+
+        if (!response.ok) {
+          if (response.status === 404) {
+            setError('提示词不存在');
+          } else {
+            setError('获取提示词详情失败');
+          }
+          return;
+        }
+
+        const data = await response.json();
+        if (data.success && data.data && data.data.prompt) {
+          setPrompt(data.data.prompt);
+        } else {
+          setError('提示词数据格式错误');
+        }
+      } catch (error) {
+        console.error('获取提示词详情失败:', error);
+        setError('网络错误，请稍后重试');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPrompt();
+  }, [id]);
 
   // 提取变量的函数 - 必须在使用之前定义
   const extractVariablesFromText = (text: string): string[] => {
@@ -125,13 +170,51 @@ export default function PromptDetailsPage({ prompt }: PromptDetailsPageProps) {
     setProcessedContent(content);
   }, [variableValues, fullContent]);
 
-  // 如果是服务端渲染或没有提示词数据，显示加载状态
-  if (!isClient || !prompt) {
+  // 处理加载状态
+  if (!isClient || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-neon-cyan mx-auto mb-4"></div>
           <p className="text-gray-400">加载中...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // 处理错误状态
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-red-400 text-6xl mb-4">⚠️</div>
+          <h1 className="text-2xl font-bold text-white mb-2">出错了</h1>
+          <p className="text-gray-400 mb-4">{error}</p>
+          <button
+            onClick={() => router.back()}
+            className="px-4 py-2 bg-neon-cyan text-black rounded-lg hover:bg-cyan-400 transition-colors"
+          >
+            返回
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // 如果没有提示词数据，显示404
+  if (!prompt) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-gray-400 text-6xl mb-4">📝</div>
+          <h1 className="text-2xl font-bold text-white mb-2">提示词不存在</h1>
+          <p className="text-gray-400 mb-4">您访问的提示词可能已被删除或不存在</p>
+          <button
+            onClick={() => router.push('/prompts')}
+            className="px-4 py-2 bg-neon-cyan text-black rounded-lg hover:bg-cyan-400 transition-colors"
+          >
+            浏览其他提示词
+          </button>
         </div>
       </div>
     );
@@ -689,35 +772,5 @@ export default function PromptDetailsPage({ prompt }: PromptDetailsPageProps) {
   );
 }
 
-export const getServerSideProps: GetServerSideProps = async (context) => {
-  const { id } = context.params as { id: string };
-
-  try {
-    console.log(`[getServerSideProps] 获取提示词详情，ID: ${id}`);
-
-    // 在服务端直接使用数据库服务，避免HTTP调用
-    // 注意：getPromptByName 方法实际上支持通过ID或name查找
-    const promptDetails = await databaseService.getPromptByName(id);
-
-    if (!promptDetails) {
-      console.log(`[getServerSideProps] 未找到提示词，ID: ${id}`);
-      return {
-        notFound: true,
-      };
-    }
-
-    console.log(`[getServerSideProps] 成功获取提示词: ${promptDetails.name} (ID: ${promptDetails.id})`);
-
-    return {
-      props: {
-        prompt: promptDetails,
-      },
-    };
-  } catch (error) {
-    console.error(`[getServerSideProps] 获取提示词 ${id} 详情失败:`, error);
-
-    return {
-      notFound: true,
-    };
-  }
-};
+// 移除 getServerSideProps，改为客户端渲染
+// 这样可以避免服务端认证的复杂性，让客户端处理认证和数据获取

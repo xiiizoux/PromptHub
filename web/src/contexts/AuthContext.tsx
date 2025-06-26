@@ -30,7 +30,6 @@ const saveUserToStorage = (user: User): void => {
   try {
     if (typeof window !== 'undefined') {
       localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(user));
-      console.log('用户信息已保存到localStorage');
     }
   } catch (error) {
     console.warn('保存用户信息到localStorage失败:', error);
@@ -43,7 +42,6 @@ const getUserFromStorage = (): User | null => {
       const stored = localStorage.getItem(USER_STORAGE_KEY);
       if (stored) {
         const user = JSON.parse(stored);
-        console.log('从localStorage恢复用户信息:', user.email);
         return user;
       }
     }
@@ -57,7 +55,6 @@ const clearUserFromStorage = (): void => {
   try {
     if (typeof window !== 'undefined') {
       localStorage.removeItem(USER_STORAGE_KEY);
-      console.log('已清理localStorage中的用户信息');
     }
   } catch (error) {
     console.warn('清理localStorage中的用户信息失败:', error);
@@ -119,8 +116,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         if (insertError) {
           console.error('创建用户记录失败:', insertError);
-        } else {
-          console.log('用户记录创建成功:', userData);
         }
       }
 
@@ -177,7 +172,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setUser(storedUser);
         setIsAuthenticated(true);
         setError(null);
-        console.log('快速恢复认证状态成功');
         return true;
       }
     } catch (error) {
@@ -189,8 +183,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // 简化的认证检查函数
   const checkAuth = useCallback(async (): Promise<boolean> => {
     try {
-      console.log('开始认证检查...');
-
       if (typeof window === 'undefined') {
         return false;
       }
@@ -198,7 +190,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
 
       if (sessionError || !session || !session.user) {
-        console.log('无有效会话，清理localStorage');
         clearUserFromStorage();
         if (mounted.current) {
           setUser(null);
@@ -248,13 +239,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (typeof window === 'undefined' || authInitialized.current) return;
 
       authInitialized.current = true;
-      console.log('初始化认证状态检查...');
 
       try {
         // 首先尝试快速恢复状态
         const quickRestored = quickRestoreAuth();
         if (quickRestored) {
-          console.log('使用localStorage快速恢复认证状态');
           // 快速恢复成功，立即结束loading状态
           if (mounted.current) {
             setIsLoading(false);
@@ -273,8 +262,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         // 监听认证状态变化
         const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event: any, session: any) => {
           if (!mounted.current) return;
-
-          console.log('认证状态变化:', event);
 
           if (event === 'SIGNED_IN' && session?.user) {
             await ensureUserInDatabase(session.user);
@@ -313,33 +300,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // 登录函数
   const login = useCallback(async (email: string, password: string, remember = false): Promise<void> => {
-    console.log('login函数开始执行:', { email, remember, mounted: mounted.current });
     if (!mounted.current) {
-      console.warn('组件未挂载，但继续执行登录...');
-      // 暂时跳过mounted检查以进行调试
-      // return;
+      return;
     }
 
     setIsLoading(true);
     setError(null);
 
     try {
-      console.log('开始调用supabase.auth.signInWithPassword...');
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
-
-      console.log('supabase登录响应:', { data: !!data, error: error?.message, user: !!data?.user, session: !!data?.session });
 
       if (error) {
         throw error;
       }
 
       if (data.user && data.session) {
-        console.log('登录成功，开始确保用户在数据库中...');
         await ensureUserInDatabase(data.user);
-        console.log('用户数据库确认完成');
       }
     } catch (err: any) {
       console.error('登录失败:', err);
@@ -382,7 +361,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const logout = useCallback(async (): Promise<void> => {
     try {
-      console.log('开始登出...');
       setIsLoading(true);
 
       // 执行Supabase登出
@@ -400,8 +378,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setIsAuthenticated(false);
         setError(null);
       }
-
-      console.log('登出成功');
     } catch (err: any) {
       console.error('登出失败:', err);
       // 即使登出失败，也清理本地状态
@@ -492,7 +468,6 @@ export const withAuth = <P extends object>(Component: React.ComponentType<P>): R
           ? window.location.pathname + window.location.search
           : router.asPath;
         const redirectUrl = `/auth/login?returnUrl=${encodeURIComponent(currentUrl)}`;
-        console.log('未登录用户访问受保护页面，重定向到:', redirectUrl);
         router.replace(redirectUrl);
       }
     }, [user, isLoading, router, redirecting]);

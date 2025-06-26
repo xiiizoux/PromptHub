@@ -153,38 +153,28 @@ export interface Category {
 
 // 获取所有分类
 export const getCategories = async (): Promise<string[]> => {
-  console.log('前端API：开始获取分类数据');
   const response = await api.get<BackendApiResponse<string[]>>('/categories');
 
-  console.log('前端API：分类API响应', response.data);
-
   if (response.data.success && Array.isArray(response.data.data)) {
-    console.log('前端API：成功获取分类数据，数量:', response.data.data.length);
     return response.data.data;
   }
 
   // 如果API报告失败，抛出错误让调用方处理
   const errorMessage = response.data.error || 'API未返回成功状态';
-  console.error('前端API：获取分类失败:', errorMessage);
   throw new Error(`获取分类失败: ${errorMessage}`);
 };
 ;
 
 // 获取所有标签
 export const getTags = async (): Promise<string[]> => {
-  console.log('前端API：开始获取标签数据');
   const response = await api.get<BackendApiResponse<string[]>>('/tags');
 
-  console.log('前端API：标签API响应', response.data);
-
   if (response.data.success && Array.isArray(response.data.data)) {
-    console.log('前端API：成功获取标签数据，数量:', response.data.data.length);
     return response.data.data;
   }
 
   // 如果API报告失败，抛出错误让调用方处理
   const errorMessage = response.data.error || 'API未返回成功状态';
-  console.error('前端API：获取标签失败:', errorMessage);
   throw new Error(`获取标签失败: ${errorMessage}`);
 };
 ;
@@ -193,13 +183,11 @@ export const getTags = async (): Promise<string[]> => {
 export const getTagsWithStats = async (): Promise<Array<{tag: string, count: number}>> => {
   try {
     const response = await api.get<any>('/tags?withStats=true');
-    console.log('标签统计API响应:', response.data);
-    
+
     if (response.data.success && response.data.data && Array.isArray(response.data.data)) {
       return response.data.data;
     }
-    
-    console.log('API返回空统计数据，使用默认数据');
+
     // 如果API返回空数据或失败，返回默认统计
     const defaultTags = ['GPT-4', 'GPT-3.5', 'Claude', 'Gemini', '初学者', '高级', '长文本', '结构化输出', '翻译', '润色'];
     return defaultTags.map((tag, index) => ({ tag, count: 10 - index }));
@@ -259,9 +247,6 @@ export const getPrompts = async (filters?: PromptFilters): Promise<PaginatedResp
         const { data: { session } } = await supabase.auth.getSession();
         if (session?.user?.id) {
           userId = session.user.id;
-          console.log('成功获取用户ID:', userId);
-        } else {
-          console.log('未找到用户会话');
         }
       } catch (e) {
         console.error('获取用户会话信息失败:', e);
@@ -269,29 +254,24 @@ export const getPrompts = async (filters?: PromptFilters): Promise<PaginatedResp
     }
 
     // 使用新的REST API端点
-    console.log('发送请求到:', `/public-prompts?${queryParams.toString()}`, '用户ID:', userId);
     const response = await api.get<any>(`/public-prompts?${queryParams.toString()}`, {
       headers: userId ? { 'x-user-id': userId } : {},
     });
-    
+
     // 1. 验证响应的基础结构
     if (!response || !response.data || typeof response.data !== 'object') {
-      console.error('API响应格式无效或为空:', response);
       return { data: [], total: 0, page: 1, pageSize: filters?.pageSize || 10, totalPages: 0 };
     }
 
     const responseData = response.data;
-    console.log('获取提示词原始响应:', responseData);
 
     // 2. 检查成功状态
     if (responseData.success === false || !responseData.data) {
-      console.error('API报告获取失败:', responseData.error || '未知错误');
       return { data: [], total: 0, page: 1, pageSize: filters?.pageSize || 10, totalPages: 0 };
     }
 
     // 3. 验证核心数据data是否为数组
     if (!Array.isArray(responseData.data)) {
-      console.error('API返回的data字段不是一个数组:', responseData.data);
       return { data: [], total: 0, page: 1, pageSize: filters?.pageSize || 10, totalPages: 0 };
     }
 
@@ -315,9 +295,7 @@ export const getPrompts = async (filters?: PromptFilters): Promise<PaginatedResp
     const pageSize = typeof responseData.pageSize === 'number' ? responseData.pageSize : 10;
     const totalPages = typeof responseData.totalPages === 'number' ? responseData.totalPages : 0;
 
-    console.log('清理后的提示词数据:', cleanedData.length, '总数:', total, '页面:', page, '总页数:', totalPages);
-
-    return { 
+    return {
       data: cleanedData,
       total,
       page,
