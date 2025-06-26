@@ -237,15 +237,19 @@ export class SupabaseAdapter {
       if (userId) {
         // 验证userId是有效的UUID格式，防止SQL注入
         const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+        console.log('getPrompts - 用户ID验证:', { userId, isValid: uuidRegex.test(userId), isPublic });
         if (uuidRegex.test(userId)) {
           if (isPublic === true) {
             // 获取用户的公开提示词 + 所有公开的提示词
+            console.log('getPrompts - 查询用户公开提示词 + 所有公开提示词');
             query = query.or(`user_id.eq.${userId},is_public.eq.true`);
           } else if (isPublic === false) {
             // 只获取该用户的所有提示词（包括私有的）
+            console.log('getPrompts - 查询用户所有提示词（包括私有）');
             query = query.eq('user_id', userId);
           } else {
             // 默认情况：获取用户的提示词 + 公开提示词
+            console.log('getPrompts - 默认查询：用户提示词 + 公开提示词');
             query = query.or(`user_id.eq.${userId},is_public.eq.true`);
           }
         } else {
@@ -254,6 +258,7 @@ export class SupabaseAdapter {
         }
       } else {
         // 没有用户ID，只能获取公开提示词
+        console.log('getPrompts - 无用户ID，只查询公开提示词');
         query = query.eq('is_public', true);
       }
 
@@ -266,6 +271,14 @@ export class SupabaseAdapter {
       query = query.range(from, to);
 
       const { data, error, count } = await query;
+
+      console.log('getPrompts - 查询结果:', {
+        dataCount: data?.length || 0,
+        totalCount: count,
+        error: error?.message,
+        userId,
+        isPublic
+      });
 
       if (error) {
         console.error('获取提示词列表失败:', error);
@@ -567,21 +580,32 @@ export class SupabaseAdapter {
       }
       
       console.log('JWT验证成功, 用户ID:', data.user.id);
-      
+
       // 创建管理员客户端以绕过RLS策略
       const adminClient = createSupabaseAdminClient();
 
       // 获取用户详细信息，使用管理员客户端
+      console.log('查询用户信息，用户ID:', data.user.id);
       const { data: userData, error: userError } = await adminClient
         .from('users')
         .select('*')
         .eq('id', data.user.id);
-      
+
+      console.log('用户查询结果:', { userData, userError });
+
       if (userError) {
         console.error('获取用户信息失败:', userError);
-        return null;
+        // 即使查询失败，也返回基本用户信息，确保认证能够继续
+        return {
+          id: data.user.id,
+          email: data.user.email || '',
+          username: data.user.email?.split('@')[0] || '',
+          display_name: data.user.email?.split('@')[0] || '',
+          created_at: data.user.created_at || new Date().toISOString(),
+          role: 'user',
+        };
       }
-      
+
       // 检查是否有用户数据
       if (!userData || userData.length === 0) {
         console.log('未找到用户信息，使用基本认证信息');
@@ -591,6 +615,7 @@ export class SupabaseAdapter {
           id: data.user.id,
           email: data.user.email || '',
           username: data.user.email?.split('@')[0] || '',
+          display_name: data.user.email?.split('@')[0] || '',
           created_at: data.user.created_at || new Date().toISOString(),
           role: 'user',
         };
