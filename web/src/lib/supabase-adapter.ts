@@ -495,7 +495,6 @@ export class SupabaseAdapter {
     try {
       // 计算密钥哈希
       const keyHash = crypto.createHash('sha256').update(apiKey).digest('hex');
-      console.log('验证API密钥:', { keyHash });
 
       // 查询有效的API密钥
       const { data, error } = await this.supabase
@@ -505,9 +504,7 @@ export class SupabaseAdapter {
         .or(`expires_at.is.null,expires_at.gt.${new Date().toISOString()}`)
         .single();
 
-      console.log('API密钥查询结果:', { data, error });
       if (error || !data) {
-        console.log('API密钥验证失败:', error?.message || '未找到匹配的密钥');
         return null;
       }
       

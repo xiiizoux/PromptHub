@@ -1094,10 +1094,12 @@ const ProfilePage = () => {
         
         if (response.ok) {
           const data = await response.json();
-          const totalCount = data.prompts ? data.prompts.length : 0;
-          const publicCount = data.prompts ? data.prompts.filter((p: any) => p.is_public).length : 0;
+          // 使用修复后的数据结构
+          const prompts = data.success && data.data ? data.data.prompts : [];
+          const totalCount = prompts ? prompts.length : 0;
+          const publicCount = prompts ? prompts.filter((p: any) => p.is_public).length : 0;
           const privateCount = totalCount - publicCount;
-          
+
           setPromptCounts({
             total: totalCount,
             public: publicCount,
