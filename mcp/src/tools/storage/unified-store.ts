@@ -351,10 +351,14 @@ export class UnifiedStoreTool extends BaseMCPTool {
         specified_params.tags = tagsMatch[1].split(/[，,、\s]+/).map(tag => tag.trim()).filter(Boolean);
       }
 
-      // 解析兼容模型指定
-      const modelsMatch = instruction.match(/(?:兼容模型|支持模型|适用模型|models?[:\s]*[""']?)([^""'，。]+)(?:[""']?)/i);
+      // 解析兼容模型指定 - 仅在明确提到模型时才解析
+      const modelsMatch = instruction.match(/(?:兼容模型为|支持模型为|适用模型为|模型为|models?[:\s]*[""'])([^""'，。！？]+)(?:[""']?)/i);
       if (modelsMatch && !specified_params.compatible_models) {
-        specified_params.compatible_models = modelsMatch[1].split(/[，,、\s]+/).map(model => model.trim()).filter(Boolean);
+        const modelText = modelsMatch[1].trim();
+        // 只有当匹配的内容看起来像模型名称时才处理
+        if (modelText.length < 100 && !/测试|保存|正确|检查|修复/.test(modelText)) {
+          specified_params.compatible_models = modelText.split(/[，,、\s]+/).map(model => model.trim()).filter(Boolean);
+        }
       }
 
       // 解析公开设置
@@ -752,7 +756,9 @@ export class UnifiedStoreTool extends BaseMCPTool {
           tags: params.tags,
           difficulty: params.difficulty,
           is_public: params.is_public || false,
-          compatible_models: params.compatible_models || [], // 添加compatible_models字段
+          compatible_models: params.compatible_models && params.compatible_models.length > 0 
+            ? params.compatible_models 
+            : getDefaultModelTags(), // 确保兼容模型不为空
           allow_collaboration: params.allow_collaboration,
           collaborative_level: params.collaborative_level,
           user_id: userId, // 确保正确的字段名
@@ -763,7 +769,9 @@ export class UnifiedStoreTool extends BaseMCPTool {
           title: params.title,
           userId: userId,
           category: params.category,
-          hasContent: !!params.content
+          hasContent: !!params.content,
+          compatible_models: promptData.compatible_models,
+          compatible_models_length: promptData.compatible_models?.length || 0
         });
 
         const result = await storage.createPrompt(promptData);

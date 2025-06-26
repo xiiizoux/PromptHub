@@ -504,10 +504,20 @@ export class PromptOptimizerMCPTool extends BaseMCPTool {
 
 📝 **重要提示：** 此工具仅提供优化建议，不会自动保存提示词。
 
-💡 **如需保存优化后的提示词，请：**
-1. 在优化后的提示词内容区域右上角点击复制按钮进行一键复制
-2. 使用 unified_store 工具手动保存
-3. 示例：unified_store({content: "优化后的提示词内容", title: "自定义标题", category: "合适的分类"})`
+💡 **是否需要保存优化后的提示词？**
+如需保存，请使用 unified_store 工具：
+\`\`\`
+unified_store({
+  content: "优化后的提示词内容",
+  title: "自定义标题",
+  category: "合适的分类"
+})
+\`\`\`
+
+**保存步骤：**
+1. 复制上方优化后的提示词内容
+2. 调用 unified_store 工具进行智能保存
+3. 系统将自动分析并补全标题、分类、标签等信息`
       };
 
     } catch (error) {

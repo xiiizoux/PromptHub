@@ -150,7 +150,7 @@ class PromptHubMCPAdapter {
       // ============= 🎯 提示词优化工具 =============
       {
         name: 'prompt_optimizer',
-        description: '🎯 提示词优化器 - 为第三方AI客户端提供结构化的提示词优化指导和分析（仅提供优化建议，不会自动保存）',
+        description: '🎯 提示词优化器 - 为第三方AI客户端提供结构化的提示词优化指导和分析（⚠️ 仅分析优化，不会自动保存，需明确的保存指令才能调用unified_store保存）',
         inputSchema: {
           type: 'object',
           properties: {
