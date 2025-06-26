@@ -42,7 +42,7 @@ type PromptFormData = Omit<PromptDetails, 'created_at' | 'updated_at'> & {
 
 function CreatePromptPage() {
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, isLoading } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [variables, setVariables] = useState<string[]>([]);
   const [variableInput, setVariableInput] = useState('');
@@ -64,6 +64,9 @@ function CreatePromptPage() {
   
   // 待应用的AI分析结果
   const [pendingAIAnalysis, setPendingAIAnalysis] = useState<any | null>(null);
+
+  // 用户状态检查
+  const [userReady, setUserReady] = useState(false);
 
   // 智能分类映射函数 - 改进安全性，与编辑页面保持一致
   function matchCategory(aiCategory: string, availableCategories: string[]): string | null {
@@ -170,6 +173,33 @@ function CreatePromptPage() {
     // 显示应用成功提示
     toast.success('AI分析建议已成功应用到表单中');
   };
+
+  // 用户状态监听和检查
+  useEffect(() => {
+    // 如果还在加载认证状态，等待
+    if (isLoading) {
+      setUserReady(false);
+      return;
+    }
+
+    // 如果用户已登录且信息完整，标记为准备就绪
+    if (user) {
+      console.log('用户认证状态确认:', {
+        id: user.id,
+        username: user.username,
+        email: user.email
+      });
+      setUserReady(true);
+
+      // 设置作者信息为当前登录用户（创建提示词时作者就是当前用户）
+      const authorName = user.display_name || user.username || user.email?.split('@')[0] || '未知用户';
+      setValue('author', authorName);
+    } else {
+      // 用户未登录，withAuth应该会处理重定向，但这里也做个标记
+      setUserReady(false);
+      console.log('用户未登录，等待认证处理...');
+    }
+  }, [user, isLoading, setValue, watch]);
 
   // 添加处理URL参数的功能
   useEffect(() => {
@@ -416,6 +446,14 @@ function CreatePromptPage() {
 
   // 表单提交
   const onSubmit = async (data: PromptFormData) => {
+    // 认证状态检查
+    if (!user || !userReady) {
+      toast.error('用户认证状态异常，请重新登录');
+      const currentUrl = window.location.pathname + window.location.search;
+      router.replace(`/auth/login?returnUrl=${encodeURIComponent(currentUrl)}`);
+      return;
+    }
+
     // 基础输入验证
     if (!data.name || typeof data.name !== 'string' || data.name.trim().length === 0) {
       toast.error('提示词名称不能为空');
@@ -444,7 +482,8 @@ function CreatePromptPage() {
       const promptData = {
         ...data,
         version: Number(data.version) || 1.0,
-        author: data.author || user?.username || '未知作者',
+        // 创建提示词时，作者始终是当前登录用户
+        author: user.display_name || user.username || user.email?.split('@')[0] || '未知用户',
         input_variables: variables.filter(Boolean), // 过滤空值
         tags: tags.filter(Boolean), // 过滤空值
         compatible_models: models.filter(Boolean), // 过滤空值
@@ -505,6 +544,12 @@ function CreatePromptPage() {
         } else if (error.message.includes('认证') || error.message.includes('登录') || error.message.includes('token')) {
           errorMessage = '登录状态已过期，请重新登录';
           canRetry = false; // 认证问题不建议重试
+
+          // 认证失效时自动重定向到登录页面
+          setTimeout(() => {
+            const currentUrl = window.location.pathname + window.location.search;
+            router.replace(`/auth/login?returnUrl=${encodeURIComponent(currentUrl)}`);
+          }, 2000);
         } else if (error.message.includes('权限')) {
           errorMessage = '权限不足，请联系管理员';
           canRetry = false;
@@ -552,6 +597,18 @@ function CreatePromptPage() {
       setIsSubmitting(false);
     }
   };
+
+  // 如果用户信息还在加载或用户未准备就绪，显示加载状态
+  if (isLoading || !userReady) {
+    return (
+      <div className="min-h-screen bg-dark-bg-primary flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-neon-cyan mx-auto mb-4"></div>
+          <p className="text-gray-400">正在加载用户信息...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-dark-bg-primary relative overflow-hidden">
@@ -741,10 +798,12 @@ function CreatePromptPage() {
                     id="author"
                     {...register('author')}
                     type="text"
-                    placeholder={user?.username || '您的名字'}
-                    className="input-primary w-full"
-                    autoComplete="name"
+                    value={user?.display_name || user?.username || user?.email?.split('@')[0] || ''}
+                    className="input-primary w-full bg-gray-800 text-gray-400 cursor-not-allowed"
+                    readOnly
+                    title="创建提示词时，作者自动设置为当前登录用户"
                   />
+                  <p className="text-xs text-gray-500">创建提示词时，作者自动设置为当前登录用户</p>
                 </div>
               </motion.div>
 
