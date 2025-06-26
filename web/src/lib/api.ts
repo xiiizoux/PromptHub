@@ -252,16 +252,34 @@ export const getPrompts = async (filters?: PromptFilters): Promise<PaginatedResp
 
     // 获取当前用户ID（如果有的话）
     let userId = null;
-    if (typeof localStorage !== 'undefined') {
-      const userSession = localStorage.getItem('supabase.auth.token');
-      if (userSession) {
-        try {
-          const parsedSession = JSON.parse(userSession);
-          const sessionUserId = parsedSession?.currentSession?.user?.id;
-          userId = sessionUserId !== null && sessionUserId !== undefined ? sessionUserId : undefined;
-        } catch (e) {
-          console.error('解析用户会话信息失败:', e);
+    if (typeof window !== 'undefined') {
+      try {
+        // 尝试从多个可能的存储位置获取用户ID
+        const supabaseSession = localStorage.getItem('supabase.auth.token');
+        if (supabaseSession) {
+          const parsedSession = JSON.parse(supabaseSession);
+          userId = parsedSession?.currentSession?.user?.id;
         }
+
+        // 如果上面的方法失败，尝试其他方法
+        if (!userId) {
+          // 尝试从 sb-xxx-auth-token 格式的key中获取
+          for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key && key.startsWith('sb-') && key.endsWith('-auth-token')) {
+              const tokenData = localStorage.getItem(key);
+              if (tokenData) {
+                const parsed = JSON.parse(tokenData);
+                if (parsed?.user?.id) {
+                  userId = parsed.user.id;
+                  break;
+                }
+              }
+            }
+          }
+        }
+      } catch (e) {
+        console.error('解析用户会话信息失败:', e);
       }
     }
 
