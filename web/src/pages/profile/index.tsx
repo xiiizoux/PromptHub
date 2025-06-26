@@ -460,7 +460,6 @@ const ProfilePage = () => {
   const fetchUserPrompts = async (page: number = 1) => {
     if (!user?.id || !isMountedRef.current) return;
 
-    console.log('fetchUserPrompts - 开始获取用户提示词:', { userId: user.id, page, pageSize: promptPageSize });
     safeSetState(() => setPromptsLoading(true));
 
     try {
@@ -468,8 +467,6 @@ const ProfilePage = () => {
       if (!token) {
         throw new Error('获取认证令牌失败');
       }
-
-      console.log('fetchUserPrompts - 获取到token，长度:', token.length);
 
       const response = await fetch(`/api/profile/prompts?page=${page}&pageSize=${promptPageSize}`, {
         headers: {
@@ -483,13 +480,6 @@ const ProfilePage = () => {
       }
 
       const data = await response.json();
-
-      console.log('fetchUserPrompts - API响应:', {
-        success: data.success,
-        promptsCount: data.data?.prompts?.length || 0,
-        total: data.data?.pagination?.total || 0,
-        prompts: data.data?.prompts?.map((p: any) => ({ id: p.id, name: p.name, is_public: p.is_public })) || []
-      });
 
       if (!isMountedRef.current) return;
 

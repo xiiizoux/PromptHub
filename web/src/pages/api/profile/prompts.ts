@@ -1,6 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { apiHandler, successResponse, errorResponse, ErrorCode } from '../../../lib/api-handler';
-import supabaseAdapter from '../../../lib/supabase-adapter';
+import { SupabaseAdapter } from '../../../lib/supabase-adapter';
+import { createClient } from '@supabase/supabase-js';
 
 /**
  * 获取当前用户的提示词列表
@@ -16,9 +17,34 @@ export default apiHandler(async (req: NextApiRequest, res: NextApiResponse, user
   }
 
   try {
+    // 获取用户的认证token
+    const authHeader = req.headers.authorization;
+    const token = authHeader?.replace('Bearer ', '');
+
+    if (!token) {
+      return errorResponse(res, '缺少认证令牌', ErrorCode.UNAUTHORIZED);
+    }
+
+    // 创建带有用户认证信息的Supabase客户端
+    const userSupabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        global: {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      }
+    );
+
+    // 创建适配器实例，使用用户认证的客户端
+    const adapter = new SupabaseAdapter();
+    adapter.supabase = userSupabase;
+
     // 获取查询参数
-    const { 
-      page = '1', 
+    const {
+      page = '1',
       pageSize = '10',
       search = '',
       category = '',
@@ -37,7 +63,7 @@ export default apiHandler(async (req: NextApiRequest, res: NextApiResponse, user
     };
 
     // 获取用户的提示词
-    const result = await supabaseAdapter.getPrompts(filters);
+    const result = await adapter.getPrompts(filters);
 
     return successResponse(res, {
       prompts: result.data,

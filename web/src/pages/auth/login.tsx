@@ -98,10 +98,12 @@ export default function LoginPage() {
   }
 
   const onSubmit = async (data: LoginFormData) => {
+    console.log('登录表单提交:', data);
     setIsLoading(true);
     setError(null);
-    
+
     try {
+      console.log('开始调用login函数...');
       await login(data.email, data.password, data.remember);
       handlePostLoginRedirect(router);
     } catch (err: any) {

@@ -254,32 +254,17 @@ export const getPrompts = async (filters?: PromptFilters): Promise<PaginatedResp
     let userId = null;
     if (typeof window !== 'undefined') {
       try {
-        // 尝试从多个可能的存储位置获取用户ID
-        const supabaseSession = localStorage.getItem('supabase.auth.token');
-        if (supabaseSession) {
-          const parsedSession = JSON.parse(supabaseSession);
-          userId = parsedSession?.currentSession?.user?.id;
-        }
-
-        // 如果上面的方法失败，尝试其他方法
-        if (!userId) {
-          // 尝试从 sb-xxx-auth-token 格式的key中获取
-          for (let i = 0; i < localStorage.length; i++) {
-            const key = localStorage.key(i);
-            if (key && key.startsWith('sb-') && key.endsWith('-auth-token')) {
-              const tokenData = localStorage.getItem(key);
-              if (tokenData) {
-                const parsed = JSON.parse(tokenData);
-                if (parsed?.user?.id) {
-                  userId = parsed.user.id;
-                  break;
-                }
-              }
-            }
-          }
+        // 使用 Supabase 客户端直接获取用户ID
+        const { supabase } = await import('@/lib/supabase');
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user?.id) {
+          userId = session.user.id;
+          console.log('成功获取用户ID:', userId);
+        } else {
+          console.log('未找到用户会话');
         }
       } catch (e) {
-        console.error('解析用户会话信息失败:', e);
+        console.error('获取用户会话信息失败:', e);
       }
     }
 

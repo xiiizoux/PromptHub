@@ -313,23 +313,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // 登录函数
   const login = useCallback(async (email: string, password: string, remember = false): Promise<void> => {
-    if (!mounted.current) return;
-    
+    console.log('login函数开始执行:', { email, remember, mounted: mounted.current });
+    if (!mounted.current) {
+      console.warn('组件未挂载，但继续执行登录...');
+      // 暂时跳过mounted检查以进行调试
+      // return;
+    }
+
     setIsLoading(true);
     setError(null);
-    
+
     try {
+      console.log('开始调用supabase.auth.signInWithPassword...');
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
-      
+
+      console.log('supabase登录响应:', { data: !!data, error: error?.message, user: !!data?.user, session: !!data?.session });
+
       if (error) {
         throw error;
       }
-      
+
       if (data.user && data.session) {
+        console.log('登录成功，开始确保用户在数据库中...');
         await ensureUserInDatabase(data.user);
+        console.log('用户数据库确认完成');
       }
     } catch (err: any) {
       console.error('登录失败:', err);
