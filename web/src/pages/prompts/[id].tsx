@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { GetServerSideProps } from 'next';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
+import { useAuth } from '@/contexts/AuthContext';
 import { motion } from 'framer-motion';
 import { 
   ClockIcon, 
@@ -60,6 +61,7 @@ interface PromptDetailsPageProps {
 export default function PromptDetailsPage() {
   const router = useRouter();
   const { id } = router.query;
+  const { user, getToken } = useAuth();
 
   // 添加客户端数据获取状态
   const [prompt, setPrompt] = useState<PromptDetails | null>(null);
@@ -79,12 +81,33 @@ export default function PromptDetailsPage() {
         setLoading(true);
         setError(null);
 
+        // 准备请求头
+        const headers: Record<string, string> = {
+          'Content-Type': 'application/json',
+        };
+
+        // 如果用户已登录，添加认证令牌
+        if (user) {
+          try {
+            const token = await getToken();
+            if (token) {
+              headers['Authorization'] = `Bearer ${token}`;
+            }
+          } catch (error) {
+            console.warn('获取认证令牌失败:', error);
+          }
+        }
+
         // 使用 API 获取提示词详情
-        const response = await fetch(`/api/prompts/${id}`);
+        const response = await fetch(`/api/prompts/${id}`, {
+          headers,
+        });
 
         if (!response.ok) {
           if (response.status === 404) {
-            setError('提示词不存在');
+            setError('提示词不存在或您无权访问');
+          } else if (response.status === 403) {
+            setError('您无权访问此提示词');
           } else {
             setError('获取提示词详情失败');
           }
