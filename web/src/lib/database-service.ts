@@ -73,15 +73,25 @@ export class DatabaseService {
   /**
    * 获取所有分类
    * 从categories表获取数据，确保数据的一致性和完整性
+   * @param type 可选的分类类型过滤 (chat, image, video)
    */
-  async getCategories(): Promise<string[]> {
-    console.log('=== 开始获取categories表数据 ===');
+  async getCategories(type?: string): Promise<string[]> {
+    console.log('=== 开始获取categories表数据 ===', { type });
 
-    const { data: categoriesData, error: categoriesError } = await this.adapter.supabase
+    let query = this.adapter.supabase
       .from('categories')
-      .select('id, name, name_en, description, sort_order, is_active')
-      .eq('is_active', true)
-      .order('sort_order');
+      .select('id, name, name_en, description, sort_order, is_active, type')
+      .eq('is_active', true);
+
+    // 如果指定了type，则按type过滤
+    if (type && ['chat', 'image', 'video'].includes(type)) {
+      console.log('添加type过滤:', type);
+      query = query.eq('type', type);
+    } else {
+      console.log('没有type过滤或type无效:', type);
+    }
+
+    const { data: categoriesData, error: categoriesError } = await query.order('sort_order');
 
     console.log('数据库查询结果:', {
       error: categoriesError,

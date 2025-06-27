@@ -11,12 +11,13 @@ import { logger } from '@/lib/error-handler';
 
 export default apiHandler(async (req: NextApiRequest, res: NextApiResponse) => {
   try {
-    logger.info('获取分类列表请求');
+    const { type } = req.query;
+    logger.info('获取分类列表请求', { type });
 
-    // 使用数据库服务获取分类
-    const categories = await databaseService.getCategories();
+    // 使用数据库服务获取分类，支持按type过滤
+    const categories = await databaseService.getCategories(type as string);
 
-    logger.info('成功获取分类数据', { count: categories.length });
+    logger.info('成功获取分类数据', { count: categories.length, type });
     return successResponse(res, categories);
 
   } catch (error: any) {

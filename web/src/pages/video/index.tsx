@@ -18,8 +18,7 @@ export default function VideoPromptsPage() {
     page: 1,
     pageSize: 24, // 视频卡片稍大，使用24个
     sortBy: 'latest',
-    // 临时移除类型过滤，在客户端处理
-    // category_type: 'video'
+    category_type: 'video' // 启用视频类型过滤
   });
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
@@ -38,26 +37,34 @@ export default function VideoPromptsPage() {
     
     const fetchCategories = async () => {
       try {
-        const data = await getCategories();
+        // 直接从数据库获取视频类型的分类
+        const data = await getCategories('video');
 
         if (abortController.signal.aborted) {
           return;
         }
 
         if (data && Array.isArray(data) && data.length > 0) {
-          // 过滤出视频类型的分类
-          const videoCategories = ['故事叙述', '动画特效', '产品展示', '自然风景', '人物肖像', '广告营销'];
-          const filteredCategories = data.filter(cat => videoCategories.includes(cat));
-          setCategories(filteredCategories.length > 0 ? filteredCategories : videoCategories);
+          setCategories(data);
         } else {
-          setCategories(['故事叙述', '动画特效', '产品展示', '自然风景', '人物肖像', '广告营销']);
+          // 如果数据库没有数据，使用默认分类
+          setCategories([
+            '故事叙述', '纪录片', '教学视频', '访谈对话',
+            '产品展示', '广告营销', '企业宣传', '活动记录',
+            '动画特效', '音乐视频', '艺术短片', '自然风景'
+          ]);
         }
       } catch (err) {
         if (abortController.signal.aborted) {
           return;
         }
-        console.error('获取分类失败:', err);
-        setCategories(['故事叙述', '动画特效', '产品展示', '自然风景', '人物肖像', '广告营销']);
+        console.error('获取视频分类失败:', err);
+        // 错误时使用默认分类
+        setCategories([
+          '故事叙述', '纪录片', '教学视频', '访谈对话',
+          '产品展示', '广告营销', '企业宣传', '活动记录',
+          '动画特效', '音乐视频', '艺术短片', '自然风景'
+        ]);
       }
     };
 
@@ -177,8 +184,8 @@ export default function VideoPromptsPage() {
 
   // 处理过滤器变更
   const handleFilterChange = (newFilters: PromptFiltersType) => {
-    // 移除类型过滤，在客户端处理
-    setFilters({ ...newFilters, page: 1 });
+    // 保持视频类型过滤
+    setFilters({ ...newFilters, page: 1, category_type: 'video' });
   };
 
   // 处理分页

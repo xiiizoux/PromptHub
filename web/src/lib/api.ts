@@ -152,8 +152,9 @@ export interface Category {
 }
 
 // 获取所有分类
-export const getCategories = async (): Promise<string[]> => {
-  const response = await api.get<BackendApiResponse<string[]>>('/categories');
+export const getCategories = async (type?: string): Promise<string[]> => {
+  const url = type ? `/categories?type=${type}` : '/categories';
+  const response = await api.get<BackendApiResponse<string[]>>(url);
 
   if (response.data.success && Array.isArray(response.data.data)) {
     return response.data.data;
@@ -280,11 +281,20 @@ export const getPrompts = async (filters?: PromptFilters): Promise<PaginatedResp
 
     // 4. (可选但推荐) 清理和映射每个prompt对象，确保字段符合预期
     const cleanedData = responseData.data.map((item: any) => {
-      // 临时逻辑：根据分类猜测类型
+      // 临时逻辑：根据分类猜测类型 - 更新为新的分类名称
       let guessedType = 'chat';
       if (item.category) {
-        const imageCategories = ['真实摄影', '艺术绘画', '动漫插画', '抽象艺术', 'Logo设计', '建筑空间', '时尚设计'];
-        const videoCategories = ['故事叙述', '动画特效', '产品展示', '自然风景', '人物肖像', '广告营销'];
+        const imageCategories = [
+          '真实摄影', '人像摄影', '风景摄影', '产品摄影',
+          '艺术绘画', '动漫插画', '抽象艺术', '数字艺术',
+          'Logo设计', '海报设计', '时尚设计', '建筑空间',
+          '概念设计', '科幻奇幻', '复古怀旧'
+        ];
+        const videoCategories = [
+          '故事叙述', '纪录片', '教学视频', '访谈对话',
+          '产品展示', '广告营销', '企业宣传', '活动记录',
+          '动画特效', '音乐视频', '艺术短片', '自然风景'
+        ];
         
         if (imageCategories.includes(item.category)) {
           guessedType = 'image';

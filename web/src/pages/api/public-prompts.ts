@@ -84,10 +84,20 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       query = query.contains('tags', [tag]);
     }
     
-    // 临时禁用类型过滤（直到数据库字段添加完成）
-    // if (category_type && typeof category_type === 'string') {
-    //   query = query.eq('category_type', category_type);
-    // }
+    // 添加类型过滤 - 通过categories表的type字段
+    if (category_type && typeof category_type === 'string') {
+      // 先获取对应类型的分类列表
+      const { data: typeCategories } = await supabase
+        .from('categories')
+        .select('name')
+        .eq('type', category_type)
+        .eq('is_active', true);
+      
+      if (typeCategories && typeCategories.length > 0) {
+        const categoryNames = typeCategories.map(cat => cat.name);
+        query = query.in('category', categoryNames);
+      }
+    }
     
     // 添加排序
     if (sortBy && typeof sortBy === 'string') {

@@ -18,8 +18,7 @@ export default function ImagePromptsPage() {
     page: 1,
     pageSize: 24, // 图像卡片稍大，使用24个（4x6或6x4布局）
     sortBy: 'latest',
-    // 临时移除类型过滤，在客户端处理
-    // category_type: 'image'
+    category_type: 'image' // 启用图像类型过滤
   });
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
@@ -38,26 +37,36 @@ export default function ImagePromptsPage() {
     
     const fetchCategories = async () => {
       try {
-        const data = await getCategories();
+        // 直接从数据库获取图像类型的分类
+        const data = await getCategories('image');
 
         if (abortController.signal.aborted) {
           return;
         }
 
         if (data && Array.isArray(data) && data.length > 0) {
-          // 过滤出图像类型的分类
-          const imageCategories = ['真实摄影', '艺术绘画', '动漫插画', '抽象艺术', 'Logo设计', '建筑空间', '时尚设计'];
-          const filteredCategories = data.filter(cat => imageCategories.includes(cat));
-          setCategories(filteredCategories.length > 0 ? filteredCategories : imageCategories);
+          setCategories(data);
         } else {
-          setCategories(['真实摄影', '艺术绘画', '动漫插画', '抽象艺术', 'Logo设计', '建筑空间', '时尚设计']);
+          // 如果数据库没有数据，使用默认分类
+          setCategories([
+            '真实摄影', '人像摄影', '风景摄影', '产品摄影',
+            '艺术绘画', '动漫插画', '抽象艺术', '数字艺术',
+            'Logo设计', '海报设计', '时尚设计', '建筑空间',
+            '概念设计', '科幻奇幻', '复古怀旧'
+          ]);
         }
       } catch (err) {
         if (abortController.signal.aborted) {
           return;
         }
-        console.error('获取分类失败:', err);
-        setCategories(['真实摄影', '艺术绘画', '动漫插画', '抽象艺术', 'Logo设计', '建筑空间', '时尚设计']);
+        console.error('获取图像分类失败:', err);
+        // 错误时使用默认分类
+        setCategories([
+          '真实摄影', '人像摄影', '风景摄影', '产品摄影',
+          '艺术绘画', '动漫插画', '抽象艺术', '数字艺术',
+          'Logo设计', '海报设计', '时尚设计', '建筑空间',
+          '概念设计', '科幻奇幻', '复古怀旧'
+        ]);
       }
     };
 
@@ -177,8 +186,8 @@ export default function ImagePromptsPage() {
 
   // 处理过滤器变更
   const handleFilterChange = (newFilters: PromptFiltersType) => {
-    // 移除类型过滤，在客户端处理
-    setFilters({ ...newFilters, page: 1 });
+    // 保持图像类型过滤
+    setFilters({ ...newFilters, page: 1, category_type: 'image' });
   };
 
   // 处理分页
