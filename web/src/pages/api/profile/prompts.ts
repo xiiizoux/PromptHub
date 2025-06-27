@@ -48,8 +48,15 @@ export default apiHandler(async (req: NextApiRequest, res: NextApiResponse, user
       pageSize = '10',
       search = '',
       category = '',
+      type = '',
       isPublic = 'false', // 默认获取用户所有提示词（包括私有）
     } = req.query;
+
+    // 验证type参数
+    const validTypes = ['chat', 'image', 'video'];
+    const categoryType = type && validTypes.includes(type as string) 
+      ? type as 'chat' | 'image' | 'video'
+      : undefined;
 
     // 构建过滤器
     const filters = {
@@ -58,6 +65,7 @@ export default apiHandler(async (req: NextApiRequest, res: NextApiResponse, user
       pageSize: parseInt(pageSize as string),
       search: search as string || undefined,
       category: category as string || undefined,
+      category_type: categoryType,
       isPublic: false, // false表示获取该用户的所有提示词（包括私有）
       sortBy: 'latest' as const,
     };

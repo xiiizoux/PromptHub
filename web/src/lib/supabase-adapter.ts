@@ -44,6 +44,7 @@ export interface Prompt {
 
 export interface PromptFilters {
   category?: string;
+  category_type?: 'chat' | 'image' | 'video';
   tags?: string[];
   search?: string;
   isPublic?: boolean;
@@ -205,6 +206,7 @@ export class SupabaseAdapter {
     try {
       const {
         category,
+        category_type,
         tags,
         search,
         isPublic = true,
@@ -218,7 +220,17 @@ export class SupabaseAdapter {
       // 必须在Supabase中为'prompts'表设置行级安全(RLS)策略。
       console.warn('管理员权限已被移除，查询将依赖RLS策略');
 
-      let query = this.supabase.from('prompts').select('*', { count: 'exact' });
+      // 按分类类型过滤
+      let query;
+      if (category_type) {
+        // 通过关联categories表来按类型过滤
+        query = this.supabase.from('prompts').select(`
+          *,
+          categories!inner(type)
+        `, { count: 'exact' }).eq('categories.type', category_type);
+      } else {
+        query = this.supabase.from('prompts').select('*', { count: 'exact' });
+      }
 
       if (category && category !== '全部') {
         query = query.eq('category', category);

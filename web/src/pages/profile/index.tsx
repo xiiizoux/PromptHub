@@ -46,6 +46,7 @@ import {
   MusicalNoteIcon,
   HeartIcon as HealthIcon,
   CpuChipIcon,
+  PhotoIcon,
 } from '@heroicons/react/24/outline';
 
 // 定义与适配器返回的API密钥兼容的接口
@@ -138,6 +139,9 @@ const ProfilePage = () => {
   const [bookmarksLoading, setBookmarksLoading] = useState(false);
   const [ratingsLoading, setRatingsLoading] = useState(false);
 
+  // 提示词分类状态
+  const [activePromptType, setActivePromptType] = useState<'chat' | 'image' | 'video'>('chat');
+
   // 确保组件已挂载
   useEffect(() => {
     isMountedRef.current = true;
@@ -204,9 +208,16 @@ const ProfilePage = () => {
   // 加载用户提示词 - 当标签页为"我的提示词"且页面改变时
   useEffect(() => {
     if (activeTab === 'my-prompts') {
-      fetchUserPrompts(promptCurrentPage);
+      fetchUserPrompts(promptCurrentPage, activePromptType);
     }
-  }, [activeTab, promptCurrentPage]);
+  }, [activeTab, promptCurrentPage, activePromptType]);
+
+  // 当切换提示词类型时重置页码
+  useEffect(() => {
+    if (activeTab === 'my-prompts') {
+      setPromptCurrentPage(1);
+    }
+  }, [activePromptType]);
 
   // 加载收藏夹
   useEffect(() => {
@@ -457,7 +468,7 @@ const ProfilePage = () => {
   };
 
   // 获取用户提示词
-  const fetchUserPrompts = async (page: number = 1) => {
+  const fetchUserPrompts = async (page: number = 1, type?: string) => {
     if (!user?.id || !isMountedRef.current) return;
 
     safeSetState(() => setPromptsLoading(true));
@@ -468,7 +479,8 @@ const ProfilePage = () => {
         throw new Error('获取认证令牌失败');
       }
 
-      const response = await fetch(`/api/profile/prompts?page=${page}&pageSize=${promptPageSize}`, {
+      const typeParam = type ? `&type=${type}` : '';
+      const response = await fetch(`/api/profile/prompts?page=${page}&pageSize=${promptPageSize}${typeParam}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
@@ -1752,6 +1764,39 @@ const ProfilePage = () => {
                   </ProtectedLink>
                 </div>
 
+                {/* 提示词分类导航 */}
+                <div className="flex justify-center">
+                  <div className="flex bg-dark-bg-secondary/50 backdrop-blur-sm rounded-xl p-1 border border-neon-cyan/20">
+                    {[
+                      { type: 'chat', name: '对话', icon: ChatBubbleLeftRightIcon },
+                      { type: 'image', name: '图片', icon: PhotoIcon },
+                      { type: 'video', name: '视频', icon: VideoCameraIcon }
+                    ].map((category) => (
+                      <button
+                        key={category.type}
+                        onClick={() => setActivePromptType(category.type as 'chat' | 'image' | 'video')}
+                        className={clsx(
+                          'relative flex items-center space-x-2 px-4 py-2 rounded-lg transition-all duration-200 overflow-hidden',
+                          activePromptType === category.type
+                            ? 'text-neon-cyan'
+                            : 'text-gray-400 hover:text-white hover:bg-white/5'
+                        )}
+                      >
+                        {activePromptType === category.type && (
+                          <motion.div
+                            layoutId="activePromptTypeBg"
+                            className="absolute inset-0 bg-neon-cyan/20 rounded-lg border border-neon-cyan/30 shadow-lg shadow-neon-cyan/20"
+                            initial={false}
+                            transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                          />
+                        )}
+                        <category.icon className="h-4 w-4 relative z-10" />
+                        <span className="text-sm font-medium relative z-10">{category.name}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
                 {/* 提示词列表 */}
                 {promptsLoading && !userPrompts.length ? (
                   <div className="glass rounded-2xl p-8 border border-neon-cyan/20 text-center">
@@ -1761,7 +1806,13 @@ const ProfilePage = () => {
                 ) : userPrompts.length === 0 ? (
                   <div className="glass rounded-2xl p-8 border border-neon-cyan/20 text-center">
                     <DocumentTextIcon className="h-12 w-12 text-gray-500 mx-auto mb-4" />
-                    <p className="text-gray-400">您还没有创建任何提示词</p>
+                    <p className="text-gray-400">
+                      您还没有创建任何
+                      {activePromptType === 'chat' ? '对话' : 
+                       activePromptType === 'image' ? '图片' :
+                       '视频'}
+                      类型的提示词
+                    </p>
                   </div>
                 ) : (
                   <>

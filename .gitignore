@@ -5,6 +5,7 @@ frontend/node_modules/
 web/node_modules/
 web/test-results/
 web/tests/
+web/playwright-report/
 mcp/node_modules/
 
 # 构建输出
