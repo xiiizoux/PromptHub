@@ -5,6 +5,7 @@ import { getPrompts, getCategories, getTags } from '@/lib/api';
 import { PromptInfo, PromptFilters as PromptFiltersType } from '@/types';
 import VideoPromptCard from '@/components/prompts/VideoPromptCard';
 import PromptFilters from '@/components/prompts/PromptFilters';
+import SidebarFilters from '@/components/layout/SidebarFilters';
 
 export default function VideoPromptsPage() {
   // 状态管理
@@ -287,7 +288,16 @@ export default function VideoPromptsPage() {
         <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-orange-500/10 rounded-full blur-3xl" />
       </div>
 
-      <div className="relative z-10 container-custom py-12">
+      {/* 边栏过滤器 */}
+      <SidebarFilters
+        filters={filters}
+        onFilterChange={handleFilterChange}
+        categories={categories}
+        tags={tags}
+        hideTypeFilter={true}
+      />
+
+      <div className="relative z-10 container-custom py-12 pl-16">
         {/* 页面标题 */}
         <motion.div 
           className="text-center mb-12"
@@ -313,21 +323,7 @@ export default function VideoPromptsPage() {
           )}
         </motion.div>
 
-        {/* 过滤器 */}
-        <motion.div 
-          className="mb-8"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.1 }}
-        >
-          <PromptFilters
-            filters={filters}
-            categories={categories}
-            tags={tags}
-            onFilterChange={handleFilterChange}
-            hideTypeFilter={true} // 隐藏类型过滤器，因为已经固定为video
-          />
-        </motion.div>
+
 
         {/* 主要内容 */}
         <AnimatePresence mode="wait">

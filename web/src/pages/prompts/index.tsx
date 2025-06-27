@@ -5,6 +5,7 @@ import { getPrompts, getCategories, getTags } from '@/lib/api';
 import { PromptInfo, PromptFilters as PromptFiltersType } from '@/types';
 import PromptCard from '@/components/prompts/PromptCard';
 import PromptFilters from '@/components/prompts/PromptFilters';
+import SidebarFilters from '@/components/layout/SidebarFilters';
 
 export default function PromptsPage() {
   // 状态管理
@@ -275,8 +276,16 @@ export default function PromptsPage() {
     <div className="min-h-screen bg-dark-bg-primary relative overflow-hidden">
       {/* 背景网格效果 */}
       <div className="fixed inset-0 bg-grid-pattern opacity-10 pointer-events-none"></div>
-      
-      <div className="relative z-10 spacing-section page-bottom-padding">
+
+      {/* 边栏过滤器 */}
+      <SidebarFilters
+        filters={filters}
+        onFilterChange={handleFilterChange}
+        categories={categories}
+        tags={tags}
+      />
+
+      <div className="relative z-10 spacing-section page-bottom-padding pl-16">
         <div className="container-custom">
           {/* 如果组件未挂载，显示加载状态 */}
           {!mounted ? (
@@ -326,19 +335,7 @@ export default function PromptsPage() {
                 </motion.p>
               </motion.div>
 
-              {/* 过滤器 */}
-              <motion.div
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, delay: 0.6 }}
-              >
-                <PromptFilters
-                  filters={filters}
-                  onFilterChange={handleFilterChange}
-                  categories={categories}
-                  tags={tags}
-                />
-              </motion.div>
+
 
               {/* 错误提示 */}
               {error && (
