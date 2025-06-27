@@ -32,9 +32,9 @@ export default function ImagePromptsPage() {
   // 获取图像分类数据
   useEffect(() => {
     if (!mounted) return;
-    
+
     const abortController = new AbortController();
-    
+
     const fetchCategories = async () => {
       try {
         // 直接从数据库获取图像类型的分类
@@ -47,26 +47,17 @@ export default function ImagePromptsPage() {
         if (data && Array.isArray(data) && data.length > 0) {
           setCategories(data);
         } else {
-          // 如果数据库没有数据，使用默认分类
-          setCategories([
-            '真实摄影', '人像摄影', '风景摄影', '产品摄影',
-            '艺术绘画', '动漫插画', '抽象艺术', '数字艺术',
-            'Logo设计', '海报设计', '时尚设计', '建筑空间',
-            '概念设计', '科幻奇幻', '复古怀旧'
-          ]);
+          // 如果数据库没有数据，显示空数组而不是硬编码回退
+          setCategories([]);
+          console.warn('数据库中没有image类型的分类数据');
         }
       } catch (err) {
         if (abortController.signal.aborted) {
           return;
         }
-        console.error('获取图像分类失败:', err);
-        // 错误时使用默认分类
-        setCategories([
-          '真实摄影', '人像摄影', '风景摄影', '产品摄影',
-          '艺术绘画', '动漫插画', '抽象艺术', '数字艺术',
-          'Logo设计', '海报设计', '时尚设计', '建筑空间',
-          '概念设计', '科幻奇幻', '复古怀旧'
-        ]);
+        console.error('获取image分类失败:', err);
+        // 错误时显示空数组而不是硬编码回退
+        setCategories([]);
       }
     };
 

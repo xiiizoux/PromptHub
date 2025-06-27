@@ -32,31 +32,32 @@ export default function ChatPromptsPage() {
   // 获取对话分类数据
   useEffect(() => {
     if (!mounted) return;
-    
+
     const abortController = new AbortController();
-    
+
     const fetchCategories = async () => {
       try {
-        const data = await getCategories();
+        // 直接从数据库获取chat类型的分类
+        const data = await getCategories('chat');
 
         if (abortController.signal.aborted) {
           return;
         }
 
         if (data && Array.isArray(data) && data.length > 0) {
-          // 过滤出对话类型的分类
-          const chatCategories = ['通用对话', '学术研究', '编程开发', '文案写作', '翻译语言'];
-          const filteredCategories = data.filter(cat => chatCategories.includes(cat));
-          setCategories(filteredCategories.length > 0 ? filteredCategories : chatCategories);
+          setCategories(data);
         } else {
-          setCategories(['通用对话', '学术研究', '编程开发', '文案写作', '翻译语言']);
+          // 如果数据库没有数据，显示空数组而不是硬编码回退
+          setCategories([]);
+          console.warn('数据库中没有chat类型的分类数据');
         }
       } catch (err) {
         if (abortController.signal.aborted) {
           return;
         }
-        console.error('获取分类失败:', err);
-        setCategories(['通用对话', '学术研究', '编程开发', '文案写作', '翻译语言']);
+        console.error('获取chat分类失败:', err);
+        // 错误时显示空数组而不是硬编码回退
+        setCategories([]);
       }
     };
 
@@ -130,17 +131,9 @@ export default function ChatPromptsPage() {
               if (prompt.category_type) {
                 return prompt.category_type === 'chat';
               }
-              // 否则根据category字段判断
-              const imageCategories = ['真实摄影', '艺术绘画', '动漫插画', '抽象艺术', 'Logo设计', '建筑空间', '时尚设计'];
-              const videoCategories = ['故事叙述', '动画特效', '产品展示', '自然风景', '人物肖像', '广告营销'];
-              
-              if (imageCategories.includes(prompt.category || '')) {
-                return false; // 不是对话类型
-              }
-              if (videoCategories.includes(prompt.category || '')) {
-                return false; // 不是对话类型
-              }
-              return true; // 默认为对话类型
+              // 否则根据category字段判断（使用新的分类名称）
+              // 这里不再使用硬编码的分类列表，而是通过API获取的分类来判断
+              return true; // 默认显示所有提示词，让服务端处理过滤
             });
             setPrompts(chatPrompts);
             setTotalPages(Math.ceil(chatPrompts.length / (filters.pageSize || 30)));

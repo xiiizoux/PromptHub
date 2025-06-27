@@ -281,27 +281,8 @@ export const getPrompts = async (filters?: PromptFilters): Promise<PaginatedResp
 
     // 4. (可选但推荐) 清理和映射每个prompt对象，确保字段符合预期
     const cleanedData = responseData.data.map((item: any) => {
-      // 临时逻辑：根据分类猜测类型 - 更新为新的分类名称
-      let guessedType = 'chat';
-      if (item.category) {
-        const imageCategories = [
-          '真实摄影', '人像摄影', '风景摄影', '产品摄影',
-          '艺术绘画', '动漫插画', '抽象艺术', '数字艺术',
-          'Logo设计', '海报设计', '时尚设计', '建筑空间',
-          '概念设计', '科幻奇幻', '复古怀旧'
-        ];
-        const videoCategories = [
-          '故事叙述', '纪录片', '教学视频', '访谈对话',
-          '产品展示', '广告营销', '企业宣传', '活动记录',
-          '动画特效', '音乐视频', '艺术短片', '自然风景'
-        ];
-        
-        if (imageCategories.includes(item.category)) {
-          guessedType = 'image';
-        } else if (videoCategories.includes(item.category)) {
-          guessedType = 'video';
-        }
-      }
+      // 使用服务端返回的category_type字段，不再使用硬编码分类判断
+      let guessedType = item.category_type || 'chat'; // 默认为chat类型
       
       return {
         id: item.id || `fallback-${Math.random()}`,

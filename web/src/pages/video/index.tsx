@@ -32,9 +32,9 @@ export default function VideoPromptsPage() {
   // 获取视频分类数据
   useEffect(() => {
     if (!mounted) return;
-    
+
     const abortController = new AbortController();
-    
+
     const fetchCategories = async () => {
       try {
         // 直接从数据库获取视频类型的分类
@@ -47,24 +47,17 @@ export default function VideoPromptsPage() {
         if (data && Array.isArray(data) && data.length > 0) {
           setCategories(data);
         } else {
-          // 如果数据库没有数据，使用默认分类
-          setCategories([
-            '故事叙述', '纪录片', '教学视频', '访谈对话',
-            '产品展示', '广告营销', '企业宣传', '活动记录',
-            '动画特效', '音乐视频', '艺术短片', '自然风景'
-          ]);
+          // 如果数据库没有数据，显示空数组而不是硬编码回退
+          setCategories([]);
+          console.warn('数据库中没有video类型的分类数据');
         }
       } catch (err) {
         if (abortController.signal.aborted) {
           return;
         }
-        console.error('获取视频分类失败:', err);
-        // 错误时使用默认分类
-        setCategories([
-          '故事叙述', '纪录片', '教学视频', '访谈对话',
-          '产品展示', '广告营销', '企业宣传', '活动记录',
-          '动画特效', '音乐视频', '艺术短片', '自然风景'
-        ]);
+        console.error('获取video分类失败:', err);
+        // 错误时显示空数组而不是硬编码回退
+        setCategories([]);
       }
     };
 
