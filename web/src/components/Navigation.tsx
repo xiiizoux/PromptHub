@@ -5,11 +5,17 @@ import {
   HomeIcon,
   BookmarkIcon,
   Squares2X2Icon,
+  ChatBubbleLeftRightIcon,
+  PhotoIcon,
+  FilmIcon,
 } from '@heroicons/react/24/outline';
 import {
   HomeIcon as HomeSolidIcon,
   BookmarkIcon as BookmarkSolidIcon,
   Squares2X2Icon as Squares2X2SolidIcon,
+  ChatBubbleLeftRightIcon as ChatBubbleLeftRightSolidIcon,
+  PhotoIcon as PhotoSolidIcon,
+  FilmIcon as FilmSolidIcon,
 } from '@heroicons/react/24/solid';
 
 const Navigation: React.FC = () => {
@@ -23,10 +29,22 @@ const Navigation: React.FC = () => {
       activeIcon: HomeSolidIcon,
     },
     {
-      href: '/prompts',
-      label: '提示词',
-      icon: Squares2X2Icon,
-      activeIcon: Squares2X2SolidIcon,
+      href: '/chat',
+      label: '对话',
+      icon: ChatBubbleLeftRightIcon,
+      activeIcon: ChatBubbleLeftRightSolidIcon,
+    },
+    {
+      href: '/image',
+      label: '图像',
+      icon: PhotoIcon,
+      activeIcon: PhotoSolidIcon,
+    },
+    {
+      href: '/video',
+      label: '视频',
+      icon: FilmIcon,
+      activeIcon: FilmSolidIcon,
     },
     {
       href: '/bookmarks',
@@ -40,7 +58,9 @@ const Navigation: React.FC = () => {
     <nav className="fixed bottom-0 left-0 right-0 bg-gray-900/90 backdrop-blur-md border-t border-gray-800 z-50 md:hidden">
       <div className="flex items-center justify-around py-2">
         {navItems.map((item) => {
-          const isActive = router.pathname === item.href;
+          const isActive = item.href === '/' 
+            ? router.pathname === item.href 
+            : router.pathname.startsWith(item.href);
           const Icon = isActive ? item.activeIcon : item.icon;
           
           return (

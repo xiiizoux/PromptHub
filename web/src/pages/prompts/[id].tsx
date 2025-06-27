@@ -43,6 +43,10 @@ import {
   MusicalNoteIcon,
   HeartIcon as HealthIcon,
   CpuChipIcon,
+  PhotoIcon,
+  FilmIcon,
+  ChatBubbleLeftRightIcon,
+  CogIcon,
 } from '@heroicons/react/24/outline';
 import { StarIcon as SolidStarIcon } from '@heroicons/react/24/solid';
 
@@ -284,49 +288,66 @@ export default function PromptDetailsPage() {
     });
   };
 
+  // 获取类型图标和样式
+  const getTypeInfo = (categoryType?: string) => {
+    const typeMap: Record<string, { color: string; icon: any; name: string }> = {
+      'chat': { color: 'from-neon-blue to-neon-cyan', icon: ChatBubbleLeftRightIcon, name: '对话' },
+      'image': { color: 'from-neon-pink to-neon-purple', icon: PhotoIcon, name: '图像' },
+      'video': { color: 'from-neon-red to-neon-orange', icon: FilmIcon, name: '视频' }
+    };
+    
+    return typeMap[categoryType || 'chat'] || typeMap['chat'];
+  };
+
   // 获取分类样式和图标
   const getCategoryInfo = (category?: string) => {
     // 分类映射表 - 支持完整的21个分类
     const categoryMap: Record<string, { color: string; icon: any }> = {
-      // 基础分类
-      '通用': { color: 'from-neon-purple to-neon-blue', icon: SparklesIcon },
+      // 对话类分类
+      '通用对话': { color: 'from-neon-blue to-neon-cyan', icon: ChatBubbleLeftRightIcon },
+      '学术研究': { color: 'from-neon-cyan to-neon-blue', icon: AcademicCapIcon },
+      '编程开发': { color: 'from-neon-green to-neon-cyan', icon: CodeBracketIcon },
+      '文案写作': { color: 'from-neon-pink to-neon-yellow', icon: PencilIcon },
+      '翻译语言': { color: 'from-neon-purple to-neon-pink', icon: LanguageIcon },
       
-      // 专业和学术
+      // 图像生成分类
+      '真实摄影': { color: 'from-neon-pink to-neon-red', icon: PhotoIcon },
+      '艺术绘画': { color: 'from-neon-purple to-neon-pink', icon: PaintBrushIcon },
+      '动漫插画': { color: 'from-neon-pink to-neon-yellow', icon: SparklesIcon },
+      '抽象艺术': { color: 'from-neon-yellow to-neon-orange', icon: SwatchIcon },
+      'Logo设计': { color: 'from-neon-cyan to-neon-purple', icon: SwatchIcon },
+      '建筑空间': { color: 'from-neon-blue to-neon-green', icon: HomeIcon },
+      '时尚设计': { color: 'from-neon-pink to-neon-purple', icon: SparklesIcon },
+      
+      // 视频生成分类
+      '故事叙述': { color: 'from-neon-orange to-neon-red', icon: BookOpenIcon },
+      '动画特效': { color: 'from-neon-red to-neon-pink', icon: FilmIcon },
+      '产品展示': { color: 'from-neon-yellow to-neon-green', icon: BriefcaseIcon },
+      '自然风景': { color: 'from-neon-green to-neon-blue', icon: SparklesIcon },
+      '人物肖像': { color: 'from-neon-pink to-neon-purple', icon: UserIcon },
+      '广告营销': { color: 'from-neon-red to-neon-orange', icon: ChartBarIcon },
+      
+      // 兼容旧分类名称
+      '通用': { color: 'from-neon-purple to-neon-blue', icon: SparklesIcon },
       '学术': { color: 'from-neon-blue to-neon-cyan', icon: AcademicCapIcon },
       '职业': { color: 'from-neon-green to-neon-yellow', icon: BriefcaseIcon },
-      
-      // 创作和内容
       '文案': { color: 'from-neon-pink to-neon-yellow', icon: PencilIcon },
       '设计': { color: 'from-neon-yellow to-neon-orange', icon: SwatchIcon },
       '绘画': { color: 'from-neon-orange to-neon-red', icon: PaintBrushIcon },
-      
-      // 教育和情感
       '教育': { color: 'from-neon-green to-neon-cyan', icon: BookOpenIcon },
       '情感': { color: 'from-neon-pink to-neon-purple', icon: HeartIcon },
-      
-      // 娱乐和游戏
       '娱乐': { color: 'from-neon-yellow to-neon-green', icon: SparklesIcon },
       '游戏': { color: 'from-neon-purple to-neon-pink', icon: PuzzlePieceIcon },
-      
-      // 生活和商业
       '生活': { color: 'from-neon-green to-neon-blue', icon: HomeIcon },
       '商业': { color: 'from-neon-red to-neon-orange', icon: ChartBarIcon },
       '办公': { color: 'from-neon-blue to-neon-purple', icon: FolderIcon },
-      
-      // 技术分类
       '编程': { color: 'from-neon-cyan to-neon-cyan-dark', icon: CodeBracketIcon },
       '翻译': { color: 'from-neon-blue to-neon-cyan', icon: LanguageIcon },
-      
-      // 多媒体
       '视频': { color: 'from-neon-red to-neon-pink', icon: VideoCameraIcon },
       '播客': { color: 'from-neon-orange to-neon-yellow', icon: MicrophoneIcon },
       '音乐': { color: 'from-neon-purple to-neon-blue', icon: MusicalNoteIcon },
-      
-      // 专业领域
       '健康': { color: 'from-neon-green to-neon-cyan', icon: HealthIcon },
       '科技': { color: 'from-neon-cyan to-neon-blue', icon: CpuChipIcon },
-      
-      // 兼容旧分类名称
       '代码': { color: 'from-neon-cyan to-neon-cyan-dark', icon: CodeBracketIcon },
       '创意写作': { color: 'from-neon-pink to-neon-yellow', icon: DocumentTextIcon },
       '写作': { color: 'from-neon-pink to-neon-yellow', icon: DocumentTextIcon },
@@ -340,7 +361,7 @@ export default function PromptDetailsPage() {
     };
     
     return {
-      name: category || '通用',
+      name: category || '通用对话',
       ...info,
     };
   };
@@ -446,7 +467,9 @@ export default function PromptDetailsPage() {
   };
 
   const categoryInfo = getCategoryInfo(prompt.category);
+  const typeInfo = getTypeInfo(prompt.category_type);
   const CategoryIcon = categoryInfo.icon;
+  const TypeIcon = typeInfo.icon;
 
   // 获取模型显示信息
   const getModelDisplayInfo = (modelId: string) => {
@@ -505,15 +528,19 @@ export default function PromptDetailsPage() {
               <div className="flex justify-between items-start mb-6">
                 <div className="flex-1">
                   <div className="flex items-center mb-4">
-                    <div className={`inline-flex p-3 rounded-xl bg-gradient-to-br ${categoryInfo.color} mr-4`}>
-                      <CategoryIcon className="h-6 w-6 text-dark-bg-primary" />
+                    <div className={`inline-flex p-3 rounded-xl bg-gradient-to-br ${typeInfo.color} mr-4`}>
+                      <TypeIcon className="h-6 w-6 text-dark-bg-primary" />
                     </div>
                     <div>
                       <h1 className="text-3xl md:text-4xl font-bold text-white gradient-text">
                         {prompt.name}
                       </h1>
                       <div className="flex items-center mt-2 space-x-4">
-                        <span className="text-sm text-gray-400">{categoryInfo.name}</span>
+                        <div className="flex items-center space-x-2">
+                          <span className="text-sm text-gray-400">{typeInfo.name}</span>
+                          <span className="text-gray-600">•</span>
+                          <span className="text-sm text-gray-400">{categoryInfo.name}</span>
+                        </div>
                         {prompt.usageCount && prompt.usageCount > 100 && (
                           <div className="flex items-center space-x-1 px-2 py-1 rounded-full bg-neon-red/20 border border-neon-red/30">
                             <FireIcon className="h-3 w-3 text-neon-red" />
@@ -604,12 +631,59 @@ export default function PromptDetailsPage() {
               </div>
             </motion.div>
             
+            {/* 预览资源（仅图像和视频类型） */}
+            {(prompt.category_type === 'image' || prompt.category_type === 'video') && prompt.preview_asset_url && (
+              <motion.div 
+                className="glass rounded-xl p-8 border border-neon-cyan/20 mb-8"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, delay: 0.1 }}
+              >
+                <div className="flex justify-between items-center mb-6">
+                  <h2 className="text-2xl font-bold text-white flex items-center">
+                    {prompt.category_type === 'image' ? (
+                      <PhotoIcon className="h-6 w-6 mr-3 text-neon-pink" />
+                    ) : (
+                      <FilmIcon className="h-6 w-6 mr-3 text-neon-red" />
+                    )}
+                    {prompt.category_type === 'image' ? '预览图像' : '预览视频'}
+                  </h2>
+                </div>
+                
+                <div className="relative">
+                  <div className="glass rounded-xl p-6 border border-gray-600 bg-black/20">
+                    {prompt.category_type === 'image' ? (
+                      <img 
+                        src={prompt.preview_asset_url} 
+                        alt={prompt.name}
+                        className="w-full h-auto max-h-96 object-contain rounded-lg"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).style.display = 'none';
+                        }}
+                      />
+                    ) : (
+                      <video 
+                        src={prompt.preview_asset_url} 
+                        controls
+                        className="w-full h-auto max-h-96 rounded-lg"
+                        onError={(e) => {
+                          (e.target as HTMLVideoElement).style.display = 'none';
+                        }}
+                      >
+                        您的浏览器不支持视频播放
+                      </video>
+                    )}
+                  </div>
+                </div>
+              </motion.div>
+            )}
+
             {/* 提示词内容 */}
             <motion.div 
               className="glass rounded-xl p-8 border border-neon-cyan/20 mb-8"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, delay: 0.1 }}
+              transition={{ duration: 0.4, delay: 0.15 }}
             >
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-2xl font-bold text-white flex items-center">
@@ -656,11 +730,41 @@ export default function PromptDetailsPage() {
               </div>
             </motion.div>
 
+            {/* 生成参数（仅图像和视频类型） */}
+            {(prompt.category_type === 'image' || prompt.category_type === 'video') && prompt.parameters && Object.keys(prompt.parameters).length > 0 && (
+              <motion.div 
+                className="glass rounded-xl p-8 border border-neon-cyan/20 mb-8"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, delay: 0.2 }}
+              >
+                <div className="flex justify-between items-center mb-6">
+                  <h2 className="text-2xl font-bold text-white flex items-center">
+                    <CogIcon className="h-6 w-6 mr-3 text-neon-yellow" />
+                    生成参数
+                  </h2>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {Object.entries(prompt.parameters).map(([key, value]) => (
+                    <div key={key} className="glass rounded-lg p-4 border border-neon-yellow/20">
+                      <div className="text-sm font-medium text-neon-yellow mb-1">
+                        {key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                      </div>
+                      <div className="text-sm text-gray-300">
+                        {typeof value === 'object' ? JSON.stringify(value) : String(value)}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+
             {/* 社交互动组件 */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, delay: 0.25 }}
+              transition={{ duration: 0.4, delay: 0.3 }}
             >
               <PromptInteractions promptId={prompt.id} />
             </motion.div>
@@ -669,7 +773,7 @@ export default function PromptDetailsPage() {
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, delay: 0.3 }}
+              transition={{ duration: 0.4, delay: 0.35 }}
             >
               <RatingSystem promptId={prompt.id} className="mb-8" />
             </motion.div>
@@ -683,17 +787,40 @@ export default function PromptDetailsPage() {
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.4, delay: 0.2 }}
             >
-              <h3 className="text-lg font-semibold text-white mb-6">变量设置</h3>
+              <h3 className="text-lg font-semibold text-white mb-6">
+                {prompt.category_type === 'chat' ? '变量设置' : '提示词信息'}
+              </h3>
               
               <div className="space-y-6">
-                {/* 输入变量 */}
+                {/* 类型信息 */}
                 <div>
-                  <h4 className="text-sm font-medium text-gray-300 mb-4 flex items-center">
-                    <TagIcon className="h-4 w-4 mr-2 text-neon-pink" />
-                    输入变量
+                  <h4 className="text-sm font-medium text-gray-300 mb-3 flex items-center">
+                    <TypeIcon className="h-4 w-4 mr-2 text-neon-cyan" />
+                    类型信息
                   </h4>
-                  {renderVariableInputs()}
+                  <div className="p-3 rounded-lg glass border border-neon-cyan/30">
+                    <div className="flex items-center space-x-2 mb-2">
+                      <div className={`inline-flex p-2 rounded-lg bg-gradient-to-br ${typeInfo.color}`}>
+                        <TypeIcon className="h-4 w-4 text-dark-bg-primary" />
+                      </div>
+                      <div>
+                        <div className="text-sm font-medium text-white">{typeInfo.name}生成</div>
+                        <div className="text-xs text-gray-400">{categoryInfo.name}</div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
+
+                {/* 输入变量（仅对话类型显示） */}
+                {prompt.category_type === 'chat' && (
+                  <div>
+                    <h4 className="text-sm font-medium text-gray-300 mb-4 flex items-center">
+                      <TagIcon className="h-4 w-4 mr-2 text-neon-pink" />
+                      输入变量
+                    </h4>
+                    {renderVariableInputs()}
+                  </div>
+                )}
                 
                 {/* 兼容模型 */}
                 <div className="pt-4 border-t border-neon-cyan/20">

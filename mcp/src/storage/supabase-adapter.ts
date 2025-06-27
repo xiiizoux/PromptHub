@@ -294,6 +294,133 @@ export class SupabaseAdapter implements StorageAdapter {
     this.setCachedResult(cacheKey, categories);
     return categories;
   }
+
+  /**
+   * 获取完整的分类信息（包含类型）
+   * @returns 分类完整信息列表
+   */
+  async getCategoriesWithType(): Promise<import('../types.js').Category[]> {
+    const cacheKey = 'categories_with_type';
+
+    // 检查缓存
+    const cached = this.getCachedResult<import('../types.js').Category[]>(cacheKey);
+    if (cached) {
+      return cached;
+    }
+
+    // 从categories表获取完整分类信息
+    const categoryResult = await this.executeWithRetry(
+      async () => await this.supabase
+        .from('categories')
+        .select('*')
+        .eq('is_active', true)
+        .order('type, sort_order'),
+      'getCategoriesWithType'
+    );
+
+    if (!categoryResult) {
+      throw new Error('获取分类失败：数据库查询返回空结果');
+    }
+
+    const categories = categoryResult as import('../types.js').Category[];
+
+    // 缓存结果
+    this.setCachedResult(cacheKey, categories);
+    return categories;
+  }
+
+  /**
+   * 按类型获取分类
+   * @param type 分类类型
+   * @returns 指定类型的分类列表
+   */
+  async getCategoriesByType(type: import('../types.js').CategoryType): Promise<import('../types.js').Category[]> {
+    const cacheKey = `categories_by_type_${type}`;
+
+    // 检查缓存
+    const cached = this.getCachedResult<import('../types.js').Category[]>(cacheKey);
+    if (cached) {
+      return cached;
+    }
+
+    // 从categories表获取指定类型的分类
+    const categoryResult = await this.executeWithRetry(
+      async () => await this.supabase
+        .from('categories')
+        .select('*')
+        .eq('is_active', true)
+        .eq('type', type)
+        .order('sort_order'),
+      'getCategoriesByType'
+    );
+
+    if (!categoryResult) {
+      throw new Error('获取分类失败：数据库查询返回空结果');
+    }
+
+    const categories = categoryResult as import('../types.js').Category[];
+
+    // 缓存结果
+    this.setCachedResult(cacheKey, categories);
+    return categories;
+  }
+
+  /**
+   * 按类型获取提示词
+   * @param type 分类类型
+   * @param userId 用户ID
+   * @param includePublic 是否包含公开提示词
+   * @param limit 限制数量
+   * @returns 指定类型的提示词列表
+   */
+  async getPromptsByType(
+    type: import('../types.js').CategoryType, 
+    userId?: string, 
+    includePublic: boolean = true, 
+    limit: number = 50
+  ): Promise<Prompt[]> {
+    const cacheKey = `prompts_by_type_${type}_${userId || 'anonymous'}_${includePublic}_${limit}`;
+
+    // 检查缓存
+    const cached = this.getCachedResult<Prompt[]>(cacheKey);
+    if (cached) {
+      return cached;
+    }
+
+    try {
+      // 构建查询，使用视图获取带类型信息的提示词
+      let query = this.supabase
+        .from('prompts_with_category_type')
+        .select('*')
+        .eq('category_type', type)
+        .limit(limit)
+        .order('created_at', { ascending: false });
+
+      // 添加权限过滤
+      if (userId && includePublic) {
+        query = query.or(`user_id.eq.${userId},is_public.eq.true`);
+      } else if (userId) {
+        query = query.eq('user_id', userId);
+      } else if (includePublic) {
+        query = query.eq('is_public', true);
+      }
+
+      const { data, error } = await query;
+
+      if (error) {
+        throw new Error(`按类型获取提示词失败: ${error.message}`);
+      }
+
+      const prompts = (data || []) as Prompt[];
+
+      // 缓存结果
+      this.setCachedResult(cacheKey, prompts, this.CACHE_TTL / 2); // 较短的缓存时间
+      return prompts;
+    } catch (err) {
+      console.error('按类型获取提示词时出错:', err);
+      throw err;
+    }
+  }
   
   /**
    * 获取所有标签
@@ -403,6 +530,7 @@ export class SupabaseAdapter implements StorageAdapter {
       // 默认过滤器设置
       const {
         category,
+        category_type,
         tags,
         search,
         isPublic,
@@ -412,12 +540,18 @@ export class SupabaseAdapter implements StorageAdapter {
         sortBy = 'latest'
       } = filters || {};
 
-      // 构建基本查询
-      let query = this.supabase.from('prompts').select('*', { count: 'exact' });
+      // 根据是否需要分类类型信息选择查询源
+      const fromTable = category_type ? 'prompts_with_category_type' : 'prompts';
+      let query = this.supabase.from(fromTable).select('*', { count: 'exact' });
 
       // 应用筛选条件
       if (category && category !== '全部') {
         query = query.eq('category', category);
+      }
+
+      // 新增：按分类类型筛选
+      if (category_type) {
+        query = query.eq('category_type', category_type);
       }
 
       if (tags && tags.length > 0) {
@@ -621,7 +755,11 @@ export class SupabaseAdapter implements StorageAdapter {
           is_public: prompt.is_public !== undefined ? prompt.is_public : true, // 默认公开，便于分享和发现
           allow_collaboration: prompt.allow_collaboration !== undefined ? prompt.allow_collaboration : false, // 默认不允许协作编辑，保护创建者权益
           edit_permission: prompt.edit_permission || 'owner_only', // 默认仅创建者可编辑
-          user_id: finalUserId
+          user_id: finalUserId,
+          // 新增媒体相关字段
+          preview_asset_url: prompt.preview_asset_url || null,
+          parameters: prompt.parameters || {},
+          category_id: prompt.category_id || null
         };
         
         console.log('[SupabaseAdapter] 验证用户是否存在于数据库中');
@@ -735,7 +873,11 @@ export class SupabaseAdapter implements StorageAdapter {
         description: prompt.description || existingPrompt.description,
         category: prompt.category || existingPrompt.category,
         tags: prompt.tags || existingPrompt.tags,
-        user_id: userId || existingPrompt.user_id
+        user_id: userId || existingPrompt.user_id,
+        // 新增媒体相关字段
+        preview_asset_url: prompt.preview_asset_url || existingPrompt.preview_asset_url,
+        parameters: prompt.parameters || existingPrompt.parameters,
+        category_id: prompt.category_id || existingPrompt.category_id
       });
       
       return updatedPrompt;
@@ -1226,7 +1368,11 @@ export class SupabaseAdapter implements StorageAdapter {
         category: promptVersion.category,
         tags: promptVersion.tags,
         user_id: userId,
-        created_at: new Date().toISOString()
+        created_at: new Date().toISOString(),
+        // 新增媒体相关字段
+        preview_asset_url: promptVersion.preview_asset_url || null,
+        parameters: promptVersion.parameters || {},
+        category_id: promptVersion.category_id || null
       };
       
       // 使用管理员客户端绕过RLS策略

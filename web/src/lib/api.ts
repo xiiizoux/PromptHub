@@ -237,6 +237,9 @@ export const getPrompts = async (filters?: PromptFilters): Promise<PaginatedResp
     if (filters?.pageSize) {
       queryParams.append('pageSize', filters.pageSize.toString());
     }
+    if (filters?.category_type) {
+      queryParams.append('category_type', filters.category_type);
+    }
 
     // 获取当前用户ID（如果有的话）
     let userId = null;
@@ -281,6 +284,7 @@ export const getPrompts = async (filters?: PromptFilters): Promise<PaginatedResp
       name: item.name || '无标题',
       description: item.description || '无描述',
       category: item.category || '通用',
+      category_type: item.category_type || 'chat',
       tags: Array.isArray(item.tags) ? item.tags : [],
       version: item.version || 1,
       created_at: item.created_at,
@@ -288,6 +292,8 @@ export const getPrompts = async (filters?: PromptFilters): Promise<PaginatedResp
       author: item.author || '匿名',
       usageCount: item.usageCount || 0,
       rating: item.rating || 0,
+      preview_asset_url: item.preview_asset_url,
+      parameters: item.parameters || {},
     }));
 
     const total = typeof responseData.total === 'number' ? responseData.total : 0;

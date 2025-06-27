@@ -6,6 +6,50 @@ export interface PromptMessage {
   };
 }
 
+// 分类类型枚举
+export type CategoryType = 'chat' | 'image' | 'video';
+
+// 分类接口
+export interface Category {
+  id: string;
+  name: string;
+  name_en?: string;
+  icon?: string;
+  description?: string;
+  type: CategoryType;
+  sort_order?: number;
+  is_active?: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
+// 媒体参数接口
+export interface MediaParameters {
+  // 通用参数
+  model?: string;
+  style?: string;
+  resolution?: string;
+  quality?: string;
+  
+  // 图像特定参数
+  aspect_ratio?: string;
+  steps?: number;
+  guidance_scale?: number;
+  seed?: number;
+  negative_prompt?: string;
+  artistic_style?: string;
+  
+  // 视频特定参数
+  duration?: number | string;
+  fps?: number;
+  motion_strength?: number;
+  camera_movement?: string;
+  background_music_url?: string;
+  
+  // 其他自定义参数
+  [key: string]: any;
+}
+
 export interface PromptVariable {
   name: string;
   description?: string;
@@ -40,6 +84,13 @@ export interface Prompt {
     output: string;
     description?: string;
   }>; // 新增：示例
+  
+  // 媒体相关字段
+  preview_asset_url?: string; // 预览资源URL（图像或视频）
+  parameters?: MediaParameters; // 生成参数（JSON格式）
+  category_id?: string; // 分类ID，关联到categories表
+  category_type?: CategoryType; // 分类类型，从关联的category获取
+  
   // 注意：去除了content字段，因为数据库中没有此字段
   // 提示词内容存储在messages字段中
 }
@@ -54,6 +105,10 @@ export interface PromptVersion {
   tags: string[];
   created_at?: string;
   user_id?: string;
+  // 媒体相关字段
+  preview_asset_url?: string;
+  parameters?: MediaParameters;
+  category_id?: string;
 }
 
 export interface User {
@@ -105,13 +160,14 @@ export interface McpRequest {
 // 提示词过滤器接口
 export interface PromptFilters {
   category?: string;
+  category_type?: CategoryType; // 新增：按分类类型筛选
   tags?: string[];
   search?: string;
   isPublic?: boolean;
   userId?: string;
   page?: number;
   pageSize?: number;
-  sortBy?: 'latest' | 'popular';
+  sortBy?: 'latest' | 'popular' | 'trending';
 }
 
 // 分页响应接口
@@ -135,12 +191,15 @@ export interface StorageAdapter {
   deletePrompt(nameOrId: string, userId?: string): Promise<boolean>;
   searchPrompts(query: string, userId?: string, includePublic?: boolean): Promise<Prompt[]>;
   
-  // 获取所有分类
-  getCategories(): Promise<string[]>;
+  // 分类管理 - 新增方法
+  getCategories(): Promise<string[]>; // 保持向后兼容
+  getCategoriesWithType(): Promise<Category[]>; // 新增：获取完整分类信息
+  getCategoriesByType(type: CategoryType): Promise<Category[]>; // 新增：按类型获取分类
   
   // 获取所有标签
   getTags(): Promise<string[]>;
   getPromptsByCategory(category: string, userId?: string, includePublic?: boolean, limit?: number): Promise<Prompt[]>;
+  getPromptsByType(type: CategoryType, userId?: string, includePublic?: boolean, limit?: number): Promise<Prompt[]>; // 新增：按类型获取提示词
   getPromptById?(idOrName: string, userId?: string): Promise<Prompt | null>;
   
   // 版本控制相关

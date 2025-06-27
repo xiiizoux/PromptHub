@@ -10,10 +10,12 @@ interface PromptFiltersProps {
     category?: string;
     tags?: string[];
     sortBy?: 'latest' | 'oldest' | 'name' | 'updated';
+    category_type?: 'chat' | 'image' | 'video';
   };
   onFilterChange: (newFilters: PromptFiltersType) => void;
   categories: string[];
   tags: string[];
+  hideTypeFilter?: boolean; // 是否隐藏类型过滤器
 }
 
 const PromptFilters: React.FC<PromptFiltersProps> = ({
@@ -21,6 +23,7 @@ const PromptFilters: React.FC<PromptFiltersProps> = ({
   onFilterChange,
   categories,
   tags,
+  hideTypeFilter = false,
 }) => {
   const [showMobileFilters, setShowMobileFilters] = useState(false);
   const [showAllTags, setShowAllTags] = useState(false);

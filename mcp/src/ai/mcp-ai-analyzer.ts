@@ -21,12 +21,47 @@ export interface MCPAIAnalysisResult {
   compatibleModels: string[];
   version: string;
   confidence: number; // 0-1之间的置信度
+  
+  // 媒体相关字段
+  category_type?: 'chat' | 'image' | 'video'; // 分类类型
+  suggested_parameters?: {
+    // 图像生成参数建议
+    style?: string;
+    aspect_ratio?: string;
+    resolution?: string;
+    quality?: string;
+    negative_prompt?: string;
+    
+    // 视频生成参数建议
+    duration?: number;
+    fps?: number;
+    motion_strength?: number;
+    camera_movement?: string;
+    
+    // 通用参数
+    model?: string;
+    [key: string]: any;
+  };
 }
 
-// 预设的20个实际分类（不包含"全部"这个UI特殊选项）
-const PRESET_CATEGORIES = [
-  '通用', '学术', '职业', '文案', '设计', '绘画', '教育', '情感', 
-  '娱乐', '游戏', '生活', '商业', '办公', '编程', '翻译', '视频', '播客', '音乐', '健康', '科技'
+// 按类型组织的分类
+const PRESET_CATEGORIES = {
+  chat: [
+    '通用对话', '学术研究', '编程开发', '文案写作', '翻译语言'
+  ],
+  image: [
+    '真实摄影', '艺术绘画', '动漫插画', '抽象艺术', 'Logo设计', '建筑空间', '时尚设计'
+  ],
+  video: [
+    '故事叙述', '动画特效', '产品展示', '自然风景', '人物肖像', '广告营销'
+  ]
+};
+
+// 向后兼容的平面分类列表
+const FLAT_CATEGORIES = [
+  ...PRESET_CATEGORIES.chat,
+  ...PRESET_CATEGORIES.image,
+  ...PRESET_CATEGORIES.video
 ];
 
 // 预设的兼容模型
@@ -169,49 +204,126 @@ export class MCPAIAnalyzer {
    * 构建分析系统提示词
    */
   private buildAnalysisSystemPrompt(): string {
-    return `你是一个专业的AI提示词分析专家。请根据提供的提示词内容，生成合适的分类、标签、标题、描述等分析结果。
+    return `你是一个专业的AI提示词分析专家，专门分析对话、图像生成和视频生成三种类型的提示词。请根据提供的提示词内容，生成合适的分类、标签、标题、描述等分析结果。
 
 ## 分析任务
 
-请根据提供的提示词内容，理解其核心功能和用途，然后生成以下分析结果：
+请根据提供的提示词内容，首先识别其类型（对话/图像生成/视频生成），然后生成对应的分析结果：
 
-### 1. 分类（category）
-请根据提示词的主要功能和用途，从以下分类中选择最合适的一个：
-通用、学术、职业、文案、设计、绘画、教育、情感、娱乐、游戏、生活、商业、办公、编程、翻译、视频、播客、音乐、健康、科技
+### 1. 类型识别（category_type）
+请根据提示词的核心用途，自动识别类型：
+- "chat"：对话类提示词，用于文本交互、问答、分析、创作等
+- "image"：图像生成提示词，用于AI图像生成工具（如DALL-E、Midjourney、Stable Diffusion等）
+- "video"：视频生成提示词，用于AI视频生成工具（如Sora、Runway、Pika等）
 
-### 2. 标签（tags）
-请提取3-8个能够准确描述提示词特征的标签，包括：
-- 功能类型（如：分析、创作、翻译、编程等）
-- 应用场景（如：办公、学习、研究等）
-- 特色功能（如：角色扮演、深度分析等）
+识别标准：
+- 包含"画"、"绘制"、"图像"、"照片"、"设计"、"风格"等关键词 → image
+- 包含"视频"、"动画"、"镜头"、"运动"、"帧"、"时长"等关键词 → video  
+- 其他情况 → chat
 
-### 3. 其他字段
+### 2. 分类（category）
+根据识别的类型，从对应分类中选择：
+
+**对话类分类（chat）：**
+通用对话、学术研究、编程开发、文案写作、翻译语言
+
+**图像生成分类（image）：**
+真实摄影、艺术绘画、动漫插画、抽象艺术、Logo设计、建筑空间、时尚设计
+
+**视频生成分类（video）：**
+故事叙述、动画特效、产品展示、自然风景、人物肖像、广告营销
+
+### 3. 参数建议（suggested_parameters）
+根据类型提供生成参数建议：
+
+**图像生成参数：**
+- style: 风格描述（如"photorealistic"、"anime"、"watercolor"）
+- aspect_ratio: 长宽比（如"16:9"、"1:1"、"9:16"）
+- resolution: 分辨率（如"1024x1024"、"1920x1080"）
+- quality: 质量等级（如"high"、"ultra"）
+- negative_prompt: 负面提示词（避免的元素）
+
+**视频生成参数：**
+- duration: 时长（秒数，如5、10、30）
+- fps: 帧率（如24、30、60）
+- motion_strength: 运动强度（1-10）
+- camera_movement: 镜头运动（如"static"、"pan"、"zoom"、"dolly"）
+
+### 4. 标签（tags）
+请提取3-8个准确描述提示词特征的标签：
+- 功能类型
+- 应用场景
+- 风格特征（图像/视频）
+- 技术特点
+
+### 5. 其他字段
 - 难度级别（difficulty）：beginner/intermediate/advanced
 - 变量提取（variables）：找出所有{{变量名}}格式的变量
 - 预估token数（estimatedTokens）：预估处理所需token数量
 - 置信度（confidence）：分析结果的置信度（0-1）
-- 建议标题（suggestedTitle）：请根据提示词的核心价值生成一个准确、吸引人的标题（10-25字）
-- 建议描述（description）：请概括提示词的核心能力和价值（60-150字），说明它能帮助用户解决什么问题
-- 使用场景（useCases）：请列出3-5个典型的应用场景
-- 改进建议（improvements）：请提供3-5个具体的优化建议，帮助提升提示词的效果
-
-## 分析要求
-- 请仔细理解提示词的实际功能，而不是被表面词汇误导
-- 如果提示词中的某些词汇是比喻性使用，请根据实际功能进行分类
-- 请用中文回复，返回有效的JSON格式
+- 建议标题（suggestedTitle）：根据类型和功能生成标题（10-25字）
+- 建议描述（description）：概括核心能力和价值（60-150字）
+- 使用场景（useCases）：列出3-5个典型应用场景
+- 改进建议（improvements）：提供3-5个具体优化建议
 
 ## 返回格式示例
+
+**对话类提示词：**
 {
-  "category": "学术",
-  "tags": ["模式识别", "系统思维", "角色扮演", "分析", "洞察"],
-  "difficulty": "advanced",
+  "category_type": "chat",
+  "category": "学术研究",
+  "tags": ["数据分析", "学术写作", "研究方法", "统计分析"],
+  "difficulty": "intermediate",
+  "variables": ["数据类型", "分析目标"],
+  "estimatedTokens": 250,
+  "confidence": 0.88,
+  "suggestedTitle": "学术数据分析助手",
+  "description": "专业的学术研究数据分析助手，帮助研究人员进行数据处理、统计分析和结果解释，提供科学严谨的分析报告。",
+  "useCases": ["学术论文数据分析", "实验结果统计", "调研数据处理"],
+  "improvements": ["增加具体统计方法指导", "添加可视化建议"]
+}
+
+**图像生成提示词：**
+{
+  "category_type": "image",
+  "category": "真实摄影",
+  "tags": ["人像摄影", "自然光", "高品质", "专业摄影"],
+  "suggested_parameters": {
+    "style": "photorealistic",
+    "aspect_ratio": "16:9",
+    "resolution": "1920x1080",
+    "quality": "ultra",
+    "negative_prompt": "blurry, low quality, distorted"
+  },
+  "difficulty": "beginner",
   "variables": [],
-  "estimatedTokens": 300,
+  "estimatedTokens": 150,
   "confidence": 0.92,
-  "suggestedTitle": "跨域模式识别思维专家",
-  "description": "具有深度洞察能力的AI角色，专门用于发现复杂系统中的隐藏模式和规律。通过独特的觉察视角，帮助用户在看似无关的事物间建立联系，从而获得更高层次的系统性理解。",
-  "useCases": ["复杂问题分析", "系统性思维训练", "创新思维启发", "跨领域研究", "战略规划"],
-  "improvements": ["可以增加具体应用示例", "建议明确输出格式", "添加互动引导机制"]
+  "suggestedTitle": "专业人像摄影风格",
+  "description": "生成高质量的专业人像照片，适用于商务头像、艺术人像等场景，呈现自然真实的摄影效果。",
+  "useCases": ["商务头像", "社交媒体头像", "艺术人像创作"],
+  "improvements": ["添加具体光线描述", "指定背景细节"]
+}
+
+**视频生成提示词：**
+{
+  "category_type": "video",
+  "category": "自然风景",
+  "tags": ["风景视频", "延时摄影", "自然美景", "治愈系"],
+  "suggested_parameters": {
+    "duration": 10,
+    "fps": 30,
+    "motion_strength": 3,
+    "camera_movement": "slow_pan"
+  },
+  "difficulty": "intermediate",
+  "variables": ["场景类型", "时间段"],
+  "estimatedTokens": 180,
+  "confidence": 0.85,
+  "suggestedTitle": "自然风景延时视频",
+  "description": "生成唯美的自然风景延时视频，展现大自然的动态美感，适用于背景视频、放松内容等。",
+  "useCases": ["网站背景视频", "冥想放松内容", "社交媒体分享"],
+  "improvements": ["指定具体季节", "添加音效建议", "明确拍摄角度"]
 }`;
   }
 
@@ -257,7 +369,7 @@ ${content}
     
     // 确保所有必需字段存在
     const validated: MCPAIAnalysisResult = {
-      category: result.category || '通用',
+      category: result.category || '通用对话',
       tags: Array.isArray(result.tags) ? result.tags.slice(0, 8) : ['AI', '提示词'],
       difficulty: ['beginner', 'intermediate', 'advanced'].includes(result.difficulty) 
         ? result.difficulty : 'intermediate',
@@ -271,7 +383,13 @@ ${content}
       confidence: typeof result.confidence === 'number' 
         ? Math.max(0, Math.min(1, result.confidence)) : 0.8,
       suggestedTitle: result.suggestedTitle || '',
-      description: result.description || ''
+      description: result.description || '',
+      
+      // 新增媒体相关字段验证
+      category_type: ['chat', 'image', 'video'].includes(result.category_type) 
+        ? result.category_type : this.detectCategoryType(originalContent),
+      suggested_parameters: result.suggested_parameters && typeof result.suggested_parameters === 'object'
+        ? result.suggested_parameters : this.generateDefaultParameters(result.category_type || 'chat')
     };
 
     return validated;
@@ -621,7 +739,7 @@ ${PRESET_CATEGORIES.join('、')}
       );
 
       const category = response.data.choices[0].message.content.trim();
-      return PRESET_CATEGORIES.includes(category) ? category : '通用';
+      return FLAT_CATEGORIES.includes(category) ? category : '通用对话';
     } catch (error) {
       console.error('[MCP AI] 分类失败:', error);
       
@@ -635,6 +753,67 @@ ${PRESET_CATEGORIES.join('、')}
       } else {
         throw new Error(`AI分类失败: ${error.message || '未知错误'}，请重试`);
       }
+    }
+  }
+
+  /**
+   * 检测提示词的类型（对话/图像/视频）
+   */
+  private detectCategoryType(content: string): 'chat' | 'image' | 'video' {
+    const lowerContent = content.toLowerCase();
+    
+    // 图像生成关键词
+    const imageKeywords = [
+      '画', '绘制', '绘画', '图像', '图片', '照片', '摄影', '设计', '风格', 
+      'style', 'draw', 'paint', 'image', 'photo', 'picture', 'art', 'design',
+      '渲染', '像素', '分辨率', '色彩', '构图', '光影', '质感'
+    ];
+    
+    // 视频生成关键词
+    const videoKeywords = [
+      '视频', '动画', '镜头', '运动', '帧', '时长', '播放', '拍摄', '剪辑',
+      'video', 'animation', 'motion', 'camera', 'frame', 'fps', 'duration',
+      '场景', '转场', '特效', '慢镜头', '快进', '回放'
+    ];
+    
+    // 检查图像关键词
+    const hasImageKeywords = imageKeywords.some(keyword => lowerContent.includes(keyword));
+    // 检查视频关键词
+    const hasVideoKeywords = videoKeywords.some(keyword => lowerContent.includes(keyword));
+    
+    if (hasVideoKeywords) {
+      return 'video';
+    } else if (hasImageKeywords) {
+      return 'image';
+    } else {
+      return 'chat';
+    }
+  }
+
+  /**
+   * 根据类型生成默认参数
+   */
+  private generateDefaultParameters(categoryType: 'chat' | 'image' | 'video'): any {
+    switch (categoryType) {
+      case 'image':
+        return {
+          style: 'photorealistic',
+          aspect_ratio: '1:1',
+          resolution: '1024x1024',
+          quality: 'high'
+        };
+      
+      case 'video':
+        return {
+          duration: 10,
+          fps: 30,
+          motion_strength: 5,
+          camera_movement: 'static'
+        };
+      
+      case 'chat':
+      default:
+        return {};
     }
   }
 }

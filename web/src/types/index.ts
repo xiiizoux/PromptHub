@@ -8,6 +8,7 @@ export interface PromptInfo {
   name: string;
   description: string;
   category?: string;
+  category_type?: 'chat' | 'image' | 'video'; // 分类类型
   tags?: string[];
   version?: number;  // 改为数字类型以匹配数据库结构
   created_at?: string;
@@ -17,6 +18,8 @@ export interface PromptInfo {
   rating?: number;
   average_rating?: number;               // 添加平均评分字段
   rating_count?: number;                 // 添加评分数量字段
+  preview_asset_url?: string;            // 预览资源URL
+  parameters?: Record<string, any>;      // 生成参数
 }
 
 // 提示词详情
@@ -37,6 +40,11 @@ export interface PromptDetails extends PromptInfo {
   created_by?: string;                    // 创建者ID
   last_modified_by?: string;              // 最后修改者ID
   category_id?: string;                   // 分类 ID，对应数据库中的category_id字段
+  
+  // 媒体相关字段
+  category_type?: 'chat' | 'image' | 'video'; // 分类类型
+  preview_asset_url?: string;             // 预览资源URL（图像或视频）
+  parameters?: Record<string, any>;       // 生成参数（JSON格式）
 }
 
 // 提示词示例
@@ -115,6 +123,7 @@ export interface PromptFilters {
   model?: string;
   page?: number;
   pageSize?: number;
+  category_type?: 'chat' | 'image' | 'video'; // 添加类型过滤
 }
 
 /**

@@ -14,6 +14,9 @@ import {
   UserIcon,
   KeyIcon,
   RectangleStackIcon,
+  ChatBubbleLeftRightIcon,
+  PhotoIcon,
+  FilmIcon,
 } from '@heroicons/react/24/outline';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'react-hot-toast';
@@ -21,7 +24,9 @@ import clsx from 'clsx';
 
 const navigation = [
   { name: '首页', href: '/', icon: HomeIcon },
-  { name: '浏览提示词', href: '/prompts', icon: RectangleStackIcon },
+  { name: '对话提示词', href: '/chat', icon: ChatBubbleLeftRightIcon },
+  { name: '图像提示词', href: '/image', icon: PhotoIcon },
+  { name: '视频提示词', href: '/video', icon: FilmIcon },
   { name: '创建提示词', href: '/create', icon: PlusCircleIcon },
   { name: 'AI优化器', href: '/optimizer', icon: SparklesIcon },
   { name: '文档', href: '/docs', icon: DocumentTextIcon },

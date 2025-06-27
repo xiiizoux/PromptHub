@@ -33,11 +33,16 @@ import SmartWritingAssistant from '@/components/SmartWritingAssistant';
 import { toast } from 'react-hot-toast';
 
 
-// 扩展类型，添加messages字段和其他数据库中的字段
+// 扩展类型，添加媒体相关字段
 type PromptFormData = Omit<PromptDetails, 'created_at' | 'updated_at'> & {
   messages?: Array<{role: string; content: string}>; // 添加messages字段
   allow_collaboration?: boolean;  // 添加allow_collaboration字段
   edit_permission?: 'owner_only' | 'collaborators' | 'public'; // 添加edit_permission字段
+  // 媒体相关字段
+  category_type?: 'chat' | 'image' | 'video'; // 分类类型
+  preview_asset_url?: string; // 预览资源URL
+  parameters?: Record<string, any>; // 生成参数
+  category_id?: string; // 分类ID
 };
 
 function CreatePromptPage() {
@@ -55,6 +60,19 @@ function CreatePromptPage() {
   // 数据加载状态
   const [categoriesLoading, setCategoriesLoading] = useState(false);
   const [tagsLoading, setTagsLoading] = useState(false);
+
+  // 媒体相关状态
+  const [categoryType, setCategoryType] = useState<'chat' | 'image' | 'video'>('chat');
+  const [categoriesByType, setCategoriesByType] = useState<Record<string, string[]>>({
+    chat: [],
+    image: [],
+    video: []
+  });
+  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [isUploading, setIsUploading] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState<string>('');
+  const [parameters, setParameters] = useState<Record<string, any>>({});
 
   // 添加实时内容监听状态
   const [currentContent, setCurrentContent] = useState('');
@@ -74,7 +92,7 @@ function CreatePromptPage() {
       name: '',
       description: '',
       content: '',  // 会被转换为messages JSONB格式
-      category: '通用', // 与数据库默认值保持一致
+      category: '通用对话', // 与数据库默认值保持一致
       version: 1.0,  // 默认版本1.0，支持小数格式
       is_public: true, // 默认公开，便于分享和发现
       allow_collaboration: true, // 默认允许协作编辑，鼓励社区协作
@@ -83,6 +101,11 @@ function CreatePromptPage() {
       input_variables: [],
       tags: [],
       compatible_models: [],
+      // 媒体相关默认值
+      category_type: 'chat',
+      preview_asset_url: '',
+      parameters: {},
+      category_id: '',
     },
   });
 
@@ -190,6 +213,114 @@ function CreatePromptPage() {
     
     // 显示应用成功提示
     toast.success('AI分析建议已成功应用到表单中');
+  };
+
+  // 检测提示词类型
+  const detectCategoryType = (content: string): 'chat' | 'image' | 'video' => {
+    const lowerContent = content.toLowerCase();
+    
+    // 图像生成关键词
+    const imageKeywords = [
+      '画', '绘制', '绘画', '图像', '图片', '照片', '摄影', '设计', '风格', 
+      'style', 'draw', 'paint', 'image', 'photo', 'picture', 'art', 'design'
+    ];
+    
+    // 视频生成关键词
+    const videoKeywords = [
+      '视频', '动画', '镜头', '运动', '帧', '时长', '播放', '拍摄',
+      'video', 'animation', 'motion', 'camera', 'frame', 'fps', 'duration'
+    ];
+    
+    const hasImageKeywords = imageKeywords.some(keyword => lowerContent.includes(keyword));
+    const hasVideoKeywords = videoKeywords.some(keyword => lowerContent.includes(keyword));
+    
+    if (hasVideoKeywords) return 'video';
+    if (hasImageKeywords) return 'image';
+    return 'chat';
+  };
+
+  // 文件上传处理
+  const handleFileUpload = async (file: File) => {
+    setIsUploading(true);
+    setUploadProgress(0);
+    
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      
+      // 模拟上传进度
+      const progressInterval = setInterval(() => {
+        setUploadProgress(prev => Math.min(prev + 10, 90));
+      }, 200);
+      
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${user?.access_token || ''}`,
+        },
+        body: formData,
+      });
+      
+      clearInterval(progressInterval);
+      setUploadProgress(100);
+      
+      if (!response.ok) {
+        throw new Error('文件上传失败');
+      }
+      
+      const result = await response.json();
+      
+      if (result.success) {
+        setPreviewUrl(result.data.url);
+        setValue('preview_asset_url', result.data.url);
+        toast.success('文件上传成功');
+      } else {
+        throw new Error(result.error || '上传失败');
+      }
+    } catch (error) {
+      console.error('文件上传错误:', error);
+      toast.error(error instanceof Error ? error.message : '文件上传失败');
+    } finally {
+      setIsUploading(false);
+      setUploadProgress(0);
+    }
+  };
+
+  // 更新参数
+  const updateParameter = (key: string, value: any) => {
+    const newParameters = { ...parameters, [key]: value };
+    setParameters(newParameters);
+    setValue('parameters', newParameters);
+  };
+
+  // 删除参数
+  const removeParameter = (key: string) => {
+    const newParameters = { ...parameters };
+    delete newParameters[key];
+    setParameters(newParameters);
+    setValue('parameters', newParameters);
+  };
+
+  // 根据类型获取默认参数模板
+  const getDefaultParameters = (type: 'chat' | 'image' | 'video') => {
+    switch (type) {
+      case 'image':
+        return {
+          style: 'photorealistic',
+          aspect_ratio: '1:1',
+          resolution: '1024x1024',
+          quality: 'high'
+        };
+      case 'video':
+        return {
+          duration: 10,
+          fps: 30,
+          motion_strength: 5,
+          camera_movement: 'static'
+        };
+      default:
+        return {};
+    }
   };
 
   // 用户状态监听和检查
@@ -389,6 +520,29 @@ function CreatePromptPage() {
     // 实时更新内容状态以确保AI按钮能够监听到变化
     setCurrentContent(content);
     
+    // 检测提示词类型并更新相关状态
+    if (content) {
+      const detectedType = detectCategoryType(content);
+      if (detectedType !== categoryType) {
+        setCategoryType(detectedType);
+        setValue('category_type', detectedType);
+        
+        // 根据类型设置默认参数
+        const defaultParams = getDefaultParameters(detectedType);
+        setParameters(defaultParams);
+        setValue('parameters', defaultParams);
+        
+        // 更新分类选项
+        const availableCategories = categoriesByType[detectedType] || [];
+        if (availableCategories.length > 0) {
+          setValue('category', availableCategories[0]);
+        }
+        
+        // 显示类型检测提示
+        toast.success(`检测到${detectedType === 'image' ? '图像' : detectedType === 'video' ? '视频' : '对话'}生成提示词`);
+      }
+    }
+    
     if (!content || typeof content !== 'string') return;
     const regex = /\{\{([a-zA-Z0-9_]+)\}\}/g;
     const matches = content.match(regex);
@@ -490,6 +644,10 @@ function CreatePromptPage() {
         input_variables: variables.filter(Boolean), // 过滤空值
         tags: tags.filter(Boolean), // 过滤空值
         compatible_models: models.filter(Boolean), // 过滤空值
+        // 媒体相关字段
+        category_type: categoryType,
+        preview_asset_url: previewUrl || data.preview_asset_url || '',
+        parameters: parameters,
       } as const;
 
       console.log('即将创建的提示词:', promptData);
@@ -810,6 +968,61 @@ function CreatePromptPage() {
                 </div>
               </motion.div>
 
+              {/* 类型选择 */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 1.0 }}
+                className="space-y-4"
+              >
+                <label className="flex items-center text-sm font-medium text-gray-300 mb-3">
+                  <SparklesIcon className="h-5 w-5 text-neon-purple mr-2" />
+                  提示词类型 *
+                </label>
+                <div className="grid grid-cols-3 gap-4">
+                  {[
+                    { value: 'chat', label: '对话', icon: '💬', desc: '文本交互、问答、分析' },
+                    { value: 'image', label: '图像', icon: '🖼️', desc: 'AI图像生成' },
+                    { value: 'video', label: '视频', icon: '🎬', desc: 'AI视频生成' }
+                  ].map((type) => (
+                    <div
+                      key={type.value}
+                      className={`relative p-4 border-2 rounded-xl cursor-pointer transition-all duration-200 ${
+                        categoryType === type.value
+                          ? 'border-neon-cyan bg-neon-cyan/10'
+                          : 'border-gray-600 hover:border-gray-500'
+                      }`}
+                      onClick={() => {
+                        setCategoryType(type.value as any);
+                        setValue('category_type', type.value as any);
+                        
+                        // 设置默认参数
+                        const defaultParams = getDefaultParameters(type.value as any);
+                        setParameters(defaultParams);
+                        setValue('parameters', defaultParams);
+                        
+                        // 更新分类选项
+                        const availableCategories = categoriesByType[type.value] || [];
+                        if (availableCategories.length > 0) {
+                          setValue('category', availableCategories[0]);
+                        }
+                      }}
+                    >
+                      <div className="text-center">
+                        <div className="text-2xl mb-2">{type.icon}</div>
+                        <div className="font-medium text-gray-200">{type.label}</div>
+                        <div className="text-xs text-gray-400 mt-1">{type.desc}</div>
+                      </div>
+                      {categoryType === type.value && (
+                        <div className="absolute -top-1 -right-1 w-4 h-4 bg-neon-cyan rounded-full flex items-center justify-center">
+                          <div className="w-2 h-2 bg-white rounded-full"></div>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+
               {/* 分类和版本 */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
@@ -829,7 +1042,7 @@ function CreatePromptPage() {
                     autoComplete="off"
                   >
                     <option value="">选择分类</option>
-                    {categories.map((category: string) => (
+                    {(categoriesByType[categoryType] || categories).map((category: string) => (
                       <option key={category} value={category}>
                         {category}
                       </option>

@@ -32,7 +32,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
 
   try {
     // 解析查询参数
-    const { search, category, tag, sortBy, page = '1', pageSize = '21' } = req.query;
+    const { search, category, tag, sortBy, page = '1', pageSize = '21', category_type } = req.query;
     
     // 解析分页参数
     const currentPage = Math.max(1, parseInt(page as string) || 1);
@@ -50,13 +50,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         name,
         description,
         category,
+        category_type,
         tags,
         version,
         is_public,
         user_id,
         created_at,
         updated_at,
-        created_by
+        created_by,
+        preview_asset_url,
+        parameters
       `, { count: 'exact' });
 
     // 如果有用户ID，则获取该用户的所有提示词和公开提示词
@@ -82,6 +85,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     // 添加标签过滤
     if (tag && typeof tag === 'string') {
       query = query.contains('tags', [tag]);
+    }
+    
+    // 添加类型过滤
+    if (category_type && typeof category_type === 'string') {
+      query = query.eq('category_type', category_type);
     }
     
     // 添加排序
