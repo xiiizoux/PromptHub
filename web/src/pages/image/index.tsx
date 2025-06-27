@@ -295,9 +295,8 @@ export default function ImagePromptsPage() {
         categories={categories}
         tags={tags}
         hideTypeFilter={true}
-      />
-
-      <div className="relative z-10 container-custom py-12 pl-16">
+      >
+        <div className="relative z-10 container-custom py-12">
         {/* 页面标题 */}
         <motion.div 
           className="text-center mb-12"
@@ -403,7 +402,8 @@ export default function ImagePromptsPage() {
 
         {/* 分页 */}
         {!loading && !error && prompts.length > 0 && renderPagination()}
-      </div>
+        </div>
+      </SidebarFilters>
     </div>
   );
 }

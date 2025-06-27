@@ -283,9 +283,8 @@ export default function PromptsPage() {
         onFilterChange={handleFilterChange}
         categories={categories}
         tags={tags}
-      />
-
-      <div className="relative z-10 spacing-section page-bottom-padding pl-16">
+      >
+        <div className="relative z-10 spacing-section page-bottom-padding">
         <div className="container-custom">
           {/* 如果组件未挂载，显示加载状态 */}
           {!mounted ? (
@@ -459,7 +458,8 @@ export default function PromptsPage() {
             </div>
           )}
         </div>
-      </div>
+        </div>
+      </SidebarFilters>
     </div>
   );
 }

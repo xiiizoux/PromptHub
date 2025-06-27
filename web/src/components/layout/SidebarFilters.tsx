@@ -26,6 +26,7 @@ interface SidebarFiltersProps {
   categories: string[];
   tags: string[];
   hideTypeFilter?: boolean;
+  children?: React.ReactNode;
 }
 
 const SidebarFilters: React.FC<SidebarFiltersProps> = ({
@@ -34,6 +35,7 @@ const SidebarFilters: React.FC<SidebarFiltersProps> = ({
   categories,
   tags,
   hideTypeFilter = false,
+  children,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [showAllTags, setShowAllTags] = useState(false);
@@ -187,9 +189,7 @@ const SidebarFilters: React.FC<SidebarFiltersProps> = ({
       onClick={toggleSidebar}
       whileHover={{ scale: 1.05 }}
       whileTap={{ scale: 0.95 }}
-      className={`fixed top-4 left-4 z-50 p-3 bg-dark-card/90 backdrop-blur-md border border-dark-border rounded-xl text-neon-cyan hover:text-white hover:border-neon-cyan transition-all duration-300 shadow-xl ${
-        isOpen && !isMobile ? 'translate-x-80' : ''
-      }`}
+      className="fixed top-20 left-4 z-50 p-3 bg-dark-card/90 backdrop-blur-md border border-dark-border rounded-xl text-neon-cyan hover:text-white hover:border-neon-cyan transition-all duration-300 shadow-xl"
       aria-label={isOpen ? '关闭过滤器' : '打开过滤器'}
     >
       {isMobile ? (
@@ -203,9 +203,9 @@ const SidebarFilters: React.FC<SidebarFiltersProps> = ({
   );
 
   return (
-    <>
+    <div className="flex">
       <ToggleButton />
-      
+
       {/* 移动端遮罩层 */}
       <AnimatePresence>
         {isOpen && isMobile && (
@@ -223,11 +223,11 @@ const SidebarFilters: React.FC<SidebarFiltersProps> = ({
       <motion.aside
         initial={false}
         animate={{
-          x: isOpen ? 0 : isMobile ? '-100%' : '-320px',
+          x: isOpen ? 0 : '-100%',
           width: isMobile ? '80%' : '320px',
         }}
         transition={{ duration: 0.3, ease: 'easeInOut' }}
-        className={`fixed top-0 left-0 h-full bg-dark-bg-primary/95 backdrop-blur-xl border-r border-dark-border shadow-2xl z-40 overflow-y-auto ${
+        className={`fixed top-16 left-0 h-[calc(100vh-4rem)] bg-dark-bg-primary/95 backdrop-blur-xl border-r border-dark-border shadow-2xl z-40 overflow-y-auto ${
           isMobile ? 'max-w-sm' : 'w-80'
         }`}
       >
@@ -373,7 +373,19 @@ const SidebarFilters: React.FC<SidebarFiltersProps> = ({
           )}
         </div>
       </motion.aside>
-    </>
+
+      {/* 主内容区域 */}
+      <motion.main
+        initial={false}
+        animate={{
+          marginLeft: isOpen && !isMobile ? '320px' : '0px',
+        }}
+        transition={{ duration: 0.3, ease: 'easeInOut' }}
+        className="flex-1 min-h-screen"
+      >
+        {children}
+      </motion.main>
+    </div>
   );
 };
 
