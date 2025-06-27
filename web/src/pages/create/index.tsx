@@ -22,6 +22,7 @@ import {
   UserIcon,
   CpuChipIcon,
   ShieldExclamationIcon,
+  PhotoIcon,
 } from '@heroicons/react/24/outline';
 import { AIAnalyzeButton, AIAnalysisResultDisplay } from '@/components/AIAnalyzeButton';
 import { AIAnalysisResult } from '@/lib/ai-analyzer';
@@ -626,7 +627,13 @@ function CreatePromptPage() {
       toast.error('提示词名称不能超过100个字符');
       return;
     }
-    
+
+    // 检查图片和视频类型是否上传了文件
+    if ((categoryType === 'image' || categoryType === 'video') && !previewUrl && !data.preview_asset_url) {
+      toast.error(`${categoryType === 'image' ? '图片' : '视频'}类型的提示词至少需要上传一个文件`);
+      return;
+    }
+
     setIsSubmitting(true);
     
     // 创建提示词请求
@@ -1022,6 +1029,130 @@ function CreatePromptPage() {
                   ))}
                 </div>
               </motion.div>
+
+              {/* 文件上传区域 - 仅在图像或视频类型时显示 */}
+              {(categoryType === 'image' || categoryType === 'video') && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 1.1 }}
+                  className="space-y-4"
+                >
+                  <label className="flex items-center text-sm font-medium text-gray-300 mb-3">
+                    <PhotoIcon className="h-5 w-5 text-neon-purple mr-2" />
+                    {categoryType === 'image' ? '示例图片' : '示例视频'} (最多4个，至少1个) *
+                  </label>
+
+                  {/* 文件上传区域 */}
+                  <div className="border-2 border-dashed border-gray-600 rounded-xl p-6 text-center hover:border-neon-cyan/50 transition-colors">
+                    <input
+                      type="file"
+                      id="file-upload"
+                      multiple
+                      accept={categoryType === 'image' ? 'image/*' : 'video/*'}
+                      onChange={(e) => {
+                        const files = Array.from(e.target.files || []);
+                        if (files.length === 0) return;
+
+                        if (files.length > 4) {
+                          toast.error('最多只能上传4个文件');
+                          return;
+                        }
+
+                        // 处理第一个文件的上传
+                        if (files[0]) {
+                          handleFileUpload(files[0]);
+                        }
+                      }}
+                      className="hidden"
+                    />
+
+                    {isUploading ? (
+                      <div className="space-y-4">
+                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-neon-cyan mx-auto"></div>
+                        <p className="text-gray-400">正在上传文件...</p>
+                        <div className="w-full bg-gray-700 rounded-full h-2">
+                          <div
+                            className="bg-neon-cyan h-2 rounded-full transition-all duration-300"
+                            style={{ width: `${uploadProgress}%` }}
+                          ></div>
+                        </div>
+                        <p className="text-sm text-gray-500">{uploadProgress}%</p>
+                      </div>
+                    ) : previewUrl ? (
+                      <div className="space-y-4">
+                        {categoryType === 'image' ? (
+                          <img
+                            src={previewUrl}
+                            alt="预览"
+                            className="max-w-full max-h-48 mx-auto rounded-lg"
+                          />
+                        ) : (
+                          <video
+                            src={previewUrl}
+                            controls
+                            className="max-w-full max-h-48 mx-auto rounded-lg"
+                          />
+                        )}
+                        <div className="flex items-center justify-center space-x-4">
+                          <button
+                            type="button"
+                            onClick={() => document.getElementById('file-upload')?.click()}
+                            className="px-4 py-2 bg-neon-cyan/20 border border-neon-cyan/30 rounded-lg text-neon-cyan hover:bg-neon-cyan/30 transition-colors"
+                          >
+                            更换文件
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setPreviewUrl('');
+                              setValue('preview_asset_url', '');
+                            }}
+                            className="px-4 py-2 bg-red-500/20 border border-red-500/30 rounded-lg text-red-300 hover:bg-red-500/30 transition-colors"
+                          >
+                            删除文件
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="space-y-4">
+                        <div className="text-4xl text-gray-400">
+                          {categoryType === 'image' ? '🖼️' : '🎬'}
+                        </div>
+                        <div>
+                          <p className="text-gray-300 mb-2">
+                            点击上传{categoryType === 'image' ? '图片' : '视频'}文件
+                          </p>
+                          <p className="text-sm text-gray-500">
+                            支持 {categoryType === 'image' ? 'JPG, PNG, WebP, GIF' : 'MP4, WebM, MOV, AVI'} 格式
+                          </p>
+                          <p className="text-sm text-gray-500">
+                            最多上传4个文件，至少需要1个文件
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => document.getElementById('file-upload')?.click()}
+                          className="px-6 py-3 bg-gradient-to-r from-neon-cyan to-neon-blue text-white rounded-lg font-medium hover:from-neon-cyan-dark hover:to-neon-blue-dark transition-all"
+                        >
+                          选择文件
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* 文件上传要求提示 */}
+                  <div className="text-sm text-gray-400 bg-gray-800/50 rounded-lg p-3">
+                    <p className="font-medium text-neon-cyan mb-1">上传要求：</p>
+                    <ul className="space-y-1 text-xs">
+                      <li>• 至少上传1个{categoryType === 'image' ? '图片' : '视频'}文件</li>
+                      <li>• 最多可上传4个文件</li>
+                      <li>• {categoryType === 'image' ? '图片' : '视频'}将作为提示词的示例展示</li>
+                      <li>• 文件大小限制：{categoryType === 'image' ? '10MB' : '100MB'}</li>
+                    </ul>
+                  </div>
+                </motion.div>
+              )}
 
               {/* 分类和版本 */}
               <motion.div

@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { getPrompts, getCategories, getTags } from '@/lib/api';
 import { PromptInfo, PromptFilters as PromptFiltersType } from '@/types';
 import PromptCard from '@/components/prompts/PromptCard';
-import PromptFilters from '@/components/prompts/PromptFilters';
+import SidebarFilters from '@/components/layout/SidebarFilters';
 
 export default function ChatPromptsPage() {
   // 状态管理
@@ -293,55 +293,47 @@ export default function ChatPromptsPage() {
   }
 
   return (
-    <div className="min-h-screen relative">
-      {/* 动态背景 */}
-      <div className="absolute inset-0 bg-gradient-to-br from-dark-bg-primary via-dark-bg-secondary to-dark-bg-primary" />
-      <div className="absolute inset-0 opacity-30">
-        <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-neon-cyan/10 rounded-full blur-3xl" />
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-neon-blue/10 rounded-full blur-3xl" />
+    <div className="min-h-screen bg-dark-bg-primary relative overflow-hidden">
+      {/* 背景装饰 */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-1/4 -right-48 w-96 h-96 bg-gradient-to-br from-neon-cyan/10 to-neon-blue/10 rounded-full blur-3xl animate-pulse-slow"></div>
+        <div className="absolute bottom-1/4 -left-48 w-96 h-96 bg-gradient-to-tr from-neon-purple/10 to-neon-pink/10 rounded-full blur-3xl animate-pulse-slow"></div>
       </div>
 
-      <div className="relative z-10 container-custom py-12">
-        {/* 页面标题 */}
-        <motion.div 
-          className="text-center mb-12"
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-        >
-          <div className="flex items-center justify-center mb-6">
-            <div className="inline-flex p-4 rounded-2xl bg-gradient-to-br from-neon-cyan to-neon-blue mr-4">
-              <ChatBubbleLeftRightIcon className="h-8 w-8 text-dark-bg-primary" />
-            </div>
-            <h1 className="text-4xl md:text-6xl font-bold text-white gradient-text">
-              对话提示词
-            </h1>
-          </div>
-          <p className="text-xl text-gray-400 max-w-3xl mx-auto">
-            探索最优秀的对话AI提示词，让你的对话更智能、更有深度、更富创造力
-          </p>
-          {totalCount > 0 && (
-            <p className="text-sm text-neon-cyan mt-4">
-              共找到 {totalCount} 个对话提示词
-            </p>
-          )}
-        </motion.div>
-
-        {/* 过滤器 */}
-        <motion.div 
-          className="mb-8"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.1 }}
-        >
-          <PromptFilters
-            filters={filters}
-            categories={categories}
-            tags={tags}
-            onFilterChange={handleFilterChange}
-            hideTypeFilter={true} // 隐藏类型过滤器，因为已经固定为chat
-          />
-        </motion.div>
+      {/* 边栏过滤器 */}
+      <SidebarFilters
+        filters={filters}
+        onFilterChange={handleFilterChange}
+        categories={categories}
+        tags={tags}
+        hideTypeFilter={true}
+      >
+        <div className="relative z-10 spacing-section page-bottom-padding">
+          <div className="container-custom">
+            {/* 页面标题 */}
+            <motion.div
+              className="text-center mb-12"
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+            >
+              <div className="flex items-center justify-center mb-6">
+                <div className="inline-flex p-4 rounded-2xl bg-gradient-to-br from-neon-cyan to-neon-blue mr-4">
+                  <ChatBubbleLeftRightIcon className="h-8 w-8 text-dark-bg-primary" />
+                </div>
+                <h1 className="text-4xl md:text-6xl font-bold text-white gradient-text">
+                  对话提示词
+                </h1>
+              </div>
+              <p className="text-xl text-gray-400 max-w-3xl mx-auto">
+                探索最优秀的对话AI提示词，让你的对话更智能、更有深度、更富创造力
+              </p>
+              {totalCount > 0 && (
+                <p className="text-sm text-neon-cyan mt-4">
+                  共找到 {totalCount} 个对话提示词
+                </p>
+              )}
+            </motion.div>
 
         {/* 主要内容 */}
         <AnimatePresence mode="wait">
@@ -419,9 +411,11 @@ export default function ChatPromptsPage() {
           )}
         </AnimatePresence>
 
-        {/* 分页 */}
-        {!loading && !error && prompts.length > 0 && renderPagination()}
-      </div>
+            {/* 分页 */}
+            {!loading && !error && prompts.length > 0 && renderPagination()}
+          </div>
+        </div>
+      </SidebarFilters>
     </div>
   );
 }

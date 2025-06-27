@@ -716,7 +716,7 @@ ${existingTags.length > 0 ? `优先使用现有标签：${existingTags.slice(0, 
             {
               role: 'system',
               content: `你是一个AI提示词分类专家。请根据提示词内容，从以下分类中选择最合适的一个：
-${PRESET_CATEGORIES.join('、')}
+${FLAT_CATEGORIES.join('、')}
 
 请仔细理解提示词的实际功能，而不是被表面词汇误导。如果提示词中的某些词汇是比喻性使用，请根据实际功能进行分类。
 

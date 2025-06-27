@@ -189,7 +189,11 @@ const SidebarFilters: React.FC<SidebarFiltersProps> = ({
       onClick={toggleSidebar}
       whileHover={{ scale: 1.05 }}
       whileTap={{ scale: 0.95 }}
-      className="fixed top-20 left-4 z-50 p-3 bg-dark-card/90 backdrop-blur-md border border-dark-border rounded-xl text-neon-cyan hover:text-white hover:border-neon-cyan transition-all duration-300 shadow-xl"
+      animate={{
+        left: isOpen && !isMobile ? '336px' : '16px', // 320px + 16px = 336px
+      }}
+      transition={{ duration: 0.3, ease: 'easeInOut' }}
+      className="fixed top-20 z-50 p-3 bg-dark-card/90 backdrop-blur-md border border-dark-border rounded-xl text-neon-cyan hover:text-white hover:border-neon-cyan transition-all duration-300 shadow-xl"
       aria-label={isOpen ? '关闭过滤器' : '打开过滤器'}
     >
       {isMobile ? (
