@@ -158,6 +158,14 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
   const [categoriesLoading, setCategoriesLoading] = useState(true);
   const [suggestedTags, setSuggestedTags] = useState<string[]>([]);
   const [tagsLoading, setTagsLoading] = useState(true);
+
+  // 添加类型相关状态
+  const [categoryType, setCategoryType] = useState<'chat' | 'image' | 'video'>('chat');
+  const [categoriesByType, setCategoriesByType] = useState<Record<string, string[]>>({
+    chat: [],
+    image: [],
+    video: []
+  });
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [permissionCheck, setPermissionCheck] = useState<PermissionCheck | null>(null);
@@ -177,24 +185,77 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
     confidence: string;
   } | null>(null);
 
-  // 获取分类数据
+  // 检测提示词类型
+  const detectCategoryType = (content: string): 'chat' | 'image' | 'video' => {
+    const lowerContent = content.toLowerCase();
+
+    // 图像生成关键词
+    const imageKeywords = [
+      '画', '绘制', '绘画', '图像', '图片', '照片', '摄影', '设计', '风格',
+      'style', 'draw', 'paint', 'image', 'photo', 'picture', 'art', 'design'
+    ];
+
+    // 视频生成关键词
+    const videoKeywords = [
+      '视频', '动画', '镜头', '运动', '帧', '时长', '播放', '拍摄',
+      'video', 'animation', 'motion', 'camera', 'frame', 'fps', 'duration'
+    ];
+
+    const hasImageKeywords = imageKeywords.some(keyword => lowerContent.includes(keyword));
+    const hasVideoKeywords = videoKeywords.some(keyword => lowerContent.includes(keyword));
+
+    if (hasVideoKeywords) return 'video';
+    if (hasImageKeywords) return 'image';
+    return 'chat';
+  };
+
+  // 获取分类数据 - 按类型分别获取
   useEffect(() => {
-    const fetchCategories = async () => {
+    const fetchCategoriesByType = async () => {
+      setCategoriesLoading(true);
       try {
-        const data = await getCategories();
-        console.log('获取到的类别数据:', data);
-        if (data && Array.isArray(data) && data.length > 0) {
-          setCategories(data as string[]);
-        }
+        console.log('开始获取类别数据...');
+
+        // 分别获取三种类型的分类
+        const [chatCategories, imageCategories, videoCategories] = await Promise.all([
+          getCategories('chat'),
+          getCategories('image'),
+          getCategories('video')
+        ]);
+
+        console.log('获取到的分类数据:', {
+          chat: chatCategories,
+          image: imageCategories,
+          video: videoCategories
+        });
+
+        // 设置按类型分组的分类
+        const categoriesByTypeData = {
+          chat: chatCategories || [],
+          image: imageCategories || [],
+          video: videoCategories || []
+        };
+        setCategoriesByType(categoriesByTypeData);
+
+        // 设置所有分类（用于向后兼容）
+        const allCategories = [...(chatCategories || []), ...(imageCategories || []), ...(videoCategories || [])];
+        setCategories(allCategories);
+
+        // 检测当前提示词的类型
+        const detectedType = detectCategoryType(safePromptData.content);
+        setCategoryType(detectedType);
 
       } catch (err) {
         console.error('获取分类失败:', err);
+        // 错误时设置空数组
+        setCategoriesByType({ chat: [], image: [], video: [] });
         setCategories([]);
       } finally {
         setCategoriesLoading(false);
       }
     };
-    fetchCategories();
+
+    fetchCategoriesByType();
   }, []);
   
   // 获取标签数据
@@ -935,19 +996,40 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
                     <TagIcon className="h-5 w-5 text-neon-cyan mr-2" />
                     分类 *
                   </label>
-                  <select
-                    id="edit-category"
-                    {...register('category', { required: '请选择分类' })}
-                    className="input-primary w-full"
-                    autoComplete="off"
-                  >
-                    <option value="">选择分类</option>
-                    {categories.map((category: string) => (
-                      <option key={category} value={category}>
-                        {String(category)}
+                  <div className="space-y-3">
+                    {/* 类型选择器 */}
+                    <div className="flex gap-2 mb-3">
+                      {(['chat', 'image', 'video'] as const).map((type) => (
+                        <button
+                          key={type}
+                          type="button"
+                          onClick={() => setCategoryType(type)}
+                          className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${
+                            categoryType === type
+                              ? 'bg-neon-cyan text-black'
+                              : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                          }`}
+                        >
+                          {type === 'chat' ? '对话' : type === 'image' ? '图像' : '视频'}
+                        </button>
+                      ))}
+                    </div>
+
+                    {/* 分类选择器 */}
+                    <select
+                      id="edit-category"
+                      {...register('category', { required: '请选择分类' })}
+                      className="input-primary w-full"
+                      autoComplete="off"
+                    >
+                      <option value="">选择分类</option>
+                      {(categoriesByType[categoryType] || []).map((category: string) => (
+                        <option key={category} value={category}>
+                          {String(category)}
                         </option>
-                    ))}
-                  </select>
+                      ))}
+                    </select>
+                  </div>
                   {errors.category && (
                     <p className="text-neon-red text-sm mt-1">{errors.category.message}</p>
                   )}

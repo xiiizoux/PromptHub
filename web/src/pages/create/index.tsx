@@ -462,26 +462,50 @@ function CreatePromptPage() {
     }
   }, [router.isReady, router.query, categoriesLoading, categories]); // 添加分类相关依赖
 
-  // 获取分类数据 - 异步但不阻塞页面显示
+  // 获取分类数据 - 按类型分别获取
   useEffect(() => {
-    const fetchCategories = async () => {
+    const fetchCategoriesByType = async () => {
       setCategoriesLoading(true);
       try {
         console.log('开始获取类别数据...');
-        const data = await getCategories();
-        console.log('获取到的类别数据:', data);
-        if (data && Array.isArray(data) && data.length > 0) {
-          setCategories(data as string[]);
-        }
+
+        // 分别获取三种类型的分类
+        const [chatCategories, imageCategories, videoCategories] = await Promise.all([
+          getCategories('chat'),
+          getCategories('image'),
+          getCategories('video')
+        ]);
+
+        console.log('获取到的分类数据:', {
+          chat: chatCategories,
+          image: imageCategories,
+          video: videoCategories
+        });
+
+        // 设置按类型分组的分类
+        const categoriesByTypeData = {
+          chat: chatCategories || [],
+          image: imageCategories || [],
+          video: videoCategories || []
+        };
+        setCategoriesByType(categoriesByTypeData);
+
+        // 设置所有分类（用于向后兼容）
+        const allCategories = [...(chatCategories || []), ...(imageCategories || []), ...(videoCategories || [])];
+        setCategories(allCategories);
+
       } catch (err) {
         toast.error('获取分类列表失败');
         console.error('获取分类失败:', err);
+        // 错误时设置空数组
+        setCategoriesByType({ chat: [], image: [], video: [] });
+        setCategories([]);
       } finally {
         setCategoriesLoading(false);
       }
     };
-    
-    fetchCategories();
+
+    fetchCategoriesByType();
   }, []);
   
   // 获取标签数据 - 异步但不阻塞页面显示
@@ -1166,19 +1190,47 @@ function CreatePromptPage() {
                     <TagIcon className="h-5 w-5 text-neon-cyan mr-2" />
                     分类 *
                   </label>
-                  <select
-                    id="category"
-                    {...register('category', { required: '请选择分类' })}
-                    className="input-primary w-full"
-                    autoComplete="off"
-                  >
-                    <option value="">选择分类</option>
-                    {(categoriesByType[categoryType] || categories).map((category: string) => (
-                      <option key={category} value={category}>
-                        {category}
-                      </option>
-                    ))}
-                  </select>
+
+                  <div className="space-y-3">
+                    {/* 类型选择器 */}
+                    <div className="flex gap-2 mb-3">
+                      {(['chat', 'image', 'video'] as const).map((type) => (
+                        <button
+                          key={type}
+                          type="button"
+                          onClick={() => {
+                            setCategoryType(type);
+                            setValue('category_type', type);
+                            // 清空当前分类选择，让用户重新选择
+                            setValue('category', '');
+                          }}
+                          className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${
+                            categoryType === type
+                              ? 'bg-neon-cyan text-black'
+                              : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                          }`}
+                        >
+                          {type === 'chat' ? '对话' : type === 'image' ? '图像' : '视频'}
+                        </button>
+                      ))}
+                    </div>
+
+                    {/* 分类选择器 */}
+                    <select
+                      id="category"
+                      {...register('category', { required: '请选择分类' })}
+                      className="input-primary w-full"
+                      autoComplete="off"
+                    >
+                      <option value="">选择分类</option>
+                      {(categoriesByType[categoryType] || []).map((category: string) => (
+                        <option key={category} value={category}>
+                          {category}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
                   {errors.category && (
                     <p className="text-neon-red text-sm mt-1">{errors.category.message}</p>
                   )}
