@@ -91,6 +91,16 @@ export class DatabaseService {
       console.log('没有type过滤或type无效:', type);
     }
 
+    console.log('执行查询，SQL预览:', query);
+
+    // 先查询表结构确认type字段存在
+    const { data: tableInfo, error: tableError } = await this.adapter.supabase
+      .from('categories')
+      .select('*')
+      .limit(1);
+    
+    console.log('categories表结构示例:', tableInfo?.[0]);
+
     const { data: categoriesData, error: categoriesError } = await query.order('sort_order');
 
     console.log('数据库查询结果:', {
@@ -98,7 +108,8 @@ export class DatabaseService {
       errorCode: categoriesError?.code,
       errorMessage: categoriesError?.message,
       dataLength: categoriesData?.length || 0,
-      data: categoriesData?.slice(0, 3), // 只显示前3个用于调试
+      data: categoriesData?.slice(0, 5), // 显示前5个用于调试
+      allData: categoriesData, // 显示全部数据用于调试
     });
 
     if (categoriesError) {
