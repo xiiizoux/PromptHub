@@ -17,8 +17,8 @@ export default function VideoPromptsPage() {
     page: 1,
     pageSize: 24, // 视频卡片稍大，使用24个
     sortBy: 'latest',
-    // 添加类型过滤，只显示视频类型
-    category_type: 'video'
+    // 临时移除类型过滤，在客户端处理
+    // category_type: 'video'
   });
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
@@ -124,9 +124,13 @@ export default function VideoPromptsPage() {
           const response = await getPrompts(filters);
 
           if (response && response.data && Array.isArray(response.data)) {
-            setPrompts(response.data);
-            setTotalPages(response.totalPages || 1);
-            setTotalCount(response.total || 0);
+            // 在客户端过滤视频类型的提示词
+            const videoPrompts = response.data.filter(prompt => 
+              prompt.category_type === 'video'
+            );
+            setPrompts(videoPrompts);
+            setTotalPages(Math.ceil(videoPrompts.length / (filters.pageSize || 24)));
+            setTotalCount(videoPrompts.length);
             setError(null);
             setLoading(false);
             return;
@@ -172,8 +176,8 @@ export default function VideoPromptsPage() {
 
   // 处理过滤器变更
   const handleFilterChange = (newFilters: PromptFiltersType) => {
-    // 确保始终包含video类型过滤
-    setFilters({ ...newFilters, page: 1, category_type: 'video' });
+    // 移除类型过滤，在客户端处理
+    setFilters({ ...newFilters, page: 1 });
   };
 
   // 处理分页

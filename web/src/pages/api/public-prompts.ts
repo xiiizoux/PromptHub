@@ -50,16 +50,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         name,
         description,
         category,
-        category_type,
         tags,
         version,
         is_public,
         user_id,
         created_at,
         updated_at,
-        created_by,
-        preview_asset_url,
-        parameters
+        created_by
       `, { count: 'exact' });
 
     // 如果有用户ID，则获取该用户的所有提示词和公开提示词
@@ -87,10 +84,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       query = query.contains('tags', [tag]);
     }
     
-    // 添加类型过滤
-    if (category_type && typeof category_type === 'string') {
-      query = query.eq('category_type', category_type);
-    }
+    // 临时禁用类型过滤（直到数据库字段添加完成）
+    // if (category_type && typeof category_type === 'string') {
+    //   query = query.eq('category_type', category_type);
+    // }
     
     // 添加排序
     if (sortBy && typeof sortBy === 'string') {

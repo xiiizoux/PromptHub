@@ -279,22 +279,37 @@ export const getPrompts = async (filters?: PromptFilters): Promise<PaginatedResp
     }
 
     // 4. (可选但推荐) 清理和映射每个prompt对象，确保字段符合预期
-    const cleanedData = responseData.data.map((item: any) => ({
-      id: item.id || `fallback-${Math.random()}`,
-      name: item.name || '无标题',
-      description: item.description || '无描述',
-      category: item.category || '通用',
-      category_type: item.category_type || 'chat',
-      tags: Array.isArray(item.tags) ? item.tags : [],
-      version: item.version || 1,
-      created_at: item.created_at,
-      updated_at: item.updated_at,
-      author: item.author || '匿名',
-      usageCount: item.usageCount || 0,
-      rating: item.rating || 0,
-      preview_asset_url: item.preview_asset_url,
-      parameters: item.parameters || {},
-    }));
+    const cleanedData = responseData.data.map((item: any) => {
+      // 临时逻辑：根据分类猜测类型
+      let guessedType = 'chat';
+      if (item.category) {
+        const imageCategories = ['真实摄影', '艺术绘画', '动漫插画', '抽象艺术', 'Logo设计', '建筑空间', '时尚设计'];
+        const videoCategories = ['故事叙述', '动画特效', '产品展示', '自然风景', '人物肖像', '广告营销'];
+        
+        if (imageCategories.includes(item.category)) {
+          guessedType = 'image';
+        } else if (videoCategories.includes(item.category)) {
+          guessedType = 'video';
+        }
+      }
+      
+      return {
+        id: item.id || `fallback-${Math.random()}`,
+        name: item.name || '无标题',
+        description: item.description || '无描述',
+        category: item.category || '通用',
+        category_type: item.category_type || guessedType,
+        tags: Array.isArray(item.tags) ? item.tags : [],
+        version: item.version || 1,
+        created_at: item.created_at,
+        updated_at: item.updated_at,
+        author: item.author || '匿名',
+        usageCount: item.usageCount || 0,
+        rating: item.rating || 0,
+        preview_asset_url: item.preview_asset_url,
+        parameters: item.parameters || {},
+      };
+    });
 
     const total = typeof responseData.total === 'number' ? responseData.total : 0;
     const page = typeof responseData.page === 'number' ? responseData.page : 1;

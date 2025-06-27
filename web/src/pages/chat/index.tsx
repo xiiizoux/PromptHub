@@ -17,8 +17,8 @@ export default function ChatPromptsPage() {
     page: 1,
     pageSize: 30,
     sortBy: 'latest',
-    // 添加类型过滤，只显示对话类型
-    category_type: 'chat'
+    // 临时移除类型过滤，在客户端处理
+    // category_type: 'chat'
   });
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
@@ -124,9 +124,27 @@ export default function ChatPromptsPage() {
           const response = await getPrompts(filters);
 
           if (response && response.data && Array.isArray(response.data)) {
-            setPrompts(response.data);
-            setTotalPages(response.totalPages || 1);
-            setTotalCount(response.total || 0);
+            // 在客户端过滤对话类型的提示词
+            const chatPrompts = response.data.filter(prompt => {
+              // 如果有category_type字段，直接使用
+              if (prompt.category_type) {
+                return prompt.category_type === 'chat';
+              }
+              // 否则根据category字段判断
+              const imageCategories = ['真实摄影', '艺术绘画', '动漫插画', '抽象艺术', 'Logo设计', '建筑空间', '时尚设计'];
+              const videoCategories = ['故事叙述', '动画特效', '产品展示', '自然风景', '人物肖像', '广告营销'];
+              
+              if (imageCategories.includes(prompt.category || '')) {
+                return false; // 不是对话类型
+              }
+              if (videoCategories.includes(prompt.category || '')) {
+                return false; // 不是对话类型
+              }
+              return true; // 默认为对话类型
+            });
+            setPrompts(chatPrompts);
+            setTotalPages(Math.ceil(chatPrompts.length / (filters.pageSize || 30)));
+            setTotalCount(chatPrompts.length);
             setError(null);
             setLoading(false);
             return;
@@ -172,8 +190,8 @@ export default function ChatPromptsPage() {
 
   // 处理过滤器变更
   const handleFilterChange = (newFilters: PromptFiltersType) => {
-    // 确保始终包含chat类型过滤
-    setFilters({ ...newFilters, page: 1, category_type: 'chat' });
+    // 移除类型过滤，在客户端处理
+    setFilters({ ...newFilters, page: 1 });
   };
 
   // 处理分页

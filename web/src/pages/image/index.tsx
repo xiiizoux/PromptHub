@@ -17,8 +17,8 @@ export default function ImagePromptsPage() {
     page: 1,
     pageSize: 24, // 图像卡片稍大，使用24个（4x6或6x4布局）
     sortBy: 'latest',
-    // 添加类型过滤，只显示图像类型
-    category_type: 'image'
+    // 临时移除类型过滤，在客户端处理
+    // category_type: 'image'
   });
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
@@ -124,9 +124,13 @@ export default function ImagePromptsPage() {
           const response = await getPrompts(filters);
 
           if (response && response.data && Array.isArray(response.data)) {
-            setPrompts(response.data);
-            setTotalPages(response.totalPages || 1);
-            setTotalCount(response.total || 0);
+            // 在客户端过滤图像类型的提示词
+            const imagePrompts = response.data.filter(prompt => 
+              prompt.category_type === 'image'
+            );
+            setPrompts(imagePrompts);
+            setTotalPages(Math.ceil(imagePrompts.length / (filters.pageSize || 24)));
+            setTotalCount(imagePrompts.length);
             setError(null);
             setLoading(false);
             return;
@@ -172,8 +176,8 @@ export default function ImagePromptsPage() {
 
   // 处理过滤器变更
   const handleFilterChange = (newFilters: PromptFiltersType) => {
-    // 确保始终包含image类型过滤
-    setFilters({ ...newFilters, page: 1, category_type: 'image' });
+    // 移除类型过滤，在客户端处理
+    setFilters({ ...newFilters, page: 1 });
   };
 
   // 处理分页

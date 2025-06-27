@@ -20,6 +20,7 @@ UPDATE categories SET type = 'chat' WHERE type IS NULL;
 
 -- 扩展prompts表，添加媒体相关字段
 ALTER TABLE prompts 
+ADD COLUMN IF NOT EXISTS category_type category_type DEFAULT 'chat',
 ADD COLUMN IF NOT EXISTS preview_asset_url TEXT,
 ADD COLUMN IF NOT EXISTS parameters JSONB DEFAULT '{}'::jsonb;
 
