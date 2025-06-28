@@ -990,6 +990,7 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
                 hasUnsavedChanges={hasUnsavedChanges}
                 permissionCheck={permissionCheck}
                 saveSuccess={saveSuccess}
+                onUnsavedChanges={setHasUnsavedChanges}
               />
           </motion.div>
           

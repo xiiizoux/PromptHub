@@ -64,6 +64,7 @@ interface PromptEditFormProps {
   hasUnsavedChanges?: boolean;
   permissionCheck?: { canEdit: boolean; message: string };
   saveSuccess?: boolean;
+  onUnsavedChanges?: (hasChanges: boolean) => void; // 通知外部组件状态变化
 }
 
 export default function PromptEditForm({
@@ -76,14 +77,14 @@ export default function PromptEditForm({
   currentType: propCurrentType, // 接收外部传入的当前类型
   hasUnsavedChanges = false,
   permissionCheck,
-  saveSuccess = false
+  saveSuccess = false,
+  onUnsavedChanges
 }: PromptEditFormProps) {
   // 表单状态 - 优先使用外部传入的类型
   const [currentType, setCurrentType] = useState<PromptType>(
     propCurrentType || initialData?.category_type || 'chat'
   );
   const [previewAssets, setPreviewAssets] = useState<AssetFile[]>([]);
-  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
   // 表单控制
   const { 
@@ -138,7 +139,7 @@ export default function PromptEditForm({
         setValue('video_parameters', {});
       }
       
-      setHasUnsavedChanges(true);
+      onUnsavedChanges?.(true);
     }
   }, [propCurrentType, currentType, setValue]);
 
@@ -161,40 +162,40 @@ export default function PromptEditForm({
         setValue('video_parameters', {});
       }
       
-      setHasUnsavedChanges(true);
+      onUnsavedChanges?.(true);
     }
   };
 
   // 处理分类变化
   const handleCategoryChange = (category: string) => {
     setValue('category', category);
-    setHasUnsavedChanges(true);
+    onUnsavedChanges?.(true);
   };
 
   // 处理资源变化
   const handleAssetsChange = (assets: AssetFile[]) => {
     setPreviewAssets(assets);
     setValue('preview_assets', assets);
-    setHasUnsavedChanges(true);
+    onUnsavedChanges?.(true);
   };
 
   // 处理图像参数变化
   const handleImageParametersChange = (parameters: ImageParameters) => {
     setValue('image_parameters', parameters);
-    setHasUnsavedChanges(true);
+    onUnsavedChanges?.(true);
   };
 
   // 处理视频参数变化
   const handleVideoParametersChange = (parameters: VideoParameters) => {
     setValue('video_parameters', parameters);
-    setHasUnsavedChanges(true);
+    onUnsavedChanges?.(true);
   };
 
   // 表单提交处理
   const onFormSubmit = async (data: PromptEditFormData) => {
     try {
       await onSubmit(data);
-      setHasUnsavedChanges(false);
+      onUnsavedChanges?.(false);
     } catch (error) {
       console.error('Form submission failed:', error);
     }
@@ -208,7 +209,7 @@ export default function PromptEditForm({
       image_parameters: {},
       video_parameters: {}
     });
-    setHasUnsavedChanges(hasChanges);
+    onUnsavedChanges?.(hasChanges);
   }, [watchedValues, initialData]);
 
   return (
