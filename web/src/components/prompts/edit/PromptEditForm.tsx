@@ -60,6 +60,7 @@ interface PromptEditFormProps {
   isSubmitting?: boolean;
   categoriesByType: Record<string, string[]>;
   className?: string;
+  currentType?: PromptType; // 添加当前类型属性
 }
 
 export default function PromptEditForm({
@@ -68,11 +69,12 @@ export default function PromptEditForm({
   onCancel,
   isSubmitting = false,
   categoriesByType,
-  className = ''
+  className = '',
+  currentType: propCurrentType // 接收外部传入的当前类型
 }: PromptEditFormProps) {
-  // 表单状态
+  // 表单状态 - 优先使用外部传入的类型
   const [currentType, setCurrentType] = useState<PromptType>(
-    initialData?.category_type || 'chat'
+    propCurrentType || initialData?.category_type || 'chat'
   );
   const [previewAssets, setPreviewAssets] = useState<AssetFile[]>([]);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
@@ -110,6 +112,29 @@ export default function PromptEditForm({
 
   // 监听表单变化
   const watchedValues = watch();
+
+  // 监听外部类型变化
+  useEffect(() => {
+    if (propCurrentType && propCurrentType !== currentType) {
+      setCurrentType(propCurrentType);
+      setValue('category_type', propCurrentType);
+      
+      // 重置相关字段
+      setValue('category', '');
+      setValue('preview_assets', []);
+      setPreviewAssets([]);
+      
+      // 重置参数
+      if (propCurrentType !== 'image') {
+        setValue('image_parameters', {});
+      }
+      if (propCurrentType !== 'video') {
+        setValue('video_parameters', {});
+      }
+      
+      setHasUnsavedChanges(true);
+    }
+  }, [propCurrentType, currentType, setValue]);
 
   // 处理类型变化
   const handleTypeChange = (newType: PromptType) => {
@@ -274,10 +299,6 @@ export default function PromptEditForm({
         >
           {/* 分类选择 */}
           <div className="space-y-2">
-            <label htmlFor="category" className="flex items-center text-sm font-medium text-gray-300 mb-3">
-              <TagIcon className="h-5 w-5 text-neon-cyan mr-2" />
-              分类 *
-            </label>
             <Controller
               name="category"
               control={control}

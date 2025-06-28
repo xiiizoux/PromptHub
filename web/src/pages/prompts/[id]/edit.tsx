@@ -976,6 +976,7 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
             >
               {/* 新版组件化表单 */}
               <PromptEditForm
+                key={categoryType}
                 initialData={{
                   ...prompt,
                   content: prompt.content || prompt.messages?.[0]?.content || '',
@@ -985,6 +986,7 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
                 onCancel={() => router.push(`/prompts/${prompt.id}`)}
                 isSubmitting={isSubmitting}
                 categoriesByType={categoriesByType}
+                currentType={categoryType as any}
               />
           </motion.div>
           
@@ -1013,34 +1015,34 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
           </motion.div>
         </div>
 
-        {/* 底部状态信息 */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 1.0 }}
-          className="mt-8 text-center space-y-2"
-        >
-          {/* 未保存更改提示 */}
-          {hasUnsavedChanges && (
-            <p className="text-xs text-yellow-400">
-              <span className="text-yellow-400">⚠</span> 有未保存的更改
-            </p>
-          )}
+          {/* 底部状态信息 */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 1.0 }}
+            className="mt-8 text-center space-y-2"
+          >
+            {/* 未保存更改提示 */}
+            {hasUnsavedChanges && (
+              <p className="text-xs text-yellow-400">
+                <span className="text-yellow-400">⚠</span> 有未保存的更改
+              </p>
+            )}
 
-          {/* 权限信息 */}
-          {permissionCheck && permissionCheck.canEdit && (
-            <p className="text-xs text-gray-500">
-              <span className="text-neon-cyan">✓</span> {permissionCheck.message}
-            </p>
-          )}
+            {/* 权限信息 */}
+            {permissionCheck && permissionCheck.canEdit && (
+              <p className="text-xs text-gray-500">
+                <span className="text-neon-cyan">✓</span> {permissionCheck.message}
+              </p>
+            )}
 
-          {/* 保存成功提示 */}
-          {saveSuccess && (
-            <p className="text-xs text-green-400">
-              <span className="text-green-400">✓</span> 提示词已成功更新！
-            </p>
-          )}
-        </motion.div>
+            {/* 保存成功提示 */}
+            {saveSuccess && (
+              <p className="text-xs text-green-400">
+                <span className="text-green-400">✓</span> 提示词已成功更新！
+              </p>
+            )}
+          </motion.div>
         </div>
       </div>
     </div>
