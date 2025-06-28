@@ -213,12 +213,12 @@ const OptimizerPage: React.FC = () => {
           </div>
         </div>
 
-        <div className="relative z-10 w-full px-4 py-8">
+        <div className="relative z-10 w-full px-4 unified-page-spacing">
           {/* 英雄区域 */}
           <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-center mb-12"
+            className="unified-page-title-container"
           >
             {optimizedPrompt && (
               <div className="flex justify-end mb-8 space-x-4">
@@ -256,17 +256,19 @@ const OptimizerPage: React.FC = () => {
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               transition={{ duration: 0.4, delay: 0.1 }}
-              className="mb-6"
+              className="flex items-center justify-center mb-2"
             >
-              <h1 className="text-2xl md:text-3xl font-bold text-neon-cyan mb-2">
-                <SparklesIcon className="h-6 w-6 text-neon-cyan mr-2 inline" />
+              <div className="inline-flex p-2 rounded-xl bg-gradient-to-br from-neon-cyan to-neon-blue mr-2">
+                <SparklesIcon className="unified-page-title-icon" />
+              </div>
+              <h1 className="unified-page-title">
                 AI优化器
               </h1>
             </motion.div>
 
             {/* 简要描述 */}
             <motion.p
-              className="text-sm md:text-base text-gray-400 max-w-2xl mx-auto mb-6"
+              className="unified-page-subtitle"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.3 }}

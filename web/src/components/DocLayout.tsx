@@ -42,7 +42,7 @@ const DocLayout: React.FC<DocLayoutProps> = ({
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-72 h-72 bg-gradient-to-r from-neon-yellow/5 to-neon-green/5 rounded-full blur-3xl animate-float"></div>
       </div>
 
-      <div className="relative z-10 py-12">
+      <div className="relative z-10 unified-page-spacing">
         <div className="container-custom">
           {/* 导航面包屑 */}
           <motion.div 
@@ -89,12 +89,12 @@ const DocLayout: React.FC<DocLayoutProps> = ({
             animate="visible"
             variants={pageVariants}
             transition={{ duration: 0.6, delay: 0.1 }}
-            className="mb-6"
+            className="unified-page-title-container"
           >
-            <h1 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-neon-cyan via-neon-purple to-neon-pink bg-clip-text text-transparent mb-2">
+            <h1 className="unified-page-title">
               {title}
             </h1>
-            <p className="text-sm md:text-base text-dark-text-secondary max-w-3xl leading-relaxed">
+            <p className="unified-page-subtitle">
               {description}
             </p>
           </motion.div>

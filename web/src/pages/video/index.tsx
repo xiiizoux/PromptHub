@@ -296,23 +296,23 @@ export default function VideoPromptsPage() {
         tags={tags}
         hideTypeFilter={true}
       >
-        <div className="relative z-10 container-custom py-12">
+        <div className="relative z-10 container-custom unified-page-spacing">
         {/* 页面标题 */}
         <motion.div
-          className="text-center mb-6"
+          className="unified-page-title-container"
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
         >
           <div className="flex items-center justify-center mb-2">
             <div className="inline-flex p-2 rounded-xl bg-gradient-to-br from-red-500 to-orange-500 mr-2">
-              <FilmIcon className="h-4 w-4 text-dark-bg-primary" />
+              <FilmIcon className="unified-page-title-icon" />
             </div>
-            <h1 className="text-2xl md:text-3xl font-bold text-white gradient-text">
+            <h1 className="unified-page-title">
               视频提示词
             </h1>
           </div>
-          <p className="text-sm md:text-base text-gray-400 max-w-2xl mx-auto">
+          <p className="unified-page-subtitle">
             探索精彩的视频生成提示词，让AI为你创造动态视觉体验
           </p>
           {totalCount > 0 && (

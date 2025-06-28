@@ -25,26 +25,30 @@ const DocsPage: React.FC = () => {
         <div className="absolute bottom-1/4 -left-48 w-96 h-96 bg-gradient-to-tr from-neon-pink/20 to-neon-purple/20 rounded-full blur-3xl"></div>
       </div>
 
-      <div className="relative z-10 py-16">
+      <div className="relative z-10 unified-page-spacing">
         <div className="container-custom">
           {/* 页面标题 */}
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
-            className="mb-16 text-center"
+            className="unified-page-title-container"
           >
-            <motion.h1 
-              className="text-4xl md:text-6xl font-bold text-neon-cyan mb-4"
+            <motion.div
+              className="flex items-center justify-center mb-2"
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 1, delay: 0.2 }}
             >
-              <DocumentTextIcon className="h-8 w-8 md:h-12 md:w-12 text-neon-cyan mr-4 inline" />
-              开发文档
-            </motion.h1>
-            <motion.p 
-              className="text-xl text-gray-400 max-w-3xl mx-auto leading-relaxed"
+              <div className="inline-flex p-2 rounded-xl bg-gradient-to-br from-neon-cyan to-neon-blue mr-2">
+                <DocumentTextIcon className="unified-page-title-icon" />
+              </div>
+              <h1 className="unified-page-title">
+                开发文档
+              </h1>
+            </motion.div>
+            <motion.p
+              className="unified-page-subtitle"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.4 }}

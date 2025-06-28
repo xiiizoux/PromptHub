@@ -544,4 +544,26 @@ code, pre, .font-mono {
   .title-spacing-small {
     @apply mb-4;
   }
+
+  /* 统一的页面标题样式 - 所有页面使用相同的字体大小、颜色和间距 */
+  .unified-page-title {
+    @apply text-2xl md:text-3xl font-bold text-white gradient-text mb-2;
+  }
+
+  .unified-page-title-icon {
+    @apply h-4 w-4 text-dark-bg-primary mr-2 inline;
+  }
+
+  .unified-page-subtitle {
+    @apply text-sm md:text-base text-gray-400 max-w-2xl mx-auto;
+  }
+
+  .unified-page-title-container {
+    @apply text-center mb-6;
+  }
+
+  /* 统一的顶部间距 */
+  .unified-page-spacing {
+    @apply py-12;
+  }
 }
