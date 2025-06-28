@@ -39,6 +39,9 @@ docker-compose.yml
 .cursor/rules/
 .serena/
 
+# Claude Code相关文件和文件夹
+.claude/
+
 # 日志文件
 logs/
 *.log
