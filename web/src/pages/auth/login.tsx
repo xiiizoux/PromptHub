@@ -33,25 +33,21 @@ export default function LoginPage() {
   
   // 检查用户是否已经登录，如果是则重定向到目标页面
   useEffect(() => {
-    let checkTimeout: NodeJS.Timeout;
     let mounted = true;
+    let checkTimeout: NodeJS.Timeout;
 
     const checkSession = async () => {
       try {
-        console.log('检查现有会话...');
+        // 等待AuthContext初始化完成，避免重复检查
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        if (!mounted) return;
 
-        // 缩短超时时间，避免用户等待过久
-        const sessionPromise = supabase.auth.getSession();
-        const timeoutPromise = new Promise((_, reject) =>
-          setTimeout(() => reject(new Error('会话检查超时')), 3000), // 减少到3秒
-        );
+        console.log('登录页面检查现有会话...');
 
-        const { data: { session }, error } = await Promise.race([
-          sessionPromise,
-          timeoutPromise,
-        ]) as any;
+        const { data: { session }, error } = await supabase.auth.getSession();
 
-        if (!mounted) return; // 组件已卸载，不执行后续操作
+        if (!mounted) return;
 
         if (error) {
           console.error('检查会话失败:', error);
@@ -61,30 +57,28 @@ export default function LoginPage() {
 
         if (session && session.user) {
           console.log('发现已登录会话，重定向...');
-          handlePostLoginRedirect(router);
+          // 使用replace避免重定向循环
+          const redirectUrl = getRedirectUrl(router) || '/';
+          router.replace(redirectUrl);
         } else {
           console.log('无现有会话，显示登录表单');
           setInitializing(false);
         }
       } catch (err: any) {
         console.error('检查会话异常:', err);
-        if (!mounted) return;
-
-        // 即使检查失败，也要显示登录表单
-        if (err.message.includes('超时')) {
-          console.warn('会话检查超时，显示登录表单');
+        if (mounted) {
+          setInitializing(false);
         }
-        setInitializing(false);
       }
     };
 
-    // 设置一个兜底的超时，确保不会无限等待
+    // 设置兜底超时
     checkTimeout = setTimeout(() => {
       if (mounted) {
         console.warn('会话检查超时，强制结束初始化');
         setInitializing(false);
       }
-    }, 5000); // 减少到5秒
+    }, 3000);
 
     checkSession();
 
@@ -96,14 +90,14 @@ export default function LoginPage() {
     };
   }, [router]);
 
-  // 暂时禁用初始化检查，直接显示登录表单
-  // if (initializing) {
-  //   return (
-  //     <div className="min-h-screen bg-dark-bg-primary flex items-center justify-center">
-  //       <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-neon-cyan"></div>
-  //     </div>
-  //   );
-  // }
+  // 显示加载状态
+  if (initializing) {
+    return (
+      <div className="min-h-screen bg-dark-bg-primary flex items-center justify-center">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-neon-cyan"></div>
+      </div>
+    );
+  }
 
   const onSubmit = async (data: LoginFormData) => {
     console.log('登录表单提交:', data);

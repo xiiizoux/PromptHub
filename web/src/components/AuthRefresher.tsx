@@ -18,18 +18,18 @@ const AuthRefresher = () => {
 
       try {
         if (isInitialCheck) {
-          console.log('初始化认证状态检查...');
+          console.log('AuthRefresher: 初始化认证状态检查...');
           // 初始检查时等待更长时间确保Supabase完全初始化
           await new Promise(resolve => setTimeout(resolve, 500));
         } else {
-          console.log('定期检查认证会话...');
+          console.log('AuthRefresher: 定期检查认证会话...');
         }
 
         // 首先直接从Supabase获取会话，不依赖isSessionValid
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
 
         if (sessionError) {
-          console.warn('获取会话时出错:', sessionError);
+          console.warn('AuthRefresher: 获取会话时出错:', sessionError);
           failureCountRef.current++;
 
           // 只有在连续多次失败且是严重错误时才清理状态
@@ -37,7 +37,7 @@ const AuthRefresher = () => {
               (sessionError.message.includes('Invalid') ||
                sessionError.message.includes('Expired') ||
                sessionError.message.includes('JWT'))) {
-            console.log('连续多次认证失败，清理状态');
+            console.log('AuthRefresher: 连续多次认证失败，清理状态');
             clearAuthState();
             failureCountRef.current = 0;
           }
@@ -46,14 +46,14 @@ const AuthRefresher = () => {
 
         if (!session) {
           // 没有会话，但不立即清理状态，可能是正常的未登录状态
-          console.log('当前没有活跃会话');
+          console.log('AuthRefresher: 当前没有活跃会话');
           failureCountRef.current = 0;
           return;
         }
 
         // 有会话，重置失败计数
         failureCountRef.current = 0;
-        console.log('会话检查通过，用户已认证');
+        console.log('AuthRefresher: 会话检查通过，用户已认证');
 
         // 检查会话是否即将过期（提前10分钟刷新）
         const expiresAt = session.expires_at;
@@ -61,43 +61,43 @@ const AuthRefresher = () => {
         const timeUntilExpiry = (expiresAt || 0) - now;
 
         if (timeUntilExpiry < 600) { // 10分钟 = 600秒
-          console.log('会话即将过期，尝试刷新...');
+          console.log('AuthRefresher: 会话即将过期，尝试刷新...');
 
           try {
             const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
 
             if (refreshError) {
-              console.error('刷新会话时出错:', refreshError);
+              console.error('AuthRefresher: 刷新会话时出错:', refreshError);
               failureCountRef.current++;
 
               // 只有在连续多次刷新失败时才清理状态
               if (failureCountRef.current >= 2 &&
                   (refreshError.message.includes('Invalid') ||
                    refreshError.message.includes('refresh_token'))) {
-                console.log('刷新令牌连续失败，清理状态');
+                console.log('AuthRefresher: 刷新令牌连续失败，清理状态');
                 clearAuthState();
                 failureCountRef.current = 0;
               }
             } else if (refreshData?.session) {
-              console.log('会话刷新成功，有效期至:', new Date((refreshData.session.expires_at || 0) * 1000));
+              console.log('AuthRefresher: 会话刷新成功，有效期至:', new Date((refreshData.session.expires_at || 0) * 1000));
               failureCountRef.current = 0;
             }
           } catch (refreshErr) {
-            console.error('刷新会话异常:', refreshErr);
+            console.error('AuthRefresher: 刷新会话异常:', refreshErr);
             failureCountRef.current++;
 
             // 只有在连续多次异常时才清理状态
             if (failureCountRef.current >= 3) {
-              console.log('刷新会话连续异常，清理状态');
+              console.log('AuthRefresher: 刷新会话连续异常，清理状态');
               clearAuthState();
               failureCountRef.current = 0;
             }
           }
         } else {
-          console.log(`会话有效，剩余时间: ${Math.floor(timeUntilExpiry / 60)} 分钟`);
+          console.log(`AuthRefresher: 会话有效，剩余时间: ${Math.floor(timeUntilExpiry / 60)} 分钟`);
         }
       } catch (err) {
-        console.error('检查认证会话时出错:', err);
+        console.error('AuthRefresher: 检查认证会话时出错:', err);
         failureCountRef.current++;
 
         // 区分网络错误和认证错误
@@ -105,11 +105,11 @@ const AuthRefresher = () => {
             (err.message.includes('Network') ||
              err.message.includes('Failed to fetch') ||
              err.message.includes('timeout'))) {
-          console.log('网络错误，跳过状态清理');
+          console.log('AuthRefresher: 网络错误，跳过状态清理');
         } else {
           // 只有在连续多次未知错误时才清理状态
           if (failureCountRef.current >= 5) {
-            console.log('连续多次未知错误，清理状态');
+            console.log('AuthRefresher: 连续多次未知错误，清理状态');
             clearAuthState();
             failureCountRef.current = 0;
           }
@@ -149,13 +149,24 @@ const AuthRefresher = () => {
 
   // 监听页面可见性变化，当页面重新变为可见时检查会话
   useEffect(() => {
-    const handleVisibilityChange = () => {
+    const handleVisibilityChange = async () => {
       if (document.visibilityState === 'visible' && mountedRef.current && isInitialized) {
-        console.log('页面重新可见，检查认证状态');
+        console.log('AuthRefresher: 页面重新可见，检查认证状态');
         // 延迟一点再检查，确保网络连接稳定
-        setTimeout(() => {
+        setTimeout(async () => {
           if (mountedRef.current) {
-            checkSession(false);
+            try {
+              const { data: { session }, error } = await supabase.auth.getSession();
+              if (error) {
+                console.warn('AuthRefresher: 页面可见性检查会话失败:', error);
+              } else if (session) {
+                console.log('AuthRefresher: 页面可见性检查通过，会话有效');
+              } else {
+                console.log('AuthRefresher: 页面可见性检查，无活跃会话');
+              }
+            } catch (err) {
+              console.error('AuthRefresher: 页面可见性检查异常:', err);
+            }
           }
         }, 2000);
       }
