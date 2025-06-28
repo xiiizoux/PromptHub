@@ -1,9 +1,10 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { createClient } from '@supabase/supabase-js';
-import formidable from 'formidable';
-import fs from 'fs';
+import multer from 'multer';
+import { fileTypeFromBuffer } from 'file-type';
 import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
+import { promisify } from 'util';
 
 // 禁用 Next.js 默认的 body parser
 export const config = {
@@ -24,10 +25,89 @@ interface UploadResponse {
   error?: string;
 }
 
-// 支持的文件类型
+// 支持的文件类型 - MIME类型和魔数签名对照
 const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
 const ALLOWED_VIDEO_TYPES = ['video/mp4', 'video/webm', 'video/quicktime', 'video/x-msvideo'];
 const ALLOWED_TYPES = [...ALLOWED_IMAGE_TYPES, ...ALLOWED_VIDEO_TYPES];
+
+// file-type库支持的扩展名对照
+const ALLOWED_IMAGE_EXTENSIONS = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
+const ALLOWED_VIDEO_EXTENSIONS = ['mp4', 'webm', 'mov', 'avi'];
+const ALLOWED_EXTENSIONS = [...ALLOWED_IMAGE_EXTENSIONS, ...ALLOWED_VIDEO_EXTENSIONS];
+
+// 配置multer内存存储
+const storage = multer.memoryStorage();
+const upload = multer({
+  storage,
+  limits: {
+    fileSize: 500 * 1024 * 1024, // 500MB 最大限制
+  },
+  fileFilter: (_req, file, cb) => {
+    // 第一层验证：检查MIME类型
+    if (ALLOWED_TYPES.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      const error = new Error('不支持的文件类型') as any;
+      cb(error, false);
+    }
+  },
+});
+
+// 转换为Promise
+const uploadSingle = promisify(upload.single('file'));
+
+// 双重文件类型验证函数
+async function validateFileType(buffer: Buffer, mimetype: string): Promise<{ isValid: boolean; error?: string; detectedType?: string }> {
+  try {
+    // 第二层验证：使用file-type检查文件魔数签名
+    const fileType = await fileTypeFromBuffer(buffer);
+    
+    if (!fileType) {
+      return {
+        isValid: false,
+        error: '无法识别文件类型，可能是损坏的文件'
+      };
+    }
+
+    // 检查扩展名是否在允许列表中
+    if (!ALLOWED_EXTENSIONS.includes(fileType.ext)) {
+      return {
+        isValid: false,
+        error: `不支持的文件扩展名: ${fileType.ext}`,
+        detectedType: fileType.mime
+      };
+    }
+
+    // 检查检测到的MIME类型是否在允许列表中
+    if (!ALLOWED_TYPES.includes(fileType.mime)) {
+      return {
+        isValid: false,
+        error: `检测到的文件类型不被支持: ${fileType.mime}`,
+        detectedType: fileType.mime
+      };
+    }
+
+    // 验证MIME类型一致性（防止文件扩展名伪装）
+    const isConsistent = mimetype === fileType.mime;
+    if (!isConsistent) {
+      return {
+        isValid: false,
+        error: `文件类型不一致：声明类型为 ${mimetype}，实际类型为 ${fileType.mime}`,
+        detectedType: fileType.mime
+      };
+    }
+
+    return {
+      isValid: true,
+      detectedType: fileType.mime
+    };
+  } catch (error) {
+    return {
+      isValid: false,
+      error: `文件类型验证失败: ${error instanceof Error ? error.message : '未知错误'}`
+    };
+  }
+}
 
 // 文件大小限制
 const MAX_IMAGE_SIZE = 50 * 1024 * 1024; // 50MB
@@ -78,24 +158,11 @@ export default async function handler(
       });
     }
 
-    // 解析表单数据
-    const form = formidable({
-      maxFileSize: MAX_VIDEO_SIZE, // 使用最大限制
-      keepExtensions: true,
-      multiples: false,
-    });
-
-    const [fields, files] = await new Promise<[formidable.Fields, formidable.Files]>(
-      (resolve, reject) => {
-        form.parse(req, (err, fields, files) => {
-          if (err) reject(err);
-          else resolve([fields, files]);
-        });
-      }
-    );
-
+    // 使用multer处理文件上传
+    await uploadSingle(req as any, res as any);
+    
     // 获取上传的文件
-    const file = Array.isArray(files.file) ? files.file[0] : files.file;
+    const file = (req as any).file;
     if (!file) {
       return res.status(400).json({
         success: false,
@@ -103,17 +170,19 @@ export default async function handler(
       });
     }
 
-    // 验证文件类型
-    if (!ALLOWED_TYPES.includes(file.mimetype || '')) {
+    // 双重文件类型验证
+    const validationResult = await validateFileType(file.buffer, file.mimetype);
+    if (!validationResult.isValid) {
       return res.status(400).json({
         success: false,
-        error: '不支持的文件类型。支持的格式：JPG, PNG, WebP, GIF, MP4, WebM, MOV, AVI'
+        error: `文件验证失败: ${validationResult.error}`
       });
     }
 
     // 验证文件大小
-    const isImage = ALLOWED_IMAGE_TYPES.includes(file.mimetype || '');
-    const isVideo = ALLOWED_VIDEO_TYPES.includes(file.mimetype || '');
+    const detectedType = validationResult.detectedType || file.mimetype;
+    const isImage = ALLOWED_IMAGE_TYPES.includes(detectedType);
+    const isVideo = ALLOWED_VIDEO_TYPES.includes(detectedType);
     const maxSize = isImage ? MAX_IMAGE_SIZE : MAX_VIDEO_SIZE;
     
     if (file.size > maxSize) {
@@ -128,15 +197,15 @@ export default async function handler(
     const bucket = isImage ? 'images' : isVideo ? 'videos' : 'images';
     
     // 生成文件名
-    const fileExtension = path.extname(file.originalFilename || '');
+    const fileExtension = path.extname(file.originalname || '');
     const fileName = `${uuidv4()}${fileExtension}`;
     const filePath = `${user.id}/${fileName}`;
 
-    // 读取文件内容
-    const fileContent = fs.readFileSync(file.filepath);
+    // 文件内容已在内存中
+    const fileContent = file.buffer;
 
     // 上传到 Supabase Storage
-    const { data: uploadData, error: uploadError } = await supabase.storage
+    const { error: uploadError } = await supabase.storage
       .from(bucket)
       .upload(filePath, fileContent, {
         contentType: file.mimetype || 'application/octet-stream',
@@ -156,18 +225,15 @@ export default async function handler(
       .from(bucket)
       .getPublicUrl(filePath);
 
-    // 清理临时文件
-    fs.unlinkSync(file.filepath);
-
-    // 返回成功响应
+    // 返回成功响应（multer使用内存存储，无需清理临时文件）
     res.status(200).json({
       success: true,
       data: {
         url: urlData.publicUrl,
         path: filePath,
-        filename: file.originalFilename || fileName,
+        filename: file.originalname || fileName,
         size: file.size,
-        type: file.mimetype || 'unknown'
+        type: validationResult.detectedType || file.mimetype || 'unknown'
       }
     });
 
