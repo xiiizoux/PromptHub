@@ -48,6 +48,7 @@ import {
 import { pinyin } from 'pinyin-pro';
 import { ModelSelector } from '@/components/ModelSelector';
 import SmartWritingAssistant from '@/components/SmartWritingAssistant';
+import PromptTypeSelector, { PromptType } from '@/components/prompts/edit/PromptTypeSelector';
 import PromptEditForm, { PromptEditFormData } from '@/components/prompts/edit/PromptEditForm';
 
 type PromptFormData = Omit<PromptDetails, 'created_at' | 'updated_at'> & {
@@ -259,9 +260,15 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
         const allCategories = [...(chatCategories || []), ...(imageCategories || []), ...(videoCategories || [])];
         setCategories(allCategories);
 
-        // 检测当前提示词的类型
-        const detectedType = detectCategoryType(safePromptData.content);
-        setCategoryType(detectedType);
+        // 优先使用提示词已有的category_type，如果没有则通过内容检测
+        let initialType: 'chat' | 'image' | 'video' | 'multimodal' = 'chat';
+        if (safePromptData.category_type && ['chat', 'image', 'video', 'multimodal'].includes(safePromptData.category_type)) {
+          initialType = safePromptData.category_type as 'chat' | 'image' | 'video' | 'multimodal';
+        } else {
+          // 如果没有category_type字段，则通过内容检测
+          initialType = detectCategoryType(safePromptData.content);
+        }
+        setCategoryType(initialType);
 
       } catch (err) {
         console.error('获取分类失败:', err);
@@ -294,6 +301,22 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
 
     fetchTags();
   }, []);
+
+  // 处理类型变化
+  const handleTypeChange = (newType: PromptType) => {
+    if (newType !== categoryType) {
+      setCategoryType(newType as any);
+
+      // 重置分类选择
+      setValue('category', '');
+
+      // 如果有可用分类，设置第一个作为默认值
+      const availableCategories = categoriesByType[newType] || [];
+      if (availableCategories.length > 0) {
+        setValue('category', availableCategories[0]);
+      }
+    }
+  };
 
   const { register, handleSubmit, control, formState: { errors }, setValue, watch, reset } = useForm<PromptFormData>({
     defaultValues: {
@@ -975,6 +998,22 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
                 </motion.div>
               )}
             </AnimatePresence>
+          </motion.div>
+
+          {/* 提示词类型选择 - 居中显示在双栏布局之前 */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+            className="flex justify-center mb-8"
+          >
+            <div className="bg-dark-bg-secondary/50 backdrop-blur-sm border border-gray-600/50 rounded-2xl p-6 shadow-lg">
+              <PromptTypeSelector
+                value={categoryType as any}
+                onChange={handleTypeChange}
+                disabled={isSubmitting}
+              />
+            </div>
           </motion.div>
 
           {/* 双栏布局容器 */}
