@@ -298,16 +298,54 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
 
       if (error) {
-        throw error;
+        // 改进错误消息显示
+        let errorMessage = '登录失败，请检查您的凭据';
+        if (error.message.includes('Invalid login credentials')) {
+          errorMessage = '邮箱或密码错误，请重新输入';
+        } else if (error.message.includes('Email not confirmed')) {
+          errorMessage = '请先验证您的邮箱地址';
+        } else if (error.message.includes('Too many requests')) {
+          errorMessage = '登录尝试过于频繁，请稍后再试';
+        }
+        
+        if (mounted.current) {
+          setError(errorMessage);
+        }
+        throw new Error(errorMessage);
       }
 
       if (data.user && data.session) {
-        await ensureUserInDatabase(data.user);
+        // 立即更新认证状态
+        const appUser: User = {
+          id: data.user.id,
+          username: data.user.user_metadata?.display_name ||
+                   data.user.user_metadata?.username ||
+                   data.user.email?.split('@')[0] || 'User',
+          email: data.user.email || '',
+          display_name: data.user.user_metadata?.display_name ||
+                       data.user.user_metadata?.full_name ||
+                       data.user.user_metadata?.name ||
+                       data.user.email?.split('@')[0] || 'User',
+          role: 'user',
+          created_at: data.user.created_at || new Date().toISOString(),
+        };
+
+        if (mounted.current) {
+          setUser(appUser);
+          setIsAuthenticated(true);
+          setError(null);
+          saveUserToStorage(appUser);
+        }
+
+        // 异步确保用户在数据库中，不阻塞登录流程
+        ensureUserInDatabase(data.user).catch(error => {
+          console.error('确保用户在数据库中失败:', error);
+        });
       }
     } catch (err: any) {
       console.error('登录失败:', err);
-      if (mounted.current) {
-        setError(err.message || '登录失败');
+      if (mounted.current && !error) {
+        setError(err.message || '登录失败，请检查您的凭据');
       }
       throw err;
     } finally {

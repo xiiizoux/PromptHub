@@ -30,9 +30,48 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     });
   }
 
+  // 检查必要的环境变量
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    console.error('Supabase配置缺失');
+    return res.status(500).json({
+      success: false,
+      error: '服务配置错误',
+      data: [],
+      total: 0,
+      page: 1,
+      pageSize: 21,
+      totalPages: 0,
+    });
+  }
+
   try {
-    // 解析查询参数
+    // 解析查询参数并添加验证
     const { search, category, tag, sortBy, page = '1', pageSize = '21', category_type } = req.query;
+    
+    // 验证参数类型
+    if (search && typeof search !== 'string') {
+      return res.status(400).json({
+        success: false,
+        error: '搜索参数格式错误',
+        data: [],
+        total: 0,
+        page: 1,
+        pageSize: 21,
+        totalPages: 0,
+      });
+    }
+    
+    if (category && typeof category !== 'string') {
+      return res.status(400).json({
+        success: false,
+        error: '分类参数格式错误',
+        data: [],
+        total: 0,
+        page: 1,
+        pageSize: 21,
+        totalPages: 0,
+      });
+    }
     
     // 解析分页参数
     const currentPage = Math.max(1, parseInt(page as string) || 1);

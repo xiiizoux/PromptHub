@@ -128,7 +128,7 @@ const Navbar: React.FC = () => {
         scrolled ? 'glass shadow-2xl backdrop-blur-xl' : 'bg-transparent',
       )}
     >
-      <nav className="container-custom mx-auto flex items-center justify-between py-4">
+      <nav className="container-custom mx-auto flex items-center justify-between py-4" role="banner" data-testid="main-navigation">
         {/* Logo */}
         <motion.div 
           className="flex lg:flex-1"

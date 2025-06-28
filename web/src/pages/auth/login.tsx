@@ -113,9 +113,17 @@ export default function LoginPage() {
     try {
       console.log('开始调用login函数...');
       await login(data.email, data.password, data.remember);
-      handlePostLoginRedirect(router);
+      
+      // 登录成功后立即重定向
+      console.log('登录成功，开始重定向...');
+      const redirectUrl = getRedirectUrl(router);
+      const targetUrl = redirectUrl || '/';
+      
+      // 使用replace而不是push避免用户通过后退按钮回到登录页
+      await router.replace(targetUrl);
     } catch (err: any) {
       console.error('登录失败:', err);
+      // 错误消息会由AuthContext设置，这里只需要显示
       setError(err.message || '登录失败，请检查您的凭据');
     } finally {
       setIsLoading(false);
