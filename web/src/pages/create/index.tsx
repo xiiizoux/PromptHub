@@ -216,25 +216,39 @@ function CreatePromptPage() {
     toast.success('AI分析建议已成功应用到表单中');
   };
 
-  // 检测提示词类型
-  const detectCategoryType = (content: string): 'chat' | 'image' | 'video' => {
+  // 检测提示词类型 - 根据新的分类方案更新
+  const detectCategoryType = (content: string): 'chat' | 'image' | 'video' | 'multimodal' => {
     const lowerContent = content.toLowerCase();
-    
-    // 图像生成关键词
-    const imageKeywords = [
-      '画', '绘制', '绘画', '图像', '图片', '照片', '摄影', '设计', '风格', 
-      'style', 'draw', 'paint', 'image', 'photo', 'picture', 'art', 'design'
+
+    // 多模态关键词（优先级最高）
+    const multimodalKeywords = [
+      '多模态', '视觉问答', '图文', '看图', '分析图片', '描述图像', '图像问答',
+      'multimodal', 'visual question', 'vqa', 'image analysis', 'describe image'
     ];
-    
+
     // 视频生成关键词
     const videoKeywords = [
-      '视频', '动画', '镜头', '运动', '帧', '时长', '播放', '拍摄',
-      'video', 'animation', 'motion', 'camera', 'frame', 'fps', 'duration'
+      '视频', '动画', '镜头', '运动', '帧', '时长', '播放', '拍摄', '剪辑', '特效',
+      'video', 'animation', 'motion', 'camera', 'frame', 'fps', 'duration', 'editing'
     ];
-    
-    const hasImageKeywords = imageKeywords.some(keyword => lowerContent.includes(keyword));
+
+    // 图像生成关键词
+    const imageKeywords = [
+      '画', '绘制', '绘画', '图像', '图片', '照片', '摄影', '设计', '风格', '生成图片',
+      'style', 'draw', 'paint', 'image', 'photo', 'picture', 'art', 'design', 'generate image'
+    ];
+
+    // 对话模型关键词（包含各种文本处理任务）
+    const chatKeywords = [
+      '对话', '聊天', '问答', '翻译', '摘要', '分析', '写作', '创作', '代码', '编程',
+      'chat', 'conversation', 'translate', 'summary', 'analysis', 'writing', 'code'
+    ];
+
+    const hasMultimodalKeywords = multimodalKeywords.some(keyword => lowerContent.includes(keyword));
     const hasVideoKeywords = videoKeywords.some(keyword => lowerContent.includes(keyword));
-    
+    const hasImageKeywords = imageKeywords.some(keyword => lowerContent.includes(keyword));
+
+    if (hasMultimodalKeywords) return 'multimodal';
     if (hasVideoKeywords) return 'video';
     if (hasImageKeywords) return 'image';
     return 'chat';
@@ -1455,6 +1469,7 @@ function CreatePromptPage() {
                 <ModelSelector
                   selectedModels={models}
                   onChange={handleModelChange}
+                  categoryType={categoryType}
                   placeholder="选择或添加兼容的AI模型..."
                 />
                 

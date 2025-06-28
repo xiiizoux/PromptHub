@@ -27,15 +27,15 @@ import {
 import { AIAnalyzeButton, AIAnalysisResultDisplay } from '@/components/AIAnalyzeButton';
 import { AIAnalysisResult } from '@/lib/ai-analyzer';
 import { useAuth, withAuth } from '@/contexts/AuthContext';
-import { 
-  checkEditPermission, 
+import {
+  checkEditPermission,
   checkFieldPermission,
   getPermissionDescription,
   getPermissionColor,
   PERMISSION_LEVELS,
   PERMISSION_LEVEL_DESCRIPTIONS,
 } from '@/lib/permissions';
-import { 
+import {
   validateVersionFormat,
   canIncrementVersion,
   suggestNextVersion,
@@ -48,6 +48,7 @@ import {
 import { pinyin } from 'pinyin-pro';
 import { ModelSelector } from '@/components/ModelSelector';
 import SmartWritingAssistant from '@/components/SmartWritingAssistant';
+import PromptEditForm, { PromptEditFormData } from '@/components/prompts/edit/PromptEditForm';
 
 type PromptFormData = Omit<PromptDetails, 'created_at' | 'updated_at'> & {
   is_public?: boolean;
@@ -160,11 +161,12 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
   const [tagsLoading, setTagsLoading] = useState(true);
 
   // 添加类型相关状态
-  const [categoryType, setCategoryType] = useState<'chat' | 'image' | 'video'>('chat');
+  const [categoryType, setCategoryType] = useState<'chat' | 'image' | 'video' | 'multimodal'>('chat');
   const [categoriesByType, setCategoriesByType] = useState<Record<string, string[]>>({
     chat: [],
     image: [],
-    video: []
+    video: [],
+    multimodal: []
   });
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
@@ -185,25 +187,42 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
     confidence: string;
   } | null>(null);
 
-  // 检测提示词类型
-  const detectCategoryType = (content: string): 'chat' | 'image' | 'video' => {
+  // 新增：控制是否使用新的组件化表单
+  const [useNewForm, setUseNewForm] = useState(true);
+
+  // 检测提示词类型 - 根据新的分类方案更新
+  const detectCategoryType = (content: string): 'chat' | 'image' | 'video' | 'multimodal' => {
     const lowerContent = content.toLowerCase();
 
-    // 图像生成关键词
-    const imageKeywords = [
-      '画', '绘制', '绘画', '图像', '图片', '照片', '摄影', '设计', '风格',
-      'style', 'draw', 'paint', 'image', 'photo', 'picture', 'art', 'design'
+    // 多模态关键词（优先级最高）
+    const multimodalKeywords = [
+      '多模态', '视觉问答', '图文', '看图', '分析图片', '描述图像', '图像问答',
+      'multimodal', 'visual question', 'vqa', 'image analysis', 'describe image'
     ];
 
     // 视频生成关键词
     const videoKeywords = [
-      '视频', '动画', '镜头', '运动', '帧', '时长', '播放', '拍摄',
-      'video', 'animation', 'motion', 'camera', 'frame', 'fps', 'duration'
+      '视频', '动画', '镜头', '运动', '帧', '时长', '播放', '拍摄', '剪辑', '特效',
+      'video', 'animation', 'motion', 'camera', 'frame', 'fps', 'duration', 'editing'
     ];
 
-    const hasImageKeywords = imageKeywords.some(keyword => lowerContent.includes(keyword));
-    const hasVideoKeywords = videoKeywords.some(keyword => lowerContent.includes(keyword));
+    // 图像生成关键词
+    const imageKeywords = [
+      '画', '绘制', '绘画', '图像', '图片', '照片', '摄影', '设计', '风格', '生成图片',
+      'style', 'draw', 'paint', 'image', 'photo', 'picture', 'art', 'design', 'generate image'
+    ];
 
+    // 对话模型关键词（包含各种文本处理任务）
+    const chatKeywords = [
+      '对话', '聊天', '问答', '翻译', '摘要', '分析', '写作', '创作', '代码', '编程',
+      'chat', 'conversation', 'translate', 'summary', 'analysis', 'writing', 'code'
+    ];
+
+    const hasMultimodalKeywords = multimodalKeywords.some(keyword => lowerContent.includes(keyword));
+    const hasVideoKeywords = videoKeywords.some(keyword => lowerContent.includes(keyword));
+    const hasImageKeywords = imageKeywords.some(keyword => lowerContent.includes(keyword));
+
+    if (hasMultimodalKeywords) return 'multimodal';
     if (hasVideoKeywords) return 'video';
     if (hasImageKeywords) return 'image';
     return 'chat';
@@ -248,7 +267,7 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
       } catch (err) {
         console.error('获取分类失败:', err);
         // 错误时设置空数组
-        setCategoriesByType({ chat: [], image: [], video: [] });
+        setCategoriesByType({ chat: [], image: [], video: [], multimodal: [] });
         setCategories([]);
       } finally {
         setCategoriesLoading(false);
@@ -630,6 +649,74 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
     }
   };
 
+  // 新表单提交处理
+  const handleNewFormSubmit = async (data: PromptEditFormData) => {
+    // 再次检查权限
+    if (!permissionCheck?.canEdit) {
+      alert('您没有编辑此提示词的权限');
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      // 转换新表单数据为旧格式
+      const formData: PromptFormData = {
+        name: data.name,
+        description: data.description,
+        content: data.content,
+        category: data.category,
+        tags: data.tags,
+        input_variables: data.input_variables,
+        compatible_models: data.compatible_models,
+        version: data.version,
+        author: data.author,
+        template_format: data.template_format,
+        is_public: data.is_public,
+        allow_collaboration: data.allow_collaboration,
+        edit_permission: data.edit_permission,
+      };
+
+      // 确保版本号是整数格式（后端需要）
+      const versionInt = typeof formData.version === 'number'
+        ? formData.version
+        : parseVersionToInt(String(formData.version));
+
+      formData.version = versionInt;
+
+      console.log('新表单提交的数据:', {
+        原始版本: formData.version,
+        处理后版本: versionInt,
+        类型: data.category_type,
+        预览资源: data.preview_assets?.length || 0,
+        图像参数: data.image_parameters,
+        视频参数: data.video_parameters,
+        其他数据: { ...formData, content: formData.content?.substring(0, 100) + '...' },
+      });
+
+      // 获取token
+      let token = undefined;
+      if (typeof window !== 'undefined' && user && typeof user === 'object') {
+        if (typeof getToken === 'function') {
+          token = await getToken();
+        }
+      }
+
+      const result = await updatePrompt(prompt.id, formData);
+
+      setSaveSuccess(true);
+      setHasUnsavedChanges(false);
+
+      // 保存成功后直接跳转回详情页面
+      router.push(`/prompts/${prompt.id}`);
+    } catch (error: unknown) {
+      console.error('更新提示词失败:', error);
+      alert(`❌ 更新失败: ${error instanceof Error ? error.message : '未知错误'}`);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   // 重置表单
   const handleReset = () => {
     const resetData = {
@@ -838,7 +925,38 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
               完善您的智能提示词，让AI更好地理解您的需求
             </motion.p>
           </motion.div>
-          
+
+          {/* 表单切换按钮 */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.5 }}
+            className="mb-8 flex justify-center"
+          >
+            <div className="flex items-center gap-4 p-2 glass rounded-xl border border-gray-600">
+              <button
+                onClick={() => setUseNewForm(false)}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                  !useNewForm
+                    ? 'bg-neon-cyan text-black'
+                    : 'text-gray-400 hover:text-gray-200'
+                }`}
+              >
+                经典表单
+              </button>
+              <button
+                onClick={() => setUseNewForm(true)}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                  useNewForm
+                    ? 'bg-gradient-to-r from-neon-cyan to-neon-purple text-white'
+                    : 'text-gray-400 hover:text-gray-200'
+                }`}
+              >
+                🚀 新版表单
+              </button>
+            </div>
+          </motion.div>
+
           {/* 移动端智能助手（可折叠） */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -898,8 +1016,22 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
               transition={{ duration: 0.8, delay: 0.6 }}
               className="xl:col-span-2 glass rounded-3xl border border-neon-cyan/20 shadow-2xl p-8"
             >
-          
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+              {useNewForm ? (
+                /* 新版组件化表单 */
+                <PromptEditForm
+                  initialData={{
+                    ...prompt,
+                    content: prompt.content || prompt.messages?.[0]?.content || '',
+                    category_type: categoryType as any,
+                  }}
+                  onSubmit={handleNewFormSubmit}
+                  onCancel={() => router.push(`/prompts/${prompt.id}`)}
+                  isSubmitting={isSubmitting}
+                  categoriesByType={categoriesByType}
+                />
+              ) : (
+                /* 原有表单 */
+                <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
               {/* 提示词内容 - 移到最上面突出显示 */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
@@ -999,7 +1131,7 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
                   <div className="space-y-3">
                     {/* 类型选择器 */}
                     <div className="flex gap-2 mb-3">
-                      {(['chat', 'image', 'video'] as const).map((type) => (
+                      {(['chat', 'image', 'video', 'multimodal'] as const).map((type) => (
                         <button
                           key={type}
                           type="button"
@@ -1010,7 +1142,7 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
                               : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
                           }`}
                         >
-                          {type === 'chat' ? '对话' : type === 'image' ? '图像' : '视频'}
+                          {type === 'chat' ? '对话' : type === 'image' ? '图像' : type === 'video' ? '视频' : '多模态'}
                         </button>
                       ))}
                     </div>
@@ -1302,6 +1434,7 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
                 <ModelSelector
                   selectedModels={models}
                   onChange={handleModelChange}
+                  categoryType={categoryType}
                   placeholder="选择或添加兼容的AI模型..."
                 />
                 
@@ -1472,6 +1605,7 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
                 </motion.button>
               </motion.div>
             </form>
+              )}
           </motion.div>
           
           {/* 智能写作助手侧边栏 */}

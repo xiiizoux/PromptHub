@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  MODEL_TAGS, 
-  ModelTag, 
-  ModelType, 
-  getModelTagsByType, 
+import {
+  MODEL_TAGS,
+  ModelTag,
+  ModelType,
+  getModelTagsByType,
+  getModelTagsByCategoryType,
   getModelTypeOptions,
-  getModelTypeLabel, 
+  getModelTypeLabel,
 } from '@/constants/ai-models';
 import {
   ChevronDownIcon,
@@ -19,6 +20,7 @@ import {
 interface ModelSelectorProps {
   selectedModels: string[];
   onChange: (models: string[]) => void;
+  categoryType?: 'chat' | 'image' | 'video' | 'multimodal'; // 新增：根据分类类型过滤模型
   className?: string;
   placeholder?: string;
 }
@@ -26,6 +28,7 @@ interface ModelSelectorProps {
 export const ModelSelector: React.FC<ModelSelectorProps> = ({
   selectedModels,
   onChange,
+  categoryType,
   className = '',
   placeholder = '选择兼容模型...',
 }) => {
@@ -34,12 +37,20 @@ export const ModelSelector: React.FC<ModelSelectorProps> = ({
   const [customModel, setCustomModel] = useState('');
   const [showCustomInput, setShowCustomInput] = useState(false);
 
-  // 获取当前选中类型的模型标签
+  // 根据分类类型和选择的模型类型过滤模型标签
   const getFilteredTags = (): ModelTag[] => {
-    if (selectedType === 'all') {
-      return MODEL_TAGS;
+    let availableTags = MODEL_TAGS;
+
+    // 如果指定了分类类型，先按分类类型过滤
+    if (categoryType) {
+      availableTags = getModelTagsByCategoryType(categoryType);
     }
-    return getModelTagsByType(selectedType);
+
+    // 再按选择的模型类型过滤
+    if (selectedType === 'all') {
+      return availableTags;
+    }
+    return availableTags.filter(tag => tag.type === selectedType);
   };
 
   // 获取已选中的模型标签
@@ -277,4 +288,6 @@ export const ModelSelector: React.FC<ModelSelectorProps> = ({
       )}
     </div>
   );
-}; 
+};
+
+export default ModelSelector;
