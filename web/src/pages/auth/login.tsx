@@ -21,7 +21,7 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [initializing, setInitializing] = useState(true);
   const router = useRouter();
-  const { login, loginWithGoogle } = useAuth();
+  const { login, loginWithGoogle, isAuthenticated, isLoading: authLoading } = useAuth();
   
   const { register, handleSubmit, formState: { errors } } = useForm<LoginFormData>({
     defaultValues: {
@@ -33,62 +33,32 @@ export default function LoginPage() {
   
   // 检查用户是否已经登录，如果是则重定向到目标页面
   useEffect(() => {
-    let mounted = true;
-    let checkTimeout: NodeJS.Timeout;
+    // 如果AuthContext还在加载中，不做任何操作
+    if (authLoading) {
+      return;
+    }
 
-    const checkSession = async () => {
-      try {
-        // 等待AuthContext初始化完成，避免重复检查
-        await new Promise(resolve => setTimeout(resolve, 100));
-        
-        if (!mounted) return;
+    // 如果用户已经认证，重定向到目标页面
+    if (isAuthenticated) {
+      console.log('用户已认证，重定向到目标页面');
+      const redirectUrl = getRedirectUrl(router) || '/';
+      router.replace(redirectUrl);
+      return;
+    }
 
-        console.log('登录页面检查现有会话...');
+    // 用户未认证，显示登录表单
+    console.log('用户未认证，显示登录表单');
+    setInitializing(false);
+  }, [router, isAuthenticated, authLoading]);
 
-        const { data: { session }, error } = await supabase.auth.getSession();
-
-        if (!mounted) return;
-
-        if (error) {
-          console.error('检查会话失败:', error);
-          setInitializing(false);
-          return;
-        }
-
-        if (session && session.user) {
-          console.log('发现已登录会话，重定向...');
-          // 使用replace避免重定向循环
-          const redirectUrl = getRedirectUrl(router) || '/';
-          router.replace(redirectUrl);
-        } else {
-          console.log('无现有会话，显示登录表单');
-          setInitializing(false);
-        }
-      } catch (err: any) {
-        console.error('检查会话异常:', err);
-        if (mounted) {
-          setInitializing(false);
-        }
-      }
-    };
-
-    // 设置兜底超时
-    checkTimeout = setTimeout(() => {
-      if (mounted) {
-        console.warn('会话检查超时，强制结束初始化');
-        setInitializing(false);
-      }
-    }, 3000);
-
-    checkSession();
-
-    return () => {
-      mounted = false;
-      if (checkTimeout) {
-        clearTimeout(checkTimeout);
-      }
-    };
-  }, [router]);
+  // 如果AuthContext还在加载中，显示加载状态
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-dark-bg-primary flex items-center justify-center">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-neon-cyan"></div>
+      </div>
+    );
+  }
 
   // 显示加载状态
   if (initializing) {
