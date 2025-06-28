@@ -24,6 +24,9 @@ interface EnhancedSearchResult {
   matchReasons: string[]; // 匹配原因
   created_at?: string;
   updated_at?: string;
+  // 媒体相关字段
+  preview_asset_url?: string;
+  category_type?: 'chat' | 'image' | 'video';
 }
 
 // 搜索参数接口
@@ -687,7 +690,10 @@ export class UnifiedSearchTool extends BaseMCPTool {
         relevanceScore: finalScore,
         matchReasons: matchReasons.length > 0 ? matchReasons : ['基础匹配'],
         created_at: prompt.created_at,
-        updated_at: prompt.updated_at
+        updated_at: prompt.updated_at,
+        // 媒体相关字段
+        preview_asset_url: (prompt as any).preview_asset_url,
+        category_type: (prompt as any).category_type || 'chat'
       };
     });
   }
@@ -1055,6 +1061,27 @@ export class UnifiedSearchTool extends BaseMCPTool {
         output += `📝 **描述：** ${result.description}\n`;
       }
 
+      // 示例展示（针对图片和视频提示词）
+      if (result.preview_asset_url && (result.category_type === 'image' || result.category_type === 'video')) {
+        const typeLabel = result.category_type === 'image' ? '图片' : '视频';
+        output += `🎨 **${typeLabel}示例：**\n\n`;
+        
+        if (result.category_type === 'image') {
+          // 图片使用Markdown图片语法
+          output += `![${result.name} - 示例图片](${result.preview_asset_url})\n\n`;
+          output += `📷 **示例图片链接：** [点击查看大图](${result.preview_asset_url})\n\n`;
+        } else if (result.category_type === 'video') {
+          // 视频提供链接（多数Markdown渲染器不支持内联视频）
+          output += `📺 **示例视频：** [点击观看视频](${result.preview_asset_url})\n\n`;
+          output += `🎬 **视频预览：**\n`;
+          output += `\`\`\`\n`;
+          output += `视频示例: ${result.name}\n`;
+          output += `链接: ${result.preview_asset_url}\n`;
+          output += `类型: ${result.category_type}\n`;
+          output += `\`\`\`\n\n`;
+        }
+      }
+
       // 提示词内容
       if (result.content && result.content.trim()) {
         output += `📄 **提示词内容（点击右上角复制按钮即可一键复制）：**\n\n`;
@@ -1097,6 +1124,7 @@ export class UnifiedSearchTool extends BaseMCPTool {
    */
   private getCategoryEmoji(category: string): string {
     const emojiMap: { [key: string]: string } = {
+      // Chat类型
       '写作': '✍️',
       '编程': '💻',
       '商务': '💼',
@@ -1109,14 +1137,53 @@ export class UnifiedSearchTool extends BaseMCPTool {
       '法律': '⚖️',
       '医疗': '🏥',
       '金融': '💰',
-      '设计': '🎨',
+      '金融投资': '💰',
       '研究': '🔬',
       '管理': '📋',
       '技术': '⚙️',
       '娱乐': '🎮',
       '生活': '🏠',
       '学习': '📖',
-      '通用': '📝'
+      '通用': '📝',
+      '学术': '🎓',
+      '职业': '💼',
+      '文案': '📝',
+      '情感': '❤️',
+      '游戏': '🎮',
+      '办公': '🏢',
+      '健康': '🏥',
+      '科技': '🔬',
+      
+      // Image类型
+      '绘画': '🎨',
+      '设计': '🎨',
+      '摄影': '📷',
+      '插画': '🖼️',
+      'UI设计': '📱',
+      '品牌设计': '🏪',
+      '海报设计': '📋',
+      '3D建模': '🧊',
+      '动漫风格': '🎭',
+      '写实风格': '👁️',
+      '抽象艺术': '🎨',
+      '建筑设计': '🏗️',
+      '时尚设计': '👗',
+      '游戏美术': '🎮',
+      '科幻风格': '🚀',
+      
+      // Video类型
+      '视频制作': '🎬',
+      '动画制作': '🎞️',
+      '短视频': '📱',
+      '纪录片': '📹',
+      '广告视频': '📺',
+      '教学视频': '🎓',
+      '音乐视频': '🎵',
+      '游戏视频': '🎮',
+      '直播内容': '📡',
+      '企业宣传': '🏢',
+      '旅行视频': '✈️',
+      '生活记录': '📝'
     };
 
     return emojiMap[category] || '📝';

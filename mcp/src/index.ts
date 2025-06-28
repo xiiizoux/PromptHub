@@ -6,6 +6,7 @@ import { createServer } from 'http';
 import { config, validateConfig } from './config.js';
 import mcpRouter from './api/mcp-router.js';
 import apiKeysRouter from './api/api-keys-router.js';
+import assetsRouter from './api/assets-router.js';
 import logger from './utils/logger.js';
 import { securityHeadersMiddleware, rateLimitMiddleware } from './api/auth-middleware.js';
 import { systemMonitor } from './monitoring/system-monitor.js';
@@ -178,6 +179,7 @@ export async function startMCPServer() {
     // 配置路由
     app.use('/', mcpRouter);
     app.use('/api/keys', apiKeysRouter);
+    app.use('/api/assets', assetsRouter);
     
     // 错误处理中间件
     app.use((error: any, req: any, res: any, next: any) => {

@@ -117,6 +117,7 @@ class PromptHubMCPAdapter {
           properties: {
             query: { type: 'string', description: '搜索查询，支持自然语言描述，例如："写商务邮件"、"分析代码问题"、"创意文案"等' },
             category: { type: 'string', description: '分类筛选（可选）' },
+            category_type: { type: 'string', enum: ['chat', 'image', 'video'], description: '按分类类型筛选：chat(对话) | image(图像) | video(视频)' },
             tags: { type: 'array', items: { type: 'string' }, description: '标签筛选（可选）' },
             max_results: { type: 'number', description: '最大结果数，默认5个，最多20个' },
             include_content: { type: 'boolean', description: '是否包含完整内容预览，默认true' },
@@ -141,7 +142,10 @@ class PromptHubMCPAdapter {
             is_public: { type: 'boolean', description: '是否公开，默认true（用户指定时优先使用）' },
             allow_collaboration: { type: 'boolean', description: '是否允许协作编辑，默认true（用户指定时优先使用）' },
             collaborative_level: { type: 'string', description: '协作级别：creator_only(默认)|invite_only|public_edit（用户指定时优先使用）' },
-            auto_analyze: { type: 'boolean', description: '是否启用AI自动分析，默认true' }
+            auto_analyze: { type: 'boolean', description: '是否启用AI自动分析，默认true' },
+            // 媒体相关参数
+            preview_asset_url: { type: 'string', description: '预览资源URL（图像或视频提示词必须提供）' },
+            category_type: { type: 'string', enum: ['chat', 'image', 'video'], description: '分类类型：chat(对话) | image(图像) | video(视频)' }
           },
           required: ['content']
         }
@@ -401,6 +405,22 @@ class PromptHubMCPAdapter {
           required: ['prompts']
         }
       },
+      
+      // 文件上传工具（支持图像和视频资源）
+      {
+        name: 'upload_asset',
+        description: '上传示例资源文件（图像或视频），用于图像/视频提示词',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            file_data: { type: 'string', description: 'Base64编码的文件数据' },
+            filename: { type: 'string', description: '文件名，包含扩展名' },
+            category_type: { type: 'string', enum: ['image', 'video'], description: '资源类型：image(图像) | video(视频)' },
+            description: { type: 'string', description: '资源描述（可选）' }
+          },
+          required: ['file_data', 'filename', 'category_type']
+        }
+      },
 
     ];
 
@@ -416,8 +436,15 @@ class PromptHubMCPAdapter {
     }
 
     try {
-      // 使用REST API调用工具
-      const response = await this.makeHttpRequest(`/tools/${name}/invoke`, 'POST', parameters);
+      let response;
+      
+      // 特殊处理文件上传工具
+      if (name === 'upload_asset') {
+        response = await this.handleAssetUpload(parameters);
+      } else {
+        // 使用REST API调用工具
+        response = await this.makeHttpRequest(`/tools/${name}/invoke`, 'POST', parameters);
+      }
       
       // 🎯 修复响应解析逻辑 - 优先使用已格式化的文本
       let displayText;
@@ -478,6 +505,100 @@ class PromptHubMCPAdapter {
   }
 
   /**
+   * 处理资源文件上传
+   */
+  async handleAssetUpload(parameters) {
+    const { file_data, filename, category_type, description } = parameters;
+    
+    if (!file_data || !filename || !category_type) {
+      throw new Error('缺少必需参数：file_data, filename, category_type');
+    }
+    
+    try {
+      // 将Base64数据转换为Buffer
+      const buffer = Buffer.from(file_data, 'base64');
+      
+      // 创建FormData以支持文件上传
+      const FormData = require('form-data');
+      const form = new FormData();
+      
+      form.append('file', buffer, {
+        filename: filename,
+        contentType: this.getMimeType(filename)
+      });
+      
+      if (description) {
+        form.append('description', description);
+      }
+      
+      form.append('category_type', category_type);
+      
+      // 发送文件上传请求
+      const url = new URL('/api/assets/upload', this.serverUrl);
+      
+      const options = {
+        method: 'POST',
+        headers: {
+          'User-Agent': 'PromptHub-MCP-Adapter/2.5.0',
+          ...form.getHeaders()
+        },
+        body: form
+      };
+      
+      // 添加认证
+      if (this.apiKey) {
+        options.headers['X-Api-Key'] = this.apiKey;
+      }
+      
+      const response = await fetch(url.toString(), options);
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`文件上传失败 (${response.status}): ${errorText}`);
+      }
+      
+      const result = await response.json();
+      
+      return {
+        success: true,
+        data: result,
+        content: {
+          type: 'text',
+          text: `✅ 文件上传成功！\n\n📁 **文件名：** ${filename}\n🔗 **访问链接：** ${result.url}\n📂 **文件类型：** ${category_type}\n\n您现在可以在创建${category_type === 'image' ? '图像' : '视频'}提示词时使用此URL作为preview_asset_url参数。`
+        }
+      };
+    } catch (error) {
+      console.error('[PromptHub MCP] 文件上传失败:', error);
+      throw new Error(`文件上传失败: ${error.message}`);
+    }
+  }
+  
+  /**
+   * 根据文件名获取MIME类型
+   */
+  getMimeType(filename) {
+    const ext = filename.toLowerCase().split('.').pop();
+    const mimeTypes = {
+      // 图像格式
+      'jpg': 'image/jpeg',
+      'jpeg': 'image/jpeg',
+      'png': 'image/png',
+      'gif': 'image/gif',
+      'webp': 'image/webp',
+      'svg': 'image/svg+xml',
+      // 视频格式
+      'mp4': 'video/mp4',
+      'webm': 'video/webm',
+      'avi': 'video/avi',
+      'mov': 'video/quicktime',
+      'wmv': 'video/x-ms-wmv',
+      'flv': 'video/x-flv'
+    };
+    
+    return mimeTypes[ext] || 'application/octet-stream';
+  }
+
+  /**
    * 🎨 格式化搜索结果为对话式文本
    * 确保用户能够看到完整的提示词内容，而不只是元数据
    */
@@ -507,6 +628,15 @@ class PromptHubMCPAdapter {
       
       if (result.description) {
         output += `📝 **描述：** ${result.description}\n`;
+      }
+      
+      // 处理预览资源URL显示
+      if (result.preview_asset_url) {
+        if (result.category_type === 'image') {
+          output += `🖼️ **示例图片：** ![${result.name} - 示例图片](${result.preview_asset_url})\n\n`;
+        } else if (result.category_type === 'video') {
+          output += `📺 **示例视频：** [点击观看视频](${result.preview_asset_url})\n\n`;
+        }
       }
       
       // 🚀 最重要：显示实际内容 - 添加强制指令防止重新格式化
@@ -732,7 +862,11 @@ class PromptHubMCPAdapter {
       '播客': '🎙️',     // Podcast - 麦克风图标，表示播客录制
       '音乐': '🎵',     // Music - 音符图标，表示音乐创作
       '健康': '💊',     // Health - 药丸图标，表示健康医疗
-      '科技': '🔬'      // Technology - 显微镜图标，表示科技创新
+      '科技': '🔬',     // Technology - 显微镜图标，表示科技创新
+      
+      // 新增媒体类型分类
+      '创意设计': '🎨',   // Creative Design - 与设计分类相同的图标
+      '金融投资': '💰'    // Finance Investment - 与商业分类相同的图标
     };
     
     return emojiMap[category] || '📄';
@@ -748,7 +882,7 @@ class PromptHubMCPAdapter {
       method: method,
       headers: {
         'Content-Type': 'application/json',
-        'User-Agent': 'PromptHub-MCP-Adapter/2.1.6'
+        'User-Agent': 'PromptHub-MCP-Adapter/2.5.0'
       }
     };
 
@@ -809,6 +943,9 @@ class PromptHubMCPAdapter {
   }
 }
 
+// 全局适配器实例
+let adapter = null;
+
 /**
  * 处理MCP消息
  */
@@ -816,6 +953,11 @@ async function handleMessage(message) {
   let request = null;
   try {
     request = JSON.parse(message);
+
+    // 确保适配器实例存在
+    if (!adapter) {
+      adapter = new PromptHubMCPAdapter();
+    }
 
     // 处理不同的MCP消息类型
     switch (request.method) {
@@ -837,7 +979,7 @@ async function handleMessage(message) {
             },
             serverInfo: {
               name: 'prompthub-mcp-adapter',
-              version: '2.3.0'
+              version: '2.5.0'
             }
           }
         });
@@ -894,7 +1036,7 @@ async function handleMessage(message) {
  */
 async function main() {
   // 创建适配器实例
-  global.adapter = new PromptHubMCPAdapter();
+  adapter = new PromptHubMCPAdapter();
   
   // 尝试初始化（如果失败，会在后续MCP消息中重试）
   try {

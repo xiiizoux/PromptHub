@@ -759,8 +759,15 @@ export class SupabaseAdapter implements StorageAdapter {
           // 新增媒体相关字段
           preview_asset_url: prompt.preview_asset_url || null,
           parameters: prompt.parameters || {},
-          category_id: prompt.category_id || null
+          category_id: prompt.category_id || null,
+          category_type: prompt.category_type || 'chat' // 确保category_type字段被正确传递
         };
+        
+        // 确保 category_type 是有效的枚举值
+        if (promptData.category_type && !['chat', 'image', 'video'].includes(promptData.category_type)) {
+          console.warn('[SupabaseAdapter] 无效的 category_type 值:', promptData.category_type, '，重置为 chat');
+          promptData.category_type = 'chat';
+        }
         
         console.log('[SupabaseAdapter] 验证用户是否存在于数据库中');
         if (finalUserId) {
@@ -1925,6 +1932,244 @@ export class SupabaseAdapter implements StorageAdapter {
     } catch (err) {
       console.error('获取用户信息时出错:', err);
       return null;
+    }
+  }
+
+  // ========= 文件存储相关方法 =========
+
+  /**
+   * 上传资源文件到Supabase Storage
+   * @param fileBuffer 文件缓冲区
+   * @param filename 文件名
+   * @param mimetype MIME类型
+   * @param categoryType 分类类型
+   * @returns 上传结果
+   */
+  async uploadAsset(
+    fileBuffer: Buffer, 
+    filename: string, 
+    mimetype: string, 
+    categoryType: 'image' | 'video'
+  ): Promise<{success: boolean; url?: string; message?: string}> {
+    try {
+      logger.info('开始上传文件到Supabase Storage', {
+        filename,
+        mimetype,
+        categoryType,
+        size: fileBuffer.length
+      });
+
+      // 选择存储桶名称
+      const bucketName = categoryType === 'image' ? 'images' : 'videos';
+      
+      // 使用管理员客户端进行上传
+      const client = this.adminSupabase || this.supabase;
+      
+      // 上传文件到Storage
+      const { data, error } = await client.storage
+        .from(bucketName)
+        .upload(filename, fileBuffer, {
+          contentType: mimetype,
+          upsert: false // 不覆盖已存在的文件
+        });
+
+      if (error) {
+        logger.error('文件上传失败', { 
+          error: error.message, 
+          filename,
+          bucketName 
+        });
+        return {
+          success: false,
+          message: `文件上传失败: ${error.message}`
+        };
+      }
+
+      if (!data) {
+        return {
+          success: false,
+          message: '文件上传失败: 未返回数据'
+        };
+      }
+
+      // 获取公开URL
+      const { data: urlData } = client.storage
+        .from(bucketName)
+        .getPublicUrl(filename);
+
+      if (!urlData.publicUrl) {
+        return {
+          success: false,
+          message: '获取文件URL失败'
+        };
+      }
+
+      logger.info('文件上传成功', {
+        filename,
+        url: urlData.publicUrl,
+        path: data.path
+      });
+
+      return {
+        success: true,
+        url: urlData.publicUrl
+      };
+
+    } catch (error) {
+      logger.error('上传文件时发生异常', { error, filename });
+      return {
+        success: false,
+        message: `上传文件时发生异常: ${error instanceof Error ? error.message : '未知错误'}`
+      };
+    }
+  }
+
+  /**
+   * 获取资源文件信息
+   * @param filename 文件名
+   * @returns 文件信息
+   */
+  async getAssetInfo(filename: string): Promise<{success: boolean; data?: any; message?: string}> {
+    try {
+      // 确定存储桶（根据文件名前缀）
+      const isImage = filename.startsWith('image_');
+      const isVideo = filename.startsWith('video_');
+      
+      if (!isImage && !isVideo) {
+        return {
+          success: false,
+          message: '无法确定文件类型'
+        };
+      }
+
+      const bucketName = isImage ? 'images' : 'videos';
+      const client = this.adminSupabase || this.supabase;
+
+      // 获取文件信息
+      const { data, error } = await client.storage
+        .from(bucketName)
+        .list('', {
+          search: filename
+        });
+
+      if (error) {
+        logger.error('获取文件信息失败', { error: error.message, filename });
+        return {
+          success: false,
+          message: `获取文件信息失败: ${error.message}`
+        };
+      }
+
+      const fileInfo = data?.find(file => file.name === filename);
+      if (!fileInfo) {
+        return {
+          success: false,
+          message: '文件不存在'
+        };
+      }
+
+      // 获取公开URL
+      const { data: urlData } = client.storage
+        .from(bucketName)
+        .getPublicUrl(filename);
+
+      return {
+        success: true,
+        data: {
+          name: fileInfo.name,
+          size: fileInfo.metadata?.size || 0,
+          lastModified: fileInfo.updated_at,
+          url: urlData.publicUrl,
+          contentType: fileInfo.metadata?.mimetype
+        }
+      };
+
+    } catch (error) {
+      logger.error('获取文件信息时发生异常', { error, filename });
+      return {
+        success: false,
+        message: `获取文件信息时发生异常: ${error instanceof Error ? error.message : '未知错误'}`
+      };
+    }
+  }
+
+  /**
+   * 删除资源文件
+   * @param filename 文件名
+   * @returns 删除结果
+   */
+  async deleteAsset(filename: string): Promise<{success: boolean; message?: string}> {
+    try {
+      // 确定存储桶（根据文件名前缀）
+      const isImage = filename.startsWith('image_');
+      const isVideo = filename.startsWith('video_');
+      
+      if (!isImage && !isVideo) {
+        return {
+          success: false,
+          message: '无法确定文件类型'
+        };
+      }
+
+      const bucketName = isImage ? 'images' : 'videos';
+      const client = this.adminSupabase || this.supabase;
+
+      // 删除文件
+      const { error } = await client.storage
+        .from(bucketName)
+        .remove([filename]);
+
+      if (error) {
+        logger.error('删除文件失败', { error: error.message, filename });
+        return {
+          success: false,
+          message: `删除文件失败: ${error.message}`
+        };
+      }
+
+      logger.info('文件删除成功', { filename });
+      return {
+        success: true
+      };
+
+    } catch (error) {
+      logger.error('删除文件时发生异常', { error, filename });
+      return {
+        success: false,
+        message: `删除文件时发生异常: ${error instanceof Error ? error.message : '未知错误'}`
+      };
+    }
+  }
+
+  /**
+   * 验证文件URL是否有效
+   * @param url 文件URL
+   * @returns 验证结果
+   */
+  async validateAssetUrl(url: string): Promise<boolean> {
+    try {
+      // 检查URL格式
+      if (!url || typeof url !== 'string') {
+        return false;
+      }
+
+      // 检查是否是Supabase Storage URL
+      // 修复：使用实际的bucket名称 images 和 videos
+      const supabaseStoragePattern = new RegExp(
+        `^${config.supabase.url}/storage/v1/object/public/(images|videos)/`
+      );
+
+      if (!supabaseStoragePattern.test(url)) {
+        return false;
+      }
+
+      // 可以选择发送HEAD请求验证文件是否存在
+      // 这里简化处理，仅验证URL格式
+      return true;
+
+    } catch (error) {
+      logger.error('验证文件URL时发生异常', { error, url });
+      return false;
     }
   }
   

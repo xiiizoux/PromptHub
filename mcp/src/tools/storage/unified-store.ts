@@ -90,6 +90,10 @@ interface UnifiedStoreParams {
   allow_collaboration?: boolean;
   collaborative_level?: 'creator_only' | 'invite_only' | 'public_edit';
   
+  // 媒体相关参数
+  preview_asset_url?: string; // 预览资源URL，图片和视频提示词必须提供
+  category_type?: 'chat' | 'image' | 'video'; // 分类类型
+  
   // 控制参数
   auto_analyze?: boolean;
   skip_ai_analysis?: boolean;
@@ -180,6 +184,19 @@ export class UnifiedStoreTool extends BaseMCPTool {
           required: false,
         } as ToolParameter,
         
+        // 媒体相关参数
+        preview_asset_url: {
+          type: 'string',
+          description: '预览资源URL，图片和视频提示词必须提供示例文件的URL',
+          required: false,
+        } as ToolParameter,
+        
+        category_type: {
+          type: 'string',
+          description: '分类类型：chat(对话) | image(图片) | video(视频)，默认chat',
+          required: false,
+        } as ToolParameter,
+        
         // 控制参数
         auto_analyze: {
           type: 'boolean',
@@ -206,7 +223,9 @@ export class UnifiedStoreTool extends BaseMCPTool {
         contentLength: params.content.length,
         hasInstruction: !!params.instruction,
         hasUserParams: this.hasUserSpecifiedParams(params),
-        autoAnalyze: params.auto_analyze !== false
+        autoAnalyze: params.auto_analyze !== false,
+        categoryType: params.category_type,
+        hasPreviewAsset: !!params.preview_asset_url
       });
 
       // 1. 解析用户指令
@@ -221,10 +240,19 @@ export class UnifiedStoreTool extends BaseMCPTool {
       // 3. 合并参数（用户指定优先）
       const finalParams = this.mergeParameters(params, instructionResult.specified_params, aiAnalysis);
       
-      // 4. 验证和优化参数
+      // 4. 媒体类型强制校验
+      const validationResult = await this.validateMediaRequirements(finalParams);
+      if (!validationResult.isValid) {
+        return {
+          success: false,
+          message: validationResult.message
+        };
+      }
+      
+      // 5. 验证和优化参数
       const optimizedParams = await this.optimizeParameters(finalParams);
       
-      // 5. 执行存储
+      // 6. 执行存储
       const storeResult = await this.performStorage(optimizedParams, context);
       
       // 6. 生成详细报告
@@ -309,8 +337,124 @@ export class UnifiedStoreTool extends BaseMCPTool {
       params.tags?.length ||
       params.compatible_models?.length || // 添加compatible_models检查
       params.difficulty ||
-      params.is_public !== undefined
+      params.is_public !== undefined ||
+      params.preview_asset_url ||
+      params.category_type
     );
+  }
+
+  /**
+   * 验证媒体类型要求
+   * 图片和视频提示词必须提供示例URL
+   */
+  private async validateMediaRequirements(params: any): Promise<{isValid: boolean; message?: string}> {
+    try {
+      // 确定分类类型
+      let categoryType = params.category_type;
+      
+      // 如果没有明确指定分类类型，尝试从分类名称推断
+      if (!categoryType && params.category) {
+        categoryType = this.inferCategoryType(params.category);
+      }
+      
+      // 如果仍然无法确定，默认为chat
+      if (!categoryType) {
+        categoryType = 'chat';
+      }
+
+      // 对于图片和视频类型，强制要求提供示例URL
+      if (categoryType === 'image' || categoryType === 'video') {
+        if (!params.preview_asset_url) {
+          const typeLabel = categoryType === 'image' ? '图片' : '视频';
+          return {
+            isValid: false,
+            message: `❌ ${typeLabel}提示词必须提供示例文件！\n\n` +
+                    `请先使用文件上传接口上传${typeLabel}示例：\n` +
+                    `• 上传接口：POST /api/assets/upload\n` +
+                    `• 支持格式：${categoryType === 'image' ? 'JPEG, PNG, GIF, WebP, SVG' : 'MP4, AVI, MOV, WMV, FLV, WebM, MKV'}\n` +
+                    `• 最大大小：50MB\n\n` +
+                    `上传成功后，将返回的URL作为preview_asset_url参数传入。`
+          };
+        }
+
+        // 验证URL格式
+        const storage = this.getStorage();
+        const isValidUrl = await storage.validateAssetUrl(params.preview_asset_url);
+        if (!isValidUrl) {
+          return {
+            isValid: false,
+            message: `❌ 提供的示例URL格式无效或不是本系统上传的文件！\n\n` +
+                    `请确保使用 /api/assets/upload 接口上传文件并使用返回的URL。\n` +
+                    `当前URL：${params.preview_asset_url}`
+          };
+        }
+
+        // 验证URL与分类类型的匹配
+        const expectedPrefix = categoryType === 'image' ? 'image_' : 'video_';
+        const filename = this.extractFilenameFromUrl(params.preview_asset_url);
+        if (!filename.startsWith(expectedPrefix)) {
+          const typeLabel = categoryType === 'image' ? '图片' : '视频';
+          return {
+            isValid: false,
+            message: `❌ 示例文件类型与分类类型不匹配！\n\n` +
+                    `${typeLabel}提示词必须使用${typeLabel}文件作为示例。\n` +
+                    `当前文件：${filename}`
+          };
+        }
+      }
+
+      // 验证通过，将分类类型设置回参数中
+      params.category_type = categoryType;
+
+      return { isValid: true };
+    } catch (error) {
+      console.error('[UnifiedStore] 媒体要求验证失败:', error);
+      return {
+        isValid: false,
+        message: `验证失败: ${error instanceof Error ? error.message : '未知错误'}`
+      };
+    }
+  }
+
+  /**
+   * 从分类名称推断分类类型
+   */
+  private inferCategoryType(category: string): 'chat' | 'image' | 'video' | null {
+    // 图片相关分类
+    const imageCategories = [
+      '绘画', '设计', '摄影', '插画', 'UI设计', '品牌设计', '海报设计', 
+      '3D建模', '动漫风格', '写实风格', '抽象艺术', '建筑设计', 
+      '时尚设计', '游戏美术', '科幻风格'
+    ];
+    
+    // 视频相关分类
+    const videoCategories = [
+      '视频制作', '动画制作', '短视频', '纪录片', '广告视频', 
+      '教学视频', '音乐视频', '游戏视频', '直播内容', 
+      '企业宣传', '旅行视频', '生活记录'
+    ];
+
+    if (imageCategories.includes(category)) {
+      return 'image';
+    } else if (videoCategories.includes(category)) {
+      return 'video';
+    } else {
+      return 'chat';
+    }
+  }
+
+  /**
+   * 从URL中提取文件名
+   */
+  private extractFilenameFromUrl(url: string): string {
+    try {
+      const urlObj = new URL(url);
+      const pathname = urlObj.pathname;
+      const segments = pathname.split('/');
+      return segments[segments.length - 1] || '';
+    } catch (error) {
+      return '';
+    }
   }
 
   /**
@@ -684,6 +828,9 @@ export class UnifiedStoreTool extends BaseMCPTool {
       tags: userSpecified.tags || aiAnalysis?.tags || ['通用'],
       difficulty: userSpecified.difficulty || aiAnalysis?.difficulty || 'medium',
       compatible_models: userSpecified.compatible_models || aiAnalysis?.compatible_models || getDefaultModelTags(), // 使用预设模型标签
+      // 媒体相关字段
+      preview_asset_url: originalParams.preview_asset_url || null,
+      category_type: originalParams.category_type || 'chat',
       // 默认设置
       is_public: userSpecified.is_public !== undefined ? userSpecified.is_public : true,
       allow_collaboration: userSpecified.allow_collaboration !== undefined ? userSpecified.allow_collaboration : true,
@@ -761,6 +908,10 @@ export class UnifiedStoreTool extends BaseMCPTool {
             : getDefaultModelTags(), // 确保兼容模型不为空
           allow_collaboration: params.allow_collaboration,
           collaborative_level: params.collaborative_level,
+          // 媒体相关字段
+          preview_asset_url: params.preview_asset_url || null,
+          category_type: params.category_type || 'chat',
+          parameters: params.parameters || {},
           user_id: userId, // 确保正确的字段名
           created_at: new Date().toISOString()
         };

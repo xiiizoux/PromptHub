@@ -225,6 +225,12 @@ export interface StorageAdapter {
   updateApiKeyLastUsed(apiKey: string): Promise<void>;
   listApiKeys(userId: string): Promise<ApiKey[]>;
   deleteApiKey(userId: string, keyId: string): Promise<boolean>;
+  
+  // 文件存储相关（可选实现）
+  uploadAsset?(fileBuffer: Buffer, filename: string, mimetype: string, categoryType: 'image' | 'video'): Promise<{success: boolean; url?: string; message?: string}>;
+  getAssetInfo?(filename: string): Promise<{success: boolean; data?: any; message?: string}>;
+  deleteAsset?(filename: string): Promise<{success: boolean; message?: string}>;
+  validateAssetUrl?(url: string): Promise<boolean>;
 }
 
 export interface MCPToolRequest {
