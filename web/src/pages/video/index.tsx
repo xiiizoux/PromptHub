@@ -298,21 +298,21 @@ export default function VideoPromptsPage() {
       >
         <div className="relative z-10 container-custom py-12">
         {/* 页面标题 */}
-        <motion.div 
-          className="text-center mb-12"
-          initial={{ opacity: 0, y: -20 }}
+        <motion.div
+          className="text-center mb-6"
+          initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
+          transition={{ duration: 0.4 }}
         >
-          <div className="flex items-center justify-center mb-6">
-            <div className="inline-flex p-4 rounded-2xl bg-gradient-to-br from-red-500 to-orange-500 mr-4">
-              <FilmIcon className="h-8 w-8 text-dark-bg-primary" />
+          <div className="flex items-center justify-center mb-2">
+            <div className="inline-flex p-2 rounded-xl bg-gradient-to-br from-red-500 to-orange-500 mr-2">
+              <FilmIcon className="h-4 w-4 text-dark-bg-primary" />
             </div>
-            <h1 className="text-4xl md:text-6xl font-bold text-white gradient-text">
+            <h1 className="text-2xl md:text-3xl font-bold text-white gradient-text">
               视频提示词
             </h1>
           </div>
-          <p className="text-xl text-gray-400 max-w-3xl mx-auto">
+          <p className="text-sm md:text-base text-gray-400 max-w-2xl mx-auto">
             探索精彩的视频生成提示词，让AI为你创造动态视觉体验
           </p>
           {totalCount > 0 && (

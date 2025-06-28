@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useForm, Controller } from 'react-hook-form';
-import { 
-  DocumentTextIcon, 
-  TagIcon, 
+import {
+  DocumentTextIcon,
+  TagIcon,
   UserIcon,
   CogIcon,
+  CpuChipIcon,
   ExclamationTriangleIcon,
   CheckCircleIcon,
   InformationCircleIcon
@@ -16,6 +17,7 @@ import CategorySelector from './CategorySelector';
 import PreviewAssetManager from './PreviewAssetManager';
 import ImageParametersForm, { ImageParameters } from './ImageParametersForm';
 import VideoParametersForm, { VideoParameters } from './VideoParametersForm';
+import { ModelSelector } from '@/components/ModelSelector';
 
 import { PromptDetails } from '@/types';
 
@@ -180,33 +182,32 @@ export default function PromptEditForm({
 
   return (
     <div className={`space-y-8 ${className}`}>
-      <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-8">
-        {/* 提示词类型选择 */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="space-y-4"
-        >
-          <h3 className="text-lg font-semibold text-gray-200 flex items-center gap-3">
-            <CogIcon className="h-6 w-6 text-neon-cyan" />
-            提示词类型
-          </h3>
+      {/* 提示词类型选择 - 移到表单外部，居中显示 */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="flex justify-center mb-8"
+      >
+        <div className="bg-dark-bg-secondary/50 backdrop-blur-sm border border-gray-600/50 rounded-2xl p-6 shadow-lg">
           <PromptTypeSelector
             value={currentType}
             onChange={handleTypeChange}
             disabled={isSubmitting}
           />
-        </motion.div>
+        </div>
+      </motion.div>
+
+      <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-8">
 
         {/* 基本信息 */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="space-y-6"
+          className="space-y-4"
         >
-          <h3 className="text-lg font-semibold text-gray-200 flex items-center gap-3">
-            <DocumentTextIcon className="h-6 w-6 text-neon-purple" />
+          <h3 className="text-base font-medium text-gray-200 flex items-center gap-2">
+            <DocumentTextIcon className="h-4 w-4 text-neon-purple" />
             基本信息
           </h3>
 
@@ -246,9 +247,6 @@ export default function PromptEditForm({
 
           {/* 分类选择 */}
           <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-300">
-              分类 *
-            </label>
             <Controller
               name="category"
               control={control}
@@ -276,7 +274,7 @@ export default function PromptEditForm({
           transition={{ delay: 0.2 }}
           className="space-y-4"
         >
-          <h3 className="text-lg font-semibold text-gray-200">
+          <h3 className="text-base font-medium text-gray-200">
             提示词内容 *
           </h3>
           <textarea
@@ -291,18 +289,18 @@ export default function PromptEditForm({
           )}
         </motion.div>
 
-        {/* 媒体相关内容 */}
+        {/* 媒体相关内容 - 移到提示词内容下面 */}
         <AnimatePresence>
           {(currentType === 'image' || currentType === 'video') && (
             <motion.div
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
-              className="space-y-6"
+              className="space-y-4"
             >
               {/* 预览资源管理 */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold text-gray-200">
+              <div className="space-y-3">
+                <h3 className="text-base font-medium text-gray-200">
                   示例文件
                 </h3>
                 <PreviewAssetManager
@@ -313,39 +311,63 @@ export default function PromptEditForm({
                 />
               </div>
 
-              {/* 生成参数 */}
-              <div className="space-y-4">
-                {currentType === 'image' && (
-                  <Controller
-                    name="image_parameters"
+              {/* 图像参数 */}
+              {currentType === 'image' && (
+                <div className="space-y-3">
+                  <h3 className="text-base font-medium text-gray-200">
+                    图像参数
+                  </h3>
+                  <ImageParametersForm
                     control={control}
-                    render={({ field }) => (
-                      <ImageParametersForm
-                        value={field.value || {}}
-                        onChange={handleImageParametersChange}
-                        disabled={isSubmitting}
-                      />
-                    )}
+                    disabled={isSubmitting}
                   />
-                )}
+                </div>
+              )}
 
-                {currentType === 'video' && (
-                  <Controller
-                    name="video_parameters"
+              {/* 视频参数 */}
+              {currentType === 'video' && (
+                <div className="space-y-3">
+                  <h3 className="text-base font-medium text-gray-200">
+                    视频参数
+                  </h3>
+                  <VideoParametersForm
                     control={control}
-                    render={({ field }) => (
-                      <VideoParametersForm
-                        value={field.value || {}}
-                        onChange={handleVideoParametersChange}
-                        disabled={isSubmitting}
-                      />
-                    )}
+                    disabled={isSubmitting}
                   />
-                )}
-              </div>
+                </div>
+              )}
             </motion.div>
           )}
         </AnimatePresence>
+
+        {/* 兼容模型 */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          className="space-y-4"
+        >
+          <h3 className="text-base font-medium text-gray-200 flex items-center gap-2">
+            <CpuChipIcon className="h-4 w-4 text-neon-cyan" />
+            兼容模型
+          </h3>
+          <Controller
+            name="compatible_models"
+            control={control}
+            render={({ field }) => (
+              <ModelSelector
+                selectedModels={field.value || []}
+                onChange={field.onChange}
+                categoryType={currentType}
+                placeholder="选择或添加兼容的AI模型..."
+                disabled={isSubmitting}
+              />
+            )}
+          />
+          <p className="text-xs text-gray-500">
+            选择此提示词兼容的AI模型类型，支持文本、图像、音频、视频等多种模型
+          </p>
+        </motion.div>
 
         {/* 提交按钮 */}
         <motion.div

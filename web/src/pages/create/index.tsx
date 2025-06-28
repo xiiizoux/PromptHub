@@ -23,6 +23,7 @@ import {
   CpuChipIcon,
   ShieldExclamationIcon,
   PhotoIcon,
+  CogIcon,
 } from '@heroicons/react/24/outline';
 import { AIAnalyzeButton, AIAnalysisResultDisplay } from '@/components/AIAnalyzeButton';
 import { AIAnalysisResult } from '@/lib/ai-analyzer';
@@ -32,6 +33,7 @@ import { formatVersionDisplay } from '@/lib/version-utils';
 import { withAuth } from '@/contexts/AuthContext';
 import SmartWritingAssistant from '@/components/SmartWritingAssistant';
 import { toast } from 'react-hot-toast';
+import PromptTypeSelector, { PromptType } from '@/components/prompts/edit/PromptTypeSelector';
 
 
 // 扩展类型，添加媒体相关字段
@@ -64,6 +66,7 @@ function CreatePromptPage() {
 
   // 媒体相关状态
   const [categoryType, setCategoryType] = useState<'chat' | 'image' | 'video'>('chat');
+  const [currentType, setCurrentType] = useState<PromptType>('chat');
   const [categoriesByType, setCategoriesByType] = useState<Record<string, string[]>>({
     chat: [],
     image: [],
@@ -74,6 +77,34 @@ function CreatePromptPage() {
   const [isUploading, setIsUploading] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string>('');
   const [parameters, setParameters] = useState<Record<string, any>>({});
+
+  // 获取激活状态的样式
+  const getActiveStyles = (color: string) => {
+    switch (color) {
+      case 'neon-cyan':
+        return 'border-neon-cyan bg-neon-cyan/20 text-neon-cyan shadow-md';
+      case 'neon-purple':
+        return 'border-neon-purple bg-neon-purple/20 text-neon-purple shadow-md';
+      case 'neon-pink':
+        return 'border-neon-pink bg-neon-pink/20 text-neon-pink shadow-md';
+      default:
+        return 'border-neon-cyan bg-neon-cyan/20 text-neon-cyan shadow-md';
+    }
+  };
+
+  // 获取激活状态的圆点样式
+  const getActiveDotStyles = (color: string) => {
+    switch (color) {
+      case 'neon-cyan':
+        return 'bg-neon-cyan';
+      case 'neon-purple':
+        return 'bg-neon-purple';
+      case 'neon-pink':
+        return 'bg-neon-pink';
+      default:
+        return 'bg-neon-cyan';
+    }
+  };
 
   // 添加实时内容监听状态
   const [currentContent, setCurrentContent] = useState('');
@@ -211,9 +242,32 @@ function CreatePromptPage() {
     
     // 清除待应用的AI分析结果
     setPendingAIAnalysis(null);
-    
+
     // 显示应用成功提示
     toast.success('AI分析建议已成功应用到表单中');
+  };
+
+  // 处理类型变化
+  const handleTypeChange = (newType: PromptType) => {
+    if (newType !== currentType) {
+      setCurrentType(newType);
+      setCategoryType(newType);
+      setValue('category_type', newType);
+
+      // 重置相关字段
+      setValue('category', '');
+
+      // 设置默认参数
+      const defaultParams = getDefaultParameters(newType);
+      setParameters(defaultParams);
+      setValue('parameters', defaultParams);
+
+      // 更新分类选项
+      const availableCategories = categoriesByType[newType] || [];
+      if (availableCategories.length > 0) {
+        setValue('category', availableCategories[0]);
+      }
+    }
   };
 
   // 检测提示词类型 - 根据新的分类方案更新
@@ -841,26 +895,26 @@ function CreatePromptPage() {
 
 
           {/* 页面标题 */}
-          <motion.div 
-            initial={{ opacity: 0, y: 30 }}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            className="mb-12 text-center"
+            transition={{ duration: 0.6 }}
+            className="mb-6 text-center"
           >
-            <motion.h1 
-              className="text-4xl md:text-6xl font-bold text-neon-cyan mb-4"
+            <motion.h1
+              className="text-2xl md:text-3xl font-bold text-neon-cyan mb-2"
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 1, delay: 0.2 }}
+              transition={{ duration: 0.8, delay: 0.1 }}
             >
-              <PlusCircleIcon className="h-8 w-8 md:h-12 md:w-12 text-neon-cyan mr-4 inline" />
-              创建新提示词
+              <PlusCircleIcon className="h-6 w-6 text-neon-cyan mr-2 inline" />
+              创建提示词
             </motion.h1>
-            <motion.p 
-              className="text-xl text-gray-400 max-w-3xl mx-auto leading-relaxed"
-              initial={{ opacity: 0, y: 20 }}
+            <motion.p
+              className="text-sm md:text-base text-gray-400 max-w-2xl mx-auto leading-relaxed"
+              initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.4 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
             >
               释放AI的无限潜能，打造专属的智能提示词
             </motion.p>
@@ -917,6 +971,22 @@ function CreatePromptPage() {
             </AnimatePresence>
           </motion.div>
 
+          {/* 提示词类型选择 - 居中显示在双栏布局之前 */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+            className="flex justify-center mb-8"
+          >
+            <div className="bg-dark-bg-secondary/50 backdrop-blur-sm border border-gray-600/50 rounded-2xl p-6 shadow-lg">
+              <PromptTypeSelector
+                value={currentType}
+                onChange={handleTypeChange}
+                disabled={isSubmitting}
+              />
+            </div>
+          </motion.div>
+
           {/* 双栏布局容器 */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* 主表单区域 */}
@@ -927,7 +997,10 @@ function CreatePromptPage() {
               className="lg:col-span-2 glass rounded-3xl border border-neon-cyan/20 shadow-2xl p-8"
             >
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
-              {/* 提示词内容 - 移到最上面突出显示 */}
+
+
+
+              {/* 提示词内容 */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -940,7 +1013,7 @@ function CreatePromptPage() {
                     提示词内容 *
                     <span className="ml-2 text-sm font-normal text-gray-400">核心内容区域</span>
                   </label>
-                  
+
                   {/* 提示用户使用右侧栏的智能功能 */}
                   <div className="text-sm text-gray-400">
                     💡 使用右侧智能助手进行分析和优化
@@ -970,114 +1043,16 @@ function CreatePromptPage() {
 
               </motion.div>
 
-              {/* 基本信息 */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 1.0 }}
-                className="grid grid-cols-1 lg:grid-cols-2 gap-8"
-              >
-                <div className="space-y-2">
-                  <label htmlFor="prompt-name" className="flex items-center text-sm font-medium text-gray-300 mb-3">
-                    <SparklesIcon className="h-5 w-5 text-neon-cyan mr-2" />
-                    提示词名称 *
-                  </label>
-                  <input
-                    id="prompt-name"
-                    {...register('name', { required: '请输入提示词名称' })}
-                    type="text"
-                    placeholder="为您的提示词起个响亮的名字"
-                    className="input-primary w-full"
-                    autoComplete="off"
-                  />
-                  {errors.name && (
-                    <p className="text-neon-red text-sm mt-1">{errors.name.message}</p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <label htmlFor="author" className="flex items-center text-sm font-medium text-gray-300 mb-3">
-                    <UserIcon className="h-5 w-5 text-neon-purple mr-2" />
-                    作者
-                  </label>
-                  <input
-                    id="author"
-                    {...register('author')}
-                    type="text"
-                    value={user?.display_name || user?.username || user?.email?.split('@')[0] || ''}
-                    className="input-primary w-full bg-gray-800 text-gray-400 cursor-not-allowed"
-                    readOnly
-                    title="创建提示词时，作者自动设置为当前登录用户"
-                  />
-                  <p className="text-xs text-gray-500">创建提示词时，作者自动设置为当前登录用户</p>
-                </div>
-              </motion.div>
-
-              {/* 类型选择 */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 1.0 }}
-                className="space-y-4"
-              >
-                <label className="flex items-center text-sm font-medium text-gray-300 mb-3">
-                  <SparklesIcon className="h-5 w-5 text-neon-purple mr-2" />
-                  提示词类型 *
-                </label>
-                <div className="grid grid-cols-3 gap-4">
-                  {[
-                    { value: 'chat', label: '对话', icon: '💬', desc: '文本交互、问答、分析' },
-                    { value: 'image', label: '图像', icon: '🖼️', desc: 'AI图像生成' },
-                    { value: 'video', label: '视频', icon: '🎬', desc: 'AI视频生成' }
-                  ].map((type) => (
-                    <div
-                      key={type.value}
-                      className={`relative p-4 border-2 rounded-xl cursor-pointer transition-all duration-200 ${
-                        categoryType === type.value
-                          ? 'border-neon-cyan bg-neon-cyan/10'
-                          : 'border-gray-600 hover:border-gray-500'
-                      }`}
-                      onClick={() => {
-                        setCategoryType(type.value as any);
-                        setValue('category_type', type.value as any);
-                        
-                        // 设置默认参数
-                        const defaultParams = getDefaultParameters(type.value as any);
-                        setParameters(defaultParams);
-                        setValue('parameters', defaultParams);
-                        
-                        // 更新分类选项
-                        const availableCategories = categoriesByType[type.value] || [];
-                        if (availableCategories.length > 0) {
-                          setValue('category', availableCategories[0]);
-                        }
-                      }}
-                    >
-                      <div className="text-center">
-                        <div className="text-2xl mb-2">{type.icon}</div>
-                        <div className="font-medium text-gray-200">{type.label}</div>
-                        <div className="text-xs text-gray-400 mt-1">{type.desc}</div>
-                      </div>
-                      {categoryType === type.value && (
-                        <div className="absolute -top-1 -right-1 w-4 h-4 bg-neon-cyan rounded-full flex items-center justify-center">
-                          <div className="w-2 h-2 bg-white rounded-full"></div>
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </motion.div>
-
-              {/* 文件上传区域 - 仅在图像或视频类型时显示 */}
+              {/* 文件上传区域 - 移到提示词内容下面 */}
               {(categoryType === 'image' || categoryType === 'video') && (
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 1.1 }}
+                  transition={{ delay: 0.9 }}
                   className="space-y-4"
                 >
-                  <label className="flex items-center text-sm font-medium text-gray-300 mb-3">
-                    <PhotoIcon className="h-5 w-5 text-neon-purple mr-2" />
+                  <label className="flex items-center text-base font-medium text-gray-200">
+                    <PhotoIcon className="h-4 w-4 text-neon-purple mr-2" />
                     {categoryType === 'image' ? '示例图片' : '示例视频'} (最多4个，至少1个) *
                   </label>
 
@@ -1192,6 +1167,53 @@ function CreatePromptPage() {
                 </motion.div>
               )}
 
+              {/* 基本信息 */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 1.0 }}
+                className="grid grid-cols-1 lg:grid-cols-2 gap-8"
+              >
+                <div className="space-y-2">
+                  <label htmlFor="prompt-name" className="flex items-center text-sm font-medium text-gray-300 mb-3">
+                    <SparklesIcon className="h-5 w-5 text-neon-cyan mr-2" />
+                    提示词名称 *
+                  </label>
+                  <input
+                    id="prompt-name"
+                    {...register('name', { required: '请输入提示词名称' })}
+                    type="text"
+                    placeholder="为您的提示词起个响亮的名字"
+                    className="input-primary w-full"
+                    autoComplete="off"
+                  />
+                  {errors.name && (
+                    <p className="text-neon-red text-sm mt-1">{errors.name.message}</p>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <label htmlFor="author" className="flex items-center text-sm font-medium text-gray-300 mb-3">
+                    <UserIcon className="h-5 w-5 text-neon-purple mr-2" />
+                    作者
+                  </label>
+                  <input
+                    id="author"
+                    {...register('author')}
+                    type="text"
+                    value={user?.display_name || user?.username || user?.email?.split('@')[0] || ''}
+                    className="input-primary w-full bg-gray-800 text-gray-400 cursor-not-allowed"
+                    readOnly
+                    title="创建提示词时，作者自动设置为当前登录用户"
+                  />
+                  <p className="text-xs text-gray-500">创建提示词时，作者自动设置为当前登录用户</p>
+                </div>
+              </motion.div>
+
+
+
+
+
               {/* 分类和版本 */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
@@ -1205,45 +1227,19 @@ function CreatePromptPage() {
                     分类 *
                   </label>
 
-                  <div className="space-y-3">
-                    {/* 类型选择器 */}
-                    <div className="flex gap-2 mb-3">
-                      {(['chat', 'image', 'video'] as const).map((type) => (
-                        <button
-                          key={type}
-                          type="button"
-                          onClick={() => {
-                            setCategoryType(type);
-                            setValue('category_type', type);
-                            // 清空当前分类选择，让用户重新选择
-                            setValue('category', '');
-                          }}
-                          className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${
-                            categoryType === type
-                              ? 'bg-neon-cyan text-black'
-                              : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                          }`}
-                        >
-                          {type === 'chat' ? '对话' : type === 'image' ? '图像' : '视频'}
-                        </button>
-                      ))}
-                    </div>
-
-                    {/* 分类选择器 */}
-                    <select
-                      id="category"
-                      {...register('category', { required: '请选择分类' })}
-                      className="input-primary w-full"
-                      autoComplete="off"
-                    >
-                      <option value="">选择分类</option>
-                      {(categoriesByType[categoryType] || []).map((category: string) => (
-                        <option key={category} value={category}>
-                          {category}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+                  <select
+                    id="category"
+                    {...register('category', { required: '请选择分类' })}
+                    className="input-primary w-full"
+                    autoComplete="off"
+                  >
+                    <option value="">选择分类</option>
+                    {(categoriesByType[categoryType] || []).map((category: string) => (
+                      <option key={category} value={category}>
+                        {category}
+                      </option>
+                    ))}
+                  </select>
 
                   {errors.category && (
                     <p className="text-neon-red text-sm mt-1">{errors.category.message}</p>

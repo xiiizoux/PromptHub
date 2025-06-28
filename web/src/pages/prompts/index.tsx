@@ -308,27 +308,27 @@ export default function PromptsPage() {
           ) : (
             <div className="minimal-spacing">
               {/* 页面标题 */}
-              <motion.div 
-                initial={{ opacity: 0, y: 30 }}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8 }}
-                className="text-center"
+                transition={{ duration: 0.6 }}
+                className="text-center mb-6"
               >
-                <motion.h1 
-                  className="text-4xl md:text-6xl font-bold text-neon-cyan mb-4"
+                <motion.h1
+                  className="text-2xl md:text-3xl font-bold text-neon-cyan mb-2"
                   style={{ color: '#00ffff' }}
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
-                  transition={{ duration: 1, delay: 0.2 }}
+                  transition={{ duration: 0.8, delay: 0.1 }}
                 >
-                  <RectangleStackIcon className="h-8 w-8 md:h-12 md:w-12 text-neon-cyan mr-4 inline" style={{ color: '#00ffff' }} />
-                  探索提示词宇宙
+                  <RectangleStackIcon className="h-6 w-6 text-neon-cyan mr-2 inline" style={{ color: '#00ffff' }} />
+                  对话提示词
                 </motion.h1>
-                <motion.p 
-                  className="text-lg md:text-xl text-gray-400 max-w-3xl mx-auto leading-relaxed"
-                  initial={{ opacity: 0, y: 20 }}
+                <motion.p
+                  className="text-sm md:text-base text-gray-400 max-w-2xl mx-auto leading-relaxed"
+                  initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.8, delay: 0.4 }}
+                  transition={{ duration: 0.6, delay: 0.2 }}
                 >
                   在这里发现最强大的AI提示词，解锁无限创意可能
                 </motion.p>

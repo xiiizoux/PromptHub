@@ -86,7 +86,7 @@ body::before {
   75% { transform: translate(-20px, 20px); }
 }
 
-/* 标题样式 */
+/* 标题样式 - 优化后的紧凑设计 */
 h1, h2, h3, h4, h5, h6 {
   font-family: 'Space Grotesk', sans-serif;
   font-weight: 700;
@@ -94,12 +94,13 @@ h1, h2, h3, h4, h5, h6 {
   line-height: 1.2;
 }
 
-h1 { @apply text-5xl md:text-6xl lg:text-7xl; }
-h2 { @apply text-3xl md:text-4xl lg:text-5xl; }
-h3 { @apply text-2xl md:text-3xl lg:text-4xl; }
-h4 { @apply text-xl md:text-2xl lg:text-3xl; }
-h5 { @apply text-lg md:text-xl lg:text-2xl; }
-h6 { @apply text-base md:text-lg lg:text-xl; }
+/* 页面主标题 - 缩小到原来的1/2 */
+h1 { @apply text-2xl md:text-3xl lg:text-4xl; }
+h2 { @apply text-xl md:text-2xl lg:text-3xl; }
+h3 { @apply text-lg md:text-xl lg:text-2xl; }
+h4 { @apply text-base md:text-lg lg:text-xl; }
+h5 { @apply text-sm md:text-base lg:text-lg; }
+h6 { @apply text-xs md:text-sm lg:text-base; }
 
 /* 代码字体 */
 code, pre, .font-mono {
@@ -512,5 +513,35 @@ code, pre, .font-mono {
   /* 确保页面底部有足够空间 */
   .page-bottom-padding {
     @apply pb-8 md:pb-12;
+  }
+
+  /* 统一的页面标题样式 */
+  .page-title {
+    @apply text-2xl md:text-3xl font-bold mb-2;
+  }
+
+  .page-title-icon {
+    @apply h-4 w-4 md:h-5 md:w-5 mr-2 inline;
+  }
+
+  .page-subtitle {
+    @apply text-sm md:text-base text-gray-400 max-w-2xl mx-auto leading-relaxed;
+  }
+
+  .page-title-container {
+    @apply text-center mb-6;
+  }
+
+  /* 统一的标题间距 */
+  .title-spacing {
+    @apply mb-6;
+  }
+
+  .title-spacing-large {
+    @apply mb-8;
+  }
+
+  .title-spacing-small {
+    @apply mb-4;
   }
 }

@@ -255,21 +255,21 @@ const OptimizerPage: React.FC = () => {
             <motion.div
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
-              transition={{ duration: 0.5, delay: 0.2 }}
-              className="mb-8"
+              transition={{ duration: 0.4, delay: 0.1 }}
+              className="mb-6"
             >
-              <h1 className="text-4xl md:text-6xl font-bold text-neon-cyan mb-4">
-                <SparklesIcon className="h-8 w-8 md:h-12 md:w-12 text-neon-cyan mr-4 inline" />
-                AI驱动的智能优化
+              <h1 className="text-2xl md:text-3xl font-bold text-neon-cyan mb-2">
+                <SparklesIcon className="h-6 w-6 text-neon-cyan mr-2 inline" />
+                AI优化器
               </h1>
             </motion.div>
-            
+
             {/* 简要描述 */}
-            <motion.p 
-              className="text-xl text-gray-400 max-w-3xl mx-auto mb-8"
+            <motion.p
+              className="text-sm md:text-base text-gray-400 max-w-2xl mx-auto mb-6"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ delay: 0.5 }}
+              transition={{ delay: 0.3 }}
             >
               利用先进的AI技术优化您的提示词，提升准确性、清晰度和效果。
               让每个提示词都发挥最大潜能。

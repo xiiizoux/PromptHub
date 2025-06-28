@@ -98,18 +98,18 @@ export default function Home({ featuredPrompts }: HomeProps) {
             <span className="text-sm text-neon-cyan">AI提示词管理的未来已到来</span>
           </motion.div>
           
-          <h1 className="text-6xl md:text-8xl font-bold mb-6">
+          <h1 className="text-3xl md:text-4xl font-bold mb-4">
             <span className="block gradient-text animate-text-shimmer bg-[length:200%_auto]">
               Prompt Hub
             </span>
-            <span className="block text-3xl md:text-5xl mt-4 text-gray-300 font-light">
+            <span className="block text-lg md:text-2xl mt-2 text-gray-300 font-light">
               {typedText}
               <span className="animate-pulse">|</span>
             </span>
           </h1>
           
-          <motion.p 
-            className="text-xl text-gray-400 max-w-3xl mx-auto mb-10"
+          <motion.p
+            className="text-sm md:text-base text-gray-400 max-w-2xl mx-auto mb-6"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.5 }}

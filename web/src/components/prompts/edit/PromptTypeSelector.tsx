@@ -11,83 +11,112 @@ interface PromptTypeSelectorProps {
 }
 
 const typeOptions = [
-  { 
-    value: 'chat' as const, 
-    label: '对话', 
-    icon: '💬', 
-    description: '文本交互、问答、分析',
+  {
+    value: 'chat' as const,
+    label: '对话提示词',
+    icon: '💬',
+    description: '适用于文本对话、问答、写作助手等场景。支持变量替换和上下文管理。',
     color: 'neon-cyan'
   },
-  { 
-    value: 'image' as const, 
-    label: '图像', 
-    icon: '🖼️', 
-    description: 'AI图像生成',
+  {
+    value: 'image' as const,
+    label: '图像提示词',
+    icon: '🖼️',
+    description: '适用于AI图像生成场景。可以设置风格、尺寸、质量等参数，并上传示例图片。',
     color: 'neon-purple'
   },
-  { 
-    value: 'video' as const, 
-    label: '视频', 
-    icon: '🎬', 
-    description: 'AI视频生成',
+  {
+    value: 'video' as const,
+    label: '视频提示词',
+    icon: '🎬',
+    description: '适用于AI视频生成场景。可以设置时长、帧率、运动强度等参数，并上传示例视频。',
     color: 'neon-pink'
   }
 ];
 
-export default function PromptTypeSelector({ 
-  value, 
-  onChange, 
+// 获取激活状态的样式
+const getActiveStyles = (color: string) => {
+  switch (color) {
+    case 'neon-cyan':
+      return 'border-neon-cyan bg-neon-cyan/20 text-neon-cyan shadow-md';
+    case 'neon-purple':
+      return 'border-neon-purple bg-neon-purple/20 text-neon-purple shadow-md';
+    case 'neon-pink':
+      return 'border-neon-pink bg-neon-pink/20 text-neon-pink shadow-md';
+    default:
+      return 'border-neon-cyan bg-neon-cyan/20 text-neon-cyan shadow-md';
+  }
+};
+
+// 获取激活状态的圆点样式
+const getActiveDotStyles = (color: string) => {
+  switch (color) {
+    case 'neon-cyan':
+      return 'bg-neon-cyan';
+    case 'neon-purple':
+      return 'bg-neon-purple';
+    case 'neon-pink':
+      return 'bg-neon-pink';
+    default:
+      return 'bg-neon-cyan';
+  }
+};
+
+export default function PromptTypeSelector({
+  value,
+  onChange,
   disabled = false,
-  className = '' 
+  className = ''
 }: PromptTypeSelectorProps) {
   return (
-    <div className={`space-y-4 ${className}`}>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div className={`${className}`}>
+      {/* 扁平化的标签式切换按钮 - 居中显示 */}
+      <div className="flex flex-wrap justify-center gap-3">
         {typeOptions.map((option) => (
-          <motion.div
+          <motion.button
             key={option.value}
-            whileHover={!disabled ? { scale: 1.02 } : {}}
+            whileHover={!disabled ? {
+              scale: 1.02,
+              boxShadow: value === option.value
+                ? `0 0 20px ${option.color === 'neon-cyan' ? '#06b6d4' : option.color === 'neon-purple' ? '#8b5cf6' : '#ec4899'}40`
+                : '0 4px 12px rgba(0, 0, 0, 0.3)'
+            } : {}}
             whileTap={!disabled ? { scale: 0.98 } : {}}
             className={`
-              relative p-4 border-2 rounded-xl cursor-pointer transition-all duration-200
-              ${disabled ? 'opacity-50 cursor-not-allowed' : ''}
+              flex items-center gap-2 px-4 py-2 rounded-lg border transition-all duration-300 text-sm font-medium
+              ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
               ${value === option.value
-                ? `border-${option.color} bg-${option.color}/10 shadow-lg`
-                : 'border-gray-600 hover:border-gray-500 bg-dark-bg-secondary/50'
+                ? getActiveStyles(option.color)
+                : 'border-gray-600 hover:border-gray-500 bg-dark-bg-secondary/50 text-gray-300 hover:text-gray-200 hover:bg-dark-bg-secondary/70'
               }
             `}
             onClick={() => !disabled && onChange(option.value)}
+            disabled={disabled}
           >
-            <div className="text-center">
-              <div className="text-3xl mb-3">{option.icon}</div>
-              <div className="font-semibold text-gray-200 mb-1">{option.label}</div>
-              <div className="text-xs text-gray-400">{option.description}</div>
-            </div>
-            
+            <span className="text-lg">{option.icon}</span>
+            <span className="font-medium">{option.label}</span>
             {value === option.value && (
-              <motion.div 
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                className={`absolute -top-2 -right-2 w-6 h-6 bg-${option.color} rounded-full flex items-center justify-center shadow-lg`}
-              >
-                <div className="w-3 h-3 bg-white rounded-full"></div>
-              </motion.div>
+              <motion.div
+                initial={{ scale: 0, rotate: 0 }}
+                animate={{ scale: 1, rotate: 360 }}
+                transition={{ duration: 0.3 }}
+                className={`w-2 h-2 ${getActiveDotStyles(option.color)} rounded-full shadow-lg`}
+              />
             )}
-          </motion.div>
+          </motion.button>
         ))}
       </div>
-      
-      {/* 类型描述 */}
+
+      {/* 简化的类型描述 - 去除背景框 */}
       <motion.div
         key={value}
-        initial={{ opacity: 0, y: 10 }}
+        initial={{ opacity: 0, y: 5 }}
         animate={{ opacity: 1, y: 0 }}
-        className="text-center p-3 rounded-lg bg-dark-bg-secondary/30 border border-gray-600"
+        transition={{ duration: 0.2 }}
+        className="text-center mt-3"
       >
-        <p className="text-sm text-gray-400">
-          {value === 'chat' && '适用于文本对话、问答、写作助手等场景。支持变量替换和上下文管理。'}
-          {value === 'image' && '适用于AI图像生成场景。可以设置风格、尺寸、质量等参数，并上传示例图片。'}
-          {value === 'video' && '适用于AI视频生成场景。可以设置时长、帧率、运动强度等参数，并上传示例视频。'}
+        <p className="text-xs text-gray-400">
+          {typeOptions.find(option => option.value === value)?.description}
         </p>
       </motion.div>
     </div>

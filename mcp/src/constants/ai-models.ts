@@ -368,7 +368,7 @@ export const SPECIFIC_MODEL_TO_TAG_MAP: Record<string, string[]> = {
 };
 
 // 分类类型到模型类型的映射
-export const CATEGORY_TYPE_TO_MODEL_TYPES = {
+export const CATEGORY_TYPE_TO_MODEL_TYPES: Record<string, ModelType[]> = {
   chat: [
     ModelType.CHAT_GENERAL,
     ModelType.CHAT_TASK_ORIENTED,
@@ -400,7 +400,7 @@ export const CATEGORY_TYPE_TO_MODEL_TYPES = {
     ModelType.MULTIMODAL_VQA,
     ModelType.MULTIMODAL_LMM,
   ]
-} as const;
+};
 
 // 根据分类类型获取对应的模型标签
 export const getModelTagsByCategoryType = (categoryType: 'chat' | 'image' | 'video' | 'multimodal'): ModelTag[] => {
@@ -483,14 +483,37 @@ export const isValidModelTag = (tagId: string): boolean => {
 
 // 获取模型类型的中文标签
 export const getModelTypeLabel = (type: ModelType): string => {
-  const labels = {
-    [ModelType.TEXT]: '文本模型',
-    [ModelType.IMAGE]: '图像模型',
-    [ModelType.AUDIO]: '音频模型',
-    [ModelType.VIDEO]: '视频模型',
-    [ModelType.MULTIMODAL]: '多模态模型',
-    [ModelType.CODE]: '代码模型',
-    [ModelType.EMBEDDING]: '嵌入模型',
+  const labels: Record<string, string> = {
+    // 对话模型
+    [ModelType.CHAT_GENERAL]: '通用聊天',
+    [ModelType.CHAT_TASK_ORIENTED]: '任务导向对话',
+    [ModelType.CHAT_QA]: '知识问答',
+    [ModelType.TEXT_CONTENT_CREATION]: '内容创作',
+    [ModelType.TEXT_SUMMARIZATION]: '文本摘要',
+    [ModelType.TEXT_TRANSLATION]: '机器翻译',
+    [ModelType.TEXT_CODE_GENERATION]: '代码生成',
+    [ModelType.TEXT_SENTIMENT_ANALYSIS]: '情感分析',
+    [ModelType.TEXT_NER]: '命名实体识别',
+    [ModelType.TEXT_CLASSIFICATION]: '文本分类',
+
+    // 图像模型
+    [ModelType.IMAGE_TEXT_TO_IMAGE]: '文本到图像',
+    [ModelType.IMAGE_IMAGE_TO_IMAGE]: '图像到图像',
+    [ModelType.IMAGE_CLASSIFICATION]: '图像分类',
+    [ModelType.IMAGE_OBJECT_DETECTION]: '目标检测',
+    [ModelType.IMAGE_CAPTIONING]: '图像描述',
+    [ModelType.IMAGE_OCR]: '光学字符识别',
+
+    // 视频模型
+    [ModelType.VIDEO_TEXT_TO_VIDEO]: '文本到视频',
+    [ModelType.VIDEO_IMAGE_TO_VIDEO]: '图像到视频',
+    [ModelType.VIDEO_ACTION_RECOGNITION]: '行为识别',
+    [ModelType.VIDEO_SUMMARIZATION]: '视频摘要',
+    [ModelType.VIDEO_OBJECT_TRACKING]: '目标跟踪',
+
+    // 多模态模型
+    [ModelType.MULTIMODAL_VQA]: '视觉问答',
+    [ModelType.MULTIMODAL_LMM]: '多模态大模型',
   };
   return labels[type] || type;
 };

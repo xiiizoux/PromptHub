@@ -84,17 +84,17 @@ const DocLayout: React.FC<DocLayoutProps> = ({
           </motion.div>
 
           {/* 页面标题 */}
-          <motion.div 
+          <motion.div
             initial="hidden"
             animate="visible"
             variants={pageVariants}
-            transition={{ duration: 0.8, delay: 0.2 }}
-            className="mb-12"
+            transition={{ duration: 0.6, delay: 0.1 }}
+            className="mb-6"
           >
-            <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-neon-cyan via-neon-purple to-neon-pink bg-clip-text text-transparent mb-4">
+            <h1 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-neon-cyan via-neon-purple to-neon-pink bg-clip-text text-transparent mb-2">
               {title}
             </h1>
-            <p className="text-xl text-dark-text-secondary max-w-4xl leading-relaxed">
+            <p className="text-sm md:text-base text-dark-text-secondary max-w-3xl leading-relaxed">
               {description}
             </p>
           </motion.div>

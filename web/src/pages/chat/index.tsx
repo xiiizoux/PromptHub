@@ -305,20 +305,20 @@ export default function ChatPromptsPage() {
           <div className="container-custom">
             {/* 页面标题 */}
             <motion.div
-              className="text-center mb-12"
-              initial={{ opacity: 0, y: -20 }}
+              className="text-center mb-6"
+              initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
+              transition={{ duration: 0.4 }}
             >
-              <div className="flex items-center justify-center mb-6">
-                <div className="inline-flex p-4 rounded-2xl bg-gradient-to-br from-neon-cyan to-neon-blue mr-4">
-                  <ChatBubbleLeftRightIcon className="h-8 w-8 text-dark-bg-primary" />
+              <div className="flex items-center justify-center mb-2">
+                <div className="inline-flex p-2 rounded-xl bg-gradient-to-br from-neon-cyan to-neon-blue mr-2">
+                  <ChatBubbleLeftRightIcon className="h-4 w-4 text-dark-bg-primary" />
                 </div>
-                <h1 className="text-4xl md:text-6xl font-bold text-white gradient-text">
+                <h1 className="text-2xl md:text-3xl font-bold text-white gradient-text">
                   对话提示词
                 </h1>
               </div>
-              <p className="text-xl text-gray-400 max-w-3xl mx-auto">
+              <p className="text-sm md:text-base text-gray-400 max-w-2xl mx-auto">
                 探索最优秀的对话AI提示词，让你的对话更智能、更有深度、更富创造力
               </p>
               {totalCount > 0 && (
