@@ -20,6 +20,7 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [initializing, setInitializing] = useState(true);
+  const [redirectAttempted, setRedirectAttempted] = useState(false);
   const router = useRouter();
   const { login, loginWithGoogle, isAuthenticated, isLoading: authLoading } = useAuth();
   
@@ -33,23 +34,50 @@ export default function LoginPage() {
   
   // 检查用户是否已经登录，如果是则重定向到目标页面
   useEffect(() => {
+    let redirectTimeout: NodeJS.Timeout;
+
     // 如果AuthContext还在加载中，不做任何操作
     if (authLoading) {
       return;
     }
 
-    // 如果用户已经认证，重定向到目标页面
-    if (isAuthenticated) {
-      console.log('用户已认证，重定向到目标页面');
+    // 如果用户已经认证且还没有尝试过重定向，重定向到目标页面
+    if (isAuthenticated && !redirectAttempted) {
+      console.log('用户已认证，准备重定向到目标页面');
+      setRedirectAttempted(true);
       const redirectUrl = getRedirectUrl(router) || '/';
-      router.replace(redirectUrl);
+
+      // 使用setTimeout避免立即重定向导致的循环
+      redirectTimeout = setTimeout(() => {
+        console.log('执行重定向到:', redirectUrl);
+        router.replace(redirectUrl).catch((error) => {
+          console.error('重定向失败:', error);
+          // 重定向失败时，重置状态并显示登录表单
+          setRedirectAttempted(false);
+          setInitializing(false);
+        });
+      }, 100);
+
+      return;
+    }
+
+    // 如果用户已认证但重定向已尝试过（可能失败了），显示登录表单
+    if (isAuthenticated && redirectAttempted) {
+      console.log('重定向已尝试，显示登录表单');
+      setInitializing(false);
       return;
     }
 
     // 用户未认证，显示登录表单
     console.log('用户未认证，显示登录表单');
     setInitializing(false);
-  }, [router, isAuthenticated, authLoading]);
+
+    return () => {
+      if (redirectTimeout) {
+        clearTimeout(redirectTimeout);
+      }
+    };
+  }, [router, isAuthenticated, authLoading, redirectAttempted]);
 
   // 如果AuthContext还在加载中，显示加载状态
   if (authLoading) {
