@@ -1,6 +1,6 @@
 -- =============================================
 -- PromptHub 完整数据库结构 (整合版本)
--- 整合了所有功能模块的完整数据库结构
+-- 基于真实Supabase数据库结构重新整合
 -- 在 Supabase SQL 编辑器中执行此脚本以创建完整的数据库结构
 -- 此文件用于一次性创建全新的数据库，包含所有功能模块
 -- 也可以在现有数据库上运行以添加缺失的表和字段
@@ -13,10 +13,13 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 -- 基础枚举类型
 -- =============================================
 
--- 创建提示词分类枚举类型
-CREATE TYPE prompt_category AS ENUM (
-  '通用', '学术', '职业', '文案', '设计', '教育', '情感',
-  '娱乐', '游戏', '生活', '商业', '办公',
+-- 创建分类类型枚举（基于真实数据库）
+CREATE TYPE IF NOT EXISTS category_type AS ENUM ('chat', 'image', 'video');
+
+-- 创建提示词分类枚举类型（保持兼容性）
+CREATE TYPE IF NOT EXISTS prompt_category AS ENUM (
+  '全部', '学术', '职业', '文案', '设计', '教育', '情感',
+  '娱乐', '游戏', '通用', '生活', '商业', '办公',
   '编程', '翻译', '绘画', '视频', '播客', '音乐',
   '健康', '科技'
 );
@@ -36,7 +39,7 @@ CREATE TABLE IF NOT EXISTS users (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 类别表 - 必须在prompts表之前创建
+-- 类别表 - 必须在prompts表之前创建，包含新的type字段
 CREATE TABLE IF NOT EXISTS categories (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   name TEXT NOT NULL UNIQUE,
@@ -46,10 +49,11 @@ CREATE TABLE IF NOT EXISTS categories (
   sort_order INT DEFAULT 0,
   is_active BOOLEAN DEFAULT TRUE,
   created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW()
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  type category_type DEFAULT 'chat'
 );
 
--- 提示词表 - 存储所有提示词的主表
+-- 提示词表 - 存储所有提示词的主表，基于真实数据库结构
 CREATE TABLE IF NOT EXISTS prompts (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   name TEXT NOT NULL,
@@ -59,35 +63,38 @@ CREATE TABLE IF NOT EXISTS prompts (
   messages JSONB NOT NULL,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW(),
-  version NUMERIC(3,1) DEFAULT 1.0,
+  version NUMERIC DEFAULT 1,
   is_public BOOLEAN DEFAULT FALSE,
-  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
   allow_collaboration BOOLEAN DEFAULT false,
   edit_permission VARCHAR(20) DEFAULT 'owner_only',
-  created_by UUID REFERENCES auth.users(id),
-  last_modified_by UUID REFERENCES auth.users(id),
+  created_by UUID REFERENCES users(id) ON DELETE SET NULL,
+  last_modified_by UUID REFERENCES users(id) ON DELETE SET NULL,
   category_id UUID REFERENCES categories(id),
-  usage_count INTEGER DEFAULT 0,
   view_count INTEGER DEFAULT 0,
-  current_version INTEGER DEFAULT 1,
   input_variables TEXT[],
   compatible_models TEXT[],
   template_format TEXT DEFAULT 'text',
+  preview_asset_url TEXT,
+  parameters JSONB DEFAULT '{}',
+  category_type VARCHAR,
   UNIQUE(name, user_id)
 );
 
--- 提示词版本表 - 存储提示词的所有历史版本
+-- 提示词版本表 - 存储提示词的所有历史版本，基于真实数据库结构
 CREATE TABLE IF NOT EXISTS prompt_versions (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   prompt_id UUID REFERENCES prompts(id) ON DELETE CASCADE,
-  version NUMERIC(3,1) NOT NULL,
+  version NUMERIC NOT NULL,
   messages JSONB NOT NULL,
   description TEXT,
   tags TEXT[],
   category TEXT,
   category_id UUID REFERENCES categories(id),
   created_at TIMESTAMPTZ DEFAULT NOW(),
-  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  preview_asset_url TEXT,
+  parameters JSONB DEFAULT '{}',
   UNIQUE(prompt_id, version)
 );
 
@@ -97,49 +104,49 @@ CREATE TABLE IF NOT EXISTS prompt_versions (
 
 -- 统一的社交互动表
 CREATE TABLE IF NOT EXISTS social_interactions (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  prompt_id UUID NOT NULL REFERENCES prompts(id) ON DELETE CASCADE,
-  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  type TEXT NOT NULL CHECK (type IN ('like', 'bookmark', 'share')),
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  prompt_id UUID NOT NULL REFERENCES prompts(id),
+  user_id UUID NOT NULL REFERENCES users(id),
+  type TEXT NOT NULL,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   UNIQUE(prompt_id, user_id, type)
 );
 
 -- 评论表
 CREATE TABLE IF NOT EXISTS comments (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  prompt_id UUID NOT NULL REFERENCES prompts(id) ON DELETE CASCADE,
-  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  prompt_id UUID NOT NULL REFERENCES prompts(id),
+  user_id UUID NOT NULL REFERENCES users(id),
   content TEXT NOT NULL,
-  parent_id UUID REFERENCES comments(id) ON DELETE CASCADE,
+  parent_id UUID REFERENCES comments(id),
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
 -- 用户关注表
 CREATE TABLE IF NOT EXISTS user_follows (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  follower_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  following_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  follower_id UUID NOT NULL REFERENCES users(id),
+  following_id UUID NOT NULL REFERENCES users(id),
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   UNIQUE(follower_id, following_id)
 );
 
 -- 话题表
 CREATE TABLE IF NOT EXISTS topics (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   title TEXT NOT NULL,
   description TEXT,
-  creator_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  creator_id UUID NOT NULL REFERENCES users(id),
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
 -- 话题帖子表
 CREATE TABLE IF NOT EXISTS topic_posts (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  topic_id UUID NOT NULL REFERENCES topics(id) ON DELETE CASCADE,
-  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  topic_id UUID NOT NULL REFERENCES topics(id),
+  user_id UUID NOT NULL REFERENCES users(id),
   title TEXT NOT NULL,
   content TEXT NOT NULL,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
@@ -150,7 +157,7 @@ CREATE TABLE IF NOT EXISTS topic_posts (
 CREATE TABLE IF NOT EXISTS notifications (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  type TEXT NOT NULL CHECK (type IN ('follow', 'like', 'comment', 'reply', 'mention', 'system')),
+  type TEXT NOT NULL,
   title TEXT,
   content TEXT NOT NULL,
   resource_id UUID,
@@ -212,9 +219,9 @@ CREATE TABLE IF NOT EXISTS prompt_comments (
 CREATE TABLE IF NOT EXISTS prompt_collaborators (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   prompt_id UUID REFERENCES prompts(id) ON DELETE CASCADE,
-  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
-  permission_level VARCHAR(20) DEFAULT 'edit' CHECK (permission_level IN ('edit', 'review', 'admin')),
-  granted_by UUID REFERENCES auth.users(id),
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  permission_level VARCHAR(20) DEFAULT 'edit',
+  granted_by UUID REFERENCES users(id) ON DELETE SET NULL,
   granted_at TIMESTAMPTZ DEFAULT NOW(),
   UNIQUE(prompt_id, user_id)
 );
@@ -223,7 +230,7 @@ CREATE TABLE IF NOT EXISTS prompt_collaborators (
 CREATE TABLE IF NOT EXISTS prompt_audit_logs (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   prompt_id UUID REFERENCES prompts(id) ON DELETE CASCADE,
-  user_id UUID REFERENCES auth.users(id),
+  user_id UUID REFERENCES users(id) ON DELETE SET NULL,
   action VARCHAR(50) NOT NULL,
   changes JSONB,
   ip_address INET,
@@ -234,7 +241,7 @@ CREATE TABLE IF NOT EXISTS prompt_audit_logs (
 -- API密钥表
 CREATE TABLE IF NOT EXISTS api_keys (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
   name TEXT NOT NULL,
   key_hash TEXT NOT NULL,
   created_at TIMESTAMPTZ DEFAULT NOW(),
@@ -246,64 +253,72 @@ CREATE TABLE IF NOT EXISTS api_keys (
 
 
 -- =============================================
--- 模板系统表结构
+-- 数据库视图
 -- =============================================
 
--- 模板分类表
-CREATE TABLE IF NOT EXISTS template_categories (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    name VARCHAR(100) NOT NULL UNIQUE,
-    display_name VARCHAR(255) NOT NULL,
-    description TEXT,
-    icon VARCHAR(100),
-    color VARCHAR(50),
-    sort_order INTEGER DEFAULT 0,
-    is_active BOOLEAN DEFAULT TRUE,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
+-- 分类统计视图
+CREATE OR REPLACE VIEW category_stats AS
+SELECT
+    c.id,
+    c.name,
+    c.name_en,
+    c.type,
+    c.icon,
+    c.description,
+    c.sort_order,
+    COUNT(p.id) AS prompt_count,
+    COUNT(CASE WHEN p.is_public = true THEN 1 END) AS public_count,
+    COUNT(CASE WHEN p.is_public = false THEN 1 END) AS private_count
+FROM categories c
+LEFT JOIN prompts p ON c.id = p.category_id
+WHERE c.is_active = true
+GROUP BY c.id, c.name, c.name_en, c.type, c.icon, c.description, c.sort_order
+ORDER BY c.sort_order;
 
--- 提示词模板表
-CREATE TABLE IF NOT EXISTS prompt_templates (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    name VARCHAR(255) NOT NULL UNIQUE,
-    title VARCHAR(255) NOT NULL,
-    description TEXT NOT NULL,
-    content TEXT NOT NULL,
-    category VARCHAR(100) NOT NULL,
-    subcategory VARCHAR(100),
-    tags TEXT[] DEFAULT '{}',
-    difficulty VARCHAR(20) CHECK (difficulty IN ('beginner', 'intermediate', 'advanced')) DEFAULT 'beginner',
-    variables JSONB DEFAULT '[]',
-    fields JSONB DEFAULT '[]',
-    author VARCHAR(255),
-    likes INTEGER DEFAULT 0,
-    usage_count INTEGER DEFAULT 0,
-    rating DECIMAL(3,2) DEFAULT 0.0,
-    estimated_time VARCHAR(50),
-    language VARCHAR(10) DEFAULT 'zh-CN',
-    is_featured BOOLEAN DEFAULT FALSE,
-    is_premium BOOLEAN DEFAULT FALSE,
-    is_active BOOLEAN DEFAULT TRUE,
-    is_official BOOLEAN DEFAULT FALSE,
-    sort_order INTEGER DEFAULT 0,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    created_by UUID REFERENCES users(id) ON DELETE SET NULL,
-    updated_by UUID REFERENCES users(id) ON DELETE SET NULL
-);
+-- 分类类型统计视图
+CREATE OR REPLACE VIEW category_type_stats AS
+SELECT
+    type,
+    COUNT(*) AS category_count,
+    SUM(prompt_count) AS total_prompts,
+    SUM(public_count) AS total_public,
+    SUM(private_count) AS total_private
+FROM category_stats
+GROUP BY type
+ORDER BY
+    CASE type
+        WHEN 'chat' THEN 1
+        WHEN 'image' THEN 2
+        WHEN 'video' THEN 3
+        ELSE 4
+    END;
 
--- 模板评分表
-CREATE TABLE IF NOT EXISTS template_ratings (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    template_id UUID NOT NULL REFERENCES prompt_templates(id) ON DELETE CASCADE,
-    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    rating INTEGER NOT NULL CHECK (rating >= 1 AND rating <= 5),
-    comment TEXT,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    UNIQUE(template_id, user_id)
-);
+-- 带分类类型的提示词视图
+CREATE OR REPLACE VIEW prompts_with_category_type AS
+SELECT
+    p.*,
+    c.name AS category_name,
+    c.name_en AS category_name_en,
+    c.type AS category_type,
+    c.icon AS category_icon
+FROM prompts p
+LEFT JOIN categories c ON p.category_id = c.id;
+
+-- 存储统计视图
+CREATE OR REPLACE VIEW storage_stats AS
+SELECT
+    'prompts' AS table_name,
+    COUNT(*) AS total_count,
+    COUNT(CASE WHEN is_public = true THEN 1 END) AS public_count,
+    COUNT(CASE WHEN is_public = false THEN 1 END) AS private_count
+FROM prompts
+UNION ALL
+SELECT
+    'categories' AS table_name,
+    COUNT(*) AS total_count,
+    COUNT(CASE WHEN is_active = true THEN 1 END) AS public_count,
+    COUNT(CASE WHEN is_active = false THEN 1 END) AS private_count
+FROM categories;
 
 
 
@@ -311,50 +326,52 @@ CREATE TABLE IF NOT EXISTS template_ratings (
 -- 更新现有表结构（兼容性处理）
 -- =============================================
 
--- 为现有prompts表添加缺失字段
+-- 为现有表添加缺失字段
 DO $$
 BEGIN
-    -- 添加usage_count字段（如果不存在）
-    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'prompts' AND column_name = 'usage_count') THEN
-        ALTER TABLE prompts ADD COLUMN usage_count INTEGER DEFAULT 0;
+    -- 添加preview_asset_url字段到prompts表（如果不存在）
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'prompts' AND column_name = 'preview_asset_url') THEN
+        ALTER TABLE prompts ADD COLUMN preview_asset_url TEXT;
     END IF;
 
-    -- 添加current_version字段（如果不存在）
-    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'prompts' AND column_name = 'current_version') THEN
-        ALTER TABLE prompts ADD COLUMN current_version INTEGER DEFAULT 1;
+    -- 添加parameters字段到prompts表（如果不存在）
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'prompts' AND column_name = 'parameters') THEN
+        ALTER TABLE prompts ADD COLUMN parameters JSONB DEFAULT '{}';
     END IF;
 
-    -- 更新version字段类型
-    ALTER TABLE prompts ALTER COLUMN version TYPE NUMERIC(3,1);
+    -- 添加category_type字段到prompts表（如果不存在）
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'prompts' AND column_name = 'category_type') THEN
+        ALTER TABLE prompts ADD COLUMN category_type VARCHAR;
+    END IF;
 
-    -- 更新prompt_versions表的version字段类型
-    ALTER TABLE prompt_versions ALTER COLUMN version TYPE NUMERIC(3,1);
+    -- 添加type字段到categories表（如果不存在）
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'categories' AND column_name = 'type') THEN
+        ALTER TABLE categories ADD COLUMN type category_type DEFAULT 'chat';
+    END IF;
 END $$;
 
 
 
 -- =============================================
--- 索引创建
+-- 索引创建（基于真实数据库结构）
 -- =============================================
 
 -- 核心表索引
-CREATE INDEX IF NOT EXISTS idx_prompts_user_id ON prompts(user_id);
-CREATE INDEX IF NOT EXISTS idx_prompts_category ON prompts(category);
-CREATE INDEX IF NOT EXISTS idx_prompts_is_public ON prompts(is_public);
-CREATE INDEX IF NOT EXISTS idx_prompts_created_at ON prompts(created_at);
 CREATE INDEX IF NOT EXISTS idx_prompts_allow_collaboration ON prompts(allow_collaboration);
+CREATE INDEX IF NOT EXISTS idx_prompts_category_id ON prompts(category_id);
 CREATE INDEX IF NOT EXISTS idx_prompts_created_by ON prompts(created_by);
 CREATE INDEX IF NOT EXISTS idx_prompts_edit_permission ON prompts(edit_permission);
-CREATE INDEX IF NOT EXISTS idx_prompts_category_id ON prompts(category_id);
+CREATE INDEX IF NOT EXISTS idx_prompts_preview_asset_url ON prompts(preview_asset_url) WHERE preview_asset_url IS NOT NULL;
 
-CREATE INDEX IF NOT EXISTS idx_prompt_versions_prompt_id ON prompt_versions(prompt_id);
 CREATE INDEX IF NOT EXISTS idx_prompt_versions_category_id ON prompt_versions(category_id);
 
 CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);
 
 -- 类别表索引
-CREATE INDEX IF NOT EXISTS idx_categories_sort_order ON categories(sort_order);
 CREATE INDEX IF NOT EXISTS idx_categories_is_active ON categories(is_active);
+CREATE INDEX IF NOT EXISTS idx_categories_sort_order ON categories(sort_order);
+CREATE INDEX IF NOT EXISTS idx_categories_type ON categories(type);
+CREATE INDEX IF NOT EXISTS idx_categories_type_sort_order ON categories(type, sort_order);
 
 -- 社交功能索引
 CREATE INDEX IF NOT EXISTS idx_social_interactions_prompt_id ON social_interactions(prompt_id);
@@ -388,16 +405,6 @@ CREATE INDEX IF NOT EXISTS idx_prompt_bookmarks_user_id ON prompt_bookmarks(user
 
 CREATE INDEX IF NOT EXISTS idx_prompt_comments_prompt_id ON prompt_comments(prompt_id);
 CREATE INDEX IF NOT EXISTS idx_prompt_comments_user_id ON prompt_comments(user_id);
-CREATE INDEX IF NOT EXISTS idx_prompt_comments_parent_id ON prompt_comments(parent_id);
-
--- 模板系统索引
-CREATE INDEX IF NOT EXISTS idx_prompt_templates_category ON prompt_templates(category);
-CREATE INDEX IF NOT EXISTS idx_prompt_templates_difficulty ON prompt_templates(difficulty);
-CREATE INDEX IF NOT EXISTS idx_prompt_templates_featured ON prompt_templates(is_featured);
-CREATE INDEX IF NOT EXISTS idx_prompt_templates_active ON prompt_templates(is_active);
-CREATE INDEX IF NOT EXISTS idx_prompt_templates_official ON prompt_templates(is_official);
-CREATE INDEX IF NOT EXISTS idx_prompt_templates_tags ON prompt_templates USING GIN(tags);
-CREATE INDEX IF NOT EXISTS idx_prompt_templates_variables ON prompt_templates USING GIN(variables);
 
 -- 权限管理索引
 CREATE INDEX IF NOT EXISTS idx_prompt_collaborators_prompt_id ON prompt_collaborators(prompt_id);
@@ -444,8 +451,10 @@ AS $$
   SELECT is_public FROM prompts WHERE id = prompt_id;
 $$;
 
--- 递增使用次数的函数
-CREATE OR REPLACE FUNCTION increment_usage_count(prompt_id UUID)
+
+
+-- 递增视图计数的函数
+CREATE OR REPLACE FUNCTION increment_view_count(prompt_id UUID)
 RETURNS void
 LANGUAGE plpgsql
 SECURITY DEFINER
@@ -453,45 +462,9 @@ SET search_path = public
 AS $$
 BEGIN
     UPDATE prompts
-    SET usage_count = COALESCE(usage_count, 0) + 1,
+    SET view_count = COALESCE(view_count, 0) + 1,
         updated_at = NOW()
     WHERE id = prompt_id;
-END;
-$$;
-
--- 递增模板使用次数的函数
-CREATE OR REPLACE FUNCTION increment_template_usage(template_id UUID)
-RETURNS void
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path = public
-AS $$
-BEGIN
-    UPDATE prompt_templates
-    SET usage_count = usage_count + 1,
-        updated_at = NOW()
-    WHERE id = template_id;
-END;
-$$;
-
--- 更新模板评分的函数
-CREATE OR REPLACE FUNCTION update_template_rating(template_id UUID)
-RETURNS void
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path = public
-AS $$
-DECLARE
-    avg_rating DECIMAL(3,2);
-BEGIN
-    SELECT AVG(rating)::DECIMAL(3,2) INTO avg_rating
-    FROM template_ratings
-    WHERE template_id = update_template_rating.template_id;
-
-    UPDATE prompt_templates
-    SET rating = COALESCE(avg_rating, 0.0),
-        updated_at = NOW()
-    WHERE id = update_template_rating.template_id;
 END;
 $$;
 
@@ -631,18 +604,7 @@ BEGIN
 END;
 $$;
 
--- 模板更新时间触发器函数
-CREATE OR REPLACE FUNCTION update_template_updated_at()
-RETURNS TRIGGER
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path = public
-AS $$
-BEGIN
-    NEW.updated_at = NOW();
-    RETURN NEW;
-END;
-$$;
+
 
 
 
@@ -682,18 +644,7 @@ CREATE OR REPLACE TRIGGER update_topic_posts_updated_at
     BEFORE UPDATE ON topic_posts
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
--- 模板表更新时间触发器
-CREATE OR REPLACE TRIGGER update_prompt_templates_updated_at
-    BEFORE UPDATE ON prompt_templates
-    FOR EACH ROW EXECUTE FUNCTION update_template_updated_at();
 
-CREATE OR REPLACE TRIGGER update_template_categories_updated_at
-    BEFORE UPDATE ON template_categories
-    FOR EACH ROW EXECUTE FUNCTION update_template_updated_at();
-
-CREATE OR REPLACE TRIGGER update_template_ratings_updated_at
-    BEFORE UPDATE ON template_ratings
-    FOR EACH ROW EXECUTE FUNCTION update_template_updated_at();
 
 
 
@@ -715,9 +666,7 @@ ALTER TABLE prompt_ratings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE prompt_likes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE prompt_bookmarks ENABLE ROW LEVEL SECURITY;
 ALTER TABLE prompt_comments ENABLE ROW LEVEL SECURITY;
-ALTER TABLE prompt_templates ENABLE ROW LEVEL SECURITY;
-ALTER TABLE template_categories ENABLE ROW LEVEL SECURITY;
-ALTER TABLE template_ratings ENABLE ROW LEVEL SECURITY;
+
 ALTER TABLE prompt_collaborators ENABLE ROW LEVEL SECURITY;
 ALTER TABLE prompt_audit_logs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE api_keys ENABLE ROW LEVEL SECURITY;
@@ -868,20 +817,7 @@ CREATE POLICY "prompt_comments_read_all" ON prompt_comments FOR SELECT USING (tr
 CREATE POLICY "prompt_comments_manage_own" ON prompt_comments
   FOR ALL USING (auth.uid() IS NULL OR auth.uid() = user_id);
 
--- 模板表策略
-CREATE POLICY "prompt_templates_read_active" ON prompt_templates
-  FOR SELECT USING (is_active = true OR auth.uid() = created_by OR auth.uid() IS NULL);
 
-CREATE POLICY "prompt_templates_manage_own" ON prompt_templates
-  FOR ALL USING (auth.uid() IS NULL OR auth.uid() = created_by);
-
--- 模板分类表策略
-CREATE POLICY "template_categories_read_all" ON template_categories FOR SELECT USING (true);
-
--- 模板评分表策略
-CREATE POLICY "template_ratings_read_all" ON template_ratings FOR SELECT USING (true);
-CREATE POLICY "template_ratings_manage_own" ON template_ratings
-  FOR ALL USING (auth.uid() IS NULL OR auth.uid() = user_id);
 
 -- 协作者表策略
 CREATE POLICY "Users can view their own collaborations" ON prompt_collaborators
@@ -927,70 +863,62 @@ USING (auth.uid() = user_id);
 -- 初始化示例数据
 -- =============================================
 
--- 插入预置类别数据
-INSERT INTO categories (name, name_en, icon, description, sort_order) VALUES
--- 基础类别
-('通用', 'general', 'layers', '通用助手和日常对话类提示词', 10),
+-- 插入预置类别数据（基于新的三类型系统）
+INSERT INTO categories (name, name_en, icon, description, sort_order, type) VALUES
+-- Chat类型 (对话提示词)
+('通用', 'general', 'chat-bubble-left-right', '通用助手和日常对话类提示词', 10, 'chat'),
+('学术', 'academic', 'academic-cap', '学术研究、论文写作、学术分析类提示词', 20, 'chat'),
+('职业', 'professional', 'briefcase', '职场沟通、简历优化、面试准备类提示词', 30, 'chat'),
+('文案', 'copywriting', 'pencil', '广告文案、营销内容、产品描述类提示词', 40, 'chat'),
+('教育', 'education', 'book-open', '教学辅导、知识解释、学习指导类提示词', 50, 'chat'),
+('情感', 'emotional', 'heart', '情感支持、心理咨询、人际关系类提示词', 60, 'chat'),
+('娱乐', 'entertainment', 'sparkles', '游戏、故事创作、趣味对话类提示词', 70, 'chat'),
+('生活', 'lifestyle', 'home', '日常生活、健康建议、生活技巧类提示词', 80, 'chat'),
+('商业', 'business', 'chart-bar', '商业分析、市场策略、企业管理类提示词', 90, 'chat'),
+('办公', 'office', 'document-text', '办公自动化、文档处理、会议记录类提示词', 100, 'chat'),
+('编程', 'programming', 'code', '代码编写、程序调试、技术解答类提示词', 110, 'chat'),
+('翻译', 'translation', 'language', '多语言翻译、本地化、语言学习类提示词', 120, 'chat'),
 
--- 学术和专业类别
-('学术', 'academic', 'academic-cap', '学术研究、论文写作、学术分析类提示词', 20),
-('职业', 'professional', 'briefcase', '职场沟通、简历优化、面试准备类提示词', 30),
+-- Image类型 (图像提示词)
+('绘画', 'painting', 'paint-brush', '绘画创作、艺术指导、风格描述类提示词', 210, 'image'),
+('设计', 'design', 'color-swatch', '设计思维、创意构思、视觉设计类提示词', 220, 'image'),
+('摄影', 'photography', 'camera', '摄影构图、光影效果、拍摄技巧类提示词', 230, 'image'),
+('插画', 'illustration', 'pencil-square', '插画创作、角色设计、场景绘制类提示词', 240, 'image'),
+('UI设计', 'ui-design', 'device-phone-mobile', 'UI界面设计、用户体验、交互设计类提示词', 250, 'image'),
+('品牌设计', 'brand-design', 'building-storefront', '品牌视觉、标志设计、企业形象类提示词', 260, 'image'),
+('海报设计', 'poster-design', 'rectangle-stack', '海报创作、宣传设计、视觉传达类提示词', 270, 'image'),
+('3D建模', '3d-modeling', 'cube', '三维建模、渲染效果、空间设计类提示词', 280, 'image'),
+('动漫风格', 'anime-style', 'face-smile', '动漫角色、二次元风格、卡通设计类提示词', 290, 'image'),
+('写实风格', 'realistic-style', 'eye', '写实绘画、真实感渲染、细节刻画类提示词', 300, 'image'),
+('抽象艺术', 'abstract-art', 'squares-plus', '抽象表现、概念艺术、创意视觉类提示词', 310, 'image'),
+('建筑设计', 'architecture', 'building-office', '建筑设计、空间规划、结构美学类提示词', 320, 'image'),
+('时尚设计', 'fashion-design', 'sparkles', '服装设计、时尚搭配、潮流趋势类提示词', 330, 'image'),
+('游戏美术', 'game-art', 'puzzle-piece', '游戏场景、角色原画、概念设计类提示词', 340, 'image'),
+('科幻风格', 'sci-fi-style', 'rocket-launch', '科幻场景、未来设计、科技感视觉类提示词', 350, 'image'),
 
--- 创作和内容类别
-('文案', 'copywriting', 'pencil', '广告文案、营销内容、产品描述类提示词', 40),
-('设计', 'design', 'color-swatch', '设计思维、创意构思、视觉设计类提示词', 50),
-('绘画', 'painting', 'paint-brush', '绘画创作、艺术指导、风格描述类提示词', 55),
-
--- 教育和娱乐类别
-('教育', 'education', 'book-open', '教学辅导、知识解释、学习指导类提示词', 60),
-('情感', 'emotional', 'heart', '情感支持、心理咨询、人际关系类提示词', 70),
-('娱乐', 'entertainment', 'sparkles', '游戏、故事创作、趣味对话类提示词', 80),
-('游戏', 'gaming', 'puzzle-piece', '游戏策略、角色扮演、游戏设计类提示词', 90),
-
--- 生活和实用类别
-('生活', 'lifestyle', 'home', '日常生活、健康建议、生活技巧类提示词', 100),
-('商业', 'business', 'chart-bar', '商业分析、市场策略、企业管理类提示词', 110),
-('办公', 'office', 'document-text', '办公自动化、文档处理、会议记录类提示词', 120),
-
--- 技术类别
-('编程', 'programming', 'code', '代码编写、程序调试、技术解答类提示词', 130),
-('翻译', 'translation', 'language', '多语言翻译、本地化、语言学习类提示词', 140),
-
--- 多媒体类别
-('视频', 'video', 'video-camera', '视频制作、脚本编写、视频策划类提示词', 150),
-('播客', 'podcast', 'microphone', '播客制作、音频内容、访谈策划类提示词', 160),
-('音乐', 'music', 'musical-note', '音乐创作、歌词编写、音乐分析类提示词', 170),
-
--- 专业领域类别
-('健康', 'health', 'heart-pulse', '健康咨询、医疗信息、养生建议类提示词', 180),
-('科技', 'technology', 'cpu-chip', '科技趋势、技术分析、创新思维类提示词', 190),
-('金融', 'finance', 'currency-dollar', '金融分析、投资理财、财务管理类提示词', 200),
-('写作', 'writing', 'pencil-square', '文章写作、内容创作、写作技巧类提示词', 210)
+-- Video类型 (视频提示词)
+('视频制作', 'video-production', 'video-camera', '视频制作、脚本编写、视频策划类提示词', 410, 'video'),
+('动画制作', 'animation', 'film', '动画创作、角色动画、特效制作类提示词', 420, 'video'),
+('短视频', 'short-video', 'device-phone-mobile', '短视频创意、社交媒体、内容策划类提示词', 430, 'video'),
+('纪录片', 'documentary', 'document-text', '纪录片制作、真实记录、深度报道类提示词', 440, 'video'),
+('广告视频', 'commercial-video', 'megaphone', '广告创意、营销视频、品牌宣传类提示词', 450, 'video'),
+('教学视频', 'educational-video', 'academic-cap', '教学内容、知识传播、在线教育类提示词', 460, 'video'),
+('音乐视频', 'music-video', 'musical-note', '音乐MV、音频视觉、节奏表现类提示词', 470, 'video'),
+('游戏视频', 'gaming-video', 'puzzle-piece', '游戏录制、解说内容、电竞视频类提示词', 480, 'video'),
+('直播内容', 'live-streaming', 'signal', '直播策划、互动内容、实时传播类提示词', 490, 'video'),
+('企业宣传', 'corporate-video', 'building-office', '企业形象、公司介绍、商务展示类提示词', 500, 'video'),
+('旅行视频', 'travel-video', 'map', '旅行记录、风景展示、文化探索类提示词', 510, 'video'),
+('生活记录', 'lifestyle-video', 'home', '日常生活、个人记录、生活分享类提示词', 520, 'video')
 
 ON CONFLICT (name) DO UPDATE SET
   name_en = EXCLUDED.name_en,
   icon = EXCLUDED.icon,
   description = EXCLUDED.description,
   sort_order = EXCLUDED.sort_order,
+  type = EXCLUDED.type,
   updated_at = NOW();
 
--- 插入模板分类数据
-INSERT INTO template_categories (name, display_name, description, icon, color, sort_order) VALUES
-('writing', '写作助手', '各种写作场景的专业模板', 'PencilIcon', 'text-blue-400', 1),
-('creative', '创意设计', '激发创意灵感的模板集合', 'SparklesIcon', 'text-purple-400', 2),
-('business', '商务应用', '提升工作效率的商务模板', 'BriefcaseIcon', 'text-green-400', 3),
-('education', '教育培训', '教学和学习的专业模板', 'AcademicCapIcon', 'text-yellow-400', 4),
-('analysis', '分析研究', '数据分析和研究类模板', 'ChartBarIcon', 'text-red-400', 5),
-('communication', '沟通交流', '各种沟通场景的模板', 'ChatBubbleLeftRightIcon', 'text-indigo-400', 6),
-('technical', '技术开发', '技术文档和开发相关模板', 'DocumentTextIcon', 'text-cyan-400', 7),
-('personal', '个人生活', '日常生活和个人发展模板', 'UserGroupIcon', 'text-pink-400', 8)
-ON CONFLICT (name) DO UPDATE SET
-    display_name = EXCLUDED.display_name,
-    description = EXCLUDED.description,
-    icon = EXCLUDED.icon,
-    color = EXCLUDED.color,
-    sort_order = EXCLUDED.sort_order,
-    updated_at = NOW();
+
 
 -- 为现有数据设置created_by字段（使用user_id字段的值）
 UPDATE prompts
@@ -1024,6 +952,10 @@ UPDATE prompts
 SET template_format = 'text'
 WHERE template_format IS NULL;
 
+UPDATE prompts
+SET parameters = '{}'::JSONB
+WHERE parameters IS NULL;
+
 
 
 -- =============================================
@@ -1033,40 +965,27 @@ WHERE template_format IS NULL;
 -- 添加注释
 COMMENT ON COLUMN prompts.allow_collaboration IS '是否允许协作编辑';
 COMMENT ON COLUMN prompts.edit_permission IS '编辑权限级别: owner_only, collaborators, public';
-COMMENT ON COLUMN prompts.created_by IS '创建者用户ID（新字段，与user_id字段功能类似）';
+COMMENT ON COLUMN prompts.created_by IS '创建者用户ID';
 COMMENT ON COLUMN prompts.last_modified_by IS '最后修改者用户ID';
 COMMENT ON COLUMN prompts.input_variables IS '提示词输入变量数组';
 COMMENT ON COLUMN prompts.compatible_models IS '兼容的AI模型列表';
 COMMENT ON COLUMN prompts.template_format IS '模板格式：text, json等';
-COMMENT ON COLUMN prompts.version IS '版本号，支持一位小数格式（如1.0, 1.1, 6.1）';
+COMMENT ON COLUMN prompts.version IS '版本号';
+COMMENT ON COLUMN prompts.preview_asset_url IS '预览资源URL，用于图像和视频类型提示词';
+COMMENT ON COLUMN prompts.parameters IS '提示词参数，JSON格式存储各种配置';
+COMMENT ON COLUMN prompts.category_type IS '分类类型，关联到categories表的type字段';
 
 COMMENT ON TABLE prompt_collaborators IS '提示词协作者表';
 COMMENT ON TABLE prompt_audit_logs IS '提示词操作审计日志表';
-COMMENT ON TABLE categories IS '提示词类别管理表';
-COMMENT ON TABLE collaborative_sessions IS '协作编辑会话表';
-COMMENT ON TABLE collaborative_participants IS '协作参与者表';
-COMMENT ON TABLE collaborative_operations IS '协作操作记录表';
-COMMENT ON TABLE collaborative_locks IS '协作区域锁定表';
-COMMENT ON TABLE collaborative_conflicts IS '协作冲突记录表';
-COMMENT ON TABLE collaborative_versions IS '协作版本历史表';
-COMMENT ON TABLE prompt_templates IS '提示词模板表';
-COMMENT ON TABLE template_categories IS '模板分类表';
-COMMENT ON TABLE template_usage_stats IS '模板使用统计表';
-COMMENT ON TABLE template_ratings IS '模板评分表';
+COMMENT ON TABLE categories IS '提示词类别管理表，支持chat/image/video三种类型';
+COMMENT ON TABLE social_interactions IS '社交互动表，统一管理点赞、收藏等操作';
+COMMENT ON TABLE prompt_versions IS '提示词版本历史表';
 
-COMMENT ON COLUMN prompt_templates.variables IS '模板变量定义，JSON格式，包含变量名、类型、描述等';
-COMMENT ON COLUMN prompt_templates.fields IS '模板向导字段定义，JSON格式，用于动态生成表单';
-COMMENT ON COLUMN prompt_templates.content IS '模板内容，包含{{变量名}}占位符';
-COMMENT ON COLUMN prompt_templates.difficulty IS '模板难度：beginner初级、intermediate中级、advanced高级';
-COMMENT ON COLUMN prompt_templates.estimated_time IS '预估使用时间，如"5分钟"、"10-15分钟"';
-COMMENT ON COLUMN prompt_templates.is_official IS '是否为系统官方提供的模板';
+COMMENT ON COLUMN categories.type IS '分类类型：chat对话类、image图像类、video视频类';
 
 -- 添加权限说明
-COMMENT ON FUNCTION increment_usage_count(UUID) IS '安全函数：递增提示词使用次数';
-COMMENT ON FUNCTION increment_template_usage(UUID) IS '安全函数：递增模板使用次数';
-COMMENT ON FUNCTION update_template_rating(UUID) IS '安全函数：更新模板平均评分';
+COMMENT ON FUNCTION increment_view_count(UUID) IS '安全函数：递增提示词查看次数';
 COMMENT ON FUNCTION get_prompt_public_stats(UUID) IS '安全函数：获取提示词公共统计信息';
 COMMENT ON FUNCTION get_user_prompt_interactions(UUID, UUID) IS '安全函数：获取用户与提示词的互动状态';
 COMMENT ON FUNCTION handle_new_user() IS '安全函数：处理新用户注册';
 COMMENT ON FUNCTION update_updated_at_column() IS '安全函数：更新时间戳';
-COMMENT ON FUNCTION update_template_updated_at() IS '安全函数：更新模板时间戳';
