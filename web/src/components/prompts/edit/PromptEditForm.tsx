@@ -9,7 +9,9 @@ import {
   CpuChipIcon,
   ExclamationTriangleIcon,
   CheckCircleIcon,
-  InformationCircleIcon
+  InformationCircleIcon,
+  XMarkIcon,
+  PlusCircleIcon
 } from '@heroicons/react/24/outline';
 
 import PromptTypeSelector, { PromptType } from './PromptTypeSelector';
@@ -85,6 +87,10 @@ export default function PromptEditForm({
     propCurrentType || initialData?.category_type || 'chat'
   );
   const [previewAssets, setPreviewAssets] = useState<AssetFile[]>([]);
+  
+  // 变量和标签的本地状态
+  const [variableInput, setVariableInput] = useState('');
+  const [tagInput, setTagInput] = useState('');
 
   // 表单控制
   const { 
@@ -436,26 +442,83 @@ export default function PromptEditForm({
           <Controller
             name="input_variables"
             control={control}
-            render={({ field }) => (
-              <div className="space-y-2">
-                {/* 显示现有变量 */}
-                {field.value && field.value.length > 0 && (
-                  <div className="flex flex-wrap gap-2">
-                    {field.value.map((variable: string, index: number) => (
-                      <span
-                        key={index}
-                        className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-neon-cyan/20 text-neon-cyan border border-neon-cyan/30"
-                      >
-                        {variable}
-                      </span>
-                    ))}
+            render={({ field }) => {
+              // 添加变量
+              const addVariable = () => {
+                if (variableInput && !field.value?.includes(variableInput)) {
+                  const newVariables = [...(field.value || []), variableInput];
+                  field.onChange(newVariables);
+                  setVariableInput('');
+                  onUnsavedChanges?.(true);
+                }
+              };
+
+              // 删除变量
+              const removeVariable = (variable: string) => {
+                const newVariables = (field.value || []).filter((v: string) => v !== variable);
+                field.onChange(newVariables);
+                onUnsavedChanges?.(true);
+              };
+
+              // 处理回车键
+              const handleKeyPress = (e: React.KeyboardEvent) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  addVariable();
+                }
+              };
+
+              return (
+                <div className="space-y-3">
+                  {/* 输入框 */}
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={variableInput}
+                      onChange={(e) => setVariableInput(e.target.value)}
+                      onKeyPress={handleKeyPress}
+                      placeholder="添加新变量..."
+                      className="input-primary flex-1"
+                      disabled={isSubmitting}
+                    />
+                    <button
+                      type="button"
+                      onClick={addVariable}
+                      disabled={!variableInput || isSubmitting}
+                      className="btn-primary px-3 py-2 disabled:opacity-50"
+                    >
+                      <PlusCircleIcon className="h-5 w-5" />
+                    </button>
                   </div>
-                )}
-                <p className="text-xs text-gray-500">
-                  在提示词内容中使用 {'{{变量名}}'} 格式来定义变量，系统会自动检测
-                </p>
-              </div>
-            )}
+
+                  {/* 显示现有变量 */}
+                  {field.value && field.value.length > 0 && (
+                    <div className="flex flex-wrap gap-2">
+                      {field.value.map((variable: string, index: number) => (
+                        <span
+                          key={index}
+                          className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-neon-cyan/20 text-neon-cyan border border-neon-cyan/30"
+                        >
+                          {variable}
+                          <button
+                            type="button"
+                            onClick={() => removeVariable(variable)}
+                            disabled={isSubmitting}
+                            className="ml-2 hover:text-neon-red transition-colors"
+                          >
+                            <XMarkIcon className="h-4 w-4" />
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                  
+                  <p className="text-xs text-gray-500">
+                    在提示词内容中使用 {'{{变量名}}'} 格式来定义变量，系统会自动检测
+                  </p>
+                </div>
+              );
+            }}
           />
         </motion.div>
 
@@ -474,26 +537,83 @@ export default function PromptEditForm({
           <Controller
             name="tags"
             control={control}
-            render={({ field }) => (
-              <div className="space-y-2">
-                {/* 显示现有标签 */}
-                {field.value && field.value.length > 0 && (
-                  <div className="flex flex-wrap gap-2">
-                    {field.value.map((tag: string, index: number) => (
-                      <span
-                        key={index}
-                        className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-neon-purple/20 text-neon-purple border border-neon-purple/30"
-                      >
-                        {tag}
-                      </span>
-                    ))}
+            render={({ field }) => {
+              // 添加标签
+              const addTag = () => {
+                if (tagInput && !field.value?.includes(tagInput)) {
+                  const newTags = [...(field.value || []), tagInput];
+                  field.onChange(newTags);
+                  setTagInput('');
+                  onUnsavedChanges?.(true);
+                }
+              };
+
+              // 删除标签
+              const removeTag = (tag: string) => {
+                const newTags = (field.value || []).filter((t: string) => t !== tag);
+                field.onChange(newTags);
+                onUnsavedChanges?.(true);
+              };
+
+              // 处理回车键
+              const handleKeyPress = (e: React.KeyboardEvent) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  addTag();
+                }
+              };
+
+              return (
+                <div className="space-y-3">
+                  {/* 输入框 */}
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={tagInput}
+                      onChange={(e) => setTagInput(e.target.value)}
+                      onKeyPress={handleKeyPress}
+                      placeholder="添加新标签..."
+                      className="input-primary flex-1"
+                      disabled={isSubmitting}
+                    />
+                    <button
+                      type="button"
+                      onClick={addTag}
+                      disabled={!tagInput || isSubmitting}
+                      className="btn-primary px-3 py-2 disabled:opacity-50"
+                    >
+                      <PlusCircleIcon className="h-5 w-5" />
+                    </button>
                   </div>
-                )}
-                <p className="text-xs text-gray-500">
-                  使用标签来帮助用户更好地发现和分类您的提示词
-                </p>
-              </div>
-            )}
+
+                  {/* 显示现有标签 */}
+                  {field.value && field.value.length > 0 && (
+                    <div className="flex flex-wrap gap-2">
+                      {field.value.map((tag: string, index: number) => (
+                        <span
+                          key={index}
+                          className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-neon-purple/20 text-neon-purple border border-neon-purple/30"
+                        >
+                          {tag}
+                          <button
+                            type="button"
+                            onClick={() => removeTag(tag)}
+                            disabled={isSubmitting}
+                            className="ml-2 hover:text-neon-red transition-colors"
+                          >
+                            <XMarkIcon className="h-4 w-4" />
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                  
+                  <p className="text-xs text-gray-500">
+                    使用标签来帮助用户更好地发现和分类您的提示词
+                  </p>
+                </div>
+              );
+            }}
           />
         </motion.div>
 

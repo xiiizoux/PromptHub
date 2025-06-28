@@ -811,16 +811,14 @@ export default function PromptDetailsPage() {
                   </div>
                 </div>
 
-                {/* 输入变量（仅对话类型显示） */}
-                {prompt.category_type === 'chat' && (
-                  <div>
-                    <h4 className="text-sm font-medium text-gray-300 mb-4 flex items-center">
-                      <TagIcon className="h-4 w-4 mr-2 text-neon-pink" />
-                      输入变量
-                    </h4>
-                    {renderVariableInputs()}
-                  </div>
-                )}
+                {/* 输入变量 */}
+                <div>
+                  <h4 className="text-sm font-medium text-gray-300 mb-4 flex items-center">
+                    <TagIcon className="h-4 w-4 mr-2 text-neon-pink" />
+                    输入变量
+                  </h4>
+                  {renderVariableInputs()}
+                </div>
                 
                 {/* 兼容模型 */}
                 <div className="pt-4 border-t border-neon-cyan/20">
