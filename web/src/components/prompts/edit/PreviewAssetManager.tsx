@@ -225,13 +225,13 @@ export default function PreviewAssetManager({
 
   return (
     <div className={`space-y-4 ${className}`}>
-      <label className="flex items-center text-sm font-medium text-gray-300">
+      <label className="flex items-center text-base font-medium text-gray-200">
         {isImageType ? (
-          <PhotoIcon className="h-5 w-5 text-neon-purple mr-2" />
+          <PhotoIcon className="h-4 w-4 text-neon-purple mr-2" />
         ) : (
-          <VideoCameraIcon className="h-5 w-5 text-neon-pink mr-2" />
+          <VideoCameraIcon className="h-4 w-4 text-neon-purple mr-2" />
         )}
-        示例{fileTypeLabel} ({assets.length}/{maxAssets}) *
+        示例{fileTypeLabel} ({assets.length}/{maxAssets})*
       </label>
 
       {/* 上传区域 */}

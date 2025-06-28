@@ -11,7 +11,8 @@ import {
   CheckCircleIcon,
   InformationCircleIcon,
   XMarkIcon,
-  PlusCircleIcon
+  PlusCircleIcon,
+  PhotoIcon
 } from '@heroicons/react/24/outline';
 
 import PromptTypeSelector, { PromptType } from './PromptTypeSelector';
@@ -261,6 +262,67 @@ export default function PromptEditForm({
           )}
         </motion.div>
 
+        {/* 媒体相关内容 - 移到提示词内容后面 */}
+        <AnimatePresence>
+          {(currentType === 'image' || currentType === 'video') && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ delay: 0.15 }}
+              className="space-y-4"
+            >
+              {/* 预览资源管理 */}
+              <PreviewAssetManager
+                promptType={currentType}
+                assets={previewAssets}
+                onAssetsChange={handleAssetsChange}
+                disabled={isSubmitting}
+              />
+
+              {/* 图像参数 */}
+              {currentType === 'image' && (
+                <div className="space-y-3">
+                  <h3 className="text-base font-medium text-gray-200">
+                    图像参数
+                  </h3>
+                  <Controller
+                    name="image_parameters"
+                    control={control}
+                    render={({ field }) => (
+                      <ImageParametersForm
+                        value={field.value || {}}
+                        onChange={field.onChange}
+                        disabled={isSubmitting}
+                      />
+                    )}
+                  />
+                </div>
+              )}
+
+              {/* 视频参数 */}
+              {currentType === 'video' && (
+                <div className="space-y-3">
+                  <h3 className="text-base font-medium text-gray-200">
+                    视频参数
+                  </h3>
+                  <Controller
+                    name="video_parameters"
+                    control={control}
+                    render={({ field }) => (
+                      <VideoParametersForm
+                        value={field.value}
+                        onChange={field.onChange}
+                        disabled={isSubmitting}
+                      />
+                    )}
+                  />
+                </div>
+              )}
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         {/* 基本信息 */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -373,59 +435,6 @@ export default function PromptEditForm({
             <p className="text-neon-red text-sm mt-1">{errors.description.message}</p>
           )}
         </motion.div>
-
-        {/* 媒体相关内容 - 在提示词内容之后 */}
-        <AnimatePresence>
-          {(currentType === 'image' || currentType === 'video') && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              transition={{ delay: 0.15 }}
-              className="space-y-4"
-            >
-              {/* 预览资源管理 */}
-              <div className="space-y-3">
-                <label className="flex items-center text-base font-medium text-gray-200">
-                  <CogIcon className="h-4 w-4 text-neon-purple mr-2" />
-                  {currentType === 'image' ? '示例图片' : '示例视频'} (最多4个，至少1个) *
-                </label>
-                <PreviewAssetManager
-                  promptType={currentType}
-                  assets={previewAssets}
-                  onAssetsChange={handleAssetsChange}
-                  disabled={isSubmitting}
-                />
-              </div>
-
-              {/* 图像参数 */}
-              {currentType === 'image' && (
-                <div className="space-y-3">
-                  <h3 className="text-base font-medium text-gray-200">
-                    图像参数
-                  </h3>
-                  <ImageParametersForm
-                    control={control}
-                    disabled={isSubmitting}
-                  />
-                </div>
-              )}
-
-              {/* 视频参数 */}
-              {currentType === 'video' && (
-                <div className="space-y-3">
-                  <h3 className="text-base font-medium text-gray-200">
-                    视频参数
-                  </h3>
-                  <VideoParametersForm
-                    control={control}
-                    disabled={isSubmitting}
-                  />
-                </div>
-              )}
-            </motion.div>
-          )}
-        </AnimatePresence>
 
         {/* 变量管理 */}
         <motion.div
