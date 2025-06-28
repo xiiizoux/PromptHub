@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import Link from 'next/link';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { PromptInfo } from '@/types';
 import { formatVersionDisplay } from '@/lib/version-utils';
 import { 
@@ -53,19 +53,17 @@ const formatDate = (dateString?: string) => {
 const ImagePromptCard: React.FC<ImagePromptCardProps> = React.memo(({ prompt }) => {
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageError, setImageError] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
 
-  // 如果没有必要的数据，不渲染
-  if (!prompt || !prompt.id) {
-    return null;
-  }
-
-  // 使用useMemo缓存计算结果
+  // 使用useMemo缓存计算结果 - 移到早期返回之前
   const categoryInfo = useMemo(() => {
-    return IMAGE_CATEGORY_MAP[prompt?.category || 'default'] || IMAGE_CATEGORY_MAP.default;
+    if (!prompt?.category) return IMAGE_CATEGORY_MAP.default;
+    return IMAGE_CATEGORY_MAP[prompt.category] || IMAGE_CATEGORY_MAP.default;
   }, [prompt?.category]);
 
   const rating = useMemo(() => {
-    const ratingValue = prompt?.average_rating !== undefined ? prompt.average_rating : (prompt?.rating || 0);
+    if (!prompt) return { value: 0, percentage: 0 };
+    const ratingValue = prompt.average_rating !== undefined ? prompt.average_rating : (prompt.rating || 0);
     const percentage = (ratingValue / 5) * 100;
     return { value: ratingValue, percentage };
   }, [prompt?.average_rating, prompt?.rating]);
@@ -80,24 +78,46 @@ const ImagePromptCard: React.FC<ImagePromptCardProps> = React.memo(({ prompt }) 
 
   // 获取主要参数用于显示
   const keyParameters = useMemo(() => {
-    if (!prompt.parameters) return null;
+    if (!prompt?.parameters) return null;
     const params: Array<{key: string; value: string}> = [];
     
     // 优先显示重要参数
-    if (prompt.parameters.style) params.push({ key: 'Style', value: prompt.parameters.style });
-    if (prompt.parameters.aspect_ratio) params.push({ key: 'Ratio', value: prompt.parameters.aspect_ratio });
-    if (prompt.parameters.resolution) params.push({ key: 'Resolution', value: prompt.parameters.resolution });
+    if (prompt.parameters.style) {
+      params.push({ key: 'Style', value: String(prompt.parameters.style) });
+    }
+    if (prompt.parameters.aspect_ratio) {
+      params.push({ key: 'Ratio', value: String(prompt.parameters.aspect_ratio) });
+    }
+    if (prompt.parameters.resolution) {
+      params.push({ key: 'Resolution', value: String(prompt.parameters.resolution) });
+    }
     
     return params.slice(0, 2); // 最多显示2个参数
-  }, [prompt.parameters]);
+  }, [prompt?.parameters]);
+
+  // 如果没有必要的数据，不渲染 - 移到hooks之后
+  if (!prompt || !prompt.id) {
+    return null;
+  }
+
+  // 获取图片URL，优先使用preview_asset_url，如果没有则使用占位符
+  const getImageUrl = () => {
+    if (prompt.preview_asset_url) {
+      return prompt.preview_asset_url;
+    }
+    // 使用高质量的占位符图片
+    return `https://images.unsplash.com/photo-1547658719-da2b51169166?w=400&h=300&fit=crop&auto=format&q=80`;
+  };
 
   return (
     <div>
       <Link href={`/prompts/${prompt.id}`}>
         <motion.div 
-          className="card glass border border-pink-500/20 hover:border-pink-500/40 transition-all duration-300 group cursor-pointer relative overflow-hidden"
-          whileHover={{ y: -2 }}
+          className="card glass border border-pink-500/20 hover:border-pink-500/40 transition-all duration-300 group cursor-pointer relative overflow-hidden h-80 flex flex-col"
+          whileHover={{ y: -4, scale: 1.02 }}
           transition={{ duration: 0.2 }}
+          onMouseEnter={() => setIsHovered(true)}
+          onMouseLeave={() => setIsHovered(false)}
         >
           {/* 背景渐变 */}
           <div className={clsx(
@@ -105,152 +125,149 @@ const ImagePromptCard: React.FC<ImagePromptCardProps> = React.memo(({ prompt }) 
             categoryInfo.gradient,
           )} />
           
-          {/* 预览图像区域 */}
-          {prompt.preview_asset_url && (
-            <div className="relative w-full h-40 mb-4 rounded-lg overflow-hidden bg-gray-900/50">
-              {!imageError ? (
-                <>
-                  <img 
-                    src={prompt.preview_asset_url}
-                    alt={prompt.name}
-                    className={clsx(
-                      'w-full h-full object-cover transition-all duration-300',
-                      imageLoaded ? 'opacity-100' : 'opacity-0',
-                      'group-hover:scale-105'
-                    )}
-                    onLoad={() => setImageLoaded(true)}
-                    onError={() => setImageError(true)}
-                  />
+          {/* 预览图像区域 - 画廊模式 */}
+          <div className="relative w-full h-48 rounded-lg overflow-hidden bg-gradient-to-br from-gray-900/80 to-gray-800/80 flex-shrink-0 mb-3">
+            <img 
+              src={getImageUrl()}
+              alt={prompt.name || '图像提示词'}
+              className={clsx(
+                'w-full h-full object-cover transition-all duration-500',
+                imageLoaded ? 'opacity-100' : 'opacity-0',
+                'group-hover:scale-110'
+              )}
+              onLoad={() => setImageLoaded(true)}
+              onError={() => setImageError(true)}
+            />
                   {!imageLoaded && (
                     <div className="absolute inset-0 flex items-center justify-center">
                       <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-pink-400"></div>
                     </div>
-                  )}
-                </>
-              ) : (
-                <div className="absolute inset-0 flex items-center justify-center bg-gray-800/50">
-                  <div className="text-center">
-                    <PhotoIcon className="h-8 w-8 text-gray-500 mx-auto mb-2" />
-                    <span className="text-xs text-gray-500">预览不可用</span>
-                  </div>
-                </div>
-              )}
+            )}
               
+            {/* 顶部标签栏 */}
+            <div className="absolute top-3 left-3 right-3 flex justify-between items-start">
               {/* 图像类型标识 */}
-              <div className="absolute top-2 left-2">
-                <div className="flex items-center space-x-1 px-2 py-1 rounded-md bg-pink-500/20 backdrop-blur-sm border border-pink-500/30">
-                  <PhotoIcon className="h-3 w-3 text-pink-400" />
-                  <span className="text-xs text-pink-400 font-medium">图像</span>
-                </div>
+              <div className="flex items-center space-x-1 px-3 py-1.5 rounded-full bg-pink-500/20 backdrop-blur-md border border-pink-500/30">
+                <PhotoIcon className="h-3 w-3 text-pink-400" />
+                <span className="text-xs text-pink-400 font-medium">图像</span>
               </div>
               
               {/* 热门标签 */}
               {(prompt.usageCount || 0) > 100 && (
-                <div className="absolute top-2 right-2">
-                  <div className="flex items-center space-x-1 px-2 py-1 rounded-md bg-red-500/20 backdrop-blur-sm border border-red-500/30">
-                    <FireIcon className="h-3 w-3 text-red-400" />
-                    <span className="text-xs text-red-400">热门</span>
-                  </div>
+                <div className="flex items-center space-x-1 px-3 py-1.5 rounded-full bg-orange-500/20 backdrop-blur-md border border-orange-500/30">
+                  <FireIcon className="h-3 w-3 text-orange-400" />
+                  <span className="text-xs text-orange-400 font-medium">热门</span>
                 </div>
               )}
-              
-              {/* 悬停时显示查看按钮 */}
-              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-                <div className="flex items-center space-x-2 px-4 py-2 rounded-lg bg-black/60 backdrop-blur-sm border border-pink-500/30">
-                  <EyeIcon className="h-4 w-4 text-pink-400" />
-                  <span className="text-sm text-white font-medium">查看详情</span>
-                </div>
-              </div>
             </div>
-          )}
-          
-          {/* 标题与分类 */}
-          <div className="relative mb-2">
-            <h3 className="text-lg font-semibold text-white line-clamp-2 group-hover:text-pink-400 transition-colors mb-1">
-              {prompt.name}
-            </h3>
-            <div className={clsx('text-xs font-medium', categoryInfo.color)}>{categoryInfo.name}</div>
+            
+            {/* 悬停时显示查看按钮 */}
+            <AnimatePresence>
+              {isHovered && (
+                <motion.div 
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.8 }}
+                  transition={{ duration: 0.2 }}
+                  className="absolute inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center"
+                >
+                  <div className="flex items-center space-x-2 px-4 py-2 rounded-full bg-black/40 backdrop-blur-md border border-pink-500/30">
+                    <EyeIcon className="h-4 w-4 text-white" />
+                    <span className="text-sm text-white font-medium">查看详情</span>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+            
+            {/* 底部渐变遮罩，用于更好的文字可读性 */}
+            <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-black/60 to-transparent pointer-events-none" />
           </div>
           
-          {/* 描述 */}
-          <p className="text-sm text-gray-400 line-clamp-2 mb-3">
-            {prompt.description || '暂无描述'}
-          </p>
-          
-          {/* 参数显示 */}
-          {keyParameters && keyParameters.length > 0 && (
-            <div className="flex flex-wrap gap-2 mb-3">
-              {keyParameters.map((param, index) => (
-                <div 
-                  key={`${prompt.id}-param-${index}`}
-                  className="inline-flex items-center space-x-1 px-2 py-1 rounded-md text-xs bg-gray-800/50 border border-gray-600/30"
-                >
-                  <CogIcon className="h-3 w-3 text-gray-400" />
-                  <span className="text-gray-300">{param.key}:</span>
-                  <span className="text-gray-400">{param.value}</span>
-                </div>
-              ))}
-            </div>
-          )}
-          
-          {/* 标签 */}
-          {tagsToShow && (
-            <div className="flex flex-wrap gap-2 mb-4">
-              {tagsToShow.visible.map((tag, index) => (
-                <span 
-                  key={`${prompt.id}-tag-${tag}-${index}`}
-                  className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium glass border border-pink-500/20 text-pink-400"
-                >
-                  #{tag}
-                </span>
-              ))}
-              {tagsToShow.remaining > 0 && (
-                <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium glass border border-gray-600 text-gray-400">
-                  +{tagsToShow.remaining}
-                </span>
-              )}
-            </div>
-          )}
-          
-          {/* 底部信息 */}
-          <div className="mt-auto pt-3 border-t border-pink-500/10 space-y-3">
-            {/* 第一行：评分与日期 */}
-            <div className="flex items-center justify-between text-xs">
-              <div className="flex items-center">
-                {rating.value > 0 ? (
-                  <div className="flex items-center space-x-2">
-                    <div className="relative w-16 h-2 bg-dark-bg-tertiary rounded-full overflow-hidden">
-                      <div 
-                        className="absolute top-0 left-0 h-full bg-gradient-to-r from-pink-400 to-purple-400 rounded-full"
-                        style={{ width: `${rating.percentage}%` }}
-                      />
-                    </div>
-                    <span className="text-xs text-gray-400">{rating.value.toFixed(1)}</span>
-                  </div>
-                ) : (
-                  <span className="text-xs text-gray-500">暂无评分</span>
-                )}
-              </div>
-              <div className="flex items-center space-x-1 text-gray-500">
-                <ClockIcon className="h-3 w-3" />
-                <span>{formatDate(prompt.updated_at || prompt.created_at)}</span>
+          {/* 内容区域 - 紧凑但信息丰富 */}
+          <div className="flex-1 p-4 flex flex-col">
+            {/* 标题与分类 */}
+            <div className="mb-2">
+              <h3 className="text-lg font-semibold text-white line-clamp-2 group-hover:text-pink-400 transition-colors mb-1">
+                {prompt.name}
+              </h3>
+              <div className={clsx('text-xs font-medium', categoryInfo.color)}>
+                {categoryInfo.name}
               </div>
             </div>
             
-            {/* 第二行：作者版本信息与互动按钮 */}
-            <div className="flex items-center justify-between text-xs text-gray-500">
-              <div className="flex items-center space-x-3">
-                <div className="flex items-center space-x-1">
-                  <UserIcon className="h-3 w-3" />
-                  <span>{prompt.author || '匿名'}</span>
+            {/* 参数显示 */}
+            {keyParameters && keyParameters.length > 0 && (
+              <div className="flex flex-wrap gap-1.5 mb-2">
+                {keyParameters.map((param, index) => (
+                  <div 
+                    key={`${prompt.id}-param-${index}`}
+                    className="inline-flex items-center space-x-1 px-2 py-1 rounded-md text-xs bg-gray-800/50 border border-gray-600/30"
+                  >
+                    <span className="text-gray-300">{param.key}:</span>
+                    <span className="text-gray-400">{param.value}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+            
+            {/* 标签 */}
+            {tagsToShow && (
+              <div className="flex flex-wrap gap-1.5 mb-3">
+                {tagsToShow.visible.map((tag, index) => (
+                  <span 
+                    key={`${prompt.id}-tag-${tag}-${index}`}
+                    className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium glass border border-pink-500/20 text-pink-400"
+                  >
+                    #{tag}
+                  </span>
+                ))}
+                {tagsToShow.remaining > 0 && (
+                  <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium glass border border-gray-600 text-gray-400">
+                    +{tagsToShow.remaining}
+                  </span>
+                )}
+              </div>
+            )}
+            
+            {/* 底部信息 */}
+            <div className="mt-auto pt-3 border-t border-pink-500/10 space-y-2">
+              {/* 评分与互动 */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                  {rating.value > 0 ? (
+                    <div className="flex items-center space-x-2">
+                      <div className="relative w-12 h-1.5 bg-gray-700 rounded-full overflow-hidden">
+                        <div 
+                          className="absolute top-0 left-0 h-full bg-gradient-to-r from-pink-400 to-purple-400 rounded-full"
+                          style={{ width: `${rating.percentage}%` }}
+                        />
+                      </div>
+                      <span className="text-xs text-gray-400">{rating.value.toFixed(1)}</span>
+                    </div>
+                  ) : (
+                    <span className="text-xs text-gray-500">暂无评分</span>
+                  )}
                 </div>
-                <div className="flex items-center space-x-1">
-                  <DocumentTextIcon className="h-3 w-3" />
-                  <span>v{formatVersionDisplay(prompt.version)}</span>
+                
+                <div onClick={(e) => e.preventDefault()}>
+                  <InteractionButtons promptId={prompt.id} size="sm" />
                 </div>
               </div>
-              <div onClick={(e) => e.preventDefault()}>
-                <InteractionButtons promptId={prompt.id} size="sm" />
+              
+              {/* 作者与日期 */}
+              <div className="flex items-center justify-between text-xs text-gray-500">
+                <div className="flex items-center space-x-2">
+                  <div className="flex items-center space-x-1">
+                    <UserIcon className="h-3 w-3" />
+                    <span>{prompt.author || '匿名'}</span>
+                  </div>
+                  <span>•</span>
+                  <span>v{formatVersionDisplay(prompt.version)}</span>
+                </div>
+                <div className="flex items-center space-x-1">
+                  <ClockIcon className="h-3 w-3" />
+                  <span>{formatDate(prompt.updated_at || prompt.created_at)}</span>
+                </div>
               </div>
             </div>
           </div>
