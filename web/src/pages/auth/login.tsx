@@ -3,9 +3,8 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useForm } from 'react-hook-form';
 import { motion, AnimatePresence } from 'framer-motion';
-import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
-import { getRedirectUrl, buildUrlWithRedirect, handlePostLoginRedirect } from '@/lib/redirect';
+import { getRedirectUrl, buildUrlWithRedirect } from '@/lib/redirect';
 import { EyeIcon, EyeSlashIcon, LockClosedIcon, EnvelopeIcon, ArrowRightIcon, SparklesIcon } from '@heroicons/react/24/outline';
 
 interface LoginFormData {
@@ -20,7 +19,6 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [initializing, setInitializing] = useState(true);
-  const [redirectAttempted, setRedirectAttempted] = useState(false);
   const router = useRouter();
   const { login, loginWithGoogle, isAuthenticated, isLoading: authLoading } = useAuth();
   
@@ -34,50 +32,23 @@ export default function LoginPage() {
   
   // 检查用户是否已经登录，如果是则重定向到目标页面
   useEffect(() => {
-    let redirectTimeout: NodeJS.Timeout;
-
-    // 如果AuthContext还在加载中，不做任何操作
+    // 等待AuthContext初始化完成
     if (authLoading) {
       return;
     }
 
-    // 如果用户已经认证且还没有尝试过重定向，重定向到目标页面
-    if (isAuthenticated && !redirectAttempted) {
-      console.log('用户已认证，准备重定向到目标页面');
-      setRedirectAttempted(true);
+    // 如果用户已认证，重定向到目标页面
+    if (isAuthenticated) {
       const redirectUrl = getRedirectUrl(router) || '/';
-
-      // 使用setTimeout避免立即重定向导致的循环
-      redirectTimeout = setTimeout(() => {
-        console.log('执行重定向到:', redirectUrl);
-        router.replace(redirectUrl).catch((error) => {
-          console.error('重定向失败:', error);
-          // 重定向失败时，重置状态并显示登录表单
-          setRedirectAttempted(false);
-          setInitializing(false);
-        });
-      }, 100);
-
-      return;
-    }
-
-    // 如果用户已认证但重定向已尝试过（可能失败了），显示登录表单
-    if (isAuthenticated && redirectAttempted) {
-      console.log('重定向已尝试，显示登录表单');
-      setInitializing(false);
+      console.log('用户已认证，重定向到:', redirectUrl);
+      router.replace(redirectUrl);
       return;
     }
 
     // 用户未认证，显示登录表单
     console.log('用户未认证，显示登录表单');
     setInitializing(false);
-
-    return () => {
-      if (redirectTimeout) {
-        clearTimeout(redirectTimeout);
-      }
-    };
-  }, [router, isAuthenticated, authLoading, redirectAttempted]);
+  }, [isAuthenticated, authLoading, router]);
 
   // 如果AuthContext还在加载中，显示加载状态
   if (authLoading) {
