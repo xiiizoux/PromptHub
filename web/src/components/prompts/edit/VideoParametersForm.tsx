@@ -16,7 +16,7 @@ export interface VideoParameters {
 }
 
 interface VideoParametersFormProps {
-  value: VideoParameters;
+  value: VideoParameters | undefined;
   onChange: (parameters: VideoParameters) => void;
   disabled?: boolean;
   className?: string;
@@ -56,9 +56,12 @@ export default function VideoParametersForm({
   disabled = false,
   className = ''
 }: VideoParametersFormProps) {
+  // 确保value不为undefined
+  const safeValue = value || {};
+
   const updateParameter = (key: keyof VideoParameters, paramValue: any) => {
     onChange({
-      ...value,
+      ...safeValue,
       [key]: paramValue
     });
   };
@@ -77,7 +80,7 @@ export default function VideoParametersForm({
           <label className="block text-sm font-medium text-gray-300">
             视频时长 (秒)
             <span className="ml-2 text-xs text-gray-500">
-              ({value.duration || 10}s)
+              ({safeValue.duration || 10}s)
             </span>
           </label>
           <div className="space-y-2">
@@ -86,7 +89,7 @@ export default function VideoParametersForm({
               min="2"
               max="30"
               step="1"
-              value={value.duration || 10}
+              value={safeValue.duration || 10}
               onChange={(e) => updateParameter('duration', parseInt(e.target.value))}
               disabled={disabled}
               className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer slider"
@@ -104,7 +107,7 @@ export default function VideoParametersForm({
             帧率 (FPS)
           </label>
           <select
-            value={value.fps || 24}
+            value={safeValue.fps || 24}
             onChange={(e) => updateParameter('fps', parseInt(e.target.value))}
             disabled={disabled}
             className="input-primary w-full"
@@ -122,7 +125,7 @@ export default function VideoParametersForm({
             视频分辨率
           </label>
           <select
-            value={value.resolution || '1024x576'}
+            value={safeValue.resolution || '1024x576'}
             onChange={(e) => updateParameter('resolution', e.target.value)}
             disabled={disabled}
             className="input-primary w-full"
@@ -141,7 +144,7 @@ export default function VideoParametersForm({
             生成质量
           </label>
           <select
-            value={value.quality || 'standard'}
+            value={safeValue.quality || 'standard'}
             onChange={(e) => updateParameter('quality', e.target.value)}
             disabled={disabled}
             className="input-primary w-full"
@@ -159,7 +162,7 @@ export default function VideoParametersForm({
           <label className="block text-sm font-medium text-gray-300">
             运动强度
             <span className="ml-2 text-xs text-gray-500">
-              ({value.motion_strength || 5})
+              ({safeValue.motion_strength || 5})
             </span>
           </label>
           <div className="space-y-2">
@@ -168,7 +171,7 @@ export default function VideoParametersForm({
               min="1"
               max="10"
               step="1"
-              value={value.motion_strength || 5}
+              value={safeValue.motion_strength || 5}
               onChange={(e) => updateParameter('motion_strength', parseInt(e.target.value))}
               disabled={disabled}
               className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer slider"
@@ -186,7 +189,7 @@ export default function VideoParametersForm({
             摄像机运动
           </label>
           <select
-            value={value.camera_movement || 'static'}
+            value={safeValue.camera_movement || 'static'}
             onChange={(e) => updateParameter('camera_movement', e.target.value)}
             disabled={disabled}
             className="input-primary w-full"
@@ -204,7 +207,7 @@ export default function VideoParametersForm({
           <label className="block text-sm font-medium text-gray-300">
             引导强度
             <span className="ml-2 text-xs text-gray-500">
-              ({value.guidance_scale || 15})
+              ({safeValue.guidance_scale || 15})
             </span>
           </label>
           <div className="space-y-2">
@@ -213,7 +216,7 @@ export default function VideoParametersForm({
               min="5"
               max="25"
               step="0.5"
-              value={value.guidance_scale || 15}
+              value={safeValue.guidance_scale || 15}
               onChange={(e) => updateParameter('guidance_scale', parseFloat(e.target.value))}
               disabled={disabled}
               className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer slider"
@@ -230,7 +233,7 @@ export default function VideoParametersForm({
           <label className="block text-sm font-medium text-gray-300">
             推理步数
             <span className="ml-2 text-xs text-gray-500">
-              ({value.num_inference_steps || 25})
+              ({safeValue.num_inference_steps || 25})
             </span>
           </label>
           <div className="space-y-2">
@@ -239,7 +242,7 @@ export default function VideoParametersForm({
               min="10"
               max="50"
               step="5"
-              value={value.num_inference_steps || 25}
+              value={safeValue.num_inference_steps || 25}
               onChange={(e) => updateParameter('num_inference_steps', parseInt(e.target.value))}
               disabled={disabled}
               className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer slider"
@@ -259,7 +262,7 @@ export default function VideoParametersForm({
           <div className="flex gap-2">
             <input
               type="number"
-              value={value.seed || ''}
+              value={safeValue.seed || ''}
               onChange={(e) => updateParameter('seed', e.target.value ? parseInt(e.target.value) : undefined)}
               placeholder="留空为随机生成"
               disabled={disabled}
@@ -294,18 +297,18 @@ export default function VideoParametersForm({
         <div className="text-xs text-yellow-300 space-y-1">
           <p>基于当前设置，预计生成时间：</p>
           <div className="grid grid-cols-2 gap-2 mt-2">
-            <div>时长影响：{value.duration || 10}秒 × 2倍</div>
+            <div>时长影响：{safeValue.duration || 10}秒 × 2倍</div>
             <div>质量影响：{
-              value.quality === 'draft' ? '0.5倍' :
-              value.quality === 'standard' ? '1倍' :
-              value.quality === 'high' ? '2倍' : '3倍'
+              safeValue.quality === 'draft' ? '0.5倍' :
+              safeValue.quality === 'standard' ? '1倍' :
+              safeValue.quality === 'high' ? '2倍' : '3倍'
             }</div>
-            <div>推理步数：{value.num_inference_steps || 25}步</div>
-            <div>预计时间：{Math.ceil(((value.duration || 10) * 
-              (value.quality === 'draft' ? 0.5 : 
-               value.quality === 'standard' ? 1 : 
-               value.quality === 'high' ? 2 : 3) * 
-              (value.num_inference_steps || 25) / 25))}分钟</div>
+            <div>推理步数：{safeValue.num_inference_steps || 25}步</div>
+            <div>预计时间：{Math.ceil(((safeValue.duration || 10) * 
+              (safeValue.quality === 'draft' ? 0.5 : 
+               safeValue.quality === 'standard' ? 1 : 
+               safeValue.quality === 'high' ? 2 : 3) * 
+              (safeValue.num_inference_steps || 25) / 25))}分钟</div>
           </div>
         </div>
       </motion.div>
@@ -320,29 +323,29 @@ export default function VideoParametersForm({
         <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-xs">
           <div>
             <span className="text-gray-500">时长:</span>
-            <span className="ml-1 text-gray-300">{value.duration || 10}秒</span>
+            <span className="ml-1 text-gray-300">{safeValue.duration || 10}秒</span>
           </div>
           <div>
             <span className="text-gray-500">帧率:</span>
-            <span className="ml-1 text-gray-300">{value.fps || 24} FPS</span>
+            <span className="ml-1 text-gray-300">{safeValue.fps || 24} FPS</span>
           </div>
           <div>
             <span className="text-gray-500">分辨率:</span>
-            <span className="ml-1 text-gray-300">{value.resolution || '1024x576'}</span>
+            <span className="ml-1 text-gray-300">{safeValue.resolution || '1024x576'}</span>
           </div>
           <div>
             <span className="text-gray-500">运动强度:</span>
-            <span className="ml-1 text-gray-300">{value.motion_strength || 5}</span>
+            <span className="ml-1 text-gray-300">{safeValue.motion_strength || 5}</span>
           </div>
           <div>
             <span className="text-gray-500">摄像机:</span>
             <span className="ml-1 text-gray-300">
-              {cameraMovementOptions.find(c => c.value === value.camera_movement)?.label || '静止'}
+              {cameraMovementOptions.find(c => c.value === safeValue.camera_movement)?.label || '静止'}
             </span>
           </div>
           <div>
             <span className="text-gray-500">种子:</span>
-            <span className="ml-1 text-gray-300">{value.seed || '随机'}</span>
+            <span className="ml-1 text-gray-300">{safeValue.seed || '随机'}</span>
           </div>
         </div>
       </motion.div>

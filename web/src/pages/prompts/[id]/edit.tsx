@@ -863,65 +863,7 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
             </Link>
           </motion.div>
 
-          {/* 权限提示 */}
-          {permissionCheck && permissionCheck.canEdit && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="mb-6 glass rounded-xl border border-neon-cyan/20 p-4"
-            >
-              <div className="flex">
-                <CheckCircleIcon className="h-5 w-5 text-neon-cyan" />
-                <div className="ml-3">
-                  <p className="text-sm font-medium text-white">
-                    编辑权限确认
-                  </p>
-                  <p className="text-sm text-gray-400 mt-1">
-                    {permissionCheck.message}
-                  </p>
-                </div>
-              </div>
-            </motion.div>
-          )}
-          
-          {/* 成功提示 */}
-          {saveSuccess && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="mb-6 glass rounded-xl border border-neon-green/20 p-4"
-            >
-              <div className="flex">
-                <CheckCircleIcon className="h-5 w-5 text-neon-green" />
-                <div className="ml-3">
-                  <p className="text-sm font-medium text-white">
-                    提示词已成功更新！
-                  </p>
-                </div>
-              </div>
-            </motion.div>
-          )}
 
-          {/* 未保存更改提示 */}
-          {hasUnsavedChanges && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="mb-6 glass rounded-xl border border-neon-orange/20 p-4"
-            >
-              <div className="flex">
-                <ExclamationTriangleIcon className="h-5 w-5 text-neon-orange" />
-                <div className="ml-3">
-                  <p className="text-sm font-medium text-white">
-                    您有未保存的更改
-                  </p>
-                  <p className="text-sm text-gray-400 mt-1">
-                    请记得保存您的更改，否则离开页面时将丢失。
-                  </p>
-                </div>
-              </div>
-            </motion.div>
-          )}
 
           {/* 页面标题 */}
           <motion.div
@@ -1063,6 +1005,35 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
             />
           </motion.div>
         </div>
+
+        {/* 底部状态信息 */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1.0 }}
+          className="mt-8 text-center space-y-2"
+        >
+          {/* 未保存更改提示 */}
+          {hasUnsavedChanges && (
+            <p className="text-xs text-yellow-400">
+              <span className="text-yellow-400">⚠</span> 有未保存的更改
+            </p>
+          )}
+
+          {/* 权限信息 */}
+          {permissionCheck && permissionCheck.canEdit && (
+            <p className="text-xs text-gray-500">
+              <span className="text-neon-cyan">✓</span> {permissionCheck.message}
+            </p>
+          )}
+
+          {/* 保存成功提示 */}
+          {saveSuccess && (
+            <p className="text-xs text-green-400">
+              <span className="text-green-400">✓</span> 提示词已成功更新！
+            </p>
+          )}
+        </motion.div>
         </div>
       </div>
     </div>

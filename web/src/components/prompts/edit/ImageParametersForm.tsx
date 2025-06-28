@@ -75,7 +75,7 @@ export default function ImageParametersForm({
             风格样式
           </label>
           <select
-            value={value.style || 'photorealistic'}
+            value={value?.style || 'photorealistic'}
             onChange={(e) => updateParameter('style', e.target.value)}
             disabled={disabled}
             className="input-primary w-full"
@@ -94,7 +94,7 @@ export default function ImageParametersForm({
             宽高比
           </label>
           <select
-            value={value.aspect_ratio || '1:1'}
+            value={value?.aspect_ratio || '1:1'}
             onChange={(e) => updateParameter('aspect_ratio', e.target.value)}
             disabled={disabled}
             className="input-primary w-full"
@@ -113,7 +113,7 @@ export default function ImageParametersForm({
             生成质量
           </label>
           <select
-            value={value.quality || 'standard'}
+            value={value?.quality || 'standard'}
             onChange={(e) => updateParameter('quality', e.target.value)}
             disabled={disabled}
             className="input-primary w-full"
@@ -131,7 +131,7 @@ export default function ImageParametersForm({
           <label className="block text-sm font-medium text-gray-300">
             引导强度
             <span className="ml-2 text-xs text-gray-500">
-              ({value.guidance_scale || 7})
+              ({value?.guidance_scale || 7})
             </span>
           </label>
           <div className="space-y-2">
@@ -140,7 +140,7 @@ export default function ImageParametersForm({
               min="1"
               max="20"
               step="0.5"
-              value={value.guidance_scale || 7}
+              value={value?.guidance_scale || 7}
               onChange={(e) => updateParameter('guidance_scale', parseFloat(e.target.value))}
               disabled={disabled}
               className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer slider"
@@ -157,7 +157,7 @@ export default function ImageParametersForm({
           <label className="block text-sm font-medium text-gray-300">
             推理步数
             <span className="ml-2 text-xs text-gray-500">
-              ({value.num_inference_steps || 50})
+              ({value?.num_inference_steps || 50})
             </span>
           </label>
           <div className="space-y-2">
@@ -166,7 +166,7 @@ export default function ImageParametersForm({
               min="10"
               max="100"
               step="5"
-              value={value.num_inference_steps || 50}
+              value={value?.num_inference_steps || 50}
               onChange={(e) => updateParameter('num_inference_steps', parseInt(e.target.value))}
               disabled={disabled}
               className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer slider"
@@ -186,7 +186,7 @@ export default function ImageParametersForm({
           <div className="flex gap-2">
             <input
               type="number"
-              value={value.seed || ''}
+              value={value?.seed || ''}
               onChange={(e) => updateParameter('seed', e.target.value ? parseInt(e.target.value) : undefined)}
               placeholder="留空为随机生成"
               disabled={disabled}
@@ -217,7 +217,7 @@ export default function ImageParametersForm({
           负面提示词 (可选)
         </label>
         <textarea
-          value={value.negative_prompt || ''}
+          value={value?.negative_prompt || ''}
           onChange={(e) => updateParameter('negative_prompt', e.target.value)}
           placeholder="描述不希望在图像中出现的内容，如：模糊、扭曲、低质量..."
           disabled={disabled}
@@ -240,30 +240,30 @@ export default function ImageParametersForm({
           <div>
             <span className="text-gray-500">风格:</span>
             <span className="ml-1 text-gray-300">
-              {styleOptions.find(s => s.value === value.style)?.label || '写实摄影'}
+              {styleOptions.find(s => s.value === value?.style)?.label || '写实摄影'}
             </span>
           </div>
           <div>
             <span className="text-gray-500">宽高比:</span>
-            <span className="ml-1 text-gray-300">{value.aspect_ratio || '1:1'}</span>
+            <span className="ml-1 text-gray-300">{value?.aspect_ratio || '1:1'}</span>
           </div>
           <div>
             <span className="text-gray-500">质量:</span>
             <span className="ml-1 text-gray-300">
-              {qualityOptions.find(q => q.value === value.quality)?.label || '标准'}
+              {qualityOptions.find(q => q.value === value?.quality)?.label || '标准'}
             </span>
           </div>
           <div>
             <span className="text-gray-500">引导强度:</span>
-            <span className="ml-1 text-gray-300">{value.guidance_scale || 7}</span>
+            <span className="ml-1 text-gray-300">{value?.guidance_scale || 7}</span>
           </div>
           <div>
             <span className="text-gray-500">推理步数:</span>
-            <span className="ml-1 text-gray-300">{value.num_inference_steps || 50}</span>
+            <span className="ml-1 text-gray-300">{value?.num_inference_steps || 50}</span>
           </div>
           <div>
             <span className="text-gray-500">种子:</span>
-            <span className="ml-1 text-gray-300">{value.seed || '随机'}</span>
+            <span className="ml-1 text-gray-300">{value?.seed || '随机'}</span>
           </div>
         </div>
       </motion.div>
