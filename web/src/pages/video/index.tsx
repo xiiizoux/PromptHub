@@ -125,13 +125,10 @@ export default function VideoPromptsPage() {
           const response = await getPrompts(filters);
 
           if (response && response.data && Array.isArray(response.data)) {
-            // 在客户端过滤视频类型的提示词
-            const videoPrompts = response.data.filter(prompt => 
-              prompt.category_type === 'video'
-            );
-            setPrompts(videoPrompts);
-            setTotalPages(Math.ceil(videoPrompts.length / (filters.pageSize || 24)));
-            setTotalCount(videoPrompts.length);
+            // 服务端已经过滤了视频类型，直接使用返回的数据
+            setPrompts(response.data);
+            setTotalPages(response.totalPages || Math.ceil(response.data.length / (filters.pageSize || 24)));
+            setTotalCount(response.total || response.data.length);
             setError(null);
             setLoading(false);
             return;

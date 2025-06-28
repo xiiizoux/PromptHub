@@ -125,13 +125,10 @@ export default function ImagePromptsPage() {
           const response = await getPrompts(filters);
 
           if (response && response.data && Array.isArray(response.data)) {
-            // 在客户端过滤图像类型的提示词
-            const imagePrompts = response.data.filter(prompt => 
-              prompt.category_type === 'image'
-            );
-            setPrompts(imagePrompts);
-            setTotalPages(Math.ceil(imagePrompts.length / (filters.pageSize || 24)));
-            setTotalCount(imagePrompts.length);
+            // 服务端已经过滤了图像类型，直接使用返回的数据
+            setPrompts(response.data);
+            setTotalPages(response.totalPages || Math.ceil(response.data.length / (filters.pageSize || 24)));
+            setTotalCount(response.total || response.data.length);
             setError(null);
             setLoading(false);
             return;

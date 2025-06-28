@@ -125,6 +125,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     
     // 添加类型过滤 - 直接使用prompts表的category_type字段
     if (category_type && typeof category_type === 'string') {
+      console.log(`添加类型过滤: category_type = ${category_type}`);
       query = query.eq('category_type', category_type);
     }
     
