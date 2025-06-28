@@ -13,6 +13,7 @@ import { withApiAuth } from '@/middleware/withApiAuth';
 
 interface PromptsQuery {
   category?: string;
+  category_type?: 'chat' | 'image' | 'video';
   tags?: string | string[];
   search?: string;
   page?: string;
@@ -29,6 +30,7 @@ export default apiHandler(async (req: NextApiRequest, res: NextApiResponse) => {
       // 解析查询参数
       const filters = {
         category: query.category,
+        category_type: query.category_type,
         tags: Array.isArray(query.tags) ? query.tags : query.tags ? [query.tags] : undefined,
         search: query.search,
         page: query.page ? parseInt(query.page) : 1,

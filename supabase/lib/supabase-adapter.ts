@@ -143,6 +143,7 @@ export class SupabaseAdapter {
       // 默认过滤器设置
       const {
         category,
+        category_type,
         tags,
         search,
         isPublic = true,
@@ -158,6 +159,10 @@ export class SupabaseAdapter {
       // 应用筛选条件
       if (category && category !== '全部') {
         query = query.eq('category', category);
+      }
+
+      if (category_type) {
+        query = query.eq('category_type', category_type);
       }
 
       if (tags && tags.length > 0) {

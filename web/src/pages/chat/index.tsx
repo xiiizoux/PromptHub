@@ -17,8 +17,7 @@ export default function ChatPromptsPage() {
     page: 1,
     pageSize: 30,
     sortBy: 'latest',
-    // 临时移除类型过滤，在客户端处理
-    // category_type: 'chat'
+    category_type: 'chat', // 只获取对话类型的提示词
   });
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
@@ -125,19 +124,10 @@ export default function ChatPromptsPage() {
           const response = await getPrompts(filters);
 
           if (response && response.data && Array.isArray(response.data)) {
-            // 在客户端过滤对话类型的提示词
-            const chatPrompts = response.data.filter(prompt => {
-              // 如果有category_type字段，直接使用
-              if (prompt.category_type) {
-                return prompt.category_type === 'chat';
-              }
-              // 否则根据category字段判断（使用新的分类名称）
-              // 这里不再使用硬编码的分类列表，而是通过API获取的分类来判断
-              return true; // 默认显示所有提示词，让服务端处理过滤
-            });
-            setPrompts(chatPrompts);
-            setTotalPages(Math.ceil(chatPrompts.length / (filters.pageSize || 30)));
-            setTotalCount(chatPrompts.length);
+            // 直接使用服务端过滤后的数据，不需要客户端过滤
+            setPrompts(response.data);
+            setTotalPages(response.totalPages || 1);
+            setTotalCount(response.total || 0);
             setError(null);
             setLoading(false);
             return;
@@ -183,8 +173,8 @@ export default function ChatPromptsPage() {
 
   // 处理过滤器变更
   const handleFilterChange = (newFilters: PromptFiltersType) => {
-    // 移除类型过滤，在客户端处理
-    setFilters({ ...newFilters, page: 1 });
+    // 保持category_type为'chat'，重置到第一页
+    setFilters({ ...newFilters, page: 1, category_type: 'chat' });
   };
 
   // 处理分页

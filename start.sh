@@ -113,14 +113,14 @@ start_services() {
     echo -e "${YELLOW}   启动MCP服务进程...${NC}"
     if [ -f "dist/src/index.js" ]; then
         # 使用编译后的文件
-        NODE_ENV=production node dist/src/index.js > ../logs/mcp.log 2>&1 &
+        NODE_ENV=production node dist/src/index.js > "$PROJECT_DIR/logs/mcp.log" 2>&1 &
     else
         # 使用tsx直接运行源码
-        npm run start > ../logs/mcp.log 2>&1 &
+        npm run start > "$PROJECT_DIR/logs/mcp.log" 2>&1 &
     fi
 
     MCP_PID=$!
-    echo "MCP_PID=$MCP_PID" > ../logs/mcp.pid
+    echo "MCP_PID=$MCP_PID" > "$PROJECT_DIR/logs/mcp.pid"
 
     cd "$PROJECT_DIR"
 
@@ -134,9 +134,9 @@ start_services() {
         return 1
     fi
 
-    NODE_ENV=production FRONTEND_PORT=9011 npm run start > ../logs/web.log 2>&1 &
+    NODE_ENV=production FRONTEND_PORT=9011 npm run start > "$PROJECT_DIR/logs/web.log" 2>&1 &
     WEB_PID=$!
-    echo "WEB_PID=$WEB_PID" > ../logs/web.pid
+    echo "WEB_PID=$WEB_PID" > "$PROJECT_DIR/logs/web.pid"
 
     cd "$PROJECT_DIR"
 
