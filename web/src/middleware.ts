@@ -145,15 +145,36 @@ function pageRequiresAuth(pathname: string): boolean {
 // 检查是否有有效的认证session
 async function hasValidSession(request: NextRequest): Promise<boolean> {
   try {
-    // 检查是否有认证相关的cookie
+    // 检查是否有Supabase认证相关的cookie
     const authCookies = request.cookies.getAll();
-    const hasAuthCookie = authCookies.some(cookie => 
-      cookie.name.includes('supabase') || 
-      cookie.name.includes('auth') ||
-      cookie.name === 'prompthub-user'
+    const supabaseAccessToken = authCookies.find(cookie => 
+      cookie.name.includes('supabase-auth-token') || 
+      cookie.name.includes('sb-') && cookie.name.includes('auth-token')
     );
     
-    return hasAuthCookie;
+    // 如果没有访问令牌cookie，检查是否有其他认证标识
+    if (!supabaseAccessToken) {
+      const hasAnyAuthCookie = authCookies.some(cookie => 
+        cookie.name.includes('supabase') || 
+        cookie.name.includes('auth') ||
+        cookie.name === 'prompthub-user'
+      );
+      
+      // 如果有认证cookie但没有访问令牌，可能session已过期
+      if (hasAnyAuthCookie) {
+        console.log('发现认证cookie但缺少访问令牌，可能session已过期');
+      }
+      
+      return hasAnyAuthCookie;
+    }
+    
+    // 简单验证token格式（JWT应该有3个部分）
+    const tokenValue = supabaseAccessToken.value;
+    if (tokenValue && tokenValue.split('.').length === 3) {
+      return true;
+    }
+    
+    return false;
   } catch (error) {
     console.error('检查session失败:', error);
     return false;
