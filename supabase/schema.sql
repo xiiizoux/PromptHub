@@ -19,7 +19,7 @@ CREATE TYPE IF NOT EXISTS category_type AS ENUM ('chat', 'image', 'video');
 -- 创建提示词分类枚举类型（保持兼容性）
 CREATE TYPE IF NOT EXISTS prompt_category AS ENUM (
   '全部', '学术', '职业', '文案', '设计', '教育', '情感',
-  '娱乐', '游戏', '通用', '生活', '商业', '办公',
+  '娱乐', '游戏', '通用', '生活', '商业', '金融投资', '办公',
   '编程', '翻译', '绘画', '视频', '播客', '音乐',
   '健康', '科技'
 );
@@ -875,6 +875,7 @@ INSERT INTO categories (name, name_en, icon, description, sort_order, type) VALU
 ('娱乐', 'entertainment', 'sparkles', '游戏、故事创作、趣味对话类提示词', 70, 'chat'),
 ('生活', 'lifestyle', 'home', '日常生活、健康建议、生活技巧类提示词', 80, 'chat'),
 ('商业', 'business', 'chart-bar', '商业分析、市场策略、企业管理类提示词', 90, 'chat'),
+('金融投资', 'finance-investment', 'currency-dollar', '金融分析、投资策略、理财规划、风险评估类提示词', 95, 'chat'),
 ('办公', 'office', 'document-text', '办公自动化、文档处理、会议记录类提示词', 100, 'chat'),
 ('编程', 'programming', 'code', '代码编写、程序调试、技术解答类提示词', 110, 'chat'),
 ('翻译', 'translation', 'language', '多语言翻译、本地化、语言学习类提示词', 120, 'chat'),
