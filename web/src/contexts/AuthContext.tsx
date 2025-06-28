@@ -485,10 +485,10 @@ export const withAuth = <P extends object>(Component: React.ComponentType<P>): R
       // 如果未登录且未在重定向中，重定向到登录页面
       if (!isAuthenticated && !redirecting) {
         setRedirecting(true);
-        // 安全地获取当前URL，避免SSR问题
+        // 安全地获取当前URL，避免SSR问题，只使用pathname避免重复查询参数
         const currentUrl = typeof window !== 'undefined'
-          ? window.location.pathname + window.location.search
-          : router.asPath;
+          ? window.location.pathname
+          : router.pathname;
         const redirectUrl = `/auth/login?returnUrl=${encodeURIComponent(currentUrl)}`;
         router.replace(redirectUrl);
       }

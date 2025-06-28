@@ -62,22 +62,8 @@ export async function middleware(request: NextRequest) {
 
   const pathname = request.nextUrl.pathname;
 
-  // 处理页面路由的认证
+  // 对于非API路由，只添加安全头，认证由客户端AuthContext处理
   if (!pathname.startsWith('/api/')) {
-    if (pageRequiresAuth(pathname)) {
-      const hasAuth = await hasValidSession(request);
-      
-      if (!hasAuth) {
-        // 重定向到登录页面，带上返回URL
-        const loginUrl = new URL('/auth/login', request.url);
-        loginUrl.searchParams.set('returnUrl', pathname);
-        
-        const response = NextResponse.redirect(loginUrl);
-        return addSecurityHeaders(response);
-      }
-    }
-    
-    // 对于非API路由，添加安全头
     const response = NextResponse.next();
     return addSecurityHeaders(response);
   }
@@ -119,68 +105,10 @@ export async function middleware(request: NextRequest) {
   return addSecurityHeaders(response);
 }
 
-// 需要认证的页面路径
-const PROTECTED_PAGES = [
-  '/prompts/create',
-  '/prompts/[id]/edit',
-  '/profile',
-  '/dashboard',
-  '/settings',
-];
+// 注意：页面级别的认证检查已移除，现在由客户端AuthContext和withAuth HOC处理
+// 这样可以避免服务端和客户端认证状态不一致导致的重定向循环问题
 
-// 检查页面是否需要认证
-function pageRequiresAuth(pathname: string): boolean {
-  return PROTECTED_PAGES.some(route => {
-    // 支持动态路由匹配
-    if (route.includes('[id]')) {
-      const pattern = route.replace('[id]', '[^/]+');
-      const regex = new RegExp(`^${pattern}$`);
-      return regex.test(pathname);
-    }
-    return pathname.startsWith(route);
-  });
-}
-
-// 检查是否有有效的认证session
-async function hasValidSession(request: NextRequest): Promise<boolean> {
-  try {
-    // 检查是否有Supabase认证相关的cookie
-    const authCookies = request.cookies.getAll();
-    const supabaseAccessToken = authCookies.find(cookie => 
-      cookie.name.includes('supabase-auth-token') || 
-      cookie.name.includes('sb-') && cookie.name.includes('auth-token')
-    );
-    
-    // 如果没有访问令牌cookie，检查是否有其他认证标识
-    if (!supabaseAccessToken) {
-      const hasAnyAuthCookie = authCookies.some(cookie => 
-        cookie.name.includes('supabase') || 
-        cookie.name.includes('auth') ||
-        cookie.name === 'prompthub-user'
-      );
-      
-      // 如果有认证cookie但没有访问令牌，可能session已过期
-      if (hasAnyAuthCookie) {
-        console.log('发现认证cookie但缺少访问令牌，可能session已过期');
-      }
-      
-      return hasAnyAuthCookie;
-    }
-    
-    // 简单验证token格式（JWT应该有3个部分）
-    const tokenValue = supabaseAccessToken.value;
-    if (tokenValue && tokenValue.split('.').length === 3) {
-      return true;
-    }
-    
-    return false;
-  } catch (error) {
-    console.error('检查session失败:', error);
-    return false;
-  }
-}
-
-// 配置中间件应该应用的路径
+// 配置中间件应该应用的路径 - 现在只处理API路由和安全头
 export const config = {
-  matcher: ['/api/:path*', '/prompts/create', '/prompts/:path*/edit', '/profile', '/dashboard', '/settings'],
+  matcher: ['/api/:path*', '/((?!_next/static|_next/image|favicon.ico).*)'],
 };

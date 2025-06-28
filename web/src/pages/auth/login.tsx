@@ -19,6 +19,7 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [initializing, setInitializing] = useState(true);
+  const [redirecting, setRedirecting] = useState(false);
   const router = useRouter();
   const { login, loginWithGoogle, isAuthenticated, isLoading: authLoading } = useAuth();
   
@@ -37,8 +38,14 @@ export default function LoginPage() {
       return;
     }
 
+    // 如果已经在重定向中，不要重复重定向
+    if (redirecting) {
+      return;
+    }
+
     // 如果用户已认证，重定向到目标页面
     if (isAuthenticated) {
+      setRedirecting(true);
       const redirectUrl = getRedirectUrl(router) || '/';
       console.log('用户已认证，重定向到:', redirectUrl);
       router.replace(redirectUrl);
@@ -48,10 +55,10 @@ export default function LoginPage() {
     // 用户未认证，显示登录表单
     console.log('用户未认证，显示登录表单');
     setInitializing(false);
-  }, [isAuthenticated, authLoading, router]);
+  }, [isAuthenticated, authLoading, redirecting, router]);
 
   // 如果AuthContext还在加载中，显示加载状态
-  if (authLoading) {
+  if (authLoading || redirecting) {
     return (
       <div className="min-h-screen bg-dark-bg-primary flex items-center justify-center">
         <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-neon-cyan"></div>
