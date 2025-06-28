@@ -146,6 +146,7 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
     is_public: prompt.is_public !== undefined ? Boolean(prompt.is_public) : false,
     allow_collaboration: prompt.allow_collaboration !== undefined ? Boolean(prompt.allow_collaboration) : false,
     edit_permission: mapEditPermission(prompt.edit_permission),
+    category_type: (prompt as any).category_type || 'chat', // 临时添加类型转换
   };
   
 
@@ -684,6 +685,7 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
     try {
       // 转换新表单数据为旧格式
       const formData: PromptFormData = {
+        id: prompt.id,
         name: data.name,
         description: data.description,
         content: data.content,
@@ -691,7 +693,7 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
         tags: data.tags,
         input_variables: data.input_variables,
         compatible_models: data.compatible_models,
-        version: data.version,
+        version: typeof data.version === 'number' ? data.version : parseFloat(String(data.version)) || 1.0,
         author: data.author,
         template_format: data.template_format,
         is_public: data.is_public,
@@ -846,7 +848,7 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
         <div className="absolute bottom-1/4 -left-48 w-96 h-96 bg-gradient-to-tr from-neon-pink/20 to-neon-purple/20 rounded-full blur-3xl"></div>
       </div>
 
-      <div className="relative z-10 py-16">
+      <div className="relative z-10 unified-page-spacing">
         <div className="container-custom">
           {/* 返回按钮 */}
           <motion.div
@@ -870,18 +872,23 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
-            className="mb-6 text-center"
+            className="unified-page-title-container"
           >
-            <motion.h1
-              className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-neon-cyan via-neon-purple to-neon-pink bg-clip-text text-transparent mb-2"
+            <motion.div
+              className="flex items-center justify-center mb-2"
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.8, delay: 0.1 }}
             >
-              编辑提示词
-            </motion.h1>
+              <div className="inline-flex p-2 rounded-xl bg-gradient-to-br from-neon-purple to-neon-pink mr-2">
+                <SparklesIcon className="unified-page-title-icon" />
+              </div>
+              <h1 className="unified-page-title">
+                编辑提示词
+              </h1>
+            </motion.div>
             <motion.p
-              className="text-sm md:text-base text-gray-400 max-w-2xl mx-auto leading-relaxed"
+              className="unified-page-subtitle"
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.2 }}
@@ -897,7 +904,7 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.4 }}
-            className="xl:hidden mb-6"
+            className="lg:hidden mb-6"
           >
             <button
               onClick={() => setShowMobileAssistant(!showMobileAssistant)}
@@ -959,13 +966,13 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
           </motion.div>
 
           {/* 双栏布局容器 */}
-          <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* 主表单区域 */}
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.6 }}
-              className="xl:col-span-2 glass rounded-3xl border border-neon-cyan/20 shadow-2xl p-8"
+              className="lg:col-span-2 glass rounded-3xl border border-neon-cyan/20 shadow-2xl p-8"
             >
               {/* 新版组件化表单 */}
               <PromptEditForm
@@ -986,7 +993,7 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
             initial={{ opacity: 0, x: 30 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8, delay: 0.8 }}
-            className="hidden xl:block glass rounded-3xl border border-neon-purple/20 shadow-2xl p-6"
+            className="hidden lg:block glass rounded-3xl border border-neon-purple/20 shadow-2xl p-6"
           >
             <SmartWritingAssistant
               content={currentContent || watch('content') || ''}

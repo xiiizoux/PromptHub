@@ -182,71 +182,102 @@ export default function PromptEditForm({
 
   return (
     <div className={`space-y-8 ${className}`}>
-      {/* 提示词类型选择 - 移到表单外部，居中显示 */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="flex justify-center mb-8"
-      >
-        <div className="bg-dark-bg-secondary/50 backdrop-blur-sm border border-gray-600/50 rounded-2xl p-6 shadow-lg">
-          <PromptTypeSelector
-            value={currentType}
-            onChange={handleTypeChange}
-            disabled={isSubmitting}
-          />
-        </div>
-      </motion.div>
-
       <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-8">
 
-        {/* 基本信息 */}
+        {/* 提示词内容 */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
           className="space-y-4"
         >
-          <h3 className="text-base font-medium text-gray-200 flex items-center gap-2">
-            <DocumentTextIcon className="h-4 w-4 text-neon-purple" />
-            基本信息
-          </h3>
+          <div className="flex items-center justify-between mb-3">
+            <label htmlFor="content" className="flex items-center text-lg font-semibold text-gray-200">
+              <DocumentTextIcon className="h-6 w-6 text-neon-cyan mr-3" />
+              提示词内容 *
+              <span className="ml-2 text-sm font-normal text-gray-400">核心内容区域</span>
+            </label>
 
+            {/* 提示用户使用右侧栏的智能功能 */}
+            <div className="text-sm text-gray-400">
+              💡 使用右侧智能助手进行分析和优化
+            </div>
+          </div>
+          
+          <div className="relative">
+            <textarea
+              {...register('content', { required: '请输入提示词内容' })}
+              rows={12}
+              placeholder="在这里编写您的提示词内容。您可以使用 {{变量名}} 来定义动态变量..."
+              className="input-primary w-full font-mono text-sm resize-none"
+              disabled={isSubmitting}
+            />
+            
+            <div className="absolute top-3 right-3 text-xs text-gray-500">
+              使用 {'{{变量名}}'} 定义变量
+            </div>
+          </div>
+          
+          {errors.content && (
+            <p className="text-neon-red text-sm mt-1">{errors.content.message}</p>
+          )}
+        </motion.div>
+
+        {/* 基本信息 */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="grid grid-cols-1 lg:grid-cols-2 gap-8"
+        >
           {/* 标题 */}
           <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-300">
-              提示词标题 *
+            <label htmlFor="prompt-name" className="flex items-center text-sm font-medium text-gray-300 mb-3">
+              <TagIcon className="h-5 w-5 text-neon-cyan mr-2" />
+              提示词名称 *
             </label>
             <input
-              {...register('name', { required: '请输入提示词标题' })}
+              id="prompt-name"
+              {...register('name', { required: '请输入提示词名称' })}
               type="text"
-              placeholder="为您的提示词起一个清晰的标题"
+              placeholder="为您的提示词起个响亮的名字"
               className="input-primary w-full"
               disabled={isSubmitting}
             />
             {errors.name && (
-              <p className="text-neon-red text-sm">{errors.name.message}</p>
+              <p className="text-neon-red text-sm mt-1">{errors.name.message}</p>
             )}
           </div>
 
-          {/* 描述 */}
+          {/* 作者 */}
           <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-300">
-              描述 *
+            <label htmlFor="author" className="flex items-center text-sm font-medium text-gray-300 mb-3">
+              <UserIcon className="h-5 w-5 text-neon-purple mr-2" />
+              作者
             </label>
-            <textarea
-              {...register('description', { required: '请输入提示词描述' })}
-              rows={3}
-              placeholder="简要描述这个提示词的用途和特点"
-              className="input-primary w-full resize-none"
+            <input
+              id="author"
+              {...register('author')}
+              type="text"
+              className="input-primary w-full"
               disabled={isSubmitting}
             />
-            {errors.description && (
-              <p className="text-neon-red text-sm">{errors.description.message}</p>
-            )}
           </div>
+        </motion.div>
 
+        {/* 分类和版本 */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          className="grid grid-cols-1 lg:grid-cols-2 gap-8"
+        >
           {/* 分类选择 */}
           <div className="space-y-2">
+            <label htmlFor="category" className="flex items-center text-sm font-medium text-gray-300 mb-3">
+              <TagIcon className="h-5 w-5 text-neon-cyan mr-2" />
+              分类 *
+            </label>
             <Controller
               name="category"
               control={control}
@@ -262,47 +293,66 @@ export default function PromptEditForm({
               )}
             />
             {errors.category && (
-              <p className="text-neon-red text-sm">{errors.category.message}</p>
+              <p className="text-neon-red text-sm mt-1">{errors.category.message}</p>
             )}
+          </div>
+
+          {/* 版本 */}
+          <div className="space-y-2">
+            <label htmlFor="version" className="flex items-center text-sm font-medium text-gray-300 mb-3">
+              <CogIcon className="h-5 w-5 text-neon-purple mr-2" />
+              版本
+            </label>
+            <input
+              id="version"
+              {...register('version')}
+              type="text"
+              className="input-primary w-full"
+              disabled={isSubmitting}
+            />
           </div>
         </motion.div>
 
-        {/* 提示词内容 */}
+        {/* 描述 */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="space-y-4"
+          transition={{ delay: 0.4 }}
+          className="space-y-2"
         >
-          <h3 className="text-base font-medium text-gray-200">
-            提示词内容 *
-          </h3>
+          <label htmlFor="description" className="flex items-center text-sm font-medium text-gray-300 mb-3">
+            <DocumentTextIcon className="h-5 w-5 text-neon-cyan mr-2" />
+            描述 *
+          </label>
           <textarea
-            {...register('content', { required: '请输入提示词内容' })}
-            rows={12}
-            placeholder="在这里编写您的提示词内容。您可以使用 {{变量名}} 来定义动态变量..."
-            className="input-primary w-full font-mono text-sm resize-none"
+            id="description"
+            {...register('description', { required: '请输入描述' })}
+            rows={3}
+            placeholder="简要描述您的提示词的用途和特点..."
+            className="input-primary w-full resize-none"
             disabled={isSubmitting}
           />
-          {errors.content && (
-            <p className="text-neon-red text-sm">{errors.content.message}</p>
+          {errors.description && (
+            <p className="text-neon-red text-sm mt-1">{errors.description.message}</p>
           )}
         </motion.div>
 
-        {/* 媒体相关内容 - 移到提示词内容下面 */}
+        {/* 媒体相关内容 - 在提示词内容之后 */}
         <AnimatePresence>
           {(currentType === 'image' || currentType === 'video') && (
             <motion.div
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
+              transition={{ delay: 0.15 }}
               className="space-y-4"
             >
               {/* 预览资源管理 */}
               <div className="space-y-3">
-                <h3 className="text-base font-medium text-gray-200">
-                  示例文件
-                </h3>
+                <label className="flex items-center text-base font-medium text-gray-200">
+                  <CogIcon className="h-4 w-4 text-neon-purple mr-2" />
+                  {currentType === 'image' ? '示例图片' : '示例视频'} (最多4个，至少1个) *
+                </label>
                 <PreviewAssetManager
                   promptType={currentType}
                   assets={previewAssets}
@@ -340,17 +390,93 @@ export default function PromptEditForm({
           )}
         </AnimatePresence>
 
+        {/* 变量管理 */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
+          className="space-y-4"
+        >
+          <label className="flex items-center text-sm font-medium text-gray-300">
+            <TagIcon className="h-5 w-5 text-neon-purple mr-2" />
+            输入变量
+          </label>
+          
+          <Controller
+            name="input_variables"
+            control={control}
+            render={({ field }) => (
+              <div className="space-y-2">
+                {/* 显示现有变量 */}
+                {field.value && field.value.length > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    {field.value.map((variable: string, index: number) => (
+                      <span
+                        key={index}
+                        className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-neon-cyan/20 text-neon-cyan border border-neon-cyan/30"
+                      >
+                        {variable}
+                      </span>
+                    ))}
+                  </div>
+                )}
+                <p className="text-xs text-gray-500">
+                  在提示词内容中使用 {'{{变量名}}'} 格式来定义变量，系统会自动检测
+                </p>
+              </div>
+            )}
+          />
+        </motion.div>
+
+        {/* 标签管理 */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.6 }}
+          className="space-y-4"
+        >
+          <label className="flex items-center text-sm font-medium text-gray-300">
+            <TagIcon className="h-5 w-5 text-neon-pink mr-2" />
+            标签
+          </label>
+          
+          <Controller
+            name="tags"
+            control={control}
+            render={({ field }) => (
+              <div className="space-y-2">
+                {/* 显示现有标签 */}
+                {field.value && field.value.length > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    {field.value.map((tag: string, index: number) => (
+                      <span
+                        key={index}
+                        className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-neon-purple/20 text-neon-purple border border-neon-purple/30"
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                )}
+                <p className="text-xs text-gray-500">
+                  使用标签来帮助用户更好地发现和分类您的提示词
+                </p>
+              </div>
+            )}
+          />
+        </motion.div>
+
         {/* 兼容模型 */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
+          transition={{ delay: 0.7 }}
           className="space-y-4"
         >
-          <h3 className="text-base font-medium text-gray-200 flex items-center gap-2">
-            <CpuChipIcon className="h-4 w-4 text-neon-cyan" />
+          <label className="flex items-center text-sm font-medium text-gray-300">
+            <CpuChipIcon className="h-5 w-5 text-neon-cyan mr-2" />
             兼容模型
-          </h3>
+          </label>
           <Controller
             name="compatible_models"
             control={control}
@@ -360,7 +486,6 @@ export default function PromptEditForm({
                 onChange={field.onChange}
                 categoryType={currentType}
                 placeholder="选择或添加兼容的AI模型..."
-                disabled={isSubmitting}
               />
             )}
           />
@@ -369,48 +494,143 @@ export default function PromptEditForm({
           </p>
         </motion.div>
 
+        {/* 公开/私有选项和协作设置 */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.8 }}
+          className="space-y-4"
+        >
+          {/* 公开/私有选项 */}
+          <div className="flex items-center justify-between p-4 border border-neon-cyan/20 rounded-xl bg-dark-bg-secondary">
+            <div className="flex items-center">
+              <div className="mr-3 text-neon-cyan">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-sm font-medium text-gray-300">公开分享</h3>
+                <p className="text-gray-400 text-sm">所有人可以查看和使用您的提示词</p>
+              </div>
+            </div>
+            <div className="flex items-center">
+              <Controller
+                name="is_public"
+                control={control}
+                render={({ field }) => (
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input 
+                      type="checkbox" 
+                      className="sr-only peer" 
+                      checked={field.value}
+                      onChange={field.onChange}
+                      disabled={isSubmitting}
+                    />
+                    <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-neon-cyan rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-neon-cyan"></div>
+                  </label>
+                )}
+              />
+            </div>
+          </div>
+
+          {/* 协作设置 */}
+          <div className="space-y-4">
+            <label className="flex items-center text-sm font-medium text-gray-300">
+              <InformationCircleIcon className="h-5 w-5 text-neon-purple mr-2" />
+              协作设置
+            </label>
+            
+            <div className="relative flex items-start p-4 border border-neon-cyan/20 rounded-xl bg-dark-bg-secondary">
+              <Controller
+                name="allow_collaboration"
+                control={control}
+                render={({ field }) => (
+                  <div className="flex items-center h-5">
+                    <input
+                      type="checkbox"
+                      checked={field.value}
+                      onChange={field.onChange}
+                      disabled={isSubmitting}
+                      className="h-4 w-4 text-neon-cyan border-gray-600 rounded focus:ring-neon-cyan"
+                    />
+                  </div>
+                )}
+              />
+              <div className="ml-3">
+                <label className="text-sm font-medium text-gray-300">
+                  允许协作编辑
+                </label>
+                <div className="text-sm text-gray-400">
+                  允许其他贡献者修改这个提示词的内容（编辑权限，仅在公开分享时有效）
+                </div>
+              </div>
+            </div>
+
+            {/* 编辑权限级别 */}
+            <div className="p-4 border border-neon-cyan/20 rounded-xl bg-dark-bg-secondary">
+              <label className="block text-sm font-medium text-gray-300 mb-2">
+                编辑权限级别
+              </label>
+              <Controller
+                name="edit_permission"
+                control={control}
+                render={({ field }) => (
+                  <select
+                    value={field.value}
+                    onChange={field.onChange}
+                    disabled={isSubmitting}
+                    className="input-primary w-full"
+                  >
+                    <option value="owner_only">仅创建者可编辑</option>
+                    <option value="collaborators">协作者可编辑</option>
+                    <option value="public">所有人可编辑</option>
+                  </select>
+                )}
+              />
+            </div>
+          </div>
+        </motion.div>
+
         {/* 提交按钮 */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          className="flex items-center justify-between pt-6 border-t border-gray-600"
+          transition={{ delay: 0.9 }}
+          className="flex justify-end space-x-4 pt-8"
         >
-          <div className="flex items-center gap-2 text-sm text-gray-400">
-            {hasUnsavedChanges ? (
+          {onCancel && (
+            <motion.button
+              type="button"
+              onClick={onCancel}
+              disabled={isSubmitting}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="btn-secondary"
+            >
+              取消
+            </motion.button>
+          )}
+          
+          <motion.button
+            type="submit"
+            disabled={isSubmitting}
+            whileHover={{ scale: isSubmitting ? 1 : 1.05 }}
+            whileTap={{ scale: isSubmitting ? 1 : 0.95 }}
+            className="btn-primary flex items-center space-x-2 disabled:opacity-50"
+          >
+            {isSubmitting ? (
               <>
-                <ExclamationTriangleIcon className="h-4 w-4 text-yellow-400" />
-                <span>有未保存的更改</span>
+                <div className="w-5 h-5 border-2 border-neon-cyan/30 border-t-neon-cyan rounded-full animate-spin"></div>
+                <span>更新中...</span>
               </>
             ) : (
               <>
-                <CheckCircleIcon className="h-4 w-4 text-green-400" />
-                <span>所有更改已保存</span>
+                <CheckCircleIcon className="h-5 w-5" />
+                <span>更新提示词</span>
               </>
             )}
-          </div>
-
-          <div className="flex items-center gap-4">
-            {onCancel && (
-              <button
-                type="button"
-                onClick={onCancel}
-                disabled={isSubmitting}
-                className="px-6 py-2 border border-gray-600 text-gray-300 rounded-lg hover:bg-gray-700 transition-colors disabled:opacity-50"
-              >
-                取消
-              </button>
-            )}
-            <motion.button
-              type="submit"
-              disabled={isSubmitting}
-              whileHover={!isSubmitting ? { scale: 1.02 } : {}}
-              whileTap={!isSubmitting ? { scale: 0.98 } : {}}
-              className="px-8 py-2 bg-gradient-to-r from-neon-cyan to-neon-blue text-white rounded-lg font-medium hover:from-neon-cyan-dark hover:to-neon-blue-dark transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isSubmitting ? '保存中...' : '保存提示词'}
-            </motion.button>
-          </div>
+          </motion.button>
         </motion.div>
       </form>
     </div>
