@@ -86,7 +86,7 @@ export default function CategorySelector({
 
   return (
     <div className={`space-y-2 ${className}`}>
-      <label className="flex items-center text-sm font-medium text-gray-300">
+      <label className="flex items-center text-sm font-medium text-gray-300 mb-3">
         <TagIcon className="h-5 w-5 text-neon-cyan mr-2" />
         分类 *
         <span className="ml-2 text-xs text-gray-500">

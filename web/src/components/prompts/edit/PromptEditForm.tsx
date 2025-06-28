@@ -291,9 +291,12 @@ export default function PromptEditForm({
               id="author"
               {...register('author')}
               type="text"
-              className="input-primary w-full"
-              disabled={isSubmitting}
+              className="input-primary w-full bg-gray-800 text-gray-400 cursor-not-allowed"
+              disabled={true}
+              readOnly
+              title="创作者不可更改"
             />
+            <p className="text-xs text-gray-500">创作者不可更改</p>
           </div>
         </motion.div>
 
