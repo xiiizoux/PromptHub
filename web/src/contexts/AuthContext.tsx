@@ -483,7 +483,7 @@ export const withAuth = <P extends object>(Component: React.ComponentType<P>): R
       if (isLoading) return;
 
       // 如果未登录且未在重定向中，重定向到登录页面
-      if (!user && !redirecting) {
+      if (!isAuthenticated && !redirecting) {
         setRedirecting(true);
         // 安全地获取当前URL，避免SSR问题
         const currentUrl = typeof window !== 'undefined'
@@ -492,10 +492,10 @@ export const withAuth = <P extends object>(Component: React.ComponentType<P>): R
         const redirectUrl = `/auth/login?returnUrl=${encodeURIComponent(currentUrl)}`;
         router.replace(redirectUrl);
       }
-    }, [user, isLoading, router, redirecting]);
+    }, [isAuthenticated, isLoading, router, redirecting]);
 
     // 显示加载状态
-    if (isLoading || (!user && !redirecting)) {
+    if (isLoading || (!isAuthenticated && !redirecting)) {
       return (
         <div className="min-h-screen bg-dark-bg-primary flex items-center justify-center relative overflow-hidden">
           <div className="absolute inset-0">

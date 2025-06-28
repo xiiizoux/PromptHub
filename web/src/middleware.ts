@@ -30,7 +30,6 @@ const PROTECTED_ROUTES = [
 // 公开访问的API路由（不需要认证）
 const PUBLIC_ROUTES = [
   '/api/health',
-  '/api/auth/login',
   '/api/auth/signin',
   '/api/auth/register',
   '/api/prompts/search',
