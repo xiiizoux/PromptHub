@@ -187,19 +187,6 @@ export default function CategorySelector({
         </AnimatePresence>
       </div>
 
-      {/* 当前选择的分类信息 */}
-      {value && (
-        <motion.div
-          initial={{ opacity: 0, height: 0 }}
-          animate={{ opacity: 1, height: 'auto' }}
-          className="text-sm text-gray-400 bg-dark-bg-secondary/30 rounded-lg p-3"
-        >
-          <p>
-            已选择：<span className="text-neon-cyan font-medium">{value}</span>
-            <span className="ml-2 text-gray-500">({getTypeLabel(promptType)}类型)</span>
-          </p>
-        </motion.div>
-      )}
 
       {/* 点击外部关闭下拉菜单 */}
       {isOpen && (

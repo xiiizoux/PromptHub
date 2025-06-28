@@ -61,6 +61,9 @@ interface PromptEditFormProps {
   categoriesByType: Record<string, string[]>;
   className?: string;
   currentType?: PromptType; // 添加当前类型属性
+  hasUnsavedChanges?: boolean;
+  permissionCheck?: { canEdit: boolean; message: string };
+  saveSuccess?: boolean;
 }
 
 export default function PromptEditForm({
@@ -70,7 +73,10 @@ export default function PromptEditForm({
   isSubmitting = false,
   categoriesByType,
   className = '',
-  currentType: propCurrentType // 接收外部传入的当前类型
+  currentType: propCurrentType, // 接收外部传入的当前类型
+  hasUnsavedChanges = false,
+  permissionCheck,
+  saveSuccess = false
 }: PromptEditFormProps) {
   // 表单状态 - 优先使用外部传入的类型
   const [currentType, setCurrentType] = useState<PromptType>(
@@ -613,45 +619,72 @@ export default function PromptEditForm({
           </div>
         </motion.div>
 
-        {/* 提交按钮 */}
+        {/* 提交按钮和状态信息 */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.9 }}
-          className="flex justify-end space-x-4 pt-8"
+          className="flex justify-between items-end pt-8"
         >
-          {onCancel && (
-            <motion.button
-              type="button"
-              onClick={onCancel}
-              disabled={isSubmitting}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="btn-secondary"
-            >
-              取消
-            </motion.button>
-          )}
-          
-          <motion.button
-            type="submit"
-            disabled={isSubmitting}
-            whileHover={{ scale: isSubmitting ? 1 : 1.05 }}
-            whileTap={{ scale: isSubmitting ? 1 : 0.95 }}
-            className="btn-primary flex items-center space-x-2 disabled:opacity-50"
-          >
-            {isSubmitting ? (
-              <>
-                <div className="w-5 h-5 border-2 border-neon-cyan/30 border-t-neon-cyan rounded-full animate-spin"></div>
-                <span>更新中...</span>
-              </>
-            ) : (
-              <>
-                <CheckCircleIcon className="h-5 w-5" />
-                <span>更新提示词</span>
-              </>
+          {/* 左侧状态信息 */}
+          <div className="flex flex-col space-y-1">
+            {/* 未保存更改提示 */}
+            {hasUnsavedChanges && (
+              <p className="text-xs text-yellow-400">
+                <span className="text-yellow-400">⚠</span> 有未保存的更改
+              </p>
             )}
-          </motion.button>
+
+            {/* 权限信息 */}
+            {permissionCheck && permissionCheck.canEdit && (
+              <p className="text-xs text-gray-500">
+                <span className="text-neon-cyan">✓</span> {permissionCheck.message}
+              </p>
+            )}
+
+            {/* 保存成功提示 */}
+            {saveSuccess && (
+              <p className="text-xs text-green-400">
+                <span className="text-green-400">✓</span> 提示词已成功更新！
+              </p>
+            )}
+          </div>
+
+          {/* 右侧提交按钮 */}
+          <div className="flex space-x-4">
+            {onCancel && (
+              <motion.button
+                type="button"
+                onClick={onCancel}
+                disabled={isSubmitting}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="btn-secondary"
+              >
+                取消
+              </motion.button>
+            )}
+            
+            <motion.button
+              type="submit"
+              disabled={isSubmitting}
+              whileHover={{ scale: isSubmitting ? 1 : 1.05 }}
+              whileTap={{ scale: isSubmitting ? 1 : 0.95 }}
+              className="btn-primary flex items-center space-x-2 disabled:opacity-50"
+            >
+              {isSubmitting ? (
+                <>
+                  <div className="w-5 h-5 border-2 border-neon-cyan/30 border-t-neon-cyan rounded-full animate-spin"></div>
+                  <span>更新中...</span>
+                </>
+              ) : (
+                <>
+                  <CheckCircleIcon className="h-5 w-5" />
+                  <span>更新提示词</span>
+                </>
+              )}
+            </motion.button>
+          </div>
         </motion.div>
       </form>
     </div>

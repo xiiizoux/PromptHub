@@ -78,6 +78,16 @@ function CreatePromptPage() {
   const [previewUrl, setPreviewUrl] = useState<string>('');
   const [parameters, setParameters] = useState<Record<string, any>>({});
 
+  // 获取类型标签
+  const getTypeLabel = (type: PromptType) => {
+    const typeLabels = {
+      chat: '对话',
+      image: '图像',
+      video: '视频'
+    };
+    return typeLabels[type];
+  };
+
   // 获取激活状态的样式
   const getActiveStyles = (color: string) => {
     switch (color) {
@@ -1240,7 +1250,7 @@ function CreatePromptPage() {
                     <option value="">选择分类</option>
                     {(categoriesByType[categoryType] || []).map((category: string) => (
                       <option key={category} value={category}>
-                        {category}
+                        {category}（{getTypeLabel(categoryType)}类型）
                       </option>
                     ))}
                   </select>
