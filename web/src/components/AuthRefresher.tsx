@@ -155,7 +155,7 @@ const AuthRefresher = () => {
         // 延迟一点再检查，确保网络连接稳定
         setTimeout(() => {
           if (mountedRef.current) {
-            refreshAuth(false);
+            checkSession(false);
           }
         }, 2000);
       }
