@@ -259,6 +259,6 @@ docker-compose -f docker-compose.prod.yml up -d
 2. 搜索[已知问题](../../issues)
 3. 创建[新问题](../../issues/new)
 
----
+----
 
 **PromptHub** - 让AI提示词管理变得简单高效 🚀
