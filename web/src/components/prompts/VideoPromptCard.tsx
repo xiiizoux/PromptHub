@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useRef } from 'react';
+import React, { useMemo, useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { PromptInfo } from '@/types';
@@ -56,8 +56,10 @@ const VideoPromptCard: React.FC<VideoPromptCardProps> = React.memo(({ prompt }) 
   const [videoError, setVideoError] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
+  const [loadingTimeout, setLoadingTimeout] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const hoverTimeoutRef = useRef<NodeJS.Timeout>();
+  const loadingTimeoutRef = useRef<NodeJS.Timeout>();
 
   // 使用useMemo缓存计算结果 - 移到早期返回之前
   const categoryInfo = useMemo(() => {
@@ -115,8 +117,41 @@ const VideoPromptCard: React.FC<VideoPromptCardProps> = React.memo(({ prompt }) 
       return prompt.parameters.media_files[0].url;
     }
 
-    // 使用高质量的短视频占位符 - ForBiggerFun 是一个15秒的短视频，比BigBuckBunny更适合
-    return `https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4`;
+    // 使用更可靠的占位符视频 - 使用国内CDN或更稳定的源
+    return `https://sample-videos.com/zip/10/mp4/SampleVideo_640x360_1mb.mp4`;
+  };
+
+  // 处理视频加载超时
+  const handleLoadingTimeout = () => {
+    setLoadingTimeout(true);
+    setVideoError(true);
+    console.warn('视频加载超时，可能是网络问题或视频源不可用');
+  };
+
+  // 重置视频状态
+  const resetVideoState = () => {
+    setVideoLoaded(false);
+    setVideoError(false);
+    setLoadingTimeout(false);
+    setIsPlaying(false);
+    if (loadingTimeoutRef.current) {
+      clearTimeout(loadingTimeoutRef.current);
+    }
+  };
+
+  // 开始加载超时计时器
+  const startLoadingTimer = () => {
+    if (loadingTimeoutRef.current) {
+      clearTimeout(loadingTimeoutRef.current);
+    }
+    loadingTimeoutRef.current = setTimeout(handleLoadingTimeout, 10000); // 10秒超时
+  };
+
+  // 清除加载超时计时器
+  const clearLoadingTimer = () => {
+    if (loadingTimeoutRef.current) {
+      clearTimeout(loadingTimeoutRef.current);
+    }
   };
 
   // 处理视频播放/暂停
@@ -165,6 +200,18 @@ const VideoPromptCard: React.FC<VideoPromptCardProps> = React.memo(({ prompt }) 
     }
   };
 
+  // 组件卸载时清理定时器
+  useEffect(() => {
+    return () => {
+      if (hoverTimeoutRef.current) {
+        clearTimeout(hoverTimeoutRef.current);
+      }
+      if (loadingTimeoutRef.current) {
+        clearTimeout(loadingTimeoutRef.current);
+      }
+    };
+  }, []);
+
   return (
     <div>
       <Link href={`/prompts/${prompt.id}`}>
@@ -191,17 +238,62 @@ const VideoPromptCard: React.FC<VideoPromptCardProps> = React.memo(({ prompt }) 
                 videoLoaded ? 'opacity-100' : 'opacity-0',
                 'group-hover:scale-110'
               )}
-              onLoadedData={() => setVideoLoaded(true)}
-              onError={() => setVideoError(true)}
+              onLoadStart={() => {
+                resetVideoState();
+                startLoadingTimer();
+              }}
+              onCanPlay={() => {
+                setVideoLoaded(true);
+                clearLoadingTimer();
+              }}
+              onError={() => {
+                setVideoError(true);
+                clearLoadingTimer();
+                console.error('视频加载失败:', getVideoUrl());
+              }}
               onEnded={() => setIsPlaying(false)}
               muted
               loop
               playsInline
             />
-                  {!videoLoaded && (
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-400"></div>
-                    </div>
+            {/* 加载状态显示 */}
+            {!videoLoaded && !videoError && (
+              <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-900/80 backdrop-blur-sm">
+                {loadingTimeout ? (
+                  <div className="text-center">
+                    <div className="text-red-400 mb-2">⚠️</div>
+                    <p className="text-xs text-red-400">加载超时</p>
+                  </div>
+                ) : (
+                  <div className="text-center">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-400 mb-2"></div>
+                    <p className="text-xs text-gray-400">加载中...</p>
+                  </div>
+                )}
+              </div>
+            )}
+            
+            {/* 错误状态显示 */}
+            {videoError && (
+              <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-900/80 backdrop-blur-sm">
+                <div className="text-center">
+                  <div className="text-red-400 text-2xl mb-2">🎬</div>
+                  <p className="text-xs text-red-400 mb-2">视频加载失败</p>
+                  <button 
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      if (videoRef.current) {
+                        resetVideoState();
+                        videoRef.current.load();
+                      }
+                    }}
+                    className="text-xs text-gray-400 hover:text-red-400 underline"
+                  >
+                    重试
+                  </button>
+                </div>
+              </div>
             )}
               
             {/* 顶部标签栏 */}
