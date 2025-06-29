@@ -54,7 +54,7 @@ export const checkEditPermission = (prompt: PromptDetails, user: User | null): P
     ].filter(Boolean); // 过滤掉空值
 
     const isCollaborator = userIdentifiers.some(identifier =>
-      prompt.collaborators!.includes(identifier)
+      identifier && prompt.collaborators?.includes(identifier) || false
     );
 
     if (isCollaborator) {

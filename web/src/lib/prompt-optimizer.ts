@@ -862,9 +862,10 @@ export async function optimizePromptIntelligently(
       detectedType = detectPromptType(prompt);
     }
 
-    // 使用高级优化API
+    // 使用高级优化API，将finance映射为business
+    const mappedType = detectedType === 'finance' ? 'business' : detectedType;
     const result = await optimizePromptAdvanced(prompt, {
-      type: detectedType,
+      type: mappedType,
       requirements: options.requirements,
       context: options.context,
       complexity: 'medium',

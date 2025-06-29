@@ -122,14 +122,14 @@ export default function PromptFormContainer({
   const [showMobileAssistant, setShowMobileAssistant] = useState(false);
 
   // 表单控制
-  const { 
-    register, 
-    handleSubmit, 
-    control, 
-    formState: { errors }, 
-    setValue, 
+  const {
+    register,
+    handleSubmit,
+    control,
+    formState: { errors },
+    setValue,
     watch,
-    reset 
+    reset
   } = useForm<PromptFormData>({
     defaultValues: {
       name: initialData?.name || '',
@@ -148,6 +148,63 @@ export default function PromptFormContainer({
       version: initialData?.version || 1.0,
     }
   });
+
+  // 初始化现有媒体文件
+  useEffect(() => {
+    console.log('PromptFormContainer - useEffect 触发:', {
+      mode,
+      hasInitialData: !!initialData,
+      hasParameters: !!initialData?.parameters,
+      hasMediaFiles: !!initialData?.parameters?.media_files,
+      mediaFilesLength: initialData?.parameters?.media_files?.length || 0,
+      initialDataKeys: initialData ? Object.keys(initialData) : []
+    });
+
+    if (mode === 'edit' && initialData?.parameters?.media_files && Array.isArray(initialData.parameters.media_files)) {
+      const mediaFiles = initialData.parameters.media_files;
+      const urls = mediaFiles.map((file: any) => file.url);
+      setPreviewUrls(urls);
+
+      // 设置预览资源URL
+      if (urls.length > 0) {
+        setValue('preview_asset_url', urls[0]);
+      }
+
+      // 为编辑模式创建虚拟File对象，用于正确显示文件计数
+      const virtualFiles = mediaFiles.map((file: any) => {
+        // 创建一个虚拟File对象，包含必要的属性
+        const virtualFile = new File([], file.name || 'unknown', {
+          type: file.type || 'application/octet-stream'
+        });
+        // 添加size属性
+        Object.defineProperty(virtualFile, 'size', {
+          value: file.size || 0,
+          writable: false
+        });
+        return virtualFile;
+      });
+      setUploadedFiles(virtualFiles);
+
+      console.log('PromptFormContainer - 加载现有媒体文件:', {
+        mediaFilesCount: mediaFiles.length,
+        urls: urls,
+        virtualFilesCount: virtualFiles.length
+      });
+    } else {
+      console.log('PromptFormContainer - 未加载媒体文件，原因:', {
+        isEditMode: mode === 'edit',
+        hasParameters: !!initialData?.parameters,
+        hasMediaFiles: !!initialData?.parameters?.media_files,
+        isArray: Array.isArray(initialData?.parameters?.media_files)
+      });
+    }
+
+    // 初始化参数
+    if (initialData?.parameters) {
+      setParameters(initialData.parameters);
+      console.log('PromptFormContainer - 设置参数:', initialData.parameters);
+    }
+  }, [initialData, mode, setValue]);
 
   // 获取类型标签
   const getTypeLabel = (type: PromptType) => {

@@ -41,6 +41,14 @@ export interface Prompt {
   average_rating?: number;
   rating_count?: number;
   rating?: number; // 为了兼容前端组件
+  
+  // 协作和权限字段
+  allow_collaboration?: boolean;
+  edit_permission?: 'owner_only' | 'collaborators' | 'public';
+  
+  // 媒体相关字段
+  preview_asset_url?: string;
+  parameters?: Record<string, any>;
 }
 
 export interface PromptFilters {
@@ -408,6 +416,16 @@ export class SupabaseAdapter {
         console.error(`获取提示词 ${nameOrId} 失败:`, error);
         return null;
       }
+
+      console.log(`[SupabaseAdapter] 获取提示词成功:`, {
+        id: data?.id,
+        name: data?.name,
+        category_type: data?.category_type,
+        hasPreviewAssetUrl: !!data?.preview_asset_url,
+        hasParameters: !!data?.parameters,
+        parametersKeys: data?.parameters ? Object.keys(data.parameters) : [],
+        mediaFilesCount: data?.parameters?.media_files?.length || 0,
+      });
 
       return data || null;
     } catch (err) {

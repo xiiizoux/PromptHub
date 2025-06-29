@@ -127,6 +127,21 @@ export default function PromptEditForm({
   // 监听表单变化
   const watchedValues = watch();
 
+  // 初始化时加载现有媒体文件
+  useEffect(() => {
+    if (initialData?.parameters?.media_files && Array.isArray(initialData.parameters.media_files)) {
+      const existingAssets: AssetFile[] = initialData.parameters.media_files.map((file: any) => ({
+        id: file.id || `existing-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        url: file.url,
+        name: file.name || 'Unknown file',
+        size: file.size || 0,
+        type: file.type || 'unknown'
+      }));
+      setPreviewAssets(existingAssets);
+      setValue('preview_assets', existingAssets);
+    }
+  }, [initialData, setValue]);
+
   // 监听外部类型变化
   useEffect(() => {
     if (propCurrentType && propCurrentType !== currentType) {

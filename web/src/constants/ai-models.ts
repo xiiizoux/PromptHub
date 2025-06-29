@@ -351,9 +351,9 @@ export const CATEGORY_TYPE_TO_MODEL_TYPES = {
 } as const;
 
 // 根据分类类型获取对应的模型标签
-export const getModelTagsByCategoryType = (categoryType: 'chat' | 'image' | 'video' | 'multimodal'): ModelTag[] => {
+export const getModelTagsByCategoryType = (categoryType: 'chat' | 'image' | 'video'): ModelTag[] => {
   const modelTypes = CATEGORY_TYPE_TO_MODEL_TYPES[categoryType] || [];
-  return MODEL_TAGS.filter(tag => modelTypes.includes(tag.type));
+  return MODEL_TAGS.filter(tag => (modelTypes as readonly ModelType[]).includes(tag.type));
 };
 
 // 根据类型获取模型标签

@@ -113,7 +113,20 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
     allow_collaboration: prompt.allow_collaboration !== undefined ? Boolean(prompt.allow_collaboration) : false,
     edit_permission: mapEditPermission(prompt.edit_permission),
     category_type: prompt.category_type || 'chat', // 直接使用prompt.category_type，不需要类型断言
+
+    // 媒体相关字段
+    preview_asset_url: prompt.preview_asset_url,
+    parameters: prompt.parameters || {},
   };
+
+  console.log('EditPromptPage - safePromptData:', {
+    name: safePromptData.name,
+    category_type: safePromptData.category_type,
+    hasPreviewAssetUrl: !!safePromptData.preview_asset_url,
+    hasParameters: !!safePromptData.parameters,
+    parametersKeys: safePromptData.parameters ? Object.keys(safePromptData.parameters) : [],
+    mediaFilesCount: safePromptData.parameters?.media_files?.length || 0,
+  });
 
   // 状态管理
   const [categoriesLoading, setCategoriesLoading] = useState(true);

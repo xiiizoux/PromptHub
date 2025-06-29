@@ -73,45 +73,68 @@ export default function PreviewAssetManager({
     return null;
   };
 
-  // 模拟文件上传
+  // 真实文件上传
   const uploadFile = async (file: File): Promise<AssetFile> => {
-    return new Promise((resolve, reject) => {
-      setIsUploading(true);
-      setUploadProgress(0);
+    setIsUploading(true);
+    setUploadProgress(0);
+
+    try {
+      // 获取认证token
+      const { supabase } = await import('@/lib/supabase');
+      const { data: { session } } = await supabase.auth.getSession();
+
+      if (!session?.access_token) {
+        throw new Error('用户未登录，请先登录后再上传文件');
+      }
+
+      const formData = new FormData();
+      formData.append('file', file);
 
       // 模拟上传进度
       const progressInterval = setInterval(() => {
-        setUploadProgress(prev => {
-          if (prev >= 90) {
-            clearInterval(progressInterval);
-            return 90;
-          }
-          return prev + 10;
-        });
+        setUploadProgress(prev => Math.min(prev + 10, 90));
       }, 200);
 
-      // 模拟上传完成
-      setTimeout(() => {
-        clearInterval(progressInterval);
-        setUploadProgress(100);
-        
-        // 创建预览URL
-        const url = URL.createObjectURL(file);
-        const assetFile: AssetFile = {
-          id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-          url,
-          name: file.name,
-          size: file.size,
-          type: file.type
-        };
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: formData,
+      });
 
-        setTimeout(() => {
-          setIsUploading(false);
-          setUploadProgress(0);
-          resolve(assetFile);
-        }, 500);
-      }, 2000);
-    });
+      clearInterval(progressInterval);
+      setUploadProgress(100);
+
+      if (!response.ok) {
+        throw new Error(`文件 ${file.name} 上传失败`);
+      }
+
+      const result = await response.json();
+      if (!result.success) {
+        throw new Error(result.error || `文件 ${file.name} 上传失败`);
+      }
+
+      const assetFile: AssetFile = {
+        id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        url: result.data.url,
+        name: file.name,
+        size: file.size,
+        type: file.type
+      };
+
+      setTimeout(() => {
+        setIsUploading(false);
+        setUploadProgress(0);
+      }, 500);
+
+      return assetFile;
+    } catch (error) {
+      setIsUploading(false);
+      setUploadProgress(0);
+      console.error('文件上传错误:', error);
+      throw error;
+    }
   };
 
   // 处理文件选择
@@ -142,7 +165,7 @@ export default function PreviewAssetManager({
       onAssetsChange([...assets, ...newAssets]);
     } catch (error) {
       console.error('File upload failed:', error);
-      alert('文件上传失败，请重试');
+      alert(error instanceof Error ? error.message : '文件上传失败，请重试');
     }
   };
 

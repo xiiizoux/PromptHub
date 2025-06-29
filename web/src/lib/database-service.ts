@@ -17,6 +17,15 @@ export interface PromptDetails extends Prompt {
   edit_permission?: 'owner_only' | 'collaborators' | 'public';
   author?: string;
   collaborators?: string[]; // 协作者用户名列表
+  
+  // 表单专用字段
+  preview_assets?: Array<{
+    id: string;
+    url: string;
+    name: string;
+    size: number;
+    type: string;
+  }>;
 }
 
 // 移除社交功能相关接口 - MCP服务专注于提示词管理
@@ -281,17 +290,25 @@ export class DatabaseService {
         edit_permission: (prompt.edit_permission as 'owner_only' | 'collaborators' | 'public') || 'owner_only',
         author: authorName,
         collaborators: collaborators, // 添加协作者列表
+
+        // 媒体相关字段
+        preview_asset_url: prompt.preview_asset_url, // 添加预览资源URL
+        parameters: prompt.parameters || {}, // 添加参数字段
       };
 
       console.log('getPromptByName - 最终处理的数据:', {
         name: promptDetails.name,
         category: promptDetails.category,
+        category_type: promptDetails.category_type,
         tags: promptDetails.tags,
         input_variables: promptDetails.input_variables,
         edit_permission: promptDetails.edit_permission,
         author: promptDetails.author,
         user_id: promptDetails.user_id,
         contentLength: content.length,
+        preview_asset_url: promptDetails.preview_asset_url,
+        parameters: promptDetails.parameters,
+        hasMediaFiles: promptDetails.parameters?.media_files?.length || 0,
       });
 
       console.log('getPromptByName - 详细调试信息:', {

@@ -947,7 +947,9 @@ export default function PromptDetailsPage() {
                 </div>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {Object.entries(prompt.parameters).map(([key, value]) => (
+                  {Object.entries(prompt.parameters)
+                    .filter(([key]) => key !== 'media_files') // 排除media_files字段，避免重复显示
+                    .map(([key, value]) => (
                     <div key={key} className="glass rounded-lg p-4 border border-neon-yellow/20">
                       <div className="text-sm font-medium text-neon-yellow mb-1">
                         {key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}

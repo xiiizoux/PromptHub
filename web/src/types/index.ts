@@ -24,7 +24,6 @@ export interface PromptInfo {
 
 // 提示词详情
 export interface PromptDetails extends PromptInfo {
-  id: string;                             // 提示词ID
   content?: string;                       // 原始内容（用于表单，但不存在于数据库中）
   messages?: Array<{role: string; content: string}>; // 消息数组，对应数据库中的JSONB字段
   template_format?: string;
@@ -41,10 +40,14 @@ export interface PromptDetails extends PromptInfo {
   last_modified_by?: string;              // 最后修改者ID
   category_id?: string;                   // 分类 ID，对应数据库中的category_id字段
   
-  // 媒体相关字段
-  category_type?: 'chat' | 'image' | 'video'; // 分类类型
-  preview_asset_url?: string;             // 预览资源URL（图像或视频）
-  parameters?: Record<string, any>;       // 生成参数（JSON格式）
+  // 表单专用字段
+  preview_assets?: Array<{
+    id: string;
+    url: string;
+    name: string;
+    size: number;
+    type: string;
+  }>;
 }
 
 // 提示词示例
