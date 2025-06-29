@@ -1770,7 +1770,7 @@ const ProfilePage = () => {
                     {[
                       { type: 'chat', name: '对话', icon: ChatBubbleLeftRightIcon },
                       { type: 'image', name: '图片', icon: PhotoIcon },
-                      { type: 'video', name: '视频', icon: VideoCameraIcon }
+                      { type: 'video', name: '视频', icon: VideoCameraIcon },
                     ].map((category) => (
                       <button
                         key={category.type}
@@ -1779,7 +1779,7 @@ const ProfilePage = () => {
                           'relative flex items-center space-x-2 px-4 py-2 rounded-lg transition-all duration-200 overflow-hidden',
                           activePromptType === category.type
                             ? 'text-neon-cyan'
-                            : 'text-gray-400 hover:text-white hover:bg-white/5'
+                            : 'text-gray-400 hover:text-white hover:bg-white/5',
                         )}
                       >
                         {activePromptType === category.type && (
@@ -1787,7 +1787,7 @@ const ProfilePage = () => {
                             layoutId="activePromptTypeBg"
                             className="absolute inset-0 bg-neon-cyan/20 rounded-lg border border-neon-cyan/30 shadow-lg shadow-neon-cyan/20"
                             initial={false}
-                            transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                            transition={{ type: 'spring', bounce: 0.2, duration: 0.6 }}
                           />
                         )}
                         <category.icon className="h-4 w-4 relative z-10" />

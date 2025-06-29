@@ -28,7 +28,7 @@ const styleOptions = [
   { value: 'oil_painting', label: '油画风格', description: '传统油画效果' },
   { value: 'watercolor', label: '水彩风格', description: '水彩画效果' },
   { value: 'sketch', label: '素描风格', description: '铅笔素描效果' },
-  { value: 'digital_art', label: '数字艺术', description: '现代数字创作' }
+  { value: 'digital_art', label: '数字艺术', description: '现代数字创作' },
 ];
 
 const aspectRatioOptions = [
@@ -37,26 +37,26 @@ const aspectRatioOptions = [
   { value: '9:16', label: '竖屏 (9:16)', description: '1080×1920' },
   { value: '4:3', label: '标准 (4:3)', description: '1024×768' },
   { value: '3:4', label: '肖像 (3:4)', description: '768×1024' },
-  { value: '21:9', label: '超宽 (21:9)', description: '2560×1080' }
+  { value: '21:9', label: '超宽 (21:9)', description: '2560×1080' },
 ];
 
 const qualityOptions = [
   { value: 'draft', label: '草图', description: '快速生成，质量较低' },
   { value: 'standard', label: '标准', description: '平衡质量与速度' },
   { value: 'high', label: '高质量', description: '高质量，生成较慢' },
-  { value: 'ultra', label: '超高质量', description: '最高质量，生成最慢' }
+  { value: 'ultra', label: '超高质量', description: '最高质量，生成最慢' },
 ];
 
 export default function ImageParametersForm({
   value,
   onChange,
   disabled = false,
-  className = ''
+  className = '',
 }: ImageParametersFormProps) {
   const updateParameter = (key: keyof ImageParameters, paramValue: any) => {
     onChange({
       ...value,
-      [key]: paramValue
+      [key]: paramValue,
     });
   };
 

@@ -65,7 +65,7 @@ async function validateFileType(buffer: Buffer, mimetype: string): Promise<{ isV
     if (!ALLOWED_TYPES.includes(mimetype)) {
       return {
         isValid: false,
-        error: `不支持的文件类型 "${mimetype}"。支持的格式：图片(${ALLOWED_IMAGE_EXTENSIONS.join(', ')})，视频(${ALLOWED_VIDEO_EXTENSIONS.join(', ')})`
+        error: `不支持的文件类型 "${mimetype}"。支持的格式：图片(${ALLOWED_IMAGE_EXTENSIONS.join(', ')})，视频(${ALLOWED_VIDEO_EXTENSIONS.join(', ')})`,
       };
     }
 
@@ -79,7 +79,7 @@ async function validateFileType(buffer: Buffer, mimetype: string): Promise<{ isV
       console.log(`File type detection failed for ${mimetype}, but MIME type is allowed. Proceeding with MIME type validation.`);
       return {
         isValid: true,
-        detectedType: mimetype
+        detectedType: mimetype,
       };
     }
 
@@ -88,7 +88,7 @@ async function validateFileType(buffer: Buffer, mimetype: string): Promise<{ isV
       return {
         isValid: false,
         error: `不支持的文件格式 "${fileType.ext}"。支持的格式：图片(${ALLOWED_IMAGE_EXTENSIONS.join(', ')})，视频(${ALLOWED_VIDEO_EXTENSIONS.join(', ')})`,
-        detectedType: fileType.mime
+        detectedType: fileType.mime,
       };
     }
 
@@ -97,7 +97,7 @@ async function validateFileType(buffer: Buffer, mimetype: string): Promise<{ isV
       return {
         isValid: false,
         error: `不支持的文件类型 "${fileType.mime}"。支持的格式：图片(${ALLOWED_IMAGE_EXTENSIONS.join(', ')})，视频(${ALLOWED_VIDEO_EXTENSIONS.join(', ')})`,
-        detectedType: fileType.mime
+        detectedType: fileType.mime,
       };
     }
 
@@ -109,13 +109,13 @@ async function validateFileType(buffer: Buffer, mimetype: string): Promise<{ isV
 
     return {
       isValid: true,
-      detectedType: fileType.mime
+      detectedType: fileType.mime,
     };
   } catch (error) {
     console.error('File validation error:', error);
     return {
       isValid: false,
-      error: `文件类型验证失败: ${error instanceof Error ? error.message : '未知错误'}。支持的格式：图片(${ALLOWED_IMAGE_EXTENSIONS.join(', ')})，视频(${ALLOWED_VIDEO_EXTENSIONS.join(', ')})`
+      error: `文件类型验证失败: ${error instanceof Error ? error.message : '未知错误'}。支持的格式：图片(${ALLOWED_IMAGE_EXTENSIONS.join(', ')})，视频(${ALLOWED_VIDEO_EXTENSIONS.join(', ')})`,
     };
   }
 }
@@ -126,12 +126,12 @@ const MAX_VIDEO_SIZE = 500 * 1024 * 1024; // 500MB
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<UploadResponse>
+  res: NextApiResponse<UploadResponse>,
 ) {
   if (req.method !== 'POST') {
     return res.status(405).json({
       success: false,
-      error: '只支持 POST 请求'
+      error: '只支持 POST 请求',
     });
   }
 
@@ -143,7 +143,7 @@ export default async function handler(
     if (!supabaseUrl || !supabaseServiceKey) {
       return res.status(500).json({
         success: false,
-        error: 'Supabase 配置错误'
+        error: 'Supabase 配置错误',
       });
     }
 
@@ -154,7 +154,7 @@ export default async function handler(
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return res.status(401).json({
         success: false,
-        error: '未认证用户，请先登录'
+        error: '未认证用户，请先登录',
       });
     }
 
@@ -165,7 +165,7 @@ export default async function handler(
     if (authError || !user) {
       return res.status(401).json({
         success: false,
-        error: '认证失败，请重新登录'
+        error: '认证失败，请重新登录',
       });
     }
 
@@ -177,7 +177,7 @@ export default async function handler(
     if (!file) {
       return res.status(400).json({
         success: false,
-        error: '未找到上传文件'
+        error: '未找到上传文件',
       });
     }
 
@@ -186,7 +186,7 @@ export default async function handler(
     if (!validationResult.isValid) {
       return res.status(400).json({
         success: false,
-        error: `文件验证失败: ${validationResult.error}`
+        error: `文件验证失败: ${validationResult.error}`,
       });
     }
 
@@ -200,7 +200,7 @@ export default async function handler(
       const maxSizeMB = Math.round(maxSize / (1024 * 1024));
       return res.status(400).json({
         success: false,
-        error: `文件大小超出限制。${isImage ? '图像' : '视频'}文件最大支持 ${maxSizeMB}MB`
+        error: `文件大小超出限制。${isImage ? '图像' : '视频'}文件最大支持 ${maxSizeMB}MB`,
       });
     }
 
@@ -220,14 +220,14 @@ export default async function handler(
       .from(bucket)
       .upload(filePath, fileContent, {
         contentType: file.mimetype || 'application/octet-stream',
-        upsert: false
+        upsert: false,
       });
 
     if (uploadError) {
       console.error('Supabase upload error:', uploadError);
       return res.status(500).json({
         success: false,
-        error: `文件上传失败: ${uploadError.message}`
+        error: `文件上传失败: ${uploadError.message}`,
       });
     }
 
@@ -244,15 +244,15 @@ export default async function handler(
         path: filePath,
         filename: file.originalname || fileName,
         size: file.size,
-        type: validationResult.detectedType || file.mimetype || 'unknown'
-      }
+        type: validationResult.detectedType || file.mimetype || 'unknown',
+      },
     });
 
   } catch (error) {
     console.error('Upload API error:', error);
     res.status(500).json({
       success: false,
-      error: error instanceof Error ? error.message : '服务器内部错误'
+      error: error instanceof Error ? error.message : '服务器内部错误',
     });
   }
 }

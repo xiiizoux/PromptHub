@@ -277,8 +277,8 @@ const Navbar: React.FC = () => {
                       onClick={handleLogout}
                       disabled={isLoggingOut}
                       className={clsx(
-                        "flex items-center space-x-3 w-full px-4 py-3 text-neon-red hover:bg-neon-red/10 transition-all",
-                        isLoggingOut && "opacity-50 cursor-not-allowed"
+                        'flex items-center space-x-3 w-full px-4 py-3 text-neon-red hover:bg-neon-red/10 transition-all',
+                        isLoggingOut && 'opacity-50 cursor-not-allowed',
                       )}
                     >
                       <ArrowRightOnRectangleIcon className="h-5 w-5" />
@@ -368,8 +368,8 @@ const Navbar: React.FC = () => {
                       }}
                       disabled={isLoggingOut}
                       className={clsx(
-                        "flex items-center space-x-3 w-full px-4 py-3 rounded-lg text-neon-red hover:bg-neon-red/10 transition-all",
-                        isLoggingOut && "opacity-50 cursor-not-allowed"
+                        'flex items-center space-x-3 w-full px-4 py-3 rounded-lg text-neon-red hover:bg-neon-red/10 transition-all',
+                        isLoggingOut && 'opacity-50 cursor-not-allowed',
                       )}
                     >
                       <ArrowRightOnRectangleIcon className="h-5 w-5" />

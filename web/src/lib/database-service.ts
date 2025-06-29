@@ -241,7 +241,7 @@ export class DatabaseService {
           .eq('prompt_id', prompt.id);
 
         if (collaboratorError) {
-          console.error(`[DatabaseService] 获取协作者信息失败:`, collaboratorError);
+          console.error('[DatabaseService] 获取协作者信息失败:', collaboratorError);
         } else if (collaboratorData && collaboratorData.length > 0) {
           collaborators = collaboratorData.map((collab: any) => {
             const user = collab.users;
@@ -250,10 +250,10 @@ export class DatabaseService {
           });
           console.log(`[DatabaseService] 找到 ${collaborators.length} 个协作者: ${collaborators.join(', ')}`);
         } else {
-          console.log(`[DatabaseService] 该提示词没有协作者`);
+          console.log('[DatabaseService] 该提示词没有协作者');
         }
       } catch (collaboratorError) {
-        console.error(`[DatabaseService] 获取协作者信息失败:`, collaboratorError);
+        console.error('[DatabaseService] 获取协作者信息失败:', collaboratorError);
       }
 
       // 处理内容提取
@@ -330,7 +330,7 @@ export class DatabaseService {
    */
   async createPrompt(promptData: Partial<PromptDetails>): Promise<Prompt> {
     // 处理媒体文件：将preview_assets转换为parameters.media_files
-    let parameters = promptData.parameters || {};
+    const parameters = promptData.parameters || {};
     let previewAssetUrl = promptData.preview_asset_url;
 
     if (promptData.preview_assets && promptData.preview_assets.length > 0) {
@@ -339,7 +339,7 @@ export class DatabaseService {
         url: asset.url,
         name: asset.name,
         size: asset.size,
-        type: asset.type
+        type: asset.type,
       }));
 
       // 设置第一个媒体文件作为封面
@@ -392,7 +392,7 @@ export class DatabaseService {
 
       // 找出需要删除的文件（存在于旧列表但不在新列表中）
       const filesToDelete = existingMediaFiles.filter((existingFile: any) => 
-        !newMediaFiles.some((newFile: any) => newFile.url === existingFile.url)
+        !newMediaFiles.some((newFile: any) => newFile.url === existingFile.url),
       );
 
       // 删除不再使用的文件
@@ -407,7 +407,7 @@ export class DatabaseService {
       }
 
       // 处理媒体文件：将preview_assets转换为parameters.media_files
-      let parameters = promptData.parameters || existingPrompt.parameters || {};
+      const parameters = promptData.parameters || existingPrompt.parameters || {};
       let previewAssetUrl = promptData.preview_asset_url;
 
       if (promptData.preview_assets && promptData.preview_assets.length > 0) {
@@ -416,7 +416,7 @@ export class DatabaseService {
           url: asset.url,
           name: asset.name,
           size: asset.size,
-          type: asset.type
+          type: asset.type,
         }));
 
         // 设置第一个媒体文件作为封面（如果没有明确指定）

@@ -12,7 +12,7 @@ import {
   InformationCircleIcon,
   XMarkIcon,
   PlusCircleIcon,
-  PhotoIcon
+  PhotoIcon,
 } from '@heroicons/react/24/outline';
 
 import { PromptType } from './PromptTypeSelector';
@@ -81,11 +81,11 @@ export default function PromptEditForm({
   hasUnsavedChanges = false,
   permissionCheck,
   saveSuccess = false,
-  onUnsavedChanges
+  onUnsavedChanges,
 }: PromptEditFormProps) {
   // 表单状态 - 优先使用外部传入的类型
   const [currentType, setCurrentType] = useState<PromptType>(
-    propCurrentType || initialData?.category_type || 'chat'
+    propCurrentType || initialData?.category_type || 'chat',
   );
   const [previewAssets, setPreviewAssets] = useState<AssetFile[]>([]);
   
@@ -101,7 +101,7 @@ export default function PromptEditForm({
     formState: { errors }, 
     setValue, 
     watch, 
-    reset 
+    reset, 
   } = useForm<PromptEditFormData>({
     defaultValues: {
       name: initialData?.name || '',
@@ -120,8 +120,8 @@ export default function PromptEditForm({
       version: initialData?.version || 1.0,
       preview_assets: [],
       image_parameters: {},
-      video_parameters: {}
-    }
+      video_parameters: {},
+    },
   });
 
   // 监听表单变化
@@ -135,7 +135,7 @@ export default function PromptEditForm({
         url: file.url,
         name: file.name || 'Unknown file',
         size: file.size || 0,
-        type: file.type || 'unknown'
+        type: file.type || 'unknown',
       }));
       setPreviewAssets(existingAssets);
       setValue('preview_assets', existingAssets);
@@ -229,7 +229,7 @@ export default function PromptEditForm({
       ...initialData,
       preview_assets: [],
       image_parameters: {},
-      video_parameters: {}
+      video_parameters: {},
     });
     onUnsavedChanges?.(hasChanges);
   }, [watchedValues, initialData]);

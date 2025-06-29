@@ -313,7 +313,7 @@ export const getPrompts = async (filters?: PromptFilters): Promise<PaginatedResp
     // 清理和映射每个prompt对象，确保字段符合预期
     const cleanedData = paginatedData.data.map((item: any) => {
       // 使用服务端返回的category_type字段，不再使用硬编码分类判断
-      let guessedType = item.category_type || 'chat'; // 默认为chat类型
+      const guessedType = item.category_type || 'chat'; // 默认为chat类型
       
       return {
         id: item.id || `fallback-${Math.random()}`,

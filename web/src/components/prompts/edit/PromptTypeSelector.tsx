@@ -16,21 +16,21 @@ const typeOptions = [
     label: '对话提示词',
     icon: '💬',
     description: '适用于文本对话、问答、写作助手等场景。支持变量替换和上下文管理。',
-    color: 'neon-cyan'
+    color: 'neon-cyan',
   },
   {
     value: 'image' as const,
     label: '图像提示词',
     icon: '🖼️',
     description: '适用于AI图像生成场景。可以设置风格、尺寸、质量等参数，并上传示例图片。',
-    color: 'neon-purple'
+    color: 'neon-purple',
   },
   {
     value: 'video' as const,
     label: '视频提示词',
     icon: '🎬',
     description: '适用于AI视频生成场景。可以设置时长、帧率、运动强度等参数，并上传示例视频。',
-    color: 'neon-pink'
+    color: 'neon-pink',
   },
 ];
 
@@ -66,7 +66,7 @@ export default function PromptTypeSelector({
   value,
   onChange,
   disabled = false,
-  className = ''
+  className = '',
 }: PromptTypeSelectorProps) {
   return (
     <div className={`${className}`}>
@@ -79,7 +79,7 @@ export default function PromptTypeSelector({
               scale: 1.02,
               boxShadow: value === option.value
                 ? `0 0 20px ${option.color === 'neon-cyan' ? '#06b6d4' : option.color === 'neon-purple' ? '#8b5cf6' : '#ec4899'}40`
-                : '0 4px 12px rgba(0, 0, 0, 0.3)'
+                : '0 4px 12px rgba(0, 0, 0, 0.3)',
             } : {}}
             whileTap={!disabled ? { scale: 0.98 } : {}}
             className={`

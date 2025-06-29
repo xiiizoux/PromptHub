@@ -18,7 +18,7 @@ export default function ImagePromptsPage() {
     page: 1,
     pageSize: 24, // 图像卡片稍大，使用24个（4x6或6x4布局）
     sortBy: 'latest',
-    category_type: 'image' // 启用图像类型过滤
+    category_type: 'image', // 启用图像类型过滤
   });
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);

@@ -35,7 +35,7 @@ export default apiHandler(async (req: NextApiRequest, res: NextApiResponse, user
             Authorization: `Bearer ${token}`,
           },
         },
-      }
+      },
     );
 
     // 创建适配器实例，使用用户认证的客户端

@@ -18,7 +18,7 @@ export default function VideoPromptsPage() {
     page: 1,
     pageSize: 24, // 视频卡片稍大，使用24个
     sortBy: 'latest',
-    category_type: 'video' // 启用视频类型过滤
+    category_type: 'video', // 启用视频类型过滤
   });
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);

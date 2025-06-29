@@ -14,7 +14,7 @@ export default function TestUpload() {
       console.log('选择的文件:', {
         name: selectedFile.name,
         type: selectedFile.type,
-        size: selectedFile.size
+        size: selectedFile.size,
       });
     }
   };
@@ -33,7 +33,7 @@ export default function TestUpload() {
       console.log('用户会话:', {
         hasSession: !!session,
         hasAccessToken: !!session?.access_token,
-        user: session?.user?.email
+        user: session?.user?.email,
       });
 
       if (!session?.access_token) {
@@ -68,7 +68,7 @@ export default function TestUpload() {
       setResult({
         status: response.status,
         success: response.ok,
-        data
+        data,
       });
 
     } catch (error) {
@@ -76,7 +76,7 @@ export default function TestUpload() {
       setResult({
         status: 'error',
         success: false,
-        error: error instanceof Error ? error.message : '未知错误'
+        error: error instanceof Error ? error.message : '未知错误',
       });
     } finally {
       setUploading(false);

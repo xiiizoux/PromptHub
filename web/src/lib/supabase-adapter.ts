@@ -417,7 +417,7 @@ export class SupabaseAdapter {
         return null;
       }
 
-      console.log(`[SupabaseAdapter] 获取提示词成功:`, {
+      console.log('[SupabaseAdapter] 获取提示词成功:', {
         id: data?.id,
         name: data?.name,
         category_type: data?.category_type,

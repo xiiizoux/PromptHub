@@ -80,7 +80,7 @@ async function deleteAssetHandler(req: NextApiRequest, res: NextApiResponse, use
 
     return successResponse(res, {
       message: '文件删除成功',
-      filename
+      filename,
     });
 
   } catch (error: any) {

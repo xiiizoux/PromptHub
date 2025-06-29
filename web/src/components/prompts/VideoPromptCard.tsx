@@ -140,7 +140,7 @@ const VideoPromptCard: React.FC<VideoPromptCardProps> = React.memo(({ prompt }) 
       // 备用地址
       'https://www.w3schools.com/html/movie.mp4',
       // HTML5测试视频
-      'https://html5demos.com/assets/dizzy.mp4'
+      'https://html5demos.com/assets/dizzy.mp4',
     ];
     return fallbackVideos[0]; // 先尝试第一个
   };
@@ -281,7 +281,7 @@ const VideoPromptCard: React.FC<VideoPromptCardProps> = React.memo(({ prompt }) 
     <div>
       <Link href={`/prompts/${prompt.id}`}>
         <motion.div
-          className="card glass border border-red-500/20 hover:border-red-500/40 transition-all duration-300 group cursor-pointer relative overflow-hidden h-96 flex flex-col"
+          className="card glass border border-red-500/20 hover:border-red-500/40 transition-all duration-300 group cursor-pointer relative overflow-hidden h-[28rem] flex flex-col"
           whileHover={{ y: -4, scale: 1.02 }}
           transition={{ duration: 0.2 }}
           onMouseEnter={handleMouseEnter}
@@ -301,7 +301,7 @@ const VideoPromptCard: React.FC<VideoPromptCardProps> = React.memo(({ prompt }) 
               className={clsx(
                 'w-full h-full object-cover transition-all duration-500',
                 videoLoaded ? 'opacity-100' : 'opacity-0',
-                'group-hover:scale-110'
+                'group-hover:scale-110',
               )}
               onLoadStart={() => {
                 resetVideoState();

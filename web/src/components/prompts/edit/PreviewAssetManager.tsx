@@ -7,7 +7,7 @@ import {
   ArrowUpTrayIcon,
   ExclamationTriangleIcon,
   CheckCircleIcon,
-  XMarkIcon
+  XMarkIcon,
 } from '@heroicons/react/24/outline';
 import { PromptType } from './PromptTypeSelector';
 
@@ -36,7 +36,7 @@ export default function PreviewAssetManager({
   maxAssets = 4,
   maxFileSize = promptType === 'image' ? 10 * 1024 * 1024 : 100 * 1024 * 1024, // 10MB for images, 100MB for videos
   disabled = false,
-  className = ''
+  className = '',
 }: PreviewAssetManagerProps) {
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -120,7 +120,7 @@ export default function PreviewAssetManager({
         url: result.data.url,
         name: file.name,
         size: file.size,
-        type: file.type
+        type: file.type,
       };
 
       setTimeout(() => {

@@ -409,7 +409,7 @@ export default function PromptDetailsPage() {
     const typeMap: Record<string, { color: string; icon: any; name: string }> = {
       'chat': { color: 'from-neon-blue to-neon-cyan', icon: ChatBubbleLeftRightIcon, name: '对话' },
       'image': { color: 'from-neon-pink to-neon-purple', icon: PhotoIcon, name: '图像' },
-      'video': { color: 'from-neon-red to-neon-orange', icon: FilmIcon, name: '视频' }
+      'video': { color: 'from-neon-red to-neon-orange', icon: FilmIcon, name: '视频' },
     };
     
     return typeMap[categoryType || 'chat'] || typeMap['chat'];
@@ -728,7 +728,7 @@ export default function PromptDetailsPage() {
                         }`}
                         whileHover={!isDeleting ? { scale: 1.05 } : {}}
                         whileTap={!isDeleting ? { scale: 0.95 } : {}}
-                        title={isDeleting ? "删除中..." : "删除提示词"}
+                        title={isDeleting ? '删除中...' : '删除提示词'}
                       >
                         <TrashIcon className="h-5 w-5" />
                       </motion.button>

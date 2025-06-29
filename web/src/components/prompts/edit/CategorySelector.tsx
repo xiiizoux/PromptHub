@@ -22,7 +22,7 @@ export default function CategorySelector({
   loading = false,
   error,
   className = '',
-  disabled = false
+  disabled = false,
 }: CategorySelectorProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -31,7 +31,7 @@ export default function CategorySelector({
   
   // 根据搜索词过滤分类
   const filteredCategories = availableCategories.filter(category =>
-    category.toLowerCase().includes(searchTerm.toLowerCase())
+    category.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
   // 当类型改变时重置搜索
@@ -50,7 +50,7 @@ export default function CategorySelector({
     const typeLabels = {
       chat: '对话',
       image: '图像',
-      video: '视频'
+      video: '视频',
     };
     return typeLabels[type];
   };

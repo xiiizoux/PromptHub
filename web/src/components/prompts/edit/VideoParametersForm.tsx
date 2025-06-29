@@ -28,7 +28,7 @@ const resolutionOptions = [
   { value: '1024x576', label: '1024×576', description: '横屏16:9' },
   { value: '576x1024', label: '576×1024', description: '竖屏9:16' },
   { value: '1280x720', label: '1280×720', description: 'HD横屏' },
-  { value: '720x1280', label: '720×1280', description: 'HD竖屏' }
+  { value: '720x1280', label: '720×1280', description: 'HD竖屏' },
 ];
 
 const cameraMovementOptions = [
@@ -40,21 +40,21 @@ const cameraMovementOptions = [
   { value: 'zoom_in', label: '拉近', description: '摄像机拉近镜头' },
   { value: 'zoom_out', label: '拉远', description: '摄像机拉远镜头' },
   { value: 'rotate_cw', label: '顺时针', description: '顺时针旋转' },
-  { value: 'rotate_ccw', label: '逆时针', description: '逆时针旋转' }
+  { value: 'rotate_ccw', label: '逆时针', description: '逆时针旋转' },
 ];
 
 const qualityOptions = [
   { value: 'draft', label: '草图', description: '快速生成，质量较低' },
   { value: 'standard', label: '标准', description: '平衡质量与速度' },
   { value: 'high', label: '高质量', description: '高质量，生成较慢' },
-  { value: 'cinematic', label: '电影级', description: '最高质量，生成最慢' }
+  { value: 'cinematic', label: '电影级', description: '最高质量，生成最慢' },
 ];
 
 export default function VideoParametersForm({
   value,
   onChange,
   disabled = false,
-  className = ''
+  className = '',
 }: VideoParametersFormProps) {
   // 确保value不为undefined
   const safeValue = value || {};
@@ -62,7 +62,7 @@ export default function VideoParametersForm({
   const updateParameter = (key: keyof VideoParameters, paramValue: any) => {
     onChange({
       ...safeValue,
-      [key]: paramValue
+      [key]: paramValue,
     });
   };
 

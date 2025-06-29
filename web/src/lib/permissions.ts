@@ -50,11 +50,11 @@ export const checkEditPermission = (prompt: PromptDetails, user: User | null): P
     const userIdentifiers = [
       user.username,
       user.display_name,
-      user.email?.split('@')[0]
+      user.email?.split('@')[0],
     ].filter(Boolean); // 过滤掉空值
 
     const isCollaborator = userIdentifiers.some(identifier =>
-      identifier && prompt.collaborators?.includes(identifier) || false
+      identifier && prompt.collaborators?.includes(identifier) || false,
     );
 
     if (isCollaborator) {

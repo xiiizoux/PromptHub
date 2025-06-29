@@ -15,7 +15,7 @@ function CreatePromptPage() {
   const [categoriesByType, setCategoriesByType] = useState<Record<string, string[]>>({
     chat: [],
     image: [],
-    video: []
+    video: [],
   });
   const [userReady, setUserReady] = useState(false);
 
@@ -30,7 +30,7 @@ function CreatePromptPage() {
       console.log('用户认证状态确认:', {
         id: user.id,
         username: user.username,
-        email: user.email
+        email: user.email,
       });
       setUserReady(true);
     } else {
@@ -50,20 +50,20 @@ function CreatePromptPage() {
         const [chatCategories, imageCategories, videoCategories] = await Promise.all([
           getCategories('chat'),
           getCategories('image'),
-          getCategories('video')
+          getCategories('video'),
         ]);
 
         console.log('获取到的分类数据:', {
           chat: chatCategories,
           image: imageCategories,
-          video: videoCategories
+          video: videoCategories,
         });
 
         // 设置按类型分组的分类
         const categoriesByTypeData = {
           chat: chatCategories || [],
           image: imageCategories || [],
-          video: videoCategories || []
+          video: videoCategories || [],
         };
         setCategoriesByType(categoriesByTypeData);
 

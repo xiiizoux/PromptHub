@@ -150,20 +150,20 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
         const [chatCategories, imageCategories, videoCategories] = await Promise.all([
           getCategories('chat'),
           getCategories('image'),
-          getCategories('video')
+          getCategories('video'),
         ]);
 
         console.log('获取到的分类数据:', {
           chat: chatCategories,
           image: imageCategories,
-          video: videoCategories
+          video: videoCategories,
         });
 
         // 设置按类型分组的分类
         const categoriesByTypeData = {
           chat: chatCategories || [],
           image: imageCategories || [],
-          video: videoCategories || []
+          video: videoCategories || [],
         };
         setCategoriesByType(categoriesByTypeData);
 
@@ -313,7 +313,7 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
       submitButtonText="更新提示词"
       backLink={{
         href: `/prompts/${prompt.id}`,
-        label: "返回提示词详情"
+        label: '返回提示词详情',
       }}
       permissionCheck={permissionCheck}
       hasUnsavedChanges={hasUnsavedChanges}

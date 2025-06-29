@@ -14,7 +14,7 @@ import {
   CogIcon,
   CpuChipIcon,
   InformationCircleIcon,
-  CheckCircleIcon
+  CheckCircleIcon,
 } from '@heroicons/react/24/outline';
 import { useForm, Controller } from 'react-hook-form';
 import { toast } from 'react-hot-toast';
@@ -29,7 +29,7 @@ import { ModelSelector } from '@/components/ModelSelector';
 import { PromptDetails } from '@/types';
 import { 
   PERMISSION_LEVELS,
-  PERMISSION_LEVEL_DESCRIPTIONS
+  PERMISSION_LEVEL_DESCRIPTIONS,
 } from '@/lib/permissions';
 import { PermissionCheck } from '@/types';
 
@@ -97,7 +97,7 @@ export default function PromptFormContainer({
   submitButtonText,
   permissionCheck,
   hasUnsavedChanges = false,
-  saveSuccess = false
+  saveSuccess = false,
 }: PromptFormContainerProps) {
   const { user } = useAuth();
   const router = useRouter();
@@ -110,14 +110,14 @@ export default function PromptFormContainer({
           style: 'photorealistic',
           aspect_ratio: '1:1',
           resolution: '1024x1024',
-          quality: 'high'
+          quality: 'high',
         };
       case 'video':
         return {
           duration: 10,
           fps: 30,
           motion_strength: 5,
-          camera_movement: 'static'
+          camera_movement: 'static',
         };
       default:
         return {};
@@ -126,7 +126,7 @@ export default function PromptFormContainer({
 
   // 表单状态
   const [currentType, setCurrentType] = useState<PromptType>(
-    (initialData?.category_type as PromptType) || 'chat'
+    (initialData?.category_type as PromptType) || 'chat',
   );
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -153,7 +153,7 @@ export default function PromptFormContainer({
     formState: { errors },
     setValue,
     watch,
-    reset
+    reset,
   } = useForm<PromptFormData>({
     defaultValues: {
       name: initialData?.name || '',
@@ -171,7 +171,7 @@ export default function PromptFormContainer({
       template_format: initialData?.template_format || 'text',
       version: initialData?.version || 1.0,
       parameters: initialData?.parameters || {},
-    }
+    },
   });
 
   // 初始化现有媒体文件
@@ -182,7 +182,7 @@ export default function PromptFormContainer({
       hasParameters: !!initialData?.parameters,
       hasMediaFiles: !!initialData?.parameters?.media_files,
       mediaFilesLength: initialData?.parameters?.media_files?.length || 0,
-      initialDataKeys: initialData ? Object.keys(initialData) : []
+      initialDataKeys: initialData ? Object.keys(initialData) : [],
     });
 
     if (mode === 'edit' && initialData?.parameters?.media_files && Array.isArray(initialData.parameters.media_files)) {
@@ -199,12 +199,12 @@ export default function PromptFormContainer({
       const virtualFiles = mediaFiles.map((file: any) => {
         // 创建一个虚拟File对象，包含必要的属性
         const virtualFile = new File([], file.name || 'unknown', {
-          type: file.type || 'application/octet-stream'
+          type: file.type || 'application/octet-stream',
         });
         // 添加size属性
         Object.defineProperty(virtualFile, 'size', {
           value: file.size || 0,
-          writable: false
+          writable: false,
         });
         return virtualFile;
       });
@@ -213,14 +213,14 @@ export default function PromptFormContainer({
       console.log('PromptFormContainer - 加载现有媒体文件:', {
         mediaFilesCount: mediaFiles.length,
         urls: urls,
-        virtualFilesCount: virtualFiles.length
+        virtualFilesCount: virtualFiles.length,
       });
     } else {
       console.log('PromptFormContainer - 未加载媒体文件，原因:', {
         isEditMode: mode === 'edit',
         hasParameters: !!initialData?.parameters,
         hasMediaFiles: !!initialData?.parameters?.media_files,
-        isArray: Array.isArray(initialData?.parameters?.media_files)
+        isArray: Array.isArray(initialData?.parameters?.media_files),
       });
     }
 
@@ -242,7 +242,7 @@ export default function PromptFormContainer({
     const typeLabels = {
       chat: '对话',
       image: '图像',
-      video: '视频'
+      video: '视频',
     };
     return typeLabels[type];
   };
@@ -254,13 +254,13 @@ export default function PromptFormContainer({
     // 视频生成关键词
     const videoKeywords = [
       '视频', '动画', '镜头', '运动', '帧', '时长', '播放', '拍摄', '剪辑', '特效',
-      'video', 'animation', 'motion', 'camera', 'frame', 'fps', 'duration', 'editing'
+      'video', 'animation', 'motion', 'camera', 'frame', 'fps', 'duration', 'editing',
     ];
 
     // 图像生成关键词
     const imageKeywords = [
       '画', '绘制', '绘画', '图像', '图片', '照片', '摄影', '设计', '风格', '生成图片',
-      'style', 'draw', 'paint', 'image', 'photo', 'picture', 'art', 'design', 'generate image'
+      'style', 'draw', 'paint', 'image', 'photo', 'picture', 'art', 'design', 'generate image',
     ];
 
     const hasVideoKeywords = videoKeywords.some(keyword => lowerContent.includes(keyword));
@@ -507,7 +507,7 @@ export default function PromptFormContainer({
         url,
         name: uploadedFiles[index]?.name || `file-${index}`,
         size: uploadedFiles[index]?.size || 0,
-        type: uploadedFiles[index]?.type || ''
+        type: uploadedFiles[index]?.type || '',
       })),
       parameters: parameters,
     };

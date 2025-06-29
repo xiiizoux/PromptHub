@@ -120,14 +120,14 @@ const ImagePromptCard: React.FC<ImagePromptCardProps> = React.memo(({ prompt }) 
     }
 
     // 使用适合AI图像生成的艺术感占位符图片 - 抽象艺术/创意设计
-    return `https://images.unsplash.com/photo-1541961017774-22349e4a1262?w=400&h=300&fit=crop&auto=format&q=80`;
+    return 'https://images.unsplash.com/photo-1541961017774-22349e4a1262?w=400&h=300&fit=crop&auto=format&q=80';
   };
 
   return (
     <div>
       <Link href={`/prompts/${prompt.id}`}>
         <motion.div
-          className="card glass border border-pink-500/20 hover:border-pink-500/40 transition-all duration-300 group cursor-pointer relative overflow-hidden h-96 flex flex-col"
+          className="card glass border border-pink-500/20 hover:border-pink-500/40 transition-all duration-300 group cursor-pointer relative overflow-hidden h-[28rem] flex flex-col"
           whileHover={{ y: -4, scale: 1.02 }}
           transition={{ duration: 0.2 }}
           onMouseEnter={() => setIsHovered(true)}
@@ -147,7 +147,7 @@ const ImagePromptCard: React.FC<ImagePromptCardProps> = React.memo(({ prompt }) 
               className={clsx(
                 'w-full h-full object-cover transition-all duration-500',
                 imageLoaded ? 'opacity-100' : 'opacity-0',
-                'group-hover:scale-110'
+                'group-hover:scale-110',
               )}
               onLoad={() => setImageLoaded(true)}
               onError={() => setImageError(true)}
