@@ -379,6 +379,26 @@ export class DatabaseService {
         throw new Error('无权限修改此提示词');
       }
 
+      // 处理媒体文件删除：比较新旧文件列表，删除不再使用的文件
+      const existingMediaFiles = existingPrompt.parameters?.media_files || [];
+      const newMediaFiles = promptData.preview_assets || [];
+
+      // 找出需要删除的文件（存在于旧列表但不在新列表中）
+      const filesToDelete = existingMediaFiles.filter(existingFile => 
+        !newMediaFiles.some(newFile => newFile.url === existingFile.url)
+      );
+
+      // 删除不再使用的文件
+      for (const fileToDelete of filesToDelete) {
+        try {
+          await this.deleteMediaFile(fileToDelete.url, userId);
+          console.log(`已删除不再使用的文件: ${fileToDelete.url}`);
+        } catch (error) {
+          console.error(`删除文件失败: ${fileToDelete.url}`, error);
+          // 不抛出错误，允许更新继续进行
+        }
+      }
+
       // 处理媒体文件：将preview_assets转换为parameters.media_files
       let parameters = promptData.parameters || existingPrompt.parameters || {};
       if (promptData.preview_assets && promptData.preview_assets.length > 0) {
@@ -389,6 +409,9 @@ export class DatabaseService {
           size: asset.size,
           type: asset.type
         }));
+      } else if (promptData.preview_assets && promptData.preview_assets.length === 0) {
+        // 如果明确传入空数组，则清空媒体文件
+        parameters.media_files = [];
       }
 
       // 转换更新数据
@@ -893,11 +916,54 @@ export class DatabaseService {
     )).filter(variable => variable.length > 0);
   }
 
+  /**
+   * 删除媒体文件
+   */
+  private async deleteMediaFile(fileUrl: string, userId?: string): Promise<void> {
+    try {
+      // 从URL中提取文件路径
+      // URL格式: https://.../storage/v1/object/public/{bucket}/{userId}/{filename}
+      const urlParts = fileUrl.split('/');
+      const pathIndex = urlParts.findIndex(part => part === 'public');
+      
+      if (pathIndex === -1 || pathIndex + 3 >= urlParts.length) {
+        throw new Error('无效的文件URL格式');
+      }
 
+      const bucket = urlParts[pathIndex + 1];
+      const userIdFromUrl = urlParts[pathIndex + 2];
+      const filename = urlParts.slice(pathIndex + 3).join('/');
 
+      // 验证用户权限
+      if (userId && userIdFromUrl !== userId) {
+        throw new Error('无权限删除此文件');
+      }
 
+      const filePath = `${userIdFromUrl}/${filename}`;
+      
+      // 使用删除API
+      console.log(`准备删除文件: ${filePath}`);
+      
+      // 这里直接调用Supabase Storage删除，因为我们在服务端
+      const { createClient } = await import('@supabase/supabase-js');
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+      const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+      const adminClient = createClient(supabaseUrl, supabaseKey);
 
+      const { error } = await adminClient.storage
+        .from(bucket)
+        .remove([filePath]);
 
+      if (error) {
+        throw new Error(`删除文件失败: ${error.message}`);
+      }
+
+      console.log(`文件删除成功: ${filePath}`);
+    } catch (error) {
+      console.error(`删除媒体文件失败: ${fileUrl}`, error);
+      throw error;
+    }
+  }
 }
 
 // 创建服务实例

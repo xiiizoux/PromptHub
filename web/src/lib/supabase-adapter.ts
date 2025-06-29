@@ -938,6 +938,9 @@ export class SupabaseAdapter {
         user_id: userId,
         version: typeof promptData.version === 'number' ? promptData.version : 1, // 确保版本是整数
         compatible_models: Array.isArray(promptData.compatible_models) ? promptData.compatible_models : [], // 添加兼容模型字段
+        category_type: promptData.category_type || 'chat', // 添加分类类型
+        preview_asset_url: promptData.preview_asset_url || null, // 添加预览资源URL
+        parameters: promptData.parameters || {}, // 添加参数
         created_at: new Date().toISOString(),
       };
       

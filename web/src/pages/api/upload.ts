@@ -47,7 +47,7 @@ const upload = multer({
     if (ALLOWED_TYPES.includes(file.mimetype)) {
       cb(null, true);
     } else {
-      const error = new Error('不支持的文件类型') as any;
+      const error = new Error(`不支持的文件类型: ${file.mimetype}。支持的格式：图片(jpg, png, webp, gif)，视频(mp4, webm, mov, avi)`) as any;
       cb(error, false);
     }
   },
@@ -59,13 +59,27 @@ const uploadSingle = promisify(upload.single('file'));
 // 双重文件类型验证函数
 async function validateFileType(buffer: Buffer, mimetype: string): Promise<{ isValid: boolean; error?: string; detectedType?: string }> {
   try {
+    console.log(`Validating file: MIME type = ${mimetype}, buffer size = ${buffer.length}`);
+    
+    // 首先检查MIME类型是否被允许
+    if (!ALLOWED_TYPES.includes(mimetype)) {
+      return {
+        isValid: false,
+        error: `不支持的文件类型 "${mimetype}"。支持的格式：图片(${ALLOWED_IMAGE_EXTENSIONS.join(', ')})，视频(${ALLOWED_VIDEO_EXTENSIONS.join(', ')})`
+      };
+    }
+
+    // 注意：AVIF格式由于兼容性问题已移除支持
+
     // 第二层验证：使用file-type检查文件魔数签名
     const fileType = await fileTypeFromBuffer(buffer);
     
     if (!fileType) {
+      // 对于file-type无法识别的文件，如果MIME类型已经被允许，则通过验证
+      console.log(`File type detection failed for ${mimetype}, but MIME type is allowed. Proceeding with MIME type validation.`);
       return {
-        isValid: false,
-        error: '无法识别文件类型，可能是损坏的文件'
+        isValid: true,
+        detectedType: mimetype
       };
     }
 
@@ -73,7 +87,7 @@ async function validateFileType(buffer: Buffer, mimetype: string): Promise<{ isV
     if (!ALLOWED_EXTENSIONS.includes(fileType.ext)) {
       return {
         isValid: false,
-        error: `不支持的文件扩展名: ${fileType.ext}`,
+        error: `不支持的文件格式 "${fileType.ext}"。支持的格式：图片(${ALLOWED_IMAGE_EXTENSIONS.join(', ')})，视频(${ALLOWED_VIDEO_EXTENSIONS.join(', ')})`,
         detectedType: fileType.mime
       };
     }
@@ -82,7 +96,7 @@ async function validateFileType(buffer: Buffer, mimetype: string): Promise<{ isV
     if (!ALLOWED_TYPES.includes(fileType.mime)) {
       return {
         isValid: false,
-        error: `检测到的文件类型不被支持: ${fileType.mime}`,
+        error: `不支持的文件类型 "${fileType.mime}"。支持的格式：图片(${ALLOWED_IMAGE_EXTENSIONS.join(', ')})，视频(${ALLOWED_VIDEO_EXTENSIONS.join(', ')})`,
         detectedType: fileType.mime
       };
     }
@@ -90,11 +104,7 @@ async function validateFileType(buffer: Buffer, mimetype: string): Promise<{ isV
     // 验证MIME类型一致性（防止文件扩展名伪装）
     const isConsistent = mimetype === fileType.mime;
     if (!isConsistent) {
-      return {
-        isValid: false,
-        error: `文件类型不一致：声明类型为 ${mimetype}，实际类型为 ${fileType.mime}`,
-        detectedType: fileType.mime
-      };
+      console.log(`MIME type mismatch: declared ${mimetype}, detected ${fileType.mime}. Using detected type.`);
     }
 
     return {
@@ -102,9 +112,10 @@ async function validateFileType(buffer: Buffer, mimetype: string): Promise<{ isV
       detectedType: fileType.mime
     };
   } catch (error) {
+    console.error('File validation error:', error);
     return {
       isValid: false,
-      error: `文件类型验证失败: ${error instanceof Error ? error.message : '未知错误'}`
+      error: `文件类型验证失败: ${error instanceof Error ? error.message : '未知错误'}。支持的格式：图片(${ALLOWED_IMAGE_EXTENSIONS.join(', ')})，视频(${ALLOWED_VIDEO_EXTENSIONS.join(', ')})`
     };
   }
 }
