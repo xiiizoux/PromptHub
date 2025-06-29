@@ -127,7 +127,7 @@ const ImagePromptCard: React.FC<ImagePromptCardProps> = React.memo(({ prompt }) 
     <div>
       <Link href={`/prompts/${prompt.id}`}>
         <motion.div
-          className="card glass border border-pink-500/20 hover:border-pink-500/40 transition-all duration-300 group cursor-pointer relative overflow-hidden h-[28rem] flex flex-col"
+          className="card glass border border-pink-500/20 hover:border-pink-500/40 transition-all duration-300 group cursor-pointer relative overflow-hidden h-[30rem] flex flex-col"
           whileHover={{ y: -4, scale: 1.02 }}
           transition={{ duration: 0.2 }}
           onMouseEnter={() => setIsHovered(true)}
@@ -140,7 +140,7 @@ const ImagePromptCard: React.FC<ImagePromptCardProps> = React.memo(({ prompt }) 
           )} />
           
           {/* 预览图像区域 - 画廊模式 */}
-          <div className="relative w-full h-56 rounded-lg overflow-hidden bg-gradient-to-br from-gray-900/80 to-gray-800/80 flex-shrink-0 mb-4">
+          <div className="relative h-56 rounded-lg overflow-hidden bg-gradient-to-br from-gray-900/80 to-gray-800/80 flex-shrink-0 mb-4 mx-5">
             <img 
               src={getImageUrl()}
               alt={prompt.name || '图像提示词'}
@@ -198,7 +198,7 @@ const ImagePromptCard: React.FC<ImagePromptCardProps> = React.memo(({ prompt }) 
           </div>
           
           {/* 内容区域 - 紧凑但信息丰富 */}
-          <div className="flex-1 p-5 flex flex-col min-h-0">
+          <div className="flex-1 px-5 pb-6 flex flex-col min-h-0">
             {/* 标题与分类图标 */}
             <div className="relative flex items-start mb-2">
               <div className="flex items-start space-x-2 flex-1">
