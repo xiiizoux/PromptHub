@@ -75,6 +75,7 @@ export default function PromptDetailsPage() {
   const [selectedVersion, setSelectedVersion] = useState<string>('1');
   const [copied, setCopied] = useState(false);
   const [isClient, setIsClient] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // 客户端数据获取
   useEffect(() => {
@@ -269,11 +270,126 @@ export default function PromptDetailsPage() {
       await navigator.clipboard.writeText(processedContent);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-      
+
 
     } catch (error) {
       toast.error('复制到剪贴板失败');
       console.error('复制失败:', error);
+    }
+  };
+
+  // 从URL中提取文件名的工具函数
+  const extractFilenameFromUrl = (url: string): string => {
+    try {
+      const urlObj = new URL(url);
+      const pathname = urlObj.pathname;
+      const segments = pathname.split('/');
+      return segments[segments.length - 1] || '';
+    } catch (error) {
+      console.error('提取文件名失败:', error);
+      return '';
+    }
+  };
+
+  // 删除媒体文件的函数
+  const deleteMediaFiles = async (token: string): Promise<void> => {
+    if (!prompt || (prompt.category_type !== 'image' && prompt.category_type !== 'video')) {
+      return; // 非媒体类型提示词，无需删除文件
+    }
+
+    const filesToDelete: string[] = [];
+
+    // 收集需要删除的文件
+    // 1. preview_asset_url 中的文件
+    if (prompt.preview_asset_url) {
+      const filename = extractFilenameFromUrl(prompt.preview_asset_url);
+      if (filename && (filename.startsWith('image_') || filename.startsWith('video_'))) {
+        filesToDelete.push(filename);
+      }
+    }
+
+    // 2. parameters.media_files 中的文件
+    const mediaFiles = prompt.parameters?.media_files || [];
+    mediaFiles.forEach((file: any) => {
+      if (file.url) {
+        const filename = extractFilenameFromUrl(file.url);
+        if (filename && (filename.startsWith('image_') || filename.startsWith('video_'))) {
+          filesToDelete.push(filename);
+        }
+      }
+    });
+
+    // 删除重复的文件名
+    const uniqueFiles = [...new Set(filesToDelete)];
+
+    // 逐个删除文件
+    for (const filename of uniqueFiles) {
+      try {
+        const deleteResponse = await fetch(`/api/assets/${filename}`, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (!deleteResponse.ok) {
+          console.warn(`删除文件失败: ${filename}`, await deleteResponse.text());
+        } else {
+          console.log(`文件删除成功: ${filename}`);
+        }
+      } catch (error) {
+        console.warn(`删除文件时出错: ${filename}`, error);
+      }
+    }
+  };
+
+  // 删除提示词
+  const handleDeletePrompt = async () => {
+    if (!prompt || !user) {
+      alert('请先登录');
+      return;
+    }
+
+    // 确认删除
+    if (!confirm(`确定要删除提示词"${prompt.name}"吗？此操作不可撤销。`)) {
+      return;
+    }
+
+    setIsDeleting(true);
+    try {
+      // 获取认证令牌
+      const token = await getToken();
+      if (!token) {
+        alert('无法获取认证令牌，请重新登录');
+        return;
+      }
+
+      // 先删除关联的媒体文件
+      await deleteMediaFiles(token);
+
+      // 然后删除提示词记录
+      const response = await fetch(`/api/prompts/${prompt.id}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (response.ok) {
+        alert('提示词及相关文件已成功删除');
+        // 删除成功后跳转到提示词列表页
+        router.push('/prompts');
+      } else {
+        const error = await response.json();
+        throw new Error(error.message || '删除提示词失败');
+      }
+    } catch (error: any) {
+      console.error('删除提示词失败:', error);
+      alert(`删除提示词失败: ${error.message || '请检查您的权限或网络连接'}`);
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -578,18 +694,33 @@ export default function PromptDetailsPage() {
                   >
                     <ShareIcon className="h-5 w-5" />
                   </motion.button>
-                  <Link
-                    href={`/prompts/${prompt.id}/edit`}
-                    className="p-3 glass rounded-xl border border-neon-yellow/30 text-neon-yellow hover:border-neon-yellow/50 hover:text-white transition-colors"
-                  >
-                    <PencilSquareIcon className="h-5 w-5" />
-                  </Link>
-                  <button 
-                    type="button"
-                    className="p-3 glass rounded-xl border border-neon-red/30 text-neon-red hover:border-neon-red/50 hover:text-white transition-colors"
-                  >
-                    <TrashIcon className="h-5 w-5" />
-                  </button>
+                  {/* 只有登录用户且是作者才显示编辑和删除按钮 */}
+                  {user && prompt.user_id === user.id && (
+                    <>
+                      <Link
+                        href={`/prompts/${prompt.id}/edit`}
+                        className="p-3 glass rounded-xl border border-neon-yellow/30 text-neon-yellow hover:border-neon-yellow/50 hover:text-white transition-colors"
+                        title="编辑提示词"
+                      >
+                        <PencilSquareIcon className="h-5 w-5" />
+                      </Link>
+                      <motion.button
+                        type="button"
+                        onClick={handleDeletePrompt}
+                        disabled={isDeleting}
+                        className={`p-3 glass rounded-xl border transition-colors ${
+                          isDeleting
+                            ? 'border-gray-500/30 text-gray-500 cursor-not-allowed'
+                            : 'border-neon-red/30 text-neon-red hover:border-neon-red/50 hover:text-white'
+                        }`}
+                        whileHover={!isDeleting ? { scale: 1.05 } : {}}
+                        whileTap={!isDeleting ? { scale: 0.95 } : {}}
+                        title={isDeleting ? "删除中..." : "删除提示词"}
+                      >
+                        <TrashIcon className="h-5 w-5" />
+                      </motion.button>
+                    </>
+                  )}
                 </div>
               </div>
               
@@ -631,9 +762,9 @@ export default function PromptDetailsPage() {
               </div>
             </motion.div>
             
-            {/* 预览资源（仅图像和视频类型） */}
-            {(prompt.category_type === 'image' || prompt.category_type === 'video') && prompt.preview_asset_url && (
-              <motion.div 
+            {/* 媒体资源展示（仅图像和视频类型） */}
+            {(prompt.category_type === 'image' || prompt.category_type === 'video') && (
+              <motion.div
                 className="glass rounded-xl p-8 border border-neon-cyan/20 mb-8"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -646,35 +777,103 @@ export default function PromptDetailsPage() {
                     ) : (
                       <FilmIcon className="h-6 w-6 mr-3 text-neon-red" />
                     )}
-                    {prompt.category_type === 'image' ? '预览图像' : '预览视频'}
+                    {prompt.category_type === 'image' ? '图像展示' : '视频展示'}
                   </h2>
                 </div>
-                
-                <div className="relative">
-                  <div className="glass rounded-xl p-6 border border-gray-600 bg-black/20">
-                    {prompt.category_type === 'image' ? (
-                      <img 
-                        src={prompt.preview_asset_url} 
-                        alt={prompt.name}
-                        className="w-full h-auto max-h-96 object-contain rounded-lg"
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).style.display = 'none';
-                        }}
-                      />
-                    ) : (
-                      <video 
-                        src={prompt.preview_asset_url} 
-                        controls
-                        className="w-full h-auto max-h-96 rounded-lg"
-                        onError={(e) => {
-                          (e.target as HTMLVideoElement).style.display = 'none';
-                        }}
-                      >
-                        您的浏览器不支持视频播放
-                      </video>
-                    )}
-                  </div>
-                </div>
+
+                {(() => {
+                  // 获取媒体文件列表
+                  const mediaFiles = prompt.parameters?.media_files || [];
+                  const hasMediaFiles = mediaFiles.length > 0;
+                  const hasSinglePreview = prompt.preview_asset_url && !hasMediaFiles;
+
+                  if (hasMediaFiles) {
+                    // 显示多个媒体文件
+                    return (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {mediaFiles.map((file: any, index: number) => (
+                          <div key={file.id || index} className="relative">
+                            <div className="glass rounded-xl p-4 border border-gray-600 bg-black/20">
+                              {prompt.category_type === 'image' ? (
+                                <img
+                                  src={file.url}
+                                  alt={file.name || `图像 ${index + 1}`}
+                                  className="w-full h-auto max-h-80 object-contain rounded-lg cursor-pointer hover:scale-105 transition-transform duration-200"
+                                  onError={(e) => {
+                                    (e.target as HTMLImageElement).style.display = 'none';
+                                  }}
+                                  onClick={() => window.open(file.url, '_blank')}
+                                />
+                              ) : (
+                                <video
+                                  src={file.url}
+                                  controls
+                                  className="w-full h-auto max-h-80 rounded-lg"
+                                  onError={(e) => {
+                                    (e.target as HTMLVideoElement).style.display = 'none';
+                                  }}
+                                >
+                                  您的浏览器不支持视频播放
+                                </video>
+                              )}
+                              {file.name && (
+                                <div className="mt-2 text-sm text-gray-400 text-center">
+                                  {file.name}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    );
+                  } else if (hasSinglePreview) {
+                    // 显示单个预览文件（向后兼容）
+                    return (
+                      <div className="relative">
+                        <div className="glass rounded-xl p-6 border border-gray-600 bg-black/20">
+                          {prompt.category_type === 'image' ? (
+                            <img
+                              src={prompt.preview_asset_url}
+                              alt={prompt.name}
+                              className="w-full h-auto max-h-96 object-contain rounded-lg cursor-pointer hover:scale-105 transition-transform duration-200"
+                              onError={(e) => {
+                                (e.target as HTMLImageElement).style.display = 'none';
+                              }}
+                              onClick={() => window.open(prompt.preview_asset_url!, '_blank')}
+                            />
+                          ) : (
+                            <video
+                              src={prompt.preview_asset_url}
+                              controls
+                              className="w-full h-auto max-h-96 rounded-lg"
+                              onError={(e) => {
+                                (e.target as HTMLVideoElement).style.display = 'none';
+                              }}
+                            >
+                              您的浏览器不支持视频播放
+                            </video>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  } else {
+                    // 没有媒体文件时显示占位符
+                    return (
+                      <div className="relative">
+                        <div className="glass rounded-xl p-12 border border-gray-600 bg-black/20 text-center">
+                          <div className="text-gray-400">
+                            {prompt.category_type === 'image' ? (
+                              <PhotoIcon className="h-16 w-16 mx-auto mb-4 opacity-50" />
+                            ) : (
+                              <FilmIcon className="h-16 w-16 mx-auto mb-4 opacity-50" />
+                            )}
+                            <p>暂无{prompt.category_type === 'image' ? '图像' : '视频'}文件</p>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  }
+                })()}
               </motion.div>
             )}
 

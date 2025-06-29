@@ -142,9 +142,11 @@ const PromptCard: React.FC<PromptCardProps> = React.memo(({ prompt }) => {
           </div>
           
           {/* 描述 */}
-          <p className="text-sm text-gray-400 line-clamp-3 mb-4">
-            {prompt.description || '暂无描述'}
-          </p>
+          <div className="text-sm text-gray-400 mb-4 h-[4.5rem] flex items-start">
+            <p className="line-clamp-3 leading-6">
+              {prompt.description || '暂无描述'}
+            </p>
+          </div>
           
           {/* 标签 */}
           {tagsToShow && (

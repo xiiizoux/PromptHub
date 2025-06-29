@@ -389,6 +389,77 @@ export class DatabaseService {
   }
 
   /**
+   * 从URL中提取文件名
+   */
+  private extractFilenameFromUrl(url: string): string {
+    try {
+      const urlObj = new URL(url);
+      const pathname = urlObj.pathname;
+      const segments = pathname.split('/');
+      return segments[segments.length - 1] || '';
+    } catch (error) {
+      console.error('提取文件名失败:', error);
+      return '';
+    }
+  }
+
+  /**
+   * 删除提示词关联的媒体文件
+   */
+  private async deletePromptMediaFiles(prompt: any): Promise<void> {
+    if (!prompt || (prompt.category_type !== 'image' && prompt.category_type !== 'video')) {
+      return; // 非媒体类型提示词，无需删除文件
+    }
+
+    const filesToDelete: string[] = [];
+
+    // 收集需要删除的文件
+    // 1. preview_asset_url 中的文件
+    if (prompt.preview_asset_url) {
+      const filename = this.extractFilenameFromUrl(prompt.preview_asset_url);
+      if (filename && (filename.startsWith('image_') || filename.startsWith('video_'))) {
+        filesToDelete.push(filename);
+      }
+    }
+
+    // 2. parameters.media_files 中的文件
+    const mediaFiles = prompt.parameters?.media_files || [];
+    mediaFiles.forEach((file: any) => {
+      if (file.url) {
+        const filename = this.extractFilenameFromUrl(file.url);
+        if (filename && (filename.startsWith('image_') || filename.startsWith('video_'))) {
+          filesToDelete.push(filename);
+        }
+      }
+    });
+
+    // 删除重复的文件名
+    const uniqueFiles = [...new Set(filesToDelete)];
+
+    // 逐个删除文件
+    for (const filename of uniqueFiles) {
+      try {
+        // 确定存储桶
+        const isImage = filename.startsWith('image_');
+        const bucketName = isImage ? 'images' : 'videos';
+
+        // 使用管理员客户端删除文件
+        const { error } = await this.adapter.supabase.storage
+          .from(bucketName)
+          .remove([filename]);
+
+        if (error) {
+          console.warn(`删除文件失败: ${filename}`, error.message);
+        } else {
+          console.log(`文件删除成功: ${filename}`);
+        }
+      } catch (error) {
+        console.warn(`删除文件时出错: ${filename}`, error);
+      }
+    }
+  }
+
+  /**
    * 删除提示词
    */
   async deletePrompt(name: string, userId?: string): Promise<boolean> {
@@ -403,6 +474,10 @@ export class DatabaseService {
         throw new Error('无权限删除此提示词');
       }
 
+      // 先删除关联的媒体文件
+      await this.deletePromptMediaFiles(existingPrompt);
+
+      // 然后删除提示词记录
       const { error } = await this.adapter.supabase
         .from('prompts')
         .delete()

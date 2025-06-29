@@ -162,8 +162,8 @@ const VideoPromptCard: React.FC<VideoPromptCardProps> = React.memo(({ prompt }) 
   return (
     <div>
       <Link href={`/prompts/${prompt.id}`}>
-        <motion.div 
-          className="card glass border border-red-500/20 hover:border-red-500/40 transition-all duration-300 group cursor-pointer relative overflow-hidden h-80 flex flex-col"
+        <motion.div
+          className="card glass border border-red-500/20 hover:border-red-500/40 transition-all duration-300 group cursor-pointer relative overflow-hidden h-96 flex flex-col"
           whileHover={{ y: -4, scale: 1.02 }}
           transition={{ duration: 0.2 }}
           onMouseEnter={handleMouseEnter}
@@ -176,7 +176,7 @@ const VideoPromptCard: React.FC<VideoPromptCardProps> = React.memo(({ prompt }) 
           )} />
           
           {/* 预览视频区域 - 画廊模式 */}
-          <div className="relative w-full h-48 rounded-lg overflow-hidden bg-gradient-to-br from-gray-900/80 to-gray-800/80 flex-shrink-0 mb-3">
+          <div className="relative w-full h-56 rounded-lg overflow-hidden bg-gradient-to-br from-gray-900/80 to-gray-800/80 flex-shrink-0 mb-4">
             <video 
               ref={videoRef}
               src={getVideoUrl()}
@@ -246,7 +246,7 @@ const VideoPromptCard: React.FC<VideoPromptCardProps> = React.memo(({ prompt }) 
           </div>
           
           {/* 内容区域 - 紧凑但信息丰富 */}
-          <div className="flex-1 p-4 flex flex-col">
+          <div className="flex-1 p-5 flex flex-col min-h-0">
             {/* 标题与分类 */}
             <div className="mb-2">
               <h3 className="text-lg font-semibold text-white line-clamp-2 group-hover:text-red-400 transition-colors mb-1">
@@ -292,7 +292,7 @@ const VideoPromptCard: React.FC<VideoPromptCardProps> = React.memo(({ prompt }) 
             )}
             
             {/* 底部信息 */}
-            <div className="mt-auto pt-3 border-t border-red-500/10 space-y-2">
+            <div className="mt-auto pt-4 border-t border-red-500/10 space-y-3">
               {/* 评分与互动 */}
               <div className="flex items-center justify-between">
                 <div className="flex items-center">
