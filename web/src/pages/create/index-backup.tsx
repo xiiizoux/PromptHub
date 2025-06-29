@@ -50,7 +50,7 @@ type PromptFormData = Omit<PromptDetails, 'created_at' | 'updated_at'> & {
 
 function CreatePromptPage() {
   const router = useRouter();
-  const { user, isLoading } = useAuth();
+  const { user, isLoading, getToken } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [variables, setVariables] = useState<string[]>([]);
   const [variableInput, setVariableInput] = useState('');
@@ -65,7 +65,7 @@ function CreatePromptPage() {
   const [tagsLoading, setTagsLoading] = useState(false);
 
   // 媒体相关状态
-  const [categoryType, setCategoryType] = useState<'chat' | 'image' | 'video'>('chat');
+  const [categoryType, setCategoryType] = useState<'chat' | 'image' | 'video' | 'multimodal'>('chat');
   const [currentType, setCurrentType] = useState<PromptType>('chat');
   const [categoriesByType, setCategoriesByType] = useState<Record<string, string[]>>({
     chat: [],
@@ -83,7 +83,8 @@ function CreatePromptPage() {
     const typeLabels = {
       chat: '对话',
       image: '图像',
-      video: '视频'
+      video: '视频',
+      multimodal: '多模态'
     };
     return typeLabels[type];
   };
@@ -261,8 +262,8 @@ function CreatePromptPage() {
   const handleTypeChange = (newType: PromptType) => {
     if (newType !== currentType) {
       setCurrentType(newType);
-      setCategoryType(newType);
-      setValue('category_type', newType);
+      setCategoryType(newType as 'chat' | 'image' | 'video' | 'multimodal');
+      setValue('category_type', newType as 'chat' | 'image' | 'video');
 
       // 重置相关字段
       setValue('category', '');
@@ -336,7 +337,7 @@ function CreatePromptPage() {
         const response = await fetch('/api/upload', {
           method: 'POST',
           headers: {
-            'Authorization': `Bearer ${user?.access_token || ''}`,
+            'Authorization': `Bearer ${await getToken() || ''}`,
           },
           body: formData,
         });
@@ -414,7 +415,7 @@ function CreatePromptPage() {
   };
 
   // 根据类型获取默认参数模板
-  const getDefaultParameters = (type: 'chat' | 'image' | 'video') => {
+  const getDefaultParameters = (type: 'chat' | 'image' | 'video' | 'multimodal') => {
     switch (type) {
       case 'image':
         return {
@@ -429,6 +430,12 @@ function CreatePromptPage() {
           fps: 30,
           motion_strength: 5,
           camera_movement: 'static'
+        };
+      case 'multimodal':
+        return {
+          input_types: ['text', 'image'],
+          output_types: ['text'],
+          context_length: 4096
         };
       default:
         return {};
@@ -661,7 +668,7 @@ function CreatePromptPage() {
       const detectedType = detectCategoryType(content);
       if (detectedType !== categoryType) {
         setCategoryType(detectedType);
-        setValue('category_type', detectedType);
+        setValue('category_type', detectedType as 'chat' | 'image' | 'video');
         
         // 根据类型设置默认参数
         const defaultParams = getDefaultParameters(detectedType);

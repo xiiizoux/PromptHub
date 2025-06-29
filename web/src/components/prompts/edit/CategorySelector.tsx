@@ -50,7 +50,8 @@ export default function CategorySelector({
     const typeLabels = {
       chat: '对话',
       image: '图像',
-      video: '视频'
+      video: '视频',
+      multimodal: '多模态'
     };
     return typeLabels[type];
   };

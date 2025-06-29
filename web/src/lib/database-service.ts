@@ -391,8 +391,8 @@ export class DatabaseService {
       const newMediaFiles = promptData.preview_assets || [];
 
       // 找出需要删除的文件（存在于旧列表但不在新列表中）
-      const filesToDelete = existingMediaFiles.filter(existingFile => 
-        !newMediaFiles.some(newFile => newFile.url === existingFile.url)
+      const filesToDelete = existingMediaFiles.filter((existingFile: any) => 
+        !newMediaFiles.some((newFile: any) => newFile.url === existingFile.url)
       );
 
       // 删除不再使用的文件
@@ -426,7 +426,7 @@ export class DatabaseService {
       } else if (promptData.preview_assets && promptData.preview_assets.length === 0) {
         // 如果明确传入空数组，则清空媒体文件和封面
         parameters.media_files = [];
-        previewAssetUrl = null;
+        previewAssetUrl = undefined;
       }
 
       // 转换更新数据

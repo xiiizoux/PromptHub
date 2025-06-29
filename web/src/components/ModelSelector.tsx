@@ -20,7 +20,7 @@ import {
 interface ModelSelectorProps {
   selectedModels: string[];
   onChange: (models: string[]) => void;
-  categoryType?: 'chat' | 'image' | 'video'; // 根据分类类型过滤模型
+  categoryType?: 'chat' | 'image' | 'video' | 'multimodal'; // 根据分类类型过滤模型
   className?: string;
   placeholder?: string;
 }

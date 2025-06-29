@@ -23,7 +23,7 @@ import clsx from 'clsx';
 
 interface VideoPromptCardProps {
   prompt: PromptInfo & {
-    category_type?: 'chat' | 'image' | 'video';
+    category_type?: 'chat' | 'image' | 'video' | 'multimodal';
     preview_asset_url?: string;
     parameters?: Record<string, any>;
   };
@@ -57,6 +57,8 @@ const VideoPromptCard: React.FC<VideoPromptCardProps> = React.memo(({ prompt }) 
   const [isPlaying, setIsPlaying] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const [loadingTimeout, setLoadingTimeout] = useState(false);
+  const [currentVideoUrl, setCurrentVideoUrl] = useState<string | null>(null);
+  const [hasTriedFallback, setHasTriedFallback] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const hoverTimeoutRef = useRef<NodeJS.Timeout>();
   const loadingTimeoutRef = useRef<NodeJS.Timeout>();
@@ -106,8 +108,8 @@ const VideoPromptCard: React.FC<VideoPromptCardProps> = React.memo(({ prompt }) 
     return null;
   }
 
-  // 获取视频URL，优先使用preview_asset_url，如果没有则从media_files获取第一个，最后使用占位符
-  const getVideoUrl = () => {
+  // 获取主要视频URL（不包括占位符）
+  const getPrimaryVideoUrl = () => {
     if (prompt.preview_asset_url) {
       return prompt.preview_asset_url;
     }
@@ -117,9 +119,43 @@ const VideoPromptCard: React.FC<VideoPromptCardProps> = React.memo(({ prompt }) 
       return prompt.parameters.media_files[0].url;
     }
 
-    // 使用更可靠的占位符视频 - 使用国内CDN或更稳定的源
-    return `https://sample-videos.com/zip/10/mp4/SampleVideo_640x360_1mb.mp4`;
+    return null;
   };
+
+  // 获取占位符视频URL
+  const getFallbackVideoUrl = () => {
+    // 使用多个备选的占位符视频，优先使用更稳定的源
+    const fallbackVideos = [
+      // 使用Commondatastorage（更稳定）
+      'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
+      // 备用地址
+      'https://www.w3schools.com/html/movie.mp4',
+      // HTML5测试视频
+      'https://html5demos.com/assets/dizzy.mp4'
+    ];
+    return fallbackVideos[0]; // 先尝试第一个
+  };
+
+  // 获取当前应该使用的视频URL
+  const getCurrentVideoUrl = () => {
+    if (currentVideoUrl) {
+      return currentVideoUrl;
+    }
+    
+    const primaryUrl = getPrimaryVideoUrl();
+    if (primaryUrl && !hasTriedFallback) {
+      return primaryUrl;
+    }
+    
+    return getFallbackVideoUrl();
+  };
+
+  // 初始化视频URL
+  useEffect(() => {
+    const primaryUrl = getPrimaryVideoUrl();
+    setCurrentVideoUrl(primaryUrl || getFallbackVideoUrl());
+    setHasTriedFallback(!primaryUrl);
+  }, [prompt.preview_asset_url, prompt.parameters?.media_files]);
 
   // 处理视频加载超时
   const handleLoadingTimeout = () => {
@@ -136,6 +172,24 @@ const VideoPromptCard: React.FC<VideoPromptCardProps> = React.memo(({ prompt }) 
     setIsPlaying(false);
     if (loadingTimeoutRef.current) {
       clearTimeout(loadingTimeoutRef.current);
+    }
+  };
+
+  // 切换到占位符视频
+  const switchToFallback = () => {
+    if (!hasTriedFallback) {
+      console.log('主视频加载失败，切换到占位符视频');
+      setHasTriedFallback(true);
+      setCurrentVideoUrl(getFallbackVideoUrl());
+      resetVideoState();
+      
+      // 触发视频重新加载
+      if (videoRef.current) {
+        videoRef.current.load();
+      }
+    } else {
+      console.error('占位符视频也加载失败');
+      setVideoError(true);
     }
   };
 
@@ -232,7 +286,7 @@ const VideoPromptCard: React.FC<VideoPromptCardProps> = React.memo(({ prompt }) 
           <div className="relative w-full h-56 rounded-lg overflow-hidden bg-gradient-to-br from-gray-900/80 to-gray-800/80 flex-shrink-0 mb-4">
             <video 
               ref={videoRef}
-              src={getVideoUrl()}
+              src={getCurrentVideoUrl()}
               className={clsx(
                 'w-full h-full object-cover transition-all duration-500',
                 videoLoaded ? 'opacity-100' : 'opacity-0',
@@ -247,9 +301,9 @@ const VideoPromptCard: React.FC<VideoPromptCardProps> = React.memo(({ prompt }) 
                 clearLoadingTimer();
               }}
               onError={() => {
-                setVideoError(true);
                 clearLoadingTimer();
-                console.error('视频加载失败:', getVideoUrl());
+                console.error('视频加载失败:', getCurrentVideoUrl());
+                switchToFallback();
               }}
               onEnded={() => setIsPlaying(false)}
               muted
@@ -284,6 +338,14 @@ const VideoPromptCard: React.FC<VideoPromptCardProps> = React.memo(({ prompt }) 
                       e.preventDefault();
                       e.stopPropagation();
                       if (videoRef.current) {
+                        // 如果已经尝试过占位符还是失败，回到主视频重试
+                        if (hasTriedFallback) {
+                          const primaryUrl = getPrimaryVideoUrl();
+                          if (primaryUrl) {
+                            setHasTriedFallback(false);
+                            setCurrentVideoUrl(primaryUrl);
+                          }
+                        }
                         resetVideoState();
                         videoRef.current.load();
                       }

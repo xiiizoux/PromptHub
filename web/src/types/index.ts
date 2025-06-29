@@ -8,7 +8,7 @@ export interface PromptInfo {
   name: string;
   description: string;
   category?: string;
-  category_type?: 'chat' | 'image' | 'video'; // 分类类型
+  category_type?: 'chat' | 'image' | 'video' | 'multimodal'; // 分类类型
   tags?: string[];
   version?: number;  // 改为数字类型以匹配数据库结构
   created_at?: string;

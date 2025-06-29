@@ -205,7 +205,7 @@ export const promptsApi = {
  */
 export const authApi = {
   // 用户登录
-  signIn: async (email: string, password: string): Promise<UserApi.SignInResponse['data']> => {
+  signIn: async (email: string, password: string): Promise<UserApi.SignInResponse['data'] | undefined> => {
     const response = await apiClient.post<UserApi.SignInResponse>(
       '/auth/signin', 
       { email, password },
@@ -218,11 +218,11 @@ export const authApi = {
       localStorage.setItem('user', JSON.stringify(data.user));
     }
     
-    return data;
+    return data || undefined;
   },
   
   // 用户注册
-  signUp: async (email: string, password: string, displayName?: string): Promise<UserApi.SignUpResponse['data']> => {
+  signUp: async (email: string, password: string, displayName?: string): Promise<UserApi.SignUpResponse['data'] | undefined> => {
     const response = await apiClient.post<UserApi.SignUpResponse>(
       '/auth/signup', 
       { email, password, displayName },
@@ -235,7 +235,7 @@ export const authApi = {
       localStorage.setItem('user', JSON.stringify(data.user));
     }
     
-    return data;
+    return data || undefined;
   },
   
   // 退出登录
@@ -284,9 +284,9 @@ export const authApi = {
  */
 export const mcpApi = {
   // 调用MCP工具
-  invokeTool: async (name: string, args: Record<string, any> = {}): Promise<McpApi.McpToolResponse['data']> => {
+  invokeTool: async (name: string, args: Record<string, any> = {}): Promise<McpApi.McpToolResponse['data'] | undefined> => {
     const response = await apiClient.post<McpApi.McpToolResponse>('/mcp/tools', { name, arguments: args });
-    return extractResponseData(response, null) as McpApi.McpToolResponse['data'];
+    return extractResponseData(response, null as unknown) as McpApi.McpToolResponse['data'] | undefined;
   },
   
   // 获取可用工具列表

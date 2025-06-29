@@ -988,7 +988,7 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
                 categoriesByType={categoriesByType}
                 currentType={categoryType as any}
                 hasUnsavedChanges={hasUnsavedChanges}
-                permissionCheck={permissionCheck}
+                permissionCheck={permissionCheck || undefined}
                 saveSuccess={saveSuccess}
                 onUnsavedChanges={setHasUnsavedChanges}
               />

@@ -659,7 +659,7 @@ export default function PromptEditForm({
               <ModelSelector
                 selectedModels={field.value || []}
                 onChange={field.onChange}
-                categoryType={currentType}
+                categoryType={currentType as 'chat' | 'image' | 'video' | 'multimodal'}
                 placeholder="选择或添加兼容的AI模型..."
               />
             )}

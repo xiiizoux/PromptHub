@@ -21,7 +21,7 @@ import clsx from 'clsx';
 
 interface ImagePromptCardProps {
   prompt: PromptInfo & {
-    category_type?: 'chat' | 'image' | 'video';
+    category_type?: 'chat' | 'image' | 'video' | 'multimodal';
     preview_asset_url?: string;
     parameters?: Record<string, any>;
   };
