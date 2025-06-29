@@ -241,26 +241,37 @@ export default function PromptFormContainer({
 
     setIsUploading(true);
     setUploadProgress(0);
-    
+
     try {
+      // 获取认证token
+      const { supabase } = await import('@/lib/supabase');
+      const { data: { session } } = await supabase.auth.getSession();
+
+      if (!session?.access_token) {
+        throw new Error('用户未登录，请先登录后再上传文件');
+      }
+
       const uploadPromises = files.map(async (file) => {
         const formData = new FormData();
         formData.append('file', file);
-        
+
         const response = await fetch('/api/upload', {
           method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${session.access_token}`,
+          },
           body: formData,
         });
-        
+
         if (!response.ok) {
           throw new Error(`文件 ${file.name} 上传失败`);
         }
-        
+
         const result = await response.json();
         if (!result.success) {
           throw new Error(result.error || `文件 ${file.name} 上传失败`);
         }
-        
+
         return result.data.url;
       });
 
@@ -560,21 +571,23 @@ export default function PromptFormContainer({
             </AnimatePresence>
           </motion.div>
 
-          {/* 提示词类型选择 - 居中显示在双栏布局之前 */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5 }}
-            className="flex justify-center mb-8"
-          >
-            <div className="bg-dark-bg-secondary/50 backdrop-blur-sm border border-gray-600/50 rounded-2xl p-6 shadow-lg">
-              <PromptTypeSelector
-                value={currentType}
-                onChange={handleTypeChange}
-                disabled={isSubmitting}
-              />
-            </div>
-          </motion.div>
+          {/* 提示词类型选择 - 仅在创建模式下显示 */}
+          {mode === 'create' && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5 }}
+              className="flex justify-center mb-8"
+            >
+              <div className="bg-dark-bg-secondary/50 backdrop-blur-sm border border-gray-600/50 rounded-2xl p-6 shadow-lg">
+                <PromptTypeSelector
+                  value={currentType}
+                  onChange={handleTypeChange}
+                  disabled={isSubmitting}
+                />
+              </div>
+            </motion.div>
+          )}
 
           {/* 双栏布局容器 */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

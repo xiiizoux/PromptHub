@@ -112,7 +112,7 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
     is_public: prompt.is_public !== undefined ? Boolean(prompt.is_public) : false,
     allow_collaboration: prompt.allow_collaboration !== undefined ? Boolean(prompt.allow_collaboration) : false,
     edit_permission: mapEditPermission(prompt.edit_permission),
-    category_type: (prompt as any).category_type || 'chat',
+    category_type: prompt.category_type || 'chat', // 直接使用prompt.category_type，不需要类型断言
   };
 
   // 状态管理

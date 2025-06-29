@@ -15,6 +15,7 @@ export default apiHandler(async (req: NextApiRequest, res: NextApiResponse, user
       { field: 'messages', required: true, type: 'array' as const, minLength: 1 },
       { ...VALIDATION_PRESETS.userId, field: 'user_id', required: false },
       { ...VALIDATION_PRESETS.isPublic, required: false },
+      { field: 'category_type', required: false, type: 'string' as const, allowedValues: ['chat', 'image', 'video'] },
     ];
 
     const validation = InputValidator.validate(req.body, validationRules);
@@ -32,6 +33,7 @@ export default apiHandler(async (req: NextApiRequest, res: NextApiResponse, user
       name,
       description,
       category,
+      category_type,
       tags,
       messages,
       is_public,
@@ -50,6 +52,7 @@ export default apiHandler(async (req: NextApiRequest, res: NextApiResponse, user
       name,
       description,
       category,
+      category_type: category_type || 'chat', // 默认为chat类型
       tags: tags || [],
       messages,
       is_public: is_public !== undefined ? is_public : true,

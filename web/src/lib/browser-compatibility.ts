@@ -253,9 +253,9 @@ export class BrowserCompatibilityManager {
       const cspDirectives = [
         "default-src 'self'",
         "script-src 'self' 'unsafe-inline'", // 为了兼容性允许内联脚本
-        "style-src 'self' 'unsafe-inline'",
+        "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com", // 允许Google Fonts
         "img-src 'self' data: https:",
-        "font-src 'self' data:",
+        "font-src 'self' data: https://fonts.gstatic.com", // 允许Google Fonts字体文件
         "connect-src 'self' https:",
         "media-src 'self'",
         "object-src 'none'",

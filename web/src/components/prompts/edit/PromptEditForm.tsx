@@ -15,7 +15,7 @@ import {
   PhotoIcon
 } from '@heroicons/react/24/outline';
 
-import PromptTypeSelector, { PromptType } from './PromptTypeSelector';
+import { PromptType } from './PromptTypeSelector';
 import CategorySelector from './CategorySelector';
 import PreviewAssetManager from './PreviewAssetManager';
 import ImageParametersForm, { ImageParameters } from './ImageParametersForm';

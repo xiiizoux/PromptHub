@@ -29,6 +29,7 @@ export interface Prompt {
   name: string;
   description: string;
   category: string;
+  category_type?: 'chat' | 'image' | 'video'; // 添加category_type字段
   tags: string[];
   messages: any[];
   is_public: boolean;

@@ -762,13 +762,67 @@ export default function PromptDetailsPage() {
               </div>
             </motion.div>
             
+
+
+            {/* 提示词内容 */}
+            <motion.div 
+              className="glass rounded-xl p-8 border border-neon-cyan/20 mb-8"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: 0.15 }}
+            >
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-2xl font-bold text-white flex items-center">
+                  <CodeBracketIcon className="h-6 w-6 mr-3 text-neon-cyan" />
+                  提示词内容
+                </h2>
+                <motion.button
+                  type="button"
+                  onClick={copyToClipboard}
+                  className={`btn ${
+                    copied
+                      ? 'bg-neon-green/20 border-neon-green/50 text-neon-green'
+                      : 'btn-primary'
+                  }`}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <ClipboardDocumentIcon className="h-5 w-5 mr-2" />
+                  {copied ? '已复制！' : '复制内容'}
+                </motion.button>
+              </div>
+              
+              {renderVersionSelector()}
+              
+              <div className="relative">
+                <div className="glass rounded-xl p-6 border border-gray-600 font-mono text-sm leading-relaxed text-gray-200 min-h-[200px] max-h-[600px] overflow-auto">
+                  <pre className="whitespace-pre-wrap">{processedContent}</pre>
+                </div>
+                
+                {/* 复制成功动画 */}
+                {copied && (
+                  <motion.div
+                    className="absolute inset-0 bg-neon-green/10 rounded-xl border-2 border-neon-green/50 flex items-center justify-center"
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.8 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <div className="bg-neon-green/20 px-4 py-2 rounded-lg text-neon-green font-semibold">
+                      复制成功！
+                    </div>
+                  </motion.div>
+                )}
+              </div>
+            </motion.div>
+
             {/* 媒体资源展示（仅图像和视频类型） */}
             {(prompt.category_type === 'image' || prompt.category_type === 'video') && (
               <motion.div
                 className="glass rounded-xl p-8 border border-neon-cyan/20 mb-8"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4, delay: 0.1 }}
+                transition={{ duration: 0.4, delay: 0.15 }}
               >
                 <div className="flex justify-between items-center mb-6">
                   <h2 className="text-2xl font-bold text-white flex items-center">
@@ -788,9 +842,9 @@ export default function PromptDetailsPage() {
                   const hasSinglePreview = prompt.preview_asset_url && !hasMediaFiles;
 
                   if (hasMediaFiles) {
-                    // 显示多个媒体文件
+                    // 显示多个媒体文件 - 单列布局
                     return (
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-6">
                         {mediaFiles.map((file: any, index: number) => (
                           <div key={file.id || index} className="relative">
                             <div className="glass rounded-xl p-4 border border-gray-600 bg-black/20">
@@ -798,7 +852,7 @@ export default function PromptDetailsPage() {
                                 <img
                                   src={file.url}
                                   alt={file.name || `图像 ${index + 1}`}
-                                  className="w-full h-auto max-h-80 object-contain rounded-lg cursor-pointer hover:scale-105 transition-transform duration-200"
+                                  className="w-full h-auto max-h-96 object-contain rounded-lg cursor-pointer hover:scale-105 transition-transform duration-200"
                                   onError={(e) => {
                                     (e.target as HTMLImageElement).style.display = 'none';
                                   }}
@@ -808,7 +862,7 @@ export default function PromptDetailsPage() {
                                 <video
                                   src={file.url}
                                   controls
-                                  className="w-full h-auto max-h-80 rounded-lg"
+                                  className="w-full h-auto max-h-96 rounded-lg"
                                   onError={(e) => {
                                     (e.target as HTMLVideoElement).style.display = 'none';
                                   }}
@@ -876,58 +930,6 @@ export default function PromptDetailsPage() {
                 })()}
               </motion.div>
             )}
-
-            {/* 提示词内容 */}
-            <motion.div 
-              className="glass rounded-xl p-8 border border-neon-cyan/20 mb-8"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, delay: 0.15 }}
-            >
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-2xl font-bold text-white flex items-center">
-                  <CodeBracketIcon className="h-6 w-6 mr-3 text-neon-cyan" />
-                  提示词内容
-                </h2>
-                <motion.button
-                  type="button"
-                  onClick={copyToClipboard}
-                  className={`btn ${
-                    copied
-                      ? 'bg-neon-green/20 border-neon-green/50 text-neon-green'
-                      : 'btn-primary'
-                  }`}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  <ClipboardDocumentIcon className="h-5 w-5 mr-2" />
-                  {copied ? '已复制！' : '复制内容'}
-                </motion.button>
-              </div>
-              
-              {renderVersionSelector()}
-              
-              <div className="relative">
-                <div className="glass rounded-xl p-6 border border-gray-600 font-mono text-sm leading-relaxed text-gray-200 min-h-[200px] max-h-[600px] overflow-auto">
-                  <pre className="whitespace-pre-wrap">{processedContent}</pre>
-                </div>
-                
-                {/* 复制成功动画 */}
-                {copied && (
-                  <motion.div
-                    className="absolute inset-0 bg-neon-green/10 rounded-xl border-2 border-neon-green/50 flex items-center justify-center"
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.8 }}
-                    transition={{ duration: 0.3 }}
-                  >
-                    <div className="bg-neon-green/20 px-4 py-2 rounded-lg text-neon-green font-semibold">
-                      复制成功！
-                    </div>
-                  </motion.div>
-                )}
-              </div>
-            </motion.div>
 
             {/* 生成参数（仅图像和视频类型） */}
             {(prompt.category_type === 'image' || prompt.category_type === 'video') && prompt.parameters && Object.keys(prompt.parameters).length > 0 && (

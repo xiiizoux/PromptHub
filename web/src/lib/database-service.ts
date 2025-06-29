@@ -264,6 +264,7 @@ export class DatabaseService {
         name: prompt.name,
         description: prompt.description || '',
         category: prompt.category || '通用',
+        category_type: prompt.category_type || 'chat', // 添加category_type字段
         tags: Array.isArray(prompt.tags) ? prompt.tags : [],
         messages: prompt.messages || [],
         is_public: Boolean(prompt.is_public),
@@ -271,7 +272,7 @@ export class DatabaseService {
         version: prompt.version || 1,
         created_at: prompt.created_at,
         updated_at: prompt.updated_at,
-        
+
         // 扩展字段
         content: content,
         input_variables: this.extractInputVariables(content),
@@ -311,11 +312,24 @@ export class DatabaseService {
    * 创建新提示词
    */
   async createPrompt(promptData: Partial<PromptDetails>): Promise<Prompt> {
+    // 处理媒体文件：将preview_assets转换为parameters.media_files
+    let parameters = promptData.parameters || {};
+    if (promptData.preview_assets && promptData.preview_assets.length > 0) {
+      parameters.media_files = promptData.preview_assets.map(asset => ({
+        id: asset.id,
+        url: asset.url,
+        name: asset.name,
+        size: asset.size,
+        type: asset.type
+      }));
+    }
+
     // 转换PromptDetails为Prompt格式
     const prompt: Partial<Prompt> = {
       name: promptData.name,
       description: promptData.description,
       category: promptData.category,
+      category_type: promptData.category_type || 'chat', // 添加category_type字段
       tags: promptData.tags,
       messages: promptData.content ? [{
         role: 'system',
@@ -325,6 +339,8 @@ export class DatabaseService {
       user_id: promptData.user_id,
       version: promptData.version ? Number(promptData.version) : 1.0, // 新建提示词默认版本为1.0
       compatible_models: promptData.compatible_models, // 添加兼容模型字段
+      preview_asset_url: promptData.preview_asset_url, // 添加预览资源URL
+      parameters: parameters, // 添加处理后的参数
     };
 
     return await this.adapter.createPrompt(prompt);
@@ -346,16 +362,31 @@ export class DatabaseService {
         throw new Error('无权限修改此提示词');
       }
 
+      // 处理媒体文件：将preview_assets转换为parameters.media_files
+      let parameters = promptData.parameters || existingPrompt.parameters || {};
+      if (promptData.preview_assets && promptData.preview_assets.length > 0) {
+        parameters.media_files = promptData.preview_assets.map(asset => ({
+          id: asset.id,
+          url: asset.url,
+          name: asset.name,
+          size: asset.size,
+          type: asset.type
+        }));
+      }
+
       // 转换更新数据
       const updateData: any = {};
-      
+
       if (promptData.name !== undefined) updateData.name = promptData.name;
       if (promptData.description !== undefined) updateData.description = promptData.description;
       if (promptData.category !== undefined) updateData.category = promptData.category;
+      if (promptData.category_type !== undefined) updateData.category_type = promptData.category_type; // 添加category_type字段处理
       if (promptData.tags !== undefined) updateData.tags = promptData.tags;
       if (promptData.is_public !== undefined) updateData.is_public = promptData.is_public;
       if (promptData.compatible_models !== undefined) updateData.compatible_models = promptData.compatible_models;
-      
+      if (promptData.preview_asset_url !== undefined) updateData.preview_asset_url = promptData.preview_asset_url; // 添加预览资源URL处理
+      updateData.parameters = parameters; // 添加处理后的参数
+
       // 处理content字段，转换为messages格式
       if (promptData.content !== undefined) {
         updateData.messages = [{

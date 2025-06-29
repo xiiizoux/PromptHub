@@ -40,6 +40,7 @@ interface AIAnalysisResult {
   title: string;
   description: string;
   category: string;
+  category_type?: 'chat' | 'image' | 'video'; // 添加category_type字段
   tags: string[];
   compatible_models: string[];
   difficulty: 'simple' | 'medium' | 'complex';
@@ -54,6 +55,7 @@ interface AIAnalysisResult {
 interface UserSpecifiedParams {
   title?: string;
   category?: string;
+  category_type?: 'chat' | 'image' | 'video'; // 添加category_type字段
   description?: string;
   tags?: string[];
   compatible_models?: string[]; // 添加compatible_models字段
@@ -570,6 +572,7 @@ export class UnifiedStoreTool extends BaseMCPTool {
           title: mcpAnalysis.suggestedTitle || this.generateTitle(content),
           description: mcpAnalysis.description || this.generateDescription(content, mcpAnalysis.category),
           category: mcpAnalysis.category,
+          category_type: mcpAnalysis.category_type, // 传递category_type字段
           tags: mcpAnalysis.tags,
           difficulty: this.mapDifficulty(mcpAnalysis.difficulty),
           compatible_models: mcpAnalysis.compatibleModels,
@@ -830,7 +833,7 @@ export class UnifiedStoreTool extends BaseMCPTool {
       compatible_models: userSpecified.compatible_models || aiAnalysis?.compatible_models || getDefaultModelTags(), // 使用预设模型标签
       // 媒体相关字段
       preview_asset_url: originalParams.preview_asset_url || null,
-      category_type: originalParams.category_type || 'chat',
+      category_type: userSpecified.category_type || originalParams.category_type || aiAnalysis?.category_type || 'chat',
       // 默认设置
       is_public: userSpecified.is_public !== undefined ? userSpecified.is_public : true,
       allow_collaboration: userSpecified.allow_collaboration !== undefined ? userSpecified.allow_collaboration : true,
