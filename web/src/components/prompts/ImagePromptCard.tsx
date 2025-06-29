@@ -14,6 +14,12 @@ import {
   FireIcon,
   EyeIcon,
   CogIcon,
+  CameraIcon,
+  PaintBrushIcon,
+  PencilIcon,
+  RectangleGroupIcon,
+  BuildingStorefrontIcon,
+  SwatchIcon,
 } from '@heroicons/react/24/outline';
 import { StarIcon as StarSolidIcon } from '@heroicons/react/24/solid';
 import { InteractionButtons } from '@/components/BookmarkButton';
@@ -28,15 +34,15 @@ interface ImagePromptCardProps {
 }
 
 // 图像生成分类映射
-const IMAGE_CATEGORY_MAP: Record<string, { name: string; color: string; gradient: string }> = {
-  '真实摄影': { name: '真实摄影', color: 'text-pink-400', gradient: 'from-pink-500/20 to-red-500/20' },
-  '艺术绘画': { name: '艺术绘画', color: 'text-purple-400', gradient: 'from-purple-500/20 to-pink-500/20' },
-  '动漫插画': { name: '动漫插画', color: 'text-yellow-400', gradient: 'from-pink-500/20 to-yellow-500/20' },
-  '抽象艺术': { name: '抽象艺术', color: 'text-orange-400', gradient: 'from-yellow-500/20 to-orange-500/20' },
-  'Logo设计': { name: 'Logo设计', color: 'text-cyan-400', gradient: 'from-cyan-500/20 to-purple-500/20' },
-  '建筑空间': { name: '建筑空间', color: 'text-blue-400', gradient: 'from-blue-500/20 to-green-500/20' },
-  '时尚设计': { name: '时尚设计', color: 'text-pink-400', gradient: 'from-pink-500/20 to-purple-500/20' },
-  'default': { name: '图像生成', color: 'text-pink-400', gradient: 'from-pink-500/20 to-purple-500/20' },
+const IMAGE_CATEGORY_MAP: Record<string, { name: string; color: string; gradient: string; icon: any }> = {
+  '真实摄影': { name: '真实摄影', color: 'from-pink-500 to-red-500', gradient: 'from-pink-500/20 to-red-500/20', icon: CameraIcon },
+  '艺术绘画': { name: '艺术绘画', color: 'from-purple-500 to-pink-500', gradient: 'from-purple-500/20 to-pink-500/20', icon: PaintBrushIcon },
+  '动漫插画': { name: '动漫插画', color: 'from-pink-500 to-yellow-500', gradient: 'from-pink-500/20 to-yellow-500/20', icon: PencilIcon },
+  '抽象艺术': { name: '抽象艺术', color: 'from-yellow-500 to-orange-500', gradient: 'from-yellow-500/20 to-orange-500/20', icon: SparklesIcon },
+  'Logo设计': { name: 'Logo设计', color: 'from-cyan-500 to-purple-500', gradient: 'from-cyan-500/20 to-purple-500/20', icon: RectangleGroupIcon },
+  '建筑空间': { name: '建筑空间', color: 'from-blue-500 to-green-500', gradient: 'from-blue-500/20 to-green-500/20', icon: BuildingStorefrontIcon },
+  '时尚设计': { name: '时尚设计', color: 'from-pink-500 to-purple-500', gradient: 'from-pink-500/20 to-purple-500/20', icon: SwatchIcon },
+  'default': { name: '图像生成', color: 'from-pink-500 to-purple-500', gradient: 'from-pink-500/20 to-purple-500/20', icon: PhotoIcon },
 };
 
 // 格式化日期函数
@@ -60,6 +66,8 @@ const ImagePromptCard: React.FC<ImagePromptCardProps> = React.memo(({ prompt }) 
     if (!prompt?.category) return IMAGE_CATEGORY_MAP.default;
     return IMAGE_CATEGORY_MAP[prompt.category] || IMAGE_CATEGORY_MAP.default;
   }, [prompt?.category]);
+
+  const CategoryIcon = categoryInfo.icon;
 
   const rating = useMemo(() => {
     if (!prompt) return { value: 0, percentage: 0 };
@@ -191,13 +199,21 @@ const ImagePromptCard: React.FC<ImagePromptCardProps> = React.memo(({ prompt }) 
           
           {/* 内容区域 - 紧凑但信息丰富 */}
           <div className="flex-1 p-5 flex flex-col min-h-0">
-            {/* 标题与分类 */}
-            <div className="mb-2">
-              <h3 className="text-lg font-semibold text-white line-clamp-2 group-hover:text-pink-400 transition-colors mb-1">
-                {prompt.name}
-              </h3>
-              <div className={clsx('text-xs font-medium', categoryInfo.color)}>
-                {categoryInfo.name}
+            {/* 标题与分类图标 */}
+            <div className="relative flex items-start mb-2">
+              <div className="flex items-start space-x-2 flex-1">
+                <div className={clsx(
+                  'inline-flex p-2 rounded-lg bg-gradient-to-br flex-shrink-0',
+                  categoryInfo.color,
+                )}>
+                  <CategoryIcon className="h-4 w-4 text-dark-bg-primary" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-lg font-semibold text-white line-clamp-1 group-hover:text-pink-400 transition-colors">
+                    {prompt.name}
+                  </h3>
+                  <div className="text-xs text-gray-400 mt-1">{categoryInfo.name}</div>
+                </div>
               </div>
             </div>
             
@@ -237,12 +253,12 @@ const ImagePromptCard: React.FC<ImagePromptCardProps> = React.memo(({ prompt }) 
             
             {/* 底部信息 */}
             <div className="mt-auto pt-4 border-t border-pink-500/10 space-y-3">
-              {/* 评分与互动 */}
-              <div className="flex items-center justify-between">
+              {/* 第一行：评分与日期 */}
+              <div className="flex items-center justify-between text-xs">
                 <div className="flex items-center">
                   {rating.value > 0 ? (
                     <div className="flex items-center space-x-2">
-                      <div className="relative w-12 h-1.5 bg-gray-700 rounded-full overflow-hidden">
+                      <div className="relative w-20 h-2 bg-dark-bg-tertiary rounded-full overflow-hidden">
                         <div 
                           className="absolute top-0 left-0 h-full bg-gradient-to-r from-pink-400 to-purple-400 rounded-full"
                           style={{ width: `${rating.percentage}%` }}
@@ -254,25 +270,26 @@ const ImagePromptCard: React.FC<ImagePromptCardProps> = React.memo(({ prompt }) 
                     <span className="text-xs text-gray-500">暂无评分</span>
                   )}
                 </div>
-                
-                <div onClick={(e) => e.preventDefault()}>
-                  <InteractionButtons promptId={prompt.id} size="sm" />
+                <div className="flex items-center space-x-1 text-gray-500">
+                  <ClockIcon className="h-3 w-3" />
+                  <span>{formatDate(prompt.updated_at || prompt.created_at)}</span>
                 </div>
               </div>
               
-              {/* 作者与日期 */}
+              {/* 第二行：作者版本信息与互动按钮 */}
               <div className="flex items-center justify-between text-xs text-gray-500">
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center space-x-3">
                   <div className="flex items-center space-x-1">
                     <UserIcon className="h-3 w-3" />
                     <span>{prompt.author || '匿名'}</span>
                   </div>
-                  <span>•</span>
-                  <span>v{formatVersionDisplay(prompt.version)}</span>
+                  <div className="flex items-center space-x-1">
+                    <DocumentTextIcon className="h-3 w-3" />
+                    <span>v{formatVersionDisplay(prompt.version)}</span>
+                  </div>
                 </div>
-                <div className="flex items-center space-x-1">
-                  <ClockIcon className="h-3 w-3" />
-                  <span>{formatDate(prompt.updated_at || prompt.created_at)}</span>
+                <div onClick={(e) => e.preventDefault()}>
+                  <InteractionButtons promptId={prompt.id} size="sm" />
                 </div>
               </div>
             </div>

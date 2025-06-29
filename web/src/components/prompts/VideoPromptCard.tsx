@@ -16,6 +16,12 @@ import {
   FireIcon,
   EyeIcon,
   CogIcon,
+  BookOpenIcon,
+  CubeTransparentIcon,
+  ShoppingBagIcon,
+  MapIcon,
+  UserCircleIcon,
+  MegaphoneIcon,
 } from '@heroicons/react/24/outline';
 import { StarIcon as StarSolidIcon } from '@heroicons/react/24/solid';
 import { InteractionButtons } from '@/components/BookmarkButton';
@@ -30,14 +36,14 @@ interface VideoPromptCardProps {
 }
 
 // 视频生成分类映射
-const VIDEO_CATEGORY_MAP: Record<string, { name: string; color: string; gradient: string }> = {
-  '故事叙述': { name: '故事叙述', color: 'text-orange-400', gradient: 'from-orange-500/20 to-red-500/20' },
-  '动画特效': { name: '动画特效', color: 'text-red-400', gradient: 'from-red-500/20 to-pink-500/20' },
-  '产品展示': { name: '产品展示', color: 'text-green-400', gradient: 'from-yellow-500/20 to-green-500/20' },
-  '自然风景': { name: '自然风景', color: 'text-blue-400', gradient: 'from-green-500/20 to-blue-500/20' },
-  '人物肖像': { name: '人物肖像', color: 'text-purple-400', gradient: 'from-pink-500/20 to-purple-500/20' },
-  '广告营销': { name: '广告营销', color: 'text-red-400', gradient: 'from-red-500/20 to-orange-500/20' },
-  'default': { name: '视频生成', color: 'text-red-400', gradient: 'from-red-500/20 to-orange-500/20' },
+const VIDEO_CATEGORY_MAP: Record<string, { name: string; color: string; gradient: string; icon: any }> = {
+  '故事叙述': { name: '故事叙述', color: 'from-orange-500 to-red-500', gradient: 'from-orange-500/20 to-red-500/20', icon: BookOpenIcon },
+  '动画特效': { name: '动画特效', color: 'from-red-500 to-pink-500', gradient: 'from-red-500/20 to-pink-500/20', icon: CubeTransparentIcon },
+  '产品展示': { name: '产品展示', color: 'from-yellow-500 to-green-500', gradient: 'from-yellow-500/20 to-green-500/20', icon: ShoppingBagIcon },
+  '自然风景': { name: '自然风景', color: 'from-green-500 to-blue-500', gradient: 'from-green-500/20 to-blue-500/20', icon: MapIcon },
+  '人物肖像': { name: '人物肖像', color: 'from-pink-500 to-purple-500', gradient: 'from-pink-500/20 to-purple-500/20', icon: UserCircleIcon },
+  '广告营销': { name: '广告营销', color: 'from-red-500 to-orange-500', gradient: 'from-red-500/20 to-orange-500/20', icon: MegaphoneIcon },
+  'default': { name: '视频生成', color: 'from-red-500 to-orange-500', gradient: 'from-red-500/20 to-orange-500/20', icon: FilmIcon },
 };
 
 // 格式化日期函数
@@ -69,6 +75,8 @@ const VideoPromptCard: React.FC<VideoPromptCardProps> = React.memo(({ prompt }) 
     if (!prompt?.category) return VIDEO_CATEGORY_MAP.default;
     return VIDEO_CATEGORY_MAP[prompt.category] || VIDEO_CATEGORY_MAP.default;
   }, [prompt?.category]);
+
+  const CategoryIcon = categoryInfo.icon;
 
   const rating = useMemo(() => {
     if (!prompt) return { value: 0, percentage: 0 };
@@ -412,13 +420,21 @@ const VideoPromptCard: React.FC<VideoPromptCardProps> = React.memo(({ prompt }) 
           
           {/* 内容区域 - 紧凑但信息丰富 */}
           <div className="flex-1 p-5 flex flex-col min-h-0">
-            {/* 标题与分类 */}
-            <div className="mb-2">
-              <h3 className="text-lg font-semibold text-white line-clamp-2 group-hover:text-red-400 transition-colors mb-1">
-                {prompt.name}
-              </h3>
-              <div className={clsx('text-xs font-medium', categoryInfo.color)}>
-                {categoryInfo.name}
+            {/* 标题与分类图标 */}
+            <div className="relative flex items-start mb-2">
+              <div className="flex items-start space-x-2 flex-1">
+                <div className={clsx(
+                  'inline-flex p-2 rounded-lg bg-gradient-to-br flex-shrink-0',
+                  categoryInfo.color,
+                )}>
+                  <CategoryIcon className="h-4 w-4 text-dark-bg-primary" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-lg font-semibold text-white line-clamp-1 group-hover:text-red-400 transition-colors">
+                    {prompt.name}
+                  </h3>
+                  <div className="text-xs text-gray-400 mt-1">{categoryInfo.name}</div>
+                </div>
               </div>
             </div>
             
@@ -458,12 +474,12 @@ const VideoPromptCard: React.FC<VideoPromptCardProps> = React.memo(({ prompt }) 
             
             {/* 底部信息 */}
             <div className="mt-auto pt-4 border-t border-red-500/10 space-y-3">
-              {/* 评分与互动 */}
-              <div className="flex items-center justify-between">
+              {/* 第一行：评分与日期 */}
+              <div className="flex items-center justify-between text-xs">
                 <div className="flex items-center">
                   {rating.value > 0 ? (
                     <div className="flex items-center space-x-2">
-                      <div className="relative w-12 h-1.5 bg-gray-700 rounded-full overflow-hidden">
+                      <div className="relative w-20 h-2 bg-dark-bg-tertiary rounded-full overflow-hidden">
                         <div 
                           className="absolute top-0 left-0 h-full bg-gradient-to-r from-red-400 to-orange-400 rounded-full"
                           style={{ width: `${rating.percentage}%` }}
@@ -475,25 +491,26 @@ const VideoPromptCard: React.FC<VideoPromptCardProps> = React.memo(({ prompt }) 
                     <span className="text-xs text-gray-500">暂无评分</span>
                   )}
                 </div>
-                
-                <div onClick={(e) => e.preventDefault()}>
-                  <InteractionButtons promptId={prompt.id} size="sm" />
+                <div className="flex items-center space-x-1 text-gray-500">
+                  <ClockIcon className="h-3 w-3" />
+                  <span>{formatDate(prompt.updated_at || prompt.created_at)}</span>
                 </div>
               </div>
               
-              {/* 作者与日期 */}
+              {/* 第二行：作者版本信息与互动按钮 */}
               <div className="flex items-center justify-between text-xs text-gray-500">
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center space-x-3">
                   <div className="flex items-center space-x-1">
                     <UserIcon className="h-3 w-3" />
                     <span>{prompt.author || '匿名'}</span>
                   </div>
-                  <span>•</span>
-                  <span>v{formatVersionDisplay(prompt.version)}</span>
+                  <div className="flex items-center space-x-1">
+                    <DocumentTextIcon className="h-3 w-3" />
+                    <span>v{formatVersionDisplay(prompt.version)}</span>
+                  </div>
                 </div>
-                <div className="flex items-center space-x-1">
-                  <ClockIcon className="h-3 w-3" />
-                  <span>{formatDate(prompt.updated_at || prompt.created_at)}</span>
+                <div onClick={(e) => e.preventDefault()}>
+                  <InteractionButtons promptId={prompt.id} size="sm" />
                 </div>
               </div>
             </div>
