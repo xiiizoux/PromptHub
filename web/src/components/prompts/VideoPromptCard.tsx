@@ -115,8 +115,8 @@ const VideoPromptCard: React.FC<VideoPromptCardProps> = React.memo(({ prompt }) 
       return prompt.parameters.media_files[0].url;
     }
 
-    // 使用高质量的视频占位符
-    return `https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4`;
+    // 使用高质量的短视频占位符 - ForBiggerFun 是一个15秒的短视频，比BigBuckBunny更适合
+    return `https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4`;
   };
 
   // 处理视频播放/暂停

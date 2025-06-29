@@ -111,8 +111,8 @@ const ImagePromptCard: React.FC<ImagePromptCardProps> = React.memo(({ prompt }) 
       return prompt.parameters.media_files[0].url;
     }
 
-    // 使用高质量的占位符图片
-    return `https://images.unsplash.com/photo-1547658719-da2b51169166?w=400&h=300&fit=crop&auto=format&q=80`;
+    // 使用适合AI图像生成的艺术感占位符图片 - 抽象艺术/创意设计
+    return `https://images.unsplash.com/photo-1541961017774-22349e4a1262?w=400&h=300&fit=crop&auto=format&q=80`;
   };
 
   return (
