@@ -56,6 +56,7 @@ const VideoPromptCard: React.FC<VideoPromptCardProps> = React.memo(({ prompt }) 
   const [videoError, setVideoError] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
+  const [isUserControlled, setIsUserControlled] = useState(false);
   const [loadingTimeout, setLoadingTimeout] = useState(false);
   const [currentVideoUrl, setCurrentVideoUrl] = useState<string | null>(null);
   const [hasTriedFallback, setHasTriedFallback] = useState(false);
@@ -217,9 +218,11 @@ const VideoPromptCard: React.FC<VideoPromptCardProps> = React.memo(({ prompt }) 
       if (isPlaying) {
         videoRef.current.pause();
         setIsPlaying(false);
+        setIsUserControlled(false);
       } else {
         videoRef.current.play();
         setIsPlaying(true);
+        setIsUserControlled(true); // 标记为用户手动控制
       }
     }
   };
@@ -228,10 +231,10 @@ const VideoPromptCard: React.FC<VideoPromptCardProps> = React.memo(({ prompt }) 
   const handleMouseEnter = () => {
     setIsHovered(true);
     
-    // 自动播放延迟
-    if (videoRef.current && !isPlaying) {
+    // 只有在非用户控制状态下才自动播放
+    if (videoRef.current && !isPlaying && !isUserControlled) {
       hoverTimeoutRef.current = setTimeout(() => {
-        if (videoRef.current && isHovered) {
+        if (videoRef.current && isHovered && !isUserControlled) {
           videoRef.current.play();
           setIsPlaying(true);
         }
@@ -247,8 +250,8 @@ const VideoPromptCard: React.FC<VideoPromptCardProps> = React.memo(({ prompt }) 
       clearTimeout(hoverTimeoutRef.current);
     }
     
-    // 自动暂停
-    if (videoRef.current && isPlaying) {
+    // 只有在非用户控制状态下才自动暂停
+    if (videoRef.current && isPlaying && !isUserControlled) {
       videoRef.current.pause();
       setIsPlaying(false);
     }
@@ -305,9 +308,11 @@ const VideoPromptCard: React.FC<VideoPromptCardProps> = React.memo(({ prompt }) 
                 console.error('视频加载失败:', getCurrentVideoUrl());
                 switchToFallback();
               }}
-              onEnded={() => setIsPlaying(false)}
+              onEnded={() => {
+                setIsPlaying(false);
+                setIsUserControlled(false); // 播放结束后重置用户控制状态
+              }}
               muted
-              loop
               playsInline
             />
             {/* 加载状态显示 */}
