@@ -281,7 +281,7 @@ const VideoPromptCard: React.FC<VideoPromptCardProps> = React.memo(({ prompt }) 
     <div>
       <Link href={`/prompts/${prompt.id}`}>
         <motion.div
-          className="card glass border border-red-500/20 hover:border-red-500/40 transition-all duration-300 group cursor-pointer relative overflow-hidden h-[30rem] flex flex-col"
+          className="card glass border border-red-500/20 hover:border-red-500/40 transition-all duration-300 group cursor-pointer relative overflow-hidden flex flex-col"
           whileHover={{ y: -4, scale: 1.02 }}
           transition={{ duration: 0.2 }}
           onMouseEnter={handleMouseEnter}
