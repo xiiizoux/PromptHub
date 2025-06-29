@@ -559,11 +559,11 @@ code, pre, .font-mono {
   }
 
   .unified-page-title-container {
-    @apply text-center mb-6;
+    @apply text-center mb-8 md:mb-10;
   }
 
   /* 统一的顶部间距 */
   .unified-page-spacing {
-    @apply py-12;
+    @apply py-8 md:py-12 lg:py-16;
   }
 }

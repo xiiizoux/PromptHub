@@ -72,7 +72,6 @@ const PRESET_MODELS = [
   { id: 'code-specialized', name: '代码专用模型', description: '专门针对编程任务优化' },
   { id: 'translation-specialized', name: '翻译专用模型', description: '专门针对翻译任务优化' },
   { id: 'reasoning-specialized', name: '推理专用模型', description: '专门针对逻辑推理优化' },
-  { id: 'multimodal-vision', name: '视觉多模态模型', description: '支持图像理解的多模态模型' },
   { id: 'image-generation', name: '图像生成模型', description: '文本转图像生成' },
   { id: 'image-analysis', name: '图像理解模型', description: '图像分析和理解' },
   { id: 'audio-generation', name: '音频生成模型', description: '音频和音乐生成' },
@@ -413,13 +412,13 @@ ${content}
         recommendations.push('translation-specialized', 'llm-large');
         break;
       case '设计':
-        recommendations.push('image-generation', 'multimodal-vision');
+        recommendations.push('image-generation', 'image-analysis');
         break;
       case '绘画':
         recommendations.push('image-generation');
         break;
       case '视频':
-        recommendations.push('video-generation', 'multimodal-vision');
+        recommendations.push('video-generation');
         break;
       case '播客':
       case '音乐':

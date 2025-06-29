@@ -44,9 +44,6 @@ export enum ModelType {
   VIDEO_SUMMARIZATION = 'video_summarization',           // 视频摘要
   VIDEO_OBJECT_TRACKING = 'video_object_tracking',       // 目标跟踪
 
-  // 4. 多模态融合模型 (Multimodal Models)
-  MULTIMODAL_VQA = 'multimodal_vqa',                // 视觉问答
-  MULTIMODAL_LMM = 'multimodal_lmm',                // 多模态大模型
 }
 
 // 模型能力枚举
@@ -293,26 +290,6 @@ export const MODEL_TAGS: ModelTag[] = [
     capabilities: [ModelCapability.VISION, ModelCapability.ANALYSIS],
     color: 'text-amber-400',
   },
-
-  // ===== 4. 多模态融合模型 (Multimodal Models) =====
-  {
-    id: 'multimodal-vqa',
-    name: '视觉问答模型',
-    description: '对图片或视频提出问题，模型用文本回答',
-    type: ModelType.MULTIMODAL_VQA,
-    capabilities: [ModelCapability.VISION, ModelCapability.CHAT, ModelCapability.ANALYSIS],
-    color: 'text-indigo-400',
-  },
-  {
-    id: 'multimodal-lmm',
-    name: '多模态大模型',
-    description: '能够接受文本、图像、音频等混合输入的大型模型，如GPT-4V、Gemini Pro Vision',
-    type: ModelType.MULTIMODAL_LMM,
-    capabilities: [ModelCapability.VISION, ModelCapability.CHAT, ModelCapability.REASONING, ModelCapability.ANALYSIS],
-    scale: ModelScale.XLARGE,
-    deployment: DeploymentType.API,
-    color: 'text-purple-400',
-  },
 ];
 
 // 分类类型到模型类型的映射
@@ -344,14 +321,10 @@ export const CATEGORY_TYPE_TO_MODEL_TYPES = {
     ModelType.VIDEO_SUMMARIZATION,
     ModelType.VIDEO_OBJECT_TRACKING,
   ],
-  multimodal: [
-    ModelType.MULTIMODAL_VQA,
-    ModelType.MULTIMODAL_LMM,
-  ]
 } as const;
 
 // 根据分类类型获取对应的模型标签
-export const getModelTagsByCategoryType = (categoryType: 'chat' | 'image' | 'video' | 'multimodal'): ModelTag[] => {
+export const getModelTagsByCategoryType = (categoryType: 'chat' | 'image' | 'video'): ModelTag[] => {
   const modelTypes = CATEGORY_TYPE_TO_MODEL_TYPES[categoryType] || [];
   return MODEL_TAGS.filter(tag => (modelTypes as readonly ModelType[]).includes(tag.type));
 };
@@ -405,9 +378,6 @@ export const getModelTypeLabel = (type: ModelType): string => {
     [ModelType.VIDEO_SUMMARIZATION]: '视频摘要模型',
     [ModelType.VIDEO_OBJECT_TRACKING]: '目标跟踪模型',
 
-    // 多模态模型
-    [ModelType.MULTIMODAL_VQA]: '视觉问答模型',
-    [ModelType.MULTIMODAL_LMM]: '多模态大模型',
   };
   return labels[type] || type;
 };
@@ -442,9 +412,6 @@ export const getModelTypeDescription = (type: ModelType): string => {
     [ModelType.VIDEO_SUMMARIZATION]: '自动生成长视频的精彩集锦或摘要',
     [ModelType.VIDEO_OBJECT_TRACKING]: '在视频序列中持续追踪特定目标',
 
-    // 多模态模型
-    [ModelType.MULTIMODAL_VQA]: '对一张图片或一段视频提出问题，模型用文本回答',
-    [ModelType.MULTIMODAL_LMM]: '能够接受文本、图像、音频等混合输入，并进行复杂的推理和对话',
   };
   return descriptions[type] || '';
 };

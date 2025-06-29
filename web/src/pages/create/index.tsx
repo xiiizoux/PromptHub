@@ -226,10 +226,6 @@ function CreatePromptPage() {
       pageTitle="创建提示词"
       pageSubtitle="释放AI的无限潜能，打造专属的智能提示词"
       submitButtonText="创建提示词"
-      backLink={{
-        href: "/prompts",
-        label: "返回提示词列表"
-      }}
     />
   );
 }

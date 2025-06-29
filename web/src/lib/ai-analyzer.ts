@@ -227,7 +227,7 @@ class AIAnalyzer {
   - 简单文本生成：优选中等规模模型
   - 复杂推理任务：需要大规模或推理专用模型
   - 代码相关任务：优先选择代码专用模型
-  - 多模态内容：必须包含相应多模态模型
+  - 图像/视频内容：必须包含相应模型
   - 专业领域：考虑领域专用模型
   
   返回格式：模型ID数组，如 ["llm-large", "reasoning-specialized"]
@@ -511,9 +511,9 @@ class AIAnalyzer {
         '文案': ['llm-large', 'llm-medium'],
         '创意写作': ['llm-large', 'llm-medium'], 
         '翻译': ['translation-specialized', 'llm-large'],
-        '设计': ['image-generation', 'multimodal-vision'],
+        '设计': ['image-generation'],
         '绘画': ['image-generation'],
-        '视频': ['video-generation', 'multimodal-vision'],
+        '视频': ['video-generation'],
         '播客': ['audio-generation', 'audio-tts'],
         '音乐': ['audio-generation', 'audio-tts'],
         '学术': ['llm-large', 'reasoning-specialized'],
@@ -545,8 +545,6 @@ class AIAnalyzer {
         code: ['代码', '编程', '函数', '算法', '脚本', '开发', 'code', 'program', 'function', 'script', 'development', 'python', 'javascript', 'java', 'c++'],
         // 推理相关关键词
         reasoning: ['推理', '逻辑', '数学', '计算', '分析', '证明', '推导', 'reasoning', 'logic', 'math', 'analysis', 'proof'],
-        // 多模态相关关键词
-        multimodal: ['视觉', '看图', '图片分析', '多模态', '理解图像', 'vision', 'multimodal', 'understand', 'analyze image'],
         // 长文本相关关键词
         longText: ['长文', '文章', '报告', '论文', '详细', '深入', 'long text', 'article', 'detailed', 'comprehensive'],
         // 创意相关关键词
@@ -572,8 +570,8 @@ class AIAnalyzer {
         if (!recommendations.includes('image-generation')) {
           recommendations.push('image-generation');
         }
-        if (featureScores.image > 2 && !recommendations.includes('multimodal-vision')) {
-          recommendations.push('multimodal-vision');
+        if (featureScores.image > 2 && !recommendations.includes('image-generation')) {
+          recommendations.push('image-generation');
         }
       }
       
@@ -590,8 +588,8 @@ class AIAnalyzer {
         if (!recommendations.includes('video-generation')) {
           recommendations.push('video-generation');
         }
-        if (!recommendations.includes('multimodal-vision')) {
-          recommendations.push('multimodal-vision');
+        if (!recommendations.includes('video-generation')) {
+          recommendations.push('video-generation');
         }
       }
       
@@ -607,9 +605,12 @@ class AIAnalyzer {
         }
       }
       
-      if (featureScores.multimodal > 0) {
-        if (!recommendations.includes('multimodal-vision')) {
-          recommendations.push('multimodal-vision');
+      if (featureScores.image > 0 || featureScores.video > 0) {
+        if (featureScores.image > 0 && !recommendations.includes('image-generation')) {
+          recommendations.push('image-generation');
+        }
+        if (featureScores.video > 0 && !recommendations.includes('video-generation')) {
+          recommendations.push('video-generation');
         }
       }
       
@@ -653,7 +654,7 @@ class AIAnalyzer {
       const uniqueRecommendations = Array.from(new Set(validRecommendations));
       
       // 根据任务类型限制推荐数量
-      const maxRecommendations = featureScores.multimodal > 0 || featureScores.image > 0 || featureScores.audio > 0 ? 3 : 2;
+      const maxRecommendations = featureScores.image > 0 || featureScores.video > 0 || featureScores.audio > 0 ? 3 : 2;
       
       return uniqueRecommendations.slice(0, maxRecommendations);
     }

@@ -134,7 +134,6 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
     chat: [],
     image: [],
     video: [],
-    multimodal: []
   });
   const [permissionCheck, setPermissionCheck] = useState<PermissionCheck | null>(null);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
@@ -171,7 +170,7 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
       } catch (err) {
         console.error('获取分类失败:', err);
         // 错误时设置空数组
-        setCategoriesByType({ chat: [], image: [], video: [], multimodal: [] });
+        setCategoriesByType({ chat: [], image: [], video: [] });
       } finally {
         setCategoriesLoading(false);
       }

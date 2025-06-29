@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 
-export type PromptType = 'chat' | 'image' | 'video' | 'multimodal';
+export type PromptType = 'chat' | 'image' | 'video';
 
 interface PromptTypeSelectorProps {
   value: PromptType;
@@ -32,13 +32,6 @@ const typeOptions = [
     description: '适用于AI视频生成场景。可以设置时长、帧率、运动强度等参数，并上传示例视频。',
     color: 'neon-pink'
   },
-  {
-    value: 'multimodal' as const,
-    label: '多模态提示词',
-    icon: '🔗',
-    description: '适用于需要同时处理文本、图像、视频等多种模态的AI场景。',
-    color: 'neon-blue'
-  }
 ];
 
 // 获取激活状态的样式
@@ -50,8 +43,6 @@ const getActiveStyles = (color: string) => {
       return 'border-neon-purple bg-neon-purple/20 text-neon-purple shadow-md';
     case 'neon-pink':
       return 'border-neon-pink bg-neon-pink/20 text-neon-pink shadow-md';
-    case 'neon-blue':
-      return 'border-neon-blue bg-neon-blue/20 text-neon-blue shadow-md';
     default:
       return 'border-neon-cyan bg-neon-cyan/20 text-neon-cyan shadow-md';
   }
@@ -66,8 +57,6 @@ const getActiveDotStyles = (color: string) => {
       return 'bg-neon-purple';
     case 'neon-pink':
       return 'bg-neon-pink';
-    case 'neon-blue':
-      return 'bg-neon-blue';
     default:
       return 'bg-neon-cyan';
   }

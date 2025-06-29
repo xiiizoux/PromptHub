@@ -624,9 +624,22 @@ export default function PromptDetailsPage() {
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.3 }}
         >
-          <Link href="/prompts" className="inline-flex items-center text-sm font-medium text-neon-cyan hover:text-white transition-colors group">
+          <Link 
+            href={(() => {
+              switch (prompt.category_type) {
+                case 'image':
+                  return '/image';
+                case 'video':
+                  return '/video';
+                case 'chat':
+                default:
+                  return '/prompts';
+              }
+            })()} 
+            className="inline-flex items-center text-sm font-medium text-neon-cyan hover:text-white transition-colors group"
+          >
             <ChevronLeftIcon className="h-5 w-5 mr-2 group-hover:-translate-x-1 transition-transform" />
-            返回提示词列表
+            返回{prompt.category_type === 'image' ? '图像' : prompt.category_type === 'video' ? '视频' : '对话'}提示词列表
           </Link>
         </motion.div>
         

@@ -371,7 +371,7 @@ export class PromptPreviewTool extends BaseMCPTool {
       'gpt-4': '适合复杂推理任务，可以使用更详细的指令',
       'gpt-3.5': '建议使用简洁明确的指令，避免过于复杂',
       'claude': '擅长分析和写作，可以提供更多上下文',
-      'gemini': '适合多模态任务，支持图文结合',
+      'gemini': '适合图像理解任务，支持图文结合',
     };
 
     const normalizedModel = model.toLowerCase();

@@ -44,9 +44,6 @@ export enum ModelType {
   VIDEO_SUMMARIZATION = 'video_summarization',           // 视频摘要
   VIDEO_OBJECT_TRACKING = 'video_object_tracking',       // 目标跟踪
 
-  // 4. 多模态融合模型 (Multimodal Models)
-  MULTIMODAL_VQA = 'multimodal_vqa',                // 视觉问答
-  MULTIMODAL_LMM = 'multimodal_lmm',                // 多模态大模型
 }
 
 // 模型能力枚举
@@ -294,25 +291,6 @@ export const MODEL_TAGS: ModelTag[] = [
     color: 'text-amber-400',
   },
 
-  // ===== 4. 多模态融合模型 (Multimodal Models) =====
-  {
-    id: 'multimodal-vqa',
-    name: '视觉问答模型',
-    description: '对图片或视频提出问题，模型用文本回答',
-    type: ModelType.MULTIMODAL_VQA,
-    capabilities: [ModelCapability.VISION, ModelCapability.CHAT, ModelCapability.ANALYSIS],
-    color: 'text-indigo-400',
-  },
-  {
-    id: 'multimodal-lmm',
-    name: '多模态大模型',
-    description: '能够接受文本、图像、音频等混合输入的大型模型，如GPT-4V、Gemini Pro Vision',
-    type: ModelType.MULTIMODAL_LMM,
-    capabilities: [ModelCapability.VISION, ModelCapability.CHAT, ModelCapability.REASONING, ModelCapability.ANALYSIS],
-    scale: ModelScale.XLARGE,
-    deployment: DeploymentType.API,
-    color: 'text-purple-400',
-  },
 ];
 
 // 模型ID到名称的映射（便于MCP工具使用）
@@ -323,7 +301,6 @@ export const MODEL_ID_TO_NAME_MAP: Record<string, string> = {
   'code-specialized': '代码专用模型',
   'image-generation': '图像生成模型',
   'image-analysis': '图像理解模型',
-  'multimodal-vision': '视觉多模态模型',
   'audio-stt': '语音转文字模型',
   'audio-tts': '文字转语音模型',
   'audio-generation': '音频生成模型',
@@ -396,14 +373,10 @@ export const CATEGORY_TYPE_TO_MODEL_TYPES: Record<string, ModelType[]> = {
     ModelType.VIDEO_SUMMARIZATION,
     ModelType.VIDEO_OBJECT_TRACKING,
   ],
-  multimodal: [
-    ModelType.MULTIMODAL_VQA,
-    ModelType.MULTIMODAL_LMM,
-  ]
 };
 
 // 根据分类类型获取对应的模型标签
-export const getModelTagsByCategoryType = (categoryType: 'chat' | 'image' | 'video' | 'multimodal'): ModelTag[] => {
+export const getModelTagsByCategoryType = (categoryType: 'chat' | 'image' | 'video'): ModelTag[] => {
   const modelTypes = CATEGORY_TYPE_TO_MODEL_TYPES[categoryType] || [];
   return MODEL_TAGS.filter(tag => modelTypes.includes(tag.type));
 };
@@ -436,7 +409,6 @@ export const suggestModelTagsByContent = (content: string): string[] => {
   if (/图像|图片|画|绘制|视觉|图形/.test(lowerContent)) {
     suggestedTags.add('image-generation');
     suggestedTags.add('image-analysis');
-    suggestedTags.add('multimodal-vision');
   }
   
   if (/代码|编程|程序|bug|算法/.test(lowerContent)) {
@@ -511,9 +483,6 @@ export const getModelTypeLabel = (type: ModelType): string => {
     [ModelType.VIDEO_SUMMARIZATION]: '视频摘要',
     [ModelType.VIDEO_OBJECT_TRACKING]: '目标跟踪',
 
-    // 多模态模型
-    [ModelType.MULTIMODAL_VQA]: '视觉问答',
-    [ModelType.MULTIMODAL_LMM]: '多模态大模型',
   };
   return labels[type] || type;
 };

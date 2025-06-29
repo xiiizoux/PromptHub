@@ -59,7 +59,12 @@ export default function Home({ featuredPrompts }: HomeProps) {
       description: '动态变量和模板让您的提示词适应各种场景',
       color: 'from-neon-pink to-neon-yellow',
     },
-
+    {
+      icon: SparklesIcon,
+      title: '智能分析优化',
+      description: 'AI驱动的提示词分析与优化，自动提升您的提示词效果和质量',
+      color: 'from-neon-purple to-neon-pink',
+    },
   ];
 
   const stats = [
