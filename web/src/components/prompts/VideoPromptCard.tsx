@@ -419,7 +419,7 @@ const VideoPromptCard: React.FC<VideoPromptCardProps> = React.memo(({ prompt }) 
           </div>
           
           {/* 内容区域 - 紧凑但信息丰富 */}
-          <div className="flex-1 px-5 pb-6 flex flex-col min-h-0">
+          <div className="flex-1 px-5 pb-5 flex flex-col min-h-0">
             {/* 标题与分类图标 */}
             <div className="relative flex items-start mb-2">
               <div className="flex items-start space-x-2 flex-1">
