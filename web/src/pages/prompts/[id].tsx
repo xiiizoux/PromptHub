@@ -829,37 +829,6 @@ export default function PromptDetailsPage() {
               </div>
             </motion.div>
 
-            {/* 生成参数（仅图像和视频类型） */}
-            {(prompt.category_type === 'image' || prompt.category_type === 'video') && prompt.parameters && Object.keys(prompt.parameters).length > 0 && (
-              <motion.div 
-                className="glass rounded-xl p-8 border border-neon-cyan/20 mb-8"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4, delay: 0.2 }}
-              >
-                <div className="flex justify-between items-center mb-6">
-                  <h2 className="text-2xl font-bold text-white flex items-center">
-                    <CogIcon className="h-6 w-6 mr-3 text-neon-yellow" />
-                    生成参数
-                  </h2>
-                </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {Object.entries(prompt.parameters)
-                    .filter(([key]) => key !== 'media_files') // 排除media_files字段，避免重复显示
-                    .map(([key, value]) => (
-                    <div key={key} className="glass rounded-lg p-4 border border-neon-yellow/20">
-                      <div className="text-sm font-medium text-neon-yellow mb-1">
-                        {key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
-                      </div>
-                      <div className="text-sm text-gray-300">
-                        {typeof value === 'object' ? JSON.stringify(value) : String(value)}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </motion.div>
-            )}
 
             {/* 媒体资源展示（仅图像和视频类型） */}
             {(prompt.category_type === 'image' || prompt.category_type === 'video') && (
@@ -1023,13 +992,43 @@ export default function PromptDetailsPage() {
                 </div>
 
                 {/* 输入变量 */}
-                <div>
+                <div className="pt-4 border-t border-neon-cyan/20">
                   <h4 className="text-sm font-medium text-gray-300 mb-4 flex items-center">
                     <TagIcon className="h-4 w-4 mr-2 text-neon-pink" />
                     输入变量
                   </h4>
                   {renderVariableInputs()}
                 </div>
+
+                {/* 生成参数（仅图像和视频类型） */}
+                {(prompt.category_type === 'image' || prompt.category_type === 'video') && (
+                  <div className="pt-4 border-t border-neon-cyan/20">
+                    <h4 className="text-sm font-medium text-gray-300 mb-3 flex items-center">
+                      <CogIcon className="h-4 w-4 mr-2 text-neon-yellow" />
+                      生成参数
+                    </h4>
+                    {prompt.parameters && Object.keys(prompt.parameters).filter(key => key !== 'media_files').length > 0 ? (
+                      <div className="space-y-3">
+                        {Object.entries(prompt.parameters)
+                          .filter(([key]) => key !== 'media_files') // 排除media_files字段，避免重复显示
+                          .map(([key, value]) => (
+                          <div key={key} className="p-3 rounded-lg glass border border-neon-yellow/30 group hover:border-neon-yellow/50 transition-colors">
+                            <div className="text-xs font-medium text-neon-yellow mb-1">
+                              {key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                            </div>
+                            <div className="text-xs text-gray-300 break-words">
+                              {typeof value === 'object' ? JSON.stringify(value, null, 2) : String(value)}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-xs text-gray-400">
+                        此提示词未设置参数
+                      </div>
+                    )}
+                  </div>
+                )}
                 
                 {/* 兼容模型 */}
                 <div className="pt-4 border-t border-neon-cyan/20">
@@ -1104,12 +1103,12 @@ export default function PromptDetailsPage() {
                 )}
 
                 {/* 标签 */}
-                {prompt.tags && prompt.tags.length > 0 && (
-                  <div className="pt-4 border-t border-neon-cyan/20">
-                    <h4 className="text-sm font-medium text-gray-300 mb-3 flex items-center">
-                      <TagIcon className="h-4 w-4 mr-2 text-neon-cyan" />
-                      标签
-                    </h4>
+                <div className="pt-4 border-t border-neon-cyan/20">
+                  <h4 className="text-sm font-medium text-gray-300 mb-3 flex items-center">
+                    <TagIcon className="h-4 w-4 mr-2 text-neon-cyan" />
+                    标签
+                  </h4>
+                  {prompt.tags && prompt.tags.length > 0 ? (
                     <div className="flex flex-wrap gap-2">
                       {prompt.tags.map((tag, index) => (
                         <span
@@ -1120,8 +1119,12 @@ export default function PromptDetailsPage() {
                         </span>
                       ))}
                     </div>
-                  </div>
-                )}
+                  ) : (
+                    <div className="text-xs text-gray-400">
+                      此提示词未设置标签
+                    </div>
+                  )}
+                </div>
               </div>
             </motion.div>
           </div>
