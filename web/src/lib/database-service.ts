@@ -331,6 +331,8 @@ export class DatabaseService {
   async createPrompt(promptData: Partial<PromptDetails>): Promise<Prompt> {
     // 处理媒体文件：将preview_assets转换为parameters.media_files
     let parameters = promptData.parameters || {};
+    let previewAssetUrl = promptData.preview_asset_url;
+
     if (promptData.preview_assets && promptData.preview_assets.length > 0) {
       parameters.media_files = promptData.preview_assets.map(asset => ({
         id: asset.id,
@@ -339,6 +341,11 @@ export class DatabaseService {
         size: asset.size,
         type: asset.type
       }));
+
+      // 设置第一个媒体文件作为封面
+      if (!previewAssetUrl) {
+        previewAssetUrl = promptData.preview_assets[0].url;
+      }
     }
 
     // 转换PromptDetails为Prompt格式
@@ -356,7 +363,7 @@ export class DatabaseService {
       user_id: promptData.user_id,
       version: promptData.version ? Number(promptData.version) : 1.0, // 新建提示词默认版本为1.0
       compatible_models: promptData.compatible_models, // 添加兼容模型字段
-      preview_asset_url: promptData.preview_asset_url, // 添加预览资源URL
+      preview_asset_url: previewAssetUrl, // 使用第一个媒体文件作为封面
       parameters: parameters, // 添加处理后的参数
     };
 
@@ -401,6 +408,8 @@ export class DatabaseService {
 
       // 处理媒体文件：将preview_assets转换为parameters.media_files
       let parameters = promptData.parameters || existingPrompt.parameters || {};
+      let previewAssetUrl = promptData.preview_asset_url;
+
       if (promptData.preview_assets && promptData.preview_assets.length > 0) {
         parameters.media_files = promptData.preview_assets.map(asset => ({
           id: asset.id,
@@ -409,9 +418,15 @@ export class DatabaseService {
           size: asset.size,
           type: asset.type
         }));
+
+        // 设置第一个媒体文件作为封面（如果没有明确指定）
+        if (previewAssetUrl === undefined) {
+          previewAssetUrl = promptData.preview_assets[0].url;
+        }
       } else if (promptData.preview_assets && promptData.preview_assets.length === 0) {
-        // 如果明确传入空数组，则清空媒体文件
+        // 如果明确传入空数组，则清空媒体文件和封面
         parameters.media_files = [];
+        previewAssetUrl = null;
       }
 
       // 转换更新数据
@@ -424,7 +439,7 @@ export class DatabaseService {
       if (promptData.tags !== undefined) updateData.tags = promptData.tags;
       if (promptData.is_public !== undefined) updateData.is_public = promptData.is_public;
       if (promptData.compatible_models !== undefined) updateData.compatible_models = promptData.compatible_models;
-      if (promptData.preview_asset_url !== undefined) updateData.preview_asset_url = promptData.preview_asset_url; // 添加预览资源URL处理
+      if (previewAssetUrl !== undefined) updateData.preview_asset_url = previewAssetUrl; // 使用处理后的预览资源URL
       updateData.parameters = parameters; // 添加处理后的参数
 
       // 处理content字段，转换为messages格式

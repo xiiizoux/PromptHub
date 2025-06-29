@@ -7,6 +7,28 @@ export type DigestFrequency = NotificationApi.DigestFrequency;
 export type Notification = NotificationApi.Notification;
 export type NotificationPreference = NotificationApi.NotificationPreference;
 
+// 统一的数据提取助手，消除多层嵌套问题
+function extractNotificationData<T>(response: any, fallback: T): T {
+  // 处理标准API响应格式: response.data.data
+  if (response?.data?.success && response.data.data !== undefined) {
+    return response.data.data;
+  }
+  // 处理简单格式: response.data
+  if (response?.data !== undefined) {
+    return response.data;
+  }
+  return fallback;
+}
+
+// 安全的可选数据提取
+function extractOptionalNotificationData<T>(response: any, fallback: T | null = null): T | null {
+  try {
+    return extractNotificationData(response, fallback);
+  } catch {
+    return fallback;
+  }
+}
+
 /**
  * 通知API客户端
  */
@@ -27,7 +49,7 @@ export const notificationApi = {
     const response = await axios.get<NotificationApi.GetNotificationsResponse>('/api/social/notifications', {
       params: { page, pageSize, unreadOnly, grouped },
     });
-    return response.data.data!;
+    return extractNotificationData(response, { data: [], total: 0, page: 1, pageSize: 20, totalPages: 0 });
   },
 
   /**
@@ -35,7 +57,8 @@ export const notificationApi = {
    */
   getUnreadCount: async (): Promise<number> => {
     const response = await axios.get<NotificationApi.GetUnreadCountResponse>('/api/social/notifications/unread-count');
-    return response.data.data?.count || 0;
+    const data = extractNotificationData(response, { count: 0 });
+    return data.count || 0;
   },
 
   /**
@@ -57,7 +80,8 @@ export const notificationApi = {
    */
   deleteNotification: async (notificationId: string): Promise<{ success: boolean }> => {
     const response = await axios.delete<ApiResponse<{ deleted: boolean }>>(`/api/social/notifications?notificationId=${notificationId}`);
-    return { success: response.data.data?.deleted || false };
+    const data = extractNotificationData(response, { deleted: false });
+    return { success: data.deleted || false };
   },
 
   /**
@@ -65,7 +89,11 @@ export const notificationApi = {
    */
   getPreferences: async (): Promise<NotificationPreference> => {
     const response = await axios.get<NotificationApi.GetPreferencesResponse>('/api/social/notifications/preferences');
-    return response.data.data!;
+    const data = extractNotificationData(response, null);
+    if (!data) {
+      throw new Error('获取通知偏好设置失败');
+    }
+    return data;
   },
 
   /**
@@ -77,6 +105,10 @@ export const notificationApi = {
       '/api/social/notifications/preferences',
       preferences,
     );
-    return response.data.data!;
+    const data = extractNotificationData(response, null);
+    if (!data) {
+      throw new Error('更新通知偏好设置失败');
+    }
+    return data;
   },
 };

@@ -14,6 +14,28 @@ import {
 } from '@/types/api';
 import { Prompt, PromptVersion } from '../../../supabase/lib/types';
 
+// 统一的数据提取助手，消除多层嵌套问题
+function extractResponseData<T>(response: any, fallback: T): T {
+  // 处理标准API响应格式: response.data.data
+  if (response?.data?.success && response.data.data !== undefined) {
+    return response.data.data;
+  }
+  // 处理简单格式: response.data
+  if (response?.data !== undefined) {
+    return response.data;
+  }
+  return fallback;
+}
+
+// 安全的可选数据提取
+function extractOptionalData<T>(response: any, fallback: T | null = null): T | null {
+  try {
+    return extractResponseData(response, fallback);
+  } catch {
+    return fallback;
+  }
+}
+
 // 创建主API实例 - 访问Next.js API Routes
 const apiClient = axios.create({
   baseURL: '/api',
@@ -107,49 +129,62 @@ export const promptsApi = {
   // 获取提示词列表
   getPrompts: async (filters?: PromptFilterParams): Promise<PaginatedResponse<Prompt>> => {
     const response = await apiClient.get<PromptApi.GetPromptsResponse>('/prompts', { params: filters });
-    return response.data.data!;
+    return extractResponseData(response, { data: [], total: 0, page: 1, pageSize: 10, totalPages: 0 });
   },
   
   // 获取单个提示词详情
   getPrompt: async (id: string): Promise<Prompt> => {
     const response = await apiClient.get<PromptApi.GetPromptResponse>(`/prompts/${id}`);
-    return response.data.data!;
+    const data = extractResponseData(response, null);
+    if (!data) {
+      throw new Error(`提示词 ${id} 不存在`);
+    }
+    return data;
   },
   
   // 创建新提示词
   createPrompt: async (prompt: PromptApi.CreatePromptRequest): Promise<Prompt> => {
     const response = await apiClient.post<PromptApi.CreatePromptResponse>('/prompts', prompt);
-    return response.data.data!;
+    const data = extractResponseData(response, null);
+    if (!data) {
+      throw new Error('创建提示词失败');
+    }
+    return data;
   },
   
   // 更新提示词
   updatePrompt: async (id: string, prompt: PromptApi.UpdatePromptRequest): Promise<Prompt> => {
     const response = await apiClient.put<PromptApi.UpdatePromptResponse>(`/prompts/${id}`, prompt);
-    return response.data.data!;
+    const data = extractResponseData(response, null);
+    if (!data) {
+      throw new Error(`更新提示词 ${id} 失败`);
+    }
+    return data;
   },
   
   // 删除提示词
   deletePrompt: async (id: string): Promise<boolean> => {
     const response = await apiClient.delete<PromptApi.DeletePromptResponse>(`/prompts/${id}`);
-    return response.data.data?.deleted || false;
+    const data = extractResponseData(response, { deleted: false });
+    return data.deleted || false;
   },
   
   // 获取分类列表
   getCategories: async (): Promise<string[]> => {
     const response = await apiClient.get<PromptApi.GetCategoriesResponse>('/categories');
-    return response.data.data || [];
+    return extractResponseData(response, []);
   },
   
   // 获取标签列表
   getTags: async (): Promise<string[]> => {
     const response = await apiClient.get<PromptApi.GetTagsResponse>('/tags');
-    return response.data.data || [];
+    return extractResponseData(response, []);
   },
   
   // 获取提示词版本历史
   getVersions: async (promptId: string): Promise<PromptVersion[]> => {
     const response = await apiClient.get<PromptApi.GetVersionsResponse>(`/prompts/versions/${promptId}`);
-    return response.data.data || [];
+    return extractResponseData(response, []);
   },
   
   // 恢复到之前的版本
@@ -157,7 +192,11 @@ export const promptsApi = {
     const response = await apiClient.post<PromptApi.RestoreVersionResponse>(
       `/prompts/restore/${promptId}/${version}`,
     );
-    return response.data.data!;
+    const data = extractResponseData(response, null);
+    if (!data) {
+      throw new Error(`恢复提示词 ${promptId} 版本 ${version} 失败`);
+    }
+    return data;
   },
 };
 
@@ -172,13 +211,14 @@ export const authApi = {
       { email, password },
     );
     
-    if (response.data.success && response.data.data) {
+    const data = extractResponseData(response, null) as UserApi.SignInResponse['data'] | null;
+    if (data) {
       // 保存认证信息
-      localStorage.setItem('auth_token', response.data.data.token);
-      localStorage.setItem('user', JSON.stringify(response.data.data.user));
+      localStorage.setItem('auth_token', data.token);
+      localStorage.setItem('user', JSON.stringify(data.user));
     }
     
-    return response.data.data;
+    return data;
   },
   
   // 用户注册
@@ -188,13 +228,14 @@ export const authApi = {
       { email, password, displayName },
     );
     
-    if (response.data.success && response.data.data) {
+    const data = extractResponseData(response, null) as UserApi.SignUpResponse['data'] | null;
+    if (data) {
       // 保存认证信息
-      localStorage.setItem('auth_token', response.data.data.token);
-      localStorage.setItem('user', JSON.stringify(response.data.data.user));
+      localStorage.setItem('auth_token', data.token);
+      localStorage.setItem('user', JSON.stringify(data.user));
     }
     
-    return response.data.data;
+    return data;
   },
   
   // 退出登录
@@ -211,13 +252,13 @@ export const authApi = {
   // 获取当前用户信息
   getCurrentUser: async () => {
     const response = await apiClient.get<UserApi.GetUserResponse>('/auth/user');
-    return response.data.data;
+    return extractOptionalData(response, null);
   },
   
   // 获取API密钥列表
   getApiKeys: async () => {
     const response = await apiClient.get<UserApi.GetApiKeysResponse>('/keys');
-    return response.data.data || [];
+    return extractResponseData(response, []);
   },
   
   // 创建新的API密钥
@@ -226,13 +267,15 @@ export const authApi = {
       '/keys', 
       { name, expiresInDays },
     );
-    return response.data.data?.key;
+    const data = extractResponseData(response, null) as { key?: string } | null;
+    return data?.key;
   },
   
   // 删除API密钥
   deleteApiKey: async (keyId: string) => {
     const response = await apiClient.delete<UserApi.DeleteApiKeyResponse>(`/keys/${keyId}`);
-    return response.data.data?.deleted || false;
+    const data = extractResponseData(response, { deleted: false });
+    return data.deleted || false;
   },
 };
 
@@ -243,13 +286,13 @@ export const mcpApi = {
   // 调用MCP工具
   invokeTool: async (name: string, args: Record<string, any> = {}): Promise<McpApi.McpToolResponse['data']> => {
     const response = await apiClient.post<McpApi.McpToolResponse>('/mcp/tools', { name, arguments: args });
-    return response.data.data;
+    return extractResponseData(response, null) as McpApi.McpToolResponse['data'];
   },
   
   // 获取可用工具列表
   getTools: async (): Promise<any[]> => {
     const response = await apiClient.get<ApiResponse<any[]>>('/mcp/tools');
-    return response.data.data || [];
+    return extractResponseData(response, []);
   },
 };
 

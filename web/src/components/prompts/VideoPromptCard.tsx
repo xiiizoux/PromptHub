@@ -104,11 +104,17 @@ const VideoPromptCard: React.FC<VideoPromptCardProps> = React.memo(({ prompt }) 
     return null;
   }
 
-  // 获取视频URL，优先使用preview_asset_url，如果没有则使用占位符
+  // 获取视频URL，优先使用preview_asset_url，如果没有则从media_files获取第一个，最后使用占位符
   const getVideoUrl = () => {
     if (prompt.preview_asset_url) {
       return prompt.preview_asset_url;
     }
+
+    // 备用方案：从parameters.media_files获取第一个文件
+    if (prompt.parameters?.media_files && Array.isArray(prompt.parameters.media_files) && prompt.parameters.media_files.length > 0) {
+      return prompt.parameters.media_files[0].url;
+    }
+
     // 使用高质量的视频占位符
     return `https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4`;
   };

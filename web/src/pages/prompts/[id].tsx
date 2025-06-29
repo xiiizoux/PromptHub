@@ -816,13 +816,45 @@ export default function PromptDetailsPage() {
               </div>
             </motion.div>
 
+            {/* 生成参数（仅图像和视频类型） */}
+            {(prompt.category_type === 'image' || prompt.category_type === 'video') && prompt.parameters && Object.keys(prompt.parameters).length > 0 && (
+              <motion.div 
+                className="glass rounded-xl p-8 border border-neon-cyan/20 mb-8"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, delay: 0.2 }}
+              >
+                <div className="flex justify-between items-center mb-6">
+                  <h2 className="text-2xl font-bold text-white flex items-center">
+                    <CogIcon className="h-6 w-6 mr-3 text-neon-yellow" />
+                    生成参数
+                  </h2>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {Object.entries(prompt.parameters)
+                    .filter(([key]) => key !== 'media_files') // 排除media_files字段，避免重复显示
+                    .map(([key, value]) => (
+                    <div key={key} className="glass rounded-lg p-4 border border-neon-yellow/20">
+                      <div className="text-sm font-medium text-neon-yellow mb-1">
+                        {key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                      </div>
+                      <div className="text-sm text-gray-300">
+                        {typeof value === 'object' ? JSON.stringify(value) : String(value)}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+
             {/* 媒体资源展示（仅图像和视频类型） */}
             {(prompt.category_type === 'image' || prompt.category_type === 'video') && (
               <motion.div
                 className="glass rounded-xl p-8 border border-neon-cyan/20 mb-8"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4, delay: 0.15 }}
+                transition={{ duration: 0.4, delay: 0.25 }}
               >
                 <div className="flex justify-between items-center mb-6">
                   <h2 className="text-2xl font-bold text-white flex items-center">
@@ -869,11 +901,6 @@ export default function PromptDetailsPage() {
                                 >
                                   您的浏览器不支持视频播放
                                 </video>
-                              )}
-                              {file.name && (
-                                <div className="mt-2 text-sm text-gray-400 text-center">
-                                  {file.name}
-                                </div>
                               )}
                             </div>
                           </div>
@@ -928,38 +955,6 @@ export default function PromptDetailsPage() {
                     );
                   }
                 })()}
-              </motion.div>
-            )}
-
-            {/* 生成参数（仅图像和视频类型） */}
-            {(prompt.category_type === 'image' || prompt.category_type === 'video') && prompt.parameters && Object.keys(prompt.parameters).length > 0 && (
-              <motion.div 
-                className="glass rounded-xl p-8 border border-neon-cyan/20 mb-8"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4, delay: 0.2 }}
-              >
-                <div className="flex justify-between items-center mb-6">
-                  <h2 className="text-2xl font-bold text-white flex items-center">
-                    <CogIcon className="h-6 w-6 mr-3 text-neon-yellow" />
-                    生成参数
-                  </h2>
-                </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {Object.entries(prompt.parameters)
-                    .filter(([key]) => key !== 'media_files') // 排除media_files字段，避免重复显示
-                    .map(([key, value]) => (
-                    <div key={key} className="glass rounded-lg p-4 border border-neon-yellow/20">
-                      <div className="text-sm font-medium text-neon-yellow mb-1">
-                        {key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
-                      </div>
-                      <div className="text-sm text-gray-300">
-                        {typeof value === 'object' ? JSON.stringify(value) : String(value)}
-                      </div>
-                    </div>
-                  ))}
-                </div>
               </motion.div>
             )}
 

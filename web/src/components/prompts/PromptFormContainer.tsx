@@ -23,6 +23,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import SmartWritingAssistant from '@/components/SmartWritingAssistant';
 import PromptTypeSelector, { PromptType } from '@/components/prompts/edit/PromptTypeSelector';
 import CategorySelector from '@/components/prompts/edit/CategorySelector';
+import ImageParametersForm, { ImageParameters } from '@/components/prompts/edit/ImageParametersForm';
+import VideoParametersForm, { VideoParameters } from '@/components/prompts/edit/VideoParametersForm';
 import { ModelSelector } from '@/components/ModelSelector';
 import { PromptDetails } from '@/types';
 import { 
@@ -100,6 +102,28 @@ export default function PromptFormContainer({
   const { user } = useAuth();
   const router = useRouter();
 
+  // 根据类型获取默认参数模板
+  const getDefaultParameters = (type: PromptType) => {
+    switch (type) {
+      case 'image':
+        return {
+          style: 'photorealistic',
+          aspect_ratio: '1:1',
+          resolution: '1024x1024',
+          quality: 'high'
+        };
+      case 'video':
+        return {
+          duration: 10,
+          fps: 30,
+          motion_strength: 5,
+          camera_movement: 'static'
+        };
+      default:
+        return {};
+    }
+  };
+
   // 表单状态
   const [currentType, setCurrentType] = useState<PromptType>(
     (initialData?.category_type as PromptType) || 'chat'
@@ -146,6 +170,7 @@ export default function PromptFormContainer({
       input_variables: initialData?.input_variables || [],
       template_format: initialData?.template_format || 'text',
       version: initialData?.version || 1.0,
+      parameters: initialData?.parameters || {},
     }
   });
 
@@ -202,9 +227,15 @@ export default function PromptFormContainer({
     // 初始化参数
     if (initialData?.parameters) {
       setParameters(initialData.parameters);
+      setValue('parameters', initialData.parameters);
       console.log('PromptFormContainer - 设置参数:', initialData.parameters);
+    } else if (currentType === 'image' || currentType === 'video') {
+      // 如果是图像或视频类型但没有参数，设置默认参数
+      const defaultParams = getDefaultParameters(currentType);
+      setParameters(defaultParams);
+      setValue('parameters', defaultParams);
     }
-  }, [initialData, mode, setValue]);
+  }, [initialData, mode, setValue, currentType]);
 
   // 获取类型标签
   const getTypeLabel = (type: PromptType) => {
@@ -254,6 +285,7 @@ export default function PromptFormContainer({
       // 根据类型设置默认参数
       const defaultParams = getDefaultParameters(newType);
       setParameters(defaultParams);
+      setValue('parameters', defaultParams);
       
       // 更新分类选项
       const availableCategories = categoriesByType[newType] || [];
@@ -267,27 +299,6 @@ export default function PromptFormContainer({
     }
   };
 
-  // 根据类型获取默认参数模板
-  const getDefaultParameters = (type: PromptType) => {
-    switch (type) {
-      case 'image':
-        return {
-          style: 'photorealistic',
-          aspect_ratio: '1:1',
-          resolution: '1024x1024',
-          quality: 'high'
-        };
-      case 'video':
-        return {
-          duration: 10,
-          fps: 30,
-          motion_strength: 5,
-          camera_movement: 'static'
-        };
-      default:
-        return {};
-    }
-  };
 
   // 文件上传处理 - 支持多文件
   const handleFilesUpload = async (files: File[]) => {
@@ -826,6 +837,57 @@ export default function PromptFormContainer({
                     </motion.div>
                   )}
                 </AnimatePresence>
+
+                {/* 生成参数设置（仅图像和视频类型） */}
+                {(currentType === 'image' || currentType === 'video') && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.15 }}
+                    className="mb-8"
+                  >
+                    <div className="glass rounded-xl p-8 border border-neon-cyan/20">
+                      <div className="flex items-center mb-6">
+                        <CogIcon className="h-6 w-6 text-neon-yellow mr-3" />
+                        <h3 className="text-xl font-semibold text-white">
+                          生成参数设置
+                        </h3>
+                        <span className="ml-2 text-sm text-gray-400">
+                          ({currentType === 'image' ? '图像' : '视频'}类型)
+                        </span>
+                      </div>
+                      
+                      <Controller
+                        name="parameters"
+                        control={control}
+                        render={({ field }) => {
+                          if (currentType === 'image') {
+                            return (
+                              <ImageParametersForm
+                                value={field.value as ImageParameters || {}}
+                                onChange={(parameters) => {
+                                  field.onChange(parameters);
+                                }}
+                                disabled={isSubmitting}
+                              />
+                            );
+                          } else if (currentType === 'video') {
+                            return (
+                              <VideoParametersForm
+                                value={field.value as VideoParameters || {}}
+                                onChange={(parameters) => {
+                                  field.onChange(parameters);
+                                }}
+                                disabled={isSubmitting}
+                              />
+                            );
+                          }
+                          return <div></div>;
+                        }}
+                      />
+                    </div>
+                  </motion.div>
+                )}
 
                 {/* 基本信息 */}
                 <motion.div

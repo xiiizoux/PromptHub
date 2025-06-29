@@ -9,6 +9,49 @@ interface BackendApiResponse<T> {
   error?: string;
 }
 
+// 数据访问助手函数，统一处理多层嵌套问题
+function extractData<T>(response: any, fallback: T): T {
+  // 处理常见的嵌套结构：response.data.data
+  if (response?.data?.success && response.data.data !== undefined) {
+    return response.data.data;
+  }
+  // 处理单层结构：response.data
+  if (response?.data !== undefined) {
+    return response.data;
+  }
+  // 返回fallback值
+  return fallback;
+}
+
+// 安全的数组访问助手
+function extractArrayData<T>(response: any, fallback: T[] = []): T[] {
+  const data = extractData(response, fallback);
+  return Array.isArray(data) ? data : fallback;
+}
+
+// 安全的分页数据访问助手
+function extractPaginatedData<T>(response: any): {
+  data: T[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+} {
+  const responseData = response?.data;
+  if (!responseData?.success || !responseData.data) {
+    return { data: [], total: 0, page: 1, pageSize: 10, totalPages: 0 };
+  }
+
+  const innerData = responseData.data;
+  return {
+    data: Array.isArray(innerData.data) ? innerData.data : [],
+    total: typeof innerData.total === 'number' ? innerData.total : 0,
+    page: typeof innerData.page === 'number' ? innerData.page : 1,
+    pageSize: typeof innerData.pageSize === 'number' ? innerData.pageSize : 10,
+    totalPages: typeof innerData.totalPages === 'number' ? innerData.totalPages : 0,
+  };
+}
+
 // 创建Axios实例 - Docker部署配置
 const api = axios.create({
   baseURL: '/api',
@@ -156,13 +199,13 @@ export const getCategories = async (type?: string): Promise<string[]> => {
   const url = type ? `/categories?type=${type}` : '/categories';
   const response = await api.get<BackendApiResponse<string[]>>(url);
 
-  if (response.data.success && Array.isArray(response.data.data)) {
-    return response.data.data;
+  const categories = extractArrayData<string>(response, []);
+  if (categories.length === 0 && !response.data?.success) {
+    const errorMessage = response.data?.error || 'API未返回成功状态';
+    throw new Error(`获取分类失败: ${errorMessage}`);
   }
-
-  // 如果API报告失败，抛出错误让调用方处理
-  const errorMessage = response.data.error || 'API未返回成功状态';
-  throw new Error(`获取分类失败: ${errorMessage}`);
+  
+  return categories;
 };
 ;
 
@@ -170,13 +213,13 @@ export const getCategories = async (type?: string): Promise<string[]> => {
 export const getTags = async (): Promise<string[]> => {
   const response = await api.get<BackendApiResponse<string[]>>('/tags');
 
-  if (response.data.success && Array.isArray(response.data.data)) {
-    return response.data.data;
+  const tags = extractArrayData<string>(response, []);
+  if (tags.length === 0 && !response.data?.success) {
+    const errorMessage = response.data?.error || 'API未返回成功状态';
+    throw new Error(`获取标签失败: ${errorMessage}`);
   }
-
-  // 如果API报告失败，抛出错误让调用方处理
-  const errorMessage = response.data.error || 'API未返回成功状态';
-  throw new Error(`获取标签失败: ${errorMessage}`);
+  
+  return tags;
 };
 ;
 
@@ -185,8 +228,9 @@ export const getTagsWithStats = async (): Promise<Array<{tag: string, count: num
   try {
     const response = await api.get<any>('/tags?withStats=true');
 
-    if (response.data.success && response.data.data && Array.isArray(response.data.data)) {
-      return response.data.data;
+    const stats = extractArrayData<{tag: string, count: number}>(response, []);
+    if (stats.length > 0) {
+      return stats;
     }
 
     // 如果API返回空数据或失败，返回默认统计
@@ -205,7 +249,8 @@ export const getPromptNames = async (): Promise<string[]> => {
   try {
     // 使用新的解耦API而不是已弃用的MCP API
     const response = await api.get<any>('/prompts');
-    return response.data?.data?.names || [];
+    const data = extractData(response, { names: [] });
+    return data.names || [];
   } catch (error) {
     console.error('获取提示词名称失败:', error);
     return [];
@@ -257,30 +302,16 @@ export const getPrompts = async (filters?: PromptFilters): Promise<PaginatedResp
       }
     }
 
-    // 使用新的REST API端点
-    const response = await api.get<any>(`/public-prompts?${queryParams.toString()}`, {
+    // 使用新的解耦API端点
+    const response = await api.get<any>(`/prompts?${queryParams.toString()}`, {
       headers: userId ? { 'x-user-id': userId } : {},
     });
 
-    // 1. 验证响应的基础结构
-    if (!response || !response.data || typeof response.data !== 'object') {
-      return { data: [], total: 0, page: 1, pageSize: filters?.pageSize || 10, totalPages: 0 };
-    }
-
-    const responseData = response.data;
-
-    // 2. 检查成功状态
-    if (responseData.success === false || !responseData.data) {
-      return { data: [], total: 0, page: 1, pageSize: filters?.pageSize || 10, totalPages: 0 };
-    }
-
-    // 3. 验证核心数据data是否为数组
-    if (!Array.isArray(responseData.data)) {
-      return { data: [], total: 0, page: 1, pageSize: filters?.pageSize || 10, totalPages: 0 };
-    }
-
-    // 4. (可选但推荐) 清理和映射每个prompt对象，确保字段符合预期
-    const cleanedData = responseData.data.map((item: any) => {
+    // 使用统一的分页数据提取助手
+    const paginatedData = extractPaginatedData<any>(response);
+    
+    // 清理和映射每个prompt对象，确保字段符合预期
+    const cleanedData = paginatedData.data.map((item: any) => {
       // 使用服务端返回的category_type字段，不再使用硬编码分类判断
       let guessedType = item.category_type || 'chat'; // 默认为chat类型
       
@@ -302,17 +333,12 @@ export const getPrompts = async (filters?: PromptFilters): Promise<PaginatedResp
       };
     });
 
-    const total = typeof responseData.total === 'number' ? responseData.total : 0;
-    const page = typeof responseData.page === 'number' ? responseData.page : 1;
-    const pageSize = typeof responseData.pageSize === 'number' ? responseData.pageSize : 10;
-    const totalPages = typeof responseData.totalPages === 'number' ? responseData.totalPages : 0;
-
     return {
       data: cleanedData,
-      total,
-      page,
-      pageSize,
-      totalPages,
+      total: paginatedData.total,
+      page: paginatedData.page,
+      pageSize: paginatedData.pageSize,
+      totalPages: paginatedData.totalPages,
     };
   } catch (error) {
     console.error('获取提示词列表失败:', error);

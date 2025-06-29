@@ -100,11 +100,17 @@ const ImagePromptCard: React.FC<ImagePromptCardProps> = React.memo(({ prompt }) 
     return null;
   }
 
-  // 获取图片URL，优先使用preview_asset_url，如果没有则使用占位符
+  // 获取图片URL，优先使用preview_asset_url，如果没有则从media_files获取第一个，最后使用占位符
   const getImageUrl = () => {
     if (prompt.preview_asset_url) {
       return prompt.preview_asset_url;
     }
+
+    // 备用方案：从parameters.media_files获取第一个文件
+    if (prompt.parameters?.media_files && Array.isArray(prompt.parameters.media_files) && prompt.parameters.media_files.length > 0) {
+      return prompt.parameters.media_files[0].url;
+    }
+
     // 使用高质量的占位符图片
     return `https://images.unsplash.com/photo-1547658719-da2b51169166?w=400&h=300&fit=crop&auto=format&q=80`;
   };

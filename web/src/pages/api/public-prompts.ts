@@ -81,7 +81,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     const userId = req.headers['x-user-id'] as string;
     console.log('请求中的用户ID:', userId, '页面:', currentPage, '页面大小:', currentPageSize);
     
-    // 构建基础查询 - 使用count来获取总数
+    // 构建基础查询 - 使用count来获取总数，包含媒体相关字段
     let query = supabase
       .from('prompts')
       .select(`
@@ -95,7 +95,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         user_id,
         created_at,
         updated_at,
-        created_by
+        created_by,
+        category_type,
+        preview_asset_url,
+        parameters
       `, { count: 'exact' });
 
     // 如果有用户ID，则获取该用户的所有提示词和公开提示词
