@@ -11,6 +11,7 @@ import { databaseService } from '@/lib/database-service';
 import { PromptDetails, PermissionCheck } from '@/types';
 import PromptFormContainer, { PromptFormData } from '@/components/prompts/PromptFormContainer';
 import { useBeforeUnload } from '@/hooks/useBeforeUnload';
+import { UnsavedChangesDialog } from '@/components/ConfirmDialog';
 import {
   checkEditPermission,
   getPermissionDescription,
@@ -141,8 +142,12 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
 
-  // 浏览器离开页面警告
-  useBeforeUnload(hasUnsavedChanges, '您对提示词的修改尚未保存，确定要离开此页面吗？');
+  // 浏览器离开页面警告 - 使用自定义对话框
+  const { showConfirmDialog, onConfirmLeave, onCancelLeave } = useBeforeUnload(
+    hasUnsavedChanges, 
+    '您对提示词的修改尚未保存，确定要离开此页面吗？',
+    true // 使用自定义对话框
+  );
 
   // 获取分类数据 - 按类型分别获取
   useEffect(() => {
@@ -308,24 +313,34 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
   }
 
   return (
-    <PromptFormContainer
-      mode="edit"
-      initialData={safePromptData}
-      onSubmit={handleSubmit}
-      onCancel={() => router.push(`/prompts/${prompt.id}`)}
-      categoriesByType={categoriesByType}
-      pageTitle="编辑提示词"
-      pageSubtitle="完善您的智能提示词，让AI更好地理解您的需求"
-      submitButtonText="更新提示词"
-      backLink={{
-        href: `/prompts/${prompt.id}`,
-        label: '返回提示词详情',
-      }}
-      permissionCheck={permissionCheck}
-      hasUnsavedChanges={hasUnsavedChanges}
-      saveSuccess={saveSuccess}
-      onUnsavedChanges={setHasUnsavedChanges}
-    />
+    <>
+      <PromptFormContainer
+        mode="edit"
+        initialData={safePromptData}
+        onSubmit={handleSubmit}
+        onCancel={() => router.push(`/prompts/${prompt.id}`)}
+        categoriesByType={categoriesByType}
+        pageTitle="编辑提示词"
+        pageSubtitle="完善您的智能提示词，让AI更好地理解您的需求"
+        submitButtonText="更新提示词"
+        backLink={{
+          href: `/prompts/${prompt.id}`,
+          label: '返回提示词详情',
+        }}
+        permissionCheck={permissionCheck}
+        hasUnsavedChanges={hasUnsavedChanges}
+        saveSuccess={saveSuccess}
+        onUnsavedChanges={setHasUnsavedChanges}
+      />
+      
+      {/* 统一的未保存更改确认对话框 */}
+      <UnsavedChangesDialog
+        open={showConfirmDialog}
+        onConfirm={onConfirmLeave}
+        onCancel={onCancelLeave}
+        context="form"
+      />
+    </>
   );
 }
 

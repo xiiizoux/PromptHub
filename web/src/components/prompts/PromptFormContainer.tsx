@@ -317,12 +317,12 @@ export default function PromptFormContainer({
         !objectsEqual(watchedData.parameters || {}, initialData?.parameters || {}) ||
         uploadedFiles.length > 0; // 编辑模式下如果有新上传的文件也算作更改
     } else if (mode === 'create') {
-      // 创建模式：检测是否有任何有意义的输入（过滤掉只有空格的情况）
+      // 创建模式：检测是否有任何输入（包括空格）
       hasChanges = 
-        (watchedData.name && watchedData.name.trim() !== '') ||
-        (watchedData.description && watchedData.description.trim() !== '') ||
-        (watchedData.content && watchedData.content.trim() !== '') ||
-        (watchedData.category && watchedData.category.trim() !== '' && watchedData.category !== '通用') ||
+        (watchedData.name && watchedData.name !== '') ||
+        (watchedData.description && watchedData.description !== '') ||
+        (watchedData.content && watchedData.content !== '') ||
+        (watchedData.category && watchedData.category !== '' && watchedData.category !== '通用') ||
         (watchedData.tags && watchedData.tags.length > 0) ||
         (watchedData.compatible_models && watchedData.compatible_models.length > 0) ||
         (watchedData.input_variables && watchedData.input_variables.length > 0) ||

@@ -6,6 +6,7 @@ import { useAuth, withAuth } from '@/contexts/AuthContext';
 import { createPrompt, getCategories, getTags } from '@/lib/api';
 import PromptFormContainer, { PromptFormData } from '@/components/prompts/PromptFormContainer';
 import { useBeforeUnload } from '@/hooks/useBeforeUnload';
+import { UnsavedChangesDialog } from '@/components/ConfirmDialog';
 
 function CreatePromptPage() {
   const router = useRouter();
@@ -24,8 +25,12 @@ function CreatePromptPage() {
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
 
-  // 浏览器离开页面警告
-  useBeforeUnload(hasUnsavedChanges, '您的提示词内容尚未保存，确定要离开此页面吗？');
+  // 浏览器离开页面警告 - 使用自定义对话框
+  const { showConfirmDialog, onConfirmLeave, onCancelLeave } = useBeforeUnload(
+    hasUnsavedChanges, 
+    '您的提示词内容尚未保存，确定要离开此页面吗？',
+    true // 使用自定义对话框
+  );
   
   // 创建页面的权限检查（始终可以创建）
   const permissionCheck = user ? {
@@ -239,18 +244,28 @@ function CreatePromptPage() {
   }
 
   return (
-    <PromptFormContainer
-      mode="create"
-      onSubmit={handleSubmit}
-      categoriesByType={categoriesByType}
-      pageTitle="创建提示词"
-      pageSubtitle="释放AI的无限潜能，打造专属的智能提示词"
-      submitButtonText="创建提示词"
-      permissionCheck={permissionCheck}
-      hasUnsavedChanges={hasUnsavedChanges}
-      saveSuccess={saveSuccess}
-      onUnsavedChanges={setHasUnsavedChanges}
-    />
+    <>
+      <PromptFormContainer
+        mode="create"
+        onSubmit={handleSubmit}
+        categoriesByType={categoriesByType}
+        pageTitle="创建提示词"
+        pageSubtitle="释放AI的无限潜能，打造专属的智能提示词"
+        submitButtonText="创建提示词"
+        permissionCheck={permissionCheck}
+        hasUnsavedChanges={hasUnsavedChanges}
+        saveSuccess={saveSuccess}
+        onUnsavedChanges={setHasUnsavedChanges}
+      />
+      
+      {/* 统一的未保存更改确认对话框 */}
+      <UnsavedChangesDialog
+        open={showConfirmDialog}
+        onConfirm={onConfirmLeave}
+        onCancel={onCancelLeave}
+        context="form"
+      />
+    </>
   );
 }
 
