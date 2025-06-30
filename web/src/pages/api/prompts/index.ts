@@ -27,6 +27,9 @@ export default apiHandler(async (req: NextApiRequest, res: NextApiResponse) => {
     try {
       const query = req.query as PromptsQuery;
       
+      // 从请求头获取用户ID（如果有的话）
+      const userId = req.headers['x-user-id'] as string | undefined;
+      
       // 解析查询参数
       const filters = {
         category: query.category,
@@ -37,9 +40,10 @@ export default apiHandler(async (req: NextApiRequest, res: NextApiResponse) => {
         pageSize: query.pageSize ? parseInt(query.pageSize) : 20,
         sortBy: query.sortBy || 'latest' as const,
         isPublic: query.isPublic !== 'false', // 默认只显示公开的提示词
+        userId: userId, // 传递用户ID到过滤器
       };
 
-      console.log('获取提示词列表，过滤条件:', filters);
+      console.log('获取提示词列表，过滤条件:', filters, '用户ID:', userId);
 
       // 使用数据库服务获取提示词列表
       const result = await databaseService.getPrompts(filters);
