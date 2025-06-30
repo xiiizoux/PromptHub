@@ -143,7 +143,7 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
   const [saveSuccess, setSaveSuccess] = useState(false);
 
   // 浏览器离开页面警告 - 使用自定义对话框
-  const { showConfirmDialog, onConfirmLeave, onCancelLeave } = useBeforeUnload(
+  const { showConfirmDialog, onConfirmLeave, onCancelLeave, forceNavigate } = useBeforeUnload(
     hasUnsavedChanges, 
     '您对提示词的修改尚未保存，确定要离开此页面吗？',
     true // 使用自定义对话框
@@ -249,8 +249,8 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
         position: 'top-center',
       });
       
-      // 保存成功后直接跳转回详情页面
-      router.push(`/prompts/${prompt.id}`);
+      // 保存成功后强制跳转（忽略未保存状态检测）
+      forceNavigate(`/prompts/${prompt.id}`);
     } catch (error: unknown) {
       console.error('更新提示词失败:', error);
       toast.error(`❌ 更新失败: ${error instanceof Error ? error.message : '未知错误'}`);

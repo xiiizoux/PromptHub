@@ -26,7 +26,7 @@ function CreatePromptPage() {
   const [saveSuccess, setSaveSuccess] = useState(false);
 
   // 浏览器离开页面警告 - 使用自定义对话框
-  const { showConfirmDialog, onConfirmLeave, onCancelLeave } = useBeforeUnload(
+  const { showConfirmDialog, onConfirmLeave, onCancelLeave, forceNavigate } = useBeforeUnload(
     hasUnsavedChanges, 
     '您的提示词内容尚未保存，确定要离开此页面吗？',
     true // 使用自定义对话框
@@ -160,8 +160,8 @@ function CreatePromptPage() {
         position: 'top-center',
       });
       
-      // 导航到新提示词页面 - 立即跳转，避免状态检测延迟
-      router.push(`/prompts/${newPrompt.id}`);
+      // 导航到新提示词页面 - 强制跳转，避免未保存状态拦截
+      forceNavigate(`/prompts/${newPrompt.id}`);
     } catch (error: unknown) {
       console.error('=== 创建提示词失败 ===');
       console.error('错误详情:', error);

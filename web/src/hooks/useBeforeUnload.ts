@@ -52,6 +52,16 @@ export function useBeforeUnload(
     }
   }, [pendingUrl, router]);
 
+  // 强制跳转方法（忽略未保存状态）
+  const forceNavigate = useCallback((url: string) => {
+    // 临时移除路由监听器
+    router.events.off('routeChangeStart', handleRouteChangeStart);
+    router.push(url).finally(() => {
+      // 导航完成后重新添加监听器
+      router.events.on('routeChangeStart', handleRouteChangeStart);
+    });
+  }, [router, handleRouteChangeStart]);
+
   // 处理取消离开
   const handleCancelLeave = useCallback(() => {
     setShowConfirmDialog(false);
@@ -96,6 +106,7 @@ export function useBeforeUnload(
     showConfirmDialog,
     onConfirmLeave: handleConfirmLeave,
     onCancelLeave: handleCancelLeave,
+    forceNavigate,
   };
 }
 
