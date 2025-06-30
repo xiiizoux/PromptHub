@@ -1,26 +1,20 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { PromptInfo } from '@/types';
 import { formatVersionDisplay } from '@/lib/version-utils';
 import { useIntersectionObserver } from '@/hooks/useIntersectionObserver';
+import { getCategoryDisplayConfig, getCategoriesByType, CategoryInfo } from '@/lib/category-service';
 import { 
   StarIcon, 
   DocumentTextIcon, 
   PhotoIcon,
-  SparklesIcon,
   TagIcon,
   ClockIcon,
   UserIcon,
   FireIcon,
   EyeIcon,
   CogIcon,
-  CameraIcon,
-  PaintBrushIcon,
-  PencilIcon,
-  RectangleGroupIcon,
-  BuildingStorefrontIcon,
-  SwatchIcon,
 } from '@heroicons/react/24/outline';
 import { StarIcon as StarSolidIcon } from '@heroicons/react/24/solid';
 import { InteractionButtons } from '@/components/BookmarkButton';
@@ -35,17 +29,7 @@ interface ImagePromptCardProps {
   };
 }
 
-// 图像生成分类映射
-const IMAGE_CATEGORY_MAP: Record<string, { name: string; color: string; gradient: string; icon: any }> = {
-  '真实摄影': { name: '真实摄影', color: 'from-pink-500 to-red-500', gradient: 'from-pink-500/20 to-red-500/20', icon: CameraIcon },
-  '艺术绘画': { name: '艺术绘画', color: 'from-purple-500 to-pink-500', gradient: 'from-purple-500/20 to-pink-500/20', icon: PaintBrushIcon },
-  '动漫插画': { name: '动漫插画', color: 'from-pink-500 to-yellow-500', gradient: 'from-pink-500/20 to-yellow-500/20', icon: PencilIcon },
-  '抽象艺术': { name: '抽象艺术', color: 'from-yellow-500 to-orange-500', gradient: 'from-yellow-500/20 to-orange-500/20', icon: SparklesIcon },
-  'Logo设计': { name: 'Logo设计', color: 'from-cyan-500 to-purple-500', gradient: 'from-cyan-500/20 to-purple-500/20', icon: RectangleGroupIcon },
-  '建筑空间': { name: '建筑空间', color: 'from-blue-500 to-green-500', gradient: 'from-blue-500/20 to-green-500/20', icon: BuildingStorefrontIcon },
-  '时尚设计': { name: '时尚设计', color: 'from-pink-500 to-purple-500', gradient: 'from-pink-500/20 to-purple-500/20', icon: SwatchIcon },
-  'default': { name: '图像生成', color: 'from-pink-500 to-purple-500', gradient: 'from-pink-500/20 to-purple-500/20', icon: PhotoIcon },
-};
+// 使用统一的分类配置系统
 
 // 格式化日期函数
 const formatDate = (dateString?: string) => {
@@ -63,6 +47,8 @@ const ImagePromptCard: React.FC<ImagePromptCardProps> = React.memo(({ prompt }) 
   const [imageError, setImageError] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const [showFullImage, setShowFullImage] = useState(false);
+  const [categories, setCategories] = useState<CategoryInfo[]>([]);
+  const [loadingCategories, setLoadingCategories] = useState(true);
   
   // 懒加载：只有当卡片进入可视区域时才加载图像
   const { elementRef, isVisible } = useIntersectionObserver({
@@ -71,11 +57,35 @@ const ImagePromptCard: React.FC<ImagePromptCardProps> = React.memo(({ prompt }) 
     freezeOnceVisible: true // 一旦可见就保持状态
   });
 
-  // 使用useMemo缓存计算结果 - 移到早期返回之前
+  // 加载分类数据
+  useEffect(() => {
+    const loadCategories = async () => {
+      try {
+        setLoadingCategories(true);
+        const imageCategories = await getCategoriesByType('image');
+        setCategories(imageCategories);
+      } catch (error) {
+        console.error('Failed to load image categories:', error);
+      } finally {
+        setLoadingCategories(false);
+      }
+    };
+
+    loadCategories();
+  }, []);
+
+  // 使用动态分类配置系统
   const categoryInfo = useMemo(() => {
-    if (!prompt?.category) return IMAGE_CATEGORY_MAP.default;
-    return IMAGE_CATEGORY_MAP[prompt.category] || IMAGE_CATEGORY_MAP.default;
-  }, [prompt?.category]);
+    if (loadingCategories) {
+      return {
+        name: prompt?.category || '加载中...',
+        color: 'from-gray-400 to-gray-500',
+        gradient: 'from-gray-400/20 to-gray-500/20',
+        icon: TagIcon
+      };
+    }
+    return getCategoryDisplayConfig(prompt?.category, categories, 'image');
+  }, [prompt?.category, categories, loadingCategories]);
 
   const CategoryIcon = categoryInfo.icon;
 

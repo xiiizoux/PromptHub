@@ -26,24 +26,70 @@ export default function CategorySelector({
 }: CategorySelectorProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [isSearchMode, setIsSearchMode] = useState(false);
 
   const availableCategories = categoriesByType[promptType] || [];
   
   // 根据搜索词过滤分类
   const filteredCategories = availableCategories.filter(category =>
-    category.toLowerCase().includes(searchTerm.toLowerCase()),
+    category.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // 当类型改变时重置搜索
+  // 当类型改变时重置状态
   useEffect(() => {
-    setSearchTerm('');
     setIsOpen(false);
+    setSearchTerm('');
+    setIsSearchMode(false);
   }, [promptType]);
 
   const handleCategorySelect = (category: string) => {
     onChange(category);
     setIsOpen(false);
     setSearchTerm('');
+    setIsSearchMode(false);
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const inputValue = e.target.value;
+    setSearchTerm(inputValue);
+    setIsSearchMode(true);
+    setIsOpen(true);
+  };
+
+  const handleInputFocus = () => {
+    setIsOpen(true);
+    if (value && !isSearchMode) {
+      setSearchTerm(value);
+      setIsSearchMode(true);
+    }
+  };
+
+  const handleInputBlur = () => {
+    // 延迟关闭，以便处理点击分类选项的情况
+    setTimeout(() => {
+      if (!isSearchMode || !searchTerm) {
+        setIsOpen(false);
+        setSearchTerm('');
+        setIsSearchMode(false);
+      }
+    }, 150);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Escape') {
+      setIsOpen(false);
+      setSearchTerm('');
+      setIsSearchMode(false);
+    } else if (e.key === 'Enter' && filteredCategories.length === 1) {
+      e.preventDefault();
+      handleCategorySelect(filteredCategories[0]);
+    } else if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setIsOpen(true);
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setIsOpen(true);
+    }
   };
 
   const getTypeLabel = (type: PromptType) => {
@@ -95,25 +141,35 @@ export default function CategorySelector({
       </label>
 
       <div className="relative">
-        <button
-          type="button"
-          onClick={() => !disabled && setIsOpen(!isOpen)}
-          disabled={disabled}
-          className={`
-            input-primary w-full text-left flex items-center justify-between
-            ${disabled ? 'opacity-50 cursor-not-allowed' : 'hover:border-neon-cyan/50'}
-            ${isOpen ? 'border-neon-cyan/50' : ''}
-          `}
-        >
-          <span className={value ? 'text-white' : 'text-gray-400'}>
-            {value || '选择分类'}
-          </span>
-          <ChevronDownIcon 
-            className={`h-5 w-5 text-gray-400 transition-transform ${
-              isOpen ? 'rotate-180' : ''
-            }`} 
+        <div className="relative">
+          <input
+            type="text"
+            value={isSearchMode ? searchTerm : (value || '')}
+            onChange={handleInputChange}
+            onFocus={handleInputFocus}
+            onBlur={handleInputBlur}
+            onKeyDown={handleKeyDown}
+            disabled={disabled}
+            placeholder="选择分类或输入搜索..."
+            className={`
+              input-primary w-full pr-10
+              ${disabled ? 'opacity-50 cursor-not-allowed' : 'hover:border-neon-cyan/50'}
+              ${isOpen ? 'border-neon-cyan/50' : ''}
+            `}
           />
-        </button>
+          <button
+            type="button"
+            onClick={() => !disabled && setIsOpen(!isOpen)}
+            disabled={disabled}
+            className="absolute inset-y-0 right-0 flex items-center pr-3 hover:bg-neon-cyan/10 rounded-r-lg transition-colors"
+          >
+            <ChevronDownIcon 
+              className={`h-5 w-5 text-gray-400 transition-transform hover:text-neon-cyan ${
+                isOpen ? 'rotate-180' : ''
+              }`} 
+            />
+          </button>
+        </div>
 
         <AnimatePresence>
           {isOpen && (
@@ -123,20 +179,8 @@ export default function CategorySelector({
               exit={{ opacity: 0, y: -10 }}
               className="absolute z-50 w-full mt-1 bg-dark-bg-secondary border border-gray-600 rounded-lg shadow-xl max-h-64 overflow-hidden"
             >
-              {/* 搜索框 */}
-              <div className="p-3 border-b border-gray-600">
-                <input
-                  type="text"
-                  placeholder="搜索分类..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full px-3 py-2 bg-dark-bg-primary border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:border-neon-cyan"
-                  autoFocus
-                />
-              </div>
-
               {/* 分类列表 */}
-              <div className="max-h-48 overflow-y-auto">
+              <div className="max-h-64 overflow-y-auto">
                 {filteredCategories.length > 0 ? (
                   filteredCategories.map((category) => (
                     <motion.button
@@ -156,19 +200,15 @@ export default function CategorySelector({
                       )}
                     </motion.button>
                   ))
+                ) : searchTerm ? (
+                  <div className="px-4 py-6 text-center text-gray-400">
+                    <p>未找到匹配的分类</p>
+                    <p className="text-sm mt-1">试试其他关键词</p>
+                  </div>
                 ) : (
                   <div className="px-4 py-6 text-center text-gray-400">
-                    {searchTerm ? (
-                      <>
-                        <p>未找到匹配的分类</p>
-                        <p className="text-sm mt-1">尝试其他关键词</p>
-                      </>
-                    ) : (
-                      <>
-                        <p>没有可用的{getTypeLabel(promptType)}分类</p>
-                        <p className="text-sm mt-1">请先选择其他类型</p>
-                      </>
-                    )}
+                    <p>没有可用的{getTypeLabel(promptType)}分类</p>
+                    <p className="text-sm mt-1">请先选择其他类型</p>
                   </div>
                 )}
               </div>
@@ -177,8 +217,11 @@ export default function CategorySelector({
               {availableCategories.length > 0 && (
                 <div className="px-4 py-2 bg-dark-bg-primary/50 border-t border-gray-600">
                   <p className="text-xs text-gray-500">
-                    共 {availableCategories.length} 个{getTypeLabel(promptType)}分类
-                    {searchTerm && `, 显示 ${filteredCategories.length} 个匹配结果`}
+                    {searchTerm ? (
+                      `显示 ${filteredCategories.length} / ${availableCategories.length} 个匹配结果`
+                    ) : (
+                      `共 ${availableCategories.length} 个${getTypeLabel(promptType)}分类`
+                    )}
                   </p>
                 </div>
               )}

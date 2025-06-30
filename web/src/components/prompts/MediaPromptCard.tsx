@@ -1,9 +1,10 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { PromptInfo } from '@/types';
 import { formatVersionDisplay } from '@/lib/version-utils';
 import { useIntersectionObserver } from '@/hooks/useIntersectionObserver';
+import { getCategoryDisplayConfig, getCategoriesByType, CategoryInfo } from '@/lib/category-service';
 import { 
   StarIcon, 
   DocumentTextIcon, 
@@ -11,23 +12,12 @@ import {
   FilmIcon,
   PlayIcon,
   PauseIcon,
-  SparklesIcon,
   TagIcon,
   ClockIcon,
   UserIcon,
   FireIcon,
   EyeIcon,
   CogIcon,
-  CameraIcon,
-  PaintBrushIcon,
-  PencilIcon,
-  RectangleGroupIcon,
-  BuildingStorefrontIcon,
-  SwatchIcon,
-  BookOpenIcon,
-  CubeTransparentIcon,
-  ShoppingBagIcon,
-  MapIcon,
   UserCircleIcon,
   MegaphoneIcon,
   ChatBubbleLeftRightIcon,
@@ -47,33 +37,7 @@ interface MediaPromptCardProps {
   showPublicStatus?: boolean; // 控制是否显示公开/私有状态
 }
 
-// 图像生成分类映射
-const IMAGE_CATEGORY_MAP: Record<string, { name: string; color: string; gradient: string; icon: any }> = {
-  '真实摄影': { name: '真实摄影', color: 'from-pink-500 to-red-500', gradient: 'from-pink-500/20 to-red-500/20', icon: CameraIcon },
-  '艺术绘画': { name: '艺术绘画', color: 'from-purple-500 to-pink-500', gradient: 'from-purple-500/20 to-pink-500/20', icon: PaintBrushIcon },
-  '动漫插画': { name: '动漫插画', color: 'from-pink-500 to-yellow-500', gradient: 'from-pink-500/20 to-yellow-500/20', icon: PencilIcon },
-  '抽象艺术': { name: '抽象艺术', color: 'from-yellow-500 to-orange-500', gradient: 'from-yellow-500/20 to-orange-500/20', icon: SparklesIcon },
-  'Logo设计': { name: 'Logo设计', color: 'from-cyan-500 to-purple-500', gradient: 'from-cyan-500/20 to-purple-500/20', icon: RectangleGroupIcon },
-  '建筑空间': { name: '建筑空间', color: 'from-blue-500 to-green-500', gradient: 'from-blue-500/20 to-green-500/20', icon: BuildingStorefrontIcon },
-  '时尚设计': { name: '时尚设计', color: 'from-pink-500 to-purple-500', gradient: 'from-pink-500/20 to-purple-500/20', icon: SwatchIcon },
-  'default': { name: '图像生成', color: 'from-pink-500 to-purple-500', gradient: 'from-pink-500/20 to-purple-500/20', icon: PhotoIcon },
-};
-
-// 视频生成分类映射
-const VIDEO_CATEGORY_MAP: Record<string, { name: string; color: string; gradient: string; icon: any }> = {
-  '故事叙述': { name: '故事叙述', color: 'from-orange-500 to-red-500', gradient: 'from-orange-500/20 to-red-500/20', icon: BookOpenIcon },
-  '动画特效': { name: '动画特效', color: 'from-red-500 to-pink-500', gradient: 'from-red-500/20 to-pink-500/20', icon: CubeTransparentIcon },
-  '产品展示': { name: '产品展示', color: 'from-yellow-500 to-green-500', gradient: 'from-yellow-500/20 to-green-500/20', icon: ShoppingBagIcon },
-  '自然风景': { name: '自然风景', color: 'from-green-500 to-blue-500', gradient: 'from-green-500/20 to-blue-500/20', icon: MapIcon },
-  '人物肖像': { name: '人物肖像', color: 'from-pink-500 to-purple-500', gradient: 'from-pink-500/20 to-purple-500/20', icon: UserCircleIcon },
-  '广告营销': { name: '广告营销', color: 'from-red-500 to-orange-500', gradient: 'from-red-500/20 to-orange-500/20', icon: MegaphoneIcon },
-  'default': { name: '视频生成', color: 'from-sky-200 to-blue-300', gradient: 'from-sky-200/20 to-blue-300/20', icon: FilmIcon },
-};
-
-// 对话类型的默认样式
-const CHAT_CATEGORY_MAP = {
-  'default': { name: '对话生成', color: 'from-neon-cyan to-neon-blue', gradient: 'from-neon-cyan/20 to-neon-blue/20', icon: ChatBubbleLeftRightIcon },
-};
+// 使用动态分类配置系统
 
 // 格式化日期函数
 const formatDate = (dateString?: string) => {
@@ -92,6 +56,8 @@ const MediaPromptCard: React.FC<MediaPromptCardProps> = React.memo(({ prompt, sh
   const [isHovered, setIsHovered] = useState(false);
   const [showFullMedia, setShowFullMedia] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [categories, setCategories] = useState<CategoryInfo[]>([]);
+  const [loadingCategories, setLoadingCategories] = useState(true);
   const videoRef = React.useRef<HTMLVideoElement>(null);
   
   // 懒加载：只有当卡片进入可视区域时才加载媒体
@@ -101,23 +67,37 @@ const MediaPromptCard: React.FC<MediaPromptCardProps> = React.memo(({ prompt, sh
     freezeOnceVisible: true
   });
 
-  // 获取适合的分类映射
-  const getCategoryMap = () => {
-    switch (prompt.category_type) {
-      case 'image':
-        return IMAGE_CATEGORY_MAP;
-      case 'video':
-        return VIDEO_CATEGORY_MAP;
-      default:
-        return CHAT_CATEGORY_MAP;
-    }
-  };
+  // 加载分类数据
+  useEffect(() => {
+    const loadCategories = async () => {
+      try {
+        setLoadingCategories(true);
+        const type = prompt.category_type || 'chat';
+        const categoriesData = await getCategoriesByType(type);
+        setCategories(categoriesData);
+      } catch (error) {
+        console.error('Failed to load categories:', error);
+      } finally {
+        setLoadingCategories(false);
+      }
+    };
 
-  const categoryMap = getCategoryMap();
+    loadCategories();
+  }, [prompt.category_type]);
+
+  // 使用动态分类配置系统
   const categoryInfo = useMemo(() => {
-    if (!prompt?.category) return categoryMap.default;
-    return (categoryMap as any)[prompt.category] || categoryMap.default;
-  }, [prompt?.category, categoryMap]);
+    if (loadingCategories) {
+      return {
+        name: prompt?.category || '加载中...',
+        color: 'from-gray-400 to-gray-500',
+        gradient: 'from-gray-400/20 to-gray-500/20',
+        icon: TagIcon
+      };
+    }
+    const type = prompt.category_type || 'chat';
+    return getCategoryDisplayConfig(prompt?.category, categories, type);
+  }, [prompt?.category, prompt.category_type, categories, loadingCategories]);
 
   const CategoryIcon = categoryInfo.icon;
 

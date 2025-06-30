@@ -1,35 +1,17 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { PromptInfo } from '@/types';
 import { formatVersionDisplay } from '@/lib/version-utils';
+import { getCategoryDisplayConfig, getCategoriesByType, CategoryInfo } from '@/lib/category-service';
 import { 
   StarIcon, 
   DocumentTextIcon, 
   ArrowTopRightOnSquareIcon,
-  SparklesIcon,
-  CodeBracketIcon,
   TagIcon,
   ClockIcon,
   UserIcon,
   FireIcon,
-  BookOpenIcon,
-  BriefcaseIcon,
-  PencilIcon,
-  SwatchIcon,
-  PaintBrushIcon,
-  AcademicCapIcon,
-  HeartIcon,
-  PuzzlePieceIcon,
-  HomeIcon,
-  ChartBarIcon,
-  FolderIcon,
-  LanguageIcon,
-  VideoCameraIcon,
-  MicrophoneIcon,
-  MusicalNoteIcon,
-  HeartIcon as HealthIcon,
-  CpuChipIcon,
 } from '@heroicons/react/24/outline';
 import { StarIcon as StarSolidIcon } from '@heroicons/react/24/solid';
 import { InteractionButtons } from '@/components/BookmarkButton';
@@ -39,30 +21,7 @@ interface PromptCardProps {
   prompt: PromptInfo;
 }
 
-// 分类映射 - 移到组件外部，避免每次渲染重新创建
-const CATEGORY_MAP: Record<string, { name: string; color: string; icon: any }> = {
-  '通用': { name: '通用', color: 'from-neon-purple to-neon-blue', icon: SparklesIcon },
-  '学术': { name: '学术', color: 'from-neon-blue to-neon-cyan', icon: AcademicCapIcon },
-  '职业': { name: '职业', color: 'from-neon-green to-neon-yellow', icon: BriefcaseIcon },
-  '文案': { name: '文案', color: 'from-neon-pink to-neon-yellow', icon: PencilIcon },
-  '设计': { name: '设计', color: 'from-neon-yellow to-neon-orange', icon: SwatchIcon },
-  '绘画': { name: '绘画', color: 'from-neon-orange to-neon-red', icon: PaintBrushIcon },
-  '教育': { name: '教育', color: 'from-neon-green to-neon-cyan', icon: BookOpenIcon },
-  '情感': { name: '情感', color: 'from-neon-pink to-neon-purple', icon: HeartIcon },
-  '娱乐': { name: '娱乐', color: 'from-neon-yellow to-neon-green', icon: SparklesIcon },
-  '游戏': { name: '游戏', color: 'from-neon-purple to-neon-pink', icon: PuzzlePieceIcon },
-  '生活': { name: '生活', color: 'from-neon-green to-neon-blue', icon: HomeIcon },
-  '商业': { name: '商业', color: 'from-neon-red to-neon-orange', icon: ChartBarIcon },
-  '办公': { name: '办公', color: 'from-neon-blue to-neon-purple', icon: FolderIcon },
-  '编程': { name: '编程', color: 'from-neon-cyan to-neon-cyan-dark', icon: CodeBracketIcon },
-  '翻译': { name: '翻译', color: 'from-neon-blue to-neon-cyan', icon: LanguageIcon },
-  '视频': { name: '视频', color: 'from-neon-red to-neon-pink', icon: VideoCameraIcon },
-  '播客': { name: '播客', color: 'from-neon-orange to-neon-yellow', icon: MicrophoneIcon },
-  '音乐': { name: '音乐', color: 'from-neon-purple to-neon-blue', icon: MusicalNoteIcon },
-  '健康': { name: '健康', color: 'from-neon-green to-neon-cyan', icon: HealthIcon },
-  '科技': { name: '科技', color: 'from-neon-cyan to-neon-blue', icon: CpuChipIcon },
-  'default': { name: '通用', color: 'from-neon-purple to-neon-blue', icon: SparklesIcon },
-};
+// 使用统一的分类配置系统
 
 // 格式化日期函数 - 移到组件外部
 const formatDate = (dateString?: string) => {
@@ -76,15 +35,43 @@ const formatDate = (dateString?: string) => {
 };
 
 const PromptCard: React.FC<PromptCardProps> = React.memo(({ prompt }) => {
+  const [categories, setCategories] = useState<CategoryInfo[]>([]);
+  const [loadingCategories, setLoadingCategories] = useState(true);
+
+  // 加载分类数据
+  useEffect(() => {
+    const loadCategories = async () => {
+      try {
+        setLoadingCategories(true);
+        const chatCategories = await getCategoriesByType('chat');
+        setCategories(chatCategories);
+      } catch (error) {
+        console.error('Failed to load categories:', error);
+      } finally {
+        setLoadingCategories(false);
+      }
+    };
+
+    loadCategories();
+  }, []);
+
   // 如果没有必要的数据，不渲染
   if (!prompt || !prompt.id) {
     return null;
   }
 
-  // 使用useMemo缓存计算结果
+  // 使用动态分类配置系统
   const categoryInfo = useMemo(() => {
-    return CATEGORY_MAP[prompt?.category || 'default'] || CATEGORY_MAP.default;
-  }, [prompt?.category]);
+    if (loadingCategories) {
+      return {
+        name: prompt?.category || '加载中...',
+        color: 'from-gray-400 to-gray-500',
+        gradient: 'from-gray-400/20 to-gray-500/20',
+        icon: TagIcon
+      };
+    }
+    return getCategoryDisplayConfig(prompt?.category, categories, 'chat');
+  }, [prompt?.category, categories, loadingCategories]);
 
   const rating = useMemo(() => {
     // 优先使用 average_rating，如果没有则使用 rating 字段
