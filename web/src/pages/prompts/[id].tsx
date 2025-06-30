@@ -1023,7 +1023,7 @@ export default function PromptDetailsPage() {
                         ))}
                       </div>
                     ) : (
-                      <div className="text-xs text-gray-400">
+                      <div className="text-sm text-gray-400 text-center py-8">
                         此提示词未设置参数
                       </div>
                     )}
@@ -1120,7 +1120,7 @@ export default function PromptDetailsPage() {
                       ))}
                     </div>
                   ) : (
-                    <div className="text-xs text-gray-400">
+                    <div className="text-sm text-gray-400 text-center py-8">
                       此提示词未设置标签
                     </div>
                   )}

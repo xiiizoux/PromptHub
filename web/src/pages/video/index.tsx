@@ -218,7 +218,7 @@ export default function VideoPromptsPage() {
         <button
           onClick={() => handlePageChange(currentPage - 1)}
           disabled={currentPage <= 1}
-          className="px-3 py-2 text-sm rounded-lg glass border border-red-500/20 text-red-400 hover:border-red-500/40 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+          className="px-3 py-2 text-sm rounded-lg glass border border-sky-200/20 text-sky-200 hover:border-sky-300/40 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
         >
           上一页
         </button>
@@ -227,7 +227,7 @@ export default function VideoPromptsPage() {
           <>
             <button
               onClick={() => handlePageChange(1)}
-              className="px-3 py-2 text-sm rounded-lg glass border border-red-500/20 text-gray-400 hover:text-red-400 hover:border-red-500/40 transition-all"
+              className="px-3 py-2 text-sm rounded-lg glass border border-sky-200/20 text-gray-400 hover:text-sky-200 hover:border-sky-300/40 transition-all"
             >
               1
             </button>
@@ -241,8 +241,8 @@ export default function VideoPromptsPage() {
             onClick={() => handlePageChange(page)}
             className={`px-3 py-2 text-sm rounded-lg glass border transition-all ${
               page === currentPage
-                ? 'border-red-500/50 bg-red-500/10 text-red-400'
-                : 'border-red-500/20 text-gray-400 hover:text-red-400 hover:border-red-500/40'
+                ? 'border-sky-300/50 bg-sky-200/10 text-sky-200'
+                : 'border-sky-200/20 text-gray-400 hover:text-sky-200 hover:border-sky-300/40'
             }`}
           >
             {page}
@@ -254,7 +254,7 @@ export default function VideoPromptsPage() {
             {endPage < totalPages - 1 && <span className="text-gray-500">...</span>}
             <button
               onClick={() => handlePageChange(totalPages)}
-              className="px-3 py-2 text-sm rounded-lg glass border border-red-500/20 text-gray-400 hover:text-red-400 hover:border-red-500/40 transition-all"
+              className="px-3 py-2 text-sm rounded-lg glass border border-sky-200/20 text-gray-400 hover:text-sky-200 hover:border-sky-300/40 transition-all"
             >
               {totalPages}
             </button>
@@ -264,7 +264,7 @@ export default function VideoPromptsPage() {
         <button
           onClick={() => handlePageChange(currentPage + 1)}
           disabled={currentPage >= totalPages}
-          className="px-3 py-2 text-sm rounded-lg glass border border-red-500/20 text-red-400 hover:border-red-500/40 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+          className="px-3 py-2 text-sm rounded-lg glass border border-sky-200/20 text-sky-200 hover:border-sky-300/40 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
         >
           下一页
         </button>
@@ -281,8 +281,8 @@ export default function VideoPromptsPage() {
       {/* 动态背景 */}
       <div className="absolute inset-0 bg-gradient-to-br from-dark-bg-primary via-dark-bg-secondary to-dark-bg-primary" />
       <div className="absolute inset-0 opacity-30">
-        <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-red-500/10 rounded-full blur-3xl" />
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-orange-500/10 rounded-full blur-3xl" />
+        <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-sky-200/10 rounded-full blur-3xl" />
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-blue-300/10 rounded-full blur-3xl" />
       </div>
 
       {/* 边栏过滤器 */}
@@ -302,7 +302,7 @@ export default function VideoPromptsPage() {
           transition={{ duration: 0.4 }}
         >
           <div className="flex items-center justify-center mb-2">
-            <div className="inline-flex p-2 rounded-xl bg-gradient-to-br from-red-500 to-orange-500 mr-2">
+            <div className="inline-flex p-2 rounded-xl bg-gradient-to-br from-sky-200 to-blue-300 mr-2">
               <FilmIcon className="unified-page-title-icon" />
             </div>
             <h1 className="unified-page-title">
@@ -313,7 +313,7 @@ export default function VideoPromptsPage() {
             探索精彩的视频生成提示词，让AI为你创造动态视觉体验
           </p>
           {totalCount > 0 && (
-            <p className="text-sm text-red-400 mt-4">
+            <p className="text-sm text-sky-200 mt-4">
               共找到 {totalCount} 个视频提示词
             </p>
           )}

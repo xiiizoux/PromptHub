@@ -194,6 +194,23 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
     }
   }, [user, prompt, router]);
 
+  // 添加浏览器离开页面警告
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (hasUnsavedChanges) {
+        e.preventDefault();
+        e.returnValue = '您有未保存的更改，确定要离开此页面吗？';
+        return '您有未保存的更改，确定要离开此页面吗？';
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [hasUnsavedChanges]);
+
   // 表单提交处理
   const handleSubmit = async (data: PromptFormData) => {
     // 再次检查权限
@@ -318,6 +335,7 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
       permissionCheck={permissionCheck}
       hasUnsavedChanges={hasUnsavedChanges}
       saveSuccess={saveSuccess}
+      onUnsavedChanges={setHasUnsavedChanges}
     />
   );
 }

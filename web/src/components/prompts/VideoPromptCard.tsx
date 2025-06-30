@@ -43,7 +43,7 @@ const VIDEO_CATEGORY_MAP: Record<string, { name: string; color: string; gradient
   '自然风景': { name: '自然风景', color: 'from-green-500 to-blue-500', gradient: 'from-green-500/20 to-blue-500/20', icon: MapIcon },
   '人物肖像': { name: '人物肖像', color: 'from-pink-500 to-purple-500', gradient: 'from-pink-500/20 to-purple-500/20', icon: UserCircleIcon },
   '广告营销': { name: '广告营销', color: 'from-red-500 to-orange-500', gradient: 'from-red-500/20 to-orange-500/20', icon: MegaphoneIcon },
-  'default': { name: '视频生成', color: 'from-red-500 to-orange-500', gradient: 'from-red-500/20 to-orange-500/20', icon: FilmIcon },
+  'default': { name: '视频生成', color: 'from-sky-200 to-blue-300', gradient: 'from-sky-200/20 to-blue-300/20', icon: FilmIcon },
 };
 
 // 格式化日期函数
@@ -374,9 +374,9 @@ const VideoPromptCard: React.FC<VideoPromptCardProps> = React.memo(({ prompt }) 
             {/* 顶部标签栏 */}
             <div className="absolute top-3 left-3 right-3 flex justify-between items-start">
               {/* 视频类型标识 */}
-              <div className="flex items-center space-x-1 px-3 py-1.5 rounded-full bg-red-500/20 backdrop-blur-md border border-red-500/30">
-                <FilmIcon className="h-3 w-3 text-red-400" />
-                <span className="text-xs text-red-400 font-medium">视频</span>
+              <div className="flex items-center space-x-1 px-3 py-1.5 rounded-full bg-sky-200/20 backdrop-blur-md border border-sky-200/30">
+                <FilmIcon className="h-3 w-3 text-sky-200" />
+                <span className="text-xs text-sky-200 font-medium">视频</span>
               </div>
               
               {/* 热门标签 */}
@@ -402,7 +402,7 @@ const VideoPromptCard: React.FC<VideoPromptCardProps> = React.memo(({ prompt }) 
                     whileHover={{ scale: 1.1 }}
                     whileTap={{ scale: 0.9 }}
                     onClick={handleVideoToggle}
-                    className="w-16 h-16 bg-red-500/20 backdrop-blur-md border border-red-500/30 rounded-full flex items-center justify-center hover:bg-red-500/30 transition-colors"
+                    className="w-16 h-16 bg-sky-200/20 backdrop-blur-md border border-sky-200/30 rounded-full flex items-center justify-center hover:bg-sky-200/30 transition-colors"
                   >
                     {isPlaying ? (
                       <PauseIcon className="h-8 w-8 text-white" />
@@ -459,7 +459,7 @@ const VideoPromptCard: React.FC<VideoPromptCardProps> = React.memo(({ prompt }) 
                 {tagsToShow.visible.map((tag, index) => (
                   <span 
                     key={`${prompt.id}-tag-${tag}-${index}`}
-                    className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium glass border border-red-500/20 text-red-400"
+                    className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium glass border border-sky-200/20 text-sky-200"
                   >
                     #{tag}
                   </span>
@@ -473,7 +473,7 @@ const VideoPromptCard: React.FC<VideoPromptCardProps> = React.memo(({ prompt }) 
             )}
             
             {/* 底部信息 */}
-            <div className="mt-auto pt-4 border-t border-red-500/10 space-y-3">
+            <div className="mt-auto pt-4 border-t border-sky-200/10 space-y-3">
               {/* 第一行：评分与日期 */}
               <div className="flex items-center justify-between text-xs">
                 <div className="flex items-center">
@@ -481,7 +481,7 @@ const VideoPromptCard: React.FC<VideoPromptCardProps> = React.memo(({ prompt }) 
                     <div className="flex items-center space-x-2">
                       <div className="relative w-20 h-2 bg-dark-bg-tertiary rounded-full overflow-hidden">
                         <div 
-                          className="absolute top-0 left-0 h-full bg-gradient-to-r from-red-400 to-orange-400 rounded-full"
+                          className="absolute top-0 left-0 h-full bg-gradient-to-r from-sky-200 to-blue-300 rounded-full"
                           style={{ width: `${rating.percentage}%` }}
                         />
                       </div>

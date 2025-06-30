@@ -200,7 +200,7 @@ const PromptInteractions: React.FC<PromptInteractionsProps> = ({ promptId, initi
   };
 
   return (
-    <div className="flex items-center space-x-4 py-3 border-t border-b border-gray-200 dark:border-gray-600 mt-4">
+    <div className="flex items-center justify-end space-x-4 py-3 mt-4">
       {/* 点赞按钮 */}
       <button 
         onClick={() => handleInteraction('like')}

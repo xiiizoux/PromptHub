@@ -82,6 +82,7 @@ interface PromptFormContainerProps {
   permissionCheck?: PermissionCheck | null;
   hasUnsavedChanges?: boolean;
   saveSuccess?: boolean;
+  onUnsavedChanges?: (hasChanges: boolean) => void;
 }
 
 export default function PromptFormContainer({
@@ -98,6 +99,7 @@ export default function PromptFormContainer({
   permissionCheck,
   hasUnsavedChanges = false,
   saveSuccess = false,
+  onUnsavedChanges,
 }: PromptFormContainerProps) {
   const { user } = useAuth();
   const router = useRouter();
@@ -236,6 +238,43 @@ export default function PromptFormContainer({
       setValue('parameters', defaultParams);
     }
   }, [initialData, mode, setValue, currentType]);
+
+  // 监听表单变化，检测是否有未保存的更改
+  const watchedData = watch();
+  useEffect(() => {
+    if (!onUnsavedChanges) return;
+
+    let hasChanges = false;
+
+    if (mode === 'edit') {
+      // 编辑模式：比较当前表单数据与初始数据
+      hasChanges = 
+        watchedData.name !== (initialData?.name || '') ||
+        watchedData.description !== (initialData?.description || '') ||
+        watchedData.content !== (initialData?.content || '') ||
+        watchedData.category !== (initialData?.category || '') ||
+        JSON.stringify(watchedData.tags || []) !== JSON.stringify(initialData?.tags || []) ||
+        JSON.stringify(watchedData.compatible_models || []) !== JSON.stringify(initialData?.compatible_models || []) ||
+        watchedData.category_type !== (initialData?.category_type || 'chat') ||
+        watchedData.is_public !== (initialData?.is_public ?? true) ||
+        watchedData.allow_collaboration !== (initialData?.allow_collaboration ?? false) ||
+        JSON.stringify(parameters) !== JSON.stringify(initialData?.parameters || {}) ||
+        uploadedFiles.length > 0; // 如果有新上传的文件也算作更改
+    } else if (mode === 'create') {
+      // 创建模式：检测是否有任何输入
+      hasChanges = 
+        (watchedData.name && watchedData.name.trim() !== '') ||
+        (watchedData.description && watchedData.description.trim() !== '') ||
+        (watchedData.content && watchedData.content.trim() !== '') ||
+        (watchedData.category && watchedData.category.trim() !== '') ||
+        (watchedData.tags && watchedData.tags.length > 0) ||
+        (watchedData.compatible_models && watchedData.compatible_models.length > 0) ||
+        Object.keys(parameters).length > 0 ||
+        uploadedFiles.length > 0;
+    }
+
+    onUnsavedChanges(hasChanges);
+  }, [watchedData, initialData, parameters, uploadedFiles, onUnsavedChanges, mode]);
 
   // 获取类型标签
   const getTypeLabel = (type: PromptType) => {

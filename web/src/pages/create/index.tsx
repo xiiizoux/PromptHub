@@ -18,6 +18,17 @@ function CreatePromptPage() {
     video: [],
   });
   const [userReady, setUserReady] = useState(false);
+  
+  // 未保存状态管理
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState(false);
+  
+  // 创建页面的权限检查（始终可以创建）
+  const permissionCheck = user ? {
+    canEdit: true,
+    reason: 'owner' as const,
+    message: '您是此提示词的创建者'
+  } : null;
 
   // 用户状态监听和检查
   useEffect(() => {
@@ -80,6 +91,23 @@ function CreatePromptPage() {
     fetchCategoriesByType();
   }, []);
 
+  // 添加浏览器离开页面警告
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (hasUnsavedChanges) {
+        e.preventDefault();
+        e.returnValue = '您有未保存的更改，确定要离开此页面吗？';
+        return '您有未保存的更改，确定要离开此页面吗？';
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [hasUnsavedChanges]);
+
   // 表单提交处理
   const handleSubmit = async (data: PromptFormData) => {
     // 认证状态检查
@@ -129,6 +157,10 @@ function CreatePromptPage() {
       const newPrompt = await createPromptWithTimeout();
       console.log('提示词创建成功:', newPrompt);
       
+      // 设置成功状态
+      setSaveSuccess(true);
+      setHasUnsavedChanges(false);
+      
       // 显示成功提示
       toast.success('提示词创建成功！正在跳转...', {
         duration: 3000,
@@ -136,7 +168,9 @@ function CreatePromptPage() {
       });
       
       // 导航到新提示词页面
-      router.push(`/prompts/${newPrompt.id}`);
+      setTimeout(() => {
+        router.push(`/prompts/${newPrompt.id}`);
+      }, 1500); // 给用户时间看到成功提示
     } catch (error: unknown) {
       console.error('=== 创建提示词失败 ===');
       console.error('错误详情:', error);
@@ -226,6 +260,10 @@ function CreatePromptPage() {
       pageTitle="创建提示词"
       pageSubtitle="释放AI的无限潜能，打造专属的智能提示词"
       submitButtonText="创建提示词"
+      permissionCheck={permissionCheck}
+      hasUnsavedChanges={hasUnsavedChanges}
+      saveSuccess={saveSuccess}
+      onUnsavedChanges={setHasUnsavedChanges}
     />
   );
 }

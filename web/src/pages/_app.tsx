@@ -6,6 +6,7 @@ import AuthRefresher from '@/components/AuthRefresher';
 import Head from 'next/head';
 import { useEffect } from 'react';
 import { logger } from '@/lib/error-handler';
+import { Toaster } from 'react-hot-toast';
 
 export default function App({ Component, pageProps }: AppProps) {
   useEffect(() => {
@@ -46,6 +47,35 @@ export default function App({ Component, pageProps }: AppProps) {
       <Layout>
         <Component {...pageProps} />
       </Layout>
+      {/* Toast通知组件 */}
+      <Toaster 
+        position="bottom-center"
+        reverseOrder={false}
+        gutter={8}
+        containerClassName=""
+        containerStyle={{}}
+        toastOptions={{
+          duration: 4000,
+          style: {
+            background: 'rgba(26, 26, 36, 0.95)',
+            color: '#fff',
+            border: '1px solid rgba(0, 255, 255, 0.2)',
+            borderRadius: '12px',
+            backdropFilter: 'blur(10px)',
+            fontSize: '14px',
+          },
+          success: {
+            style: {
+              border: '1px solid rgba(16, 185, 129, 0.3)',
+            },
+          },
+          error: {
+            style: {
+              border: '1px solid rgba(239, 68, 68, 0.3)',
+            },
+          },
+        }}
+      />
     </AuthProvider>
   );
 }
