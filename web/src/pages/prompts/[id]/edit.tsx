@@ -10,6 +10,7 @@ import { updatePrompt, getCategories } from '@/lib/api';
 import { databaseService } from '@/lib/database-service';
 import { PromptDetails, PermissionCheck } from '@/types';
 import PromptFormContainer, { PromptFormData } from '@/components/prompts/PromptFormContainer';
+import { useBeforeUnload } from '@/hooks/useBeforeUnload';
 import {
   checkEditPermission,
   getPermissionDescription,
@@ -112,6 +113,7 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
     is_public: prompt.is_public !== undefined ? Boolean(prompt.is_public) : false,
     allow_collaboration: prompt.allow_collaboration !== undefined ? Boolean(prompt.allow_collaboration) : false,
     edit_permission: mapEditPermission(prompt.edit_permission),
+    collaborators: Array.isArray(prompt.collaborators) ? prompt.collaborators : [],
     category_type: prompt.category_type || 'chat', // 直接使用prompt.category_type，不需要类型断言
 
     // 媒体相关字段
@@ -138,6 +140,9 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
   const [permissionCheck, setPermissionCheck] = useState<PermissionCheck | null>(null);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
+
+  // 浏览器离开页面警告
+  useBeforeUnload(hasUnsavedChanges, '您对提示词的修改尚未保存，确定要离开此页面吗？');
 
   // 获取分类数据 - 按类型分别获取
   useEffect(() => {
@@ -194,22 +199,6 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
     }
   }, [user, prompt, router]);
 
-  // 添加浏览器离开页面警告
-  useEffect(() => {
-    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      if (hasUnsavedChanges) {
-        e.preventDefault();
-        e.returnValue = '您有未保存的更改，确定要离开此页面吗？';
-        return '您有未保存的更改，确定要离开此页面吗？';
-      }
-    };
-
-    window.addEventListener('beforeunload', handleBeforeUnload);
-
-    return () => {
-      window.removeEventListener('beforeunload', handleBeforeUnload);
-    };
-  }, [hasUnsavedChanges]);
 
   // 表单提交处理
   const handleSubmit = async (data: PromptFormData) => {
@@ -250,12 +239,12 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
       setHasUnsavedChanges(false);
       
       // 显示成功提示
-      toast.success('提示词更新成功！正在跳转...', {
-        duration: 3000,
+      toast.success('提示词更新成功！', {
+        duration: 2000,
         position: 'top-center',
       });
       
-      // 保存成功后直接跳转回详情页面，提供更好的用户体验
+      // 保存成功后直接跳转回详情页面
       router.push(`/prompts/${prompt.id}`);
     } catch (error: unknown) {
       console.error('更新提示词失败:', error);

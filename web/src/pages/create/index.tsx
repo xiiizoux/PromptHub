@@ -5,6 +5,7 @@ import { toast } from 'react-hot-toast';
 import { useAuth, withAuth } from '@/contexts/AuthContext';
 import { createPrompt, getCategories, getTags } from '@/lib/api';
 import PromptFormContainer, { PromptFormData } from '@/components/prompts/PromptFormContainer';
+import { useBeforeUnload } from '@/hooks/useBeforeUnload';
 
 function CreatePromptPage() {
   const router = useRouter();
@@ -22,6 +23,9 @@ function CreatePromptPage() {
   // 未保存状态管理
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
+
+  // 浏览器离开页面警告
+  useBeforeUnload(hasUnsavedChanges, '您的提示词内容尚未保存，确定要离开此页面吗？');
   
   // 创建页面的权限检查（始终可以创建）
   const permissionCheck = user ? {
@@ -91,22 +95,6 @@ function CreatePromptPage() {
     fetchCategoriesByType();
   }, []);
 
-  // 添加浏览器离开页面警告
-  useEffect(() => {
-    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      if (hasUnsavedChanges) {
-        e.preventDefault();
-        e.returnValue = '您有未保存的更改，确定要离开此页面吗？';
-        return '您有未保存的更改，确定要离开此页面吗？';
-      }
-    };
-
-    window.addEventListener('beforeunload', handleBeforeUnload);
-
-    return () => {
-      window.removeEventListener('beforeunload', handleBeforeUnload);
-    };
-  }, [hasUnsavedChanges]);
 
   // 表单提交处理
   const handleSubmit = async (data: PromptFormData) => {
@@ -167,10 +155,8 @@ function CreatePromptPage() {
         position: 'top-center',
       });
       
-      // 导航到新提示词页面
-      setTimeout(() => {
-        router.push(`/prompts/${newPrompt.id}`);
-      }, 1500); // 给用户时间看到成功提示
+      // 导航到新提示词页面 - 立即跳转，避免状态检测延迟
+      router.push(`/prompts/${newPrompt.id}`);
     } catch (error: unknown) {
       console.error('=== 创建提示词失败 ===');
       console.error('错误详情:', error);

@@ -253,6 +253,16 @@ export const COLLABORATOR_PERMISSIONS = {
   ADMIN: 'admin',
 } as const;
 
+// 简化的权限模式
+export const SIMPLE_PERMISSIONS = {
+  PRIVATE: 'private',           // 私有：仅创建者可查看和编辑
+  PUBLIC_READ: 'public_read',   // 公开只读：所有人可查看，仅创建者可编辑
+  TEAM_EDIT: 'team_edit',       // 团队协作：所有人可查看，指定协作者可编辑
+  PUBLIC_EDIT: 'public_edit',   // 公开可编辑：所有人可查看和编辑
+} as const;
+
+export type SimplePermissionType = typeof SIMPLE_PERMISSIONS[keyof typeof SIMPLE_PERMISSIONS];
+
 // 权限级别描述
 export const PERMISSION_LEVEL_DESCRIPTIONS = {
   [PERMISSION_LEVELS.OWNER_ONLY]: '仅创建者可编辑',
@@ -264,4 +274,110 @@ export const COLLABORATOR_PERMISSION_DESCRIPTIONS = {
   [COLLABORATOR_PERMISSIONS.EDIT]: '可以编辑内容',
   [COLLABORATOR_PERMISSIONS.REVIEW]: '可以查看和评论',
   [COLLABORATOR_PERMISSIONS.ADMIN]: '可以管理协作者',
+};
+
+// 简化权限模式描述
+export const SIMPLE_PERMISSION_DESCRIPTIONS = {
+  [SIMPLE_PERMISSIONS.PRIVATE]: '私有',
+  [SIMPLE_PERMISSIONS.PUBLIC_READ]: '公开只读',
+  [SIMPLE_PERMISSIONS.TEAM_EDIT]: '团队协作',
+  [SIMPLE_PERMISSIONS.PUBLIC_EDIT]: '公开可编辑',
+};
+
+// 简化权限模式的详细说明
+export const SIMPLE_PERMISSION_DETAILS = {
+  [SIMPLE_PERMISSIONS.PRIVATE]: {
+    title: '私有',
+    description: '只有您可以查看和编辑这个提示词',
+    viewUsers: ['创建者'],
+    editUsers: ['创建者'],
+    icon: '🔒',
+    needsCollaborators: false,
+  },
+  [SIMPLE_PERMISSIONS.PUBLIC_READ]: {
+    title: '公开只读', 
+    description: '所有人都可以查看，但只有您可以编辑',
+    viewUsers: ['所有人'],
+    editUsers: ['创建者'],
+    icon: '👁️',
+    needsCollaborators: false,
+  },
+  [SIMPLE_PERMISSIONS.TEAM_EDIT]: {
+    title: '团队协作',
+    description: '所有人都可以查看，您指定的协作者可以编辑',
+    viewUsers: ['所有人'],
+    editUsers: ['创建者', '指定协作者'],
+    icon: '👥',
+    needsCollaborators: true,
+  },
+  [SIMPLE_PERMISSIONS.PUBLIC_EDIT]: {
+    title: '公开可编辑',
+    description: '所有人都可以查看和编辑这个提示词',
+    viewUsers: ['所有人'],
+    editUsers: ['所有人'],
+    icon: '✏️',
+    needsCollaborators: false,
+  },
+};
+
+// 将简化权限转换为原有的三个字段
+export const convertSimplePermissionToFields = (simplePermission: SimplePermissionType) => {
+  switch (simplePermission) {
+    case SIMPLE_PERMISSIONS.PRIVATE:
+      return {
+        is_public: false,
+        allow_collaboration: false,
+        edit_permission: 'owner_only' as const,
+      };
+    case SIMPLE_PERMISSIONS.PUBLIC_READ:
+      return {
+        is_public: true,
+        allow_collaboration: false,
+        edit_permission: 'owner_only' as const,
+      };
+    case SIMPLE_PERMISSIONS.TEAM_EDIT:
+      return {
+        is_public: true,
+        allow_collaboration: true,
+        edit_permission: 'collaborators' as const,
+      };
+    case SIMPLE_PERMISSIONS.PUBLIC_EDIT:
+      return {
+        is_public: true,
+        allow_collaboration: true,
+        edit_permission: 'public' as const,
+      };
+    default:
+      return {
+        is_public: true,
+        allow_collaboration: false,
+        edit_permission: 'owner_only' as const,
+      };
+  }
+};
+
+// 从原有的三个字段推断简化权限
+export const inferSimplePermission = (
+  is_public?: boolean,
+  allow_collaboration?: boolean,
+  edit_permission?: string
+): SimplePermissionType => {
+  if (!is_public) {
+    return SIMPLE_PERMISSIONS.PRIVATE;
+  }
+  
+  if (is_public && allow_collaboration && edit_permission === 'public') {
+    return SIMPLE_PERMISSIONS.PUBLIC_EDIT;
+  }
+  
+  if (is_public && allow_collaboration && edit_permission === 'collaborators') {
+    return SIMPLE_PERMISSIONS.TEAM_EDIT;
+  }
+  
+  if (is_public && (!allow_collaboration || edit_permission === 'owner_only')) {
+    return SIMPLE_PERMISSIONS.PUBLIC_READ;
+  }
+  
+  // 默认情况
+  return SIMPLE_PERMISSIONS.PUBLIC_READ;
 }; 

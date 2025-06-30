@@ -1,6 +1,7 @@
 /**
  * 提示词相关类型定义
  */
+import { SimplePermissionType } from '@/lib/permissions';
 
 // 提示词基本信息
 export interface PromptInfo {
@@ -35,6 +36,7 @@ export interface PromptDetails extends PromptInfo {
   allow_collaboration?: boolean;          // 是否允许协作编辑
   collaborators?: string[];               // 指定的协作者列表
   edit_permission?: 'owner_only' | 'collaborators' | 'public'; // 编辑权限级别
+  simple_permission?: SimplePermissionType; // 简化权限模式
   user_id?: string;                       // 所有者用户ID
   created_by?: string;                    // 创建者ID
   last_modified_by?: string;              // 最后修改者ID

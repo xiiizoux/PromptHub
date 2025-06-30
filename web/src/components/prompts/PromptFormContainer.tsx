@@ -30,8 +30,15 @@ import { PromptDetails } from '@/types';
 import { 
   PERMISSION_LEVELS,
   PERMISSION_LEVEL_DESCRIPTIONS,
+  SIMPLE_PERMISSIONS,
+  SIMPLE_PERMISSION_DESCRIPTIONS,
+  SIMPLE_PERMISSION_DETAILS,
+  SimplePermissionType,
+  convertSimplePermissionToFields,
+  inferSimplePermission,
 } from '@/lib/permissions';
 import { PermissionCheck } from '@/types';
+import PermissionPreview from '@/components/prompts/PermissionPreview';
 
 // 文件接口
 interface AssetFile {
@@ -54,6 +61,8 @@ export interface PromptFormData {
   is_public: boolean;
   allow_collaboration: boolean;
   edit_permission: 'owner_only' | 'collaborators' | 'public';
+  simple_permission: SimplePermissionType; // 新增：简化权限字段
+  collaborators: string[]; // 协作者列表
   compatible_models: string[];
   input_variables: string[];
   template_format: string;
@@ -136,18 +145,22 @@ export default function PromptFormContainer({
   const [previewUrls, setPreviewUrls] = useState<string[]>([]);
   const [parameters, setParameters] = useState<Record<string, any>>({});
 
-  // 变量和标签的本地状态
-  const [variables, setVariables] = useState<string[]>(initialData?.input_variables || []);
+  // 只保留必要的本地状态 - 输入框状态
   const [variableInput, setVariableInput] = useState('');
-  const [tags, setTags] = useState<string[]>(initialData?.tags || []);
   const [tagInput, setTagInput] = useState('');
-  const [models, setModels] = useState<string[]>(initialData?.compatible_models || []);
 
   // AI相关状态
   const [currentContent, setCurrentContent] = useState(initialData?.content || '');
   const [showMobileAssistant, setShowMobileAssistant] = useState(false);
 
   // 表单控制
+  // 从初始数据推断简化权限，默认为公开只读
+  const inferredSimplePermission = initialData ? inferSimplePermission(
+    initialData?.is_public,
+    initialData?.allow_collaboration,
+    initialData?.edit_permission
+  ) : 'public_read';
+
   const {
     register,
     handleSubmit,
@@ -168,6 +181,8 @@ export default function PromptFormContainer({
       is_public: initialData?.is_public ?? true,
       allow_collaboration: initialData?.allow_collaboration ?? false,
       edit_permission: initialData?.edit_permission || 'owner_only',
+      simple_permission: inferredSimplePermission, // 新增：简化权限默认值
+      collaborators: initialData?.collaborators || [], // 协作者列表
       compatible_models: initialData?.compatible_models || [],
       input_variables: initialData?.input_variables || [],
       template_format: initialData?.template_format || 'text',
@@ -239,6 +254,46 @@ export default function PromptFormContainer({
     }
   }, [initialData, mode, setValue, currentType]);
 
+  // 工具函数：安全的数组比较
+  const arraysEqual = (a: any[], b: any[]): boolean => {
+    if (!Array.isArray(a) || !Array.isArray(b)) return false;
+    if (a.length !== b.length) return false;
+    return a.every((val, index) => val === b[index]);
+  };
+
+  // 工具函数：深度比较对象
+  const objectsEqual = (a: any, b: any): boolean => {
+    if (a === b) return true;
+    if (!a || !b) return a === b;
+    
+    const keysA = Object.keys(a);
+    const keysB = Object.keys(b);
+    
+    if (keysA.length !== keysB.length) return false;
+    
+    return keysA.every(key => {
+      const valueA = a[key];
+      const valueB = b[key];
+      
+      if (Array.isArray(valueA) && Array.isArray(valueB)) {
+        return arraysEqual(valueA, valueB);
+      }
+      
+      return valueA === valueB;
+    });
+  };
+
+  // 监听简化权限变化，自动更新原有三个权限字段
+  const watchedSimplePermission = watch('simple_permission');
+  useEffect(() => {
+    if (watchedSimplePermission) {
+      const fields = convertSimplePermissionToFields(watchedSimplePermission);
+      setValue('is_public', fields.is_public, { shouldValidate: false });
+      setValue('allow_collaboration', fields.allow_collaboration, { shouldValidate: false });
+      setValue('edit_permission', fields.edit_permission, { shouldValidate: false });
+    }
+  }, [watchedSimplePermission, setValue]);
+
   // 监听表单变化，检测是否有未保存的更改
   const watchedData = watch();
   useEffect(() => {
@@ -253,28 +308,47 @@ export default function PromptFormContainer({
         watchedData.description !== (initialData?.description || '') ||
         watchedData.content !== (initialData?.content || '') ||
         watchedData.category !== (initialData?.category || '') ||
-        JSON.stringify(watchedData.tags || []) !== JSON.stringify(initialData?.tags || []) ||
-        JSON.stringify(watchedData.compatible_models || []) !== JSON.stringify(initialData?.compatible_models || []) ||
+        !arraysEqual(watchedData.tags || [], initialData?.tags || []) ||
+        !arraysEqual(watchedData.compatible_models || [], initialData?.compatible_models || []) ||
+        !arraysEqual(watchedData.input_variables || [], initialData?.input_variables || []) ||
         watchedData.category_type !== (initialData?.category_type || 'chat') ||
         watchedData.is_public !== (initialData?.is_public ?? true) ||
         watchedData.allow_collaboration !== (initialData?.allow_collaboration ?? false) ||
-        JSON.stringify(parameters) !== JSON.stringify(initialData?.parameters || {}) ||
-        uploadedFiles.length > 0; // 如果有新上传的文件也算作更改
+        !objectsEqual(watchedData.parameters || {}, initialData?.parameters || {}) ||
+        uploadedFiles.length > 0; // 编辑模式下如果有新上传的文件也算作更改
     } else if (mode === 'create') {
-      // 创建模式：检测是否有任何输入
+      // 创建模式：检测是否有任何有意义的输入（过滤掉只有空格的情况）
       hasChanges = 
         (watchedData.name && watchedData.name.trim() !== '') ||
         (watchedData.description && watchedData.description.trim() !== '') ||
         (watchedData.content && watchedData.content.trim() !== '') ||
-        (watchedData.category && watchedData.category.trim() !== '') ||
+        (watchedData.category && watchedData.category.trim() !== '' && watchedData.category !== '通用') ||
         (watchedData.tags && watchedData.tags.length > 0) ||
         (watchedData.compatible_models && watchedData.compatible_models.length > 0) ||
-        Object.keys(parameters).length > 0 ||
+        (watchedData.input_variables && watchedData.input_variables.length > 0) ||
+        (watchedData.parameters && Object.keys(watchedData.parameters).some(key => {
+          const value = (watchedData.parameters as Record<string, any>)?.[key];
+          return value !== null && value !== undefined && value !== '' && value !== false;
+        })) ||
         uploadedFiles.length > 0;
     }
 
+    // 调试信息 - 仅在开发环境输出
+    if (process.env.NODE_ENV === 'development') {
+      console.log('未保存状态检测:', {
+        mode,
+        hasChanges,
+        name: watchedData.name?.trim(),
+        description: watchedData.description?.trim(),
+        content: watchedData.content?.trim(),
+        category: watchedData.category,
+        tagsLength: watchedData.tags?.length || 0,
+        uploadedFilesCount: uploadedFiles.length,
+      });
+    }
+
     onUnsavedChanges(hasChanges);
-  }, [watchedData, initialData, parameters, uploadedFiles, onUnsavedChanges, mode]);
+  }, [watchedData, initialData, uploadedFiles, onUnsavedChanges, mode]);
 
   // 获取类型标签
   const getTypeLabel = (type: PromptType) => {
@@ -452,8 +526,8 @@ export default function PromptFormContainer({
       )).filter(variable => variable.length > 0);
       
       if (detectedVars.length > 0) {
-        const newVariables = Array.from(new Set([...variables, ...detectedVars]));
-        setVariables(newVariables);
+        const currentVariables = watch('input_variables') || [];
+        const newVariables = Array.from(new Set([...currentVariables, ...detectedVars]));
         setValue('input_variables', newVariables);
       }
     }
@@ -461,9 +535,9 @@ export default function PromptFormContainer({
 
   // 添加变量
   const addVariable = () => {
-    if (variableInput && !variables.includes(variableInput)) {
-      const newVariables = [...variables, variableInput];
-      setVariables(newVariables);
+    const currentVariables = watch('input_variables') || [];
+    if (variableInput && !currentVariables.includes(variableInput)) {
+      const newVariables = [...currentVariables, variableInput];
       setValue('input_variables', newVariables);
       setVariableInput('');
     }
@@ -471,16 +545,16 @@ export default function PromptFormContainer({
 
   // 删除变量
   const removeVariable = (variable: string) => {
-    const newVariables = variables.filter(v => v !== variable);
-    setVariables(newVariables);
+    const currentVariables = watch('input_variables') || [];
+    const newVariables = currentVariables.filter(v => v !== variable);
     setValue('input_variables', newVariables);
   };
 
   // 添加标签
   const addTag = () => {
-    if (tagInput && !tags.includes(tagInput)) {
-      const newTags = [...tags, tagInput];
-      setTags(newTags);
+    const currentTags = watch('tags') || [];
+    if (tagInput && !currentTags.includes(tagInput)) {
+      const newTags = [...currentTags, tagInput];
       setValue('tags', newTags);
       setTagInput('');
     }
@@ -488,26 +562,20 @@ export default function PromptFormContainer({
 
   // 删除标签
   const removeTag = (tag: string) => {
-    const newTags = tags.filter(t => t !== tag);
-    setTags(newTags);
+    const currentTags = watch('tags') || [];
+    const newTags = currentTags.filter(t => t !== tag);
     setValue('tags', newTags);
   };
 
   // 切换模型选择
   const handleModelChange = (models: string[]) => {
-    setModels(models);
     setValue('compatible_models', models);
   };
 
-  // 监听表单内容变化，确保AI按钮能够正确获取内容
+  // 监听content字段变化，更新AI助手的内容状态
   useEffect(() => {
-    const subscription = watch((value, { name }) => {
-      if (name === 'content') {
-        setCurrentContent(value.content || '');
-      }
-    });
-    return () => subscription.unsubscribe();
-  }, [watch]);
+    setCurrentContent(watchedData.content || '');
+  }, [watchedData.content]);
 
   // 表单提交处理
   const onFormSubmit = async (data: PromptFormData) => {
@@ -536,9 +604,6 @@ export default function PromptFormContainer({
     // 构建完整的数据对象
     const formData: PromptFormData = {
       ...data,
-      input_variables: variables,
-      tags: tags,
-      compatible_models: models,
       category_type: currentType,
       preview_asset_url: previewUrls.length > 0 ? previewUrls[0] : '',
       preview_assets: previewUrls.map((url, index) => ({
@@ -548,7 +613,6 @@ export default function PromptFormContainer({
         size: uploadedFiles[index]?.size || 0,
         type: uploadedFiles[index]?.type || '',
       })),
-      parameters: parameters,
     };
 
     try {
@@ -670,7 +734,7 @@ export default function PromptFormContainer({
                       console.log('应用AI分析结果:', data);
                     }}
                     category={watch('category')}
-                    tags={tags}
+                    tags={watch('tags') || []}
                     className="max-h-96 overflow-y-auto"
                   />
                 </motion.div>
@@ -1064,7 +1128,7 @@ export default function PromptFormContainer({
                       onChange={(e) => setVariableInput(e.target.value)}
                       placeholder="添加新变量..."
                       className="input-primary flex-1"
-                      onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addVariable())}
+                      onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addVariable())}
                       disabled={isSubmitting}
                     />
                     <motion.button
@@ -1080,14 +1144,14 @@ export default function PromptFormContainer({
                   </div>
 
                   <AnimatePresence>
-                    {variables.length > 0 && (
+                    {(watch('input_variables') || []).length > 0 && (
                       <motion.div
                         initial={{ opacity: 0, height: 0 }}
                         animate={{ opacity: 1, height: 'auto' }}
                         exit={{ opacity: 0, height: 0 }}
                         className="flex flex-wrap gap-2"
                       >
-                        {variables.map((variable) => (
+                        {(watch('input_variables') || []).map((variable: string) => (
                           <motion.span
                             key={variable}
                             initial={{ opacity: 0, scale: 0.8 }}
@@ -1130,7 +1194,7 @@ export default function PromptFormContainer({
                       onChange={(e) => setTagInput(e.target.value)}
                       placeholder="添加新标签..."
                       className="input-primary flex-1"
-                      onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addTag())}
+                      onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addTag())}
                       disabled={isSubmitting}
                     />
                     <motion.button
@@ -1146,14 +1210,14 @@ export default function PromptFormContainer({
                   </div>
 
                   <AnimatePresence>
-                    {tags.length > 0 && (
+                    {(watch('tags') || []).length > 0 && (
                       <motion.div
                         initial={{ opacity: 0, height: 0 }}
                         animate={{ opacity: 1, height: 'auto' }}
                         exit={{ opacity: 0, height: 0 }}
                         className="flex flex-wrap gap-2"
                       >
-                        {tags.map((tag) => (
+                        {(watch('tags') || []).map((tag: string) => (
                           <motion.span
                             key={tag}
                             initial={{ opacity: 0, scale: 0.8 }}
@@ -1190,7 +1254,7 @@ export default function PromptFormContainer({
                   </label>
                   
                   <ModelSelector
-                    selectedModels={models}
+                    selectedModels={watch('compatible_models') || []}
                     onChange={handleModelChange}
                     categoryType={currentType}
                     placeholder="选择或添加兼容的AI模型..."
@@ -1201,91 +1265,90 @@ export default function PromptFormContainer({
                   </p>
                 </motion.div>
 
-                {/* 公开/私有选项 */}
+                {/* 简化权限设置 */}
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.8 }}
-                  className="flex items-center justify-between p-4 border border-neon-cyan/20 rounded-xl bg-dark-bg-secondary"
-                >
-                  <div className="flex items-center">
-                    <div className="mr-3 text-neon-cyan">
-                      {watch('is_public') ? (
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064" />
-                        </svg>
-                      ) : (
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                        </svg>
-                      )}
-                    </div>
-                    <div>
-                      <h3 className="text-sm font-medium text-gray-300">{watch('is_public') ? '公开分享' : '私人提示词'}</h3>
-                      <p className="text-gray-400 text-sm">{watch('is_public') ? '所有人可以查看和使用您的提示词' : '只有您自己可以访问此提示词'}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center">
-                    <label className="relative inline-flex items-center cursor-pointer">
-                      <input 
-                        type="checkbox" 
-                        className="sr-only peer" 
-                        {...register('is_public')} 
-                        disabled={isSubmitting}
-                      />
-                      <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-neon-cyan rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-neon-cyan"></div>
-                    </label>
-                  </div>
-                </motion.div>
-
-                {/* 协作设置 */}
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.9 }}
                   className="space-y-4"
                 >
                   <label className="flex items-center text-sm font-medium text-gray-300">
                     <InformationCircleIcon className="h-5 w-5 text-neon-purple mr-2" />
-                    协作设置
+                    访问权限
                   </label>
                   
-                  <div className="relative flex items-start p-4 border border-neon-cyan/20 rounded-xl bg-dark-bg-secondary">
-                    <div className="flex items-center h-5">
-                      <input
-                        type="checkbox"
-                        {...register('allow_collaboration')}
-                        className="h-4 w-4 text-neon-cyan border-gray-600 rounded focus:ring-neon-cyan"
-                        disabled={isSubmitting}
-                      />
-                    </div>
-                    <div className="ml-3">
-                      <label className="text-sm font-medium text-gray-300">
-                        允许协作编辑
+                  {/* 权限选择器 */}
+                  <div className="grid grid-cols-1 gap-3">
+                    {Object.entries(SIMPLE_PERMISSION_DETAILS).map(([key, details]) => (
+                      <label 
+                        key={key} 
+                        className={`relative flex items-center p-4 border rounded-xl cursor-pointer transition-all ${
+                          watch('simple_permission') === key 
+                            ? 'border-neon-cyan bg-neon-cyan/5' 
+                            : 'border-gray-600 bg-dark-bg-secondary hover:border-neon-cyan/40'
+                        }`}
+                      >
+                        <input
+                          type="radio"
+                          value={key}
+                          {...register('simple_permission')}
+                          className="sr-only"
+                          disabled={isSubmitting}
+                        />
+                        <div className="flex items-center space-x-3 flex-1">
+                          <span className="text-2xl">{details.icon}</span>
+                          <div className="flex-1">
+                            <h4 className="text-sm font-medium text-gray-300">{details.title}</h4>
+                            <p className="text-xs text-gray-400 mt-1">{details.description}</p>
+                          </div>
+                        </div>
+                        {watch('simple_permission') === key && (
+                          <div className="ml-3">
+                            <CheckCircleIcon className="h-5 w-5 text-neon-cyan" />
+                          </div>
+                        )}
                       </label>
-                      <div className="text-sm text-gray-400">
-                        允许其他贡献者修改这个提示词的内容（编辑权限，仅在公开分享时有效）
-                      </div>
-                    </div>
+                    ))}
                   </div>
 
-                  {/* 编辑权限级别 */}
-                  <div className="p-4 border border-neon-cyan/20 rounded-xl bg-dark-bg-secondary">
-                    <label className="block text-sm font-medium text-gray-300 mb-2">
-                      编辑权限级别
-                    </label>
-                    <select
-                      {...register('edit_permission')}
-                      className="input-primary w-full"
-                      disabled={isSubmitting}
-                    >
-                      {Object.entries(PERMISSION_LEVEL_DESCRIPTIONS).map(([key, description]) => (
-                        <option key={key} value={key}>
-                          {description}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+                  {/* 协作者管理 */}
+                  {watch('simple_permission') === 'team_edit' && (
+                    <div className="p-4 border border-neon-cyan/20 rounded-xl bg-dark-bg-secondary">
+                      <label className="block text-sm font-medium text-gray-300 mb-2">
+                        协作者设置
+                      </label>
+                      <p className="text-xs text-gray-400 mb-3">
+                        输入协作者的用户名，用逗号分隔。这些用户将获得编辑权限。
+                      </p>
+                      <Controller
+                        name="collaborators"
+                        control={control}
+                        render={({ field }) => (
+                          <input
+                            type="text"
+                            placeholder="例如：user1, user2, user3"
+                            className="input-primary w-full"
+                            value={Array.isArray(field.value) ? field.value.join(', ') : ''}
+                            onChange={(e) => {
+                              const collaborators = e.target.value
+                                .split(',')
+                                .map(s => s.trim())
+                                .filter(s => s.length > 0);
+                              field.onChange(collaborators);
+                            }}
+                            disabled={isSubmitting}
+                          />
+                        )}
+                      />
+                    </div>
+                  )}
+
+                  {/* 权限预览 */}
+                  <PermissionPreview 
+                    selectedPermission={watch('simple_permission')} 
+                    collaborators={watch('collaborators') || []}
+                    className="mt-4"
+                  />
                 </motion.div>
 
                 {/* 提交按钮和状态信息 */}
@@ -1383,7 +1446,7 @@ export default function PromptFormContainer({
                   console.log('应用AI分析结果:', data);
                 }}
                 category={watch('category')}
-                tags={tags}
+                tags={watch('tags') || []}
                 className="h-full"
               />
             </motion.div>
