@@ -1,4 +1,4 @@
-import { useEffect, useCallback, useState } from 'react';
+import { useEffect, useCallback, useState, useRef } from 'react';
 import { useRouter } from 'next/router';
 
 /**
@@ -15,52 +15,76 @@ export function useBeforeUnload(
   const router = useRouter();
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [pendingUrl, setPendingUrl] = useState<string>('');
+  
+  // 使用 ref 来避免依赖问题
+  const hasUnsavedChangesRef = useRef(hasUnsavedChanges);
+  const messageRef = useRef(message);
+  const useCustomDialogRef = useRef(useCustomDialog);
+  
+  // 更新 refs
+  useEffect(() => {
+    hasUnsavedChangesRef.current = hasUnsavedChanges;
+    messageRef.current = message;
+    useCustomDialogRef.current = useCustomDialog;
+  }, [hasUnsavedChanges, message, useCustomDialog]);
 
   // 处理浏览器beforeunload事件
   useEffect(() => {
-    const defaultMessage = '您有未保存的更改，确定要离开此页面吗？';
-    const warningMessage = message || defaultMessage;
-
     const handleBeforeUnload = (event: BeforeUnloadEvent) => {
-      if (hasUnsavedChanges) {
-        // 现代浏览器会忽略自定义消息，但仍需要设置returnValue
+      if (hasUnsavedChangesRef.current) {
+        const warningMessage = messageRef.current || '您有未保存的更改，确定要离开此页面吗？';
         event.preventDefault();
         event.returnValue = warningMessage;
         return warningMessage;
       }
     };
 
-    // 始终添加监听器，在处理函数中判断状态
     window.addEventListener('beforeunload', handleBeforeUnload);
-
     return () => {
       window.removeEventListener('beforeunload', handleBeforeUnload);
     };
-  }, [hasUnsavedChanges, message]);
+  }, []); // 空依赖数组，使用 ref 来访问最新值
+
+  // 处理Next.js路由变化
+  useEffect(() => {
+    const handleRouteChangeStart = (url: string) => {
+      if (hasUnsavedChangesRef.current) {
+        if (useCustomDialogRef.current) {
+          // 使用自定义对话框
+          setPendingUrl(url);
+          setShowConfirmDialog(true);
+          router.events.emit('routeChangeError');
+          throw 'Route change aborted by user - showing custom dialog';
+        } else {
+          // 使用默认的confirm对话框
+          const shouldLeave = window.confirm(
+            messageRef.current || '您有未保存的更改，确定要离开此页面吗？'
+          );
+          if (!shouldLeave) {
+            router.events.emit('routeChangeError');
+            throw 'Route change aborted by user';
+          }
+        }
+      }
+    };
+
+    router.events.on('routeChangeStart', handleRouteChangeStart);
+    return () => {
+      router.events.off('routeChangeStart', handleRouteChangeStart);
+    };
+  }, [router]); // 只依赖 router
 
   // 处理确认离开
   const handleConfirmLeave = useCallback(() => {
     setShowConfirmDialog(false);
     if (pendingUrl) {
-      // 临时移除路由监听器，避免再次触发确认
-      router.events.off('routeChangeStart', handleRouteChangeStart);
+      // 临时设置状态为已保存，避免再次触发确认
+      hasUnsavedChangesRef.current = false;
       router.push(pendingUrl).finally(() => {
-        // 导航完成后重新添加监听器
-        router.events.on('routeChangeStart', handleRouteChangeStart);
         setPendingUrl('');
       });
     }
   }, [pendingUrl, router]);
-
-  // 强制跳转方法（忽略未保存状态）
-  const forceNavigate = useCallback((url: string) => {
-    // 临时移除路由监听器
-    router.events.off('routeChangeStart', handleRouteChangeStart);
-    router.push(url).finally(() => {
-      // 导航完成后重新添加监听器
-      router.events.on('routeChangeStart', handleRouteChangeStart);
-    });
-  }, [router, handleRouteChangeStart]);
 
   // 处理取消离开
   const handleCancelLeave = useCallback(() => {
@@ -68,39 +92,12 @@ export function useBeforeUnload(
     setPendingUrl('');
   }, []);
 
-  // 处理Next.js路由变化
-  const handleRouteChangeStart = useCallback((url: string) => {
-    if (hasUnsavedChanges) {
-      if (useCustomDialog) {
-        // 使用自定义对话框
-        setPendingUrl(url);
-        setShowConfirmDialog(true);
-        // 抛出错误来阻止路由跳转
-        router.events.emit('routeChangeError');
-        throw 'Route change aborted by user - showing custom dialog';
-      } else {
-        // 使用默认的confirm对话框
-        const shouldLeave = window.confirm(
-          message || '您有未保存的更改，确定要离开此页面吗？'
-        );
-        if (!shouldLeave) {
-          // 抛出错误来阻止路由跳转
-          router.events.emit('routeChangeError');
-          throw 'Route change aborted by user';
-        }
-      }
-    }
-  }, [hasUnsavedChanges, message, useCustomDialog, router]);
-
-  useEffect(() => {
-    // 监听路由变化开始事件
-    router.events.on('routeChangeStart', handleRouteChangeStart);
-
-    // 清理监听器
-    return () => {
-      router.events.off('routeChangeStart', handleRouteChangeStart);
-    };
-  }, [router, handleRouteChangeStart]);
+  // 强制跳转方法（忽略未保存状态）
+  const forceNavigate = useCallback((url: string) => {
+    // 临时设置状态为已保存
+    hasUnsavedChangesRef.current = false;
+    router.push(url);
+  }, [router]);
 
   return {
     showConfirmDialog,
@@ -125,51 +122,76 @@ export function useRouteGuard(
 ) {
   const router = useRouter();
   const { message, onLeaveConfirm, onSave } = options || {};
+  
+  // 使用 ref 来避免依赖问题
+  const hasUnsavedChangesRef = useRef(hasUnsavedChanges);
+  const optionsRef = useRef(options);
+  
+  useEffect(() => {
+    hasUnsavedChangesRef.current = hasUnsavedChanges;
+    optionsRef.current = options;
+  }, [hasUnsavedChanges, options]);
 
-  const handleRouteChangeStart = useCallback(async () => {
-    if (!hasUnsavedChanges) return false;
+  // 监听路由变化
+  useEffect(() => {
+    const handleRouteChangeStart = async (url: string) => {
+      if (!hasUnsavedChangesRef.current) return;
 
-    // 如果提供了自定义确认函数
-    if (onLeaveConfirm) {
-      const result = await onLeaveConfirm();
-      return !result; // 如果用户选择不离开，则阻止路由跳转
-    }
-
-    // 使用默认的确认对话框
-    const shouldLeave = window.confirm(
-      message || '您有未保存的更改，确定要离开此页面吗？'
-    );
-    
-    return !shouldLeave; // 如果用户选择不离开，则阻止路由跳转
-  }, [hasUnsavedChanges, message, onLeaveConfirm]);
-
-  // 使用原有的useBeforeUnload处理浏览器事件和路由事件
-  useBeforeUnload(hasUnsavedChanges, message, handleRouteChangeStart);
-
-  // 返回一些有用的方法
-  return {
-    // 强制跳转（忽略未保存状态）
-    forceNavigate: useCallback((url: string) => {
-      // 临时移除路由监听器
-      router.events.off('routeChangeStart', handleRouteChangeStart);
-      router.push(url).finally(() => {
-        // 跳转完成后重新添加监听器
-        router.events.on('routeChangeStart', handleRouteChangeStart);
-      });
-    }, [router, handleRouteChangeStart]),
-
-    // 安全跳转（先保存再跳转）
-    safeNavigate: useCallback(async (url: string) => {
-      if (hasUnsavedChanges && onSave) {
-        try {
-          await onSave();
-          router.push(url);
-        } catch (error) {
-          console.error('保存失败:', error);
+      const currentOptions = optionsRef.current;
+      
+      // 如果提供了自定义确认函数
+      if (currentOptions?.onLeaveConfirm) {
+        const result = await currentOptions.onLeaveConfirm();
+        if (!result) {
+          router.events.emit('routeChangeError');
+          throw 'Route change aborted by user confirmation';
         }
-      } else {
-        router.push(url);
+        return;
       }
-    }, [hasUnsavedChanges, onSave, router])
+
+      // 使用默认的确认对话框
+      const shouldLeave = window.confirm(
+        currentOptions?.message || '您有未保存的更改，确定要离开此页面吗？'
+      );
+      
+      if (!shouldLeave) {
+        router.events.emit('routeChangeError');
+        throw 'Route change aborted by user';
+      }
+    };
+
+    router.events.on('routeChangeStart', handleRouteChangeStart);
+    return () => {
+      router.events.off('routeChangeStart', handleRouteChangeStart);
+    };
+  }, [router]); // 只依赖 router
+
+  // 使用原有的useBeforeUnload处理浏览器事件
+  useBeforeUnload(hasUnsavedChanges, message);
+
+  // 强制跳转（忽略未保存状态）
+  const forceNavigate = useCallback((url: string) => {
+    hasUnsavedChangesRef.current = false;
+    router.push(url);
+  }, [router]);
+
+  // 安全跳转（先保存再跳转）
+  const safeNavigate = useCallback(async (url: string) => {
+    const currentOptions = optionsRef.current;
+    if (hasUnsavedChangesRef.current && currentOptions?.onSave) {
+      try {
+        await currentOptions.onSave();
+        router.push(url);
+      } catch (error) {
+        console.error('保存失败:', error);
+      }
+    } else {
+      router.push(url);
+    }
+  }, [router]);
+
+  return {
+    forceNavigate,
+    safeNavigate
   };
 }

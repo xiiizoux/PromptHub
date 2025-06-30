@@ -1,10 +1,9 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { PhotoIcon } from '@heroicons/react/24/outline';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getPrompts, getCategories, getTags } from '@/lib/api';
 import { PromptInfo, PromptFilters as PromptFiltersType } from '@/types';
 import ImagePromptCard from '@/components/prompts/ImagePromptCard';
-import PromptFilters from '@/components/prompts/PromptFilters';
 import SidebarFilters from '@/components/layout/SidebarFilters';
 
 export default function ImagePromptsPage() {

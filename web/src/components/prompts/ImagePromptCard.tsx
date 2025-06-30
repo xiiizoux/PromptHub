@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { PromptInfo } from '@/types';
 import { formatVersionDisplay } from '@/lib/version-utils';
+import { useIntersectionObserver } from '@/hooks/useIntersectionObserver';
 import { 
   StarIcon, 
   DocumentTextIcon, 
@@ -29,6 +30,7 @@ interface ImagePromptCardProps {
   prompt: PromptInfo & {
     category_type?: 'chat' | 'image' | 'video';
     preview_asset_url?: string;
+    thumbnail_url?: string; // 添加缩略图支持
     parameters?: Record<string, any>;
   };
 }
@@ -60,6 +62,14 @@ const ImagePromptCard: React.FC<ImagePromptCardProps> = React.memo(({ prompt }) 
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageError, setImageError] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
+  const [showFullImage, setShowFullImage] = useState(false);
+  
+  // 懒加载：只有当卡片进入可视区域时才加载图像
+  const { elementRef, isVisible } = useIntersectionObserver({
+    threshold: 0.1,
+    rootMargin: '50px', // 提前50px开始加载
+    freezeOnceVisible: true // 一旦可见就保持状态
+  });
 
   // 使用useMemo缓存计算结果 - 移到早期返回之前
   const categoryInfo = useMemo(() => {
@@ -108,8 +118,30 @@ const ImagePromptCard: React.FC<ImagePromptCardProps> = React.memo(({ prompt }) 
     return null;
   }
 
-  // 获取图片URL，优先使用preview_asset_url，如果没有则从media_files获取第一个，最后使用占位符
-  const getImageUrl = () => {
+  // 获取缩略图URL（低质量快速加载版本）
+  const getThumbnailUrl = () => {
+    // 优先使用专门的缩略图
+    if (prompt.thumbnail_url) {
+      return prompt.thumbnail_url;
+    }
+    
+    // 尝试从parameters中获取缩略图
+    if (prompt.parameters?.thumbnail_url) {
+      return prompt.parameters.thumbnail_url;
+    }
+    
+    // 如果有原图，生成缩略图版本（较小尺寸）
+    const originalUrl = getOriginalImageUrl();
+    if (originalUrl && originalUrl.includes('unsplash.com')) {
+      // 为unsplash图片添加缩略图参数
+      return originalUrl.replace(/w=\d+&h=\d+/, 'w=200&h=150');
+    }
+    
+    return null;
+  };
+
+  // 获取原始图片URL（高质量版本）
+  const getOriginalImageUrl = () => {
     if (prompt.preview_asset_url) {
       return prompt.preview_asset_url;
     }
@@ -123,14 +155,38 @@ const ImagePromptCard: React.FC<ImagePromptCardProps> = React.memo(({ prompt }) 
     return 'https://images.unsplash.com/photo-1541961017774-22349e4a1262?w=400&h=300&fit=crop&auto=format&q=80';
   };
 
+  // 获取当前应该显示的图片URL
+  const getCurrentImageUrl = () => {
+    if (!isVisible) {
+      return null; // 不可见时不加载任何图片
+    }
+    
+    const thumbnailUrl = getThumbnailUrl();
+    const originalUrl = getOriginalImageUrl();
+    
+    // 如果有缩略图且还没显示完整图片，显示缩略图
+    if (thumbnailUrl && !showFullImage) {
+      return thumbnailUrl;
+    }
+    
+    // 否则显示原图
+    return originalUrl;
+  };
+
   return (
-    <div>
+    <div ref={elementRef}>
       <Link href={`/prompts/${prompt.id}`}>
         <motion.div
           className="card glass border border-pink-500/20 hover:border-pink-500/40 transition-all duration-300 group cursor-pointer relative overflow-hidden flex flex-col"
           whileHover={{ y: -4, scale: 1.02 }}
           transition={{ duration: 0.2 }}
-          onMouseEnter={() => setIsHovered(true)}
+          onMouseEnter={() => {
+            setIsHovered(true);
+            // 悬停时加载高质量图片
+            if (isVisible && getThumbnailUrl() && !showFullImage) {
+              setShowFullImage(true);
+            }
+          }}
           onMouseLeave={() => setIsHovered(false)}
         >
           {/* 背景渐变 */}
@@ -141,21 +197,56 @@ const ImagePromptCard: React.FC<ImagePromptCardProps> = React.memo(({ prompt }) 
           
           {/* 预览图像区域 - 画廊模式 */}
           <div className="relative h-56 rounded-lg overflow-hidden bg-gradient-to-br from-gray-900/80 to-gray-800/80 flex-shrink-0 mb-4">
-            <img 
-              src={getImageUrl()}
-              alt={prompt.name || '图像提示词'}
-              className={clsx(
-                'w-full h-full object-cover transition-all duration-500',
-                imageLoaded ? 'opacity-100' : 'opacity-0',
-                'group-hover:scale-110',
-              )}
-              onLoad={() => setImageLoaded(true)}
-              onError={() => setImageError(true)}
-            />
-                  {!imageLoaded && (
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-pink-400"></div>
-                    </div>
+            {isVisible ? (
+              <>
+                {getCurrentImageUrl() ? (
+                  <img 
+                    src={getCurrentImageUrl()!}
+                    alt={prompt.name || '图像提示词'}
+                    className={clsx(
+                      'w-full h-full object-cover transition-all duration-500',
+                      imageLoaded ? 'opacity-100' : 'opacity-0',
+                      'group-hover:scale-110',
+                    )}
+                    onLoad={() => {
+                      setImageLoaded(true);
+                      // 如果是缩略图加载完成，延迟加载高质量图片
+                      if (getThumbnailUrl() && !showFullImage) {
+                        setTimeout(() => {
+                          setShowFullImage(true);
+                        }, 200);
+                      }
+                    }}
+                    onError={() => setImageError(true)}
+                  />
+                ) : null}
+                
+                {/* 加载状态 */}
+                {!imageLoaded && !imageError && (
+                  <div className="absolute inset-0 flex flex-col items-center justify-center">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-pink-400 mb-2"></div>
+                    <p className="text-xs text-gray-400">
+                      {getThumbnailUrl() && !showFullImage ? '加载预览...' : '加载图像...'}
+                    </p>
+                  </div>
+                )}
+                
+                {/* 错误状态 */}
+                {imageError && (
+                  <div className="absolute inset-0 flex flex-col items-center justify-center">
+                    <PhotoIcon className="h-12 w-12 text-gray-500 mb-2" />
+                    <p className="text-xs text-gray-500">图像加载失败</p>
+                  </div>
+                )}
+              </>
+            ) : (
+              /* 懒加载占位符 */
+              <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-800/60 to-gray-700/60">
+                <div className="text-center">
+                  <PhotoIcon className="h-12 w-12 text-gray-500 mx-auto mb-2" />
+                  <p className="text-sm text-gray-500">图像预览</p>
+                </div>
+              </div>
             )}
               
             {/* 顶部标签栏 */}

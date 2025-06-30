@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { PromptInfo } from '@/types';
 import { formatVersionDisplay } from '@/lib/version-utils';
+import { useIntersectionObserver } from '@/hooks/useIntersectionObserver';
 import { 
   StarIcon, 
   DocumentTextIcon, 
@@ -31,6 +32,7 @@ interface VideoPromptCardProps {
   prompt: PromptInfo & {
     category_type?: 'chat' | 'image' | 'video';
     preview_asset_url?: string;
+    thumbnail_url?: string; // 添加缩略图URL支持
     parameters?: Record<string, any>;
   };
 }
@@ -66,9 +68,19 @@ const VideoPromptCard: React.FC<VideoPromptCardProps> = React.memo(({ prompt }) 
   const [loadingTimeout, setLoadingTimeout] = useState(false);
   const [currentVideoUrl, setCurrentVideoUrl] = useState<string | null>(null);
   const [hasTriedFallback, setHasTriedFallback] = useState(false);
+  const [thumbnailLoaded, setThumbnailLoaded] = useState(false);
+  const [thumbnailError, setThumbnailError] = useState(false);
+  const [showVideo, setShowVideo] = useState(false); // 控制是否显示视频（vs缩略图）
   const videoRef = useRef<HTMLVideoElement>(null);
   const hoverTimeoutRef = useRef<NodeJS.Timeout>();
   const loadingTimeoutRef = useRef<NodeJS.Timeout>();
+  
+  // 懒加载：只有当卡片进入可视区域时才加载视频
+  const { elementRef, isVisible } = useIntersectionObserver({
+    threshold: 0.1,
+    rootMargin: '100px', // 提前100px开始加载
+    freezeOnceVisible: true // 一旦可见就保持状态，不再反复切换
+  });
 
   // 使用useMemo缓存计算结果 - 移到早期返回之前
   const categoryInfo = useMemo(() => {
@@ -93,24 +105,6 @@ const VideoPromptCard: React.FC<VideoPromptCardProps> = React.memo(({ prompt }) 
     };
   }, [prompt?.tags]);
 
-  // 获取主要参数用于显示
-  const keyParameters = useMemo(() => {
-    if (!prompt?.parameters) return null;
-    const params: Array<{key: string; value: string}> = [];
-    
-    // 优先显示重要参数
-    if (prompt.parameters.duration) {
-      params.push({ key: 'Duration', value: `${prompt.parameters.duration}s` });
-    }
-    if (prompt.parameters.fps) {
-      params.push({ key: 'FPS', value: String(prompt.parameters.fps) });
-    }
-    if (prompt.parameters.camera_movement) {
-      params.push({ key: 'Camera', value: String(prompt.parameters.camera_movement) });
-    }
-    
-    return params.slice(0, 2); // 最多显示2个参数
-  }, [prompt?.parameters]);
 
   // 如果没有必要的数据，不渲染 - 移到hooks之后
   if (!prompt || !prompt.id) {
@@ -128,6 +122,22 @@ const VideoPromptCard: React.FC<VideoPromptCardProps> = React.memo(({ prompt }) 
       return prompt.parameters.media_files[0].url;
     }
 
+    return null;
+  };
+
+  // 获取缩略图URL
+  const getThumbnailUrl = () => {
+    // 优先使用专门的缩略图
+    if (prompt.thumbnail_url) {
+      return prompt.thumbnail_url;
+    }
+    
+    // 尝试从parameters中获取缩略图
+    if (prompt.parameters?.thumbnail_url) {
+      return prompt.parameters.thumbnail_url;
+    }
+    
+    // 如果没有专门的缩略图，可以使用默认缩略图
     return null;
   };
 
@@ -159,12 +169,24 @@ const VideoPromptCard: React.FC<VideoPromptCardProps> = React.memo(({ prompt }) 
     return getFallbackVideoUrl();
   };
 
-  // 初始化视频URL
+  // 判断是否优先显示缩略图
+  const shouldShowThumbnail = getThumbnailUrl() !== null;
+
+  // 初始化视频URL - 只有在组件可见时才初始化
   useEffect(() => {
+    if (!isVisible) return;
+    
     const primaryUrl = getPrimaryVideoUrl();
     setCurrentVideoUrl(primaryUrl || getFallbackVideoUrl());
     setHasTriedFallback(!primaryUrl);
-  }, [prompt.preview_asset_url, prompt.parameters?.media_files]);
+    
+    // 如果有缩略图，默认不显示视频
+    if (shouldShowThumbnail) {
+      setShowVideo(false);
+    } else {
+      setShowVideo(true);
+    }
+  }, [isVisible, prompt.preview_asset_url, prompt.parameters?.media_files, shouldShowThumbnail]);
 
   // 处理视频加载超时
   const handleLoadingTimeout = () => {
@@ -239,6 +261,11 @@ const VideoPromptCard: React.FC<VideoPromptCardProps> = React.memo(({ prompt }) 
   const handleMouseEnter = () => {
     setIsHovered(true);
     
+    // 如果当前显示缩略图，先切换到视频
+    if (shouldShowThumbnail && !showVideo) {
+      setShowVideo(true);
+    }
+    
     // 只有在非用户控制状态下才自动播放
     if (videoRef.current && !isPlaying && !isUserControlled) {
       hoverTimeoutRef.current = setTimeout(() => {
@@ -246,7 +273,7 @@ const VideoPromptCard: React.FC<VideoPromptCardProps> = React.memo(({ prompt }) 
           videoRef.current.play();
           setIsPlaying(true);
         }
-      }, 500); // 500ms延迟避免意外触发
+      }, 800); // 延长到800ms，给视频切换时间
     }
   };
 
@@ -263,6 +290,15 @@ const VideoPromptCard: React.FC<VideoPromptCardProps> = React.memo(({ prompt }) 
       videoRef.current.pause();
       setIsPlaying(false);
     }
+    
+    // 如果有缩略图且非用户控制，回到缩略图显示
+    if (shouldShowThumbnail && !isUserControlled) {
+      setTimeout(() => {
+        if (!isHovered) {
+          setShowVideo(false);
+        }
+      }, 300); // 延迟300ms再切回缩略图，避免闪烁
+    }
   };
 
   // 组件卸载时清理定时器
@@ -278,7 +314,7 @@ const VideoPromptCard: React.FC<VideoPromptCardProps> = React.memo(({ prompt }) 
   }, []);
 
   return (
-    <div>
+    <div ref={elementRef}>
       <Link href={`/prompts/${prompt.id}`}>
         <motion.div
           className="card glass border border-red-500/20 hover:border-red-500/40 transition-all duration-300 group cursor-pointer relative overflow-hidden flex flex-col"
@@ -295,36 +331,89 @@ const VideoPromptCard: React.FC<VideoPromptCardProps> = React.memo(({ prompt }) 
           
           {/* 预览视频区域 - 画廊模式 */}
           <div className="relative h-56 rounded-lg overflow-hidden bg-gradient-to-br from-gray-900/80 to-gray-800/80 flex-shrink-0 mb-4">
-            <video 
-              ref={videoRef}
-              src={getCurrentVideoUrl()}
-              className={clsx(
-                'w-full h-full object-cover transition-all duration-500',
-                videoLoaded ? 'opacity-100' : 'opacity-0',
-                'group-hover:scale-110',
-              )}
-              onLoadStart={() => {
-                resetVideoState();
-                startLoadingTimer();
-              }}
-              onCanPlay={() => {
-                setVideoLoaded(true);
-                clearLoadingTimer();
-              }}
-              onError={() => {
-                clearLoadingTimer();
-                console.error('视频加载失败:', getCurrentVideoUrl());
-                switchToFallback();
-              }}
-              onEnded={() => {
-                setIsPlaying(false);
-                setIsUserControlled(false); // 播放结束后重置用户控制状态
-              }}
-              muted
-              playsInline
-            />
-            {/* 加载状态显示 */}
-            {!videoLoaded && !videoError && (
+            {isVisible ? (
+              <>
+                {/* 缩略图显示 */}
+                {shouldShowThumbnail && !showVideo && (
+                  <>
+                    <img
+                      src={getThumbnailUrl()!}
+                      alt="视频缩略图"
+                      className={clsx(
+                        'w-full h-full object-cover transition-all duration-500',
+                        thumbnailLoaded ? 'opacity-100' : 'opacity-0',
+                        'group-hover:scale-110',
+                      )}
+                      onLoad={() => setThumbnailLoaded(true)}
+                      onError={() => {
+                        setThumbnailError(true);
+                        setShowVideo(true); // 缩略图加载失败时回退到视频
+                      }}
+                    />
+                    {/* 缩略图上的播放按钮指示器 */}
+                    {thumbnailLoaded && (
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                        <div className="w-16 h-16 bg-white/20 backdrop-blur-sm border border-white/30 rounded-full flex items-center justify-center">
+                          <PlayIcon className="h-8 w-8 text-white ml-1" />
+                        </div>
+                      </div>
+                    )}
+                  </>
+                )}
+                
+                {/* 视频显示 */}
+                {(!shouldShowThumbnail || showVideo) && (
+                  <video 
+                    ref={videoRef}
+                    src={getCurrentVideoUrl()}
+                    className={clsx(
+                      'w-full h-full object-cover transition-all duration-500',
+                      videoLoaded ? 'opacity-100' : 'opacity-0',
+                      'group-hover:scale-110',
+                    )}
+                    onLoadStart={() => {
+                      resetVideoState();
+                      startLoadingTimer();
+                    }}
+                    onCanPlay={() => {
+                      setVideoLoaded(true);
+                      clearLoadingTimer();
+                    }}
+                    onError={() => {
+                      clearLoadingTimer();
+                      console.error('视频加载失败:', getCurrentVideoUrl());
+                      switchToFallback();
+                    }}
+                    onEnded={() => {
+                      setIsPlaying(false);
+                      setIsUserControlled(false); // 播放结束后重置用户控制状态
+                    }}
+                    muted
+                    playsInline
+                  />
+                )}
+              </>
+            ) : (
+              /* 懒加载占位符 */
+              <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-800/60 to-gray-700/60">
+                <div className="text-center">
+                  <FilmIcon className="h-12 w-12 text-gray-500 mx-auto mb-2" />
+                  <p className="text-sm text-gray-500">视频预览</p>
+                </div>
+              </div>
+            )}
+            {/* 缩略图加载状态 */}
+            {isVisible && shouldShowThumbnail && !showVideo && !thumbnailLoaded && !thumbnailError && (
+              <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-900/80 backdrop-blur-sm">
+                <div className="text-center">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sky-400 mb-2"></div>
+                  <p className="text-xs text-gray-400">加载缩略图...</p>
+                </div>
+              </div>
+            )}
+            
+            {/* 视频加载状态显示 - 只有在显示视频且视频可见时才显示 */}
+            {isVisible && (!shouldShowThumbnail || showVideo) && !videoLoaded && !videoError && (
               <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-900/80 backdrop-blur-sm">
                 {loadingTimeout ? (
                   <div className="text-center">
@@ -340,8 +429,8 @@ const VideoPromptCard: React.FC<VideoPromptCardProps> = React.memo(({ prompt }) 
               </div>
             )}
             
-            {/* 错误状态显示 */}
-            {videoError && (
+            {/* 错误状态显示 - 只有在显示视频且视频可见时才显示 */}
+            {isVisible && (!shouldShowThumbnail || showVideo) && videoError && (
               <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-900/80 backdrop-blur-sm">
                 <div className="text-center">
                   <div className="text-red-400 text-2xl mb-2">🎬</div>
@@ -388,9 +477,9 @@ const VideoPromptCard: React.FC<VideoPromptCardProps> = React.memo(({ prompt }) 
               )}
             </div>
             
-            {/* 中央播放控制 */}
+            {/* 中央播放控制 - 只有在显示视频且加载完成时才显示 */}
             <AnimatePresence>
-              {isHovered && videoLoaded && !videoError && (
+              {isVisible && isHovered && (!shouldShowThumbnail || (showVideo && videoLoaded)) && !videoError && (
                 <motion.div
                   initial={{ opacity: 0, scale: 0.8 }}
                   animate={{ opacity: 1, scale: 1 }}
@@ -438,20 +527,6 @@ const VideoPromptCard: React.FC<VideoPromptCardProps> = React.memo(({ prompt }) 
               </div>
             </div>
             
-            {/* 参数显示 */}
-            {keyParameters && keyParameters.length > 0 && (
-              <div className="flex flex-wrap gap-1.5 mb-2">
-                {keyParameters.map((param, index) => (
-                  <div 
-                    key={`${prompt.id}-param-${index}`}
-                    className="inline-flex items-center space-x-1 px-2 py-1 rounded-md text-xs bg-gray-800/50 border border-gray-600/30"
-                  >
-                    <span className="text-gray-300">{param.key}:</span>
-                    <span className="text-gray-400">{param.value}</span>
-                  </div>
-                ))}
-              </div>
-            )}
             
             {/* 标签 */}
             {tagsToShow && (

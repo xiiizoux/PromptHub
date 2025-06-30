@@ -1,10 +1,9 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FilmIcon } from '@heroicons/react/24/outline';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getPrompts, getCategories, getTags } from '@/lib/api';
 import { PromptInfo, PromptFilters as PromptFiltersType } from '@/types';
 import VideoPromptCard from '@/components/prompts/VideoPromptCard';
-import PromptFilters from '@/components/prompts/PromptFilters';
 import SidebarFilters from '@/components/layout/SidebarFilters';
 
 export default function VideoPromptsPage() {
