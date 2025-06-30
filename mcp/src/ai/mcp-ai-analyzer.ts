@@ -44,25 +44,86 @@ export interface MCPAIAnalysisResult {
   };
 }
 
-// 按类型组织的分类
-const PRESET_CATEGORIES = {
-  chat: [
-    '通用对话', '学术研究', '编程开发', '文案写作', '翻译语言'
-  ],
-  image: [
-    '真实摄影', '艺术绘画', '动漫插画', '抽象艺术', 'Logo设计', '建筑空间', '时尚设计'
-  ],
-  video: [
-    '故事叙述', '动画特效', '产品展示', '自然风景', '人物肖像', '广告营销'
-  ]
-};
+/**
+ * 动态分类管理器
+ */
+class CategoryManager {
+  private categoriesCache: { [key: string]: string[] } = {};
+  private lastCacheUpdate = 0;
+  private readonly CACHE_TTL = 5 * 60 * 1000; // 5分钟缓存
 
-// 向后兼容的平面分类列表
-const FLAT_CATEGORIES = [
-  ...PRESET_CATEGORIES.chat,
-  ...PRESET_CATEGORIES.image,
-  ...PRESET_CATEGORIES.video
-];
+  /**
+   * 获取指定类型的分类列表
+   */
+  async getCategories(type: 'chat' | 'image' | 'video'): Promise<string[]> {
+    const cacheKey = type;
+    const now = Date.now();
+
+    // 检查缓存
+    if (this.categoriesCache[cacheKey] && (now - this.lastCacheUpdate) < this.CACHE_TTL) {
+      return this.categoriesCache[cacheKey];
+    }
+
+    try {
+      // 尝试从API获取分类（如果可用）
+      const categories = await this.fetchCategoriesFromAPI(type);
+
+      // 更新缓存
+      this.categoriesCache[cacheKey] = categories;
+      this.lastCacheUpdate = now;
+
+      return categories;
+    } catch (error) {
+      console.warn(`获取${type}分类失败，使用默认分类`, error);
+
+      // 降级：使用默认分类
+      const defaultCategories = this.getDefaultCategories(type);
+      this.categoriesCache[cacheKey] = defaultCategories;
+      return defaultCategories;
+    }
+  }
+
+  /**
+   * 从API获取分类
+   */
+  private async fetchCategoriesFromAPI(type: string): Promise<string[]> {
+    // 这里可以实现从web服务API获取分类的逻辑
+    // 暂时抛出错误，使用默认分类
+    throw new Error('API获取暂未实现');
+  }
+
+  /**
+   * 获取默认分类 - 不再提供硬编码默认值
+   */
+  private getDefaultCategories(type: 'chat' | 'image' | 'video'): string[] {
+    // 不再提供硬编码的默认分类
+    // 如果API失败，应该返回空数组，让调用方处理错误
+    console.warn(`无法获取${type}类型的分类，API服务不可用`);
+    return [];
+  }
+
+  /**
+   * 获取所有分类的平面列表
+   */
+  async getAllCategories(): Promise<string[]> {
+    const chatCategories = await this.getCategories('chat');
+    const imageCategories = await this.getCategories('image');
+    const videoCategories = await this.getCategories('video');
+
+    return [...chatCategories, ...imageCategories, ...videoCategories];
+  }
+
+  /**
+   * 清除缓存
+   */
+  clearCache(): void {
+    this.categoriesCache = {};
+    this.lastCacheUpdate = 0;
+  }
+}
+
+// 创建分类管理器实例
+const categoryManager = new CategoryManager();
 
 // 预设的兼容模型
 const PRESET_MODELS = [
@@ -685,14 +746,22 @@ ${existingTags.length > 0 ? `优先使用现有标签：${existingTags.slice(0, 
   /**
    * 获取配置信息
    */
-  getConfig() {
+  async getConfig() {
+    const chatCategories = await categoryManager.getCategories('chat');
+    const imageCategories = await categoryManager.getCategories('image');
+    const videoCategories = await categoryManager.getCategories('video');
+
     return {
       endpoint: this.baseURL,
       models: {
         fullAnalysis: this.fullAnalysisModel,
         quickTasks: this.quickTasksModel
       },
-      presetCategories: PRESET_CATEGORIES,
+      presetCategories: {
+        chat: chatCategories,
+        image: imageCategories,
+        video: videoCategories
+      },
       presetModels: PRESET_MODELS,
       hasApiKey: !!this.apiKey
     };
@@ -707,6 +776,9 @@ ${existingTags.length > 0 ? `优先使用现有标签：${existingTags.slice(0, 
     }
 
     try {
+      // 获取所有可用分类
+      const allCategories = await categoryManager.getAllCategories();
+
       const response = await axios.post(
         `${this.baseURL}/chat/completions`,
         {
@@ -715,7 +787,7 @@ ${existingTags.length > 0 ? `优先使用现有标签：${existingTags.slice(0, 
             {
               role: 'system',
               content: `你是一个AI提示词分类专家。请根据提示词内容，从以下分类中选择最合适的一个：
-${FLAT_CATEGORIES.join('、')}
+${allCategories.join('、')}
 
 请仔细理解提示词的实际功能，而不是被表面词汇误导。如果提示词中的某些词汇是比喻性使用，请根据实际功能进行分类。
 
@@ -738,7 +810,14 @@ ${FLAT_CATEGORIES.join('、')}
       );
 
       const category = response.data.choices[0].message.content.trim();
-      return FLAT_CATEGORIES.includes(category) ? category : '通用对话';
+      const allCategories = await categoryManager.getAllCategories();
+
+      if (allCategories.length === 0) {
+        // 如果无法获取分类列表，直接返回AI的结果
+        return category;
+      }
+
+      return allCategories.includes(category) ? category : allCategories[0];
     } catch (error) {
       console.error('[MCP AI] 分类失败:', error);
       

@@ -16,13 +16,9 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 -- 创建分类类型枚举（基于真实数据库）
 CREATE TYPE IF NOT EXISTS category_type AS ENUM ('chat', 'image', 'video');
 
--- 创建提示词分类枚举类型（保持兼容性）
-CREATE TYPE IF NOT EXISTS prompt_category AS ENUM (
-  '全部', '学术', '职业', '文案', '设计', '教育', '情感',
-  '娱乐', '游戏', '通用', '生活', '商业', '金融投资', '办公',
-  '编程', '翻译', '绘画', '视频', '播客', '音乐',
-  '健康', '科技'
-);
+-- 注意：prompt_category 枚举类型已废弃
+-- 现在使用 categories 表进行动态分类管理，不再使用硬编码的枚举类型
+-- 如果需要兼容旧代码，可以保留此枚举，但不应在新代码中使用
 
 -- =============================================
 -- 核心表结构
@@ -58,7 +54,7 @@ CREATE TABLE IF NOT EXISTS prompts (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   name TEXT NOT NULL,
   description TEXT,
-  category TEXT NOT NULL DEFAULT '通用',
+  category TEXT NOT NULL DEFAULT '通用', -- 使用重构后的分类名称 -- 注意：此默认值需要与categories表中的实际分类名称保持一致
   tags TEXT[],
   messages JSONB NOT NULL,
   created_at TIMESTAMPTZ DEFAULT NOW(),
@@ -819,105 +815,45 @@ CREATE POLICY "prompt_comments_manage_own" ON prompt_comments
 
 
 
--- 协作者表策略
-CREATE POLICY "Users can view their own collaborations" ON prompt_collaborators
-  FOR SELECT USING (user_id = auth.uid());
-
-CREATE POLICY "Prompt owners can manage collaborators" ON prompt_collaborators
-  FOR ALL USING (
-    EXISTS (
-      SELECT 1 FROM prompts
-      WHERE prompts.id = prompt_collaborators.prompt_id
-      AND (prompts.created_by = auth.uid() OR prompts.user_id = auth.uid())
-    )
-  );
-
--- 审计日志表策略
-CREATE POLICY "Users can view audit logs for their prompts" ON prompt_audit_logs
-  FOR SELECT USING (
-    user_id = auth.uid() OR
-    EXISTS (
-      SELECT 1 FROM prompts
-      WHERE prompts.id = prompt_audit_logs.prompt_id
-      AND (prompts.created_by = auth.uid() OR prompts.user_id = auth.uid())
-    )
-  );
-
--- API密钥表策略
-CREATE POLICY "用户可以查看自己的API密钥"
-ON api_keys
-FOR SELECT
-USING (auth.uid() = user_id);
-
-CREATE POLICY "用户可以创建自己的API密钥"
-ON api_keys
-FOR INSERT
-WITH CHECK (auth.uid() = user_id);
-
-CREATE POLICY "用户可以删除自己的API密钥"
-ON api_keys
-FOR DELETE
-USING (auth.uid() = user_id);
+-- 注意：以上策略已在前面定义，此处为重复定义，已清理
 
 -- =============================================
 -- 初始化示例数据
 -- =============================================
 
--- 插入预置类别数据（基于新的三类型系统）
+-- 注意：以下分类数据仅作为schema参考，实际分类数据应从数据库动态获取
+-- 不建议在生产环境中执行此INSERT语句，因为分类数据会经常变化
+-- 当前数据库已包含重构后的分类数据，使用更详细的分类名称
+
+-- 示例分类数据结构（基于当前数据库的实际分类）：
+-- Chat类型分类示例：
+-- ('通用对话', 'general', 'chat-bubble-left-right', '适用于日常生活交流、基础问题咨询、通用助手对话等场景...', 101, 'chat'),
+-- ('客服助手', 'customer_service', 'phone', '专门用于客户服务场景的对话提示词...', 102, 'chat'),
+-- ('角色扮演', 'role_playing', 'user-group', '用于角色扮演和情景模拟的对话提示词...', 103, 'chat'),
+--
+-- Image类型分类示例：
+-- ('真实摄影', 'realistic_photo', 'camera', '真实摄影风格的图像生成提示词...', 201, 'image'),
+-- ('人像摄影', 'portrait', 'user', '人像摄影专业提示词...', 202, 'image'),
+--
+-- Video类型分类示例：
+-- ('故事叙述', 'storytelling', 'book-open', '故事叙述和剧情创作的视频提示词...', 301, 'video'),
+-- ('纪录片', 'documentary', 'film', '纪录片制作和纪实拍摄的专业提示词...', 302, 'video'),
+
+/*
+-- 如需重新初始化分类数据，请使用以下格式，但建议通过API动态管理：
 INSERT INTO categories (name, name_en, icon, description, sort_order, type) VALUES
--- Chat类型 (对话提示词)
-('通用', 'general', 'chat-bubble-left-right', '通用助手和日常对话类提示词', 10, 'chat'),
-('学术', 'academic', 'academic-cap', '学术研究、论文写作、学术分析类提示词', 20, 'chat'),
-('职业', 'professional', 'briefcase', '职场沟通、简历优化、面试准备类提示词', 30, 'chat'),
-('文案', 'copywriting', 'pencil', '广告文案、营销内容、产品描述类提示词', 40, 'chat'),
-('教育', 'education', 'book-open', '教学辅导、知识解释、学习指导类提示词', 50, 'chat'),
-('情感', 'emotional', 'heart', '情感支持、心理咨询、人际关系类提示词', 60, 'chat'),
-('娱乐', 'entertainment', 'sparkles', '游戏、故事创作、趣味对话类提示词', 70, 'chat'),
-('生活', 'lifestyle', 'home', '日常生活、健康建议、生活技巧类提示词', 80, 'chat'),
-('商业', 'business', 'chart-bar', '商业分析、市场策略、企业管理类提示词', 90, 'chat'),
-('金融投资', 'finance-investment', 'currency-dollar', '金融分析、投资策略、理财规划、风险评估类提示词', 95, 'chat'),
-('办公', 'office', 'document-text', '办公自动化、文档处理、会议记录类提示词', 100, 'chat'),
-('编程', 'programming', 'code', '代码编写、程序调试、技术解答类提示词', 110, 'chat'),
-('翻译', 'translation', 'language', '多语言翻译、本地化、语言学习类提示词', 120, 'chat'),
 
--- Image类型 (图像提示词)
-('绘画', 'painting', 'paint-brush', '绘画创作、艺术指导、风格描述类提示词', 210, 'image'),
-('设计', 'design', 'color-swatch', '设计思维、创意构思、视觉设计类提示词', 220, 'image'),
-('摄影', 'photography', 'camera', '摄影构图、光影效果、拍摄技巧类提示词', 230, 'image'),
-('插画', 'illustration', 'pencil-square', '插画创作、角色设计、场景绘制类提示词', 240, 'image'),
-('UI设计', 'ui-design', 'device-phone-mobile', 'UI界面设计、用户体验、交互设计类提示词', 250, 'image'),
-('品牌设计', 'brand-design', 'building-storefront', '品牌视觉、标志设计、企业形象类提示词', 260, 'image'),
-('海报设计', 'poster-design', 'rectangle-stack', '海报创作、宣传设计、视觉传达类提示词', 270, 'image'),
-('3D建模', '3d-modeling', 'cube', '三维建模、渲染效果、空间设计类提示词', 280, 'image'),
-('动漫风格', 'anime-style', 'face-smile', '动漫角色、二次元风格、卡通设计类提示词', 290, 'image'),
-('写实风格', 'realistic-style', 'eye', '写实绘画、真实感渲染、细节刻画类提示词', 300, 'image'),
-('抽象艺术', 'abstract-art', 'squares-plus', '抽象表现、概念艺术、创意视觉类提示词', 310, 'image'),
-('建筑设计', 'architecture', 'building-office', '建筑设计、空间规划、结构美学类提示词', 320, 'image'),
-('时尚设计', 'fashion-design', 'sparkles', '服装设计、时尚搭配、潮流趋势类提示词', 330, 'image'),
-('游戏美术', 'game-art', 'puzzle-piece', '游戏场景、角色原画、概念设计类提示词', 340, 'image'),
-('科幻风格', 'sci-fi-style', 'rocket-launch', '科幻场景、未来设计、科技感视觉类提示词', 350, 'image'),
+-- 以上分类数据已注释，因为：
+-- 1. 数据库已包含重构后的实际分类数据
+-- 2. 分类数据应通过API动态管理，而非硬编码在schema中
+-- 3. 避免与现有数据库数据冲突
+*/
 
--- Video类型 (视频提示词)
-('视频制作', 'video-production', 'video-camera', '视频制作、脚本编写、视频策划类提示词', 410, 'video'),
-('动画制作', 'animation', 'film', '动画创作、角色动画、特效制作类提示词', 420, 'video'),
-('短视频', 'short-video', 'device-phone-mobile', '短视频创意、社交媒体、内容策划类提示词', 430, 'video'),
-('纪录片', 'documentary', 'document-text', '纪录片制作、真实记录、深度报道类提示词', 440, 'video'),
-('广告视频', 'commercial-video', 'megaphone', '广告创意、营销视频、品牌宣传类提示词', 450, 'video'),
-('教学视频', 'educational-video', 'academic-cap', '教学内容、知识传播、在线教育类提示词', 460, 'video'),
-('音乐视频', 'music-video', 'musical-note', '音乐MV、音频视觉、节奏表现类提示词', 470, 'video'),
-('游戏视频', 'gaming-video', 'puzzle-piece', '游戏录制、解说内容、电竞视频类提示词', 480, 'video'),
-('直播内容', 'live-streaming', 'signal', '直播策划、互动内容、实时传播类提示词', 490, 'video'),
-('企业宣传', 'corporate-video', 'building-office', '企业形象、公司介绍、商务展示类提示词', 500, 'video'),
-('旅行视频', 'travel-video', 'map', '旅行记录、风景展示、文化探索类提示词', 510, 'video'),
-('生活记录', 'lifestyle-video', 'home', '日常生活、个人记录、生活分享类提示词', 520, 'video')
-
-ON CONFLICT (name) DO UPDATE SET
-  name_en = EXCLUDED.name_en,
-  icon = EXCLUDED.icon,
-  description = EXCLUDED.description,
-  sort_order = EXCLUDED.sort_order,
-  type = EXCLUDED.type,
-  updated_at = NOW();
+-- 分类数据管理说明：
+-- - 当前数据库使用动态分类管理，分类数据存储在categories表中
+-- - 分类数据会根据业务需求动态调整，不应硬编码在schema文件中
+-- - 如需查看当前分类数据，请查询categories表：SELECT * FROM categories ORDER BY sort_order;
+-- - 新增分类请通过API接口或管理后台进行，确保数据一致性
 
 
 

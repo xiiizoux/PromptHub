@@ -467,21 +467,84 @@ export class PromptQualityAnalyzer {
   }
 
   /**
-   * 获取分类关键词
+   * 获取分类关键词 - 动态生成基于分类名称
    */
   private getCategoryKeywords(category: string): string[] {
-    const keywords: { [key: string]: string[] } = {
-      '编程': ['代码', '函数', '算法', '变量', '调试', '优化', '架构'],
-      '文案': ['标题', '内容', '创意', '营销', '品牌', '传播', '文字'],
-      '写作': ['文章', '创作', '文字', '内容', '表达', '修辞', '结构'],
-      '学术': ['研究', '分析', '理论', '方法', '数据', '结论', '参考'],
-      '商业': ['策略', '市场', '客户', '价值', '竞争', '盈利', '增长'],
-      '金融': ['投资', '理财', '风险', '收益', '资产', '财务', '分析'],
-      '设计': ['视觉', '布局', '色彩', '字体', '用户体验', '界面', '创意'],
-      '教育': ['学习', '教学', '知识', '技能', '培训', '课程', '评估'],
-    };
+    // 基于分类名称智能生成关键词
+    const categoryKeywordMap = this.generateCategoryKeywords(category);
+    return categoryKeywordMap;
+  }
 
-    return keywords[category] || ['专业', '质量', '效果', '方法'];
+  /**
+   * 智能生成分类关键词
+   */
+  private generateCategoryKeywords(category: string): string[] {
+    // 动态关键词生成 - 基于分类名称智能推断
+    return this.generateKeywordsByCategory(category);
+  }
+
+  /**
+   * 基于分类名称动态生成关键词
+   */
+  private generateKeywordsByCategory(category: string): string[] {
+    // 基础关键词映射规则
+    const keywordRules = [
+      // 编程开发相关
+      { keywords: ['编程', '开发', '代码', '程序'], relatedWords: ['代码', '函数', '算法', '变量', '调试', '优化', '架构', '开发', '程序'] },
+
+      // 文案写作相关
+      { keywords: ['文案', '写作', '创作', '文字'], relatedWords: ['标题', '内容', '创意', '营销', '品牌', '传播', '文字', '写作', '表达'] },
+
+      // 学术研究相关
+      { keywords: ['学术', '研究', '论文', '科研'], relatedWords: ['研究', '分析', '理论', '方法', '数据', '结论', '参考', '学术', '论文'] },
+
+      // 翻译语言相关
+      { keywords: ['翻译', '语言', '多语言'], relatedWords: ['翻译', '语言', '转换', '表达', '准确', '流畅', '多语言'] },
+
+      // 对话交流相关
+      { keywords: ['对话', '交流', '沟通', '聊天'], relatedWords: ['对话', '交流', '沟通', '回答', '互动', '理解'] },
+
+      // 设计艺术相关
+      { keywords: ['设计', '艺术', '绘画', '美术'], relatedWords: ['视觉', '布局', '色彩', '字体', '创意', '美学', '构图'] },
+
+      // 商业金融相关
+      { keywords: ['商业', '金融', '投资', '财务'], relatedWords: ['策略', '市场', '客户', '价值', '投资', '理财', '风险', '收益'] },
+
+      // 摄影图像相关
+      { keywords: ['摄影', '拍摄', '照片', '图像'], relatedWords: ['摄影', '构图', '光线', '色彩', '视觉', '美学'] },
+
+      // 视频制作相关
+      { keywords: ['视频', '影像', '动画', '特效'], relatedWords: ['视频', '剪辑', '特效', '动画', '故事', '叙述'] },
+    ];
+
+    // 查找匹配的规则
+    for (const rule of keywordRules) {
+      if (rule.keywords.some(keyword => category.includes(keyword))) {
+        return rule.relatedWords;
+      }
+    }
+
+    // 基于分类名称生成通用关键词
+    const generalKeywords = ['专业', '质量', '效果', '方法'];
+
+    // 根据分类名称中的特定词汇添加相关关键词
+    if (category.includes('对话') || category.includes('聊天')) {
+      generalKeywords.push('对话', '交流', '沟通');
+    }
+    if (category.includes('创作') || category.includes('创意')) {
+      generalKeywords.push('创作', '创意', '想象');
+    }
+    if (category.includes('分析') || category.includes('研究')) {
+      generalKeywords.push('分析', '研究', '深入');
+    }
+    if (category.includes('设计') || category.includes('美术')) {
+      generalKeywords.push('设计', '美学', '视觉');
+    }
+    if (category.includes('技术') || category.includes('科技')) {
+      generalKeywords.push('技术', '创新', '解决方案');
+    }
+
+    return generalKeywords;
   }
 }
 

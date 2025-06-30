@@ -1,14 +1,13 @@
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useMemo } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { PromptInfo } from '@/types';
 import { formatVersionDisplay } from '@/lib/version-utils';
-import { getCategoryDisplayConfig, getCategoriesByType, CategoryInfo } from '@/lib/category-service';
-import { 
-  StarIcon, 
-  DocumentTextIcon, 
+import { useCategoryDisplayMap } from '@/hooks/useCategoryService';
+import {
+  StarIcon,
+  DocumentTextIcon,
   ArrowTopRightOnSquareIcon,
-  TagIcon,
   ClockIcon,
   UserIcon,
   FireIcon,
@@ -35,43 +34,33 @@ const formatDate = (dateString?: string) => {
 };
 
 const PromptCard: React.FC<PromptCardProps> = React.memo(({ prompt }) => {
-  const [categories, setCategories] = useState<CategoryInfo[]>([]);
-  const [loadingCategories, setLoadingCategories] = useState(true);
-
-  // 加载分类数据
-  useEffect(() => {
-    const loadCategories = async () => {
-      try {
-        setLoadingCategories(true);
-        const chatCategories = await getCategoriesByType('chat');
-        setCategories(chatCategories);
-      } catch (error) {
-        console.error('Failed to load categories:', error);
-      } finally {
-        setLoadingCategories(false);
-      }
-    };
-
-    loadCategories();
-  }, []);
+  // 使用新的分类服务Hook
+  const { displayMap, loading: loadingCategories, getDisplayInfo } = useCategoryDisplayMap('chat');
 
   // 如果没有必要的数据，不渲染
   if (!prompt || !prompt.id) {
     return null;
   }
 
-  // 使用动态分类配置系统
+  // 获取分类显示信息
   const categoryInfo = useMemo(() => {
     if (loadingCategories) {
       return {
         name: prompt?.category || '加载中...',
         color: 'from-gray-400 to-gray-500',
         gradient: 'from-gray-400/20 to-gray-500/20',
-        icon: TagIcon
+        iconComponent: () => React.createElement('div', { className: 'h-4 w-4 bg-gray-400 rounded animate-pulse' })
       };
     }
-    return getCategoryDisplayConfig(prompt?.category, categories, 'chat');
-  }, [prompt?.category, categories, loadingCategories]);
+
+    const displayInfo = getDisplayInfo(prompt?.category || '通用对话');
+    return {
+      name: displayInfo.name,
+      color: displayInfo.color,
+      gradient: displayInfo.gradient,
+      iconComponent: displayInfo.iconComponent
+    };
+  }, [prompt?.category, loadingCategories, getDisplayInfo]);
 
   const rating = useMemo(() => {
     // 优先使用 average_rating，如果没有则使用 rating 字段
@@ -88,8 +77,6 @@ const PromptCard: React.FC<PromptCardProps> = React.memo(({ prompt }) => {
     };
   }, [prompt?.tags]);
 
-  const CategoryIcon = categoryInfo.icon;
-
   return (
     <div>
       <Link href={`/prompts/${prompt.id}`}>
@@ -99,7 +86,7 @@ const PromptCard: React.FC<PromptCardProps> = React.memo(({ prompt }) => {
             'absolute inset-0 bg-gradient-to-br opacity-0 group-hover:opacity-5 transition-opacity duration-300',
             categoryInfo.color,
           )} />
-          
+
           {/* 头部 - 只在符合条件时显示热门标签 */}
           <div className="relative mb-4">
             {(prompt.usageCount || 0) > 100 && (
@@ -109,7 +96,7 @@ const PromptCard: React.FC<PromptCardProps> = React.memo(({ prompt }) => {
               </div>
             )}
           </div>
-          
+
           {/* 标题与分类图标 */}
           <div className="relative flex items-start mb-2">
             <div className="flex items-start space-x-2 flex-1">
@@ -117,7 +104,9 @@ const PromptCard: React.FC<PromptCardProps> = React.memo(({ prompt }) => {
                 'inline-flex p-2 rounded-lg bg-gradient-to-br flex-shrink-0',
                 categoryInfo.color,
               )}>
-                <CategoryIcon className="h-4 w-4 text-dark-bg-primary" />
+                {categoryInfo.iconComponent && React.createElement(categoryInfo.iconComponent, {
+                  className: "h-4 w-4 text-dark-bg-primary"
+                })}
               </div>
               <div className="flex-1 min-w-0">
                 <h3 className="text-lg font-semibold text-white line-clamp-1 group-hover:text-neon-cyan transition-colors">

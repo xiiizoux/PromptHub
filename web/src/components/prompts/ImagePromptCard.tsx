@@ -1,15 +1,14 @@
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { PromptInfo } from '@/types';
 import { formatVersionDisplay } from '@/lib/version-utils';
 import { useIntersectionObserver } from '@/hooks/useIntersectionObserver';
-import { getCategoryDisplayConfig, getCategoriesByType, CategoryInfo } from '@/lib/category-service';
-import { 
-  StarIcon, 
-  DocumentTextIcon, 
+import { useCategoryDisplayMap } from '@/hooks/useCategoryService';
+import {
+  StarIcon,
+  DocumentTextIcon,
   PhotoIcon,
-  TagIcon,
   ClockIcon,
   UserIcon,
   FireIcon,
@@ -47,9 +46,10 @@ const ImagePromptCard: React.FC<ImagePromptCardProps> = React.memo(({ prompt }) 
   const [imageError, setImageError] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const [showFullImage, setShowFullImage] = useState(false);
-  const [categories, setCategories] = useState<CategoryInfo[]>([]);
-  const [loadingCategories, setLoadingCategories] = useState(true);
-  
+
+  // 使用新的分类服务Hook
+  const { displayMap, loading: loadingCategories, getDisplayInfo } = useCategoryDisplayMap('image');
+
   // 懒加载：只有当卡片进入可视区域时才加载图像
   const { elementRef, isVisible } = useIntersectionObserver({
     threshold: 0.1,
@@ -57,37 +57,25 @@ const ImagePromptCard: React.FC<ImagePromptCardProps> = React.memo(({ prompt }) 
     freezeOnceVisible: true // 一旦可见就保持状态
   });
 
-  // 加载分类数据
-  useEffect(() => {
-    const loadCategories = async () => {
-      try {
-        setLoadingCategories(true);
-        const imageCategories = await getCategoriesByType('image');
-        setCategories(imageCategories);
-      } catch (error) {
-        console.error('Failed to load image categories:', error);
-      } finally {
-        setLoadingCategories(false);
-      }
-    };
-
-    loadCategories();
-  }, []);
-
-  // 使用动态分类配置系统
+  // 获取分类显示信息
   const categoryInfo = useMemo(() => {
     if (loadingCategories) {
       return {
         name: prompt?.category || '加载中...',
         color: 'from-gray-400 to-gray-500',
         gradient: 'from-gray-400/20 to-gray-500/20',
-        icon: TagIcon
+        iconComponent: () => React.createElement('div', { className: 'h-4 w-4 bg-gray-400 rounded animate-pulse' })
       };
     }
-    return getCategoryDisplayConfig(prompt?.category, categories, 'image');
-  }, [prompt?.category, categories, loadingCategories]);
 
-  const CategoryIcon = categoryInfo.icon;
+    const displayInfo = getDisplayInfo(prompt?.category || '真实摄影');
+    return {
+      name: displayInfo.name,
+      color: displayInfo.color,
+      gradient: displayInfo.gradient,
+      iconComponent: displayInfo.iconComponent
+    };
+  }, [prompt?.category, loadingCategories, getDisplayInfo]);
 
   const rating = useMemo(() => {
     if (!prompt) return { value: 0, percentage: 0 };
@@ -307,7 +295,9 @@ const ImagePromptCard: React.FC<ImagePromptCardProps> = React.memo(({ prompt }) 
                   'inline-flex p-2 rounded-lg bg-gradient-to-br flex-shrink-0',
                   categoryInfo.color,
                 )}>
-                  <CategoryIcon className="h-4 w-4 text-dark-bg-primary" />
+                  {categoryInfo.iconComponent && React.createElement(categoryInfo.iconComponent, {
+                    className: "h-4 w-4 text-dark-bg-primary"
+                  })}
                 </div>
                 <div className="flex-1 min-w-0">
                   <h3 className="text-lg font-semibold text-white line-clamp-1 group-hover:text-pink-400 transition-colors">

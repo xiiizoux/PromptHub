@@ -61,42 +61,12 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
     }
   };
 
-  // 分类数据标准化处理
+  // 分类数据标准化处理 - 移除硬编码映射
   const normalizeCategoryName = (category: string | undefined): string => {
-    if (!category) return '通用';
-    
-    // 清理分类名称：去除多余空格、统一格式
-    const cleaned = category.trim();
-    
-    // 只做基本的英文到中文映射，不要随意更改中文分类名称
-    const categoryMappings: { [key: string]: string } = {
-      'general': '通用',
-      'academic': '学术',
-      'professional': '职业', 
-      'creative': '文案',
-      'design': '设计',
-      'education': '教育',
-      'entertainment': '娱乐',
-      'game': '游戏',
-      'life': '生活',
-      'business': '商业',
-      'office': '办公',
-      'code': '编程',
-      'programming': '编程',
-      'translation': '翻译',
-      'video': '视频',
-      'podcast': '播客',
-      'music': '音乐',
-      'health': '健康',
-      'technology': '科技',
-    };
-    
-    // 检查是否为英文分类，如果是则映射为中文
-    const mapped = categoryMappings[cleaned.toLowerCase()];
-    if (mapped) return mapped;
-    
-    // 中文分类名称直接返回，不做映射
-    return cleaned;
+    if (!category) return '';
+
+    // 只做基本的清理：去除多余空格
+    return category.trim();
   };
 
   // 确保所有数据都有默认值并正确格式化

@@ -5,6 +5,7 @@
 
 import axios from 'axios';
 import { MODEL_TAGS, ModelCapability, getModelTagsByCapability } from '@/constants/ai-models';
+import { categoryService } from '@/services/categoryService';
 
 // AI分析结果接口
 export interface AIAnalysisResult {
@@ -87,12 +88,13 @@ class AIAnalyzer {
     };
 
     try {
+      const systemPrompt = await this.buildSystemPrompt(finalConfig, existingTags);
       const response = await axios.post(
         `${this.baseURL}/chat/completions`,
         {
           model: this.fullAnalysisModel,
           messages: [
-            { role: 'system', content: this.buildSystemPrompt(finalConfig, existingTags) },
+            { role: 'system', content: systemPrompt },
             { role: 'user', content: this.buildUserPrompt(content, finalConfig) },
           ],
           temperature: 0.3,
@@ -150,13 +152,22 @@ class AIAnalyzer {
   /**
    * 构建系统提示词 - 支持增量分析
    */
-  private buildSystemPrompt(config: AnalysisConfig, existingTags: string[] = []): string {
+  private async buildSystemPrompt(config: AnalysisConfig, existingTags: string[] = []): Promise<string> {
       const language = config.language === 'zh' ? '中文' : 'English';
-      
-      // 22个预设分类（与数据库categories表完全一致，不包含"全部"这个UI选项）
-      const categories = [
-        '通用', '学术', '职业', '文案', '设计', '绘画', '教育', '情感', '娱乐', '游戏', '生活', '商业', '办公', '编程', '翻译', '视频', '播客', '音乐', '健康', '科技', '金融', '写作',
-      ];
+
+      // 动态获取分类列表
+      let categories: string[] = [];
+      try {
+        const categoryInfos = await categoryService.getCategories('chat');
+        categories = categoryInfos.map(cat => cat.name);
+
+        if (categories.length === 0) {
+          throw new Error('API返回空分类列表');
+        }
+      } catch (error) {
+        console.error('获取分类失败，无法进行分析', error);
+        throw new Error('分类服务不可用，请稍后重试');
+      }
       
       // 预设的兼容模型选项（从MODEL_TAGS中获取）
       const compatibleModelOptions = MODEL_TAGS.map(tag => ({
@@ -1295,17 +1306,33 @@ class AIAnalyzer {
   
         const result = response.data.choices[0].message.content.trim();
         
-        // 验证返回的分类是否在预设列表中
-        const validCategories = [
-          '通用', '学术', '职业', '文案', '设计', '绘画', '教育', '情感', '娱乐', '游戏', '生活', '商业', '办公', '编程', '翻译', '视频', '播客', '音乐', '健康', '科技', '金融', '写作',
-        ];
+        // 验证返回的分类是否在有效列表中
+        let validCategories: string[] = [];
+        try {
+          const categoryInfos = await categoryService.getCategories('chat');
+          validCategories = categoryInfos.map(cat => cat.name);
+
+          if (validCategories.length === 0) {
+            throw new Error('无法获取有效分类列表');
+          }
+        } catch (error) {
+          console.error('获取分类验证列表失败', error);
+          // 如果无法获取分类列表，跳过分类验证
+          validCategories = [];
+        }
         
-        if (validCategories.includes(result)) {
-          return result;
+        // 如果有有效分类列表，进行验证
+        if (validCategories.length > 0) {
+          if (validCategories.includes(result)) {
+            return result;
+          } else {
+            console.warn(`AI返回了无效分类: ${result}，使用本地分类算法`);
+            return this.classifyByKeywords(content);
+          }
         } else {
-          // 如果AI返回的分类不在预设列表中，使用本地分类算法作为降级处理
-          console.warn(`AI返回了无效分类: ${result}，使用本地分类算法`);
-          return this.classifyByKeywords(content);
+          // 如果无法获取分类列表，直接返回AI的结果
+          console.warn('无法验证分类有效性，直接使用AI返回结果');
+          return result;
         }
   
       } catch (error) {

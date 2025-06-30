@@ -468,23 +468,9 @@ export class UnifiedSearchTool extends BaseMCPTool {
   private suggestCategories(query: string, intent: string, domain: string): string[] {
     const categories = new Set<string>();
 
-    // 基于领域映射到分类
-    const domainToCategory: { [key: string]: string[] } = {
-      '编程': ['编程', '技术'],
-      '商务': ['商务', '管理'],
-      '教育': ['教育', '学习'],
-      '写作': ['写作', '创意'],
-      '设计': ['设计', '创意'],
-      '科技': ['技术', '创新'],
-      '医疗': ['医疗', '专业'],
-      '法律': ['法律', '专业'],
-      '金融': ['金融', '商务'],
-      '娱乐': ['娱乐', '生活']
-    };
-
-    if (domainToCategory[domain]) {
-      domainToCategory[domain].forEach(cat => categories.add(cat));
-    }
+    // 基于领域智能映射到分类
+    const domainMappings = this.generateDomainCategoryMappings(domain);
+    domainMappings.forEach(cat => categories.add(cat));
 
     // 基于意图建议分类
     const lowerQuery = query.toLowerCase();
@@ -505,6 +491,50 @@ export class UnifiedSearchTool extends BaseMCPTool {
     }
 
     return Array.from(categories);
+  }
+
+  /**
+   * 生成领域到分类的智能映射
+   */
+  private generateDomainCategoryMappings(domain: string): string[] {
+    // 动态领域映射 - 基于关键词智能推断
+    const mappingRules = [
+      // 编程技术相关
+      { keywords: ['编程', '技术', '开发', '代码'], suggestions: ['编程', '技术', '开发'] },
+
+      // 商务管理相关
+      { keywords: ['商务', '商业', '管理', '企业'], suggestions: ['商业', '管理'] },
+
+      // 教育学习相关
+      { keywords: ['教育', '学习', '学术', '研究'], suggestions: ['教育', '学习', '研究'] },
+
+      // 写作创作相关
+      { keywords: ['写作', '文案', '创作', '文字'], suggestions: ['写作', '创作'] },
+
+      // 设计艺术相关
+      { keywords: ['设计', '创意', '艺术', '绘画'], suggestions: ['设计', '艺术'] },
+
+      // 翻译语言相关
+      { keywords: ['翻译', '语言', '多语言'], suggestions: ['翻译', '语言'] },
+
+      // 金融相关
+      { keywords: ['金融', '投资', '财务', '理财'], suggestions: ['金融', '投资'] },
+
+      // 其他领域
+      { keywords: ['医疗', '健康'], suggestions: ['健康'] },
+      { keywords: ['法律', '法规'], suggestions: ['法律'] },
+      { keywords: ['科技', '创新'], suggestions: ['科技'] },
+    ];
+
+    // 查找匹配的规则
+    for (const rule of mappingRules) {
+      if (rule.keywords.some(keyword => domain.includes(keyword) || keyword.includes(domain))) {
+        return rule.suggestions;
+      }
+    }
+
+    // 如果没有匹配的规则，返回基于领域名称的通用建议
+    return [domain];
   }
 
   /**

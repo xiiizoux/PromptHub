@@ -9,13 +9,17 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 -- 基础表结构
 -- =============================================
 
--- 创建提示词分类枚举类型
-CREATE TYPE prompt_category AS ENUM (
-  '通用', '学术', '职业', '文案', '设计', '教育', '情感', 
-  '娱乐', '游戏', '生活', '商业', '办公', 
-  '编程', '翻译', '绘画', '视频', '播客', '音乐', 
-  '健康', '科技'
-);
+-- 注意：prompt_category 枚举类型已废弃
+-- 此文件为历史schema文件，仅作参考
+-- 现在使用 categories 表进行动态分类管理，不再使用硬编码的枚举类型
+-- 旧的2字分类名（如'通用', '学术', '职业'等）已被更详细的分类名称替代
+
+-- CREATE TYPE prompt_category AS ENUM (
+--   '通用', '学术', '职业', '文案', '设计', '教育', '情感',
+--   '娱乐', '游戏', '生活', '商业', '办公',
+--   '编程', '翻译', '绘画', '视频', '播客', '音乐',
+--   '健康', '科技'
+-- );
 
 -- 用户表 - 用于身份验证和权限控制，与auth.users同步
 CREATE TABLE users (
@@ -581,50 +585,40 @@ CREATE POLICY "Authenticated users can manage categories" ON categories
 -- 初始化示例数据
 -- =============================================
 
--- 插入预置类别数据
-INSERT INTO categories (name, name_en, icon, description, sort_order) VALUES
--- 基础类别
-('通用', 'general', 'layers', '通用助手和日常对话类提示词', 10),
+-- 注意：此文件为历史schema文件，以下分类数据已过时
+-- 旧的2字分类名（如'通用', '学术', '职业'等）已被删除，现在使用更详细的分类名称
+-- 当前数据库已包含重构后的分类数据，请勿执行以下INSERT语句
 
--- 学术和专业类别
+-- 历史分类数据（已废弃，仅作参考）：
+/*
+INSERT INTO categories (name, name_en, icon, description, sort_order) VALUES
+-- 以下为已废弃的旧分类数据
+('通用', 'general', 'layers', '通用助手和日常对话类提示词', 10),
 ('学术', 'academic', 'academic-cap', '学术研究、论文写作、学术分析类提示词', 20),
 ('职业', 'professional', 'briefcase', '职场沟通、简历优化、面试准备类提示词', 30),
-
--- 创作和内容类别
 ('文案', 'copywriting', 'pencil', '广告文案、营销内容、产品描述类提示词', 40),
 ('设计', 'design', 'color-swatch', '设计思维、创意构思、视觉设计类提示词', 50),
 ('绘画', 'painting', 'paint-brush', '绘画创作、艺术指导、风格描述类提示词', 55),
-
--- 教育和娱乐类别
 ('教育', 'education', 'book-open', '教学辅导、知识解释、学习指导类提示词', 60),
 ('情感', 'emotional', 'heart', '情感支持、心理咨询、人际关系类提示词', 70),
 ('娱乐', 'entertainment', 'sparkles', '游戏、故事创作、趣味对话类提示词', 80),
 ('游戏', 'gaming', 'puzzle-piece', '游戏策略、角色扮演、游戏设计类提示词', 90),
-
--- 生活和实用类别
 ('生活', 'lifestyle', 'home', '日常生活、健康建议、生活技巧类提示词', 100),
 ('商业', 'business', 'chart-bar', '商业分析、市场策略、企业管理类提示词', 110),
 ('办公', 'office', 'document-text', '办公自动化、文档处理、会议记录类提示词', 120),
-
--- 技术类别
 ('编程', 'programming', 'code', '代码编写、程序调试、技术解答类提示词', 130),
 ('翻译', 'translation', 'language', '多语言翻译、本地化、语言学习类提示词', 140),
-
--- 多媒体类别
 ('视频', 'video', 'video-camera', '视频制作、脚本编写、视频策划类提示词', 150),
 ('播客', 'podcast', 'microphone', '播客制作、音频内容、访谈策划类提示词', 160),
 ('音乐', 'music', 'musical-note', '音乐创作、歌词编写、音乐分析类提示词', 170),
-
--- 专业领域类别
 ('健康', 'health', 'heart-pulse', '健康咨询、医疗信息、养生建议类提示词', 180),
-('科技', 'technology', 'cpu-chip', '科技趋势、技术分析、创新思维类提示词', 190)
+('科技', 'technology', 'cpu-chip', '科技趋势、技术分析、创新思维类提示词', 190);
+*/
 
-ON CONFLICT (name) DO UPDATE SET
-  name_en = EXCLUDED.name_en,
-  icon = EXCLUDED.icon,
-  description = EXCLUDED.description,
-  sort_order = EXCLUDED.sort_order,
-  updated_at = NOW();
+-- 当前分类数据管理说明：
+-- 1. 数据库已包含重构后的实际分类数据，使用更详细和专业的分类名称
+-- 2. 分类数据通过API动态管理，不再使用硬编码方式
+-- 3. 如需查看当前分类，请查询：SELECT * FROM categories ORDER BY sort_order;
 
 -- 为现有数据设置created_by字段（使用user_id字段的值）
 UPDATE prompts 
