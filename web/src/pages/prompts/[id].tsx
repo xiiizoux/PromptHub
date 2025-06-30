@@ -50,6 +50,24 @@ import {
 } from '@heroicons/react/24/outline';
 import { StarIcon as SolidStarIcon } from '@heroicons/react/24/solid';
 
+// 参数名称中文映射
+const PARAMETER_NAMES: Record<string, string> = {
+  // 图像参数
+  'style': '风格样式',
+  'aspect_ratio': '宽高比',
+  'resolution': '分辨率',
+  'quality': '生成质量',
+  'guidance_scale': '引导强度',
+  'num_inference_steps': '推理步数',
+  'seed': '随机种子',
+  'negative_prompt': '负面提示词',
+  // 视频参数
+  'duration': '视频时长',
+  'fps': '帧率',
+  'motion_strength': '运动强度',
+  'camera_movement': '摄像机运动',
+};
+
 import { databaseService } from '@/lib/database-service';
 import { PromptDetails, PromptExample, PromptVersion } from '@/types';
 import { MODEL_TAGS, getModelTypeLabel } from '@/constants/ai-models';
@@ -1011,16 +1029,20 @@ export default function PromptDetailsPage() {
                       <div className="space-y-3">
                         {Object.entries(prompt.parameters)
                           .filter(([key]) => key !== 'media_files') // 排除media_files字段，避免重复显示
-                          .map(([key, value]) => (
-                          <div key={key} className="p-3 rounded-lg glass border border-neon-yellow/30 group hover:border-neon-yellow/50 transition-colors">
-                            <div className="text-xs font-medium text-neon-yellow mb-1">
-                              {key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
-                            </div>
-                            <div className="text-xs text-gray-300 break-words">
-                              {typeof value === 'object' ? JSON.stringify(value, null, 2) : String(value)}
-                            </div>
-                          </div>
-                        ))}
+                          .map(([key, value]) => {
+                            const displayName = PARAMETER_NAMES[key] || key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                            
+                            return (
+                              <div key={key} className="p-3 rounded-lg glass border border-neon-yellow/30 group hover:border-neon-yellow/50 transition-colors">
+                                <div className="text-xs font-medium text-neon-yellow mb-1">
+                                  {displayName}
+                                </div>
+                                <div className="text-xs text-gray-300 break-words">
+                                  {typeof value === 'object' ? JSON.stringify(value, null, 2) : String(value)}
+                                </div>
+                              </div>
+                            );
+                          })}
                       </div>
                     ) : (
                       <div className="text-sm text-gray-400 text-center py-8">
