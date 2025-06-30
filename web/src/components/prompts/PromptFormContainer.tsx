@@ -144,6 +144,9 @@ export default function PromptFormContainer({
   const [isUploading, setIsUploading] = useState(false);
   const [previewUrls, setPreviewUrls] = useState<string[]>([]);
   const [parameters, setParameters] = useState<Record<string, any>>({});
+  
+  // 初始化状态 - 用于防止在数据加载期间误报未保存状态
+  const [isInitialized, setIsInitialized] = useState(mode === 'create');
 
   // 只保留必要的本地状态 - 输入框状态
   const [variableInput, setVariableInput] = useState('');
@@ -252,6 +255,13 @@ export default function PromptFormContainer({
       setParameters(defaultParams);
       setValue('parameters', defaultParams);
     }
+
+    // 标记初始化完成 - 延迟一点确保所有setValue都完成
+    const timer = setTimeout(() => {
+      setIsInitialized(true);
+    }, 100);
+
+    return () => clearTimeout(timer);
   }, [initialData, mode, setValue, currentType]);
 
   // 工具函数：安全的数组比较
@@ -299,6 +309,12 @@ export default function PromptFormContainer({
   useEffect(() => {
     if (!onUnsavedChanges) return;
 
+    // 只有在初始化完成后才开始检测未保存状态
+    if (!isInitialized) {
+      onUnsavedChanges(false);
+      return;
+    }
+
     let hasChanges = false;
 
     if (mode === 'edit') {
@@ -340,6 +356,7 @@ export default function PromptFormContainer({
       console.log('未保存状态检测:', {
         mode,
         hasChanges,
+        isInitialized,
         current: {
           name: watchedData.name,
           description: watchedData.description,
@@ -361,7 +378,7 @@ export default function PromptFormContainer({
     }
 
     onUnsavedChanges(hasChanges);
-  }, [watchedData, initialData, uploadedFiles, onUnsavedChanges, mode]);
+  }, [watchedData, initialData, uploadedFiles, onUnsavedChanges, mode, isInitialized]);
 
   // 获取类型标签
   const getTypeLabel = (type: PromptType) => {
