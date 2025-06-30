@@ -308,6 +308,7 @@ export default function PromptFormContainer({
         watchedData.description !== (initialData?.description || '') ||
         watchedData.content !== (initialData?.content || '') ||
         watchedData.category !== (initialData?.category || '') ||
+        watchedData.version !== (initialData?.version || 1.0) ||
         !arraysEqual(watchedData.tags || [], initialData?.tags || []) ||
         !arraysEqual(watchedData.compatible_models || [], initialData?.compatible_models || []) ||
         !arraysEqual(watchedData.input_variables || [], initialData?.input_variables || []) ||
@@ -326,6 +327,7 @@ export default function PromptFormContainer({
         (watchedData.tags && watchedData.tags.length > 0) ||
         (watchedData.compatible_models && watchedData.compatible_models.length > 0) ||
         (watchedData.input_variables && watchedData.input_variables.length > 0) ||
+        (watchedData.version && watchedData.version !== 1.0 && watchedData.version !== '1.0') ||
         (watchedData.parameters && Object.keys(watchedData.parameters).some(key => {
           const value = (watchedData.parameters as Record<string, any>)?.[key];
           return value !== null && value !== undefined && value !== '' && value !== false;
@@ -338,11 +340,22 @@ export default function PromptFormContainer({
       console.log('未保存状态检测:', {
         mode,
         hasChanges,
-        name: watchedData.name?.trim(),
-        description: watchedData.description?.trim(),
-        content: watchedData.content?.trim(),
-        category: watchedData.category,
-        tagsLength: watchedData.tags?.length || 0,
+        current: {
+          name: watchedData.name,
+          description: watchedData.description,
+          content: watchedData.content,
+          version: watchedData.version,
+          category: watchedData.category,
+          tagsLength: watchedData.tags?.length || 0,
+        },
+        initial: mode === 'edit' ? {
+          name: initialData?.name || '',
+          description: initialData?.description || '',
+          content: initialData?.content || '',
+          version: initialData?.version || 1.0,
+          category: initialData?.category || '',
+          tagsLength: initialData?.tags?.length || 0,
+        } : null,
         uploadedFilesCount: uploadedFiles.length,
       });
     }
