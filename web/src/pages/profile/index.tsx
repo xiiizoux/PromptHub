@@ -4,6 +4,7 @@ import { useAuth, withAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import Link from 'next/link';
 import { ProtectedLink, ProtectedButton } from '@/components/ProtectedLink';
+import MediaPromptCard from '@/components/prompts/MediaPromptCard';
 import clsx from 'clsx';
 import { 
   UserIcon, 
@@ -205,19 +206,19 @@ const ProfilePage = () => {
     }
   }, [activeTab]);
 
-  // 加载用户提示词 - 当标签页为"我的提示词"且页面改变时
+  // 加载用户提示词 - 统一处理标签页、页码和类型变化
   useEffect(() => {
     if (activeTab === 'my-prompts') {
       fetchUserPrompts(promptCurrentPage, activePromptType);
     }
   }, [activeTab, promptCurrentPage, activePromptType]);
 
-  // 当切换提示词类型时重置页码
+  // 当切换提示词类型时重置页码（这会触发上面的useEffect重新加载第1页数据）
   useEffect(() => {
-    if (activeTab === 'my-prompts') {
+    if (activeTab === 'my-prompts' && promptCurrentPage !== 1) {
       setPromptCurrentPage(1);
     }
-  }, [activePromptType]);
+  }, [activePromptType, activeTab, promptCurrentPage]);
 
   // 加载收藏夹
   useEffect(() => {
@@ -1823,175 +1824,15 @@ const ProfilePage = () => {
                           initial={{ opacity: 0, y: 20 }}
                           animate={{ opacity: 1, y: 0 }}
                           transition={{ delay: index * 0.1 }}
-                          className="glass rounded-2xl p-6 border border-neon-cyan/20 hover:border-neon-cyan/40 transition-all duration-300 group cursor-pointer relative overflow-hidden"
                         >
-                          {/* 背景渐变 */}
-                          <div className="absolute inset-0 bg-gradient-to-br from-neon-cyan/5 to-neon-purple/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                          
-                          <div className="relative">
-                            {/* 标题与分类图标、公开/私有状态 */}
-                            <div className="flex justify-between items-start mb-2">
-                              <div className="flex items-start space-x-2 flex-1 pr-2">
-                                {(() => {
-                                  const categoryInfo = CATEGORY_MAP[prompt.category || 'default'] || CATEGORY_MAP.default;
-                                  const CategoryIcon = categoryInfo.icon;
-                                  return (
-                                    <>
-                                      <div className={clsx(
-                                        'inline-flex p-2 rounded-lg bg-gradient-to-br flex-shrink-0',
-                                        categoryInfo.color,
-                                      )}>
-                                        <CategoryIcon className="h-4 w-4 text-dark-bg-primary" />
-                                      </div>
-                                      <div className="flex-1 min-w-0">
-                                        <h3 className="text-lg font-semibold text-white line-clamp-1 group-hover:text-neon-cyan transition-colors">
-                                          {prompt.name}
-                                        </h3>
-                                        <div className="text-xs text-gray-400 mt-1">{categoryInfo.name}</div>
-                                      </div>
-                                    </>
-                                  );
-                                })()}
-                              </div>
-                              <div className="flex items-center space-x-2">
-                                <span className={`px-2 py-1 text-xs rounded-full ${
-                                  prompt.is_public 
-                                    ? 'bg-neon-green/20 text-neon-green border border-neon-green/30'
-                                    : 'bg-neon-orange/20 text-neon-orange border border-neon-orange/30'
-                                }`}>
-                                  {prompt.is_public ? '公开' : '私有'}
-                                </span>
-                              </div>
-                            </div>
-
-                            {/* 描述 */}
-                            <p className="text-sm text-gray-400 line-clamp-3 mb-4">
-                              {prompt.description || '暂无描述'}
-                            </p>
-
-                            {/* 标签 */}
-                            {prompt.tags && prompt.tags.length > 0 && (
-                              <div className="flex flex-wrap gap-1 mb-4">
-                                {prompt.tags.slice(0, 2).map((tag, tagIndex) => (
-                                  <span
-                                    key={tagIndex}
-                                    className="px-2 py-1 text-xs rounded-full bg-neon-cyan/10 text-neon-cyan border border-neon-cyan/20"
-                                  >
-                                    #{tag}
-                                  </span>
-                                ))}
-                                {prompt.tags.length > 2 && (
-                                  <span className="px-2 py-1 text-xs rounded-full bg-gray-600/20 text-gray-400 border border-gray-600/20">
-                                    +{prompt.tags.length - 2}
-                                  </span>
-                                )}
-                              </div>
-                            )}
-
-                            {/* 底部信息 */}
-                            <div className="mt-auto pt-4 border-t border-neon-cyan/10 space-y-3">
-                              {/* 第一行：评分与日期 */}
-                              <div className="flex items-center justify-between text-xs">
-                                <div className="flex items-center">
-                                  {(() => {
-                                    // 优先使用 average_rating，如果没有则使用 rating 字段
-                                    const rating = (prompt as any).average_rating !== undefined 
-                                      ? (prompt as any).average_rating 
-                                      : ((prompt as any).rating || 0);
-                                    const percentage = (rating / 5) * 100;
-                                    return rating > 0 ? (
-                                      <div className="flex items-center space-x-2">
-                                        <div className="relative w-20 h-2 bg-dark-bg-tertiary rounded-full overflow-hidden">
-                                          <div 
-                                            className="absolute top-0 left-0 h-full bg-gradient-to-r from-neon-yellow to-neon-green rounded-full"
-                                            style={{ width: `${percentage}%` }}
-                                          />
-                                        </div>
-                                        <span className="text-xs text-gray-400">{rating.toFixed(1)}</span>
-                                      </div>
-                                    ) : (
-                                      <span className="text-xs text-gray-500">暂无评分</span>
-                                    );
-                                  })()}
-                                </div>
-                                <div className="flex items-center space-x-1 text-gray-500">
-                                  <ClockIcon className="h-3 w-3" />
-                                  <span>创建于 {formatDate(prompt.created_at)}</span>
-                                </div>
-                              </div>
-                              
-                              {/* 第二行：作者版本信息与操作按钮 */}
-                              <div className="flex items-center justify-between text-xs text-gray-500">
-                                <div className="flex items-center space-x-3">
-                                  <div className="flex items-center space-x-1">
-                                    <UserIcon className="h-3 w-3" />
-                                    <span>您</span>
-                                  </div>
-                                  <div className="flex items-center space-x-1">
-                                    <DocumentTextIcon className="h-3 w-3" />
-                                    <span>v{prompt.version || '1.0'}</span>
-                                  </div>
-                                </div>
-                                <div className="flex items-center space-x-1" onClick={(e) => e.preventDefault()}>
-                                  <Link
-                                    href={`/prompts/${prompt.id}`}
-                                    className="p-1.5 glass rounded-md hover:bg-neon-cyan/10 transition-colors group/btn"
-                                    title="查看详情"
-                                    onClick={(e) => e.stopPropagation()}
-                                  >
-                                    <EyeIcon className="h-3.5 w-3.5 text-gray-400 group-hover/btn:text-neon-cyan" />
-                                  </Link>
-                                  <button
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      const shareUrl = `${window.location.origin}/prompts/${prompt.id}`;
-                                      navigator.clipboard.writeText(shareUrl).then(() => {
-                                        alert('分享链接已复制到剪贴板！');
-                                      }).catch(() => {
-                                        alert('复制失败，请手动复制链接');
-                                      });
-                                    }}
-                                    className="p-1.5 glass rounded-md hover:bg-neon-blue/10 transition-colors group/btn"
-                                    title="分享提示词"
-                                  >
-                                    <ShareIcon className="h-3.5 w-3.5 text-gray-400 group-hover/btn:text-neon-blue" />
-                                  </button>
-                                  <button
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      copyToClipboard(prompt.name, prompt.id);
-                                    }}
-                                    className="p-1.5 glass rounded-md hover:bg-neon-green/10 transition-colors group/btn"
-                                    title="复制提示词名称"
-                                  >
-                                    {copiedKey === prompt.id ? (
-                                      <CheckIcon className="h-3.5 w-3.5 text-neon-green" />
-                                    ) : (
-                                      <ClipboardIcon className="h-3.5 w-3.5 text-gray-400 group-hover/btn:text-neon-green" />
-                                    )}
-                                  </button>
-                                  <Link
-                                    href={`/prompts/${prompt.id}/edit`}
-                                    className="p-1.5 glass rounded-md hover:bg-neon-purple/10 transition-colors group/btn"
-                                    title="编辑提示词"
-                                    onClick={(e) => e.stopPropagation()}
-                                  >
-                                    <PencilIcon className="h-3.5 w-3.5 text-gray-400 group-hover/btn:text-neon-purple" />
-                                  </Link>
-                                  <button
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      deletePrompt(prompt.id);
-                                    }}
-                                    className="p-1.5 glass rounded-md hover:bg-neon-red/10 transition-colors group/btn"
-                                    title="删除提示词"
-                                  >
-                                    <TrashIcon className="h-3.5 w-3.5 text-gray-400 group-hover/btn:text-neon-red" />
-                                  </button>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
+                          <MediaPromptCard 
+                            prompt={{
+                              ...prompt,
+                              category_type: activePromptType, // 设置卡片类型
+                              author: '您', // 设置作者为"您"因为这是用户自己的提示词
+                            }}
+                            showPublicStatus={true} // 在profile页面显示公开/私有状态
+                          />
                         </motion.div>
                       ))}
                     </div>
