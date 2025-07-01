@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { PromptInfo } from '@/types';
 import { formatVersionDisplay } from '@/lib/version-utils';
 import { useIntersectionObserver } from '@/hooks/useIntersectionObserver';
-import { useCategoryDisplayMap } from '@/hooks/useCategoryService';
+import { useOptimizedCategoryDisplay } from '@/contexts/CategoryContext';
 import {
   StarIcon,
   DocumentTextIcon,
@@ -59,8 +59,8 @@ const VideoPromptCard: React.FC<VideoPromptCardProps> = React.memo(({ prompt }) 
   const hoverTimeoutRef = useRef<NodeJS.Timeout>();
   const loadingTimeoutRef = useRef<NodeJS.Timeout>();
 
-  // 使用新的分类服务Hook
-  const { displayMap, loading: loadingCategories, getDisplayInfo } = useCategoryDisplayMap('video');
+  // 使用优化的分类显示Hook，无延迟加载
+  const categoryInfo = useOptimizedCategoryDisplay(prompt?.category || '故事叙述', 'video');
 
   // 懒加载：只有当卡片进入可视区域时才加载视频
   const { elementRef, isVisible } = useIntersectionObserver({
@@ -68,26 +68,6 @@ const VideoPromptCard: React.FC<VideoPromptCardProps> = React.memo(({ prompt }) 
     rootMargin: '100px', // 提前100px开始加载
     freezeOnceVisible: true // 一旦可见就保持状态，不再反复切换
   });
-
-  // 获取分类显示信息
-  const categoryInfo = useMemo(() => {
-    if (loadingCategories) {
-      return {
-        name: prompt?.category || '加载中...',
-        color: 'from-gray-400 to-gray-500',
-        gradient: 'from-gray-400/20 to-gray-500/20',
-        iconComponent: () => React.createElement('div', { className: 'h-4 w-4 bg-gray-400 rounded animate-pulse' })
-      };
-    }
-
-    const displayInfo = getDisplayInfo(prompt?.category || '故事叙述');
-    return {
-      name: displayInfo.name,
-      color: displayInfo.color,
-      gradient: displayInfo.gradient,
-      iconComponent: displayInfo.iconComponent
-    };
-  }, [prompt?.category, loadingCategories, getDisplayInfo]);
 
   const rating = useMemo(() => {
     if (!prompt) return { value: 0, percentage: 0 };

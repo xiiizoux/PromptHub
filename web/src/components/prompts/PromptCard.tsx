@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { PromptInfo } from '@/types';
 import { formatVersionDisplay } from '@/lib/version-utils';
-import { useCategoryDisplayMap } from '@/hooks/useCategoryService';
+import { useOptimizedCategoryDisplay } from '@/contexts/CategoryContext';
 import {
   StarIcon,
   DocumentTextIcon,
@@ -34,33 +34,13 @@ const formatDate = (dateString?: string) => {
 };
 
 const PromptCard: React.FC<PromptCardProps> = React.memo(({ prompt }) => {
-  // 使用新的分类服务Hook
-  const { displayMap, loading: loadingCategories, getDisplayInfo } = useCategoryDisplayMap('chat');
+  // 使用优化的分类显示Hook，无延迟加载
+  const categoryInfo = useOptimizedCategoryDisplay(prompt?.category || '通用对话', 'chat');
 
   // 如果没有必要的数据，不渲染
   if (!prompt || !prompt.id) {
     return null;
   }
-
-  // 获取分类显示信息
-  const categoryInfo = useMemo(() => {
-    if (loadingCategories) {
-      return {
-        name: prompt?.category || '加载中...',
-        color: 'from-gray-400 to-gray-500',
-        gradient: 'from-gray-400/20 to-gray-500/20',
-        iconComponent: () => React.createElement('div', { className: 'h-4 w-4 bg-gray-400 rounded animate-pulse' })
-      };
-    }
-
-    const displayInfo = getDisplayInfo(prompt?.category || '通用对话');
-    return {
-      name: displayInfo.name,
-      color: displayInfo.color,
-      gradient: displayInfo.gradient,
-      iconComponent: displayInfo.iconComponent
-    };
-  }, [prompt?.category, loadingCategories, getDisplayInfo]);
 
   const rating = useMemo(() => {
     // 优先使用 average_rating，如果没有则使用 rating 字段

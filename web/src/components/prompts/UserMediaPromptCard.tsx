@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { PromptInfo } from '@/types';
 import { formatVersionDisplay } from '@/lib/version-utils';
 import { useIntersectionObserver } from '@/hooks/useIntersectionObserver';
-import { useCategoryDisplayMap } from '@/hooks/useCategoryService';
+import { useOptimizedCategoryDisplay } from '@/contexts/CategoryContext';
 import { 
   StarIcon, 
   DocumentTextIcon, 
@@ -58,8 +58,9 @@ const UserMediaPromptCard: React.FC<UserMediaPromptCardProps> = React.memo(({ pr
   const [isPlaying, setIsPlaying] = useState(false);
   const videoRef = React.useRef<HTMLVideoElement>(null);
 
-  // 使用分类显示映射Hook
-  const { displayMap, loading: loadingCategories, getDisplayInfo } = useCategoryDisplayMap(
+  // 使用优化的分类显示Hook
+  const categoryInfo = useOptimizedCategoryDisplay(
+    prompt?.category || '',
     (prompt.category_type || 'chat') as 'chat' | 'image' | 'video'
   );
 
@@ -70,25 +71,6 @@ const UserMediaPromptCard: React.FC<UserMediaPromptCardProps> = React.memo(({ pr
     freezeOnceVisible: true
   });
 
-  // 获取分类显示信息
-  const categoryInfo = useMemo(() => {
-    if (loadingCategories) {
-      return {
-        name: prompt?.category || '加载中...',
-        color: 'from-gray-400 to-gray-500',
-        gradient: 'from-gray-400/20 to-gray-500/20',
-        iconComponent: () => React.createElement('div', { className: 'h-4 w-4 bg-gray-400 rounded animate-pulse' })
-      };
-    }
-
-    const displayInfo = getDisplayInfo(prompt?.category || '');
-    return {
-      name: displayInfo.name,
-      color: displayInfo.color,
-      gradient: displayInfo.gradient,
-      iconComponent: displayInfo.iconComponent
-    };
-  }, [prompt?.category, loadingCategories, getDisplayInfo]);
 
   const rating = useMemo(() => {
     if (!prompt) return { value: 0, percentage: 0 };

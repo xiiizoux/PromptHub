@@ -2,6 +2,7 @@ import '@/styles/globals.css';
 import type { AppProps } from 'next/app';
 import Layout from '@/components/layout/Layout';
 import { AuthProvider } from '@/contexts/AuthContext';
+import { CategoryProvider } from '@/contexts/CategoryContext';
 import AuthRefresher from '@/components/AuthRefresher';
 import Head from 'next/head';
 import { useEffect } from 'react';
@@ -39,16 +40,17 @@ export default function App({ Component, pageProps }: AppProps) {
 
   return (
     <AuthProvider>
-      <Head>
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-      </Head>
-      {/* 智能认证刷新组件，自动维持会话有效性 */}
-      <AuthRefresher />
-      <Layout>
-        <Component {...pageProps} />
-      </Layout>
-      {/* Toast通知组件 */}
-      <Toaster 
+      <CategoryProvider>
+        <Head>
+          <meta name="viewport" content="width=device-width, initial-scale=1" />
+        </Head>
+        {/* 智能认证刷新组件，自动维持会话有效性 */}
+        <AuthRefresher />
+        <Layout>
+          <Component {...pageProps} />
+        </Layout>
+        {/* Toast通知组件 */}
+        <Toaster 
         position="bottom-center"
         reverseOrder={false}
         gutter={8}
@@ -75,7 +77,8 @@ export default function App({ Component, pageProps }: AppProps) {
             },
           },
         }}
-      />
+        />
+      </CategoryProvider>
     </AuthProvider>
   );
 }

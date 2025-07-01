@@ -68,7 +68,7 @@ export function useCategoryService(options: UseCategoryServiceOptions = {}): Use
       const errorMessage = err instanceof Error ? err.message : '获取分类数据失败';
       setError(errorMessage);
       onError?.(err instanceof Error ? err : new Error(errorMessage));
-      logger.error('Hook获取分类数据失败', err);
+      logger.error('Hook获取分类数据失败', err instanceof Error ? err : new Error(String(err)));
     } finally {
       setLoading(false);
     }
