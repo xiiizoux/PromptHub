@@ -128,13 +128,16 @@ export default function CategorySelector({
             {value && (() => {
               const categoryInfo = getCategoryDisplayInfo(value, promptType);
               const IconComponent = categoryInfo.iconComponent;
-              return (
-                <div className={`inline-flex p-1.5 rounded-lg bg-gradient-to-br ${categoryInfo.color}`}>
-                  {IconComponent && (
+              
+              // 只在有图标时显示图标容器
+              if (IconComponent) {
+                return (
+                  <div className={`inline-flex p-1.5 rounded-lg bg-gradient-to-br ${categoryInfo.color}`}>
                     <IconComponent className="h-3.5 w-3.5 text-dark-bg-primary" />
-                  )}
-                </div>
-              );
+                  </div>
+                );
+              }
+              return null;
             })()}
             <span className={value ? 'text-gray-200' : 'text-gray-400'}>
               {value || '请选择分类...'}
@@ -177,11 +180,11 @@ export default function CategorySelector({
                         aria-selected={value === category}
                       >
                         <div className="flex items-center space-x-3">
-                          <div className={`inline-flex p-1.5 rounded-lg bg-gradient-to-br ${categoryInfo.color}`}>
-                            {IconComponent && (
+                          {IconComponent && (
+                            <div className={`inline-flex p-1.5 rounded-lg bg-gradient-to-br ${categoryInfo.color}`}>
                               <IconComponent className="h-3.5 w-3.5 text-dark-bg-primary" />
-                            )}
-                          </div>
+                            </div>
+                          )}
                           <span>{category}</span>
                         </div>
                         {value === category && (
