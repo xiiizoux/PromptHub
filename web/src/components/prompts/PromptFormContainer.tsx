@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
+import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   SparklesIcon, 
@@ -22,22 +23,17 @@ import { toast } from 'react-hot-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import SmartWritingAssistant from '@/components/SmartWritingAssistant';
 import PromptTypeSelector, { PromptType } from '@/components/prompts/edit/PromptTypeSelector';
-import CategorySelectorSimple from '@/components/prompts/edit/CategorySelectorSimple';
+import CategorySelector from '@/components/prompts/edit/CategorySelector';
 import ImageParametersForm, { ImageParameters } from '@/components/prompts/edit/ImageParametersForm';
 import VideoParametersForm, { VideoParameters } from '@/components/prompts/edit/VideoParametersForm';
 import { ModelSelector } from '@/components/ModelSelector';
-import { PromptDetails } from '@/types';
-import { 
-  PERMISSION_LEVELS,
-  PERMISSION_LEVEL_DESCRIPTIONS,
-  SIMPLE_PERMISSIONS,
-  SIMPLE_PERMISSION_DESCRIPTIONS,
+import { PromptDetails, PermissionCheck } from '@/types';
+import {
   SIMPLE_PERMISSION_DETAILS,
   SimplePermissionType,
   convertSimplePermissionToFields,
   inferSimplePermission,
 } from '@/lib/permissions';
-import { PermissionCheck } from '@/types';
 import PermissionPreview from '@/components/prompts/PermissionPreview';
 
 // 文件接口
@@ -70,7 +66,7 @@ export interface PromptFormData {
   // 媒体相关字段
   preview_assets?: AssetFile[];
   preview_asset_url?: string;
-  parameters?: Record<string, any>;
+  parameters?: Record<string, unknown>;
 }
 
 // 组件属性接口
@@ -111,7 +107,7 @@ export default function PromptFormContainer({
   onUnsavedChanges,
 }: PromptFormContainerProps) {
   const { user } = useAuth();
-  const router = useRouter();
+  const _router = useRouter();
 
   // 根据类型获取默认参数模板
   const getDefaultParameters = (type: PromptType) => {
@@ -143,7 +139,7 @@ export default function PromptFormContainer({
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
   const [previewUrls, setPreviewUrls] = useState<string[]>([]);
-  const [parameters, setParameters] = useState<Record<string, any>>({});
+
   
   // 初始化状态 - 用于防止在数据加载期间误报未保存状态
   const [isInitialized, setIsInitialized] = useState(mode === 'create');
@@ -171,7 +167,7 @@ export default function PromptFormContainer({
     formState: { errors },
     setValue,
     watch,
-    reset,
+    reset: _reset,
   } = useForm<PromptFormData>({
     defaultValues: {
       name: initialData?.name || '',
@@ -196,18 +192,10 @@ export default function PromptFormContainer({
 
   // 初始化现有媒体文件
   useEffect(() => {
-    console.log('PromptFormContainer - useEffect 触发:', {
-      mode,
-      hasInitialData: !!initialData,
-      hasParameters: !!initialData?.parameters,
-      hasMediaFiles: !!initialData?.parameters?.media_files,
-      mediaFilesLength: initialData?.parameters?.media_files?.length || 0,
-      initialDataKeys: initialData ? Object.keys(initialData) : [],
-    });
 
     if (mode === 'edit' && initialData?.parameters?.media_files && Array.isArray(initialData.parameters.media_files)) {
       const mediaFiles = initialData.parameters.media_files;
-      const urls = mediaFiles.map((file: any) => file.url);
+      const urls = mediaFiles.map((file: { url: string }) => file.url);
       setPreviewUrls(urls);
 
       // 设置预览资源URL
@@ -216,7 +204,7 @@ export default function PromptFormContainer({
       }
 
       // 为编辑模式创建虚拟File对象，用于正确显示文件计数
-      const virtualFiles = mediaFiles.map((file: any) => {
+      const virtualFiles = mediaFiles.map((file: { name?: string; type?: string; size?: number }) => {
         // 创建一个虚拟File对象，包含必要的属性
         const virtualFile = new File([], file.name || 'unknown', {
           type: file.type || 'application/octet-stream',
@@ -229,30 +217,14 @@ export default function PromptFormContainer({
         return virtualFile;
       });
       setUploadedFiles(virtualFiles);
-
-      console.log('PromptFormContainer - 加载现有媒体文件:', {
-        mediaFilesCount: mediaFiles.length,
-        urls: urls,
-        virtualFilesCount: virtualFiles.length,
-      });
-    } else {
-      console.log('PromptFormContainer - 未加载媒体文件，原因:', {
-        isEditMode: mode === 'edit',
-        hasParameters: !!initialData?.parameters,
-        hasMediaFiles: !!initialData?.parameters?.media_files,
-        isArray: Array.isArray(initialData?.parameters?.media_files),
-      });
     }
 
     // 初始化参数
     if (initialData?.parameters) {
-      setParameters(initialData.parameters);
       setValue('parameters', initialData.parameters);
-      console.log('PromptFormContainer - 设置参数:', initialData.parameters);
     } else if (currentType === 'image' || currentType === 'video') {
       // 如果是图像或视频类型但没有参数，设置默认参数
       const defaultParams = getDefaultParameters(currentType);
-      setParameters(defaultParams);
       setValue('parameters', defaultParams);
     }
 
@@ -265,33 +237,39 @@ export default function PromptFormContainer({
   }, [initialData, mode, setValue, currentType]);
 
   // 工具函数：安全的数组比较
-  const arraysEqual = (a: any[], b: any[]): boolean => {
+  const arraysEqual = (a: unknown[], b: unknown[]): boolean => {
     if (!Array.isArray(a) || !Array.isArray(b)) return false;
     if (a.length !== b.length) return false;
     return a.every((val, index) => val === b[index]);
   };
 
   // 工具函数：深度比较对象
-  const objectsEqual = (a: any, b: any): boolean => {
+  const objectsEqual = useCallback((a: unknown, b: unknown): boolean => {
     if (a === b) return true;
     if (!a || !b) return a === b;
-    
-    const keysA = Object.keys(a);
-    const keysB = Object.keys(b);
-    
+
+    // Type guard to ensure we're working with objects
+    if (typeof a !== 'object' || typeof b !== 'object') return false;
+
+    const objA = a as Record<string, unknown>;
+    const objB = b as Record<string, unknown>;
+
+    const keysA = Object.keys(objA);
+    const keysB = Object.keys(objB);
+
     if (keysA.length !== keysB.length) return false;
-    
+
     return keysA.every(key => {
-      const valueA = a[key];
-      const valueB = b[key];
-      
+      const valueA = objA[key];
+      const valueB = objB[key];
+
       if (Array.isArray(valueA) && Array.isArray(valueB)) {
         return arraysEqual(valueA, valueB);
       }
-      
+
       return valueA === valueB;
     });
-  };
+  }, []);
 
   // 监听简化权限变化，自动更新原有三个权限字段
   const watchedSimplePermission = watch('simple_permission');
@@ -345,7 +323,7 @@ export default function PromptFormContainer({
         (watchedData.input_variables && watchedData.input_variables.length > 0) ||
         (watchedData.version && watchedData.version !== 1.0 && watchedData.version !== '1.0') ||
         (watchedData.parameters && Object.keys(watchedData.parameters).some(key => {
-          const value = (watchedData.parameters as Record<string, any>)?.[key];
+          const value = (watchedData.parameters as Record<string, unknown>)?.[key];
           return value !== null && value !== undefined && value !== '' && value !== false;
         })) ||
         uploadedFiles.length > 0;
@@ -378,7 +356,7 @@ export default function PromptFormContainer({
     }
 
     onUnsavedChanges(hasChanges);
-  }, [watchedData, initialData, uploadedFiles, onUnsavedChanges, mode, isInitialized]);
+  }, [watchedData, initialData, uploadedFiles, onUnsavedChanges, mode, isInitialized, objectsEqual]);
 
   // 获取类型标签
   const getTypeLabel = (type: PromptType) => {
@@ -427,7 +405,6 @@ export default function PromptFormContainer({
       
       // 根据类型设置默认参数
       const defaultParams = getDefaultParameters(newType);
-      setParameters(defaultParams);
       setValue('parameters', defaultParams);
       
       // 重置分类选择，让用户主动选择
@@ -753,12 +730,11 @@ export default function PromptFormContainer({
                       setValue('content', newContent);
                       setCurrentContent(newContent);
                     }}
-                    onAnalysisComplete={(result) => {
-                      console.log('收到智能分析结果，等待用户手动应用:', result);
+                    onAnalysisComplete={(_result) => {
+                      // Analysis complete callback
                     }}
-                    onApplyAnalysisResults={(data) => {
+                    onApplyAnalysisResults={(_data) => {
                       // 应用AI分析结果的逻辑
-                      console.log('应用AI分析结果:', data);
                     }}
                     category={watch('category')}
                     tags={watch('tags') || []}
@@ -888,10 +864,11 @@ export default function PromptFormContainer({
                                 <div key={index} className="relative group bg-dark-bg-secondary rounded-lg overflow-hidden border border-gray-600">
                                   <div className="aspect-video">
                                     {currentType === 'image' ? (
-                                      <img
+                                      <Image
                                         src={url}
                                         alt={`预览 ${index + 1}`}
-                                        className="w-full h-full object-cover"
+                                        fill
+                                        className="object-cover"
                                       />
                                     ) : (
                                       <video
@@ -1465,12 +1442,11 @@ export default function PromptFormContainer({
                   setValue('content', newContent);
                   setCurrentContent(newContent);
                 }}
-                onAnalysisComplete={(result) => {
-                  console.log('收到智能分析结果，等待用户手动应用:', result);
+                onAnalysisComplete={(_result) => {
+                  // Analysis complete callback
                 }}
-                onApplyAnalysisResults={(data) => {
+                onApplyAnalysisResults={(_data) => {
                   // 应用AI分析结果的逻辑
-                  console.log('应用AI分析结果:', data);
                 }}
                 category={watch('category')}
                 tags={watch('tags') || []}

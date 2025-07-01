@@ -312,10 +312,14 @@ export function createIconComponent(
   const sizeClass = getIconSizeClass(size);
   const colorClass = getIconColorClass(color);
   
-  return (props: any) => React.createElement(IconComponent, {
+  const DynamicIcon = (props: any) => React.createElement(IconComponent, {
     ...props,
     className: `${sizeClass} ${colorClass} ${className || ''}`.trim(),
   });
+
+  DynamicIcon.displayName = `DynamicIcon(${iconName})`;
+
+  return DynamicIcon;
 }
 
 /**

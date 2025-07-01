@@ -1,4 +1,5 @@
 import Head from 'next/head';
+import Link from 'next/link';
 import { useState } from 'react';
 
 const Terms = () => {
@@ -160,7 +161,7 @@ const Terms = () => {
                     我们重视您的隐私，我们的隐私政策详细说明了我们如何收集、使用和保护您的个人信息。使用我们的服务即表示您同意我们按照隐私政策处理您的信息。
                   </p>
                   <p>
-                    请查看我们的 <a href="/privacy" className="text-blue-600 hover:underline">隐私政策</a> 了解详细信息。
+                    请查看我们的 <Link href="/privacy" className="text-blue-600 hover:underline">隐私政策</Link> 了解详细信息。
                   </p>
                 </div>
               </section>
@@ -249,7 +250,7 @@ const Terms = () => {
                   <div className="bg-gray-50 p-4 rounded-lg">
                     <p><strong>邮箱：</strong> legal@prompthub.zouguojun.com</p>
                     <p><strong>网站：</strong> https://prompthub.zouguojun.com</p>
-                    <p><strong>联系页面：</strong> <a href="/contact" className="text-blue-600 hover:underline">/contact</a></p>
+                    <p><strong>联系页面：</strong> <Link href="/contact" className="text-blue-600 hover:underline">/contact</Link></p>
                   </div>
                   <p className="text-sm text-gray-500 mt-4">
                     本服务条款于2024年12月生效，可能会不定期更新。请定期查看以了解最新版本。
@@ -261,12 +262,12 @@ const Terms = () => {
 
           {/* 返回首页按钮 */}
           <div className="text-center mt-8">
-            <a
+            <Link
               href="/"
               className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 transition-colors"
             >
               返回首页
-            </a>
+            </Link>
           </div>
         </div>
       </div>

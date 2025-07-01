@@ -1,4 +1,5 @@
 import Head from 'next/head';
+import Link from 'next/link';
 import { useState } from 'react';
 
 const Privacy = () => {
@@ -347,7 +348,7 @@ const Privacy = () => {
                       </div>
                       <div>
                         <p><strong>联系页面：</strong></p>
-                        <p><a href="/contact" className="text-blue-600 hover:underline">/contact</a></p>
+                        <p><Link href="/contact" className="text-blue-600 hover:underline">/contact</Link></p>
                       </div>
                     </div>
                   </div>
@@ -369,9 +370,9 @@ const Privacy = () => {
             <div className="bg-white rounded-lg shadow p-6">
               <h3 className="text-lg font-semibold mb-2">相关链接</h3>
               <ul className="space-y-2">
-                <li><a href="/terms" className="text-blue-600 hover:underline">服务条款</a></li>
-                <li><a href="/contact" className="text-blue-600 hover:underline">联系我们</a></li>
-                <li><a href="/about" className="text-blue-600 hover:underline">关于我们</a></li>
+                <li><Link href="/terms" className="text-blue-600 hover:underline">服务条款</Link></li>
+                <li><Link href="/contact" className="text-blue-600 hover:underline">联系我们</Link></li>
+                <li><Link href="/about" className="text-blue-600 hover:underline">关于我们</Link></li>
               </ul>
             </div>
             <div className="bg-white rounded-lg shadow p-6">
@@ -384,12 +385,12 @@ const Privacy = () => {
 
           {/* 返回首页按钮 */}
           <div className="text-center mt-8">
-            <a
+            <Link
               href="/"
               className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-green-600 hover:bg-green-700 transition-colors"
             >
               返回首页
-            </a>
+            </Link>
           </div>
         </div>
       </div>

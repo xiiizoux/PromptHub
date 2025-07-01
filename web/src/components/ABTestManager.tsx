@@ -1,14 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  BeakerIcon, 
+import {
+  BeakerIcon,
   ChartBarIcon,
   ArrowPathIcon,
   CheckCircleIcon,
   XCircleIcon,
   PlayIcon,
   PauseIcon,
-  DocumentDuplicateIcon,
 } from '@heroicons/react/24/outline';
 import { useAuth } from '@/contexts/AuthContext';
 import toast from 'react-hot-toast';
@@ -46,22 +45,22 @@ interface ABTestResults {
 }
 
 // 临时的API函数，用于演示
-const createABTest = async (data: Partial<ABTest>): Promise<ABTest> => {
+const createABTest = async (_data: Partial<ABTest>): Promise<ABTest> => {
   // 这里应该是实际的API调用
   throw new Error('A/B测试功能正在开发中');
 };
 
-const getABTests = async (promptId?: string): Promise<ABTest[]> => {
+const getABTests = async (_promptId?: string): Promise<ABTest[]> => {
   // 这里应该是实际的API调用
   return [];
 };
 
-const updateABTest = async (id: string, data: Partial<ABTest>): Promise<ABTest> => {
+const updateABTest = async (_id: string, _data: Partial<ABTest>): Promise<ABTest> => {
   // 这里应该是实际的API调用
   throw new Error('A/B测试功能正在开发中');
 };
 
-const getABTestResults = async (testId: string): Promise<ABTestResults> => {
+const getABTestResults = async (_testId: string): Promise<ABTestResults> => {
   // 这里应该是实际的API调用
   throw new Error('A/B测试功能正在开发中');
 };
@@ -82,24 +81,25 @@ export const ABTestManager: React.FC<ABTestManagerProps> = ({
   const [selectedTest, setSelectedTest] = useState<ABTest | null>(null);
   const [testResults, setTestResults] = useState<ABTestResults | null>(null);
 
-  useEffect(() => {
-    if (promptId) {
-      fetchABTests();
-    }
-  }, [promptId]);
-
-  const fetchABTests = async () => {
+  const fetchABTests = useCallback(async () => {
     try {
       setIsLoading(true);
       const data = await getABTests(promptId);
       setTests(data);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('获取A/B测试失败:', error);
-      toast.error('获取A/B测试失败: ' + error.message);
+      const errorMessage = error instanceof Error ? error.message : '未知错误';
+      toast.error('获取A/B测试失败: ' + errorMessage);
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [promptId]);
+
+  useEffect(() => {
+    if (promptId) {
+      fetchABTests();
+    }
+  }, [promptId, fetchABTests]);
 
   const handleCreateTest = async (testData: Partial<ABTest>) => {
     if (!user) {
@@ -118,8 +118,9 @@ export const ABTestManager: React.FC<ABTestManagerProps> = ({
       toast.success('A/B测试创建成功');
       setShowCreateModal(false);
       await fetchABTests();
-    } catch (error: any) {
-      toast.error('创建A/B测试失败: ' + error.message);
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : '未知错误';
+      toast.error('创建A/B测试失败: ' + errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -132,8 +133,9 @@ export const ABTestManager: React.FC<ABTestManagerProps> = ({
       
       toast.success(`测试已${newStatus === 'running' ? '启动' : '暂停'}`);
       await fetchABTests();
-    } catch (error: any) {
-      toast.error('更新测试状态失败: ' + error.message);
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : '未知错误';
+      toast.error('更新测试状态失败: ' + errorMessage);
     }
   };
 
@@ -142,8 +144,9 @@ export const ABTestManager: React.FC<ABTestManagerProps> = ({
       const results = await getABTestResults(test.id);
       setTestResults(results);
       setSelectedTest(test);
-    } catch (error: any) {
-      toast.error('获取测试结果失败: ' + error.message);
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : '未知错误';
+      toast.error('获取测试结果失败: ' + errorMessage);
     }
   };
 

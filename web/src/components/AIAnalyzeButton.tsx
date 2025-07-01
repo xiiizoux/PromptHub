@@ -86,7 +86,7 @@ export const AIAnalyzeButton: React.FC<AIAnalyzeButtonProps> = ({
 
     try {
       // 准备请求体，支持增量分析
-      const requestBody: any = {
+      const requestBody: Record<string, unknown> = {
         content: content.trim(),
         action: config.action,
         config: {
@@ -108,13 +108,15 @@ export const AIAnalyzeButton: React.FC<AIAnalyzeButtonProps> = ({
         requestBody.existingTags = existingTags || [];
         requestBody.existingModels = existingModels || [];
         
-        console.log('🔍 增量分析参数:', {
-          原始内容长度: originalContent?.length || 0,
-          当前内容长度: content.length,
-          现有分类: existingCategory,
-          现有标签数量: existingTags?.length || 0,
-          现有模型数量: existingModels?.length || 0,
-        });
+        if (process.env.NODE_ENV === 'development') {
+          console.log('🔍 增量分析参数:', {
+            原始内容长度: originalContent?.length || 0,
+            当前内容长度: content.length,
+            现有分类: existingCategory,
+            现有标签数量: existingTags?.length || 0,
+            现有模型数量: existingModels?.length || 0,
+          });
+        }
       }
 
       const response = await fetch('/api/ai/analyze', {
@@ -135,16 +137,17 @@ export const AIAnalyzeButton: React.FC<AIAnalyzeButtonProps> = ({
         onAnalysisComplete(result.data);
         
         // 显示成功提示
-        if (variant === 'full') {
+        if (variant === 'full' && process.env.NODE_ENV === 'development') {
           console.log('AI分析完成，置信度:', result.data.confidence);
         }
       } else {
         throw new Error(result.error || '分析结果异常');
       }
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('AI分析失败:', error);
-      setError(error.message || 'AI分析服务暂时不可用');
+      const errorMessage = error instanceof Error ? error.message : 'AI分析服务暂时不可用';
+      setError(errorMessage);
       
       // 如果是API key问题，提供后备方案
       if (error.message?.includes('API key') || error.message?.includes('未配置')) {
@@ -231,7 +234,7 @@ export const AIAnalysisResultDisplay: React.FC<AIAnalysisResultDisplayProps> = (
   const [appliedFields, setAppliedFields] = useState<Set<string>>(new Set());
   const [copiedField, setCopiedField] = useState<string | null>(null);
 
-  const applyField = (fieldName: string, value: any) => {
+  const applyField = (fieldName: string, value: unknown) => {
     if (onApplyResults) {
       onApplyResults({ [fieldName]: value });
       setAppliedFields(prev => new Set(Array.from(prev).concat(fieldName)));
@@ -312,7 +315,7 @@ export const AIAnalysisResultDisplay: React.FC<AIAnalysisResultDisplayProps> = (
           <div>
             <p className="text-xs text-gray-300 leading-relaxed">
               <span className="text-neon-cyan font-semibold">智能建议系统：</span>
-              以下是AI神经网络分析的优化建议，您可以选择性地应用这些建议到表单中。点击各项的"应用"按钮可单独应用某项建议，"复制"按钮可复制内容到剪贴板。
+              以下是AI神经网络分析的优化建议，您可以选择性地应用这些建议到表单中。点击各项的&ldquo;应用&rdquo;按钮可单独应用某项建议，&ldquo;复制&rdquo;按钮可复制内容到剪贴板。
             </p>
           </div>
         </div>

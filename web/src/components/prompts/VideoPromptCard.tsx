@@ -1,12 +1,12 @@
-import React, { useMemo, useState, useRef, useEffect } from 'react';
+import React, { useMemo, useState, useRef, useEffect, useCallback } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import { PromptInfo } from '@/types';
 import { formatVersionDisplay } from '@/lib/version-utils';
 import { useIntersectionObserver } from '@/hooks/useIntersectionObserver';
 import { useOptimizedCategoryDisplay } from '@/contexts/CategoryContext';
 import {
-  StarIcon,
   DocumentTextIcon,
   FilmIcon,
   PlayIcon,
@@ -14,10 +14,7 @@ import {
   ClockIcon,
   UserIcon,
   FireIcon,
-  EyeIcon,
-  CogIcon,
 } from '@heroicons/react/24/outline';
-import { StarIcon as StarSolidIcon } from '@heroicons/react/24/solid';
 import { InteractionButtons } from '@/components/BookmarkButton';
 import clsx from 'clsx';
 
@@ -26,7 +23,7 @@ interface VideoPromptCardProps {
     category_type?: 'chat' | 'image' | 'video';
     preview_asset_url?: string;
     thumbnail_url?: string; // 添加缩略图URL支持
-    parameters?: Record<string, any>;
+    parameters?: Record<string, unknown>;
   };
 }
 
@@ -74,7 +71,7 @@ const VideoPromptCard: React.FC<VideoPromptCardProps> = React.memo(({ prompt }) 
     const ratingValue = prompt.average_rating !== undefined ? prompt.average_rating : (prompt.rating || 0);
     const percentage = (ratingValue / 5) * 100;
     return { value: ratingValue, percentage };
-  }, [prompt?.average_rating, prompt?.rating]);
+  }, [prompt]);
 
   const tagsToShow = useMemo(() => {
     if (!prompt?.tags || prompt.tags.length === 0) return null;
@@ -84,14 +81,8 @@ const VideoPromptCard: React.FC<VideoPromptCardProps> = React.memo(({ prompt }) 
     };
   }, [prompt?.tags]);
 
-
-  // 如果没有必要的数据，不渲染 - 移到hooks之后
-  if (!prompt || !prompt.id) {
-    return null;
-  }
-
   // 获取主要视频URL（不包括占位符）
-  const getPrimaryVideoUrl = () => {
+  const getPrimaryVideoUrl = useCallback(() => {
     if (prompt.preview_asset_url) {
       return prompt.preview_asset_url;
     }
@@ -102,10 +93,10 @@ const VideoPromptCard: React.FC<VideoPromptCardProps> = React.memo(({ prompt }) 
     }
 
     return null;
-  };
+  }, [prompt.preview_asset_url, prompt.parameters?.media_files]);
 
   // 获取缩略图URL
-  const getThumbnailUrl = () => {
+  const getThumbnailUrl = useCallback(() => {
     // 优先使用专门的缩略图
     if (prompt.thumbnail_url) {
       return prompt.thumbnail_url;
@@ -118,10 +109,10 @@ const VideoPromptCard: React.FC<VideoPromptCardProps> = React.memo(({ prompt }) 
     
     // 如果没有专门的缩略图，可以使用默认缩略图
     return null;
-  };
+  }, [prompt.thumbnail_url, prompt.parameters?.thumbnail_url]);
 
   // 获取占位符视频URL
-  const getFallbackVideoUrl = () => {
+  const getFallbackVideoUrl = useCallback(() => {
     // 使用多个备选的占位符视频，优先使用更稳定的源
     const fallbackVideos = [
       // 使用Commondatastorage（更稳定）
@@ -132,10 +123,10 @@ const VideoPromptCard: React.FC<VideoPromptCardProps> = React.memo(({ prompt }) 
       'https://html5demos.com/assets/dizzy.mp4',
     ];
     return fallbackVideos[0]; // 先尝试第一个
-  };
+  }, []);
 
   // 获取当前应该使用的视频URL
-  const getCurrentVideoUrl = () => {
+  const getCurrentVideoUrl = useCallback(() => {
     if (currentVideoUrl) {
       return currentVideoUrl;
     }
@@ -144,34 +135,53 @@ const VideoPromptCard: React.FC<VideoPromptCardProps> = React.memo(({ prompt }) 
     if (primaryUrl && !hasTriedFallback) {
       return primaryUrl;
     }
-    
-    return getFallbackVideoUrl();
-  };
 
-  // 判断是否优先显示缩略图
-  const shouldShowThumbnail = getThumbnailUrl() !== null;
+    return getFallbackVideoUrl();
+  }, [currentVideoUrl, hasTriedFallback, getPrimaryVideoUrl, getFallbackVideoUrl]);
 
   // 初始化视频URL - 只有在组件可见时才初始化
   useEffect(() => {
     if (!isVisible) return;
-    
+
     const primaryUrl = getPrimaryVideoUrl();
     setCurrentVideoUrl(primaryUrl || getFallbackVideoUrl());
     setHasTriedFallback(!primaryUrl);
-    
+
+    // 判断是否优先显示缩略图
+    const shouldShowThumbnail = getThumbnailUrl() !== null;
+
     // 如果有缩略图，默认不显示视频
     if (shouldShowThumbnail) {
       setShowVideo(false);
     } else {
       setShowVideo(true);
     }
-  }, [isVisible, prompt.preview_asset_url, prompt.parameters?.media_files, shouldShowThumbnail]);
+  }, [isVisible, getPrimaryVideoUrl, getFallbackVideoUrl, getThumbnailUrl]);
+
+  // 组件卸载时清理定时器
+  useEffect(() => {
+    return () => {
+      if (hoverTimeoutRef.current) {
+        clearTimeout(hoverTimeoutRef.current);
+      }
+      if (loadingTimeoutRef.current) {
+        clearTimeout(loadingTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  // 如果没有必要的数据，不渲染
+  if (!prompt || !prompt.id) {
+    return null;
+  }
+
+  // 判断是否优先显示缩略图
+  const shouldShowThumbnail = getThumbnailUrl() !== null;
 
   // 处理视频加载超时
   const handleLoadingTimeout = () => {
     setLoadingTimeout(true);
     setVideoError(true);
-    console.warn('视频加载超时，可能是网络问题或视频源不可用');
   };
 
   // 重置视频状态
@@ -188,17 +198,15 @@ const VideoPromptCard: React.FC<VideoPromptCardProps> = React.memo(({ prompt }) 
   // 切换到占位符视频
   const switchToFallback = () => {
     if (!hasTriedFallback) {
-      console.log('主视频加载失败，切换到占位符视频');
       setHasTriedFallback(true);
       setCurrentVideoUrl(getFallbackVideoUrl());
       resetVideoState();
-      
+
       // 触发视频重新加载
       if (videoRef.current) {
         videoRef.current.load();
       }
     } else {
-      console.error('占位符视频也加载失败');
       setVideoError(true);
     }
   };
@@ -280,18 +288,6 @@ const VideoPromptCard: React.FC<VideoPromptCardProps> = React.memo(({ prompt }) 
     }
   };
 
-  // 组件卸载时清理定时器
-  useEffect(() => {
-    return () => {
-      if (hoverTimeoutRef.current) {
-        clearTimeout(hoverTimeoutRef.current);
-      }
-      if (loadingTimeoutRef.current) {
-        clearTimeout(loadingTimeoutRef.current);
-      }
-    };
-  }, []);
-
   return (
     <div ref={elementRef}>
       <Link href={`/prompts/${prompt.id}`}>
@@ -315,11 +311,12 @@ const VideoPromptCard: React.FC<VideoPromptCardProps> = React.memo(({ prompt }) 
                 {/* 缩略图显示 */}
                 {shouldShowThumbnail && !showVideo && (
                   <>
-                    <img
+                    <Image
                       src={getThumbnailUrl()!}
                       alt="视频缩略图"
+                      fill
                       className={clsx(
-                        'w-full h-full object-cover transition-all duration-500',
+                        'object-cover transition-all duration-500',
                         thumbnailLoaded ? 'opacity-100' : 'opacity-0',
                         'group-hover:scale-110',
                       )}
@@ -360,7 +357,6 @@ const VideoPromptCard: React.FC<VideoPromptCardProps> = React.memo(({ prompt }) 
                     }}
                     onError={() => {
                       clearLoadingTimer();
-                      console.error('视频加载失败:', getCurrentVideoUrl());
                       switchToFallback();
                     }}
                     onEnded={() => {

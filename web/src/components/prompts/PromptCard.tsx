@@ -1,18 +1,14 @@
 import React, { useMemo } from 'react';
 import Link from 'next/link';
-import { motion } from 'framer-motion';
 import { PromptInfo } from '@/types';
 import { formatVersionDisplay } from '@/lib/version-utils';
 import { useOptimizedCategoryDisplay } from '@/contexts/CategoryContext';
 import {
-  StarIcon,
   DocumentTextIcon,
-  ArrowTopRightOnSquareIcon,
   ClockIcon,
   UserIcon,
   FireIcon,
 } from '@heroicons/react/24/outline';
-import { StarIcon as StarSolidIcon } from '@heroicons/react/24/solid';
 import { InteractionButtons } from '@/components/BookmarkButton';
 import clsx from 'clsx';
 
@@ -37,11 +33,6 @@ const PromptCard: React.FC<PromptCardProps> = React.memo(({ prompt }) => {
   // 使用优化的分类显示Hook，无延迟加载
   const categoryInfo = useOptimizedCategoryDisplay(prompt?.category || '通用对话', 'chat');
 
-  // 如果没有必要的数据，不渲染
-  if (!prompt || !prompt.id) {
-    return null;
-  }
-
   const rating = useMemo(() => {
     // 优先使用 average_rating，如果没有则使用 rating 字段
     const ratingValue = prompt?.average_rating !== undefined ? prompt.average_rating : (prompt?.rating || 0);
@@ -56,6 +47,11 @@ const PromptCard: React.FC<PromptCardProps> = React.memo(({ prompt }) => {
       remaining: Math.max(0, prompt.tags.length - 3),
     };
   }, [prompt?.tags]);
+
+  // 如果没有必要的数据，不渲染
+  if (!prompt || !prompt.id) {
+    return null;
+  }
 
   return (
     <div>

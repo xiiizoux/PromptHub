@@ -1,14 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import Link from 'next/link';
 import {
   SparklesIcon,
   AcademicCapIcon,
   RocketLaunchIcon,
   StarIcon,
-  HeartIcon,
-  EyeIcon,
-  ChartBarIcon,
   ShieldCheckIcon,
   LightBulbIcon,
   UserGroupIcon,
@@ -140,7 +137,7 @@ const LearningPath: React.FC<{
 };
 
 // 提示词难度标识
-const DifficultyBadge: React.FC<{ difficulty: 'beginner' | 'intermediate' | 'advanced' }> = ({ difficulty }) => {
+const _DifficultyBadge: React.FC<{ difficulty: 'beginner' | 'intermediate' | 'advanced' }> = ({ difficulty }) => {
   const configs = {
     beginner: {
       label: '新手',
@@ -170,7 +167,7 @@ const DifficultyBadge: React.FC<{ difficulty: 'beginner' | 'intermediate' | 'adv
 };
 
 // 学习提示组件
-const LearningTip: React.FC<{ tip: string; type: 'info' | 'success' | 'warning' }> = ({ tip, type }) => {
+const _LearningTip: React.FC<{ tip: string; type: 'info' | 'success' | 'warning' }> = ({ tip, type }) => {
   const configs = {
     info: {
       icon: <LightBulbIcon className="h-4 w-4 text-blue-400" />,
