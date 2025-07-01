@@ -25,7 +25,7 @@ export interface CategoryDisplayInfo {
   name: string;
   color: string;
   gradient: string;
-  iconName: string;
+  iconName: string | null;
   iconComponent?: React.ComponentType<any>;
 }
 
