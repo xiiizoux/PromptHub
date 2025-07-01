@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { PromptInfo } from '@/types';
 import { formatVersionDisplay } from '@/lib/version-utils';
 import { useIntersectionObserver } from '@/hooks/useIntersectionObserver';
-import { getCategoryDisplayConfig, getCategoriesByType, CategoryInfo } from '@/lib/category-service';
+import { categoryService, CategoryInfo } from '@/services/categoryService';
 import { 
   StarIcon, 
   DocumentTextIcon, 
@@ -72,8 +72,8 @@ const MediaPromptCard: React.FC<MediaPromptCardProps> = React.memo(({ prompt, sh
     const loadCategories = async () => {
       try {
         setLoadingCategories(true);
-        const type = prompt.category_type || 'chat';
-        const categoriesData = await getCategoriesByType(type);
+        const type = (prompt.category_type || 'chat') as 'chat' | 'image' | 'video';
+        const categoriesData = await categoryService.getCategories(type);
         setCategories(categoriesData);
       } catch (error) {
         console.error('Failed to load categories:', error);
@@ -92,14 +92,18 @@ const MediaPromptCard: React.FC<MediaPromptCardProps> = React.memo(({ prompt, sh
         name: prompt?.category || '加载中...',
         color: 'from-gray-400 to-gray-500',
         gradient: 'from-gray-400/20 to-gray-500/20',
-        icon: TagIcon
+        iconName: 'TagIcon',
+        iconComponent: TagIcon
       };
     }
-    const type = prompt.category_type || 'chat';
-    return getCategoryDisplayConfig(prompt?.category, categories, type);
+    const displayInfo = categoryService.getCategoryDisplayInfo(prompt?.category || '');
+    return {
+      ...displayInfo,
+      iconComponent: TagIcon // 暂时使用默认图标，后续可以根据 iconName 动态获取
+    };
   }, [prompt?.category, prompt.category_type, categories, loadingCategories]);
 
-  const CategoryIcon = categoryInfo.icon;
+  const CategoryIcon = categoryInfo.iconComponent;
 
   const rating = useMemo(() => {
     if (!prompt) return { value: 0, percentage: 0 };

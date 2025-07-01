@@ -430,11 +430,8 @@ export default function PromptFormContainer({
       setParameters(defaultParams);
       setValue('parameters', defaultParams);
       
-      // 更新分类选项
-      const availableCategories = categoriesByType[newType] || [];
-      if (availableCategories.length > 0) {
-        setValue('category', availableCategories[0]);
-      }
+      // 重置分类选择，让用户主动选择
+      // 不自动设置第一个分类，避免混淆用户
       
       if (newType === 'image' || newType === 'video') {
         toast.success(`切换到${getTypeLabel(newType)}生成模式`);

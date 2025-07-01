@@ -810,7 +810,6 @@ ${allCategories.join('、')}
       );
 
       const category = response.data.choices[0].message.content.trim();
-      const allCategories = await categoryManager.getAllCategories();
 
       if (allCategories.length === 0) {
         // 如果无法获取分类列表，直接返回AI的结果

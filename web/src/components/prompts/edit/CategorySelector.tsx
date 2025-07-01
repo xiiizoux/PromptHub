@@ -58,20 +58,15 @@ export default function CategorySelector({
 
   const handleInputFocus = () => {
     setIsOpen(true);
-    if (value && !isSearchMode) {
-      setSearchTerm(value);
-      setIsSearchMode(true);
-    }
+    // 不要自动进入搜索模式，让用户主动输入时才进入搜索模式
   };
 
   const handleInputBlur = () => {
     // 延迟关闭，以便处理点击分类选项的情况
     setTimeout(() => {
-      if (!isSearchMode || !searchTerm) {
-        setIsOpen(false);
-        setSearchTerm('');
-        setIsSearchMode(false);
-      }
+      setIsOpen(false);
+      setSearchTerm('');
+      setIsSearchMode(false);
     }, 150);
   };
 
