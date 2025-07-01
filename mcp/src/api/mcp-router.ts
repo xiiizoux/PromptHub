@@ -1,13 +1,8 @@
 import express from 'express';
-import { config } from '../config.js';
 import { storage } from '../shared/services.js';
-import { handleToolError, handleToolSuccess } from '../shared/error-handler.js';
-import { ResponseFormatter } from '../shared/response-formatter.js';
 import { 
-  Prompt, 
   ToolDescription, 
   ToolParameter,
-  StorageAdapter,
   PromptFilters
 } from '../types.js';
 
@@ -359,7 +354,7 @@ router.post('/tools/:name/invoke', optionalAuthMiddleware, async (req, res) => {
     console.log(`[MCP Router] 调用工具: ${name}`, params);
 
     // 🔥 记录开始时间用于性能统计
-    const startTime = Date.now();
+    const _startTime = Date.now();
     
     let result;
     switch (name) {
@@ -814,7 +809,7 @@ async function handleRestorePromptVersion(params: any, req?: express.Request) {
 
   // 恢复到特定版本
   const versionNum = typeof params.version === 'string' ? parseFloat(params.version) : params.version;
-  const restoredPrompt = await storage.restorePromptVersion(prompt.id, versionNum, req?.user?.id);
+  const _restoredPrompt = await storage.restorePromptVersion(prompt.id, versionNum, req?.user?.id);
 
   return {
     content: {

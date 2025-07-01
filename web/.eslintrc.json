@@ -64,6 +64,14 @@
     "dist/",
     "*.min.js",
     "coverage/",
-    ".env*"
+    ".env*",
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "**/*.test.js",
+    "**/*.test.jsx",
+    "**/tests/**",
+    "**/test/**",
+    "playwright-report/**",
+    "test-results/**"
   ]
 }

@@ -3,7 +3,6 @@ import type { Request, Response, NextFunction } from 'express';
 import { storage } from '../shared/services.js';
 import { User } from '../types.js';
 import logger, { logAuthActivity, logSecurityEvent, AuditEventType } from '../utils/logger.js';
-import { createEnhancedError, ErrorType, ErrorSeverity } from '../shared/error-handler.js';
 
 // 扩展Express的Request类型以包含用户信息
 declare global {
@@ -74,7 +73,7 @@ const rateLimitStore = new Map<string, { count: number; resetTime: number }>();
 const RATE_LIMIT_WINDOW = 15 * 60 * 1000; // 15分钟窗口
 const RATE_LIMIT_MAX_REQUESTS = 100; // 每个窗口最多100个请求
 
-function isSessionValid(sessionId: string): boolean {
+function _isSessionValid(sessionId: string): boolean {
   const session = activeSessions.get(sessionId);
   if (!session) return false;
 

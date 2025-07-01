@@ -1,7 +1,9 @@
 /**
  * 提示词相关类型定义
  */
-import { SimplePermissionType } from '@/lib/permissions';
+
+// 简化权限类型定义（避免循环依赖）
+export type SimplePermissionType = 'private' | 'public_read' | 'team_edit' | 'public_edit';
 
 // 提示词基本信息
 export interface PromptInfo {

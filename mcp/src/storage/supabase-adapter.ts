@@ -734,7 +734,7 @@ export class SupabaseAdapter implements StorageAdapter {
   async createPrompt(prompt: Prompt): Promise<Prompt> {
       try {
         // 确保有用户ID - 改进用户ID验证逻辑
-        let finalUserId = prompt.user_id;
+        const finalUserId = prompt.user_id;
 
         if (!finalUserId) {
           console.log('[SupabaseAdapter] 提示词缺少用户ID，无法创建提示词');

@@ -1,4 +1,4 @@
-import { PromptDetails, User, PermissionCheck } from '@/types';
+import { PromptDetails, User, PermissionCheck, SimplePermissionType } from '@/types';
 
 /**
  * 权限管理工具函数
@@ -261,7 +261,7 @@ export const SIMPLE_PERMISSIONS = {
   PUBLIC_EDIT: 'public_edit',   // 公开可编辑：所有人可查看和编辑
 } as const;
 
-export type SimplePermissionType = typeof SIMPLE_PERMISSIONS[keyof typeof SIMPLE_PERMISSIONS];
+// SimplePermissionType 现在从 @/types 导入
 
 // 权限级别描述
 export const PERMISSION_LEVEL_DESCRIPTIONS = {

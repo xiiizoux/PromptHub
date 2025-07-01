@@ -901,7 +901,6 @@ export class UnifiedStoreTool extends BaseMCPTool {
           name: params.title,
           description: params.description,
           content: params.content,
-          content: params.content,
           category: params.category,
           tags: params.tags,
           difficulty: params.difficulty,

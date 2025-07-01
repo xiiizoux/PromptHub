@@ -5,7 +5,6 @@
  */
 
 import axios from 'axios';
-import { Prompt } from '../types.js';
 
 // MCP AI分析结果接口
 export interface MCPAIAnalysisResult {
@@ -86,7 +85,7 @@ class CategoryManager {
   /**
    * 从API获取分类
    */
-  private async fetchCategoriesFromAPI(type: string): Promise<string[]> {
+  private async fetchCategoriesFromAPI(_type: string): Promise<string[]> {
     // 这里可以实现从web服务API获取分类的逻辑
     // 暂时抛出错误，使用默认分类
     throw new Error('API获取暂未实现');
@@ -182,7 +181,7 @@ export class MCPAIAnalyzer {
   async analyzePrompt(
     content: string,
     config: Partial<MCPAnalysisConfig> = {},
-    existingTags: string[] = [],
+    _existingTags: string[] = [],
     currentVersion?: string,
     isNewPrompt: boolean = false,
     existingVersions: string[] = []
@@ -544,7 +543,7 @@ ${content}
     
     // 新提示词从1.0开始
     if (isNewPrompt) {
-      let baseVersion = '1.0';
+      const baseVersion = '1.0';
 
       // 确保版本号不重复
       let version = baseVersion;

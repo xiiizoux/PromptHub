@@ -6,15 +6,11 @@
  */
 
 import { SupabaseAdapter, Prompt, PromptFilters, PaginatedResponse, User } from './supabase-adapter';
-import type { PromptTemplate, TemplateCategory } from '@/types';
+import type { PromptTemplate, TemplateCategory } from '../types';
 
 // 扩展的提示词详情接口
 export interface PromptDetails extends Prompt {
-  content?: string;
   input_variables?: string[];
-  compatible_models?: string[];
-  allow_collaboration?: boolean;
-  edit_permission?: 'owner_only' | 'collaborators' | 'public';
   author?: string;
   collaborators?: string[]; // 协作者用户名列表
   
@@ -36,6 +32,21 @@ export interface Interaction {
   prompt_id: string;
   type: 'like' | 'dislike' | 'bookmark' | 'share';
   created_at: string;
+}
+
+export interface Comment {
+  id: string;
+  prompt_id: string;
+  user_id: string;
+  content: string;
+  parent_id?: string;
+  created_at: string;
+  updated_at?: string;
+  user?: {
+    username: string;
+    display_name?: string;
+  };
+  replies?: Comment[];
 }
 
 export interface Topic {
@@ -282,17 +293,9 @@ export class DatabaseService {
         updated_at: prompt.updated_at,
 
         // 扩展字段
-        content: content,
         input_variables: this.extractInputVariables(content),
-        compatible_models: prompt.compatible_models || [], // 保持数据原始性，不添加假的默认值
-        allow_collaboration: Boolean(prompt.allow_collaboration), // 使用数据库中的实际值
-        edit_permission: (prompt.edit_permission as 'owner_only' | 'collaborators' | 'public') || 'owner_only',
         author: authorName,
         collaborators: collaborators, // 添加协作者列表
-
-        // 媒体相关字段
-        preview_asset_url: prompt.preview_asset_url, // 添加预览资源URL
-        parameters: prompt.parameters || {}, // 添加参数字段
       };
 
       console.log('getPromptByName - 最终处理的数据:', {
@@ -301,7 +304,6 @@ export class DatabaseService {
         category_type: promptDetails.category_type,
         tags: promptDetails.tags,
         input_variables: promptDetails.input_variables,
-        edit_permission: promptDetails.edit_permission,
         author: promptDetails.author,
         user_id: promptDetails.user_id,
         contentLength: content.length,
@@ -441,7 +443,6 @@ export class DatabaseService {
       // 处理content字段
       if (promptData.content !== undefined) {
         updateData.content = promptData.content;
-        }];
       }
 
       // 版本号处理 - 编辑时默认+0.1（支持小数版本号）
@@ -514,7 +515,7 @@ export class DatabaseService {
     });
 
     // 删除重复的文件名
-    const uniqueFiles = [...new Set(filesToDelete)];
+    const uniqueFiles = Array.from(new Set(filesToDelete));
 
     // 逐个删除文件
     for (const filename of uniqueFiles) {

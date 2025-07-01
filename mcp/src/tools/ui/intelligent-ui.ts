@@ -5,14 +5,7 @@
 
 import { BaseMCPTool, ToolContext, ToolResult } from '../../shared/base-tool.js';
 import { ToolDescription, ToolParameter, Prompt } from '../../types.js';
-import { MCPAIAnalysisResult } from '../../ai/mcp-ai-analyzer.js';
 
-// 智能选择匹配分数接口
-interface PromptMatchScore {
-  prompt: Prompt;
-  score: number;
-  reasons: string[];
-}
 
 // 外部AI分析结果接口
 export interface ExternalAIAnalysis {
@@ -48,13 +41,13 @@ export class IntelligentPromptSelectionTool extends BaseMCPTool {
     };
   }
 
-  async execute(params: any, context: ToolContext): Promise<ToolResult> {
+  async execute(params: any, _context: ToolContext): Promise<ToolResult> {
     this.validateParams(params, ['user_query']);
     const { user_query, max_results = 5 } = params;
 
     try {
       const storage = this.getStorage();
-      const searchResults = await storage.searchPrompts(user_query, context.userId);
+      const searchResults = await storage.searchPrompts(user_query, _context.userId);
       const results = Array.isArray(searchResults) ? searchResults.slice(0, max_results) : [];
 
       // 格式化结果
@@ -159,7 +152,7 @@ export class IntelligentPromptStorageTool extends BaseMCPTool {
     };
   }
 
-  async execute(params: any, context: ToolContext): Promise<ToolResult> {
+  async execute(params: any, _context: ToolContext): Promise<ToolResult> {
     this.validateParams(params, ['content']);
     const { content } = params;
 
@@ -207,7 +200,7 @@ export class ExternalAIAnalysisTool extends BaseMCPTool {
     };
   }
 
-  async execute(params: any, context: ToolContext): Promise<ToolResult> {
+  async execute(params: any, _context: ToolContext): Promise<ToolResult> {
     this.validateParams(params, ['content']);
     const { content } = params;
 
@@ -228,16 +221,16 @@ export const intelligentPromptStorageTool = new IntelligentPromptStorageTool();
 export const externalAIAnalysisTool = new ExternalAIAnalysisTool();
 
 // 兼容函数
-export async function handleIntelligentPromptSelection(params: any, userId?: string) {
-  return intelligentPromptSelectionTool.handleExecution(params, userId);
+export async function handleIntelligentPromptSelection(params: any, _userId?: string) {
+  return intelligentPromptSelectionTool.handleExecution(params, _userId);
 }
 
-export async function handleIntelligentPromptStorage(params: any, userId?: string) {
-  return intelligentPromptStorageTool.handleExecution(params, userId);
+export async function handleIntelligentPromptStorage(params: any, _userId?: string) {
+  return intelligentPromptStorageTool.handleExecution(params, _userId);
 }
 
-export async function handleExternalAIAnalysis(params: any, userId?: string) {
-  return externalAIAnalysisTool.handleExecution(params, userId);
+export async function handleExternalAIAnalysis(params: any, _userId?: string) {
+  return externalAIAnalysisTool.handleExecution(params, _userId);
 }
 
 // 工具定义导出

@@ -1,8 +1,6 @@
 import express from 'express';
 import type { Request, Response, NextFunction } from 'express';
 import { storage } from '../shared/services.js';
-import { handleToolError } from '../shared/error-handler.js';
-import { ResponseFormatter } from '../shared/response-formatter.js';
 import { authenticateRequest } from './auth-middleware.js';
 import logger, { logApiKeyActivity, AuditEventType } from '../utils/logger.js';
 
@@ -22,7 +20,7 @@ const getRequestMetadata = (req: Request) => {
 };
 
 // 通用错误处理中间件
-const errorHandler = (err: any, req: Request, res: Response, next: NextFunction) => {
+const errorHandler = (err: any, req: Request, res: Response, _next: NextFunction) => {
   const metadata = getRequestMetadata(req);
   const userId = req.user?.id || 'unauthenticated';
   
@@ -42,7 +40,7 @@ const errorHandler = (err: any, req: Request, res: Response, next: NextFunction)
   });
 };
 
-router.get('/', authenticateRequest, async (req: Request, res: Response, next: NextFunction) => {
+router.get('/', authenticateRequest, async (req: Request, res: Response, _next: NextFunction) => {
   try {
     const metadata = getRequestMetadata(req);
     
@@ -83,7 +81,7 @@ router.get('/', authenticateRequest, async (req: Request, res: Response, next: N
  * 创建新的API密钥
  * POST /api/api-keys
  */
-router.post('/', authenticateRequest, async (req: Request, res: Response, next: NextFunction) => {
+router.post('/', authenticateRequest, async (req: Request, res: Response, _next: NextFunction) => {
   try {
     const metadata = getRequestMetadata(req);
     
@@ -148,7 +146,7 @@ router.post('/', authenticateRequest, async (req: Request, res: Response, next: 
  * 删除API密钥
  * DELETE /api/api-keys/:id
  */
-router.delete('/:id', authenticateRequest, async (req: Request, res: Response, next: NextFunction) => {
+router.delete('/:id', authenticateRequest, async (req: Request, res: Response, _next: NextFunction) => {
   try {
     const metadata = getRequestMetadata(req);
     

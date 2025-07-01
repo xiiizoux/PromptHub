@@ -280,7 +280,7 @@ export class ReadyToUseTool extends BaseMCPTool {
     const storage = this.getStorage();
     
     try {
-      let prompt = await storage.getPrompt(identifier);
+      const prompt = await storage.getPrompt(identifier);
       if (prompt) return prompt;
 
       const searchResults = await storage.searchPrompts(identifier, userId);

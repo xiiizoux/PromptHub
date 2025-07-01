@@ -60,7 +60,7 @@ const DirectCreatePage: React.FC = () => {
           description,
           category,
           tags: selectedTags,
-          content: promptContent, // 使用content字段
+          content: content, // 使用content字段
           is_public: true, // 设置为公开，这样所有用户都能看到
           user_id: user?.id || null,
         }),

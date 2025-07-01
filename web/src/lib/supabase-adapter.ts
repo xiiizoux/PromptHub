@@ -6,7 +6,7 @@
  */
 
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
-import crypto from 'crypto';
+import * as crypto from 'crypto';
 
 // 基础类型定义
 export interface User {
