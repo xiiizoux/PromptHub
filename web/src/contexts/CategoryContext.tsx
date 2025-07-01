@@ -36,6 +36,12 @@ const CACHE_EXPIRY = 5 * 60 * 1000; // 5分钟缓存
 // 从localStorage获取缓存数据
 const getCachedCategories = (): Record<CategoryType, CategoryInfo[]> | null => {
   try {
+    // 检查是否在浏览器环境中
+    if (typeof window === 'undefined') {
+      // 服务端渲染时直接返回null，避免警告
+      return null;
+    }
+    
     const cached = localStorage.getItem(CACHE_KEY);
     const timestamp = localStorage.getItem(CACHE_TIMESTAMP_KEY);
     
@@ -49,7 +55,10 @@ const getCachedCategories = (): Record<CategoryType, CategoryInfo[]> | null => {
       }
     }
   } catch (error) {
-    logger.warn('读取分类缓存失败', error);
+    // 只在浏览器环境中记录警告
+    if (typeof window !== 'undefined') {
+      logger.warn('读取分类缓存失败', error);
+    }
   }
   return null;
 };
@@ -57,10 +66,16 @@ const getCachedCategories = (): Record<CategoryType, CategoryInfo[]> | null => {
 // 保存数据到localStorage
 const setCachedCategories = (categories: Record<CategoryType, CategoryInfo[]>) => {
   try {
-    localStorage.setItem(CACHE_KEY, JSON.stringify(categories));
-    localStorage.setItem(CACHE_TIMESTAMP_KEY, Date.now().toString());
+    // 只在浏览器环境中保存缓存
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(CACHE_KEY, JSON.stringify(categories));
+      localStorage.setItem(CACHE_TIMESTAMP_KEY, Date.now().toString());
+    }
   } catch (error) {
-    logger.warn('保存分类缓存失败', error);
+    // 只在浏览器环境中记录警告
+    if (typeof window !== 'undefined') {
+      logger.warn('保存分类缓存失败', error);
+    }
   }
 };
 

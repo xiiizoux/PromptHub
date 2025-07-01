@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { BookmarkIcon, MagnifyingGlassIcon, Squares2X2Icon, ListBulletIcon } from '@heroicons/react/24/outline';
+import { BookmarkIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 import { getUserBookmarks } from '@/lib/api';
 import { PromptDetails } from '@/types';
 import { useAuth, withAuth } from '@/contexts/AuthContext';
@@ -11,7 +11,6 @@ import { BookmarkButton } from '@/components/BookmarkButton';
 import UserMediaPromptCard from '@/components/prompts/UserMediaPromptCard';
 import toast from 'react-hot-toast';
 import { formatVersionDisplay } from '@/lib/version-utils';
-import clsx from 'clsx';
 
 const BookmarksPage: React.FC = () => {
   const { user } = useAuth();
@@ -19,8 +18,7 @@ const BookmarksPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid'); // 新增视图模式
-  const [activeType, setActiveType] = useState<'all' | 'chat' | 'image' | 'video'>('all'); // 新增类型筛选
+  const [activeType, setActiveType] = useState<'all' | 'chat' | 'image' | 'video'>('all'); // 类型筛选
 
   useEffect(() => {
     fetchBookmarks();
@@ -149,31 +147,6 @@ const BookmarksPage: React.FC = () => {
                 ))}
               </select>
 
-              {/* 视图模式切换 */}
-              <div className="flex border border-gray-600 rounded-lg overflow-hidden">
-                <button
-                  onClick={() => setViewMode('grid')}
-                  className={clsx(
-                    'px-3 py-2 text-sm font-medium transition-colors',
-                    viewMode === 'grid'
-                      ? 'bg-neon-cyan text-black'
-                      : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
-                  )}
-                >
-                  <Squares2X2Icon className="h-4 w-4" />
-                </button>
-                <button
-                  onClick={() => setViewMode('list')}
-                  className={clsx(
-                    'px-3 py-2 text-sm font-medium transition-colors',
-                    viewMode === 'list'
-                      ? 'bg-neon-cyan text-black'
-                      : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
-                  )}
-                >
-                  <ListBulletIcon className="h-4 w-4" />
-                </button>
-              </div>
             </div>
           </motion.div>
 
@@ -209,86 +182,25 @@ const BookmarksPage: React.FC = () => {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.4 }}
-              className={clsx(
-                viewMode === 'grid' 
-                  ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'
-                  : 'space-y-4'
-              )}
+              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
             >
               {filteredBookmarks.map((bookmark, index) => (
                 <motion.div
                   key={bookmark.id}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.05 * index }} // 减少延迟时间
+                  transition={{ delay: 0.05 * index }}
                 >
-                  {viewMode === 'grid' ? (
-                    // 网格模式：使用优化的UserMediaPromptCard
-                    <UserMediaPromptCard
-                      prompt={{
-                        ...bookmark,
-                        category_type: (bookmark as any).category_type || 'chat',
-                        preview_asset_url: (bookmark as any).preview_asset_url,
-                        thumbnail_url: (bookmark as any).thumbnail_url,
-                        parameters: (bookmark as any).parameters,
-                      }}
-                      showPublicStatus={false}
-                    />
-                  ) : (
-                    // 列表模式：简化布局但仍支持媒体预览
-                    <div className="glass rounded-xl border border-neon-cyan/20 p-4 hover:border-neon-cyan/40 transition-all duration-300 group">
-                      <div className="flex items-start gap-4">
-                        {/* 媒体缩略图 */}
-                        <div className="w-20 h-20 rounded-lg overflow-hidden bg-gray-800 flex-shrink-0">
-                          {(bookmark as any).preview_asset_url ? (
-                            <img 
-                              src={(bookmark as any).thumbnail_url || (bookmark as any).preview_asset_url}
-                              alt={bookmark.name}
-                              className="w-full h-full object-cover"
-                              loading="lazy"
-                            />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center">
-                              <span className="text-xs text-gray-500">
-                                {(bookmark as any).category_type === 'image' ? '🖼️' : 
-                                 (bookmark as any).category_type === 'video' ? '🎥' : '💬'}
-                              </span>
-                            </div>
-                          )}
-                        </div>
-                        
-                        {/* 内容 */}
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-start justify-between mb-2">
-                            <Link
-                              href={`/prompts/${bookmark.id}`}
-                              className="text-lg font-semibold text-white hover:text-neon-cyan transition-colors line-clamp-1"
-                            >
-                              {bookmark.name}
-                            </Link>
-                            <BookmarkButton
-                              promptId={bookmark.id}
-                              variant="bookmark"
-                              size="sm"
-                              showCount={false}
-                              className="ml-2 flex-shrink-0"
-                            />
-                          </div>
-                          
-                          <p className="text-gray-400 text-sm mb-2 line-clamp-2">
-                            {bookmark.description}
-                          </p>
-                          
-                          <div className="flex items-center gap-2 text-xs text-gray-500">
-                            <span className="px-2 py-1 bg-neon-purple/20 text-neon-purple rounded-full">
-                              {bookmark.category}
-                            </span>
-                            <span>收藏于 {formatDistanceToNow(new Date((bookmark as any).bookmarked_at), { addSuffix: true, locale: zhCN })}</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
+                  <UserMediaPromptCard
+                    prompt={{
+                      ...bookmark,
+                      category_type: (bookmark as any).category_type || 'chat',
+                      preview_asset_url: (bookmark as any).preview_asset_url,
+                      thumbnail_url: (bookmark as any).thumbnail_url,
+                      parameters: (bookmark as any).parameters,
+                    }}
+                    showPublicStatus={false}
+                  />
                 </motion.div>
               ))}
             </motion.div>
