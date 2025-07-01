@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { TagIcon, ChevronDownIcon, CheckIcon } from '@heroicons/react/24/outline';
 import { PromptType } from './PromptTypeSelector';
+import { useCategoryContext } from '@/contexts/CategoryContext';
 
 interface CategorySelectorProps {
   promptType: PromptType;
@@ -25,6 +26,7 @@ export default function CategorySelector({
   disabled = false,
 }: CategorySelectorProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const { getCategoryDisplayInfo } = useCategoryContext();
 
   const availableCategories = categoriesByType[promptType] || [];
 
@@ -122,9 +124,22 @@ export default function CategorySelector({
           aria-haspopup="listbox"
           aria-controls="category-listbox"
         >
-          <span className={value ? 'text-gray-200' : 'text-gray-400'}>
-            {value || '请选择分类...'}
-          </span>
+          <div className="flex items-center space-x-2">
+            {value && (() => {
+              const categoryInfo = getCategoryDisplayInfo(value, promptType);
+              const IconComponent = categoryInfo.iconComponent;
+              return (
+                <div className={`inline-flex p-1.5 rounded-lg bg-gradient-to-br ${categoryInfo.color}`}>
+                  {IconComponent && (
+                    <IconComponent className="h-3.5 w-3.5 text-dark-bg-primary" />
+                  )}
+                </div>
+              );
+            })()}
+            <span className={value ? 'text-gray-200' : 'text-gray-400'}>
+              {value || '请选择分类...'}
+            </span>
+          </div>
           <ChevronDownIcon 
             className={`h-5 w-5 text-gray-400 transition-transform hover:text-neon-cyan ${
               isOpen ? 'rotate-180' : ''
@@ -143,26 +158,38 @@ export default function CategorySelector({
               {/* 分类列表 */}
               <div className="max-h-64 overflow-y-auto" role="listbox" id="category-listbox">
                 {availableCategories.length > 0 ? (
-                  availableCategories.map((category) => (
-                    <motion.button
-                      key={category}
-                      type="button"
-                      onClick={() => handleCategorySelect(category)}
-                      className={`
-                        w-full px-4 py-3 text-left hover:bg-neon-cyan/10 transition-colors
-                        flex items-center justify-between
-                        ${value === category ? 'bg-neon-cyan/20 text-neon-cyan' : 'text-gray-300'}
-                      `}
-                      whileHover={{ backgroundColor: 'rgba(6, 182, 212, 0.1)' }}
-                      role="option"
-                      aria-selected={value === category}
-                    >
-                      <span>{category}</span>
-                      {value === category && (
-                        <CheckIcon className="h-4 w-4 text-neon-cyan" />
-                      )}
-                    </motion.button>
-                  ))
+                  availableCategories.map((category) => {
+                    const categoryInfo = getCategoryDisplayInfo(category, promptType);
+                    const IconComponent = categoryInfo.iconComponent;
+                    
+                    return (
+                      <motion.button
+                        key={category}
+                        type="button"
+                        onClick={() => handleCategorySelect(category)}
+                        className={`
+                          w-full px-4 py-3 text-left hover:bg-neon-cyan/10 transition-colors
+                          flex items-center justify-between
+                          ${value === category ? 'bg-neon-cyan/20 text-neon-cyan' : 'text-gray-300'}
+                        `}
+                        whileHover={{ backgroundColor: 'rgba(6, 182, 212, 0.1)' }}
+                        role="option"
+                        aria-selected={value === category}
+                      >
+                        <div className="flex items-center space-x-3">
+                          <div className={`inline-flex p-1.5 rounded-lg bg-gradient-to-br ${categoryInfo.color}`}>
+                            {IconComponent && (
+                              <IconComponent className="h-3.5 w-3.5 text-dark-bg-primary" />
+                            )}
+                          </div>
+                          <span>{category}</span>
+                        </div>
+                        {value === category && (
+                          <CheckIcon className="h-4 w-4 text-neon-cyan" />
+                        )}
+                      </motion.button>
+                    );
+                  })
                 ) : (
                   <div className="px-4 py-6 text-center text-gray-400">
                     <p>没有可用的{getTypeLabel(promptType)}分类</p>
