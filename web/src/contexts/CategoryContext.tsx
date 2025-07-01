@@ -120,7 +120,7 @@ export const CategoryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         types.map(async (type) => {
           const categoryData = await categoryService.getCategories(type);
           return { type, data: categoryData };
-        })
+        }),
       );
 
       const newCategories = { ...categories };
@@ -149,7 +149,7 @@ export const CategoryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
       logger.info('分类数据预加载完成', { 
         totalCategories: allCategories.length,
-        cachedIcons: IconComponentCache.size 
+        cachedIcons: IconComponentCache.size, 
       });
 
     } catch (error) {

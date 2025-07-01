@@ -29,14 +29,14 @@ function CreatePromptPage() {
   const { showConfirmDialog, onConfirmLeave, onCancelLeave, forceNavigate } = useBeforeUnload(
     hasUnsavedChanges, 
     '您的提示词内容尚未保存，确定要离开此页面吗？',
-    true // 使用自定义对话框
+    true, // 使用自定义对话框
   );
   
   // 创建页面的权限检查（始终可以创建）
   const permissionCheck = user ? {
     canEdit: true,
     reason: 'owner' as const,
-    message: '您是此提示词的创建者'
+    message: '您是此提示词的创建者',
   } : null;
 
   // 用户状态监听和检查

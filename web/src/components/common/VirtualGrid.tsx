@@ -26,7 +26,7 @@ function VirtualGrid<T>({
   overscan = 2,
   onLoadMore,
   hasMore = false,
-  loading = false
+  loading = false,
 }: VirtualGridProps<T>) {
   const [scrollTop, setScrollTop] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -74,7 +74,7 @@ function VirtualGrid<T>({
     const startRow = Math.floor(scrollTop / rowHeight);
     const endRow = Math.min(
       startRow + Math.ceil(viewportHeight / rowHeight),
-      rowCount - 1
+      rowCount - 1,
     );
 
     // 添加overscan
@@ -85,7 +85,7 @@ function VirtualGrid<T>({
     for (let i = startWithOverscan; i <= endWithOverscan; i++) {
       rows.push({
         index: i,
-        offsetTop: i * rowHeight
+        offsetTop: i * rowHeight,
       });
     }
 
@@ -108,7 +108,7 @@ function VirtualGrid<T>({
           row: row.index,
           column: columnIndex,
           offsetTop: row.offsetTop,
-          offsetLeft: columnIndex * (100 / columnCount) // 百分比定位
+          offsetLeft: columnIndex * (100 / columnCount), // 百分比定位
         });
       }
     }
@@ -119,7 +119,7 @@ function VirtualGrid<T>({
   // 无限滚动检测
   const { elementRef: loadMoreRef, isVisible: shouldLoadMore } = useIntersectionObserver({
     threshold: 0.1,
-    rootMargin: '200px'
+    rootMargin: '200px',
   });
 
   // 触发加载更多
@@ -149,7 +149,7 @@ function VirtualGrid<T>({
               top: offsetTop,
               left: `${offsetLeft}%`,
               width: `calc(${100 / columnCount}% - ${gap * (columnCount - 1) / columnCount}px)`,
-              height: itemHeight
+              height: itemHeight,
             }}
           >
             {renderItem(item, index)}

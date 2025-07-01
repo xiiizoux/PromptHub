@@ -85,7 +85,7 @@ const PromptCard: React.FC<PromptCardProps> = React.memo(({ prompt }) => {
                 categoryInfo.color,
               )}>
                 {categoryInfo.iconComponent && React.createElement(categoryInfo.iconComponent, {
-                  className: "h-4 w-4 text-dark-bg-primary"
+                  className: 'h-4 w-4 text-dark-bg-primary',
                 })}
               </div>
               <div className="flex-1 min-w-0">

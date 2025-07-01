@@ -2,7 +2,7 @@ import React from 'react';
 import { 
   SIMPLE_PERMISSIONS, 
   SIMPLE_PERMISSION_DETAILS, 
-  SimplePermissionType 
+  SimplePermissionType, 
 } from '@/lib/permissions';
 
 interface PermissionPreviewProps {

@@ -306,7 +306,7 @@ export function createIconComponent(
   iconName: string,
   size: IconSize = 'md',
   color: IconColor = 'secondary',
-  className?: string
+  className?: string,
 ): React.ComponentType<any> {
   const IconComponent = getIconComponent(iconName);
   const sizeClass = getIconSizeClass(size);
@@ -324,7 +324,7 @@ export function createIconComponent(
 export function createIconComponents(
   iconNames: string[],
   size: IconSize = 'md',
-  color: IconColor = 'secondary'
+  color: IconColor = 'secondary',
 ): Record<string, React.ComponentType<any>> {
   const components: Record<string, React.ComponentType<any>> = {};
   

@@ -108,7 +108,7 @@ export function UnsavedChangesDialog({
   open,
   onConfirm,
   onCancel,
-  context = 'page'
+  context = 'page',
 }: {
   open: boolean;
   onConfirm: () => void;
@@ -118,7 +118,7 @@ export function UnsavedChangesDialog({
   const contextMessages = {
     page: '您有未保存的更改，确定要离开此页面吗？',
     form: '表单内容尚未保存，确定要离开吗？',
-    editor: '编辑器内容尚未保存，确定要离开吗？'
+    editor: '编辑器内容尚未保存，确定要离开吗？',
   };
 
   return (

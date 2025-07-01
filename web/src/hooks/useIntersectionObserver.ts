@@ -8,13 +8,13 @@ interface UseIntersectionObserverOptions {
 }
 
 export function useIntersectionObserver(
-  options: UseIntersectionObserverOptions = {}
+  options: UseIntersectionObserverOptions = {},
 ) {
   const {
     threshold = 0.1,
     root = null,
     rootMargin = '50px',
-    freezeOnceVisible = false
+    freezeOnceVisible = false,
   } = options;
 
   const [isIntersecting, setIsIntersecting] = useState(false);
@@ -43,7 +43,7 @@ export function useIntersectionObserver(
         threshold,
         root,
         rootMargin,
-      }
+      },
     );
 
     observer.observe(element);
@@ -57,6 +57,6 @@ export function useIntersectionObserver(
     elementRef,
     isIntersecting,
     hasBeenVisible,
-    isVisible: freezeOnceVisible ? hasBeenVisible : isIntersecting
+    isVisible: freezeOnceVisible ? hasBeenVisible : isIntersecting,
   };
 }

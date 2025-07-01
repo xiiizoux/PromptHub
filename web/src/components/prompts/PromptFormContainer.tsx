@@ -161,7 +161,7 @@ export default function PromptFormContainer({
   const inferredSimplePermission = initialData ? inferSimplePermission(
     initialData?.is_public,
     initialData?.allow_collaboration,
-    initialData?.edit_permission
+    initialData?.edit_permission,
   ) : 'public_read';
 
   const {

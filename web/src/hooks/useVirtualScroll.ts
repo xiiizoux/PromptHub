@@ -21,7 +21,7 @@ export function useVirtualScroll({
   itemHeight,
   containerHeight,
   overscan = 5,
-  totalItems
+  totalItems,
 }: UseVirtualScrollOptions): VirtualScrollReturn {
   const [scrollTop, setScrollTop] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -47,7 +47,7 @@ export function useVirtualScroll({
     const startIndex = Math.floor(scrollTop / itemHeight);
     const endIndex = Math.min(
       startIndex + Math.ceil(containerHeight / itemHeight),
-      totalItems - 1
+      totalItems - 1,
     );
 
     // 添加overscan
@@ -58,7 +58,7 @@ export function useVirtualScroll({
     for (let i = startWithOverscan; i <= endWithOverscan; i++) {
       items.push({
         index: i,
-        offsetTop: i * itemHeight
+        offsetTop: i * itemHeight,
       });
     }
 
@@ -74,7 +74,7 @@ export function useVirtualScroll({
       const targetScrollTop = index * itemHeight;
       containerRef.current.scrollTo({
         top: targetScrollTop,
-        behavior: 'smooth'
+        behavior: 'smooth',
       });
     }
   }, [itemHeight]);
@@ -83,6 +83,6 @@ export function useVirtualScroll({
     containerRef,
     visibleItems,
     totalHeight,
-    scrollToIndex
+    scrollToIndex,
   };
 }

@@ -10,7 +10,7 @@ import { useRouter } from 'next/router';
 export function useBeforeUnload(
   hasUnsavedChanges: boolean, 
   message?: string,
-  useCustomDialog?: boolean
+  useCustomDialog?: boolean,
 ) {
   const router = useRouter();
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
@@ -58,7 +58,7 @@ export function useBeforeUnload(
         } else {
           // 使用默认的confirm对话框
           const shouldLeave = window.confirm(
-            messageRef.current || '您有未保存的更改，确定要离开此页面吗？'
+            messageRef.current || '您有未保存的更改，确定要离开此页面吗？',
           );
           if (!shouldLeave) {
             router.events.emit('routeChangeError');
@@ -118,7 +118,7 @@ export function useRouteGuard(
     message?: string;
     onLeaveConfirm?: () => Promise<boolean> | boolean;
     onSave?: () => Promise<void>;
-  }
+  },
 ) {
   const router = useRouter();
   const { message, onLeaveConfirm, onSave } = options || {};
@@ -151,7 +151,7 @@ export function useRouteGuard(
 
       // 使用默认的确认对话框
       const shouldLeave = window.confirm(
-        currentOptions?.message || '您有未保存的更改，确定要离开此页面吗？'
+        currentOptions?.message || '您有未保存的更改，确定要离开此页面吗？',
       );
       
       if (!shouldLeave) {
@@ -192,6 +192,6 @@ export function useRouteGuard(
 
   return {
     forceNavigate,
-    safeNavigate
+    safeNavigate,
   };
 }

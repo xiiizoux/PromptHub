@@ -10,7 +10,7 @@ import {
   CategoryType, 
   CategoryDisplayInfo, 
   CategoryMap,
-  UseCategoryServiceReturn 
+  UseCategoryServiceReturn, 
 } from '@/types/category';
 import { getIconComponent } from '@/utils/categoryIcons';
 import { logger } from '@/lib/error-handler';
@@ -244,7 +244,7 @@ export function useCategorySearch(type?: CategoryType): {
     return categories.filter(category => 
       category.name.toLowerCase().includes(lowerQuery) ||
       category.name_en?.toLowerCase().includes(lowerQuery) ||
-      category.description?.toLowerCase().includes(lowerQuery)
+      category.description?.toLowerCase().includes(lowerQuery),
     );
   }, [categories]);
 
@@ -279,7 +279,7 @@ export function useMultiTypeCategoryService(types: CategoryType[]): {
         types.map(async (type) => {
           const categories = await categoryService.getCategories(type);
           return { type, categories };
-        })
+        }),
       );
 
       const newCategoriesByType = {} as Record<CategoryType, CategoryInfo[]>;

@@ -54,7 +54,7 @@ const ImagePromptCard: React.FC<ImagePromptCardProps> = React.memo(({ prompt }) 
   const { elementRef, isVisible } = useIntersectionObserver({
     threshold: 0.1,
     rootMargin: '50px', // 提前50px开始加载
-    freezeOnceVisible: true // 一旦可见就保持状态
+    freezeOnceVisible: true, // 一旦可见就保持状态
   });
 
   const rating = useMemo(() => {
@@ -276,7 +276,7 @@ const ImagePromptCard: React.FC<ImagePromptCardProps> = React.memo(({ prompt }) 
                   categoryInfo.color,
                 )}>
                   {categoryInfo.iconComponent && React.createElement(categoryInfo.iconComponent, {
-                    className: "h-4 w-4 text-dark-bg-primary"
+                    className: 'h-4 w-4 text-dark-bg-primary',
                   })}
                 </div>
                 <div className="flex-1 min-w-0">

@@ -32,7 +32,7 @@ export default function CategorySelector({
   
   // 根据搜索词过滤分类
   const filteredCategories = availableCategories.filter(category =>
-    category.toLowerCase().includes(searchTerm.toLowerCase())
+    category.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
   // 当类型改变时重置状态

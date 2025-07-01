@@ -360,7 +360,7 @@ export const convertSimplePermissionToFields = (simplePermission: SimplePermissi
 export const inferSimplePermission = (
   is_public?: boolean,
   allow_collaboration?: boolean,
-  edit_permission?: string
+  edit_permission?: string,
 ): SimplePermissionType => {
   if (!is_public) {
     return SIMPLE_PERMISSIONS.PRIVATE;

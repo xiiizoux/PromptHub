@@ -116,7 +116,7 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
   const { showConfirmDialog, onConfirmLeave, onCancelLeave, forceNavigate } = useBeforeUnload(
     hasUnsavedChanges, 
     '您对提示词的修改尚未保存，确定要离开此页面吗？',
-    true // 使用自定义对话框
+    true, // 使用自定义对话框
   );
 
   // 获取分类数据 - 按类型分别获取

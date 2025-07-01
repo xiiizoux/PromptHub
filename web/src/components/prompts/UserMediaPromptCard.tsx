@@ -61,14 +61,14 @@ const UserMediaPromptCard: React.FC<UserMediaPromptCardProps> = React.memo(({ pr
   // 使用优化的分类显示Hook
   const categoryInfo = useOptimizedCategoryDisplay(
     prompt?.category || '',
-    (prompt.category_type || 'chat') as 'chat' | 'image' | 'video'
+    (prompt.category_type || 'chat') as 'chat' | 'image' | 'video',
   );
 
   // 懒加载：只有当卡片进入可视区域时才加载媒体
   const { elementRef, isVisible } = useIntersectionObserver({
     threshold: 0.1,
     rootMargin: '50px',
-    freezeOnceVisible: true
+    freezeOnceVisible: true,
   });
 
 
@@ -222,7 +222,7 @@ const UserMediaPromptCard: React.FC<UserMediaPromptCardProps> = React.memo(({ pr
         <motion.div
           className={clsx(
             'card glass border transition-all duration-300 group cursor-pointer relative overflow-hidden flex flex-col',
-            getBorderColor()
+            getBorderColor(),
           )}
           whileHover={{ y: -4, scale: 1.02 }}
           transition={{ duration: 0.2 }}
@@ -282,7 +282,7 @@ const UserMediaPromptCard: React.FC<UserMediaPromptCardProps> = React.memo(({ pr
                     <div className="absolute inset-0 flex flex-col items-center justify-center">
                       <div className={clsx(
                         'animate-spin rounded-full h-8 w-8 border-b-2 mb-2',
-                        prompt.category_type === 'image' ? 'border-pink-400' : 'border-red-400'
+                        prompt.category_type === 'image' ? 'border-pink-400' : 'border-red-400',
                       )}></div>
                       <p className="text-xs text-gray-400">
                         {prompt.category_type === 'image' ? '加载图像...' : '加载视频...'}
@@ -327,7 +327,7 @@ const UserMediaPromptCard: React.FC<UserMediaPromptCardProps> = React.memo(({ pr
                   'flex items-center space-x-1 px-3 py-1.5 rounded-full backdrop-blur-md border',
                   prompt.category_type === 'image' 
                     ? 'bg-pink-500/20 border-pink-500/30' 
-                    : 'bg-sky-200/20 border-sky-200/30'
+                    : 'bg-sky-200/20 border-sky-200/30',
                 )}>
                   {prompt.category_type === 'image' ? (
                     <>
@@ -414,13 +414,13 @@ const UserMediaPromptCard: React.FC<UserMediaPromptCardProps> = React.memo(({ pr
                   categoryInfo.color,
                 )}>
                   {categoryInfo.iconComponent && React.createElement(categoryInfo.iconComponent, {
-                    className: "h-4 w-4 text-dark-bg-primary"
+                    className: 'h-4 w-4 text-dark-bg-primary',
                   })}
                 </div>
                 <div className="flex-1 min-w-0">
                   <h3 className={clsx(
                     'text-lg font-semibold text-white line-clamp-1 transition-colors',
-                    getHoverTextColor()
+                    getHoverTextColor(),
                   )}>
                     {prompt.name}
                   </h3>
@@ -461,7 +461,7 @@ const UserMediaPromptCard: React.FC<UserMediaPromptCardProps> = React.memo(({ pr
                         ? 'border-pink-500/20 text-pink-400' 
                         : prompt.category_type === 'video'
                         ? 'border-sky-200/20 text-sky-200'
-                        : 'border-neon-cyan/20 text-neon-cyan'
+                        : 'border-neon-cyan/20 text-neon-cyan',
                     )}
                   >
                     #{tag}
@@ -482,7 +482,7 @@ const UserMediaPromptCard: React.FC<UserMediaPromptCardProps> = React.memo(({ pr
                 ? 'border-pink-500/10' 
                 : prompt.category_type === 'video'
                 ? 'border-sky-200/10'
-                : 'border-neon-cyan/10'
+                : 'border-neon-cyan/10',
             )}>
               {/* 第一行：评分与日期 */}
               <div className="flex items-center justify-between text-xs">
@@ -497,7 +497,7 @@ const UserMediaPromptCard: React.FC<UserMediaPromptCardProps> = React.memo(({ pr
                               ? 'bg-gradient-to-r from-pink-400 to-purple-400'
                               : prompt.category_type === 'video'
                               ? 'bg-gradient-to-r from-sky-200 to-blue-300'
-                              : 'bg-gradient-to-r from-neon-cyan to-neon-blue'
+                              : 'bg-gradient-to-r from-neon-cyan to-neon-blue',
                           )}
                           style={{ width: `${rating.percentage}%` }}
                         />

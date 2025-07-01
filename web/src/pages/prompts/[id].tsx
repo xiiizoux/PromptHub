@@ -49,7 +49,7 @@ import {
   CogIcon,
 } from '@heroicons/react/24/outline';
 import { StarIcon as SolidStarIcon } from '@heroicons/react/24/solid';
-import { useCategoryDisplayMap } from '@/hooks/useCategoryService';
+import { useOptimizedCategoryDisplay } from '@/contexts/CategoryContext';
 
 // 参数名称中文映射
 const PARAMETER_NAMES: Record<string, string> = {
@@ -96,9 +96,10 @@ export default function PromptDetailsPage() {
   const [isClient, setIsClient] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  // 使用分类显示映射Hook
-  const { displayMap, loading: loadingCategories, getDisplayInfo } = useCategoryDisplayMap(
-    (prompt?.category_type || 'chat') as 'chat' | 'image' | 'video'
+  // 使用优化的分类显示Hook
+  const categoryDisplayInfo = useOptimizedCategoryDisplay(
+    prompt?.category || '',
+    (prompt?.category_type || 'chat') as 'chat' | 'image' | 'video',
   );
 
   // 客户端数据获取
@@ -439,21 +440,12 @@ export default function PromptDetailsPage() {
     return typeMap[categoryType || 'chat'] || typeMap['chat'];
   };
 
-  // 获取分类样式和图标 - 使用动态分类系统
+  // 获取分类样式和图标 - 直接使用优化的分类信息
   const getCategoryInfo = (category?: string) => {
-    if (loadingCategories) {
-      return {
-        name: category || '加载中...',
-        color: 'from-gray-400 to-gray-500',
-        icon: TagIcon
-      };
-    }
-
-    const displayInfo = getDisplayInfo(category || '');
     return {
-      name: displayInfo.name,
-      color: displayInfo.color,
-      icon: displayInfo.iconComponent || TagIcon
+      name: categoryDisplayInfo.name,
+      color: categoryDisplayInfo.color,
+      icon: categoryDisplayInfo.iconComponent || TagIcon,
     };
   };
 
@@ -632,8 +624,8 @@ export default function PromptDetailsPage() {
               <div className="flex justify-between items-start mb-6">
                 <div className="flex-1">
                   <div className="flex items-center mb-4">
-                    <div className={`inline-flex p-3 rounded-xl bg-gradient-to-br ${typeInfo.color} mr-4`}>
-                      <TypeIcon className="h-6 w-6 text-dark-bg-primary" />
+                    <div className={`inline-flex p-3 rounded-xl bg-gradient-to-br ${categoryInfo.color} mr-4`}>
+                      <CategoryIcon className="h-6 w-6 text-dark-bg-primary" />
                     </div>
                     <div>
                       <h1 className="text-3xl md:text-4xl font-bold text-white gradient-text">
