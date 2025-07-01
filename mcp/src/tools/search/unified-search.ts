@@ -18,7 +18,7 @@ interface EnhancedSearchResult {
   description: string;
   category: string;
   tags: string[];
-  messages: any;
+
   content: string; // 提取的完整内容
   relevanceScore: number; // 相关性评分 0-100
   matchReasons: string[]; // 匹配原因
@@ -715,7 +715,7 @@ export class UnifiedSearchTool extends BaseMCPTool {
         description: prompt.description || '',
         category: prompt.category || '通用',
         tags: prompt.tags || [],
-        messages: prompt.messages,
+
         content: content,
         relevanceScore: finalScore,
         matchReasons: matchReasons.length > 0 ? matchReasons : ['基础匹配'],
@@ -922,87 +922,14 @@ export class UnifiedSearchTool extends BaseMCPTool {
    * 提取提示词内容
    */
   private extractPromptContent(prompt: Prompt): string {
-    let content = '';
-
-    try {
-      if (prompt.messages) {
-        if (Array.isArray(prompt.messages)) {
-          // 查找包含实际内容的消息
-          const contentMsg = prompt.messages.find(msg => {
-            if (typeof msg === 'object' && msg !== null && 'content' in msg) {
-              const msgContent = (msg as any).content;
-              // 优先处理content是字符串的情况（这是我们数据库中的实际情况）
-              if (typeof msgContent === 'string' && msgContent.trim().length > 10) {
-                return true;
-              }
-              // 处理content是对象的情况（如 {type: "text", text: "实际内容"}）
-              if (typeof msgContent === 'object' && msgContent !== null && msgContent.text) {
-                return typeof msgContent.text === 'string' && msgContent.text.trim().length > 10;
-              }
-            }
-            return false;
-          });
-
-          if (contentMsg) {
-            const msgContent = (contentMsg as any).content;
-            // 优先处理content是字符串的情况
-            if (typeof msgContent === 'string') {
-              content = msgContent;
-            } else if (typeof msgContent === 'object' && msgContent !== null && msgContent.text) {
-              // 如果content是对象且有text字段，使用text字段
-              content = msgContent.text;
-            }
-          } else if (prompt.messages.length > 0) {
-            // 尝试获取第一个消息
-            const firstMsg = prompt.messages[0];
-            if (typeof firstMsg === 'string') {
-              content = firstMsg;
-            } else if (typeof firstMsg === 'object' && firstMsg !== null) {
-              const msgObj = firstMsg as any;
-              // 优先处理content字段
-              if (msgObj.content) {
-                if (typeof msgObj.content === 'object' && msgObj.content.text) {
-                  content = msgObj.content.text;
-                } else if (typeof msgObj.content === 'string') {
-                  content = msgObj.content;
-                }
-              } else {
-                // 备选字段
-                content = msgObj.text || msgObj.prompt || msgObj.message || '';
-              }
-            }
-          }
-        } else if (typeof prompt.messages === 'string') {
-          content = prompt.messages;
-        } else if (typeof prompt.messages === 'object' && prompt.messages !== null) {
-          const msgObj = prompt.messages as any;
-          // 处理单个消息对象
-          if (msgObj.content) {
-            if (typeof msgObj.content === 'object' && msgObj.content.text) {
-              content = msgObj.content.text;
-            } else if (typeof msgObj.content === 'string') {
-              content = msgObj.content;
-            }
-          } else {
-            content = msgObj.text || msgObj.prompt || msgObj.message || '';
-          }
-        }
-      }
-    } catch (error) {
-      console.warn('提取提示词内容失败:', error);
+    // 使用content字段
+    if (prompt.content && prompt.content.trim()) {
+      return prompt.content;
     }
 
-    // 确保content是字符串
-    if (typeof content !== 'string') {
-      content = String(content || '');
-    }
 
     // 如果没有提取到内容，使用描述作为备选
-    if (!content || content.trim().length < 10) {
-      content = prompt.description || '';
-    }
-
-    return content;
+    return prompt.description || '';
   }
 
   /**

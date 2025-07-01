@@ -71,7 +71,7 @@ interface UserPrompt {
   updated_at?: string; // 设为可选，与Supabase适配器的Prompt类型兼容
   user_id?: string;
   version?: number;
-  messages?: any[];
+  content: string;
   rating?: number; // 添加评分属性
 }
 
@@ -859,16 +859,7 @@ const ProfilePage = () => {
           description: '这是一个示例提示词的描述',
           category: '工作',
           tags: ['示例', '模板'],
-          messages: [
-            {
-              role: 'system',
-              content: '你是一个有用的AI助手。',
-            },
-            {
-              role: 'user', 
-              content: '请帮我{{任务描述}}，要求{{具体要求}}。',
-            },
-          ],
+          content: '你是一个有用的AI助手。请帮我{{任务描述}}，要求{{具体要求}}。',
           is_public: false,
           version: 1,
         },
@@ -885,14 +876,14 @@ const ProfilePage = () => {
           description: '提示词描述（必填）',
           category: '分类（可选，如：工作、学习、创意等）',
           tags: '标签数组（可选）',
-          messages: '对话消息数组，包含system和user消息',
+          content: '提示词内容（必填）',
           is_public: '是否公开（true/false）',
           version: '版本号（默认为1）',
         },
         notes: [
           '请保持JSON格式正确',
           '必填字段不能为空',
-          'messages数组至少包含一个user消息',
+          'content字段不能为空',
           '导入前会验证数据格式',
         ],
       },
@@ -937,21 +928,8 @@ const ProfilePage = () => {
         promptErrors.push('描述（description）是必填字段');
       }
 
-      if (!prompt.messages || !Array.isArray(prompt.messages) || prompt.messages.length === 0) {
-        promptErrors.push('messages数组是必填字段且不能为空');
-      } else {
-        // 检查是否至少有一个user消息
-        const hasUserMessage = prompt.messages.some((msg: any) => msg.role === 'user');
-        if (!hasUserMessage) {
-          promptErrors.push('至少需要一个role为"user"的消息');
-        }
-
-        // 验证messages格式
-        prompt.messages.forEach((msg: any, msgIndex: number) => {
-          if (!msg.role || !msg.content) {
-            promptErrors.push(`消息${msgIndex + 1}缺少role或content字段`);
-          }
-        });
+      if (!prompt.content || typeof prompt.content !== 'string' || prompt.content.trim() === '') {
+        promptErrors.push('content字段是必填字段且不能为空');
       }
 
       if (promptErrors.length > 0) {
@@ -1008,7 +986,7 @@ const ProfilePage = () => {
                 description: promptData.description,
                 category: promptData.category || '未分类',
                 tags: promptData.tags || [],
-                messages: promptData.messages,
+                content: promptData.content || '',
                 is_public: promptData.is_public || false,
                 version: promptData.version || 1,
               }),

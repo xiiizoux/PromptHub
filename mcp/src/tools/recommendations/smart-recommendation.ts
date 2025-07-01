@@ -130,12 +130,7 @@ export class SimilarPromptsTool extends BaseMCPTool {
   }
 
   private extractContentFromPrompt(prompt: Prompt): string {
-    if (typeof prompt.messages === 'string') return prompt.messages;
-    if (Array.isArray(prompt.messages)) {
-      return prompt.messages.map(m => 
-        typeof m === 'string' ? m : m.content?.text || m.content || ''
-      ).join(' ');
-    }
+    if (prompt.content) return prompt.content;
     return prompt.description || prompt.name || '';
   }
 

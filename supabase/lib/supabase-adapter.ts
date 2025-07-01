@@ -303,19 +303,19 @@ export class SupabaseAdapter {
    */
   async searchPrompts(query: string, userId?: string, includePublic: boolean = true): Promise<Prompt[]> {
       try {
-        // 构建搜索模式 - 搜索标题、描述、分类、标签和消息内容
+        // 构建搜索模式 - 搜索标题、描述、分类、标签和内容
         const searchPattern = `%${query}%`;
-        
-        // 创建基本查询 - 搜索所有相关字段
+
+        // 创建基本查询 - 搜索所有相关字段（使用新的content字段）
         let dbQuery = this.supabase
           .from('prompts')
           .select('*')
           .or([
             `name.ilike.${searchPattern}`,
-            `description.ilike.${searchPattern}`, 
+            `description.ilike.${searchPattern}`,
             `category.ilike.${searchPattern}`,
             `tags::text.ilike.${searchPattern}`,
-            `messages::text.ilike.${searchPattern}`
+            `content.ilike.${searchPattern}`
           ].join(','));
         
         // 添加访问控制

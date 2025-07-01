@@ -166,13 +166,10 @@ router.get('/tools', authenticateRequest, (req, res) => {
             type: 'string',
           },
         } as ToolParameter,
-        messages: {
-          type: 'array',
-          description: '提示词消息',
+        content: {
+          type: 'string',
+          description: '提示词内容',
           required: true,
-          items: {
-            type: 'object',
-          },
         } as ToolParameter,
       },
     },
@@ -204,9 +201,9 @@ router.get('/tools', authenticateRequest, (req, res) => {
             type: 'string',
           },
         } as ToolParameter,
-        messages: {
-          type: 'array',
-          description: '提示词消息',
+        content: {
+          type: 'string',
+          description: '提示词内容',
           required: false,
           items: {
             type: 'object',
@@ -834,15 +831,7 @@ async function handleGetPromptTemplate() {
     description: '示例提示词描述',
     category: '通用',  // 默认分类为通用
     tags: ['示例', '模板'],
-    messages: [
-      {
-        role: 'system',
-        content: {
-          type: 'text',
-          text: '你是一个有用的AI助手。请根据用户的需求提供帮助。',
-        },
-      },
-    ],
+    content: '你是一个有用的AI助手。请根据用户的需求提供帮助。',
     is_public: true,  // 默认为公开提示词，便于分享和发现
     allow_collaboration: false, // 默认不允许协作编辑，保护创建者权益
     edit_permission: 'owner_only' // 默认仅创建者可编辑

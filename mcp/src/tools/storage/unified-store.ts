@@ -901,7 +901,7 @@ export class UnifiedStoreTool extends BaseMCPTool {
           name: params.title,
           description: params.description,
           content: params.content,
-          messages: [{ role: 'system' as const, content: params.content }], // 统一使用system角色，避免显示"用户:"前缀
+          content: params.content,
           category: params.category,
           tags: params.tags,
           difficulty: params.difficulty,

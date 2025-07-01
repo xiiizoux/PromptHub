@@ -73,7 +73,7 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
   const safePromptData = {
     name: prompt.name || '',
     description: prompt.description || '',
-    content: prompt.content || prompt.messages?.[0]?.content || '',
+    content: prompt.content || '',
     category: normalizeCategoryName(prompt.category),
     tags: Array.isArray(prompt.tags) ? prompt.tags : [],
     input_variables: Array.isArray(prompt.input_variables) ? prompt.input_variables : [],

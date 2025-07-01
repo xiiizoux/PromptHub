@@ -243,9 +243,9 @@ class PromptHubMCPAdapter {
             description: { type: 'string', description: '提示词描述' },
             category: { type: 'string', description: '提示词分类' },
             tags: { type: 'array', items: { type: 'string' }, description: '提示词标签' },
-            messages: { type: 'array', description: '提示词消息' }
+            content: { type: 'string', description: '提示词内容' }
           },
-          required: ['name', 'description', 'messages']
+          required: ['name', 'description', 'content']
         }
       },
       {
@@ -258,7 +258,7 @@ class PromptHubMCPAdapter {
             description: { type: 'string', description: '提示词描述' },
             category: { type: 'string', description: '提示词分类' },
             tags: { type: 'array', items: { type: 'string' }, description: '提示词标签' },
-            messages: { type: 'array', description: '提示词消息' },
+            content: { type: 'string', description: '提示词内容' },
             is_public: { type: 'boolean', description: '是否公开可见' },
             allow_collaboration: { type: 'boolean', description: '是否允许协作编辑' }
           },
@@ -701,86 +701,21 @@ class PromptHubMCPAdapter {
    * 📄 从提示词对象中提取实际内容
    */
   extractPromptContent(prompt) {
-    let content = '';
+    // 使用content字段
+    if (prompt.content && prompt.content.trim()) {
+      return prompt.content;
+    }
 
-    // 1. 优先从preview字段获取（如果已经格式化过）
+    // 优先从preview字段获取（如果已经格式化过）
     if (prompt.preview && prompt.preview.trim() && prompt.preview !== '暂无内容预览') {
       return prompt.preview;
     }
 
-    // 2. 尝试从messages字段提取
-    if (prompt.messages) {
-      try {
-        if (Array.isArray(prompt.messages)) {
-          // 查找包含实际提示词内容的消息
-          const contentMsg = prompt.messages.find(msg => {
-            if (typeof msg === 'object' && msg !== null && 'content' in msg) {
-              const msgContent = msg.content;
-              // 优先处理content是字符串的情况（这是我们数据库中的实际情况）
-              if (typeof msgContent === 'string' && msgContent.trim().length > 10) {
-                return true;
-              }
-              // 处理content是对象的情况（如 {type: "text", text: "实际内容"}）
-              if (typeof msgContent === 'object' && msgContent !== null && msgContent.text) {
-                return typeof msgContent.text === 'string' && msgContent.text.trim().length > 10;
-              }
-            }
-            return false;
-          });
+    // 如果还是没有内容，使用description作为备选
+    const content = prompt.description || '';
 
-          if (contentMsg) {
-            const msgContent = contentMsg.content;
-            // 优先处理content是字符串的情况
-            if (typeof msgContent === 'string') {
-              content = msgContent;
-            } else if (typeof msgContent === 'object' && msgContent !== null && msgContent.text) {
-              // 如果content是对象且有text字段，使用text字段
-              content = msgContent.text;
-            }
-          } else if (prompt.messages.length > 0) {
-            // 如果没找到content字段，尝试获取第一个非空消息
-            const firstMsg = prompt.messages[0];
-            if (typeof firstMsg === 'string') {
-              content = firstMsg;
-            } else if (typeof firstMsg === 'object' && firstMsg !== null) {
-              // 优先处理content字段
-              const msgObj = firstMsg;
-              if (msgObj.content) {
-                if (typeof msgObj.content === 'object' && msgObj.content.text) {
-                  content = msgObj.content.text;
-                } else if (typeof msgObj.content === 'string') {
-                  content = msgObj.content;
-                }
-              } else {
-                // 备选字段
-                content = msgObj.text || msgObj.prompt || msgObj.message || '';
-              }
-            }
-          }
-        } else if (typeof prompt.messages === 'string') {
-          content = prompt.messages;
-        } else if (typeof prompt.messages === 'object' && prompt.messages !== null) {
-          // 处理单个消息对象
-          const msgObj = prompt.messages;
-          if (msgObj.content) {
-            if (typeof msgObj.content === 'object' && msgObj.content.text) {
-              content = msgObj.content.text;
-            } else if (typeof msgObj.content === 'string') {
-              content = msgObj.content;
-            }
-          } else {
-            content = msgObj.text || msgObj.prompt || msgObj.message || '';
-          }
-        }
-      } catch (error) {
-        console.warn('解析提示词消息内容失败:', error);
-      }
-    }
-    
-    // 3. 如果还是没有内容，使用description作为备选
-    if (!content || content.trim().length < 10) {
-      content = prompt.description || '';
-    }
+
+    return content;
     
     // 4. 清理可能的角色前缀（避免AI客户端显示"用户:"或"系统:"）
     content = content.trim();

@@ -28,7 +28,7 @@ export function extendSupabaseAdapter(adapter: SupabaseAdapter): any {
           description: prompt.description,
           category: prompt.category,
           tags: prompt.tags,
-          messages: prompt.messages,
+          content: prompt.content || '',
           is_public: prompt.is_public,
           user_id: prompt.user_id,
           version: prompt.version || 1
@@ -59,21 +59,21 @@ export function extendSupabaseAdapter(adapter: SupabaseAdapter): any {
       if (prompt.description) updateData.description = prompt.description;
       if (prompt.category) updateData.category = prompt.category;
       if (prompt.tags) updateData.tags = prompt.tags;
-      if (prompt.messages) updateData.messages = prompt.messages;
+      if (prompt.content) updateData.content = prompt.content;
       if (prompt.is_public !== undefined) updateData.is_public = prompt.is_public;
       
       // 添加更新时间
       updateData.updated_at = new Date().toISOString();
       
-      // 如果消息有变化，增加版本号
-      if (prompt.messages) {
+      // 如果内容有变化，增加版本号
+      if (prompt.content) {
         updateData.version = (existingPrompt.version || 1) + 1;
         
         // 创建版本记录
         await this.createPromptVersion({
           prompt_id: existingPrompt.id,
           version: existingPrompt.version || 1,
-          messages: existingPrompt.messages || [],
+          content: existingPrompt.content || '',
           description: existingPrompt.description,
           category: existingPrompt.category,
           tags: existingPrompt.tags || [],
@@ -218,7 +218,7 @@ export function extendSupabaseAdapter(adapter: SupabaseAdapter): any {
         .insert({
           prompt_id: promptVersion.prompt_id,
           version: promptVersion.version,
-          messages: promptVersion.messages,
+          content: promptVersion.content || '',
           description: promptVersion.description,
           category: promptVersion.category,
           tags: promptVersion.tags,
@@ -254,7 +254,7 @@ export function extendSupabaseAdapter(adapter: SupabaseAdapter): any {
       await this.createPromptVersion({
         prompt_id: currentPrompt.id,
         version: currentPrompt.version || 1,
-        messages: currentPrompt.messages || [],
+        content: currentPrompt.content || '',
         description: currentPrompt.description,
         category: currentPrompt.category,
         tags: currentPrompt.tags || [],
@@ -265,7 +265,7 @@ export function extendSupabaseAdapter(adapter: SupabaseAdapter): any {
       const { data, error } = await this.supabase
         .from('prompts')
         .update({
-          messages: versionToRestore.messages,
+          content: versionToRestore.content || '',
           description: versionToRestore.description,
           category: versionToRestore.category,
           tags: versionToRestore.tags,

@@ -19,7 +19,7 @@ export interface Prompt {
   category: string;
   tags: string[];
   variables?: string[];
-  messages?: any[];
+  content: string;  // 内容字段，现在是必需的
   user_id?: string;
   is_public: boolean;
   created_at?: string;
@@ -39,7 +39,7 @@ export interface PromptVersion {
   category: string;
   tags: string[];
   variables?: string[];
-  messages: any[];
+  content: string;  // 使用content字段替代messages
   created_at: string;
   user_id?: string;
 }

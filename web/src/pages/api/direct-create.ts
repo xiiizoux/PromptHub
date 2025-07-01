@@ -35,7 +35,8 @@ export default apiHandler(async (req: NextApiRequest, res: NextApiResponse, user
       category,
       category_type,
       tags,
-      messages,
+      content,
+
       is_public,
       user_id,
     } = sanitizedData;
@@ -54,7 +55,7 @@ export default apiHandler(async (req: NextApiRequest, res: NextApiResponse, user
       category,
       category_type: category_type || 'chat', // 默认为chat类型
       tags: tags || [],
-      messages,
+      content, // 使用content字段
       is_public: is_public !== undefined ? is_public : true,
       user_id: finalUserId,
       version: 1,

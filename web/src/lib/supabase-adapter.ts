@@ -31,7 +31,7 @@ export interface Prompt {
   category: string;
   category_type?: 'chat' | 'image' | 'video'; // 添加category_type字段
   tags: string[];
-  messages: any[];
+  content: string;  // 内容字段，现在是必需的
   is_public: boolean;
   user_id: string;
   version?: number;
@@ -41,11 +41,11 @@ export interface Prompt {
   average_rating?: number;
   rating_count?: number;
   rating?: number; // 为了兼容前端组件
-  
+
   // 协作和权限字段
   allow_collaboration?: boolean;
   edit_permission?: 'owner_only' | 'collaborators' | 'public';
-  
+
   // 媒体相关字段
   preview_asset_url?: string;
   parameters?: Record<string, any>;
@@ -909,22 +909,11 @@ export class SupabaseAdapter {
         }
       }
       
-      // 处理messages字段 - 数据库需要JSONB格式
-      let messagesValue;
-      if (promptData.messages && Array.isArray(promptData.messages)) {
-        messagesValue = promptData.messages;
-      } else if ((promptData as any).content) {
-        // 如果没有messages字段，但有content字段，则创建一个system消息
-        messagesValue = [{
-          role: 'system',
-          content: (promptData as any).content,
-        }];
-      } else {
-        // 默认空消息
-        messagesValue = [{
-          role: 'system',
-          content: '',
-        }];
+      // 处理content字段
+      const contentValue = (promptData as any).content || '';
+
+      if (!contentValue.trim()) {
+        throw new Error('提示词内容不能为空');
       }
       
       // 构建要插入的提示词数据
@@ -933,7 +922,7 @@ export class SupabaseAdapter {
         description: promptData.description || '',
         category: promptData.category || '通用',
         tags: Array.isArray(promptData.tags) ? promptData.tags : [],
-        messages: messagesValue,  // 正确设置messages字段为JSONB格式
+        content: contentValue,  // 使用content字段
         is_public: promptData.is_public ?? true,
         user_id: userId,
         version: typeof promptData.version === 'number' ? promptData.version : 1, // 确保版本是整数

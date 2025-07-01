@@ -70,7 +70,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         description,
         category,
         tags,
-        messages,
+        content,
         is_public,
         created_at,
         updated_at,

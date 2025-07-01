@@ -127,21 +127,16 @@ export class IntelligentPromptSelectionTool extends BaseMCPTool {
 
   private extractContentPreview(prompt: Prompt): string {
     let content = '';
-    
-    if (prompt.messages && Array.isArray(prompt.messages)) {
-      content = prompt.messages
-        .map(msg => typeof msg === 'string' ? msg : msg.content || '')
-        .join('\n\n');
-    } else if (typeof prompt.messages === 'string') {
-      content = prompt.messages;
+
+    // 使用content字段
+    if (prompt.content) {
+      content = prompt.content;
     }
-    
-    // content字段已从Prompt接口中移除，内容存储在messages字段中
-    
+
     if (content.length > 500) {
       content = content.substring(0, 500) + '...';
     }
-    
+
     return content;
   }
 }
@@ -175,7 +170,7 @@ export class IntelligentPromptStorageTool extends BaseMCPTool {
         description: '通过智能分析创建',
         category: 'general',
         tags: [],
-        messages: [{ role: 'system' as const, content }], // 统一使用system角色，避免显示"用户:"前缀
+        content: content,
         version: 1.0,
         is_public: true,
         created_at: new Date().toISOString(),

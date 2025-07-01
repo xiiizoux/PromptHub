@@ -63,7 +63,7 @@ export interface Prompt {
   description: string;
   category: string;
   tags: string[];
-  messages: PromptMessage[];
+  content: string;  // 内容字段，现在是必需的
   created_at?: string;
   updated_at?: string;
   version?: number;
@@ -84,22 +84,19 @@ export interface Prompt {
     output: string;
     description?: string;
   }>; // 新增：示例
-  
+
   // 媒体相关字段
   preview_asset_url?: string; // 预览资源URL（图像或视频）
   parameters?: MediaParameters; // 生成参数（JSON格式）
   category_id?: string; // 分类ID，关联到categories表
   category_type?: CategoryType; // 分类类型，从关联的category获取
-  
-  // 注意：去除了content字段，因为数据库中没有此字段
-  // 提示词内容存储在messages字段中
 }
 
 export interface PromptVersion {
   id?: string;
   prompt_id: string;
   version: number;
-  messages: PromptMessage[];
+  content: string;  // 使用content字段替代messages
   description: string;
   category: string;
   tags: string[];

@@ -128,14 +128,7 @@ export class QuickCopyTool extends BaseMCPTool {
     customVariables: any
   ): string {
     // 提取消息内容
-    let content = '';
-    if (prompt.messages && Array.isArray(prompt.messages)) {
-      content = prompt.messages
-        .map(msg => typeof msg === 'string' ? msg : msg.content || '')
-        .join('\n\n');
-    } else if (typeof prompt.messages === 'string') {
-      content = prompt.messages;
-    }
+    let content = prompt.content || '';
 
     // 替换自定义变量
     if (Object.keys(customVariables).length > 0) {
@@ -320,13 +313,7 @@ export class PromptPreviewTool extends BaseMCPTool {
     let content = '';
     
     // 提取消息内容
-    if (prompt.messages && Array.isArray(prompt.messages)) {
-      content = prompt.messages
-        .map(msg => typeof msg === 'string' ? msg : msg.content || '')
-        .join('\n\n');
-    } else if (typeof prompt.messages === 'string') {
-      content = prompt.messages;
-    }
+    content = prompt.content || '';
 
     // 替换变量
     if (Object.keys(sampleVariables).length > 0) {
@@ -502,7 +489,7 @@ export class BatchExportTool extends BaseMCPTool {
       case 'markdown':
         return this.formatAsBatchMarkdown(prompts);
       case 'txt':
-        return prompts.map(p => `${p.name}\n${p.description}\n---\n${p.messages}\n\n`).join('');
+        return prompts.map(p => `${p.name}\n${p.description}\n---\n${p.content}\n\n`).join('');
       default: // json
         return JSON.stringify(prompts, null, 2);
     }
@@ -521,7 +508,7 @@ export class BatchExportTool extends BaseMCPTool {
         `"${prompt.name || ''}"`,
         `"${prompt.description || ''}"`,
         `"${prompt.category || ''}"`,
-        `"${prompt.messages || ''}"`
+        `"${prompt.content || ''}"`
       ];
       
       if (includeMetadata) {
@@ -549,7 +536,7 @@ export class BatchExportTool extends BaseMCPTool {
       if (prompt.category) {
         markdown += `**分类**: ${prompt.category}\n\n`;
       }
-              markdown += '**内容（点击右上角复制按钮即可一键复制）**:\n\n' + prompt.messages + '\n\n';
+              markdown += '**内容（点击右上角复制按钮即可一键复制）**:\n\n' + prompt.content + '\n\n';
               markdown += '⬆️ 以上是完整的提示词内容，请在内容区域右上角点击复制按钮进行一键复制\n\n';
       markdown += '---\n\n';
     });

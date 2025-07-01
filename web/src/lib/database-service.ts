@@ -264,15 +264,7 @@ export class DatabaseService {
       }
 
       // 处理内容提取
-      let content = '';
-      if (prompt.messages && Array.isArray(prompt.messages) && prompt.messages.length > 0) {
-        const firstMessage = prompt.messages[0];
-        if (typeof firstMessage.content === 'string') {
-          content = firstMessage.content;
-        } else if (typeof firstMessage.content === 'object' && firstMessage.content?.text) {
-          content = firstMessage.content.text;
-        }
-      }
+      const content = prompt.content || '';
 
       // 转换为PromptDetails格式
       const promptDetails: PromptDetails = {
@@ -282,7 +274,7 @@ export class DatabaseService {
         category: prompt.category || '通用',
         category_type: prompt.category_type || 'chat', // 添加category_type字段
         tags: Array.isArray(prompt.tags) ? prompt.tags : [],
-        messages: prompt.messages || [],
+        content: content,
         is_public: Boolean(prompt.is_public),
         user_id: prompt.user_id,
         version: prompt.version || 1,
@@ -362,10 +354,7 @@ export class DatabaseService {
       category: promptData.category,
       category_type: promptData.category_type || 'chat', // 添加category_type字段
       tags: promptData.tags,
-      messages: promptData.content ? [{
-        role: 'system',
-        content: promptData.content,
-      }] : promptData.messages,
+      content: promptData.content || '',
       is_public: promptData.is_public,
       user_id: promptData.user_id,
       version: promptData.version ? Number(promptData.version) : 1.0, // 新建提示词默认版本为1.0
@@ -449,11 +438,9 @@ export class DatabaseService {
       if (previewAssetUrl !== undefined) updateData.preview_asset_url = previewAssetUrl; // 使用处理后的预览资源URL
       updateData.parameters = parameters; // 添加处理后的参数
 
-      // 处理content字段，转换为messages格式
+      // 处理content字段
       if (promptData.content !== undefined) {
-        updateData.messages = [{
-          role: 'system',
-          content: promptData.content,
+        updateData.content = promptData.content;
         }];
       }
 

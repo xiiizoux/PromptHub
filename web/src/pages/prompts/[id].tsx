@@ -175,12 +175,6 @@ export default function PromptDetailsPage() {
   // 获取完整内容和提取变量 - 需要在hooks之前计算
   const getFullContent = () => {
     if (!prompt) return '';
-
-    if (prompt.messages && prompt.messages.length > 0) {
-      // 直接返回消息内容，不添加角色前缀
-      return prompt.messages.map(msg => msg.content).join('\n\n');
-    }
-
     return prompt.content || '';
   };
 

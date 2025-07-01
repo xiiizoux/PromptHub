@@ -748,7 +748,7 @@ export class SupabaseAdapter implements StorageAdapter {
           description: prompt.description,
           category: prompt.category || '通用',
           tags: prompt.tags || [],
-          messages: prompt.messages,
+          content: prompt.content,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
           version: prompt.version ? Number(prompt.version) : 1.0, // 新建提示词默认版本为1.0
@@ -811,7 +811,7 @@ export class SupabaseAdapter implements StorageAdapter {
           await this.createPromptVersion({
             prompt_id: createdPrompt.id,
             version: createdPrompt.version || 1.0, // 使用创建的提示词的版本号
-            messages: prompt.messages,
+            content: prompt.content || '',
             description: prompt.description,
             category: prompt.category || '通用',
             tags: prompt.tags || [],
@@ -876,7 +876,7 @@ export class SupabaseAdapter implements StorageAdapter {
       await this.createPromptVersion({
         prompt_id: updatedPrompt.id,
         version: updatedPrompt.version || 1.0, // 使用更新后的版本号
-        messages: prompt.messages || existingPrompt.messages,
+        content: prompt.content || existingPrompt.content || '',
         description: prompt.description || existingPrompt.description,
         category: prompt.category || existingPrompt.category,
         tags: prompt.tags || existingPrompt.tags,
@@ -1077,45 +1077,25 @@ export class SupabaseAdapter implements StorageAdapter {
     try {
       console.log(`[精确搜索] 查询: "${query}"`);
       
-      // 修复：分开查询基础字段和messages字段
+      // 使用新的content字段进行统一搜索
       let dbQuery = this.supabase
         .from('prompts')
         .select('*')
-        .or(`name.ilike.%${query}%,description.ilike.%${query}%,category.ilike.%${query}%`);
-      
+        .or(`name.ilike.%${query}%,description.ilike.%${query}%,category.ilike.%${query}%,content.ilike.%${query}%`);
+
       dbQuery = this.applyAccessControl(dbQuery, userId, includePublic);
-      
-      const { data: basicResults, error: basicError } = await dbQuery.limit(50);
-      
-      if (basicError) {
-        console.warn('基础字段搜索失败:', basicError.message);
+
+      const { data: results, error } = await dbQuery.limit(50);
+
+      if (error) {
+        console.warn('精确搜索失败:', error.message);
         return [];
       }
+
+      console.log(`[精确搜索] 找到 ${results?.length || 0} 个结果`);
+      return results || [];
       
-      // 分开查询messages字段（JSONB类型）
-      let messagesQuery = this.supabase
-        .from('prompts')
-        .select('*')
-        .ilike('messages', `%${query}%`);
-      
-      messagesQuery = this.applyAccessControl(messagesQuery, userId, includePublic);
-      
-      const { data: messagesResults, error: messagesError } = await messagesQuery.limit(50);
-      
-      if (messagesError) {
-        console.warn('messages字段搜索失败:', messagesError.message);
-      }
-      
-      // 合并结果并去重
-      const allResults = new Map();
-      
-      basicResults?.forEach(prompt => allResults.set(prompt.id, prompt));
-      messagesResults?.forEach(prompt => allResults.set(prompt.id, prompt));
-      
-      const finalResults = Array.from(allResults.values());
-      
-      console.log(`[精确搜索] 找到 ${finalResults.length} 个结果`);
-      return finalResults;
+
     } catch (err) {
       console.warn('精确搜索出错:', err);
       return [];
@@ -1135,35 +1115,21 @@ export class SupabaseAdapter implements StorageAdapter {
       // 对每个关键词进行搜索（并行处理前5个关键词）
       const searchPromises = keywords.slice(0, 5).map(async (keyword) => {
         try {
-          // 基础字段搜索
+          // 使用content字段进行统一搜索
           let dbQuery = this.supabase
             .from('prompts')
             .select('*')
-            .or(`name.ilike.%${keyword}%,description.ilike.%${keyword}%,category.ilike.%${keyword}%`);
-          
+            .or(`name.ilike.%${keyword}%,description.ilike.%${keyword}%,category.ilike.%${keyword}%,content.ilike.%${keyword}%`);
+
           dbQuery = this.applyAccessControl(dbQuery, userId, includePublic);
-          
-          const { data: basicData, error: basicError } = await dbQuery.limit(20);
-          
-          if (!basicError && basicData) {
-            basicData.forEach(prompt => results.add(prompt));
+
+          const { data, error } = await dbQuery.limit(20);
+
+          if (!error && data) {
+            data.forEach(prompt => results.add(prompt));
           }
-          
-          // messages字段搜索
-          let messagesQuery = this.supabase
-            .from('prompts')
-            .select('*')
-            .ilike('messages', `%${keyword}%`);
-          
-          messagesQuery = this.applyAccessControl(messagesQuery, userId, includePublic);
-          
-          const { data: messagesData, error: messagesError } = await messagesQuery.limit(20);
-          
-          if (!messagesError && messagesData) {
-            messagesData.forEach(prompt => results.add(prompt));
-          }
-          
-          console.log(`[关键词搜索] 关键词 "${keyword}" 找到 ${(basicData?.length || 0) + (messagesData?.length || 0)} 个结果`);
+
+          console.log(`[关键词搜索] 关键词 "${keyword}" 找到 ${data?.length || 0} 个结果`);
         } catch (err) {
           console.warn(`关键词 "${keyword}" 搜索失败:`, err);
         }
@@ -1189,45 +1155,23 @@ export class SupabaseAdapter implements StorageAdapter {
       // 生成模糊匹配查询
       const fuzzyQuery = query.split('').join('%');
       
-      // 基础字段模糊搜索
+      // 使用content字段进行统一模糊搜索
       let dbQuery = this.supabase
         .from('prompts')
         .select('*')
-        .or(`name.ilike.%${fuzzyQuery}%,description.ilike.%${fuzzyQuery}%,category.ilike.%${fuzzyQuery}%`);
-      
+        .or(`name.ilike.%${fuzzyQuery}%,description.ilike.%${fuzzyQuery}%,category.ilike.%${fuzzyQuery}%,content.ilike.%${fuzzyQuery}%`);
+
       dbQuery = this.applyAccessControl(dbQuery, userId, includePublic);
-      
-      const { data: basicData, error: basicError } = await dbQuery.limit(15);
-      
-      if (basicError) {
-        console.warn('基础字段模糊搜索失败:', basicError.message);
+
+      const { data, error } = await dbQuery.limit(30);
+
+      if (error) {
+        console.warn('模糊搜索失败:', error.message);
         return [];
       }
-      
-      // messages字段模糊搜索
-      let messagesQuery = this.supabase
-        .from('prompts')
-        .select('*')
-        .ilike('messages', `%${fuzzyQuery}%`);
-      
-      messagesQuery = this.applyAccessControl(messagesQuery, userId, includePublic);
-      
-      const { data: messagesData, error: messagesError } = await messagesQuery.limit(15);
-      
-      if (messagesError) {
-        console.warn('messages字段模糊搜索失败:', messagesError.message);
-      }
-      
-      // 合并结果并去重
-      const allResults = new Map();
-      
-      basicData?.forEach(prompt => allResults.set(prompt.id, prompt));
-      messagesData?.forEach(prompt => allResults.set(prompt.id, prompt));
-      
-      const finalResults = Array.from(allResults.values());
-      
-      console.log(`[模糊搜索] 找到 ${finalResults.length} 个结果`);
-      return finalResults;
+
+      console.log(`[模糊搜索] 找到 ${data?.length || 0} 个结果`);
+      return data || [];
     } catch (err) {
       console.warn('模糊搜索出错:', err);
       return [];
@@ -1283,38 +1227,18 @@ export class SupabaseAdapter implements StorageAdapter {
         const weights = {
           name: 3.0,        // 标题权重最高
           description: 2.0, // 描述权重中等
-          messages: 1.5,    // 提示词内容权重中等
+          content: 1.5,     // 提示词内容权重中等
           category: 1.0     // 分类权重较低
         };
         
-        // 提取消息内容文本
-        let messagesText = '';
-        try {
-          if (typeof prompt.messages === 'string') {
-            messagesText = prompt.messages;
-          } else if (Array.isArray(prompt.messages)) {
-            messagesText = prompt.messages.map(msg => {
-              if (typeof msg === 'string') return msg;
-              if (typeof msg === 'object' && msg !== null) {
-                const msgObj = msg as any;
-                return msgObj.content?.text || msgObj.content || msgObj.text || '';
-              }
-              return '';
-            }).join(' ');
-          } else if (typeof prompt.messages === 'object' && prompt.messages !== null) {
-            const msgObj = prompt.messages as any;
-            messagesText = msgObj.content?.text || msgObj.content || msgObj.text || '';
-          }
-        } catch (error) {
-          console.warn('解析消息内容失败:', error);
-          messagesText = '';
-        }
-        
+        // 直接使用content字段（已迁移的内容）
+        const contentText = prompt.content || '';
+
         // 计算各字段匹配分数
         const fields = {
           name: prompt.name || '',
           description: prompt.description || '',
-          messages: messagesText,
+          content: contentText,
           category: prompt.category || ''
         };
         
@@ -1436,7 +1360,7 @@ export class SupabaseAdapter implements StorageAdapter {
       const versionData = {
         prompt_id: promptVersion.prompt_id,
         version: promptVersion.version,
-        messages: promptVersion.messages,
+        content: promptVersion.content || '',
         description: promptVersion.description,
         category: promptVersion.category,
         tags: promptVersion.tags,
@@ -1492,7 +1416,7 @@ export class SupabaseAdapter implements StorageAdapter {
       
       // 更新提示词为历史版本内容
       const updateData = {
-        messages: versionToRestore.messages,
+        content: versionToRestore.content || '',
         description: versionToRestore.description,
         category: versionToRestore.category,
         tags: versionToRestore.tags,
@@ -1520,7 +1444,7 @@ export class SupabaseAdapter implements StorageAdapter {
       await this.createPromptVersion({
         prompt_id: promptId,
         version: updateData.version,
-        messages: versionToRestore.messages,
+        content: versionToRestore.content || '',
         description: versionToRestore.description,
         category: versionToRestore.category,
         tags: versionToRestore.tags,

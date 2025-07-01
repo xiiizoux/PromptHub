@@ -295,11 +295,9 @@ export class ReadyToUseTool extends BaseMCPTool {
   }
 
   private extractPromptContent(prompt: Prompt): string {
-    if (typeof prompt.messages === 'string') return prompt.messages;
-    if (Array.isArray(prompt.messages)) {
-      return prompt.messages.map(msg => 
-        typeof msg === 'string' ? msg : msg.content || ''
-      ).join('\n');
+    // 使用content字段
+    if (prompt.content) {
+      return prompt.content;
     }
     return prompt.description || '';
   }

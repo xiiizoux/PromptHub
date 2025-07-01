@@ -307,13 +307,7 @@ export class DirectUseTool extends BaseMCPTool {
     let content = '';
     
     // 提取消息内容
-    if (prompt.messages && Array.isArray(prompt.messages)) {
-      content = prompt.messages
-        .map(msg => typeof msg === 'string' ? msg : msg.content || '')
-        .join('\n\n');
-    } else if (typeof prompt.messages === 'string') {
-      content = prompt.messages;
-    }
+    content = prompt.content || '';
 
     // 应用变量替换
     if (Object.keys(vars).length > 0) {
