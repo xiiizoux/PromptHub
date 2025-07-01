@@ -5,6 +5,34 @@
 // 简化权限类型定义（避免循环依赖）
 export type SimplePermissionType = 'private' | 'public_read' | 'team_edit' | 'public_edit';
 
+// 提示词参数类型定义
+export interface PromptParameters {
+  [key: string]: string | number | boolean | string[] | null | undefined;
+}
+
+// 示例输入类型定义
+export interface PromptExampleInput {
+  [key: string]: string | number | boolean | string[] | null | undefined;
+}
+
+// 审计日志变更记录类型
+export type AuditLogChanges = Array<{
+  field: string;
+  oldValue?: string | number | boolean | null;
+  newValue?: string | number | boolean | null;
+}>;
+
+// 导入数据类型定义
+export interface ImportData {
+  prompts?: Array<Partial<PromptDetails>>;
+  version?: string;
+  metadata?: {
+    source?: string;
+    exportedAt?: string;
+    totalCount?: number;
+  };
+}
+
 // 提示词基本信息
 export interface PromptInfo {
   id: string;                             // id字段是必需的
@@ -22,7 +50,7 @@ export interface PromptInfo {
   average_rating?: number;               // 添加平均评分字段
   rating_count?: number;                 // 添加评分数量字段
   preview_asset_url?: string;            // 预览资源URL
-  parameters?: Record<string, any>;      // 生成参数
+  parameters?: PromptParameters;         // 生成参数
 }
 
 // 提示词详情
@@ -55,7 +83,7 @@ export interface PromptDetails extends PromptInfo {
 
 // 提示词示例
 export interface PromptExample {
-  input: Record<string, any>;
+  input: PromptExampleInput;
   output: string;
   description?: string;
 }
@@ -161,7 +189,7 @@ export interface AuditLog {
   user_id: string;
   username?: string;
   action: string;
-  changes?: any;
+  changes?: AuditLogChanges;
   ip_address?: string;
   user_agent?: string;
   created_at: string;

@@ -130,13 +130,17 @@ export default function PromptEditForm({
   // 初始化时加载现有媒体文件
   useEffect(() => {
     if (initialData?.parameters?.media_files && Array.isArray(initialData.parameters.media_files)) {
-      const existingAssets: AssetFile[] = initialData.parameters.media_files.map((file: any) => ({
-        id: file.id || `existing-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-        url: file.url,
-        name: file.name || 'Unknown file',
-        size: file.size || 0,
-        type: file.type || 'unknown',
-      }));
+      const existingAssets: AssetFile[] = initialData.parameters.media_files.map((file: unknown) => {
+        // 类型守卫：确保file是一个对象
+        const fileData = file && typeof file === 'object' ? file as Record<string, unknown> : {};
+        return {
+          id: (typeof fileData.id === 'string' ? fileData.id : undefined) || `existing-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          url: typeof fileData.url === 'string' ? fileData.url : '',
+          name: (typeof fileData.name === 'string' ? fileData.name : undefined) || 'Unknown file',
+          size: typeof fileData.size === 'number' ? fileData.size : 0,
+          type: (typeof fileData.type === 'string' ? fileData.type : undefined) || 'unknown',
+        };
+      });
       setPreviewAssets(existingAssets);
       setValue('preview_assets', existingAssets);
     }

@@ -110,7 +110,8 @@ const Navbar: React.FC = () => {
       if (typeof window !== 'undefined') {
         window.location.href = '/';
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : '登出失败';
       console.error('登出失败:', error);
       toast.error('退出登录失败，请重试');
     } finally {

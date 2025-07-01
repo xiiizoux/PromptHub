@@ -172,8 +172,14 @@ export function useSession(options: UseSessionOptions = {}): UseSessionReturn {
   // 监听Supabase认证状态变化
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event: any, supabaseSession: any) => {
-        if (event === 'SIGNED_OUT' || !supabaseSession) {
+      async (event: string, supabaseSession: unknown) => {
+        // 类型守卫：检查supabaseSession是否有效
+        const hasValidSession = supabaseSession && 
+          typeof supabaseSession === 'object' && 
+          'user' in supabaseSession && 
+          supabaseSession.user;
+
+        if (event === 'SIGNED_OUT' || !hasValidSession) {
           if (sessionIdRef.current) {
             sessionManager.invalidateSession(sessionIdRef.current);
             sessionIdRef.current = null;

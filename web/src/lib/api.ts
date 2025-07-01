@@ -1,6 +1,53 @@
 import axios from 'axios';
-import { PromptInfo, PromptDetails, ApiResponse, PaginatedResponse, PromptFilters } from '@/types';
+import { PromptInfo, PromptDetails, ApiResponse, PaginatedResponse, PromptFilters, ImportData } from '@/types';
 import { supabase } from '@/lib/supabase';
+
+// API响应的具体数据类型
+export interface ApiResponseData {
+  [key: string]: unknown;
+}
+
+// 网络响应类型
+export interface NetworkResponse {
+  data?: {
+    success?: boolean;
+    data?: unknown;
+    error?: string;
+    message?: string;
+  };
+  status?: number;
+}
+
+// 错误类型定义
+export interface ApiError {
+  message: string;
+  response?: {
+    data?: {
+      error?: string;
+      message?: string;
+    };
+    status?: number;
+  };
+}
+
+// 用户会话类型
+export interface UserSession {
+  user?: {
+    id: string;
+    email?: string;
+  };
+  access_token?: string;
+}
+
+// Supabase认证响应类型
+export interface SupabaseAuthResponse {
+  data: {
+    session: UserSession | null;
+  };
+  error?: {
+    message: string;
+  };
+}
 
 // 定义一个更符合后端实际响应结构的泛型类型
 interface BackendApiResponse<T> {
@@ -10,27 +57,27 @@ interface BackendApiResponse<T> {
 }
 
 // 数据访问助手函数，统一处理多层嵌套问题
-function extractData<T>(response: any, fallback: T): T {
+function extractData<T>(response: NetworkResponse, fallback: T): T {
   // 处理常见的嵌套结构：response.data.data
   if (response?.data?.success && response.data.data !== undefined) {
-    return response.data.data;
+    return response.data.data as T;
   }
   // 处理单层结构：response.data
   if (response?.data !== undefined) {
-    return response.data;
+    return response.data as T;
   }
   // 返回fallback值
   return fallback;
 }
 
 // 安全的数组访问助手
-function extractArrayData<T>(response: any, fallback: T[] = []): T[] {
+function extractArrayData<T>(response: NetworkResponse, fallback: T[] = []): T[] {
   const data = extractData(response, fallback);
   return Array.isArray(data) ? data : fallback;
 }
 
 // 安全的分页数据访问助手
-function extractPaginatedData<T>(response: any): {
+function extractPaginatedData<T>(response: NetworkResponse): {
   data: T[];
   total: number;
   page: number;
@@ -42,7 +89,14 @@ function extractPaginatedData<T>(response: any): {
     return { data: [], total: 0, page: 1, pageSize: 10, totalPages: 0 };
   }
 
-  const innerData = responseData.data;
+  const innerData = responseData.data as {
+    data?: T[];
+    total?: number;
+    page?: number;
+    pageSize?: number;
+    totalPages?: number;
+  };
+  
   return {
     data: Array.isArray(innerData.data) ? innerData.data : [],
     total: typeof innerData.total === 'number' ? innerData.total : 0,
@@ -112,7 +166,7 @@ const getAuthTokenWithRetry = async (maxRetries: number = 3): Promise<string | n
       // 如果在服务器端或无法获取，则返回 null
       if (attempt === 1) return null;
 
-    } catch (error: any) {
+    } catch (error: ApiError) {
       console.error(`[Token获取] 第${attempt}次尝试失败:`, error.message);
       if (attempt >= maxRetries) {
         throw new Error(`获取认证token失败: ${error.message}`);
@@ -262,7 +316,7 @@ export const getTags = async (): Promise<string[]> => {
 // 获取带使用频率的标签统计
 export const getTagsWithStats = async (): Promise<Array<{tag: string, count: number}>> => {
   try {
-    const response = await api.get<any>('/tags?withStats=true');
+    const response = await api.get<NetworkResponse>('/tags?withStats=true');
 
     const stats = extractArrayData<{tag: string, count: number}>(response, []);
     if (stats.length > 0) {
@@ -284,8 +338,8 @@ export const getTagsWithStats = async (): Promise<Array<{tag: string, count: num
 export const getPromptNames = async (): Promise<string[]> => {
   try {
     // 使用新的解耦API而不是已弃用的MCP API
-    const response = await api.get<any>('/prompts');
-    const data = extractData(response, { names: [] });
+    const response = await api.get<NetworkResponse>('/prompts');
+    const data = extractData(response, { names: [] }) as { names?: string[] };
     return data.names || [];
   } catch (error) {
     console.error('获取提示词名称失败:', error);
@@ -339,15 +393,15 @@ export const getPrompts = async (filters?: PromptFilters): Promise<PaginatedResp
     }
 
     // 使用新的解耦API端点
-    const response = await api.get<any>(`/prompts?${queryParams.toString()}`, {
+    const response = await api.get<NetworkResponse>(`/prompts?${queryParams.toString()}`, {
       headers: userId ? { 'x-user-id': userId } : {},
     });
 
     // 使用统一的分页数据提取助手
-    const paginatedData = extractPaginatedData<any>(response);
+    const paginatedData = extractPaginatedData<PromptInfo>(response);
     
     // 清理和映射每个prompt对象，确保字段符合预期
-    const cleanedData = paginatedData.data.map((item: any) => {
+    const cleanedData = paginatedData.data.map((item: Record<string, unknown>) => {
       // 使用服务端返回的category_type字段，不再使用硬编码分类判断
       const guessedType = item.category_type || 'chat'; // 默认为chat类型
       
@@ -407,7 +461,7 @@ export const createPrompt = async (prompt: Partial<PromptDetails>): Promise<Prom
       throw new Error(response.data?.error || '创建提示词失败');
     }
     return response.data.data;
-  } catch (error: any) {
+  } catch (error: ApiError) {
     console.error('创建提示词失败:', error);
     const errorMessage = error.response?.data?.error || error.message || '创建提示词失败';
     throw new Error(errorMessage);
@@ -423,7 +477,7 @@ export const updatePrompt = async (id: string, prompt: Partial<PromptDetails>): 
       throw new Error(response.data?.error || '更新提示词失败');
     }
     return response.data.data;
-  } catch (error: any) {
+  } catch (error: ApiError) {
     console.error(`更新提示词 ${id} 失败:`, error);
     const errorMessage = error.response?.data?.error || error.message || '更新提示词失败';
     throw new Error(errorMessage);
@@ -438,7 +492,7 @@ export const deletePrompt = async (id: string): Promise<void> => {
     if (!response.data || !response.data.success) {
       throw new Error(response.data?.error || '删除提示词失败');
     }
-  } catch (error: any) {
+  } catch (error: ApiError) {
     console.error(`删除提示词 ${id} 失败:`, error);
     const errorMessage = error.response?.data?.error || error.message || '删除提示词失败';
     throw new Error(errorMessage);
@@ -457,18 +511,40 @@ export const deletePrompt = async (id: string): Promise<void> => {
  * MCP工具调用API
  */
 
+// MCP工具调用参数类型
+export interface McpToolParams {
+  [key: string]: string | number | boolean | string[] | null | undefined;
+}
+
+// MCP工具响应类型
+export interface McpToolResponse {
+  content?: Array<{
+    type: string;
+    text: string;
+  }>;
+  [key: string]: unknown;
+}
+
+// MCP工具信息类型
+export interface McpToolInfo {
+  name: string;
+  description?: string;
+  inputSchema?: Record<string, unknown>;
+  [key: string]: unknown;
+}
+
 // 调用MCP工具
-export const invokeMcpTool = async (toolName: string, params: any): Promise<any> => {
+export const invokeMcpTool = async (toolName: string, params: McpToolParams): Promise<McpToolResponse> => {
   // 使用Web API代理调用MCP工具
-  const response = await api.post<any>('/mcp/tools', { name: toolName, arguments: params });
-  return response.data;
+  const response = await api.post<NetworkResponse>('/mcp/tools', { name: toolName, arguments: params });
+  return extractData(response, {} as McpToolResponse);
 };
 
 // 获取可用工具列表
-export const getMcpTools = async (): Promise<any> => {
+export const getMcpTools = async (): Promise<McpToolInfo[]> => {
   // 使用Web API代理获取MCP工具列表
-  const response = await api.get<any>('/mcp/tools');
-  return response.data;
+  const response = await api.get<NetworkResponse>('/mcp/tools');
+  return extractArrayData<McpToolInfo>(response, []);
 };
 
 // 移除社交功能接口定义 - MCP服务专注于提示词管理
@@ -496,7 +572,7 @@ export async function getPromptInteractions(promptId: string): Promise<PromptInt
       userLiked: data.userLiked || false,
       userBookmarked: data.userBookmarked || false,
     };
-  } catch (error: any) {
+  } catch (error: ApiError) {
     console.error('获取提示词互动状态失败:', error);
     // 返回默认值而不是抛出错误，避免组件崩溃
     return {
@@ -537,7 +613,7 @@ export async function toggleBookmark(promptId: string): Promise<{ bookmarked: bo
       
       return { bookmarked: true };
     }
-  } catch (error: any) {
+  } catch (error: ApiError) {
     console.error('切换收藏状态失败:', error);
     throw new Error(error.message || '切换收藏状态失败');
   }
@@ -572,7 +648,7 @@ export async function toggleLike(promptId: string): Promise<{ liked: boolean }> 
       
       return { liked: true };
     }
-  } catch (error: any) {
+  } catch (error: ApiError) {
     console.error('切换点赞状态失败:', error);
     throw new Error(error.message || '切换点赞状态失败');
   }
@@ -684,7 +760,7 @@ export async function getUserRating(promptId: string): Promise<Rating | null> {
     }
 
     return response.data.rating;
-  } catch (error: any) {
+  } catch (error: ApiError) {
     // 处理不同类型的错误
     if (error.response?.status === 401) {
       console.warn('用户未登录，无法获取评分信息');
@@ -709,7 +785,7 @@ export async function exportPrompts(promptIds: string[], format: 'json' | 'csv' 
   return response.data;
 }
 
-export async function importPrompts(importData: any, options?: {
+export async function importPrompts(importData: ImportData, options?: {
   allowDuplicates?: boolean;
   skipDuplicates?: boolean;
 }): Promise<{

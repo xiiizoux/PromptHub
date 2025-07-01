@@ -3,8 +3,35 @@ import { storage } from '../shared/services.js';
 import { 
   ToolDescription, 
   ToolParameter,
-  PromptFilters
+  PromptFilters,
+  McpArguments
 } from '../types.js';
+
+// MCP 路由参数类型定义
+interface McpRouterParams extends Record<string, McpArguments> {
+  // 通用参数
+  name?: string;
+  category?: string;
+  tags?: string[];
+  search?: string;
+  query?: string;
+  limit?: number;
+  page?: number;
+  pageSize?: number;
+  isPublic?: boolean;
+  
+  // 提示词相关参数
+  content?: string;
+  description?: string;
+  is_public?: boolean;
+  allow_collaboration?: boolean;
+  
+  // 版本相关参数
+  version?: number;
+  
+  // 导入导出参数  
+  ids?: string[];
+}
 
 // MCP服务器信息内联定义
 const getMcpServerInfo = () => ({
@@ -559,7 +586,7 @@ router.post('/tools/:name/invoke', optionalAuthMiddleware, async (req, res) => {
 });
 
 // 处理获取所有提示词名称请求
-async function handleGetPromptNames(params: any = {}, req?: express.Request) {
+async function handleGetPromptNames(params: McpRouterParams = {}, req?: express.Request) {
   // 构造过滤条件
   const filters: PromptFilters = {
     category: params.category,
@@ -588,12 +615,12 @@ async function handleGetPromptNames(params: any = {}, req?: express.Request) {
   };
 }
 
-async function handleGetPromptDetails(params: any, req?: express.Request) {
+async function handleGetPromptDetails(params: McpRouterParams, req?: express.Request) {
   if (!params.name) {
     throw new Error('缺少必需参数: name');
   }
 
-  const prompt = await storage.getPrompt(params.name, req?.user?.id);
+  const prompt = await storage.getPrompt(params.name as string, req?.user?.id);
   if (!prompt) {
     throw new Error(`提示词未找到: ${params.name}`);
   }
@@ -607,7 +634,7 @@ async function handleGetPromptDetails(params: any, req?: express.Request) {
 }
 
 // 导出提示词
-async function handleExportPrompts(params: any, req?: express.Request) {
+async function handleExportPrompts(params: McpRouterParams, req?: express.Request) {
   const promptIds = params?.ids;
   const prompts = await storage.exportPrompts(req?.user?.id, promptIds);
 
@@ -620,12 +647,19 @@ async function handleExportPrompts(params: any, req?: express.Request) {
 }
 
 // 导入提示词
-async function handleImportPrompts(params: any, req?: express.Request) {
-  if (!params.prompts || !Array.isArray(params.prompts)) {
+async function handleImportPrompts(params: McpRouterParams, req?: express.Request) {
+  // 处理 prompts 参数，它可能在 params 的任何地方
+  const prompts = (params as unknown as { prompts?: unknown[] }).prompts;
+  
+  if (!prompts || !Array.isArray(prompts)) {
     throw new Error('无效的提示词数据');
   }
+  
+  // 类型断言：确保 prompts 是正确的类型
+  const promptsArray = prompts as unknown[];
 
-  const result = await storage.importPrompts(params.prompts, req?.user?.id);
+  // 这里需要进行类型转换，因为我们不能完全确保输入数据的结构
+  const result = await storage.importPrompts(promptsArray as unknown as any[], req?.user?.id);
 
   return {
     content: {
@@ -668,7 +702,7 @@ async function handleGetTags() {
 }
 
 // 搜索提示词
-async function handleSearchPrompts(params: any, req?: express.Request) {
+async function handleSearchPrompts(params: McpRouterParams, req?: express.Request) {
   const { query, category, tags, limit = 20 } = params;
 
   const filters: PromptFilters = {
@@ -691,13 +725,24 @@ async function handleSearchPrompts(params: any, req?: express.Request) {
 }
 
 // 创建提示词
-async function handleCreatePrompt(params: any, req?: express.Request) {
+async function handleCreatePrompt(params: McpRouterParams, req?: express.Request) {
   if (!req?.user?.id) {
     throw new Error('需要登录才能创建提示词');
   }
 
+  // 确保必需的字段存在
+  if (!params.name || !params.description || !params.content) {
+    throw new Error('缺少必需参数: name, description, content');
+  }
+
   const promptData = {
-    ...params,
+    name: params.name as string,
+    description: params.description as string,
+    content: params.content as string,
+    category: (params.category as string) || '通用',
+    tags: (params.tags as string[]) || [],
+    is_public: (params.is_public as boolean) || false,
+    allow_collaboration: (params.allow_collaboration as boolean) || false,
     user_id: req.user.id,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString()
@@ -714,7 +759,7 @@ async function handleCreatePrompt(params: any, req?: express.Request) {
 }
 
 // 更新提示词
-async function handleUpdatePrompt(params: any, req?: express.Request) {
+async function handleUpdatePrompt(params: McpRouterParams, req?: express.Request) {
   if (!req?.user?.id) {
     throw new Error('需要登录才能更新提示词');
   }
@@ -723,7 +768,7 @@ async function handleUpdatePrompt(params: any, req?: express.Request) {
     throw new Error('缺少必需参数: id 或 name');
   }
 
-  const promptId = params.id || params.name;
+  const promptId = (params.id as string) || (params.name as string);
   const updateData = { ...params };
   delete updateData.id;
   delete updateData.name;
@@ -739,7 +784,7 @@ async function handleUpdatePrompt(params: any, req?: express.Request) {
 }
 
 // 删除提示词
-async function handleDeletePrompt(params: any, req?: express.Request) {
+async function handleDeletePrompt(params: McpRouterParams, req?: express.Request) {
   if (!req?.user?.id) {
     throw new Error('需要登录才能删除提示词');
   }
@@ -748,7 +793,7 @@ async function handleDeletePrompt(params: any, req?: express.Request) {
     throw new Error('缺少必需参数: id 或 name');
   }
 
-  const promptId = params.id || params.name;
+  const promptId = (params.id as string) || (params.name as string);
   await storage.deletePrompt(promptId, req.user.id);
 
   return {
@@ -760,12 +805,12 @@ async function handleDeletePrompt(params: any, req?: express.Request) {
 }
 
 // 获取提示词版本
-async function handleGetPromptVersions(params: any, req?: express.Request) {
+async function handleGetPromptVersions(params: McpRouterParams, req?: express.Request) {
   if (!params.name) {
     throw new Error('缺少必需参数: name');
   }
 
-  const versions = await storage.getPromptVersions(params.name, req?.user?.id);
+  const versions = await storage.getPromptVersions(params.name as string, req?.user?.id);
 
   return {
     content: {
@@ -776,12 +821,12 @@ async function handleGetPromptVersions(params: any, req?: express.Request) {
 }
 
 // 获取特定版本
-async function handleGetPromptVersion(params: any, req?: express.Request) {
+async function handleGetPromptVersion(params: McpRouterParams, req?: express.Request) {
   if (!params.name || !params.version) {
     throw new Error('缺少必需参数: name, version');
   }
 
-  const prompt = await storage.getPromptVersion(params.name, params.version, req?.user?.id);
+  const prompt = await storage.getPromptVersion(params.name as string, params.version as number, req?.user?.id);
 
   return {
     content: {
@@ -792,12 +837,12 @@ async function handleGetPromptVersion(params: any, req?: express.Request) {
 }
 
 // 恢复提示词版本
-async function handleRestorePromptVersion(params: any, req?: express.Request) {
+async function handleRestorePromptVersion(params: McpRouterParams, req?: express.Request) {
   if (!params.name || !params.version) {
     throw new Error('缺少必需参数: name, version');
   }
 
-  const prompt = await storage.getPrompt(params.name, req?.user?.id);
+  const prompt = await storage.getPrompt(params.name as string, req?.user?.id);
   if (!prompt) {
     throw new Error(`提示词未找到: ${params.name}`);
   }
@@ -808,8 +853,8 @@ async function handleRestorePromptVersion(params: any, req?: express.Request) {
   }
 
   // 恢复到特定版本
-  const versionNum = typeof params.version === 'string' ? parseFloat(params.version) : params.version;
-  const _restoredPrompt = await storage.restorePromptVersion(prompt.id, versionNum, req?.user?.id);
+  const versionNum = typeof params.version === 'string' ? parseFloat(params.version as string) : (params.version as number);
+  const _restoredPrompt = await storage.restorePromptVersion(prompt.id!, versionNum, req?.user?.id);
 
   return {
     content: {

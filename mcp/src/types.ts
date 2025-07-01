@@ -47,7 +47,7 @@ export interface MediaParameters {
   background_music_url?: string;
   
   // 其他自定义参数
-  [key: string]: any;
+  [key: string]: string | number | boolean | undefined;
 }
 
 export interface PromptVariable {
@@ -130,7 +130,7 @@ export interface AuthResponse {
   token: string;
 }
 
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T = unknown> {
   success: boolean;
   data?: T;
   message?: string;
@@ -138,20 +138,23 @@ export interface ApiResponse<T = any> {
 }
 
 // MCP请求类型
+// MCP 请求参数的联合类型
+export type McpArguments = 
+  | string 
+  | number 
+  | boolean 
+  | string[] 
+  | Record<string, unknown> 
+  | undefined;
+
 export interface McpRequest {
   params: {
     name: string;
-    arguments: any;
+    arguments: McpArguments;
   };
-  auth?: {
-    [key: string]: string;
-  };
-  headers?: {
-    [key: string]: string;
-  };
-  query?: {
-    [key: string]: string;
-  };
+  auth?: Record<string, string>;
+  headers?: Record<string, string>;
+  query?: Record<string, string>;
 }
 
 // 提示词过滤器接口
@@ -225,14 +228,14 @@ export interface StorageAdapter {
   
   // 文件存储相关（可选实现）
   uploadAsset?(fileBuffer: Buffer, filename: string, mimetype: string, categoryType: 'image' | 'video'): Promise<{success: boolean; url?: string; message?: string}>;
-  getAssetInfo?(filename: string): Promise<{success: boolean; data?: any; message?: string}>;
+  getAssetInfo?(filename: string): Promise<{success: boolean; data?: unknown; message?: string}>;
   deleteAsset?(filename: string): Promise<{success: boolean; message?: string}>;
   validateAssetUrl?(url: string): Promise<boolean>;
 }
 
 export interface MCPToolRequest {
   name: string;
-  arguments?: Record<string, any>;
+  arguments?: Record<string, McpArguments>;
 }
 
 export interface MCPToolResponse {
@@ -265,7 +268,7 @@ export interface ToolDescription {
 
 export interface ToolInvocationRequest {
   name: string;
-  params: Record<string, any>;
+  params: Record<string, McpArguments>;
 }
 
 export interface ToolInvocationResponse {

@@ -20,7 +20,7 @@ const getRequestMetadata = (req: Request) => {
 };
 
 // 通用错误处理中间件
-const errorHandler = (err: any, req: Request, res: Response, _next: NextFunction) => {
+const errorHandler = (err: Error, req: Request, res: Response, _next: NextFunction) => {
   const metadata = getRequestMetadata(req);
   const userId = req.user?.id || 'unauthenticated';
   

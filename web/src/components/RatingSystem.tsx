@@ -59,7 +59,7 @@ export const RatingSystem: React.FC<RatingSystemProps> = ({
       setTotalPages(response.totalPages);
       setAverageRating(response.averageRating);
       setRatingDistribution(response.ratingDistribution);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('获取评分失败:', error);
     } finally {
       setIsLoading(false);
@@ -114,19 +114,31 @@ export const RatingSystem: React.FC<RatingSystemProps> = ({
       setShowRatingForm(false);
       await fetchRatings();
       await fetchUserRating();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('评分操作失败详情:', error);
-      if (error.response) {
-        console.error('错误响应:', error.response.status, error.response.data);
-        if (error.response.status === 401) {
-          toast.error('认证失败，请重新登录');
-        } else if (error.response.status === 400) {
-          toast.error(error.response.data?.error || '请求参数错误');
+      
+      // 类型守卫：检查是否是带有response属性的错误对象
+      if (error && typeof error === 'object' && 'response' in error) {
+        const responseError = error as { response?: { status: number; data?: { error?: string } } };
+        if (responseError.response) {
+          console.error('错误响应:', responseError.response.status, responseError.response.data);
+          if (responseError.response.status === 401) {
+            toast.error('认证失败，请重新登录');
+          } else if (responseError.response.status === 400) {
+            toast.error(responseError.response.data?.error || '请求参数错误');
+          } else {
+            const errorMessage = responseError.response.data?.error || 
+                               (error instanceof Error ? error.message : undefined) || 
+                               '评分提交失败';
+            toast.error(errorMessage);
+          }
         } else {
-          toast.error(error.response.data?.error || error.message || '评分提交失败');
+          const errorMessage = error instanceof Error ? error.message : '评分提交失败';
+          toast.error(errorMessage);
         }
       } else {
-        toast.error(error.message || '评分提交失败');
+        const errorMessage = error instanceof Error ? error.message : '评分提交失败';
+        toast.error(errorMessage);
       }
     } finally {
       setIsLoading(false);
@@ -145,8 +157,9 @@ export const RatingSystem: React.FC<RatingSystemProps> = ({
       setNewComment('');
       setShowRatingForm(false);
       await fetchRatings();
-    } catch (error: any) {
-      toast.error(error.message || '删除评分失败');
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : '删除评分失败';
+      toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }

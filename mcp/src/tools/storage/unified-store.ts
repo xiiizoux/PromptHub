@@ -22,7 +22,7 @@ import { MCPAIAnalyzer } from '../../ai/mcp-ai-analyzer.js';
 // 定义本地类型接口
 interface ToolResult {
   success: boolean;
-  data?: any;
+  data?: unknown;
   message?: string;
 }
 
@@ -266,7 +266,7 @@ export class UnifiedStoreTool extends BaseMCPTool {
       );
 
       this.logExecution('智能存储完成', context, {
-        promptId: storeResult.data?.id,
+        promptId: (storeResult.data as { id?: string })?.id,
         usedAI: !!aiAnalysis,
         userOverrides: Object.keys(instructionResult.specified_params).length,
         executionTime: `${(performance.now() - startTime).toFixed(2)}ms`
@@ -349,14 +349,14 @@ export class UnifiedStoreTool extends BaseMCPTool {
    * 验证媒体类型要求
    * 图片和视频提示词必须提供示例URL
    */
-  private async validateMediaRequirements(params: any): Promise<{isValid: boolean; message?: string}> {
+  private async validateMediaRequirements(params: Record<string, unknown>): Promise<{isValid: boolean; message?: string}> {
     try {
       // 确定分类类型
-      let categoryType = params.category_type;
+      let categoryType = params.category_type as string | undefined;
       
       // 如果没有明确指定分类类型，尝试从分类名称推断
       if (!categoryType && params.category) {
-        categoryType = this.inferCategoryType(params.category);
+        categoryType = this.inferCategoryType(params.category as string);
       }
       
       // 如果仍然无法确定，默认为chat
@@ -381,19 +381,20 @@ export class UnifiedStoreTool extends BaseMCPTool {
 
         // 验证URL格式
         const storage = this.getStorage();
-        const isValidUrl = await storage.validateAssetUrl(params.preview_asset_url);
+        const assetUrl = params.preview_asset_url as string;
+        const isValidUrl = await storage.validateAssetUrl(assetUrl);
         if (!isValidUrl) {
           return {
             isValid: false,
             message: `❌ 提供的示例URL格式无效或不是本系统上传的文件！\n\n` +
                     `请确保使用 /api/assets/upload 接口上传文件并使用返回的URL。\n` +
-                    `当前URL：${params.preview_asset_url}`
+                    `当前URL：${assetUrl}`
           };
         }
 
         // 验证URL与分类类型的匹配
         const expectedPrefix = categoryType === 'image' ? 'image_' : 'video_';
-        const filename = this.extractFilenameFromUrl(params.preview_asset_url);
+        const filename = this.extractFilenameFromUrl(assetUrl);
         if (!filename.startsWith(expectedPrefix)) {
           const typeLabel = categoryType === 'image' ? '图片' : '视频';
           return {
@@ -822,7 +823,7 @@ export class UnifiedStoreTool extends BaseMCPTool {
     originalParams: UnifiedStoreParams,
     userSpecified: UserSpecifiedParams,
     aiAnalysis: AIAnalysisResult | null
-  ): any {
+  ): Record<string, unknown> {
     const merged = {
       content: originalParams.content,
       title: userSpecified.title || aiAnalysis?.title || '未命名提示词',
@@ -853,19 +854,19 @@ export class UnifiedStoreTool extends BaseMCPTool {
   /**
    * 优化参数
    */
-  private async optimizeParameters(params: any): Promise<any> {
+  private async optimizeParameters(params: Record<string, unknown>): Promise<Record<string, unknown>> {
     // 优化标题
-    if (params.title.length > 100) {
+    if (typeof params.title === 'string' && params.title.length > 100) {
       params.title = params.title.substring(0, 97) + '...';
     }
 
     // 优化描述
-    if (params.description.length > 500) {
+    if (typeof params.description === 'string' && params.description.length > 500) {
       params.description = params.description.substring(0, 497) + '...';
     }
 
     // 优化标签
-    if (params.tags.length > 10) {
+    if (Array.isArray(params.tags) && params.tags.length > 10) {
       params.tags = params.tags.slice(0, 10);
     }
 
@@ -875,7 +876,7 @@ export class UnifiedStoreTool extends BaseMCPTool {
       '生活', '商业', '办公', '编程', '翻译', '视频', '播客', '音乐', '健康', '科技'
     ];
     
-    if (!params.category || !PRESET_CATEGORIES.includes(params.category)) {
+    if (typeof params.category !== 'string' || !PRESET_CATEGORIES.includes(params.category)) {
       params.category = '通用';
     }
 
@@ -885,35 +886,36 @@ export class UnifiedStoreTool extends BaseMCPTool {
   /**
    * 执行存储
    */
-  private async performStorage(params: any, context: ToolContext): Promise<ToolResult> {
+  private async performStorage(params: Record<string, unknown>, context: ToolContext): Promise<ToolResult> {
       try {
         const storage = this.getStorage();
 
         // 确保用户ID正确传递
-        const userId = context.userId || params.created_by || params.user_id;
+        const userId = context.userId || (params.created_by as string) || (params.user_id as string);
 
         if (!userId) {
           throw new Error('无法确定用户身份，请检查API密钥认证');
         }
 
         // 调用存储服务
+        const compatibleModels = params.compatible_models as string[] | undefined;
         const promptData = {
-          name: params.title,
-          description: params.description,
-          content: params.content,
-          category: params.category,
-          tags: params.tags,
-          difficulty: params.difficulty,
-          is_public: params.is_public || false,
-          compatible_models: params.compatible_models && params.compatible_models.length > 0 
-            ? params.compatible_models 
+          name: params.title as string,
+          description: params.description as string,
+          content: params.content as string,
+          category: params.category as string,
+          tags: params.tags as string[],
+          difficulty: (params.difficulty as 'beginner' | 'intermediate' | 'advanced') || 'intermediate',
+          is_public: (params.is_public as boolean) || false,
+          compatible_models: compatibleModels && compatibleModels.length > 0 
+            ? compatibleModels 
             : getDefaultModelTags(), // 确保兼容模型不为空
-          allow_collaboration: params.allow_collaboration,
-          collaborative_level: params.collaborative_level,
+          allow_collaboration: params.allow_collaboration as boolean,
+          collaborative_level: params.collaborative_level as string,
           // 媒体相关字段
-          preview_asset_url: params.preview_asset_url || null,
-          category_type: params.category_type || 'chat',
-          parameters: params.parameters || {},
+          preview_asset_url: (params.preview_asset_url as string) || null,
+          category_type: (params.category_type as 'chat' | 'image' | 'video') || 'chat',
+          parameters: (params.parameters as Record<string, string | number | boolean | undefined>) || {},
           user_id: userId, // 确保正确的字段名
           created_at: new Date().toISOString()
         };
@@ -951,11 +953,11 @@ export class UnifiedStoreTool extends BaseMCPTool {
    * 生成存储报告
    */
   private generateStorageReport(
-    finalParams: any,
+    finalParams: Record<string, unknown>,
     aiAnalysis: AIAnalysisResult | null,
     instructionResult: InstructionParseResult,
     executionTime: number
-  ): any {
+  ): Record<string, unknown> {
     return {
       execution_summary: {
         execution_time_ms: Math.round(executionTime),
@@ -1006,9 +1008,9 @@ export const unifiedStoreToolDef = unifiedStoreTool.getToolDefinition();
 
 // 处理函数导出
 export async function handleUnifiedStore(
-  params: any,
+  params: UnifiedStoreParams,
   context?: { userId?: string; requestId?: string; userAgent?: string }
-): Promise<any> {
+): Promise<{ content: { type: string; text: string }; metadata?: Record<string, unknown> }> {
   const toolContext = {
     userId: context?.userId,
     requestId: context?.requestId || `unified_store_${Date.now()}`,
@@ -1019,15 +1021,21 @@ export async function handleUnifiedStore(
   const result = await unifiedStoreTool.execute(params, toolContext);
   
   if (result.success) {
+    const resultData = result.data as {
+      analysis_report?: { execution_summary?: { execution_time_ms?: number } };
+      prompt?: { id?: string };
+      used_ai_analysis?: boolean;
+    };
+    
     return {
       content: {
         type: 'text',
-        text: `✅ ${result.message}\n\n📊 存储报告:\n${JSON.stringify(result.data?.analysis_report, null, 2)}`
+        text: `✅ ${result.message}\n\n📊 存储报告:\n${JSON.stringify(resultData?.analysis_report, null, 2)}`
       },
       metadata: {
-        prompt_id: result.data?.prompt?.id,
-        used_ai: result.data?.used_ai_analysis,
-        execution_time: result.data?.analysis_report?.execution_summary?.execution_time_ms
+        prompt_id: resultData?.prompt?.id,
+        used_ai: resultData?.used_ai_analysis,
+        execution_time: resultData?.analysis_report?.execution_summary?.execution_time_ms
       }
     };
   } else {

@@ -6,7 +6,7 @@
 import { Prompt, User, ApiKey, PromptVersion } from '../../../supabase/lib/types';
 
 // 通用API响应格式
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T = unknown> {
   success: boolean;
   data?: T;
   message?: string;
@@ -117,7 +117,7 @@ export namespace McpApi {
   // POST /api/mcp/tools
   export interface McpToolRequest {
     name: string;
-    arguments?: Record<string, any>;
+    arguments?: Record<string, unknown>;
   }
   
   export interface McpToolResponse extends ApiResponse {

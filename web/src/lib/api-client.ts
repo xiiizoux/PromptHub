@@ -14,21 +14,30 @@ import {
 } from '@/types/api';
 import { Prompt, PromptVersion } from '../../../supabase/lib/types';
 
+// 网络响应类型定义
+interface ApiResponseStructure {
+  data?: {
+    success?: boolean;
+    data?: unknown;
+    error?: string;
+  };
+}
+
 // 统一的数据提取助手，消除多层嵌套问题
-function extractResponseData<T>(response: any, fallback: T): T {
+function extractResponseData<T>(response: ApiResponseStructure, fallback: T): T {
   // 处理标准API响应格式: response.data.data
   if (response?.data?.success && response.data.data !== undefined) {
-    return response.data.data;
+    return response.data.data as T;
   }
   // 处理简单格式: response.data
   if (response?.data !== undefined) {
-    return response.data;
+    return response.data as T;
   }
   return fallback;
 }
 
 // 安全的可选数据提取
-function extractOptionalData<T>(response: any, fallback: T | null = null): T | null {
+function extractOptionalData<T>(response: ApiResponseStructure, fallback: T | null = null): T | null {
   try {
     return extractResponseData(response, fallback);
   } catch {
@@ -284,14 +293,14 @@ export const authApi = {
  */
 export const mcpApi = {
   // 调用MCP工具
-  invokeTool: async (name: string, args: Record<string, any> = {}): Promise<McpApi.McpToolResponse['data'] | undefined> => {
+  invokeTool: async (name: string, args: Record<string, unknown> = {}): Promise<McpApi.McpToolResponse['data'] | undefined> => {
     const response = await apiClient.post<McpApi.McpToolResponse>('/mcp/tools', { name, arguments: args });
-    return extractResponseData(response, null as unknown) as McpApi.McpToolResponse['data'] | undefined;
+    return extractResponseData(response, undefined) as McpApi.McpToolResponse['data'] | undefined;
   },
   
   // 获取可用工具列表
-  getTools: async (): Promise<any[]> => {
-    const response = await apiClient.get<ApiResponse<any[]>>('/mcp/tools');
+  getTools: async (): Promise<Array<Record<string, unknown>>> => {
+    const response = await apiClient.get<ApiResponse<Array<Record<string, unknown>>>>('/mcp/tools');
     return extractResponseData(response, []);
   },
 };

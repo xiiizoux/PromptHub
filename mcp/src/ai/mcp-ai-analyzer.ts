@@ -39,7 +39,7 @@ export interface MCPAIAnalysisResult {
     
     // 通用参数
     model?: string;
-    [key: string]: any;
+    [key: string]: string | number | boolean | undefined;
   };
 }
 
@@ -241,20 +241,21 @@ export class MCPAIAnalyzer {
         throw new Error('AI分析结果格式错误，请重试');
       }
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('[MCP AI] 分析失败:', error);
       
       // 提供具体的错误信息
-      if (error.response?.status === 401) {
+      const axiosError = error as { response?: { status?: number }; message?: string };
+      if (axiosError.response?.status === 401) {
         throw new Error('AI服务认证失败，请检查API密钥配置');
-      } else if (error.response?.status === 429) {
+      } else if (axiosError.response?.status === 429) {
         throw new Error('AI服务请求频率过高，请稍后重试');
-      } else if (error.response?.status >= 500) {
+      } else if (axiosError.response?.status && axiosError.response.status >= 500) {
         throw new Error('AI服务暂时不可用，请稍后重试');
-      } else if (error.message?.includes('timeout')) {
+      } else if (axiosError.message?.includes('timeout')) {
         throw new Error('AI分析超时，请重试');
       } else {
-        throw new Error(`AI分析失败: ${error.message || '未知错误'}，请重试`);
+        throw new Error(`AI分析失败: ${axiosError.message || '未知错误'}，请重试`);
       }
     }
   }
@@ -401,7 +402,7 @@ ${content}
    * 验证和格式化分析结果
    */
   private validateAndFormatResult(
-    result: any, 
+    result: Record<string, unknown>, 
     originalContent: string, 
     currentVersion?: string, 
     isNewPrompt: boolean = false, 
@@ -413,14 +414,14 @@ ${content}
     // 验证AI返回的兼容模型
     let finalCompatibleModels: string[] = [];
     if (Array.isArray(result.compatibleModels)) {
-      finalCompatibleModels = result.compatibleModels.filter((model: string) => 
-        validModelIds.includes(model)
+      finalCompatibleModels = (result.compatibleModels as unknown[]).filter((model): model is string => 
+        typeof model === 'string' && validModelIds.includes(model)
       );
     }
     
     // 如果AI没有返回有效模型，使用智能推荐
     if (finalCompatibleModels.length === 0) {
-      finalCompatibleModels = this.recommendCompatibleModels(result.category || '通用', originalContent);
+      finalCompatibleModels = this.recommendCompatibleModels((result.category as string) || '通用', originalContent);
     }
     
     // 生成版本建议
@@ -428,27 +429,27 @@ ${content}
     
     // 确保所有必需字段存在
     const validated: MCPAIAnalysisResult = {
-      category: result.category || '通用对话',
-      tags: Array.isArray(result.tags) ? result.tags.slice(0, 8) : ['AI', '提示词'],
-      difficulty: ['beginner', 'intermediate', 'advanced'].includes(result.difficulty) 
-        ? result.difficulty : 'intermediate',
+      category: (result.category as string) || '通用对话',
+      tags: Array.isArray(result.tags) ? (result.tags as string[]).slice(0, 8) : ['AI', '提示词'],
+      difficulty: ['beginner', 'intermediate', 'advanced'].includes(result.difficulty as string) 
+        ? (result.difficulty as 'beginner' | 'intermediate' | 'advanced') : 'intermediate',
       estimatedTokens: typeof result.estimatedTokens === 'number' 
         ? result.estimatedTokens : Math.ceil(originalContent.length / 4),
-      variables: Array.isArray(result.variables) ? result.variables : this.extractVariables(originalContent),
-      improvements: Array.isArray(result.improvements) ? result.improvements : [],
-      useCases: Array.isArray(result.useCases) ? result.useCases : [],
+      variables: Array.isArray(result.variables) ? (result.variables as string[]) : this.extractVariables(originalContent),
+      improvements: Array.isArray(result.improvements) ? (result.improvements as string[]) : [],
+      useCases: Array.isArray(result.useCases) ? (result.useCases as string[]) : [],
       compatibleModels: finalCompatibleModels,
       version: suggestedVersion,
       confidence: typeof result.confidence === 'number' 
         ? Math.max(0, Math.min(1, result.confidence)) : 0.8,
-      suggestedTitle: result.suggestedTitle || '',
-      description: result.description || '',
+      suggestedTitle: (result.suggestedTitle as string) || '',
+      description: (result.description as string) || '',
       
       // 新增媒体相关字段验证
-      category_type: ['chat', 'image', 'video'].includes(result.category_type) 
-        ? result.category_type : this.detectCategoryType(originalContent),
-      suggested_parameters: result.suggested_parameters && typeof result.suggested_parameters === 'object'
-        ? result.suggested_parameters : this.generateDefaultParameters(result.category_type || 'chat')
+      category_type: ['chat', 'image', 'video'].includes(result.category_type as string) 
+        ? (result.category_type as 'chat' | 'image' | 'video') : this.detectCategoryType(originalContent),
+      suggested_parameters: result.suggested_parameters && typeof result.suggested_parameters === 'object' && !Array.isArray(result.suggested_parameters)
+        ? (result.suggested_parameters as Record<string, string | number | boolean | undefined>) : this.generateDefaultParameters((result.category_type as 'chat' | 'image' | 'video') || 'chat')
     };
 
     return validated;
@@ -678,18 +679,19 @@ ${existingTags.length > 0 ? `优先使用现有标签：${existingTags.slice(0, 
       const tags = tagsText.split(',').map(tag => tag.trim()).filter(Boolean);
       
       return tags.slice(0, 8); // 最多返回8个标签
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('[MCP AI] 标签提取失败:', error);
       
       // 提供具体的错误信息
-      if (error.response?.status === 401) {
+      const axiosError = error as { response?: { status?: number }; message?: string };
+      if (axiosError.response?.status === 401) {
         throw new Error('AI服务认证失败，请检查API密钥配置');
-      } else if (error.response?.status === 429) {
+      } else if (axiosError.response?.status === 429) {
         throw new Error('AI服务请求频率过高，请稍后重试');
-      } else if (error.response?.status >= 500) {
+      } else if (axiosError.response?.status && axiosError.response.status >= 500) {
         throw new Error('AI服务暂时不可用，请稍后重试');
       } else {
-        throw new Error(`AI标签提取失败: ${error.message || '未知错误'}，请重试`);
+        throw new Error(`AI标签提取失败: ${axiosError.message || '未知错误'}，请重试`);
       }
     }
   }
@@ -729,7 +731,8 @@ ${existingTags.length > 0 ? `优先使用现有标签：${existingTags.slice(0, 
           quick: this.quickTasksModel
         }
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
       return {
         isHealthy: false,
         endpoint: this.baseURL,
@@ -737,7 +740,7 @@ ${existingTags.length > 0 ? `优先使用现有标签：${existingTags.slice(0, 
           full: this.fullAnalysisModel,
           quick: this.quickTasksModel
         },
-        error: error.message
+        error: errorMessage
       };
     }
   }
@@ -816,18 +819,19 @@ ${allCategories.join('、')}
       }
 
       return allCategories.includes(category) ? category : allCategories[0];
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('[MCP AI] 分类失败:', error);
       
       // 提供具体的错误信息
-      if (error.response?.status === 401) {
+      const axiosError = error as { response?: { status?: number }; message?: string };
+      if (axiosError.response?.status === 401) {
         throw new Error('AI服务认证失败，请检查API密钥配置');
-      } else if (error.response?.status === 429) {
+      } else if (axiosError.response?.status === 429) {
         throw new Error('AI服务请求频率过高，请稍后重试');
-      } else if (error.response?.status >= 500) {
+      } else if (axiosError.response?.status && axiosError.response.status >= 500) {
         throw new Error('AI服务暂时不可用，请稍后重试');
       } else {
-        throw new Error(`AI分类失败: ${error.message || '未知错误'}，请重试`);
+        throw new Error(`AI分类失败: ${axiosError.message || '未知错误'}，请重试`);
       }
     }
   }
@@ -869,7 +873,7 @@ ${allCategories.join('、')}
   /**
    * 根据类型生成默认参数
    */
-  private generateDefaultParameters(categoryType: 'chat' | 'image' | 'video'): any {
+  private generateDefaultParameters(categoryType: 'chat' | 'image' | 'video'): Record<string, string | number> {
     switch (categoryType) {
       case 'image':
         return {

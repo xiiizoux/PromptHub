@@ -111,7 +111,7 @@ export const CategoryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
 
     // 获取显示信息（只使用数据库icon字段）
-    const displayInfo = categoryService.getCategoryDisplayInfo(categoryName, categoryData as Record<string, any> | undefined);
+    const displayInfo = categoryService.getCategoryDisplayInfo(categoryName, categoryData);
     
     // 获取图标组件（如果没有图标就返回null）
     const iconComponent = displayInfo.iconName ? getIconComponent(displayInfo.iconName) : null;

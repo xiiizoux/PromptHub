@@ -150,7 +150,7 @@ export const AIAnalyzeButton: React.FC<AIAnalyzeButtonProps> = ({
       setError(errorMessage);
       
       // 如果是API key问题，提供后备方案
-      if (error.message?.includes('API key') || error.message?.includes('未配置')) {
+      if (errorMessage.includes('API key') || errorMessage.includes('未配置')) {
         // 使用本地后备分析
         if (variant === 'variables') {
           const matches = content.match(/\{\{([^}]+)\}\}/g);

@@ -59,7 +59,7 @@ export default function VideoParametersForm({
   // 确保value不为undefined
   const safeValue = value || {};
 
-  const updateParameter = (key: keyof VideoParameters, paramValue: any) => {
+  const updateParameter = <K extends keyof VideoParameters>(key: K, paramValue: VideoParameters[K]) => {
     onChange({
       ...safeValue,
       [key]: paramValue,

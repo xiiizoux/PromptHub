@@ -76,7 +76,7 @@ const PromptInteractions: React.FC<PromptInteractionsProps> = ({ promptId, initi
   // 获取互动数据
   const fetchInteractions = async () => {
     try {
-      const headers: any = {
+      const headers: Record<string, string> = {
         'Content-Type': 'application/json',
       };
       
@@ -180,19 +180,21 @@ const PromptInteractions: React.FC<PromptInteractionsProps> = ({ promptId, initi
       } else {
         throw new Error(data.error || '操作失败');
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error(`${type}操作失败:`, error);
       
       // 显示具体的错误信息
-      if (error.message.includes('认证')) {
+      const errorMessage = error instanceof Error ? error.message : '';
+      if (errorMessage.includes('认证')) {
         toast.error('认证失败，请重新登录');
         router.push(`/auth/login?redirect=${router.asPath}`);
-      } else if (error.message.includes('已过期')) {
+      } else if (errorMessage.includes('已过期')) {
         toast.error('登录已过期，请重新登录');
         router.push(`/auth/login?redirect=${router.asPath}`);
       } else {
         const actionText = type === 'like' ? '点赞' : type === 'bookmark' ? '收藏' : '分享';
-        toast.error(`${actionText}失败: ${error.message}`);
+        const finalMessage = errorMessage || '操作失败';
+        toast.error(`${actionText}失败: ${finalMessage}`);
       }
     } finally {
       setLoading(prev => ({ ...prev, [type]: false }));

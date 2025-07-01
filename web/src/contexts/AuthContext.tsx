@@ -70,8 +70,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const mounted = useRef(true);
   const authInitialized = useRef(false);
 
+  // Supabase用户类型定义
+  interface SupabaseUser {
+    id: string;
+    email: string;
+    created_at: string;
+    user_metadata?: {
+      username?: string;
+      preferred_username?: string;
+      name?: string;
+      display_name?: string;
+      full_name?: string;
+    };
+  }
+
   // 确保用户数据在数据库中 - 使用useCallback确保引用稳定
-  const ensureUserInDatabase = useCallback(async (authUser: any) => {
+  const ensureUserInDatabase = useCallback(async (authUser: SupabaseUser) => {
     if (!mounted.current) return;
     
     try {
@@ -216,7 +230,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // 更新localStorage中的用户信息
       saveUserToStorage(appUser);
       return true;
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('认证检查失败:', err);
       clearUserFromStorage();
       setUser(null);
@@ -227,7 +241,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // 初始化认证状态 - 修复时序问题
   useEffect(() => {
-    let authSubscription: any = null;
+    let authSubscription: { unsubscribe: () => void } | null = null;
 
     const initAuth = async () => {
       if (typeof window === 'undefined' || authInitialized.current) return;
@@ -244,8 +258,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         // 只有在认证检查完成后才结束loading状态
         setIsLoading(false);
 
+        // Supabase认证事件类型
+        type AuthEvent = 'SIGNED_IN' | 'SIGNED_OUT' | 'TOKEN_REFRESHED' | 'USER_UPDATED' | 'PASSWORD_RECOVERY';
+        
+        interface AuthSession {
+          user: SupabaseUser | null;
+          access_token?: string;
+        }
+
         // 监听认证状态变化
-        const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event: any, session: any) => {
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event: AuthEvent, session: AuthSession | null) => {
           if (!mounted.current) return;
 
           if (event === 'SIGNED_IN' && session?.user) {
@@ -342,12 +364,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           console.error('确保用户在数据库中失败:', error);
         });
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : '登录失败，请检查您的凭据';
       console.error('登录失败:', err);
       if (mounted.current && !error) {
-        setError(err.message || '登录失败，请检查您的凭据');
+        setError(errorMessage);
       }
-      throw err;
+      throw new Error(errorMessage);
     } finally {
       if (mounted.current) {
         setIsLoading(false);
@@ -400,7 +423,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setIsAuthenticated(false);
         setError(null);
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : '登出时发生错误';
       console.error('登出失败:', err);
       // 即使登出失败，也清理本地状态
       clearUserFromStorage();
@@ -409,7 +433,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setIsAuthenticated(false);
         setError('登出时发生错误，但已清理本地状态');
       }
-      throw err;
+      throw new Error(errorMessage);
     } finally {
       if (mounted.current) {
         setIsLoading(false);

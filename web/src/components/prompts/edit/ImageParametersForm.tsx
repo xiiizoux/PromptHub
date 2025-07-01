@@ -53,7 +53,7 @@ export default function ImageParametersForm({
   disabled = false,
   className = '',
 }: ImageParametersFormProps) {
-  const updateParameter = (key: keyof ImageParameters, paramValue: any) => {
+  const updateParameter = <K extends keyof ImageParameters>(key: K, paramValue: ImageParameters[K]) => {
     onChange({
       ...value,
       [key]: paramValue,

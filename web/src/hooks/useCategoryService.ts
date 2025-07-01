@@ -266,7 +266,11 @@ export function useMultiTypeCategoryService(types: CategoryType[]): {
   error: string | null;
   refreshAll: () => Promise<void>;
 } {
-  const [categoriesByType, setCategoriesByType] = useState<Record<CategoryType, CategoryInfo[]>>({} as any);
+  const [categoriesByType, setCategoriesByType] = useState<Record<CategoryType, CategoryInfo[]>>({
+    chat: [],
+    image: [],
+    video: [],
+  });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 

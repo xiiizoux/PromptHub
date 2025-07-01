@@ -119,7 +119,7 @@ export const logApiKeyActivity = (
   userId: string,
   action: AuditEventType,
   keyId?: string,
-  metadata?: any
+  metadata?: Record<string, unknown>
 ) => {
   auditLogger.info('API Key Activity', {
     eventType: action,
@@ -138,7 +138,7 @@ export const logAuthActivity = (
   userId: string,
   action: AuditEventType,
   success: boolean,
-  metadata?: any
+  metadata?: Record<string, unknown>
 ) => {
   auditLogger.info('Authentication Activity', {
     eventType: action,
@@ -158,7 +158,7 @@ export const logSecurityEvent = (
   eventType: AuditEventType,
   severity: 'low' | 'medium' | 'high' | 'critical',
   description: string,
-  metadata?: any
+  metadata?: Record<string, unknown>
 ) => {
   auditLogger.warn('Security Event', {
     eventType,
@@ -176,7 +176,7 @@ export const logSecurityEvent = (
 export const logPerformanceEvent = (
   operation: string,
   duration: number,
-  metadata?: any
+  metadata?: Record<string, unknown>
 ) => {
   const level = duration > 5000 ? 'warn' : duration > 1000 ? 'info' : 'debug';
   logger[level]('Performance Event', {

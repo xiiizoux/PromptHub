@@ -11,6 +11,7 @@ import {
   ExclamationTriangleIcon,
 } from '@heroicons/react/24/outline';
 import { exportPrompts, importPrompts } from '@/lib/api';
+import { ImportData } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
 import toast from 'react-hot-toast';
 
@@ -37,7 +38,13 @@ export const ImportExport: React.FC<ImportExportProps> = ({
     allowDuplicates: false,
     skipDuplicates: true,
   });
-  const [importResult, setImportResult] = useState<any>(null);
+  const [importResult, setImportResult] = useState<{
+    success: boolean;
+    imported_count: number;
+    total_count: number;
+    errors?: string[];
+    prompts: Array<{ id: string; name: string }>;
+  } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleExport = async () => {
@@ -67,8 +74,9 @@ export const ImportExport: React.FC<ImportExportProps> = ({
 
       toast.success(`已导出 ${selectedPrompts.length} 个提示词`);
       setShowExportModal(false);
-    } catch (error: any) {
-      toast.error(error.message || '导出失败');
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : '导出失败';
+      toast.error(errorMessage);
     } finally {
       setIsExporting(false);
     }
@@ -100,7 +108,24 @@ export const ImportExport: React.FC<ImportExportProps> = ({
 
     try {
       setIsImporting(true);
-      const result = await importPrompts(importData, importOptions);
+      
+      // 尝试解析JSON数据
+      let parsedData: ImportData;
+      try {
+        parsedData = JSON.parse(importData);
+      } catch (parseError) {
+        // 如果不是JSON，创建一个简单的ImportData对象
+        parsedData = {
+          prompts: [{
+            name: '导入的文本',
+            content: importData,
+            description: '从文本导入的提示词',
+          }],
+          version: '1.0',
+        };
+      }
+      
+      const result = await importPrompts(parsedData, importOptions);
       setImportResult(result);
       
       if (result.imported_count > 0) {
@@ -111,9 +136,16 @@ export const ImportExport: React.FC<ImportExportProps> = ({
       if (result.errors && result.errors.length > 0) {
         console.warn('导入警告:', result.errors);
       }
-    } catch (error: any) {
-      toast.error(error.message || '导入失败');
-      setImportResult({ success: false, error: error.message });
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : '导入失败';
+      toast.error(errorMessage);
+      setImportResult({ 
+        success: false, 
+        imported_count: 0, 
+        total_count: 0, 
+        errors: [errorMessage],
+        prompts: []
+      });
     } finally {
       setIsImporting(false);
     }

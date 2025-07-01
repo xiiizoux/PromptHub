@@ -11,6 +11,13 @@ import { unifiedStoreTool } from './unified-store.js';
 /**
  * 一键存储工具类 - 最简化的存储体验
  */
+// 定义参数类型
+interface QuickStoreParams {
+  content: string;
+  title?: string;
+  make_public?: boolean;
+}
+
 export class QuickStoreTool extends BaseMCPTool {
   readonly name = 'quick_store';
   readonly description = '一键存储提示词。系统将自动分析并填充所有参数，智能判断公开/私有设置，最大程度减少人工干预。';
@@ -40,7 +47,7 @@ export class QuickStoreTool extends BaseMCPTool {
     };
   }
 
-  async execute(params: any, context: ToolContext): Promise<ToolResult> {
+  async execute(params: QuickStoreParams, context: ToolContext): Promise<ToolResult> {
     this.validateParams(params, ['content']);
 
     const { content, title, make_public } = params;
@@ -66,18 +73,24 @@ export class QuickStoreTool extends BaseMCPTool {
       
       if (result.success) {
         // 转换为QuickStore格式的返回数据
+        // 转换为QuickStore格式的返回数据
+        const resultData = result.data as {
+          prompt?: { id?: string; name?: string };
+          final_params?: { category?: string; tags?: string[] };
+        };
+        
         return {
           success: true,
           data: {
-            prompt_id: result.data?.prompt?.id,
-            prompt_name: result.data?.prompt?.name,
+            prompt_id: resultData?.prompt?.id,
+            prompt_name: resultData?.prompt?.name,
             is_public: isPublic,
             analysis_summary: {
-              category: result.data?.final_params?.category,
-              tags_count: result.data?.final_params?.tags?.length || 0
+              category: resultData?.final_params?.category,
+              tags_count: resultData?.final_params?.tags?.length || 0
             }
           },
-          message: `✅ 提示词已成功存储: ${result.data?.prompt?.name}`
+          message: `✅ 提示词已成功存储: ${resultData?.prompt?.name}`
         };
       } else {
         return result;
@@ -125,7 +138,7 @@ export class SmartStoreTool extends BaseMCPTool {
     };
   }
 
-  async execute(params: any, context: ToolContext): Promise<ToolResult> {
+  async execute(params: { content: string; auto_analyze?: boolean; make_public?: boolean }, context: ToolContext): Promise<ToolResult> {
     this.validateParams(params, ['content']);
     
     const { content, auto_analyze = true, make_public } = params;
@@ -145,16 +158,21 @@ export class SmartStoreTool extends BaseMCPTool {
       const result = await unifiedStoreTool.execute(unifiedParams, context);
       
       if (result.success) {
+        const resultData = result.data as {
+          prompt?: { id?: string; name?: string };
+          analysis_report?: { ai_analysis?: unknown };
+        };
+        
         // 转换为SmartStore格式的返回数据
         return {
           success: true,
           data: {
-            prompt_id: result.data?.prompt?.id,
-            prompt_name: result.data?.prompt?.name,
-            analysis_result: result.data?.analysis_report?.ai_analysis,
+            prompt_id: resultData?.prompt?.id,
+            prompt_name: resultData?.prompt?.name,
+            analysis_result: resultData?.analysis_report?.ai_analysis,
             is_public: isPublic
           },
-          message: `✅ 智能存储完成: ${result.data?.prompt?.name}`
+          message: `✅ 智能存储完成: ${resultData?.prompt?.name}`
         };
       } else {
         return result;
@@ -190,7 +208,7 @@ export class AnalyzeAndStoreTool extends BaseMCPTool {
     };
   }
 
-  async execute(params: any, context: ToolContext): Promise<ToolResult> {
+  async execute(params: { content: string; analysis_only?: boolean; analysis_result?: MCPAIAnalysisResult }, context: ToolContext): Promise<ToolResult> {
     this.validateParams(params, ['content']);
 
     const { content, analysis_only = false, analysis_result } = params;
@@ -214,13 +232,18 @@ export class AnalyzeAndStoreTool extends BaseMCPTool {
         }, dummyContext);
 
         if (result.success) {
+          const resultData = result.data as {
+            analysis_report?: { ai_analysis?: unknown };
+            final_params?: { category?: string };
+          };
+          
           return {
             success: true,
             data: {
-              analysis_result: result.data?.analysis_report?.ai_analysis,
+              analysis_result: resultData?.analysis_report?.ai_analysis,
               content_stats: { 
                 length: content.length, 
-                estimated_category: result.data?.final_params?.category 
+                estimated_category: resultData?.final_params?.category 
               },
               next_steps: ['确认分析结果', '调整设置', '执行存储']
             },
@@ -244,17 +267,22 @@ export class AnalyzeAndStoreTool extends BaseMCPTool {
         const result = await unifiedStoreTool.execute(unifiedParams, context);
         
         if (result.success) {
+          const resultData = result.data as {
+            prompt?: { id?: string; name?: string };
+            final_params?: { category?: string; tags?: string[] };
+          };
+          
           return {
             success: true,
             data: {
-              prompt_id: result.data?.prompt?.id,
-              prompt_name: result.data?.prompt?.name,
+              prompt_id: resultData?.prompt?.id,
+              prompt_name: resultData?.prompt?.name,
               final_settings: { 
-                category: result.data?.final_params?.category, 
-                tags: result.data?.final_params?.tags 
+                category: resultData?.final_params?.category, 
+                tags: resultData?.final_params?.tags 
               }
             },
-            message: `✅ 分析并存储完成: ${result.data?.prompt?.name}`
+            message: `✅ 分析并存储完成: ${resultData?.prompt?.name}`
           };
         } else {
           return result;
@@ -280,15 +308,15 @@ export const smartStoreTool = new SmartStoreTool();
 export const analyzeAndStoreTool = new AnalyzeAndStoreTool();
 
 // 向后兼容的函数导出
-export async function handleQuickStore(params: any, userId?: string) {
+export async function handleQuickStore(params: QuickStoreParams, userId?: string) {
   return quickStoreTool.handleExecution(params, userId);
 }
 
-export async function handleSmartStore(params: any, userId?: string) {
+export async function handleSmartStore(params: { content: string; auto_analyze?: boolean; make_public?: boolean }, userId?: string) {
   return smartStoreTool.handleExecution(params, userId);
 }
 
-export async function handleAnalyzeAndStore(params: any, userId?: string) {
+export async function handleAnalyzeAndStore(params: { content: string; analysis_only?: boolean; analysis_result?: MCPAIAnalysisResult }, userId?: string) {
   return analyzeAndStoreTool.handleExecution(params, userId);
 }
 

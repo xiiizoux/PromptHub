@@ -76,9 +76,10 @@ export const BookmarkButton: React.FC<BookmarkButtonProps> = React.memo(({
         setCount(prev => result.liked ? prev + 1 : Math.max(0, prev - 1));
         toast.success(result.liked ? '已点赞' : '已取消点赞');
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : '操作失败';
       console.error('操作失败:', error);
-      toast.error(error.message || '操作失败');
+      toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }
