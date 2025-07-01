@@ -192,7 +192,7 @@ const ImagePromptCard: React.FC<ImagePromptCardProps> = React.memo(({ prompt }) 
                       if (getThumbnailUrl() && !showFullImage) {
                         setTimeout(() => {
                           setShowFullImage(true);
-                        }, 200);
+                        }, 50); // 减少到50ms，更快加载高质量图片
                       }
                     }}
                     onError={() => setImageError(true)}

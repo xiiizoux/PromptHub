@@ -216,7 +216,7 @@ const VideoPromptCard: React.FC<VideoPromptCardProps> = React.memo(({ prompt }) 
     if (loadingTimeoutRef.current) {
       clearTimeout(loadingTimeoutRef.current);
     }
-    loadingTimeoutRef.current = setTimeout(handleLoadingTimeout, 10000); // 10秒超时
+    loadingTimeoutRef.current = setTimeout(handleLoadingTimeout, 5000); // 减少到5秒超时
   };
 
   // 清除加载超时计时器
@@ -260,7 +260,7 @@ const VideoPromptCard: React.FC<VideoPromptCardProps> = React.memo(({ prompt }) 
           videoRef.current.play();
           setIsPlaying(true);
         }
-      }, 800); // 延长到800ms，给视频切换时间
+      }, 300); // 减少到300ms，提升响应速度
     }
   };
 
@@ -284,7 +284,7 @@ const VideoPromptCard: React.FC<VideoPromptCardProps> = React.memo(({ prompt }) 
         if (!isHovered) {
           setShowVideo(false);
         }
-      }, 300); // 延迟300ms再切回缩略图，避免闪烁
+      }, 100); // 减少到100ms，更快响应
     }
   };
 

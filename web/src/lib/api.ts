@@ -55,7 +55,7 @@ function extractPaginatedData<T>(response: any): {
 // 创建Axios实例 - Docker部署配置
 const api = axios.create({
   baseURL: '/api',
-  timeout: 120000, // 增加到2分钟超时
+  timeout: 15000, // 减少到15秒超时
   headers: {
     'Content-Type': 'application/json',
   },
@@ -76,7 +76,7 @@ const checkNetworkConnection = async (): Promise<boolean> => {
     // 简单的连通性测试
     const response = await fetch('/api/health', { 
       method: 'GET',
-      signal: AbortSignal.timeout(3000), // 3秒超时
+      signal: AbortSignal.timeout(1000), // 减少到1秒超时
     });
     return response.ok;
   } catch (error) {
@@ -117,7 +117,7 @@ const getAuthTokenWithRetry = async (maxRetries: number = 3): Promise<string | n
       if (attempt >= maxRetries) {
         throw new Error(`获取认证token失败: ${error.message}`);
       }
-      const delay = Math.min(1000 * Math.pow(2, attempt - 1), 5000);
+      const delay = Math.min(500 * Math.pow(2, attempt - 1), 2000); // 减少重试延迟
       await new Promise(resolve => setTimeout(resolve, delay));
     }
   }

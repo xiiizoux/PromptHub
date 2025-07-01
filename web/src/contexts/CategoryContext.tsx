@@ -28,18 +28,57 @@ interface CategoryContextType {
 // 创建上下文
 const CategoryContext = createContext<CategoryContextType | null>(null);
 
+// 本地存储键名
+const CACHE_KEY = 'prompthub_categories_cache';
+const CACHE_TIMESTAMP_KEY = 'prompthub_categories_timestamp';
+const CACHE_EXPIRY = 5 * 60 * 1000; // 5分钟缓存
+
+// 从localStorage获取缓存数据
+const getCachedCategories = (): Record<CategoryType, CategoryInfo[]> | null => {
+  try {
+    const cached = localStorage.getItem(CACHE_KEY);
+    const timestamp = localStorage.getItem(CACHE_TIMESTAMP_KEY);
+    
+    if (cached && timestamp) {
+      const now = Date.now();
+      const cacheTime = parseInt(timestamp);
+      
+      // 检查缓存是否过期
+      if (now - cacheTime < CACHE_EXPIRY) {
+        return JSON.parse(cached);
+      }
+    }
+  } catch (error) {
+    logger.warn('读取分类缓存失败', error);
+  }
+  return null;
+};
+
+// 保存数据到localStorage
+const setCachedCategories = (categories: Record<CategoryType, CategoryInfo[]>) => {
+  try {
+    localStorage.setItem(CACHE_KEY, JSON.stringify(categories));
+    localStorage.setItem(CACHE_TIMESTAMP_KEY, Date.now().toString());
+  } catch (error) {
+    logger.warn('保存分类缓存失败', error);
+  }
+};
+
 // 分类提供者组件
 export const CategoryProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  // 从缓存初始化状态
+  const cachedData = getCachedCategories();
+  
   // 状态管理
-  const [categories, setCategories] = useState<Record<CategoryType, CategoryInfo[]>>({
+  const [categories, setCategories] = useState<Record<CategoryType, CategoryInfo[]>>(cachedData || {
     chat: [],
     image: [],
     video: [],
   });
   
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(!cachedData); // 有缓存时不显示加载状态
   const [error, setError] = useState<string | null>(null);
-  const [isInitialized, setIsInitialized] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(!!cachedData); // 有缓存时直接初始化
 
   // 获取分类显示信息的简化方法
   const getCategoryDisplayInfo = useCallback((categoryName: string, type?: CategoryType): CategoryDisplayInfo => {
@@ -57,21 +96,21 @@ export const CategoryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
 
     // 获取显示信息（只使用数据库icon字段）
-    const displayInfo = categoryService.getCategoryDisplayInfo(categoryName, categoryData);
+    const displayInfo = categoryService.getCategoryDisplayInfo(categoryName, categoryData as Record<string, any> | undefined);
     
     // 获取图标组件（如果没有图标就返回null）
     const iconComponent = displayInfo.iconName ? getIconComponent(displayInfo.iconName) : null;
     
     return {
       ...displayInfo,
-      iconComponent,
+      iconComponent: iconComponent || undefined,
     };
   }, [categories]);
 
   // 获取分类图标组件
   const getCategoryIcon = useCallback((categoryName: string, type?: CategoryType): React.ComponentType<React.SVGProps<SVGSVGElement>> | null => {
     const displayInfo = getCategoryDisplayInfo(categoryName, type);
-    return displayInfo.iconComponent;
+    return displayInfo.iconComponent || null;
   }, [getCategoryDisplayInfo]);
 
   // 加载分类数据
@@ -86,11 +125,14 @@ export const CategoryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         categoryService.getCategories('video'),
       ]);
 
-      setCategories({
+      const newCategories = {
         chat: chatCategories,
         image: imageCategories,
         video: videoCategories,
-      });
+      };
+      
+      setCategories(newCategories);
+      setCachedCategories(newCategories); // 保存到缓存
 
       logger.info('分类数据加载完成', {
         chat: chatCategories.length,
