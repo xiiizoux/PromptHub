@@ -34,10 +34,25 @@ import {
   QuestionMarkCircleIcon,
   TagIcon,
   PhotoIcon,
+  ChatBubbleLeftRightIcon,
+  PhoneIcon,
+  UserGroupIcon,
+  ScaleIcon,
+  PencilSquareIcon,
+  IdentificationIcon,
+  DocumentTextIcon,
+  ComputerDesktopIcon,
+  LightBulbIcon,
+  RocketLaunchIcon,
+  ClockIcon,
+  FilmIcon,
+  CalendarIcon,
+  CubeIcon,
 } from '@heroicons/react/24/outline';
 
-// 图标组件映射表
+// 图标组件映射表（支持多种命名格式）
 export const ICON_COMPONENTS: Record<string, React.ComponentType<any>> = {
+  // PascalCase 格式
   SparklesIcon,
   AcademicCapIcon,
   CodeBracketIcon,
@@ -67,16 +82,96 @@ export const ICON_COMPONENTS: Record<string, React.ComponentType<any>> = {
   QuestionMarkCircleIcon,
   TagIcon,
   PhotoIcon,
+  ChatBubbleLeftRightIcon,
+  PhoneIcon,
+  UserGroupIcon,
+  ScaleIcon,
+  PencilSquareIcon,
+  IdentificationIcon,
+  DocumentTextIcon,
+  ComputerDesktopIcon,
+  LightBulbIcon,
+  RocketLaunchIcon,
+  ClockIcon,
+  FilmIcon,
+  CalendarIcon,
+  CubeIcon,
+
+  // kebab-case 格式映射（数据库中使用的格式）
+  'chat-bubble-left-right': ChatBubbleLeftRightIcon,
+  'phone': PhoneIcon,
+  'user-group': UserGroupIcon,
+  'academic-cap': AcademicCapIcon,
+  'code-bracket': CodeBracketIcon,
+  'chart-bar': ChartBarIcon,
+  'scale': ScaleIcon,
+  'heart': HeartIcon,
+  'pencil-square': PencilSquareIcon,
+  'language': LanguageIcon,
+  'book-open': BookOpenIcon,
+  'map': MapIcon,
+  'home': HomeIcon,
+  'camera': CameraIcon,
+  'user': UserIcon,
+  'photo': PhotoIcon,
+  'cube': CubeIcon,
+  'paint-brush': PaintBrushIcon,
+  'sparkles': SparklesIcon,
+  'swatch': SwatchIcon,
+  'computer-desktop': ComputerDesktopIcon,
+  'identification': IdentificationIcon,
+  'document-text': DocumentTextIcon,
+  'building-office': BuildingOfficeIcon,
+  'light-bulb': LightBulbIcon,
+  'rocket-launch': RocketLaunchIcon,
+  'clock': ClockIcon,
+  'film': FilmIcon,
+  'microphone': MicrophoneIcon,
+  'megaphone': MegaphoneIcon,
+  'calendar': CalendarIcon,
+  'musical-note': MusicalNoteIcon,
+  'currency-dollar': CurrencyDollarIcon,
 };
 
 // 默认图标
 export const DEFAULT_ICON = QuestionMarkCircleIcon;
 
 /**
+ * 将 kebab-case 转换为 PascalCase + Icon 后缀
+ */
+function kebabToPascalCase(str: string): string {
+  return str
+    .split('-')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join('') + 'Icon';
+}
+
+/**
  * 根据图标名称获取图标组件
+ * 支持多种格式：kebab-case, PascalCase
  */
 export function getIconComponent(iconName: string): React.ComponentType<any> {
-  return ICON_COMPONENTS[iconName] || DEFAULT_ICON;
+  if (!iconName) return DEFAULT_ICON;
+
+  // 直接查找（支持 kebab-case 和 PascalCase）
+  let component = ICON_COMPONENTS[iconName];
+  if (component) return component;
+
+  // 如果是 kebab-case，尝试转换为 PascalCase
+  if (iconName.includes('-')) {
+    const pascalCaseName = kebabToPascalCase(iconName);
+    component = ICON_COMPONENTS[pascalCaseName];
+    if (component) return component;
+  }
+
+  // 如果没有 Icon 后缀，尝试添加
+  if (!iconName.endsWith('Icon')) {
+    component = ICON_COMPONENTS[iconName + 'Icon'];
+    if (component) return component;
+  }
+
+  // 返回默认图标
+  return DEFAULT_ICON;
 }
 
 /**

@@ -80,16 +80,27 @@ export class DatabaseService {
   // ===== 提示词管理 =====
 
   /**
-   * 获取所有分类
+   * 获取所有分类（完整信息）
    * 从categories表获取数据，确保数据的一致性和完整性
    * @param type 可选的分类类型过滤 (chat, image, video)
    */
-  async getCategories(type?: string): Promise<string[]> {
-    console.log('=== 开始获取categories表数据 ===', { type });
+  async getCategories(type?: string): Promise<Array<{
+    id: string;
+    name: string;
+    name_en?: string;
+    icon?: string;
+    description?: string;
+    type: string;
+    sort_order?: number;
+    is_active?: boolean;
+    created_at?: string;
+    updated_at?: string;
+  }>> {
+    console.log('=== 开始获取categories表完整数据 ===', { type });
 
     let query = this.adapter.supabase
       .from('categories')
-      .select('id, name, name_en, description, sort_order, is_active, type')
+      .select('id, name, name_en, icon, description, sort_order, is_active, type, created_at, updated_at')
       .eq('is_active', true);
 
     // 如果指定了type，则按type过滤
@@ -100,16 +111,6 @@ export class DatabaseService {
       console.log('没有type过滤或type无效:', type);
     }
 
-    console.log('执行查询，SQL预览:', query);
-
-    // 先查询表结构确认type字段存在
-    const { data: tableInfo, error: tableError } = await this.adapter.supabase
-      .from('categories')
-      .select('*')
-      .limit(1);
-    
-    console.log('categories表结构示例:', tableInfo?.[0]);
-
     const { data: categoriesData, error: categoriesError } = await query.order('sort_order');
 
     console.log('数据库查询结果:', {
@@ -117,8 +118,7 @@ export class DatabaseService {
       errorCode: categoriesError?.code,
       errorMessage: categoriesError?.message,
       dataLength: categoriesData?.length || 0,
-      data: categoriesData?.slice(0, 5), // 显示前5个用于调试
-      allData: categoriesData, // 显示全部数据用于调试
+      data: categoriesData?.slice(0, 3), // 显示前3个用于调试
     });
 
     if (categoriesError) {
@@ -135,10 +135,17 @@ export class DatabaseService {
       throw new Error('categories表中没有数据');
     }
 
-    console.log('成功从categories表获取数据，数量:', categoriesData.length);
-    const categoryNames = categoriesData.map(c => c.name);
-    console.log('返回的分类名称:', categoryNames);
-    return categoryNames;
+    console.log('成功从categories表获取完整数据，数量:', categoriesData.length);
+    return categoriesData;
+  }
+
+  /**
+   * 获取分类名称列表（向后兼容）
+   * @param type 可选的分类类型过滤 (chat, image, video)
+   */
+  async getCategoryNames(type?: string): Promise<string[]> {
+    const categories = await this.getCategories(type);
+    return categories.map(c => c.name);
   }
 
 

@@ -49,6 +49,7 @@ import {
   CogIcon,
 } from '@heroicons/react/24/outline';
 import { StarIcon as SolidStarIcon } from '@heroicons/react/24/solid';
+import { useCategoryDisplayMap } from '@/hooks/useCategoryService';
 
 // 参数名称中文映射
 const PARAMETER_NAMES: Record<string, string> = {
@@ -94,6 +95,11 @@ export default function PromptDetailsPage() {
   const [copied, setCopied] = useState(false);
   const [isClient, setIsClient] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  // 使用分类显示映射Hook
+  const { displayMap, loading: loadingCategories, getDisplayInfo } = useCategoryDisplayMap(
+    (prompt?.category_type || 'chat') as 'chat' | 'image' | 'video'
+  );
 
   // 客户端数据获取
   useEffect(() => {
@@ -433,70 +439,21 @@ export default function PromptDetailsPage() {
     return typeMap[categoryType || 'chat'] || typeMap['chat'];
   };
 
-  // 获取分类样式和图标
+  // 获取分类样式和图标 - 使用动态分类系统
   const getCategoryInfo = (category?: string) => {
-    // 分类映射表 - 支持完整的21个分类
-    const categoryMap: Record<string, { color: string; icon: any }> = {
-      // 对话类分类
-      '通用对话': { color: 'from-neon-blue to-neon-cyan', icon: ChatBubbleLeftRightIcon },
-      '学术研究': { color: 'from-neon-cyan to-neon-blue', icon: AcademicCapIcon },
-      '编程开发': { color: 'from-neon-green to-neon-cyan', icon: CodeBracketIcon },
-      '文案写作': { color: 'from-neon-pink to-neon-yellow', icon: PencilIcon },
-      '翻译语言': { color: 'from-neon-purple to-neon-pink', icon: LanguageIcon },
-      
-      // 图像生成分类
-      '真实摄影': { color: 'from-neon-pink to-neon-red', icon: PhotoIcon },
-      '艺术绘画': { color: 'from-neon-purple to-neon-pink', icon: PaintBrushIcon },
-      '动漫插画': { color: 'from-neon-pink to-neon-yellow', icon: SparklesIcon },
-      '抽象艺术': { color: 'from-neon-yellow to-neon-orange', icon: SwatchIcon },
-      'Logo设计': { color: 'from-neon-cyan to-neon-purple', icon: SwatchIcon },
-      '建筑空间': { color: 'from-neon-blue to-neon-green', icon: HomeIcon },
-      '时尚设计': { color: 'from-neon-pink to-neon-purple', icon: SparklesIcon },
-      
-      // 视频生成分类
-      '故事叙述': { color: 'from-neon-orange to-neon-red', icon: BookOpenIcon },
-      '动画特效': { color: 'from-neon-red to-neon-pink', icon: FilmIcon },
-      '产品展示': { color: 'from-neon-yellow to-neon-green', icon: BriefcaseIcon },
-      '自然风景': { color: 'from-neon-green to-neon-blue', icon: SparklesIcon },
-      '人物肖像': { color: 'from-neon-pink to-neon-purple', icon: UserIcon },
-      '广告营销': { color: 'from-neon-red to-neon-orange', icon: ChartBarIcon },
-      
-      // 兼容旧分类名称
-      '通用': { color: 'from-neon-purple to-neon-blue', icon: SparklesIcon },
-      '学术': { color: 'from-neon-blue to-neon-cyan', icon: AcademicCapIcon },
-      '职业': { color: 'from-neon-green to-neon-yellow', icon: BriefcaseIcon },
-      '文案': { color: 'from-neon-pink to-neon-yellow', icon: PencilIcon },
-      '设计': { color: 'from-neon-yellow to-neon-orange', icon: SwatchIcon },
-      '绘画': { color: 'from-neon-orange to-neon-red', icon: PaintBrushIcon },
-      '教育': { color: 'from-neon-green to-neon-cyan', icon: BookOpenIcon },
-      '情感': { color: 'from-neon-pink to-neon-purple', icon: HeartIcon },
-      '娱乐': { color: 'from-neon-yellow to-neon-green', icon: SparklesIcon },
-      '游戏': { color: 'from-neon-purple to-neon-pink', icon: PuzzlePieceIcon },
-      '生活': { color: 'from-neon-green to-neon-blue', icon: HomeIcon },
-      '商业': { color: 'from-neon-red to-neon-orange', icon: ChartBarIcon },
-      '办公': { color: 'from-neon-blue to-neon-purple', icon: FolderIcon },
-      '编程': { color: 'from-neon-cyan to-neon-cyan-dark', icon: CodeBracketIcon },
-      '翻译': { color: 'from-neon-blue to-neon-cyan', icon: LanguageIcon },
-      '视频': { color: 'from-neon-red to-neon-pink', icon: VideoCameraIcon },
-      '播客': { color: 'from-neon-orange to-neon-yellow', icon: MicrophoneIcon },
-      '音乐': { color: 'from-neon-purple to-neon-blue', icon: MusicalNoteIcon },
-      '健康': { color: 'from-neon-green to-neon-cyan', icon: HealthIcon },
-      '科技': { color: 'from-neon-cyan to-neon-blue', icon: CpuChipIcon },
-      '代码': { color: 'from-neon-cyan to-neon-cyan-dark', icon: CodeBracketIcon },
-      '创意写作': { color: 'from-neon-pink to-neon-yellow', icon: DocumentTextIcon },
-      '写作': { color: 'from-neon-pink to-neon-yellow', icon: DocumentTextIcon },
-      '数据分析': { color: 'from-neon-yellow to-neon-green', icon: SparklesIcon },
-      '分析': { color: 'from-neon-yellow to-neon-green', icon: SparklesIcon },
-    };
-    
-    const info = categoryMap[category || ''] || { 
-      color: 'from-neon-purple to-neon-blue', 
-      icon: SparklesIcon, 
-    };
-    
+    if (loadingCategories) {
+      return {
+        name: category || '加载中...',
+        color: 'from-gray-400 to-gray-500',
+        icon: TagIcon
+      };
+    }
+
+    const displayInfo = getDisplayInfo(category || '');
     return {
-      name: category || '通用对话',
-      ...info,
+      name: displayInfo.name,
+      color: displayInfo.color,
+      icon: displayInfo.iconComponent || TagIcon
     };
   };
 

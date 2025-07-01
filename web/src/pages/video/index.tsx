@@ -44,7 +44,8 @@ export default function VideoPromptsPage() {
         }
 
         if (data && Array.isArray(data) && data.length > 0) {
-          setCategories(data);
+          // 将对象数组转换为字符串数组，只提取name字段
+          setCategories(data.map(category => category.name));
         } else {
           // 如果数据库没有数据，显示空数组而不是硬编码回退
           setCategories([]);

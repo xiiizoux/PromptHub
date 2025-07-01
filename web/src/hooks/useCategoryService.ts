@@ -76,14 +76,16 @@ export function useCategoryService(options: UseCategoryServiceOptions = {}): Use
 
   // 获取分类显示信息
   const getCategoryDisplayInfo = useCallback((name: string): CategoryDisplayInfo => {
-    const displayInfo = categoryService.getCategoryDisplayInfo(name);
-    
+    // 查找对应的分类数据
+    const categoryData = categories.find(cat => cat.name === name);
+    const displayInfo = categoryService.getCategoryDisplayInfo(name, categoryData);
+
     // 添加图标组件
     return {
       ...displayInfo,
       iconComponent: getIconComponent(displayInfo.iconName),
     };
-  }, []);
+  }, [categories]);
 
   // 刷新分类数据
   const refreshCategories = useCallback(async () => {

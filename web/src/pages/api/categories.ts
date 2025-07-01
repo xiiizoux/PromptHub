@@ -11,14 +11,21 @@ import { logger } from '@/lib/error-handler';
 
 export default apiHandler(async (req: NextApiRequest, res: NextApiResponse) => {
   try {
-    const { type } = req.query;
-    logger.info('获取分类列表请求', { type });
+    const { type, namesOnly } = req.query;
+    logger.info('获取分类列表请求', { type, namesOnly });
 
-    // 使用数据库服务获取分类，支持按type过滤
-    const categories = await databaseService.getCategories(type as string);
-
-    logger.info('成功获取分类数据', { count: categories.length, type });
-    return successResponse(res, categories);
+    // 根据参数决定返回完整信息还是仅名称
+    if (namesOnly === 'true') {
+      // 向后兼容：仅返回分类名称
+      const categoryNames = await databaseService.getCategoryNames(type as string);
+      logger.info('成功获取分类名称', { count: categoryNames.length, type });
+      return successResponse(res, categoryNames);
+    } else {
+      // 返回完整的分类信息（包含icon等字段）
+      const categories = await databaseService.getCategories(type as string);
+      logger.info('成功获取完整分类数据', { count: categories.length, type });
+      return successResponse(res, categories);
+    }
 
   } catch (error: any) {
     logger.error('获取分类列表失败', error);

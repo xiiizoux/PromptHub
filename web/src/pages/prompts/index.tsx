@@ -44,7 +44,8 @@ export default function PromptsPage() {
         }
 
         if (data && Array.isArray(data) && data.length > 0) {
-          setCategories(data);
+          // 将对象数组转换为字符串数组，只提取name字段
+          setCategories(data.map(category => category.name));
         } else {
           setCategories([]);
         }

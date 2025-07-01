@@ -194,9 +194,45 @@ export interface Category {
   is_active?: boolean;
 }
 
-// 获取所有分类
-export const getCategories = async (type?: string): Promise<string[]> => {
+// 获取所有分类（完整信息）
+export const getCategories = async (type?: string): Promise<Array<{
+  id: string;
+  name: string;
+  name_en?: string;
+  icon?: string;
+  description?: string;
+  type: string;
+  sort_order?: number;
+  is_active?: boolean;
+  created_at?: string;
+  updated_at?: string;
+}>> => {
   const url = type ? `/categories?type=${type}` : '/categories';
+  const response = await api.get<BackendApiResponse<Array<{
+    id: string;
+    name: string;
+    name_en?: string;
+    icon?: string;
+    description?: string;
+    type: string;
+    sort_order?: number;
+    is_active?: boolean;
+    created_at?: string;
+    updated_at?: string;
+  }>>>(url);
+
+  const categories = extractArrayData(response, []);
+  if (categories.length === 0 && !response.data?.success) {
+    const errorMessage = response.data?.error || 'API未返回成功状态';
+    throw new Error(`获取分类失败: ${errorMessage}`);
+  }
+
+  return categories;
+};
+
+// 获取分类名称列表（向后兼容）
+export const getCategoryNames = async (type?: string): Promise<string[]> => {
+  const url = type ? `/categories?type=${type}&namesOnly=true` : '/categories?namesOnly=true';
   const response = await api.get<BackendApiResponse<string[]>>(url);
 
   const categories = extractArrayData<string>(response, []);
@@ -204,7 +240,7 @@ export const getCategories = async (type?: string): Promise<string[]> => {
     const errorMessage = response.data?.error || 'API未返回成功状态';
     throw new Error(`获取分类失败: ${errorMessage}`);
   }
-  
+
   return categories;
 };
 ;

@@ -4,7 +4,7 @@ import { useAuth, withAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import Link from 'next/link';
 import { ProtectedLink, ProtectedButton } from '@/components/ProtectedLink';
-import MediaPromptCard from '@/components/prompts/MediaPromptCard';
+import UserMediaPromptCard from '@/components/prompts/UserMediaPromptCard';
 import clsx from 'clsx';
 import { 
   UserIcon, 
@@ -1825,7 +1825,7 @@ const ProfilePage = () => {
                           animate={{ opacity: 1, y: 0 }}
                           transition={{ delay: index * 0.1 }}
                         >
-                          <MediaPromptCard 
+                          <UserMediaPromptCard
                             prompt={{
                               ...prompt,
                               category_type: activePromptType, // 设置卡片类型

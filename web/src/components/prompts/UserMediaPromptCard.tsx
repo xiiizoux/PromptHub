@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { PromptInfo } from '@/types';
 import { formatVersionDisplay } from '@/lib/version-utils';
 import { useIntersectionObserver } from '@/hooks/useIntersectionObserver';
-import { categoryService, CategoryInfo } from '@/services/categoryService';
+import { useCategoryDisplayMap } from '@/hooks/useCategoryService';
 import { 
   StarIcon, 
   DocumentTextIcon, 
@@ -26,7 +26,7 @@ import { StarIcon as StarSolidIcon } from '@heroicons/react/24/solid';
 import { InteractionButtons } from '@/components/BookmarkButton';
 import clsx from 'clsx';
 
-interface MediaPromptCardProps {
+interface UserMediaPromptCardProps {
   prompt: PromptInfo & {
     category_type?: 'chat' | 'image' | 'video';
     preview_asset_url?: string;
@@ -50,16 +50,19 @@ const formatDate = (dateString?: string) => {
   });
 };
 
-const MediaPromptCard: React.FC<MediaPromptCardProps> = React.memo(({ prompt, showPublicStatus = false }) => {
+const UserMediaPromptCard: React.FC<UserMediaPromptCardProps> = React.memo(({ prompt, showPublicStatus = false }) => {
   const [mediaLoaded, setMediaLoaded] = useState(false);
   const [mediaError, setMediaError] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const [showFullMedia, setShowFullMedia] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [categories, setCategories] = useState<CategoryInfo[]>([]);
-  const [loadingCategories, setLoadingCategories] = useState(true);
   const videoRef = React.useRef<HTMLVideoElement>(null);
-  
+
+  // 使用分类显示映射Hook
+  const { displayMap, loading: loadingCategories, getDisplayInfo } = useCategoryDisplayMap(
+    (prompt.category_type || 'chat') as 'chat' | 'image' | 'video'
+  );
+
   // 懒加载：只有当卡片进入可视区域时才加载媒体
   const { elementRef, isVisible } = useIntersectionObserver({
     threshold: 0.1,
@@ -67,43 +70,25 @@ const MediaPromptCard: React.FC<MediaPromptCardProps> = React.memo(({ prompt, sh
     freezeOnceVisible: true
   });
 
-  // 加载分类数据
-  useEffect(() => {
-    const loadCategories = async () => {
-      try {
-        setLoadingCategories(true);
-        const type = (prompt.category_type || 'chat') as 'chat' | 'image' | 'video';
-        const categoriesData = await categoryService.getCategories(type);
-        setCategories(categoriesData);
-      } catch (error) {
-        console.error('Failed to load categories:', error);
-      } finally {
-        setLoadingCategories(false);
-      }
-    };
-
-    loadCategories();
-  }, [prompt.category_type]);
-
-  // 使用动态分类配置系统
+  // 获取分类显示信息
   const categoryInfo = useMemo(() => {
     if (loadingCategories) {
       return {
         name: prompt?.category || '加载中...',
         color: 'from-gray-400 to-gray-500',
         gradient: 'from-gray-400/20 to-gray-500/20',
-        iconName: 'TagIcon',
-        iconComponent: TagIcon
+        iconComponent: () => React.createElement('div', { className: 'h-4 w-4 bg-gray-400 rounded animate-pulse' })
       };
     }
-    const displayInfo = categoryService.getCategoryDisplayInfo(prompt?.category || '');
-    return {
-      ...displayInfo,
-      iconComponent: TagIcon // 暂时使用默认图标，后续可以根据 iconName 动态获取
-    };
-  }, [prompt?.category, prompt.category_type, categories, loadingCategories]);
 
-  const CategoryIcon = categoryInfo.iconComponent;
+    const displayInfo = getDisplayInfo(prompt?.category || '');
+    return {
+      name: displayInfo.name,
+      color: displayInfo.color,
+      gradient: displayInfo.gradient,
+      iconComponent: displayInfo.iconComponent
+    };
+  }, [prompt?.category, loadingCategories, getDisplayInfo]);
 
   const rating = useMemo(() => {
     if (!prompt) return { value: 0, percentage: 0 };
@@ -446,7 +431,9 @@ const MediaPromptCard: React.FC<MediaPromptCardProps> = React.memo(({ prompt, sh
                   'inline-flex p-2 rounded-lg bg-gradient-to-br flex-shrink-0',
                   categoryInfo.color,
                 )}>
-                  <CategoryIcon className="h-4 w-4 text-dark-bg-primary" />
+                  {categoryInfo.iconComponent && React.createElement(categoryInfo.iconComponent, {
+                    className: "h-4 w-4 text-dark-bg-primary"
+                  })}
                 </div>
                 <div className="flex-1 min-w-0">
                   <h3 className={clsx(
@@ -584,6 +571,6 @@ const MediaPromptCard: React.FC<MediaPromptCardProps> = React.memo(({ prompt, sh
   );
 });
 
-MediaPromptCard.displayName = 'MediaPromptCard';
+UserMediaPromptCard.displayName = 'UserMediaPromptCard';
 
-export default MediaPromptCard;
+export default UserMediaPromptCard;

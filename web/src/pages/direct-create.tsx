@@ -25,8 +25,8 @@ const DirectCreatePage: React.FC = () => {
         setIsLoading(true);
         const categoriesData = await getCategories();
         const tagsData = await getTags();
-        // 直接使用字符串数组
-        setCategories(categoriesData);
+        // 将对象数组转换为字符串数组
+        setCategories(categoriesData.map(cat => cat.name));
         setTags(tagsData);
         console.log('加载的分类:', categoriesData);
         console.log('加载的标签:', tagsData);

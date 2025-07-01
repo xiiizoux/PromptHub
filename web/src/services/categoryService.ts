@@ -160,23 +160,28 @@ class CategoryService {
   async getCategories(type?: CategoryType): Promise<CategoryInfo[]> {
     const cacheKey = type || 'all';
     const cached = this.cache.get(cacheKey);
-    
+
     // 检查缓存是否有效
     if (cached && Date.now() < cached.expiry) {
       return cached.data;
     }
 
     try {
-      // 调用API获取分类
-      const categoryNames = await getCategories(type);
-      
+      // 调用API获取完整的分类信息
+      const categoriesData = await getCategories(type);
+
       // 转换为CategoryInfo格式
-      const categories: CategoryInfo[] = categoryNames.map((name, index) => ({
-        id: `category-${name}`,
-        name,
-        type: type || 'chat',
-        sort_order: index,
-        is_active: true,
+      const categories: CategoryInfo[] = categoriesData.map((category) => ({
+        id: category.id,
+        name: category.name,
+        name_en: category.name_en,
+        icon: category.icon,
+        description: category.description,
+        type: category.type as CategoryType,
+        sort_order: category.sort_order,
+        is_active: category.is_active,
+        created_at: category.created_at,
+        updated_at: category.updated_at,
       }));
 
       // 更新缓存
@@ -240,11 +245,53 @@ class CategoryService {
   }
 
   /**
-   * 获取分类的显示信息 - 动态生成
+   * 获取分类的显示信息 - 优先使用数据库信息
    */
-  getCategoryDisplayInfo(categoryName: string): CategoryDisplayInfo {
-    // 使用动态生成器生成显示信息
+  getCategoryDisplayInfo(categoryName: string, categoryData?: CategoryInfo): CategoryDisplayInfo {
+    // 如果提供了分类数据且包含图标信息，优先使用
+    if (categoryData?.icon) {
+      return {
+        name: categoryData.name,
+        color: this.getColorByType(categoryData.type),
+        gradient: this.getGradientByType(categoryData.type),
+        iconName: categoryData.icon,
+      };
+    }
+
+    // 否则使用动态生成器生成显示信息
     return displayGenerator.generateDisplayInfo(categoryName);
+  }
+
+  /**
+   * 根据分类类型获取颜色
+   */
+  private getColorByType(type: CategoryType): string {
+    switch (type) {
+      case 'chat':
+        return 'from-neon-purple to-neon-blue';
+      case 'image':
+        return 'from-pink-500 to-purple-500';
+      case 'video':
+        return 'from-red-500 to-orange-500';
+      default:
+        return 'from-gray-500 to-gray-600';
+    }
+  }
+
+  /**
+   * 根据分类类型获取渐变
+   */
+  private getGradientByType(type: CategoryType): string {
+    switch (type) {
+      case 'chat':
+        return 'from-neon-purple/20 to-neon-blue/20';
+      case 'image':
+        return 'from-pink-500/20 to-purple-500/20';
+      case 'video':
+        return 'from-red-500/20 to-orange-500/20';
+      default:
+        return 'from-gray-500/20 to-gray-600/20';
+    }
   }
 
   /**
