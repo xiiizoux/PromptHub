@@ -331,6 +331,7 @@ export default function PromptFormContainer({
 
     // 调试信息 - 仅在开发环境输出
     if (process.env.NODE_ENV === 'development') {
+      // eslint-disable-next-line no-console
       console.log('未保存状态检测:', {
         mode,
         hasChanges,
