@@ -139,11 +139,11 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
           video: videoCategories,
         });
 
-        // 设置按类型分组的分类
+        // 设置按类型分组的分类 - 转换为字符串数组
         const categoriesByTypeData = {
-          chat: chatCategories || [],
-          image: imageCategories || [],
-          video: videoCategories || [],
+          chat: (chatCategories || []).map(cat => cat.name),
+          image: (imageCategories || []).map(cat => cat.name),
+          video: (videoCategories || []).map(cat => cat.name),
         };
         setCategoriesByType(categoriesByTypeData);
 

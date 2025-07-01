@@ -22,7 +22,7 @@ import { toast } from 'react-hot-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import SmartWritingAssistant from '@/components/SmartWritingAssistant';
 import PromptTypeSelector, { PromptType } from '@/components/prompts/edit/PromptTypeSelector';
-import CategorySelector from '@/components/prompts/edit/CategorySelector';
+import CategorySelectorSimple from '@/components/prompts/edit/CategorySelectorSimple';
 import ImageParametersForm, { ImageParameters } from '@/components/prompts/edit/ImageParametersForm';
 import VideoParametersForm, { VideoParameters } from '@/components/prompts/edit/VideoParametersForm';
 import { ModelSelector } from '@/components/ModelSelector';
