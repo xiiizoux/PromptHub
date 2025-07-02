@@ -18,6 +18,7 @@ export interface CategoryInfo {
   is_active?: boolean;
   created_at?: string;
   updated_at?: string;
+  optimization_template?: string; // 提示词优化模板
 }
 
 // 分类显示信息接口（前端显示用）

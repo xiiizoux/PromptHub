@@ -24,6 +24,8 @@ import {
 } from '@/lib/prompt-optimizer';
 import { AIAnalyzeButton, AIAnalysisResultDisplay } from '@/components/AIAnalyzeButton';
 import { AIAnalysisResult } from '@/lib/ai-analyzer';
+import { categoryService, CategoryInfo } from '@/services/categoryService';
+import { promptCategoryMatcher } from '@/services/promptCategoryMatcher';
 import toast from 'react-hot-toast';
 
 interface PromptOptimizerProps {
@@ -44,16 +46,40 @@ export const PromptOptimizerComponent: React.FC<PromptOptimizerProps> = ({
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isIterating, setIsIterating] = useState(false);
   const [activeTab, setActiveTab] = useState<'optimize' | 'iterate' | 'analyze'>('optimize');
-  const [optimizationType, setOptimizationType] = useState<OptimizationRequest['type']>('general');
+  const [selectedCategory, setSelectedCategory] = useState<CategoryInfo | null>(null);
+  const [categories, setCategories] = useState<CategoryInfo[]>([]);
+  const [isLoadingCategories, setIsLoadingCategories] = useState(true);
+  const [categoryType, setCategoryType] = useState<'chat' | 'image' | 'video'>('chat');
   const [requirements, setRequirements] = useState('');
   const [iterationRequirements, setIterationRequirements] = useState('');
   const [iterationType, setIterationType] = useState<IterationRequest['type']>('refine');
   const [result, setResult] = useState<OptimizationResult | null>(null);
   const [analysisScore, setAnalysisScore] = useState<OptimizationResult['score'] | null>(null);
-  
+
   // 添加智能分析相关状态
   const [aiAnalysisResult, setAiAnalysisResult] = useState<AIAnalysisResult | null>(null);
   const [showAiAnalysisResult, setShowAiAnalysisResult] = useState(false);
+
+  // 加载分类数据
+  useEffect(() => {
+    const loadCategories = async () => {
+      try {
+        setIsLoadingCategories(true);
+        const categoriesData = await categoryService.getCategories(categoryType);
+        setCategories(categoriesData);
+
+        // 重置选中的分类，让用户重新选择
+        setSelectedCategory(null);
+      } catch (error) {
+        console.error('加载分类失败:', error);
+        toast.error('加载分类失败');
+      } finally {
+        setIsLoadingCategories(false);
+      }
+    };
+
+    loadCategories();
+  }, [categoryType]);
 
   // 同步外部prompt变化
   useEffect(() => {
@@ -82,43 +108,61 @@ export const PromptOptimizerComponent: React.FC<PromptOptimizerProps> = ({
 
     setIsOptimizing(true);
     try {
-      // 根据优化类型选择API
-      let optimizationResult;
-      
-      if (optimizationType === 'advanced') {
-        // 使用高级优化API
-        const { optimizePromptAdvanced } = await import('@/lib/prompt-optimizer');
-        const result = await optimizePromptAdvanced(prompt, {
-          type: 'general',
-          requirements: requirements || '',
-          complexity: 'medium',
-          includeAnalysis: true,
-        });
-        
-        if (result) {
-          optimizationResult = {
-            optimizedPrompt: result.optimized,
-            improvements: result.improvements,
-            score: { clarity: 8, specificity: 8, completeness: 8, overall: 8 }, // 临时评分
-            suggestions: result.techniques || [],
-          };
-        }
-      } else {
-        // 使用标准优化API
-        optimizationResult = await optimizePrompt(
-          prompt,
-          requirements || undefined,
-          optimizationType as 'general' | 'creative' | 'technical' | 'business' | 'educational' | 'drawing',
-        );
+      // 构建请求体
+      const requestBody: any = {
+        prompt,
+        requirements: requirements || '',
+        context: '',
+      };
+
+      // 如果用户手动选择了分类，则传递分类信息
+      if (selectedCategory) {
+        requestBody.manualCategory = {
+          id: selectedCategory.id,
+          name: selectedCategory.name,
+          optimization_template: selectedCategory.optimization_template,
+        };
       }
 
-      if (optimizationResult) {
-        setResult(optimizationResult);
-        setOptimizedPrompt(optimizationResult.optimizedPrompt);
-        onOptimizedPrompt?.(optimizationResult.optimizedPrompt);
-        toast.success('提示词优化完成！');
+      // 使用新的智能优化API
+      const response = await fetch('/api/ai/optimize', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestBody),
+      });
+
+      if (!response.ok) {
+        throw new Error(`优化失败: ${response.status}`);
+      }
+
+      const data = await response.json();
+      if (!data.success) {
+        throw new Error(data.error || '优化失败');
+      }
+
+      // 构建优化结果
+      const optimizationResult = {
+        optimizedPrompt: data.data.optimized,
+        improvements: data.data.improvements || [],
+        score: { clarity: 8, specificity: 8, completeness: 8, overall: 8 }, // 临时评分
+        suggestions: data.data.suggestions || [],
+      };
+
+      setResult(optimizationResult);
+      setOptimizedPrompt(optimizationResult.optimizedPrompt);
+      onOptimizedPrompt?.(optimizationResult.optimizedPrompt);
+
+      // 显示匹配的分类信息
+      if (data.data.category) {
+        if (selectedCategory) {
+          toast.success(`使用手动选择的 "${data.data.category.name}" 分类优化完成！`);
+        } else {
+          toast.success(`AI智能匹配到 "${data.data.category.name}" 分类优化完成！置信度: ${Math.round(data.data.confidence * 100)}%`);
+        }
       } else {
-        toast.error('优化失败：请检查API配置');
+        toast.success('提示词优化完成！');
       }
     } catch (error) {
       console.error('优化失败:', error);
@@ -323,25 +367,69 @@ export const PromptOptimizerComponent: React.FC<PromptOptimizerProps> = ({
               智能优化
             </h3>
 
+            {/* 类型切换 */}
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-300 mb-2">
+                提示词类型
+              </label>
+              <div className="flex space-x-2">
+                {[
+                  { value: 'chat', label: '💬 对话', icon: '💬' },
+                  { value: 'image', label: '🎨 图像', icon: '🎨' },
+                  { value: 'video', label: '🎬 视频', icon: '🎬' },
+                ].map((type) => (
+                  <button
+                    key={type.value}
+                    onClick={() => setCategoryType(type.value as 'chat' | 'image' | 'video')}
+                    className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                      categoryType === type.value
+                        ? 'bg-neon-green/20 text-neon-green border border-neon-green/50'
+                        : 'bg-gray-800/50 text-gray-300 border border-gray-600/50 hover:bg-gray-700/50'
+                    }`}
+                  >
+                    {type.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+              {/* 优化类型选择 */}
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">
                   优化类型
                 </label>
-                <select
-                  value={optimizationType}
-                  onChange={(e) => setOptimizationType(e.target.value as OptimizationRequest['type'])}
-                  className="w-full bg-gray-800/50 border border-gray-600/50 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-neon-green/50"
-                >
-                  <option value="general">📝 通用优化</option>
-                  <option value="creative">🎨 创意优化</option>
-                  <option value="technical">💻 技术优化</option>
-                  <option value="business">💼 商业优化</option>
-                  <option value="educational">🎓 教育优化</option>
-                  <option value="advanced">🚀 高级优化</option>
-                  <option value="drawing">🎨 绘图优化</option>
-                  <option value="finance">💰 金融优化</option>
-                </select>
+                {isLoadingCategories ? (
+                  <div className="w-full bg-gray-800/50 border border-gray-600/50 rounded-lg px-3 py-2 text-gray-400">
+                    加载分类中...
+                  </div>
+                ) : (
+                  <select
+                    value={selectedCategory?.id || ''}
+                    onChange={(e) => {
+                      if (e.target.value === '') {
+                        setSelectedCategory(null);
+                      } else {
+                        const category = categories.find(c => c.id === e.target.value);
+                        setSelectedCategory(category || null);
+                      }
+                    }}
+                    className="w-full bg-gray-800/50 border border-gray-600/50 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-neon-green/50"
+                  >
+                    <option value="">🧠 选择分类或AI智能匹配分类</option>
+                    {categories.map((category) => (
+                      <option key={category.id} value={category.id}>
+                        {category.icon || '📝'} {category.name}
+                      </option>
+                    ))}
+                  </select>
+                )}
+                <p className="text-xs text-gray-400 mt-1">
+                  {selectedCategory
+                    ? `已选择: ${selectedCategory.name}`
+                    : '未选择时将自动智能匹配最适合的分类'
+                  }
+                </p>
               </div>
 
               <div>

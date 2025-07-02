@@ -106,47 +106,27 @@ export class DatabaseService {
     is_active?: boolean;
     created_at?: string;
     updated_at?: string;
+    optimization_template?: string;
   }>> {
-    console.log('=== 开始获取categories表完整数据 ===', { type });
-
     let query = this.adapter.supabase
       .from('categories')
-      .select('id, name, name_en, icon, description, sort_order, is_active, type, created_at, updated_at')
+      .select('id, name, name_en, icon, description, sort_order, is_active, type, created_at, updated_at, optimization_template')
       .eq('is_active', true);
 
     // 如果指定了type，则按type过滤
     if (type && ['chat', 'image', 'video'].includes(type)) {
-      console.log('添加type过滤:', type);
       query = query.eq('type', type);
-    } else {
-      console.log('没有type过滤或type无效:', type);
     }
 
     const { data: categoriesData, error: categoriesError } = await query.order('sort_order');
 
-    console.log('数据库查询结果:', {
-      error: categoriesError,
-      errorCode: categoriesError?.code,
-      errorMessage: categoriesError?.message,
-      dataLength: categoriesData?.length || 0,
-      data: categoriesData?.slice(0, 3), // 显示前3个用于调试
-    });
-
     if (categoriesError) {
-      console.error('数据库错误详情:', {
-        code: categoriesError.code,
-        message: categoriesError.message,
-        details: categoriesError.details,
-        hint: categoriesError.hint,
-      });
       throw new Error(`获取分类失败: ${categoriesError.message}`);
     }
 
     if (!categoriesData || categoriesData.length === 0) {
       throw new Error('categories表中没有数据');
     }
-
-    console.log('成功从categories表获取完整数据，数量:', categoriesData.length);
     return categoriesData;
   }
 

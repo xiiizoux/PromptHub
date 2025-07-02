@@ -1,4 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
+import { promptCategoryMatcher } from '@/services/promptCategoryMatcher';
+import { logger } from '@/lib/error-handler';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
@@ -6,8 +8,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    const { prompt, optimizationType = 'general', requirements = '', context = '' } = req.body;
-    
+    const { prompt, requirements = '', context = '', manualCategory } = req.body;
+
     if (!prompt || typeof prompt !== 'string') {
       return res.status(400).json({
         success: false,
@@ -18,7 +20,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // 检查环境变量
     const apiKey = process.env.NEXT_PUBLIC_OPENAI_API_KEY;
     const baseURL = process.env.NEXT_PUBLIC_OPENAI_BASE_URL || 'https://api.openai.com/v1';
-    
+
     if (!apiKey) {
       return res.status(500).json({
         success: false,
@@ -26,9 +28,41 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       });
     }
 
-    // 根据优化类型选择合适的模型和提示词模板
-    const model = optimizationType === 'complex' ? 'gpt-4' : 'gpt-4o-mini';
-    const optimizationPrompt = buildOptimizationPrompt(prompt, optimizationType, requirements, context);
+    let templateResult;
+    let isManualSelection = false;
+
+    // 如果用户手动选择了分类，使用手动选择的分类
+    if (manualCategory && manualCategory.optimization_template) {
+      logger.info('使用手动选择的分类', {
+        categoryName: manualCategory.name,
+        categoryId: manualCategory.id
+      });
+
+      templateResult = {
+        template: manualCategory.optimization_template,
+        category: {
+          id: manualCategory.id,
+          name: manualCategory.name,
+        },
+        confidence: 1.0, // 手动选择的置信度为100%
+      };
+      isManualSelection = true;
+    } else {
+      // 使用智能分类匹配获取优化模板
+      logger.info('开始智能分类匹配', { prompt: prompt.substring(0, 100) });
+      templateResult = await promptCategoryMatcher.getOptimizationTemplate(prompt);
+    }
+
+    // 构建优化提示词
+    const optimizationTemplate = templateResult.template;
+    const requirementsText = requirements ? `\n\n特殊要求：${requirements}` : '';
+    const contextText = context ? `\n\n使用场景：${context}` : '';
+    const optimizationPrompt = optimizationTemplate
+      .replace('{prompt}', prompt)
+      .replace('{requirements}', requirementsText + contextText);
+
+    // 选择模型
+    const model = 'gpt-4o-mini';
 
     // 调用OpenAI API
     const response = await fetch(`${baseURL}/chat/completions`, {
@@ -41,15 +75,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         model,
         messages: [
           {
-            role: 'system',
-            content: getSystemPrompt(optimizationType),
-          },
-          {
             role: 'user',
             content: optimizationPrompt,
           },
         ],
-        max_tokens: optimizationType === 'complex' ? 2000 : 1000,
+        max_tokens: 1500,
         temperature: 0.7,
       }),
     });
@@ -84,7 +114,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         optimized: optimizedPrompt,
         improvements,
         suggestions,
-        optimizationType,
+        category: templateResult.category,
+        confidence: templateResult.confidence,
         usage: data.usage,
       },
     });
@@ -98,106 +129,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 }
 
-// 构建优化提示词
-function buildOptimizationPrompt(prompt: string, type: string, requirements: string, context: string): string {
-  let basePrompt = `请优化以下AI提示词：
-
-原始提示词：
-${prompt}`;
-
-  // 为绘图优化添加特殊指导
-  if (type === 'drawing') {
-    basePrompt += `
-
-注意：这是一个绘图提示词优化请求，请提供一个高质量的通用优化版本，适合各种AI绘图模型使用。请在使用建议中包含技术参数和不同平台的使用技巧。`;
-  }
-
-  const contextSection = context ? `
-
-使用场景：
-${context}` : '';
-  const requirementsSection = requirements ? `
-
-特殊要求：
-${requirements}` : '';
-  
-  return basePrompt + contextSection + requirementsSection;
-}
-
-// 获取系统提示词
-function getSystemPrompt(optimizationType: string): string {
-  const basePrompt = `你是一个专业的AI提示词优化专家。你的任务是优化用户提供的提示词，使其更加清晰、具体和有效。
-
-核心优化原则：
-1. 清晰性：确保指令明确，避免歧义
-2. 具体性：提供具体的要求和期望输出格式
-3. 完整性：包含必要的上下文和约束条件
-4. 结构化：使用清晰的结构和格式
-5. 可操作性：确保AI能够理解并执行
-
-请按照以下格式输出：
-
-### 优化后的提示词
-[提供优化后的提示词]
-
-### 主要改进点
-[列出3-5个主要改进点]
-
-### 使用建议
-[提供使用该提示词的最佳实践建议]`;
-
-  const typeSpecificPrompts = {
-    creative: `
-特别注重创意和灵感激发：
-- 增加创意引导语句
-- 提供多样化的思考角度
-- 鼓励原创性和独特性`,
-    
-    technical: `
-特别注重技术准确性：
-- 确保技术术语使用准确
-- 提供明确的技术规范
-- 包含错误处理和边缘情况`,
-    
-    business: `
-特别注重商业价值：
-- 强调ROI和商业目标
-- 考虑利益相关者需求
-- 包含可衡量的成功指标`,
-    
-    educational: `
-特别注重教学效果：
-- 采用循序渐进的结构
-- 包含示例和练习
-- 考虑不同学习水平`,
-    
-    complex: `
-处理复杂任务优化：
-- 分解复杂任务为子任务
-- 提供详细的步骤指导
-- 考虑多种解决方案路径`,
-
-    drawing: `
-特别注重绘画图像生成优化：
-- 主体描述：使用具体生动的主体描述，明确姿态、表情、服装等细节
-- 风格技法：指定明确的艺术风格（写实、卡通、油画等），添加光影、构图、色彩描述
-- 环境背景：详细描述场景、背景元素、时间地点、氛围
-- 质量增强：添加质量增强关键词，优化画面构图和视觉效果
-- 通用适配：提供一个高质量的通用优化版本，适合各种AI绘图模型使用
-- 技术建议：在使用建议中包含技术参数和高级技巧指导`,
-
-    finance: `
-特别注重金融专业性优化：
-- 金融角色定位：明确金融专业角色（基金经理、财务分析师、投资顾问等）
-- 核心指标聚焦：突出关键财务指标（ROI、ROE、IRR、夏普比率、VAR等）
-- 量化方法应用：引入金融模型和定量分析方法（DCF、CAPM、蒙特卡洛模拟等）
-- 风险评估框架：包含风险识别、评估和管理的系统性方法
-- 监管合规考量：结合相关监管要求和行业标准
-- 实用性导向：确保建议具有可执行性和实际应用价值`,
-  };
-
-  return basePrompt + (typeSpecificPrompts[optimizationType as keyof typeof typeSpecificPrompts] || '');
-}
+// 这些函数已被智能分类匹配服务替代，保留用于解析响应
 
 // 提取优化后的提示词
 function extractOptimizedPrompt(content: string): string {

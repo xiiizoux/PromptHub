@@ -21,6 +21,7 @@ export interface CategoryInfo {
   is_active?: boolean;
   created_at?: string;
   updated_at?: string;
+  optimization_template?: string; // 提示词优化模板
 }
 
 // 分类显示信息接口
@@ -75,6 +76,7 @@ class CategoryService {
         is_active: category.is_active,
         created_at: category.created_at,
         updated_at: category.updated_at,
+        optimization_template: category.optimization_template,
       }));
 
       // 更新缓存

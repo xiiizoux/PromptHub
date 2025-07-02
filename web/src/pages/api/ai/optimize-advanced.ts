@@ -1,4 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
+import { promptCategoryMatcher } from '@/services/promptCategoryMatcher';
+import { logger } from '@/lib/error-handler';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
@@ -6,15 +8,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    const { 
-      prompt, 
-      optimizationType = 'general',
+    const {
+      prompt,
       requirements = '',
       context = '',
       complexity = 'medium',
       includeAnalysis = false,
     } = req.body;
-    
+
     if (!prompt || typeof prompt !== 'string') {
       return res.status(400).json({
         success: false,
@@ -25,7 +26,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // 检查环境变量
     const apiKey = process.env.NEXT_PUBLIC_OPENAI_API_KEY;
     const baseURL = process.env.NEXT_PUBLIC_OPENAI_BASE_URL || 'https://api.openai.com/v1';
-    
+
     if (!apiKey) {
       return res.status(500).json({
         success: false,
@@ -33,12 +34,22 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       });
     }
 
-    // 根据复杂度和类型选择模型
+    // 使用智能分类匹配获取优化模板
+    logger.info('开始高级智能分类匹配', { prompt: prompt.substring(0, 100) });
+    const templateResult = await promptCategoryMatcher.getOptimizationTemplate(prompt);
+
+    // 根据复杂度选择模型
     const model = complexity === 'complex' ? 'gpt-4' : 'gpt-4o-mini';
-    
-    // 构建高级优化提示词
-    const systemPrompt = buildAdvancedSystemPrompt(optimizationType, complexity);
-    const userPrompt = buildAdvancedUserPrompt(prompt, requirements, context, optimizationType);
+
+    // 构建优化提示词
+    const optimizationTemplate = templateResult.template;
+    const requirementsText = requirements ? `\n\n特殊要求：${requirements}` : '';
+    const contextText = context ? `\n\n使用场景：${context}` : '';
+    const complexityText = complexity === 'complex' ? '\n\n请提供更深入和详细的优化建议。' : '';
+
+    const userPrompt = optimizationTemplate
+      .replace('{prompt}', prompt)
+      .replace('{requirements}', requirementsText + contextText + complexityText);
 
     // 如果需要分析，先进行质量分析
     let analysis = null;
@@ -56,11 +67,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       body: JSON.stringify({
         model,
         messages: [
-          { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt },
         ],
         max_tokens: complexity === 'complex' ? 3000 : 2000,
-        temperature: optimizationType === 'creative' ? 0.8 : 0.7,
+        temperature: templateResult.category.type === 'chat' && templateResult.category.name.includes('创意') ? 0.8 : 0.7,
       }),
     });
 
@@ -90,7 +100,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       data: {
         original: prompt,
         ...result,
-        optimizationType,
+        category: templateResult.category,
+        confidence: templateResult.confidence,
         complexity,
         analysis,
         usage: data.usage,
@@ -106,67 +117,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 }
 
-function buildAdvancedSystemPrompt(type: string, complexity: string): string {
-  const basePrompt = `你是一个高级AI提示词优化专家，拥有深厚的提示工程经验。你将提供专业级别的提示词优化服务。
-
-优化等级：${complexity}
-优化类型：${type}
-
-核心优化原则：
-1. 精确性：每个词都有其存在的价值
-2. 结构化：采用最优的信息架构
-3. 可扩展性：考虑未来的扩展可能
-4. 用户体验：确保使用者容易理解和操作
-5. 效果最大化：追求最佳的AI响应质量
-
-请按照以下结构输出：
-
-### 🎯 优化后的提示词
-[提供经过专业优化的提示词]
-
-### 📊 优化分析
-[分析原始提示词的问题和改进策略]
-
-### ✨ 关键改进点
-[列出3-5个最重要的改进点]
-
-### 🔧 高级技巧
-[提供提示工程的高级技巧和最佳实践]
-
-### 📋 使用指南
-[详细的使用说明和注意事项]
-
-### 🎛️ 参数建议
-[推荐的模型参数设置]`;
-
-  const typeSpecific = {
-    creative: `
-特别优化重点：
-- 激发创意思维的语言模式
-- 多维度创意引导框架
-- 情感共鸣和想象力激发
-- 开放性与约束性的平衡`,
-    
-    technical: `
-特别优化重点：
-- 技术规范和标准的精确表达
-- 错误处理和边界条件考虑
-- 代码质量和最佳实践集成
-- 可测试和可维护的输出要求`,
-    
-    business: `
-特别优化重点：
-- 商业目标和KPI的明确定义
-- 利益相关者需求的全面考虑
-- ROI和成本效益的量化表达
-- 可执行的行动计划框架`,
-    
-    educational: `
-特别优化重点：
-- 循序渐进的知识建构
-- 多样化的学习活动设计
-- 不同学习风格的适配
-- 评估和反馈机制的嵌入`,
+// 这些函数已被智能分类匹配服务替代，保留用于解析响应和质量分析
     
     complex: `
 特别优化重点：
