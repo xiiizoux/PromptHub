@@ -4,12 +4,12 @@ import { useRouter } from 'next/router';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
 import { motion } from 'framer-motion';
-import { 
-  ClockIcon, 
-  UserIcon, 
-  TagIcon, 
-  DocumentTextIcon, 
-  PencilSquareIcon, 
+import {
+  ClockIcon,
+  UserIcon,
+  TagIcon,
+  DocumentTextIcon,
+  PencilSquareIcon,
   TrashIcon,
   ChevronLeftIcon,
   ClipboardDocumentIcon,
@@ -50,6 +50,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { StarIcon as SolidStarIcon } from '@heroicons/react/24/solid';
 import { useOptimizedCategoryDisplay } from '@/contexts/CategoryContext';
+import ShareButton from '@/components/ShareButton';
 
 // 参数名称中文映射
 const PARAMETER_NAMES: Record<string, string> = {
@@ -690,25 +691,11 @@ export default function PromptDetailsPage() {
                 </div>
                 
                 <div className="flex items-center space-x-3 ml-6">
-                  <motion.button
-                    type="button"
-                    onClick={() => {
-                      // 简单的分享功能：复制当前页面链接
-                      const shareUrl = window.location.href;
-                      navigator.clipboard.writeText(shareUrl).then(() => {
-                        // 这里可以添加toast提示
-                        alert('链接已复制到剪贴板！');
-                      }).catch(() => {
-                        alert('复制失败，请手动复制地址栏链接');
-                      });
-                    }}
-                    className="p-3 glass rounded-xl border border-neon-cyan/30 text-neon-cyan hover:border-neon-cyan/50 hover:text-white transition-colors"
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    title="分享这个提示词"
-                  >
-                    <ShareIcon className="h-5 w-5" />
-                  </motion.button>
+                  <ShareButton
+                    url={typeof window !== 'undefined' ? window.location.href : ''}
+                    title={prompt?.name || ''}
+                    description={prompt?.description || ''}
+                  />
 
                   {/* 版本历史按钮 - 所有用户都可以查看 */}
                   <motion.button

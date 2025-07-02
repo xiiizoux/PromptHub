@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { motion } from 'framer-motion';
-import { 
+import {
   PencilSquareIcon,
   ClockIcon,
   UserGroupIcon,
@@ -13,6 +13,7 @@ import {
 import { useAuth } from '@/contexts/AuthContext';
 import { CollaborativeEditor } from '@/components/CollaborativeEditor';
 import VersionHistory from '@/components/prompts/VersionHistory';
+import ShareButton from '@/components/ShareButton';
 import api from '@/lib/api';
 import toast from 'react-hot-toast';
 
@@ -192,13 +193,12 @@ export default function CollaborativePage() {
                 </button>
               )}
               
-              <button
-                onClick={copyShareLink}
-                className="btn-secondary flex items-center gap-2"
-              >
-                <ShareIcon className="h-4 w-4" />
-                分享
-              </button>
+              <ShareButton
+                url={shareLink}
+                title={prompt?.name || '协作编辑'}
+                description="协作编辑提示词"
+                className="!p-2"
+              />
             </div>
           </div>
         </div>
