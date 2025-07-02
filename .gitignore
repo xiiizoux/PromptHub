@@ -7,6 +7,7 @@ web/test-results/
 web/tests/
 web/playwright-report/
 mcp/node_modules/
+migration/
 
 # 构建输出
 dist/
