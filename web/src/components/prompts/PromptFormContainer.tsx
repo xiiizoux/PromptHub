@@ -369,29 +369,7 @@ export default function PromptFormContainer({
     return typeLabels[type];
   };
 
-  // 检测提示词类型
-  const detectCategoryType = (content: string): PromptType => {
-    const lowerContent = content.toLowerCase();
 
-    // 视频生成关键词
-    const videoKeywords = [
-      '视频', '动画', '镜头', '运动', '帧', '时长', '播放', '拍摄', '剪辑', '特效',
-      'video', 'animation', 'motion', 'camera', 'frame', 'fps', 'duration', 'editing',
-    ];
-
-    // 图像生成关键词
-    const imageKeywords = [
-      '画', '绘制', '绘画', '图像', '图片', '照片', '摄影', '设计', '风格', '生成图片',
-      'style', 'draw', 'paint', 'image', 'photo', 'picture', 'art', 'design', 'generate image',
-    ];
-
-    const hasVideoKeywords = videoKeywords.some(keyword => lowerContent.includes(keyword));
-    const hasImageKeywords = imageKeywords.some(keyword => lowerContent.includes(keyword));
-
-    if (hasVideoKeywords) return 'video';
-    if (hasImageKeywords) return 'image';
-    return 'chat';
-  };
 
   // 处理类型变化
   const handleTypeChange = (newType: PromptType) => {
@@ -511,25 +489,20 @@ export default function PromptFormContainer({
     const content = e.target.value;
     // 实时更新内容状态以确保AI按钮能够监听到变化
     setCurrentContent(content);
-    
-    // 检测提示词类型并更新相关状态（仅创建模式）
-    if (mode === 'create' && content) {
-      const detectedType = detectCategoryType(content);
-      if (detectedType !== currentType) {
-        handleTypeChange(detectedType);
-      }
-    }
-    
+
+    // 移除自动类型检测逻辑，避免与用户手动选择的类型冲突
+    // 用户手动选择的类型应该优先，不应该被内容自动覆盖
+
     if (!content || typeof content !== 'string') return;
-    
+
     // 修复正则表达式以正确匹配 {{variable}} 格式
     const matches = content.match(/\{\{([^}]+)\}\}/g);
-    
+
     if (matches) {
       const detectedVars = Array.from(new Set(
         matches.map(match => match.replace(/^\{\{|\}\}$/g, '').trim()),
       )).filter(variable => variable.length > 0);
-      
+
       if (detectedVars.length > 0) {
         const currentVariables = watch('input_variables') || [];
         const newVariables = Array.from(new Set([...currentVariables, ...detectedVars]));

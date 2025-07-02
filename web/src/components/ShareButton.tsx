@@ -92,7 +92,7 @@ const ShareButton: React.FC<ShareButtonProps> = ({
         window.open(twitterUrl, '_blank', 'width=600,height=400');
         setIsOpen(false);
       },
-      color: 'text-black hover:text-gray-700'
+      color: 'text-gray-200 hover:text-white'
     },
     {
       name: 'Facebook',
