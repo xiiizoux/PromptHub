@@ -46,7 +46,7 @@ class MCPPromptCategoryMatcher {
    */
   private async getCategories(type?: 'chat' | 'image' | 'video'): Promise<MCPCategoryInfo[]> {
     const now = Date.now();
-    const cacheKey = type || 'all';
+    const _cacheKey = type || 'all';
     
     if (this.categoryCache.length === 0 || now - this.lastCacheUpdate > this.CACHE_TTL) {
       try {

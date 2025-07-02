@@ -126,7 +126,7 @@ export const PromptOptimizerComponent: React.FC<PromptOptimizerProps> = ({
     setIsOptimizing(true);
     try {
       // 构建请求体
-      const requestBody: any = {
+      const requestBody: OptimizationRequest = {
         prompt,
         requirements: requirements || '',
         context: '',
@@ -320,7 +320,7 @@ export const PromptOptimizerComponent: React.FC<PromptOptimizerProps> = ({
         ].map(tab => (
           <button
             key={tab.key}
-            onClick={() => setActiveTab(tab.key as any)}
+            onClick={() => setActiveTab(tab.key as 'optimize' | 'iterate' | 'analyze')}
             className={`flex-1 flex items-center justify-center space-x-2 px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
               activeTab === tab.key
                 ? 'bg-neon-cyan/20 text-neon-cyan border border-neon-cyan/30'

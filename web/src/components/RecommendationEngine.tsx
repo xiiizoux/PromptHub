@@ -107,9 +107,9 @@ export const RecommendationEngine: React.FC<RecommendationEngineProps> = ({
       }
 
       setRecommendations(results);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('获取推荐失败:', error);
-      toast.error('获取推荐失败: ' + error.message);
+      toast.error('获取推荐失败: ' + (error instanceof Error ? error.message : '未知错误'));
     } finally {
       setIsLoading(false);
     }

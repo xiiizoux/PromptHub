@@ -207,19 +207,19 @@ export const BeginnerFriendlyRecommendations: React.FC<BeginnerFriendlyRecommend
   maxRecommendations = 9,
   className = '',
   userLevel = 'beginner',
-  showLearningPath = true,
+  _showLearningPath = true,
 }) => {
   const { user } = useAuth();
-  const { levelData, isLoading: userLevelLoading } = useUserLevel();
-  const [recommendations, setRecommendations] = useState<RecommendationResult[]>([]);
-  const [learningPaths, setLearningPaths] = useState<LearningPath[]>([]);
-  const [personalizedRecs, setPersonalizedRecs] = useState<PersonalizedRecommendation[]>([]);
+  const { levelData, isLoading: _userLevelLoading } = useUserLevel();
+  const [_recommendations, _setRecommendations] = useState<RecommendationResult[]>([]);
+  const [_learningPaths, _setLearningPaths] = useState<LearningPath[]>([]);
+  const [_personalizedRecs, _setPersonalizedRecs] = useState<PersonalizedRecommendation[]>([]);
   const [activeTab, setActiveTab] = useState<'paths' | 'recommendations' | 'achievements'>('paths');
   const [filter, setFilter] = useState<'all' | 'beginner' | 'intermediate' | 'advanced'>('all');
   const [isLoading, setIsLoading] = useState(false);
 
   // 适合初学者的推荐类型
-  const beginnerRecommendationTypes = [
+  const _beginnerRecommendationTypes = [
     {
       type: 'personalized' as RecommendationType,
       label: '为您推荐',
@@ -274,17 +274,17 @@ export const BeginnerFriendlyRecommendations: React.FC<BeginnerFriendlyRecommend
   };
 
   // Mock API 函数
-  const getPersonalizedRecommendations = async (userId: string, limit: number): Promise<RecommendationResult[]> => {
+  const getPersonalizedRecommendations = async (_userId: string, _limit: number): Promise<RecommendationResult[]> => {
     // Mock 实现
     return [];
   };
 
-  const getTrendingPrompts = async (limit: number): Promise<RecommendationResult[]> => {
+  const getTrendingPrompts = async (_limit: number): Promise<RecommendationResult[]> => {
     // Mock 实现
     return [];
   };
 
-  const getSimilarPrompts = async (promptId: string, limit: number): Promise<RecommendationResult[]> => {
+  const getSimilarPrompts = async (_promptId: string, _limit: number): Promise<RecommendationResult[]> => {
     // Mock 实现
     return [];
   };
@@ -339,9 +339,9 @@ export const BeginnerFriendlyRecommendations: React.FC<BeginnerFriendlyRecommend
       });
 
       setRecommendations(filteredResults);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('获取推荐失败:', error);
-      toast.error('获取推荐失败: ' + error.message);
+      toast.error('获取推荐失败: ' + (error instanceof Error ? error.message : '未知错误'));
     } finally {
       setIsLoading(false);
     }
@@ -355,17 +355,17 @@ export const BeginnerFriendlyRecommendations: React.FC<BeginnerFriendlyRecommend
     // Implementation of generatePersonalizedRecommendations function
   };
 
-  const getRecommendationScore = (score: number) => {
+  const _getRecommendationScore = (score: number) => {
     return Math.round(score * 100);
   };
 
-  const getScoreColor = (score: number) => {
+  const _getScoreColor = (score: number) => {
     if (score >= 0.8) return 'text-green-400 bg-green-400/10';
     if (score >= 0.6) return 'text-yellow-400 bg-yellow-400/10';
     return 'text-orange-400 bg-orange-400/10';
   };
 
-  const getLearningTip = (prompt: any) => {
+  const _getLearningTip = (_prompt: { difficulty?: 'beginner' | 'intermediate' | 'advanced' }) => {
     const difficulty = prompt.difficulty || 'intermediate';
     
     if (userLevel === 'beginner') {
@@ -409,7 +409,7 @@ export const BeginnerFriendlyRecommendations: React.FC<BeginnerFriendlyRecommend
             <FunnelIcon className="h-4 w-4 text-gray-400" />
             <select
               value={userLevel}
-              onChange={(e) => {
+              onChange={(_e) => {
                 // Implementation of level change
               }}
               className="bg-dark-bg-secondary border border-gray-700 text-white text-sm rounded-lg px-3 py-1 focus:ring-2 focus:ring-neon-cyan focus:border-transparent"
@@ -442,7 +442,7 @@ export const BeginnerFriendlyRecommendations: React.FC<BeginnerFriendlyRecommend
         ].map((tab) => (
           <button
             key={tab.key}
-            onClick={() => setActiveTab(tab.key as any)}
+            onClick={() => setActiveTab(tab.key as 'recommendations' | 'achievements')}
             className={`flex-1 py-2 px-3 rounded-md text-sm font-medium transition-all flex items-center justify-center gap-2 ${
               activeTab === tab.key
                 ? 'bg-neon-cyan text-dark-bg-primary'
@@ -472,7 +472,7 @@ export const BeginnerFriendlyRecommendations: React.FC<BeginnerFriendlyRecommend
             ].map((filterOption) => (
               <button
                 key={filterOption.key}
-                onClick={() => setFilter(filterOption.key as any)}
+                onClick={() => setFilter(filterOption.key as 'all' | 'beginner' | 'intermediate' | 'advanced')}
                 className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${
                   filter === filterOption.key
                     ? 'bg-neon-cyan text-dark-bg-primary'

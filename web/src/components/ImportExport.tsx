@@ -144,7 +144,7 @@ export const ImportExport: React.FC<ImportExportProps> = ({
         imported_count: 0, 
         total_count: 0, 
         errors: [errorMessage],
-        prompts: []
+        prompts: [],
       });
     } finally {
       setIsImporting(false);

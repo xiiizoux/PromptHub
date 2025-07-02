@@ -22,7 +22,7 @@ import { HeartIcon as HeartSolidIcon, StarIcon as StarSolidIcon } from '@heroico
 import type { PromptTemplate, TemplateCategory, TemplateFilters } from '@/types';
 
 // 图标映射
-const ICON_MAP: Record<string, React.ComponentType<any>> = {
+const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
   PencilIcon,
   SparklesIcon,
   BriefcaseIcon,

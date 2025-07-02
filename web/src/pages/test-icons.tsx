@@ -69,7 +69,7 @@ export default function TestIcons() {
               'academic-cap',
               'code-bracket',
               'paint-brush',
-              'language'
+              'language',
             ].map((iconName) => {
               const IconComponent = getIconComponent(iconName);
               return (

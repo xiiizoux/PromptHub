@@ -19,7 +19,7 @@ interface SmartWritingAssistantProps {
   onContentChange: (content: string) => void;
   onAnalysisComplete?: (result: Partial<AIAnalysisResult>) => void;
   onApplyAnalysisResults?: (data: Partial<AIAnalysisResult>) => void;
-  pendingAIAnalysis?: any | null;
+  pendingAIAnalysis?: Partial<AIAnalysisResult> | null;
   className?: string;
   category?: string;
   tags?: string[];

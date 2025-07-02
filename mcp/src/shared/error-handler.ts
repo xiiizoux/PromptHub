@@ -98,7 +98,7 @@ export function handleToolError(
   const errorId = `err_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
 
   // 构建增强的错误对象
-  const enhancedError: EnhancedError = {
+  const _enhancedError: EnhancedError = {
     name: error?.name || 'Error',
     message: errorMessage,
     type,

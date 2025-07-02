@@ -1610,7 +1610,7 @@ export class SupabaseAdapter implements StorageAdapter {
 
   async signInWithOAuth(provider: 'google' | 'github' | 'discord', redirectTo?: string): Promise<AuthResponse> {
     try {
-      const { data, error } = await this.supabase.auth.signInWithOAuth({
+      const { data: _data, error } = await this.supabase.auth.signInWithOAuth({
         provider,
         options: {
           redirectTo: redirectTo || `${process.env.FRONTEND_URL || 'http://localhost:9011'}/auth/callback`,

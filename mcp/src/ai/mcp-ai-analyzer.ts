@@ -190,7 +190,7 @@ export class MCPAIAnalyzer {
       throw new Error('AI分析服务未配置API密钥，请联系管理员配置');
     }
 
-    const finalConfig: MCPAnalysisConfig = {
+    const _finalConfig: MCPAnalysisConfig = {
       includeImprovements: true,
       includeSuggestions: true,
       language: 'zh',
@@ -199,13 +199,13 @@ export class MCPAIAnalyzer {
     };
 
     try {
-      const response = await axios.post(
+      const _response = await axios.post(
         `${this.baseURL}/chat/completions`,
         {
           model: this.fullAnalysisModel,
           messages: [
             { role: 'system', content: this.buildAnalysisSystemPrompt() },
-            { role: 'user', content: this.buildUserPrompt(content, finalConfig) }
+            { role: 'user', content: this.buildUserPrompt(content, _finalConfig) }
           ],
           temperature: 0.3,
           max_tokens: 2000
@@ -219,12 +219,12 @@ export class MCPAIAnalyzer {
       );
 
       // 验证响应格式
-      if (!response.data || !response.data.choices || !Array.isArray(response.data.choices) || response.data.choices.length === 0) {
-        console.error('[MCP AI] API返回格式异常:', response.data);
+      if (!_response.data || !_response.data.choices || !Array.isArray(_response.data.choices) || _response.data.choices.length === 0) {
+        console.error('[MCP AI] API返回格式异常:', _response.data);
         throw new Error('AI服务返回格式异常，请重试');
       }
 
-      const choice = response.data.choices[0];
+      const choice = _response.data.choices[0];
       if (!choice || !choice.message || !choice.message.content) {
         console.error('[MCP AI] API返回内容为空:', choice);
         throw new Error('AI服务返回内容为空，请重试');
@@ -390,7 +390,7 @@ export class MCPAIAnalyzer {
   /**
    * 构建用户提示词
    */
-  private buildUserPrompt(content: string, config: MCPAnalysisConfig): string {
+  private buildUserPrompt(content: string, _config: MCPAnalysisConfig): string {
     return `请分析以下提示词内容：
 
 ${content}
@@ -639,7 +639,7 @@ ${content}
     }
 
     try {
-      const response = await axios.post(
+      const _response = await axios.post(
         `${this.baseURL}/chat/completions`,
         {
           model: this.quickTasksModel,
@@ -675,7 +675,7 @@ ${existingTags.length > 0 ? `优先使用现有标签：${existingTags.slice(0, 
         }
       );
 
-      const tagsText = response.data.choices[0].message.content.trim();
+      const tagsText = _response.data.choices[0].message.content.trim();
       const tags = tagsText.split(',').map(tag => tag.trim()).filter(Boolean);
       
       return tags.slice(0, 8); // 最多返回8个标签
@@ -706,7 +706,7 @@ ${existingTags.length > 0 ? `优先使用现有标签：${existingTags.slice(0, 
     error?: string;
   }> {
     try {
-      const response = await axios.post(
+      const _response = await axios.post(
         `${this.baseURL}/chat/completions`,
         {
           model: this.quickTasksModel,
@@ -781,7 +781,7 @@ ${existingTags.length > 0 ? `优先使用现有标签：${existingTags.slice(0, 
       // 获取所有可用分类
       const allCategories = await categoryManager.getAllCategories();
 
-      const response = await axios.post(
+      const _response = await axios.post(
         `${this.baseURL}/chat/completions`,
         {
           model: this.quickTasksModel,
@@ -811,7 +811,7 @@ ${allCategories.join('、')}
         }
       );
 
-      const category = response.data.choices[0].message.content.trim();
+      const category = _response.data.choices[0].message.content.trim();
 
       if (allCategories.length === 0) {
         // 如果无法获取分类列表，直接返回AI的结果

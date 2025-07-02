@@ -395,16 +395,18 @@ export class BrowseTool extends BaseMCPTool {
     const storage = this.getStorage();
     
     switch (type) {
-      case 'hot':
+      case 'hot': {
         // 简化：获取所有并按某种热度排序
         const allPrompts = await storage.getPrompts({ userId });
         return Array.isArray(allPrompts) ? allPrompts.slice(0, 6) : [];
+      }
         
-      case 'new':
+      case 'new': {
         const newPrompts = await storage.getPrompts({ userId });
         return Array.isArray(newPrompts) ? newPrompts
           .sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime())
           .slice(0, 6) : [];
+      }
         
       case 'business':
       case 'tech':
@@ -416,9 +418,10 @@ export class BrowseTool extends BaseMCPTool {
           return [];
         }
         
-      default:
+      default: {
         const defaultPrompts = await storage.getPrompts({ userId });
         return Array.isArray(defaultPrompts) ? defaultPrompts.slice(0, 6) : [];
+      }
     }
   }
 

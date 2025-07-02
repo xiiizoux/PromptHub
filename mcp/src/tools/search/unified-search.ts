@@ -135,7 +135,7 @@ export class UnifiedSearchTool extends BaseMCPTool {
     });
 
     try {
-      const storage = this.getStorage();
+      const _storage = this.getStorage();
       
       // 1. 执行多维度搜索
       const searchResults = await this.performMultiDimensionalSearch(
@@ -217,7 +217,7 @@ export class UnifiedSearchTool extends BaseMCPTool {
     const semanticAnalysis = await this.analyzeUserIntent(query);
 
     // 2. 基于语义分析结果构建搜索策略
-    const searchStrategies = this.buildSearchStrategies(semanticAnalysis, category, tags);
+    const _searchStrategies = this.buildSearchStrategies(semanticAnalysis, category, tags);
 
     // 3. 并行执行多种搜索策略
     const searchPromises = [
@@ -611,7 +611,7 @@ export class UnifiedSearchTool extends BaseMCPTool {
   /**
    * 构建搜索策略
    */
-  private buildSearchStrategies(semanticAnalysis: any, category?: string, tags: string[] = []): any {
+  private buildSearchStrategies(semanticAnalysis: any, _category?: string, _tags: string[] = []): any {
     // 这里可以根据语义分析结果调整搜索权重和策略
     return {
       useSemanticKeywords: true,
@@ -657,7 +657,7 @@ export class UnifiedSearchTool extends BaseMCPTool {
   private async calculateRelevanceScores(results: Prompt[], query: string): Promise<EnhancedSearchResult[]> {
     // 首先进行语义分析
     const semanticAnalysis = await this.analyzeUserIntent(query);
-    const queryLower = query.toLowerCase();
+    const _queryLower = query.toLowerCase();
 
     return results.map(prompt => {
       let score = 0;

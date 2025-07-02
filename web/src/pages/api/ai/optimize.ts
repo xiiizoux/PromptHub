@@ -35,7 +35,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (manualCategory && manualCategory.optimization_template) {
       logger.info('使用手动选择的分类', {
         categoryName: manualCategory.name,
-        categoryId: manualCategory.id
+        categoryId: manualCategory.id,
       });
 
       templateResult = {

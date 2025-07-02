@@ -7,7 +7,7 @@ import {
   ArrowUturnLeftIcon,
   EyeIcon,
   DocumentDuplicateIcon,
-  ArrowsRightLeftIcon
+  ArrowsRightLeftIcon,
 } from '@heroicons/react/24/outline';
 import { PromptVersion } from '@/types';
 import { formatVersionDisplay } from '@/lib/version-utils';
@@ -31,7 +31,7 @@ const VersionHistory: React.FC<VersionHistoryProps> = ({
   currentVersion,
   onVersionRevert,
   inline = false,
-  className = ''
+  className = '',
 }) => {
   const [versions, setVersions] = useState<PromptVersion[]>([]);
   const [loading, setLoading] = useState(false);
@@ -160,7 +160,7 @@ const VersionHistory: React.FC<VersionHistoryProps> = ({
       month: 'short',
       day: 'numeric',
       hour: '2-digit',
-      minute: '2-digit'
+      minute: '2-digit',
     });
   };
 

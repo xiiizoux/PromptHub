@@ -57,7 +57,7 @@ export class QuickCopyTool extends BaseMCPTool {
     this.logExecution('开始快速复制', context, { prompt_id, format });
 
     // 获取存储实例
-    const storage = this.getStorage();
+    const _storage = this.getStorage();
 
     // 获取提示词
     const prompt = await this.getPromptById(prompt_id, context.userId);
@@ -273,7 +273,7 @@ export class PromptPreviewTool extends BaseMCPTool {
       target_model 
     });
 
-    const storage = this.getStorage();
+    const _storage = this.getStorage();
 
     try {
       // 获取提示词

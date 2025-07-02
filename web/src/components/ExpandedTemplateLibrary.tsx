@@ -502,7 +502,7 @@ const ExpandedTemplateLibrary: React.FC = () => {
               id="sort-filter"
               name="sortFilter"
               value={sortBy}
-              onChange={(e) => setSortBy(e.target.value as any)}
+              onChange={(e) => setSortBy(e.target.value as 'popular' | 'newest' | 'rating' | 'usage')}
               aria-label="选择排序方式"
               className="bg-dark-bg-secondary border border-gray-700 text-white rounded-lg px-3 py-2 focus:ring-2 focus:ring-neon-cyan focus:border-transparent"
             >

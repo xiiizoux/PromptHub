@@ -16,7 +16,7 @@ const VersionComparison: React.FC<VersionComparisonProps> = ({
   isOpen,
   onClose,
   version1,
-  version2
+  version2,
 }) => {
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -25,7 +25,7 @@ const VersionComparison: React.FC<VersionComparisonProps> = ({
       month: 'short',
       day: 'numeric',
       hour: '2-digit',
-      minute: '2-digit'
+      minute: '2-digit',
     });
   };
 

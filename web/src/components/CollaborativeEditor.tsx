@@ -1,17 +1,17 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  PencilSquareIcon,
+  // PencilSquareIcon,
   UserGroupIcon,
   ClockIcon,
   ExclamationTriangleIcon,
-  CheckCircleIcon,
+  // CheckCircleIcon,
   ArrowPathIcon,
   EyeIcon,
-  ChatBubbleLeftIcon,
-  DocumentDuplicateIcon,
+  // ChatBubbleLeftIcon,
+  // DocumentDuplicateIcon,
   LockClosedIcon,
-  LockOpenIcon,
+  // LockOpenIcon,
 } from '@heroicons/react/24/outline';
 import { useAuth } from '@/contexts/AuthContext';
 import { 
@@ -104,9 +104,9 @@ export const CollaborativeEditor: React.FC<CollaborativeEditorProps> = ({
         unsubscribe();
         clearInterval(syncInterval);
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('初始化协作失败:', error);
-      toast.error('连接协作服务失败: ' + error.message);
+      toast.error('连接协作服务失败: ' + (error instanceof Error ? error.message : '未知错误'));
     }
   };
 
@@ -134,7 +134,7 @@ export const CollaborativeEditor: React.FC<CollaborativeEditorProps> = ({
         duration: 2000,
         icon: '👥',
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('应用远程操作失败:', error);
       // 处理冲突
       handleConflict(operation);
@@ -176,7 +176,7 @@ export const CollaborativeEditor: React.FC<CollaborativeEditorProps> = ({
       });
       
       setHasUnsavedChanges(false);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('发送操作失败:', error);
       toast.error('同步失败，请检查网络连接');
     }
@@ -212,11 +212,11 @@ export const CollaborativeEditor: React.FC<CollaborativeEditorProps> = ({
     toast.error('检测到编辑冲突，请手动解决');
   };
 
-  const resolveConflict = async (conflictId: string, resolution: 'accept' | 'reject') => {
+  const resolveConflict = async (conflictId: string, _resolution: 'accept' | 'reject') => {
     try {
       setConflicts(prev => prev.filter(c => c.id !== conflictId));
       toast.success('冲突已解决');
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('解决冲突失败:', error);
       toast.error('解决冲突失败');
     }
@@ -229,13 +229,13 @@ export const CollaborativeEditor: React.FC<CollaborativeEditorProps> = ({
       await lockSection(promptId, user.id, startPos, endPos);
       setLockedSections(prev => new Map(prev.set(`${startPos}-${endPos}`, user.id)));
       toast.success('区域已锁定');
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('锁定失败:', error);
       toast.error('锁定失败');
     }
   };
 
-  const handleUnlockSection = async (startPos: number, endPos: number) => {
+  const _handleUnlockSection = async (startPos: number, endPos: number) => {
     if (!user) return;
     
     try {
@@ -246,7 +246,7 @@ export const CollaborativeEditor: React.FC<CollaborativeEditorProps> = ({
         return newMap;
       });
       toast.success('区域已解锁');
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('解锁失败:', error);
       toast.error('解锁失败');
     }
@@ -255,13 +255,13 @@ export const CollaborativeEditor: React.FC<CollaborativeEditorProps> = ({
   const refreshCollaborators = async () => {
     try {
       const status = await getCollaborativeStatus(promptId);
-      const collaboratorList = status.collaborators.map((collab: any, index: number) => ({
+      const collaboratorList = status.collaborators.map((collab: { lastSeen: string }, index: number) => ({
         ...collab,
         color: collaboratorColors[index % collaboratorColors.length],
         isActive: (Date.now() - new Date(collab.lastSeen).getTime()) < 30000, // 30秒内活跃
       }));
       setCollaborators(collaboratorList);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('获取协作者失败:', error);
     }
   };

@@ -3,7 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse
+  res: NextApiResponse,
 ) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: '方法不允许' });
@@ -111,7 +111,7 @@ export default async function handler(
       if (currentParams.media_files) {
         updatedParameters = {
           ...updatedParameters,
-          media_files: currentParams.media_files
+          media_files: currentParams.media_files,
         };
       }
     }
@@ -146,8 +146,8 @@ export default async function handler(
         ...updatedPrompt,
         previousVersion: currentVersion,
         newVersion: newVersion,
-        revertedFromVersion: targetVersion.version
-      }
+        revertedFromVersion: targetVersion.version,
+      },
     });
 
   } catch (error) {

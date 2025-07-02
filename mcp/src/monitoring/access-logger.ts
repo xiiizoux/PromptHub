@@ -27,7 +27,7 @@ export interface ErrorLogEntry {
   level: 'error' | 'warn' | 'info';
   message: string;
   stack?: string;
-  context?: any;
+  context?: Record<string, unknown>;
   userId?: string;
   sessionId?: string;
   requestId?: string;
@@ -67,7 +67,7 @@ export class AccessLogger {
       this.requestStartTimes.set(requestId, startTime);
       
       // 添加请求ID到请求对象
-      (req as any).requestId = requestId;
+      (req as express.Request & { requestId?: string }).requestId = requestId;
 
       // 监听响应完成
       res.on('finish', () => {
@@ -81,8 +81,8 @@ export class AccessLogger {
           url: req.url,
           method: req.method,
           requestId,
-          userId: (req as any).userId,
-          sessionId: (req as any).sessionId
+          userId: (req as express.Request & { userId?: string }).userId,
+          sessionId: (req as express.Request & { sessionId?: string }).sessionId
         });
       });
 
@@ -105,8 +105,8 @@ export class AccessLogger {
       responseTime,
       userAgent: req.headers['user-agent'] || 'unknown',
       ip: this.getClientIP(req),
-      userId: (req as any).userId,
-      sessionId: (req as any).sessionId,
+      userId: (req as express.Request & { userId?: string }).userId,
+      sessionId: (req as express.Request & { sessionId?: string }).sessionId,
       requestId,
       requestSize: this.getRequestSize(req),
       responseSize: this.getResponseSize(res),
@@ -158,7 +158,7 @@ export class AccessLogger {
   /**
    * 记录错误日志
    */
-  logError(level: 'error' | 'warn' | 'info', message: string, context?: any): void {
+  logError(level: 'error' | 'warn' | 'info', message: string, context?: Record<string, unknown>): void {
     const entry: ErrorLogEntry = {
       timestamp: Date.now(),
       level,

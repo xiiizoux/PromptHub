@@ -22,7 +22,7 @@ export interface ToolContext {
  */
 export interface ToolResult {
   success: boolean;
-  data?: any;
+  data?: Record<string, unknown> | string | number | boolean | null;
   message?: string;
   metadata?: {
     executionTime?: number;
@@ -53,7 +53,7 @@ export abstract class BaseMCPTool {
   /**
    * 工具执行入口
    */
-  abstract execute(params: any, context: ToolContext): Promise<ToolResult>;
+  abstract execute(params: Record<string, unknown>, context: ToolContext): Promise<ToolResult>;
 
   /**
    * 获取存储实例
@@ -72,28 +72,28 @@ export abstract class BaseMCPTool {
   /**
    * 验证必需参数
    */
-  protected validateParams(params: any, requiredFields: string[]): void {
+  protected validateParams(params: Record<string, unknown>, requiredFields: string[]): void {
     validateRequiredParams(params, requiredFields);
   }
 
   /**
    * 创建成功响应
    */
-  protected createSuccessResponse(data: any, message?: string): MCPToolResponse {
+  protected createSuccessResponse(data: Record<string, unknown> | string | number | boolean | null, message?: string): MCPToolResponse {
     return handleToolSuccess(data, message);
   }
 
   /**
    * 创建错误响应
    */
-  protected createErrorResponse(error: any, customMessage?: string): MCPToolResponse {
+  protected createErrorResponse(error: Error | string | unknown, customMessage?: string): MCPToolResponse {
     return handleToolError(this.name, error, customMessage);
   }
 
   /**
    * 记录工具执行日志
    */
-  protected logExecution(action: string, context: ToolContext, metadata?: any): void {
+  protected logExecution(action: string, context: ToolContext, metadata?: Record<string, unknown>): void {
     console.log(`[${this.name}] ${action}:`, {
       userId: context.userId,
       requestId: context.requestId,
@@ -106,7 +106,7 @@ export abstract class BaseMCPTool {
    * 处理工具执行
    * 包含错误处理、日志记录、性能监控等通用逻辑
    */
-  async handleExecution(params: any, userId?: string): Promise<MCPToolResponse> {
+  async handleExecution(params: Record<string, unknown>, userId?: string): Promise<MCPToolResponse> {
     const context: ToolContext = {
       userId,
       requestId: this.generateRequestId(),
@@ -156,7 +156,7 @@ export abstract class BaseMCPTool {
   /**
    * 格式化响应数据
    */
-  protected formatResponse(data: any, format: 'json' | 'markdown' | 'plain' = 'json'): string {
+  protected formatResponse(data: Record<string, unknown> | string | number | boolean | null, format: 'json' | 'markdown' | 'plain' = 'json'): string {
     switch (format) {
       case 'markdown':
         return this.toMarkdown(data);
@@ -170,7 +170,7 @@ export abstract class BaseMCPTool {
   /**
    * 转换为Markdown格式
    */
-  private toMarkdown(data: any): string {
+  private toMarkdown(data: unknown): string {
     if (typeof data === 'string') return data;
     if (Array.isArray(data)) {
       return data.map((item, index) => `${index + 1}. ${this.toMarkdown(item)}`).join('\n');
@@ -186,7 +186,7 @@ export abstract class BaseMCPTool {
   /**
    * 转换为纯文本格式
    */
-  private toPlainText(data: any): string {
+  private toPlainText(data: unknown): string {
     if (typeof data === 'string') return data;
     if (Array.isArray(data)) {
       return data.map((item, index) => `${index + 1}. ${this.toPlainText(item)}`).join('\n');
@@ -238,7 +238,7 @@ export class ToolRegistry {
   /**
    * 执行工具
    */
-  static async executeTool(name: string, params: any, userId?: string): Promise<MCPToolResponse> {
+  static async executeTool(name: string, params: Record<string, unknown>, userId?: string): Promise<MCPToolResponse> {
     const tool = this.getTool(name);
     if (!tool) {
       return handleToolError('工具注册器', new Error(`未找到工具: ${name}`));

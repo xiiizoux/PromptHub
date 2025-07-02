@@ -517,26 +517,30 @@ export class DiscoverTool extends BaseMCPTool {
       let discoveryData = {};
 
       switch (discover_type) {
-        case 'trending':
+        case 'trending': {
           const trendingData = await this.generateTrendingView(interest, context.userId);
           discoveryContent = trendingData.content;
           discoveryData = trendingData.data;
           break;
-        case 'new':
+        }
+        case 'new': {
           const newData = await this.generateNewPromptsView(interest, context.userId);
           discoveryContent = newData.content;
           discoveryData = newData.data;
           break;
-        case 'categories':
+        }
+        case 'categories': {
           const categoriesData = await this.generateCategoriesView(context.userId);
           discoveryContent = categoriesData.content;
           discoveryData = categoriesData.data;
           break;
-        case 'combos':
+        }
+        case 'combos': {
           const combosData = await this.generateCombosView(interest, context.userId);
           discoveryContent = combosData.content;
           discoveryData = combosData.data;
           break;
+        }
         default:
           return { success: false, message: '❌ 不支持的探索类型' };
       }

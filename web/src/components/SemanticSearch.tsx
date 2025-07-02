@@ -92,9 +92,9 @@ export const SemanticSearch: React.FC<SemanticSearchProps> = ({
       });
 
       setShowSuggestionDropdown(false);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('搜索失败:', error);
-      toast.error('搜索失败: ' + error.message);
+      toast.error('搜索失败: ' + (error instanceof Error ? error.message : '未知错误'));
     } finally {
       setIsSearching(false);
       onSearchStateChange?.(false);

@@ -105,10 +105,10 @@ export const PromptPreviewPanel: React.FC<PromptPreviewPanelProps> = ({
         warnings: generateWarnings(processedPrompt),
       });
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       setPreviewResult({
         success: false,
-        error: error.message || '预览生成失败',
+        error: error instanceof Error ? error.message : '预览生成失败',
         warnings: [],
       });
     } finally {

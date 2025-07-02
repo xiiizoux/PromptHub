@@ -182,7 +182,7 @@ export async function startMCPServer() {
     app.use('/api/assets', assetsRouter);
     
     // 错误处理中间件
-    app.use((error: any, req: any, res: any, next: any) => {
+    app.use((error: Error, req: express.Request, res: express.Response, _next: express.NextFunction) => {
       logger.error('服务器错误:', error);
       res.status(500).json({
         success: false,

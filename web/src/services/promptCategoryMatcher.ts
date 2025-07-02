@@ -112,7 +112,7 @@ class PromptCategoryMatcher {
       '动画特效': ['动画', '特效', '动态', '效果', 'animation', 'effects', 'motion', 'animated'],
       '音乐视频': ['音乐', '歌曲', 'MV', '音频', 'music', 'song', 'audio', 'musical'],
       '艺术短片': ['艺术', '短片', '创意', '实验', 'art', 'short', 'creative', 'experimental'],
-      '自然风景': ['自然', '风景', '风光', '户外', 'nature', 'landscape', 'scenery', 'outdoor']
+      '自然风景': ['自然', '风景', '风光', '户外', 'nature', 'landscape', 'scenery', 'outdoor'],
     };
 
     // 计算每个分类的匹配分数
@@ -231,13 +231,13 @@ class PromptCategoryMatcher {
         prompt: prompt.substring(0, 100),
         matchedCategory: bestCategory.name,
         confidence,
-        reason
+        reason,
       });
 
       return {
         category: bestCategory,
         confidence,
-        reason
+        reason,
       };
 
     } catch (error) {
@@ -259,7 +259,7 @@ class PromptCategoryMatcher {
     return {
       template: matchResult.category.optimization_template,
       category: matchResult.category,
-      confidence: matchResult.confidence
+      confidence: matchResult.confidence,
     };
   }
 
