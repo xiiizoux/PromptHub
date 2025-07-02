@@ -7,8 +7,21 @@ import os from 'os';
 import process from 'process';
 import logger from '../utils/logger.js';
 
-// Node.js types
-import { MemoryUsage, CpuUsage } from 'node:process';
+// Node.js types - using built-in NodeJS namespace
+declare namespace NodeJS {
+  interface MemoryUsage {
+    rss: number;
+    heapTotal: number;
+    heapUsed: number;
+    external: number;
+    arrayBuffers: number;
+  }
+  
+  interface CpuUsage {
+    user: number;
+    system: number;
+  }
+}
 
 export interface SystemMetrics {
   timestamp: number;
@@ -28,8 +41,8 @@ export interface SystemMetrics {
   process: {
     pid: number;
     uptime: number;
-    memoryUsage: MemoryUsage;
-    cpuUsage: CpuUsage;
+    memoryUsage: NodeJS.MemoryUsage;
+    cpuUsage: NodeJS.CpuUsage;
   };
   network?: {
     connections: number;
@@ -67,7 +80,7 @@ export class SystemMonitor {
   private maxMetricsHistory = 1000;
   private monitoringInterval: ReturnType<typeof setTimeout> | null = null;
   private alertRules: AlertRule[] = [];
-  private lastCpuUsage: CpuUsage | null = null;
+  private lastCpuUsage: NodeJS.CpuUsage | null = null;
   private startTime = Date.now();
 
   constructor() {
@@ -186,7 +199,7 @@ export class SystemMonitor {
    */
   async performHealthCheck(): Promise<HealthStatus> {
     const checks = [];
-    const _startTime = Date.now();
+    // Health check start time - removed as unused
 
     // CPU 检查
     const cpuCheck = await this.checkCPU();
