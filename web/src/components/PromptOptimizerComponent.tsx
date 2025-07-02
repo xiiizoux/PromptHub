@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/router';
 import {
@@ -26,6 +26,7 @@ import { AIAnalyzeButton, AIAnalysisResultDisplay } from '@/components/AIAnalyze
 import { AIAnalysisResult } from '@/lib/ai-analyzer';
 import { categoryService, CategoryInfo } from '@/services/categoryService';
 import { promptCategoryMatcher } from '@/services/promptCategoryMatcher';
+import { getIconComponent } from '@/utils/categoryIcons';
 import toast from 'react-hot-toast';
 
 interface PromptOptimizerProps {
@@ -50,6 +51,8 @@ export const PromptOptimizerComponent: React.FC<PromptOptimizerProps> = ({
   const [categories, setCategories] = useState<CategoryInfo[]>([]);
   const [isLoadingCategories, setIsLoadingCategories] = useState(true);
   const [categoryType, setCategoryType] = useState<'chat' | 'image' | 'video'>('chat');
+  const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
   const [requirements, setRequirements] = useState('');
   const [iterationRequirements, setIterationRequirements] = useState('');
   const [iterationType, setIterationType] = useState<IterationRequest['type']>('refine');
@@ -80,6 +83,20 @@ export const PromptOptimizerComponent: React.FC<PromptOptimizerProps> = ({
 
     loadCategories();
   }, [categoryType]);
+
+  // 点击外部关闭下拉框
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setShowCategoryDropdown(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   // 同步外部prompt变化
   useEffect(() => {
@@ -404,25 +421,74 @@ export const PromptOptimizerComponent: React.FC<PromptOptimizerProps> = ({
                     加载分类中...
                   </div>
                 ) : (
-                  <select
-                    value={selectedCategory?.id || ''}
-                    onChange={(e) => {
-                      if (e.target.value === '') {
-                        setSelectedCategory(null);
-                      } else {
-                        const category = categories.find(c => c.id === e.target.value);
-                        setSelectedCategory(category || null);
-                      }
-                    }}
-                    className="w-full bg-gray-800/50 border border-gray-600/50 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-neon-green/50"
-                  >
-                    <option value="">🧠 选择分类或AI智能匹配分类</option>
-                    {categories.map((category) => (
-                      <option key={category.id} value={category.id}>
-                        {category.icon || '📝'} {category.name}
-                      </option>
-                    ))}
-                  </select>
+                  <div className="relative" ref={dropdownRef}>
+                    <button
+                      type="button"
+                      onClick={() => setShowCategoryDropdown(!showCategoryDropdown)}
+                      className="w-full bg-gray-800/50 border border-gray-600/50 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-neon-green/50 flex items-center justify-between"
+                    >
+                      <div className="flex items-center space-x-2">
+                        {selectedCategory ? (
+                          <>
+                            {(() => {
+                              const IconComponent = getIconComponent(selectedCategory.icon);
+                              return IconComponent ? (
+                                <IconComponent className="h-4 w-4 text-neon-green" />
+                              ) : (
+                                <span>📝</span>
+                              );
+                            })()}
+                            <span>{selectedCategory.name}</span>
+                          </>
+                        ) : (
+                          <>
+                            <span>🧠</span>
+                            <span className="text-gray-400">选择分类或AI智能匹配分类</span>
+                          </>
+                        )}
+                      </div>
+                      <svg className="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </button>
+
+                    {showCategoryDropdown && (
+                      <div className="absolute z-10 w-full mt-1 bg-gray-800 border border-gray-600/50 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSelectedCategory(null);
+                            setShowCategoryDropdown(false);
+                          }}
+                          className="w-full px-3 py-2 text-left hover:bg-gray-700/50 flex items-center space-x-2 text-gray-400"
+                        >
+                          <span>🧠</span>
+                          <span>选择分类或AI智能匹配分类</span>
+                        </button>
+                        {categories.map((category) => {
+                          const IconComponent = getIconComponent(category.icon);
+                          return (
+                            <button
+                              key={category.id}
+                              type="button"
+                              onClick={() => {
+                                setSelectedCategory(category);
+                                setShowCategoryDropdown(false);
+                              }}
+                              className="w-full px-3 py-2 text-left hover:bg-gray-700/50 flex items-center space-x-2 text-white"
+                            >
+                              {IconComponent ? (
+                                <IconComponent className="h-4 w-4 text-neon-green" />
+                              ) : (
+                                <span>📝</span>
+                              )}
+                              <span>{category.name}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
                 )}
                 <p className="text-xs text-gray-400 mt-1">
                   {selectedCategory
