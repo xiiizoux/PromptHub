@@ -10,9 +10,14 @@ interface OptimizationTemplate {
 
 // 优化参数接口
 import { MODEL_TAGS, getModelTagsByType, ModelType } from '../../constants/ai-models.js';
+import { mcpPromptCategoryMatcher, MCPCategoryInfo, MCPOptimizationTemplateResult } from '../../services/mcp-category-matcher.js';
 
 interface PromptOptimizationParams {
   content: string;
+  // 新增参数：类型选择和分类选择
+  type?: 'chat' | 'image' | 'video';
+  category?: string; // 手动指定分类名称
+  // 保持向后兼容的旧参数
   optimization_type?: 'general' | 'creative' | 'technical' | 'business' | 'educational' | 'drawing' | 'analysis' | 'iteration' | 'advanced' | 'finance';
   requirements?: string;
   context?: string;
@@ -42,6 +47,11 @@ interface OptimizationResult {
     operability: number;
     overall: number;
   };
+  // 新增字段：分类信息和置信度
+  matched_category?: MCPCategoryInfo;
+  confidence?: number;
+  matching_reason?: string;
+  is_manual_selection?: boolean;
   techniques?: string[];
   guide?: string[];
   parameters?: string;
@@ -54,7 +64,7 @@ interface OptimizationResult {
  */
 export class PromptOptimizerMCPTool extends BaseMCPTool {
   readonly name = 'prompt_optimizer';
-  readonly description = '🎯 提示词优化器 - 为第三方AI客户端提供结构化的提示词优化指导和分析';
+  readonly description = '🎯 智能提示词优化器 - 支持类型选择(chat/image/video)和智能分类匹配，提供基于数据库优化模板的专业优化指导';
 
   // 优化模板库（从Web版本移植并优化）
   private readonly OPTIMIZATION_TEMPLATES: Record<string, OptimizationTemplate> = {
@@ -405,9 +415,21 @@ export class PromptOptimizerMCPTool extends BaseMCPTool {
           required: true,
         } as ToolParameter,
 
+        type: {
+          type: 'string',
+          description: '提示词类型：chat(对话)|image(图像)|video(视频)，用于筛选相应类型的分类',
+          required: false,
+        } as ToolParameter,
+
+        category: {
+          type: 'string',
+          description: '手动指定分类名称（如"通用对话"、"艺术绘画"等）。如不指定，将使用AI智能匹配最适合的分类',
+          required: false,
+        } as ToolParameter,
+
         optimization_type: {
           type: 'string',
-          description: '优化类型：general(通用)|creative(创意)|technical(技术)|business(商务)|educational(教育)|drawing(绘图)|analysis(分析)|iteration(迭代)|advanced(高级)|finance(金融)',
+          description: '【向后兼容】优化类型：general(通用)|creative(创意)|technical(技术)|business(商务)|educational(教育)|drawing(绘图)|analysis(分析)|iteration(迭代)|advanced(高级)|finance(金融)。建议使用新的type和category参数',
           required: false,
         } as ToolParameter,
 
@@ -467,40 +489,96 @@ export class PromptOptimizerMCPTool extends BaseMCPTool {
     this.validateParams(params, ['content']);
 
     const startTime = performance.now();
-    
+
     try {
-      this.logExecution('提示词优化开始', context, {
-        optimizationType: params.optimization_type || 'general',
+      this.logExecution('智能提示词优化开始', context, {
+        type: params.type,
+        category: params.category,
+        optimizationType: params.optimization_type,
         contentLength: params.content.length,
         hasRequirements: !!params.requirements,
         includeAnalysis: params.include_analysis || false
       });
 
-      // 获取优化类型
-      const optimizationType = params.optimization_type || 'general';
-      
-      // 验证优化类型
-      if (!this.OPTIMIZATION_TEMPLATES[optimizationType]) {
-        return {
-          success: false,
-          message: `不支持的优化类型: ${optimizationType}。支持的类型: general, creative, technical, business, educational, drawing, analysis, iteration, advanced, finance`
-        };
+      // 新的智能优化逻辑
+      let templateResult: MCPOptimizationTemplateResult | null = null;
+      let isManualSelection = false;
+      let optimizationType = '';
+
+      // 1. 优先使用新的智能分类匹配
+      if (params.category) {
+        // 手动指定分类
+        console.log(`[MCP优化器] 使用手动指定分类: ${params.category}`);
+        const categoryInfo = await mcpPromptCategoryMatcher.getCategoryByName(params.category, params.type);
+
+        if (categoryInfo && categoryInfo.optimization_template) {
+          templateResult = {
+            template: categoryInfo.optimization_template,
+            category: categoryInfo,
+            confidence: 1.0 // 手动选择置信度100%
+          };
+          isManualSelection = true;
+          optimizationType = categoryInfo.name;
+        } else {
+          return {
+            success: false,
+            message: `指定的分类 "${params.category}" 不存在或没有配置优化模板${params.type ? `（类型：${params.type}）` : ''}`
+          };
+        }
+      } else {
+        // 智能匹配分类
+        console.log(`[MCP优化器] 使用智能分类匹配${params.type ? `（类型：${params.type}）` : ''}`);
+        try {
+          templateResult = await mcpPromptCategoryMatcher.getOptimizationTemplate(params.content, params.type);
+          optimizationType = templateResult.category.name;
+          console.log(`[MCP优化器] 智能匹配到分类: ${optimizationType}, 置信度: ${templateResult.confidence.toFixed(2)}`);
+        } catch (error) {
+          console.warn(`[MCP优化器] 智能分类匹配失败，回退到传统模式: ${error}`);
+          // 回退到传统的硬编码模板
+          templateResult = null;
+        }
+      }
+
+      // 2. 回退到传统的硬编码模板（向后兼容）
+      if (!templateResult && params.optimization_type) {
+        optimizationType = params.optimization_type;
+
+        if (!this.OPTIMIZATION_TEMPLATES[optimizationType]) {
+          return {
+            success: false,
+            message: `不支持的优化类型: ${optimizationType}。支持的类型: general, creative, technical, business, educational, drawing, analysis, iteration, advanced, finance`
+          };
+        }
+      }
+
+      // 3. 最终回退到默认
+      if (!templateResult && !params.optimization_type) {
+        optimizationType = 'general';
       }
 
       // 构建优化结果
-      const result = await this.buildOptimizationResult(params, optimizationType);
+      const result = await this.buildOptimizationResult(params, optimizationType, templateResult, isManualSelection);
 
-      this.logExecution('提示词优化完成', context, {
+      this.logExecution('智能提示词优化完成', context, {
         optimizationType: result.optimization_type,
+        matchedCategory: result.matched_category?.name,
+        confidence: result.confidence,
+        isManualSelection: result.is_manual_selection,
         hasOptimizedPrompt: !!result.optimized_prompt,
         improvementCount: result.improvement_points.length,
         executionTime: `${(performance.now() - startTime).toFixed(2)}ms`
       });
 
+      const categoryInfo = result.matched_category ?
+        `\n🎯 **匹配分类**: ${result.matched_category.name}${result.matched_category.name_en ? ` (${result.matched_category.name_en})` : ''}
+📊 **置信度**: ${result.confidence ? (result.confidence * 100).toFixed(1) + '%' : '100%'}${result.is_manual_selection ? ' (手动选择)' : ' (智能匹配)'}
+📝 **分类描述**: ${result.matched_category.description || '暂无描述'}` :
+        `\n🔧 **优化类型**: ${optimizationType} (传统模式)`;
+
       return {
         success: true,
         data: result,
-        message: `✅ 提示词优化指导已生成！类型：${optimizationType}${params.include_analysis ? '（包含详细分析）' : ''}
+        message: `✅ 智能提示词优化指导已生成！${categoryInfo}${params.include_analysis ? '\n📈 **包含详细分析**' : ''}
 
 📝 **重要提示：** 此工具仅提供优化建议，不会自动保存提示词。
 
@@ -517,7 +595,13 @@ unified_store({
 **保存步骤：**
 1. 复制上方优化后的提示词内容
 2. 调用 unified_store 工具进行智能保存
-3. 系统将自动分析并补全标题、分类、标签等信息`
+3. 系统将自动分析并补全标题、分类、标签等信息
+
+🆕 **新功能说明：**
+- **类型选择**: 使用 \`type\` 参数指定 chat/image/video 类型
+- **智能匹配**: 不指定 \`category\` 时自动智能匹配最适合的分类
+- **手动选择**: 使用 \`category\` 参数手动指定分类名称（如"通用对话"、"艺术绘画"等）
+- **动态模板**: 优化模板来自数据库，支持最新的分类和模板配置`
       };
 
     } catch (error) {
@@ -533,11 +617,16 @@ unified_store({
    * 构建优化结果
    */
   private async buildOptimizationResult(
-    params: PromptOptimizationParams, 
-    optimizationType: string
+    params: PromptOptimizationParams,
+    optimizationType: string,
+    templateResult?: MCPOptimizationTemplateResult | null,
+    isManualSelection: boolean = false
   ): Promise<OptimizationResult> {
-    const template = this.OPTIMIZATION_TEMPLATES[optimizationType];
-    
+    // 优先使用智能匹配的模板，否则使用硬编码模板
+    const template = templateResult ?
+      { system: '', user: templateResult.template } :
+      this.OPTIMIZATION_TEMPLATES[optimizationType];
+
     // 构建基础结果
     const result: OptimizationResult = {
       optimization_type: optimizationType,
@@ -545,29 +634,47 @@ unified_store({
       improvement_points: this.generateImprovementPoints(params, optimizationType),
       usage_suggestions: this.generateUsageSuggestions(params, optimizationType),
       optimization_template: template,
-      complexity: params.complexity || 'medium'
+      complexity: params.complexity || 'medium',
+      // 新增字段
+      matched_category: templateResult?.category,
+      confidence: templateResult?.confidence,
+      is_manual_selection: isManualSelection
     };
 
-    // 为迭代类型处理特殊参数
-    if (optimizationType === 'iteration') {
-      if (params.original_prompt) {
+    // 处理模板参数替换
+    if (templateResult) {
+      // 使用智能匹配的模板
+      const requirementsText = params.requirements ? `\n\n特殊要求：${params.requirements}` : '';
+      const contextText = params.context ? `\n\n使用场景：${params.context}` : '';
+
+      result.optimization_template = {
+        system: '',
+        user: templateResult.template
+          .replace('{prompt}', params.content)
+          .replace('{requirements}', requirementsText + contextText)
+      };
+    } else {
+      // 使用硬编码模板的原有逻辑
+      if (optimizationType === 'iteration') {
+        if (params.original_prompt) {
+          result.optimization_template = {
+            ...template,
+            user: template.user
+              .replace('{originalPrompt}', params.original_prompt)
+              .replace('{currentPrompt}', params.current_prompt || params.content)
+              .replace('{requirements}', params.requirements || '')
+              .replace('{type}', params.iteration_type || 'general')
+          };
+        }
+      } else {
+        // 普通优化类型的模板参数替换
         result.optimization_template = {
           ...template,
           user: template.user
-            .replace('{originalPrompt}', params.original_prompt)
-            .replace('{currentPrompt}', params.current_prompt || params.content)
-            .replace('{requirements}', params.requirements || '')
-            .replace('{type}', params.iteration_type || 'general')
+            .replace('{prompt}', params.content)
+            .replace('{requirements}', params.requirements ? `\n\n特殊要求：${params.requirements}` : '')
         };
       }
-    } else {
-      // 普通优化类型的模板参数替换
-      result.optimization_template = {
-        ...template,
-        user: template.user
-          .replace('{prompt}', params.content)
-          .replace('{requirements}', params.requirements ? `\n\n特殊要求：${params.requirements}` : '')
-      };
     }
 
     // 如果需要分析，添加质量评分
