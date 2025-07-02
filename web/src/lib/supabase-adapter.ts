@@ -940,6 +940,26 @@ export class SupabaseAdapter {
         throw new Error('提示词内容不能为空');
       }
       
+      // 根据分类名称查找category_id
+      let categoryId = promptData.category_id;
+      if (!categoryId && promptData.category) {
+        try {
+          const { data: categoryData } = await this.supabase
+            .from('categories')
+            .select('id')
+            .eq('name', promptData.category)
+            .eq('is_active', true)
+            .maybeSingle();
+
+          if (categoryData) {
+            categoryId = categoryData.id;
+            console.log(`找到分类ID: ${promptData.category} -> ${categoryId}`);
+          }
+        } catch (error) {
+          console.warn('查找分类ID失败:', error);
+        }
+      }
+
       // 构建要插入的提示词数据
       const promptToCreate = {
         name: promptData.name || '',
@@ -949,6 +969,8 @@ export class SupabaseAdapter {
         content: contentValue,  // 使用content字段
         is_public: promptData.is_public ?? true,
         user_id: userId,
+        created_by: userId, // 设置创建者ID
+        category_id: categoryId, // 设置分类ID
         version: typeof promptData.version === 'number' ? promptData.version : 1, // 确保版本是整数
         compatible_models: Array.isArray(promptData.compatible_models) ? promptData.compatible_models : [], // 添加兼容模型字段
         category_type: promptData.category_type || 'chat', // 添加分类类型

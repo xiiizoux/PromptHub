@@ -756,6 +756,7 @@ export class SupabaseAdapter implements StorageAdapter {
           allow_collaboration: prompt.allow_collaboration !== undefined ? prompt.allow_collaboration : false, // 默认不允许协作编辑，保护创建者权益
           edit_permission: prompt.edit_permission || 'owner_only', // 默认仅创建者可编辑
           user_id: finalUserId,
+          created_by: finalUserId, // 设置创建者ID
           // 新增媒体相关字段
           preview_asset_url: prompt.preview_asset_url || null,
           parameters: prompt.parameters || {},
@@ -773,11 +774,32 @@ export class SupabaseAdapter implements StorageAdapter {
         if (finalUserId) {
           await this.validateUserExists(finalUserId);
         }
-        
+
+        // 根据分类名称查找category_id
+        if (!promptData.category_id && promptData.category) {
+          try {
+            const { data: categoryData } = await this.supabase
+              .from('categories')
+              .select('id')
+              .eq('name', promptData.category)
+              .eq('is_active', true)
+              .maybeSingle();
+
+            if (categoryData) {
+              promptData.category_id = categoryData.id;
+              console.log(`[SupabaseAdapter] 找到分类ID: ${promptData.category} -> ${categoryData.id}`);
+            }
+          } catch (error) {
+            console.warn('[SupabaseAdapter] 查找分类ID失败:', error);
+          }
+        }
+
         console.log('[SupabaseAdapter] 准备创建提示词:', {
           name: promptData.name,
           category: promptData.category,
+          category_id: promptData.category_id,
           user_id: promptData.user_id,
+          created_by: promptData.created_by,
           is_public: promptData.is_public
         });
         
