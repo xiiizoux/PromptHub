@@ -29,9 +29,7 @@ const ShareButton: React.FC<ShareButtonProps> = ({
   className = ''
 }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [buttonPosition, setButtonPosition] = useState({ top: 0, right: 0 });
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const buttonRef = useRef<HTMLButtonElement>(null);
 
   // 通用的剪贴板复制函数，支持浏览器兼容性
   const copyTextToClipboard = async (text: string): Promise<boolean> => {
@@ -150,17 +148,6 @@ const ShareButton: React.FC<ShareButtonProps> = ({
     }
   ];
 
-  // 计算按钮位置
-  const updateButtonPosition = () => {
-    if (buttonRef.current) {
-      const rect = buttonRef.current.getBoundingClientRect();
-      setButtonPosition({
-        top: rect.bottom + 8, // 按钮下方8px
-        right: window.innerWidth - rect.right // 右对齐
-      });
-    }
-  };
-
   // 点击外部关闭下拉菜单
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -175,33 +162,11 @@ const ShareButton: React.FC<ShareButtonProps> = ({
     };
   }, []);
 
-  // 监听窗口大小变化，更新位置
-  useEffect(() => {
-    const handleResize = () => {
-      if (isOpen) {
-        updateButtonPosition();
-      }
-    };
-
-    window.addEventListener('resize', handleResize);
-    return () => {
-      window.removeEventListener('resize', handleResize);
-    };
-  }, [isOpen]);
-
-  const handleToggle = () => {
-    if (!isOpen) {
-      updateButtonPosition();
-    }
-    setIsOpen(!isOpen);
-  };
-
   return (
     <div className="relative" ref={dropdownRef}>
       <motion.button
-        ref={buttonRef}
         type="button"
-        onClick={handleToggle}
+        onClick={() => setIsOpen(!isOpen)}
         className={`p-3 glass rounded-xl border border-neon-cyan/30 text-neon-cyan hover:border-neon-cyan/50 hover:text-white transition-colors ${className}`}
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
@@ -217,11 +182,7 @@ const ShareButton: React.FC<ShareButtonProps> = ({
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: -10 }}
             transition={{ duration: 0.15 }}
-            className="fixed w-48 glass rounded-xl border border-gray-700/50 shadow-xl z-[100]"
-            style={{
-              top: buttonPosition.top,
-              right: buttonPosition.right,
-            }}
+            className="absolute right-0 mt-2 w-48 glass rounded-xl border border-gray-700/50 shadow-xl z-[9999]"
           >
             <div className="p-2">
               <div className="flex items-center justify-between px-3 py-2 mb-2 border-b border-gray-700/30">

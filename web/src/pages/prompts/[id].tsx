@@ -714,7 +714,7 @@ export default function PromptDetailsPage() {
                   {renderTags(prompt.tags)}
                 </div>
                 
-                <div className="flex items-center space-x-3 ml-6">
+                <div className="flex items-center space-x-3 ml-6 relative z-[100]">
                   <ShareButton
                     url={typeof window !== 'undefined' ? window.location.href : ''}
                     title={prompt?.name || ''}
