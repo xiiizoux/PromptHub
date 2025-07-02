@@ -453,7 +453,7 @@ export const PromptOptimizerComponent: React.FC<PromptOptimizerProps> = ({
                     </button>
 
                     {showCategoryDropdown && (
-                      <div className="absolute z-10 w-full mt-1 bg-gray-800 border border-gray-600/50 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                      <div className="absolute z-50 w-full mt-1 bg-gray-800 border border-gray-600/50 rounded-lg shadow-lg max-h-60 overflow-y-auto">
                         <button
                           type="button"
                           onClick={() => {

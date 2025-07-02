@@ -1,17 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
 import { Fragment } from 'react';
-import { 
-  XMarkIcon, 
-  ClockIcon, 
+import {
+  XMarkIcon,
+  ClockIcon,
   ArrowUturnLeftIcon,
   EyeIcon,
   DocumentDuplicateIcon,
-  ArrowsRightLeftIcon 
+  ArrowsRightLeftIcon
 } from '@heroicons/react/24/outline';
 import { PromptVersion } from '@/types';
 import { formatVersionDisplay } from '@/lib/version-utils';
 import VersionComparison from './VersionComparison';
+import { supabase } from '@/lib/supabase';
 
 interface VersionHistoryProps {
   isOpen?: boolean;
@@ -51,15 +52,26 @@ const VersionHistory: React.FC<VersionHistoryProps> = ({
   const fetchVersions = async () => {
     setLoading(true);
     setError(null);
-    
+
     try {
-      const response = await fetch(`/api/prompts/${promptId}/versions`);
+      // 获取认证 token
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError || !session?.access_token) {
+        throw new Error('未认证，请先登录');
+      }
+
+      const response = await fetch(`/api/prompts/${promptId}/versions`, {
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json',
+        },
+      });
       const data = await response.json();
-      
+
       if (!response.ok) {
         throw new Error(data.error || '获取版本历史失败');
       }
-      
+
       setVersions(data.data || []);
     } catch (err) {
       console.error('获取版本历史失败:', err);
@@ -71,26 +83,33 @@ const VersionHistory: React.FC<VersionHistoryProps> = ({
 
   const handleRevert = async (versionId: string) => {
     if (!onVersionRevert) return;
-    
+
     setReverting(versionId);
-    
+
     try {
+      // 获取认证 token
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError || !session?.access_token) {
+        throw new Error('未认证，请先登录');
+      }
+
       const response = await fetch(`/api/prompts/${promptId}/revert`, {
         method: 'POST',
         headers: {
+          'Authorization': `Bearer ${session.access_token}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ versionId }),
       });
-      
+
       const data = await response.json();
-      
+
       if (!response.ok) {
         throw new Error(data.error || '版本回滚失败');
       }
-      
+
       onVersionRevert(versionId);
-      onClose();
+      onClose && onClose();
     } catch (err) {
       console.error('版本回滚失败:', err);
       setError(err instanceof Error ? err.message : '版本回滚失败');
@@ -340,21 +359,20 @@ const VersionHistory: React.FC<VersionHistoryProps> = ({
     <Transition appear show={isOpen} as={Fragment}>
       <Dialog as="div" className="relative z-50" onClose={onClose || (() => {})}>
         <Transition.Child
-          as={Fragment}
+          as="div"
           enter="ease-out duration-300"
           enterFrom="opacity-0"
           enterTo="opacity-100"
           leave="ease-in duration-200"
           leaveFrom="opacity-100"
           leaveTo="opacity-0"
-        >
-          <div className="fixed inset-0 bg-black bg-opacity-25" />
-        </Transition.Child>
+          className="fixed inset-0 bg-black bg-opacity-25"
+        />
 
         <div className="fixed inset-0 overflow-y-auto">
           <div className="flex min-h-full items-center justify-center p-4 text-center">
             <Transition.Child
-              as={Fragment}
+              as="div"
               enter="ease-out duration-300"
               enterFrom="opacity-0 scale-95"
               enterTo="opacity-100 scale-100"
@@ -389,7 +407,7 @@ const VersionHistory: React.FC<VersionHistoryProps> = ({
             <div className="fixed inset-0 overflow-y-auto">
               <div className="flex min-h-full items-center justify-center p-4 text-center">
                 <Transition.Child
-                  as={Fragment}
+                  as="div"
                   enter="ease-out duration-300"
                   enterFrom="opacity-0 scale-95"
                   enterTo="opacity-100 scale-100"
