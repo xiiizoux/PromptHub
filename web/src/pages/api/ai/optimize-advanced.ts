@@ -118,17 +118,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 }
 
 // 这些函数已被智能分类匹配服务替代，保留用于解析响应和质量分析
-    
-    complex: `
-特别优化重点：
-- 复杂任务的分解和串联
-- 多阶段处理流程的设计
-- 异常情况和回退策略
-- 质量控制和验证机制`,
-  };
-
-  return basePrompt + (typeSpecific[type as keyof typeof typeSpecific] || '');
-}
 
 function buildAdvancedUserPrompt(prompt: string, requirements: string, context: string, type: string): string {
   return `请对以下提示词进行${type}类型的高级优化：
