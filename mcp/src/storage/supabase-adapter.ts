@@ -1043,7 +1043,7 @@ export class SupabaseAdapter implements StorageAdapter {
     // 智能分词：按多种分隔符分割
     const words = query
       .toLowerCase() // 转小写进行处理
-      .split(/[\s,，。！？、；：""\''（）\(\)\[\]【】\-_=+|\\\/\*&%$#@~`]+/)
+      .split(/[\s,，。！？、；：""''（）()[\]【】\-_=+|\\/*&%$#@~`]+/)
       .filter(word => {
         // 过滤条件
         if (word.length === 0) return false;

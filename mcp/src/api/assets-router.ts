@@ -30,7 +30,9 @@ const ALLOWED_MIME_TYPES = [
   'video/x-flv',
   'video/webm',
   'video/x-matroska'
-] as const;
+];
+
+type AllowedMimeType = typeof ALLOWED_MIME_TYPES[number];
 
 // 配置multer用于内存存储（文件直接存储到Supabase Storage）
 const upload = multer({
@@ -100,7 +102,7 @@ router.post('/upload', upload.single('file'), async (req, res) => {
     }
 
     // 验证检测到的MIME类型是否在允许的类型列表中
-    if (!ALLOWED_MIME_TYPES.includes(detectedMimeType as string)) {
+    if (!ALLOWED_MIME_TYPES.includes(detectedMimeType as AllowedMimeType)) {
       return res.status(400).json({
         success: false,
         message: `不支持的文件类型: ${detectedMimeType}。仅支持图片（JPEG, PNG, GIF, WebP, SVG）和视频（MP4, AVI, MOV, WMV, FLV, WebM, MKV）文件`

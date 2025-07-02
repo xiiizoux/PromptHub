@@ -3,7 +3,7 @@
  * 记录API访问、错误信息、性能指标等
  */
 
-import { Request, Response, NextFunction } from 'express';
+import express, { Request, Response, NextFunction } from 'express';
 import logger from '../utils/logger.js';
 
 export interface AccessLogEntry {
@@ -163,13 +163,13 @@ export class AccessLogger {
       timestamp: Date.now(),
       level,
       message,
-      stack: context?.stack,
+      stack: context?.stack as string | undefined,
       context,
-      userId: context?.userId,
-      sessionId: context?.sessionId,
-      requestId: context?.requestId,
-      url: context?.url,
-      method: context?.method
+      userId: context?.userId as string | undefined,
+      sessionId: context?.sessionId as string | undefined,
+      requestId: context?.requestId as string | undefined,
+      url: context?.url as string | undefined,
+      method: context?.method as string | undefined
     };
 
     // 添加到错误日志历史

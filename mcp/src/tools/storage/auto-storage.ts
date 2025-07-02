@@ -93,7 +93,7 @@ export class QuickStoreTool extends BaseMCPTool {
           message: `✅ 提示词已成功存储: ${resultData?.prompt?.name}`
         };
       } else {
-        return result;
+        return result as ToolResult;
       }
     } catch (error) {
       return {
@@ -175,7 +175,7 @@ export class SmartStoreTool extends BaseMCPTool {
           message: `✅ 智能存储完成: ${resultData?.prompt?.name}`
         };
       } else {
-        return result;
+        return result as ToolResult;
       }
     } catch (error) {
       return { success: false, message: '智能存储失败，请重试' };
@@ -285,7 +285,7 @@ export class AnalyzeAndStoreTool extends BaseMCPTool {
             message: `✅ 分析并存储完成: ${resultData?.prompt?.name}`
           };
         } else {
-          return result;
+          return result as ToolResult;
         }
       }
 

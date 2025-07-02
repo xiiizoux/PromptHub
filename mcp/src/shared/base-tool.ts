@@ -22,7 +22,7 @@ export interface ToolContext {
  */
 export interface ToolResult {
   success: boolean;
-  data?: Record<string, unknown> | string | number | boolean | null;
+  data?: any;
   message?: string;
   metadata?: {
     executionTime?: number;
@@ -53,7 +53,7 @@ export abstract class BaseMCPTool {
   /**
    * 工具执行入口
    */
-  abstract execute(params: Record<string, unknown>, context: ToolContext): Promise<ToolResult>;
+  abstract execute(params: any, context: ToolContext): Promise<ToolResult>;
 
   /**
    * 获取存储实例
@@ -72,14 +72,14 @@ export abstract class BaseMCPTool {
   /**
    * 验证必需参数
    */
-  protected validateParams(params: Record<string, unknown>, requiredFields: string[]): void {
+  protected validateParams(params: any, requiredFields: string[]): void {
     validateRequiredParams(params, requiredFields);
   }
 
   /**
    * 创建成功响应
    */
-  protected createSuccessResponse(data: Record<string, unknown> | string | number | boolean | null, message?: string): MCPToolResponse {
+  protected createSuccessResponse(data: any, message?: string): MCPToolResponse {
     return handleToolSuccess(data, message);
   }
 
@@ -106,7 +106,7 @@ export abstract class BaseMCPTool {
    * 处理工具执行
    * 包含错误处理、日志记录、性能监控等通用逻辑
    */
-  async handleExecution(params: Record<string, unknown>, userId?: string): Promise<MCPToolResponse> {
+  async handleExecution(params: any, userId?: string): Promise<MCPToolResponse> {
     const context: ToolContext = {
       userId,
       requestId: this.generateRequestId(),
@@ -238,7 +238,7 @@ export class ToolRegistry {
   /**
    * 执行工具
    */
-  static async executeTool(name: string, params: Record<string, unknown>, userId?: string): Promise<MCPToolResponse> {
+  static async executeTool(name: string, params: any, userId?: string): Promise<MCPToolResponse> {
     const tool = this.getTool(name);
     if (!tool) {
       return handleToolError('工具注册器', new Error(`未找到工具: ${name}`));
