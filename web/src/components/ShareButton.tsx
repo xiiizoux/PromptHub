@@ -1,7 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  ShareIcon, 
+import {
+  ShareIcon,
   LinkIcon,
   ClipboardDocumentIcon,
   XMarkIcon
@@ -29,7 +30,10 @@ const ShareButton: React.FC<ShareButtonProps> = ({
   className = ''
 }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [buttonPosition, setButtonPosition] = useState({ top: 0, left: 0 });
+  const [mounted, setMounted] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
 
   // 通用的剪贴板复制函数，支持浏览器兼容性
   const copyTextToClipboard = async (text: string): Promise<boolean> => {
@@ -148,6 +152,22 @@ const ShareButton: React.FC<ShareButtonProps> = ({
     }
   ];
 
+  // 确保组件已挂载（用于Portal）
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // 计算按钮位置
+  const updateButtonPosition = () => {
+    if (buttonRef.current) {
+      const rect = buttonRef.current.getBoundingClientRect();
+      setButtonPosition({
+        top: rect.bottom + 8, // 按钮下方8px
+        left: rect.right - 192, // 192px是弹窗宽度(w-48 = 12rem = 192px)，右对齐
+      });
+    }
+  };
+
   // 点击外部关闭下拉菜单
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -162,11 +182,38 @@ const ShareButton: React.FC<ShareButtonProps> = ({
     };
   }, []);
 
+  // 监听位置变化
+  useEffect(() => {
+    if (isOpen && mounted) {
+      updateButtonPosition();
+
+      const handlePositionUpdate = () => {
+        updateButtonPosition();
+      };
+
+      window.addEventListener('scroll', handlePositionUpdate, true);
+      window.addEventListener('resize', handlePositionUpdate);
+
+      return () => {
+        window.removeEventListener('scroll', handlePositionUpdate, true);
+        window.removeEventListener('resize', handlePositionUpdate);
+      };
+    }
+  }, [isOpen, mounted]);
+
+  const handleToggle = () => {
+    if (!isOpen) {
+      updateButtonPosition();
+    }
+    setIsOpen(!isOpen);
+  };
+
   return (
     <div className="relative" ref={dropdownRef}>
       <motion.button
+        ref={buttonRef}
         type="button"
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={handleToggle}
         className={`p-3 glass rounded-xl border border-neon-cyan/30 text-neon-cyan hover:border-neon-cyan/50 hover:text-white transition-colors ${className}`}
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
@@ -175,44 +222,53 @@ const ShareButton: React.FC<ShareButtonProps> = ({
         <ShareIcon className="h-5 w-5" />
       </motion.button>
 
-      <AnimatePresence>
-        {isOpen && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: -10 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: -10 }}
-            transition={{ duration: 0.15 }}
-            className="absolute right-0 mt-2 w-48 glass rounded-xl border border-gray-700/50 shadow-xl z-[9999]"
-          >
-            <div className="p-2">
-              <div className="flex items-center justify-between px-3 py-2 mb-2 border-b border-gray-700/30">
-                <span className="text-sm font-medium text-white">分享到</span>
-                <button
-                  onClick={() => setIsOpen(false)}
-                  className="text-gray-400 hover:text-white transition-colors"
-                >
-                  <XMarkIcon className="h-4 w-4" />
-                </button>
+      {/* 使用Portal渲染弹窗到body，避免层叠上下文问题 */}
+      {mounted && createPortal(
+        <AnimatePresence>
+          {isOpen && (
+            <motion.div
+              ref={dropdownRef}
+              initial={{ opacity: 0, scale: 0.95, y: -10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: -10 }}
+              transition={{ duration: 0.15 }}
+              className="fixed w-48 glass rounded-xl border border-gray-700/50 shadow-xl z-[9999]"
+              style={{
+                top: buttonPosition.top,
+                left: buttonPosition.left,
+              }}
+            >
+              <div className="p-2">
+                <div className="flex items-center justify-between px-3 py-2 mb-2 border-b border-gray-700/30">
+                  <span className="text-sm font-medium text-white">分享到</span>
+                  <button
+                    onClick={() => setIsOpen(false)}
+                    className="text-gray-400 hover:text-white transition-colors"
+                  >
+                    <XMarkIcon className="h-4 w-4" />
+                  </button>
+                </div>
+
+                {shareOptions.map((option, index) => (
+                  <motion.button
+                    key={option.name}
+                    onClick={option.action}
+                    className={`w-full flex items-center space-x-3 px-3 py-2 rounded-lg transition-colors ${option.color} hover:bg-white/10`}
+                    whileHover={{ x: 4 }}
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: index * 0.05 }}
+                  >
+                    {option.icon}
+                    <span className="text-sm">{option.name}</span>
+                  </motion.button>
+                ))}
               </div>
-              
-              {shareOptions.map((option, index) => (
-                <motion.button
-                  key={option.name}
-                  onClick={option.action}
-                  className={`w-full flex items-center space-x-3 px-3 py-2 rounded-lg transition-colors ${option.color} hover:bg-white/10`}
-                  whileHover={{ x: 4 }}
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.05 }}
-                >
-                  {option.icon}
-                  <span className="text-sm">{option.name}</span>
-                </motion.button>
-              ))}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+            </motion.div>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
     </div>
   );
 };
