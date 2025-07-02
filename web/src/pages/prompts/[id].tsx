@@ -75,6 +75,7 @@ import { MODEL_TAGS, getModelTypeLabel } from '@/constants/ai-models';
 import { formatVersionDisplay } from '@/lib/version-utils';
 import { RatingSystem } from '@/components/RatingSystem';
 import PromptInteractions from '@/components/social/PromptInteractions';
+import VersionHistory from '@/components/prompts/VersionHistory';
 import { toast } from 'react-hot-toast';
 
 interface PromptDetailsPageProps {
@@ -95,6 +96,7 @@ export default function PromptDetailsPage() {
   const [copied, setCopied] = useState(false);
   const [isClient, setIsClient] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [showVersionHistory, setShowVersionHistory] = useState(false);
 
   // 使用优化的分类显示Hook
   const categoryDisplayInfo = useOptimizedCategoryDisplay(
@@ -360,6 +362,45 @@ export default function PromptDetailsPage() {
       } catch (error) {
         console.warn(`删除文件时出错: ${filename}`, error);
       }
+    }
+  };
+
+  // 版本回滚处理
+  const handleVersionRevert = async (versionId: string) => {
+    // 版本回滚成功后，重新获取提示词数据
+    try {
+      if (!id || typeof id !== 'string') return;
+
+      // 重新获取提示词数据
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
+
+      if (user) {
+        try {
+          const token = await getToken();
+          if (token) {
+            headers['Authorization'] = `Bearer ${token}`;
+          }
+        } catch (error) {
+          console.warn('获取认证令牌失败:', error);
+        }
+      }
+
+      const response = await fetch(`/api/prompts/${id}`, {
+        headers,
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.data && data.data.prompt) {
+          setPrompt(data.data.prompt);
+          toast.success('版本回滚成功');
+        }
+      }
+    } catch (error) {
+      console.error('重新获取提示词失败:', error);
+      toast.error('刷新数据失败');
     }
   };
 
@@ -668,6 +709,19 @@ export default function PromptDetailsPage() {
                   >
                     <ShareIcon className="h-5 w-5" />
                   </motion.button>
+
+                  {/* 版本历史按钮 - 所有用户都可以查看 */}
+                  <motion.button
+                    type="button"
+                    onClick={() => setShowVersionHistory(true)}
+                    className="p-3 glass rounded-xl border border-neon-purple/30 text-neon-purple hover:border-neon-purple/50 hover:text-white transition-colors"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    title="查看版本历史"
+                  >
+                    <ClockIcon className="h-5 w-5" />
+                  </motion.button>
+
                   {/* 只有登录用户且是作者才显示编辑和删除按钮 */}
                   {user && prompt.user_id === user.id && (
                     <>
@@ -1094,6 +1148,17 @@ export default function PromptDetailsPage() {
             </motion.div>
           </div>
         </div>
+
+        {/* 版本历史弹窗 */}
+        {prompt && (
+          <VersionHistory
+            isOpen={showVersionHistory}
+            onClose={() => setShowVersionHistory(false)}
+            promptId={prompt.id}
+            currentVersion={prompt.version || 1.0}
+            onVersionRevert={handleVersionRevert}
+          />
+        )}
       </div>
     </div>
   );

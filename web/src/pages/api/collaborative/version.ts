@@ -73,7 +73,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const changes = calculateChanges(previousContent, content);
 
-    // 保存新版本
+    // 保存新版本（不包含媒体相关信息，媒体文件不支持版本管理）
     const versionId = `version_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     const { data: newVersion, error: versionError } = await supabase
       .from('collaborative_versions')
@@ -87,6 +87,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         author_name: user.display_name || user.email,
         changes_summary: JSON.stringify(changes),
         created_at: new Date().toISOString(),
+        // 注意：不保存 preview_asset_url 和 parameters 中的媒体信息
+        // 媒体文件不支持版本管理，版本回滚时保持当前媒体状态
       })
       .select()
       .single();

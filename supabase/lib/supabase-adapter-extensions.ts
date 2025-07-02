@@ -223,6 +223,7 @@ export function extendSupabaseAdapter(adapter: SupabaseAdapter): any {
           category: promptVersion.category,
           tags: promptVersion.tags,
           user_id: promptVersion.user_id
+          // 注意：不保存媒体相关字段，媒体文件不支持版本管理
         })
         .select()
         .single();

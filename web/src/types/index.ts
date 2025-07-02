@@ -33,6 +33,35 @@ export interface ImportData {
   };
 }
 
+// 提示词历史版本类型定义
+export interface PromptVersion {
+  id: string;                                 // 版本记录ID
+  prompt_id: string;                          // 关联的提示词ID
+  version: number;                            // 版本号 (数值型，如1.0, 1.1, 2.0)
+  content: string;                            // 版本内容
+  description?: string;                       // 版本描述
+  tags?: string[];                            // 标签
+  category?: string;                          // 分类
+  category_id?: string;                       // 分类ID
+  parameters?: PromptParameters;              // 参数配置
+  preview_asset_url?: string;                 // 预览资源URL
+  created_at: string;                         // 创建时间
+  user_id: string;                            // 创建者ID
+}
+
+// 版本比较结果
+export interface VersionComparison {
+  current: PromptVersion;
+  previous: PromptVersion;
+  changes: {
+    content?: boolean;
+    description?: boolean;
+    tags?: boolean;
+    category?: boolean;
+    parameters?: boolean;
+  };
+}
+
 // 提示词基本信息
 export interface PromptInfo {
   id: string;                             // id字段是必需的
@@ -88,14 +117,7 @@ export interface PromptExample {
   description?: string;
 }
 
-// 提示词版本
-export interface PromptVersion {
-  version: number;  // 改为数字类型以匹配数据库结构
-  content: string;
-  created_at: string;
-  author?: string;
-  notes?: string;
-}
+// 提示词版本接口已在上方定义，删除重复定义
 
 
 

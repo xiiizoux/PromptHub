@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
-import { ChevronLeftIcon, PencilIcon, TrashIcon, ClipboardIcon, CheckIcon } from '@heroicons/react/24/outline';
+import { ChevronLeftIcon, PencilIcon, TrashIcon, ClipboardIcon, CheckIcon, ClockIcon } from '@heroicons/react/24/outline';
 import { formatVersionDisplay } from '@/lib/version-utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { MODEL_TAGS } from '@/constants/ai-models';
+import VersionHistory from '@/components/prompts/VersionHistory';
 
 const PromptDetails = () => {
   const router = useRouter();
@@ -14,52 +15,53 @@ const PromptDetails = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [showVersionHistory, setShowVersionHistory] = useState(false);
+
+  const fetchPrompt = async () => {
+    if (!id || !user) return;
+    
+    setLoading(true);
+    try {
+      // 获取认证令牌
+      const token = localStorage.getItem('supabase.auth.token');
+      let parsedToken = null;
+      
+      if (token) {
+        try {
+          const parsed = JSON.parse(token);
+          parsedToken = parsed?.currentSession?.access_token;
+        } catch (e) {
+          console.error('解析令牌失败:', e);
+        }
+      }
+      
+      if (!parsedToken) {
+        throw new Error('未找到有效的认证令牌');
+      }
+      
+      // 从私有API获取提示词详情
+      const response = await fetch(`/api/profile/prompt/${id}`, {
+        headers: {
+          'Authorization': `Bearer ${parsedToken}`,
+        },
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || '获取提示词详情失败');
+      }
+      
+      const data = await response.json();
+      setPrompt(data.data);
+    } catch (err: any) {
+      console.error('获取提示词失败:', err);
+      setError(err.message || '获取提示词详情失败');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchPrompt = async () => {
-      if (!id || !user) return;
-      
-      setLoading(true);
-      try {
-        // 获取认证令牌
-        const token = localStorage.getItem('supabase.auth.token');
-        let parsedToken = null;
-        
-        if (token) {
-          try {
-            const parsed = JSON.parse(token);
-            parsedToken = parsed?.currentSession?.access_token;
-          } catch (e) {
-            console.error('解析令牌失败:', e);
-          }
-        }
-        
-        if (!parsedToken) {
-          throw new Error('未找到有效的认证令牌');
-        }
-        
-        // 从私有API获取提示词详情
-        const response = await fetch(`/api/profile/prompt/${id}`, {
-          headers: {
-            'Authorization': `Bearer ${parsedToken}`,
-          },
-        });
-        
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.message || '获取提示词详情失败');
-        }
-        
-        const data = await response.json();
-        setPrompt(data.data);
-      } catch (err: any) {
-        console.error('获取提示词失败:', err);
-        setError(err.message || '获取提示词详情失败');
-      } finally {
-        setLoading(false);
-      }
-    };
-    
     fetchPrompt();
   }, [id, user]);
   
@@ -70,6 +72,15 @@ const PromptDetails = () => {
       setTimeout(() => setCopied(false), 2000);
     } catch (error) {
       console.error('复制失败:', error);
+    }
+  };
+
+  const handleVersionRevert = async (versionId: string) => {
+    // 版本回滚成功后，重新获取提示词数据
+    try {
+      await fetchPrompt();
+    } catch (error) {
+      console.error('重新获取提示词失败:', error);
     }
   };
   
@@ -135,6 +146,14 @@ const PromptDetails = () => {
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold text-white">{prompt.name}</h1>
           <div className="flex items-center space-x-3">
+            <button
+              onClick={() => setShowVersionHistory(true)}
+              className="btn-outline flex items-center space-x-2"
+              title="查看版本历史"
+            >
+              <ClockIcon className="h-5 w-5" />
+              <span>版本历史</span>
+            </button>
             <Link
               href={`/prompts/${prompt.id}/edit`}
               className="btn-secondary flex items-center space-x-2"
@@ -256,6 +275,15 @@ const PromptDetails = () => {
             </div>
           </div>
         </div>
+        
+        {/* 版本历史弹窗 */}
+        <VersionHistory
+          isOpen={showVersionHistory}
+          onClose={() => setShowVersionHistory(false)}
+          promptId={prompt.id}
+          currentVersion={prompt.version || 1.0}
+          onVersionRevert={handleVersionRevert}
+        />
       </div>
     </div>
   );

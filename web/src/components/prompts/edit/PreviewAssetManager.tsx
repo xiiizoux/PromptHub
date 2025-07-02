@@ -257,6 +257,19 @@ export default function PreviewAssetManager({
         示例{fileTypeLabel} ({assets.length}/{maxAssets})*
       </label>
 
+      {/* 媒体版本管理警告说明 */}
+      <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-3">
+        <div className="flex items-start space-x-2">
+          <ExclamationTriangleIcon className="h-5 w-5 text-yellow-400 mt-0.5 flex-shrink-0" />
+          <div className="text-sm">
+            <p className="text-yellow-400 font-medium mb-1">媒体文件不支持版本管理</p>
+            <p className="text-yellow-300/80">
+              媒体文件不会保存到版本历史中，版本回滚时保持当前状态，请谨慎删改
+            </p>
+          </div>
+        </div>
+      </div>
+
       {/* 上传区域 */}
       <div
         onDragOver={handleDragOver}

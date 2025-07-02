@@ -1366,10 +1366,9 @@ export class SupabaseAdapter implements StorageAdapter {
         tags: promptVersion.tags,
         user_id: userId,
         created_at: new Date().toISOString(),
-        // 新增媒体相关字段
-        preview_asset_url: promptVersion.preview_asset_url || null,
-        parameters: promptVersion.parameters || {},
         category_id: promptVersion.category_id || null
+        // 注意：不保存媒体相关字段 (preview_asset_url, parameters)
+        // 媒体文件不支持版本管理，版本回滚时保持当前媒体状态
       };
       
       // 使用管理员客户端绕过RLS策略

@@ -12,7 +12,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { useAuth } from '@/contexts/AuthContext';
 import { CollaborativeEditor } from '@/components/CollaborativeEditor';
-import { VersionHistory } from '@/components/VersionHistory';
+import VersionHistory from '@/components/prompts/VersionHistory';
 import api from '@/lib/api';
 import toast from 'react-hot-toast';
 
@@ -271,9 +271,13 @@ export default function CollaborativePage() {
           {activeTab === 'history' && (
             <VersionHistory
               promptId={prompt.id}
-              currentContent={content}
-              onRestore={handleVersionRestore}
+              currentVersion={1.0}
+              inline={true}
               className="min-h-[600px]"
+              onVersionRevert={(versionId) => {
+                // 这里需要实现版本恢复逻辑
+                console.log('恢复版本:', versionId);
+              }}
             />
           )}
         </motion.div>

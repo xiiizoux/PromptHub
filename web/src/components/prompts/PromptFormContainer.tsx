@@ -194,8 +194,8 @@ export default function PromptFormContainer({
   useEffect(() => {
 
     if (mode === 'edit' && initialData?.parameters?.media_files && Array.isArray(initialData.parameters.media_files)) {
-      const mediaFiles = initialData.parameters.media_files;
-      const urls = mediaFiles.map((file: { url: string }) => file.url);
+      const mediaFiles = initialData.parameters.media_files as unknown as Array<{ url: string; name?: string; type?: string; size?: number }>;
+      const urls = mediaFiles.map((file) => file.url);
       setPreviewUrls(urls);
 
       // 设置预览资源URL
@@ -204,7 +204,7 @@ export default function PromptFormContainer({
       }
 
       // 为编辑模式创建虚拟File对象，用于正确显示文件计数
-      const virtualFiles = mediaFiles.map((file: { name?: string; type?: string; size?: number }) => {
+      const virtualFiles = mediaFiles.map((file) => {
         // 创建一个虚拟File对象，包含必要的属性
         const virtualFile = new File([], file.name || 'unknown', {
           type: file.type || 'application/octet-stream',
@@ -828,6 +828,21 @@ export default function PromptFormContainer({
                         <PhotoIcon className="h-4 w-4 text-neon-purple mr-2" />
                         {getTypeLabel(currentType) === '图像' ? '示例图片' : '示例视频'} ({uploadedFiles.length}/4)*
                       </label>
+
+                      {/* 媒体版本管理警告说明 - 增强版 */}
+                      <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-3 mt-2">
+                        <div className="flex items-start space-x-2">
+                          <div className="text-yellow-400 text-lg">⚠️</div>
+                          <div className="text-sm">
+                            <p className="text-yellow-400 font-medium mb-1">重要提示：媒体文件不支持版本管理</p>
+                            <p className="text-yellow-300/80">
+                              • 媒体文件不会保存到版本历史中<br/>
+                              • 版本回滚时将保持媒体内容的当前状态<br/>
+                              • 请谨慎删改媒体文件，删除后无法通过版本回滚恢复
+                            </p>
+                          </div>
+                        </div>
+                      </div>
 
                       {/* 文件上传区域 */}
                       <div className="border-2 border-dashed border-gray-600 rounded-xl p-6 text-center hover:border-neon-cyan/50 transition-colors">

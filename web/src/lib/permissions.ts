@@ -1,5 +1,8 @@
 import { PromptDetails, User, PermissionCheck, SimplePermissionType } from '@/types';
 
+// 重新导出 SimplePermissionType 以便其他组件导入
+export type { SimplePermissionType };
+
 /**
  * 权限管理工具函数
  */
