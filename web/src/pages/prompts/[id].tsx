@@ -453,8 +453,19 @@ export default function PromptDetailsPage() {
 
       if (response.ok) {
         alert('提示词及相关文件已成功删除');
-        // 删除成功后跳转到提示词列表页
-        router.push('/prompts');
+        // 根据提示词类型跳转到对应的页面
+        const redirectPath = (() => {
+          switch (prompt.category_type) {
+            case 'image':
+              return '/image';
+            case 'video':
+              return '/video';
+            case 'chat':
+            default:
+              return '/prompts';
+          }
+        })();
+        router.push(redirectPath);
       } else {
         const error = await response.json();
         throw new Error(error.message || '删除提示词失败');
