@@ -292,6 +292,10 @@ export class DatabaseService {
         created_at: prompt.created_at,
         updated_at: prompt.updated_at,
 
+        // 媒体相关字段
+        preview_asset_url: prompt.preview_asset_url,
+        parameters: prompt.parameters,
+
         // 扩展字段
         input_variables: this.extractInputVariables(content),
         author: authorName,

@@ -49,6 +49,9 @@ export interface Prompt {
   // 媒体相关字段
   preview_asset_url?: string;
   parameters?: Record<string, any>;
+
+  // 作者信息字段
+  author?: string;
 }
 
 export interface PromptFilters {
@@ -229,16 +232,21 @@ export class SupabaseAdapter {
       // 必须在Supabase中为'prompts'表设置行级安全(RLS)策略。
       console.warn('管理员权限已被移除，查询将依赖RLS策略');
 
-      // 按分类类型过滤
+      // 按分类类型过滤，同时获取作者信息
       let query;
       if (category_type) {
-        // 通过关联categories表来按类型过滤
+        // 通过关联categories表来按类型过滤，同时获取用户信息
         query = this.supabase.from('prompts').select(`
           *,
-          categories!inner(type)
+          categories!inner(type),
+          users!prompts_user_id_fkey(display_name, email)
         `, { count: 'exact' }).eq('categories.type', category_type);
       } else {
-        query = this.supabase.from('prompts').select('*', { count: 'exact' });
+        // 获取提示词信息和用户信息
+        query = this.supabase.from('prompts').select(`
+          *,
+          users!prompts_user_id_fkey(display_name, email)
+        `, { count: 'exact' });
       }
 
       if (category && category !== '全部') {
@@ -347,14 +355,30 @@ export class SupabaseAdapter {
         }
       }
 
-      // 添加评分信息到提示词数据中
+      // 添加评分信息和作者信息到提示词数据中
       const promptsWithRatings = data.map(prompt => {
         const ratingInfo = ratingsMap.get(prompt.id) || { average: 0, count: 0 };
+
+        // 处理作者信息
+        let authorName = '匿名';
+        if (prompt.users) {
+          if (prompt.users.display_name) {
+            authorName = prompt.users.display_name;
+          } else if (prompt.users.email) {
+            // 如果没有 display_name，使用 email 的前缀作为备用
+            authorName = prompt.users.email.split('@')[0];
+          }
+        }
+
+        // 移除嵌套的用户对象，避免数据结构混乱
+        const { users, ...promptWithoutUsers } = prompt;
+
         return {
-          ...prompt,
+          ...promptWithoutUsers,
           average_rating: ratingInfo.average,
           rating_count: ratingInfo.count,
           rating: ratingInfo.average, // 为了兼容前端组件，同时提供rating字段
+          author: authorName, // 添加作者信息
         };
       });
 
