@@ -116,6 +116,42 @@ export default async function handler(
       }
     }
 
+    // 获取目标版本对应的分类信息，确保数据一致性
+    let categoryName = targetVersion.category;
+    let categoryId = targetVersion.category_id;
+
+    // 如果有 category_id，从数据库获取最新的分类名称，确保数据一致性
+    if (categoryId) {
+      const { data: categoryData } = await supabase
+        .from('categories')
+        .select('name')
+        .eq('id', categoryId)
+        .eq('is_active', true)
+        .maybeSingle();
+
+      if (categoryData) {
+        categoryName = categoryData.name;
+        console.log(`分类数据同步: ${targetVersion.category} -> ${categoryName}`);
+      } else {
+        console.warn(`分类ID ${categoryId} 不存在或已禁用，使用原分类名称: ${categoryName}`);
+      }
+    } else if (categoryName) {
+      // 如果只有分类名称，尝试获取对应的 category_id
+      const { data: categoryData } = await supabase
+        .from('categories')
+        .select('id')
+        .eq('name', categoryName)
+        .eq('is_active', true)
+        .maybeSingle();
+
+      if (categoryData) {
+        categoryId = categoryData.id;
+        console.log(`分类ID补全: ${categoryName} -> ${categoryId}`);
+      } else {
+        console.warn(`分类名称 ${categoryName} 不存在或已禁用`);
+      }
+    }
+
     // 更新主提示词记录为目标版本的内容（但保持当前的媒体文件）
     const { data: updatedPrompt, error: updateError } = await supabase
       .from('prompts')
@@ -123,8 +159,8 @@ export default async function handler(
         content: targetVersion.content,
         description: targetVersion.description,
         tags: targetVersion.tags,
-        category: targetVersion.category,
-        category_id: targetVersion.category_id,
+        category: categoryName, // 使用最新的分类名称
+        category_id: categoryId,
         parameters: updatedParameters, // 使用处理后的参数，保留媒体文件
         // 注意：不更新 preview_asset_url，保持当前的媒体状态
         version: newVersion,
@@ -136,8 +172,25 @@ export default async function handler(
 
     if (updateError) {
       console.error('回滚失败:', updateError);
-      return res.status(500).json({ error: '回滚失败' });
+      console.error('回滚参数:', {
+        content: targetVersion.content?.substring(0, 100) + '...',
+        description: targetVersion.description,
+        tags: targetVersion.tags,
+        category: categoryName,
+        category_id: categoryId,
+        version: newVersion
+      });
+      return res.status(500).json({ error: '回滚失败: ' + updateError.message });
     }
+
+    console.log('回滚成功:', {
+      promptId: id,
+      fromVersion: currentVersion,
+      toVersion: targetVersion.version,
+      newVersion: newVersion,
+      category: categoryName,
+      category_id: categoryId
+    });
 
     return res.status(200).json({
       success: true,

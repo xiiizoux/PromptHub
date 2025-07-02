@@ -372,6 +372,8 @@ export default function PromptDetailsPage() {
     try {
       if (!id || typeof id !== 'string') return;
 
+      console.log('开始重新获取提示词数据，ID:', id);
+
       // 重新获取提示词数据
       const headers: Record<string, string> = {
         'Content-Type': 'application/json',
@@ -392,16 +394,27 @@ export default function PromptDetailsPage() {
         headers,
       });
 
+      console.log('获取提示词响应状态:', response.status);
+
       if (response.ok) {
         const data = await response.json();
+        console.log('获取提示词响应数据:', data);
+
         if (data.success && data.data && data.data.prompt) {
           setPrompt(data.data.prompt);
           toast.success('版本回滚成功');
+        } else {
+          console.error('响应数据格式错误:', data);
+          toast.error('获取提示词数据失败');
         }
+      } else {
+        const errorData = await response.json().catch(() => ({}));
+        console.error('获取提示词失败:', response.status, errorData);
+        toast.error('获取提示词失败: ' + (errorData.error || response.statusText));
       }
     } catch (error) {
       console.error('重新获取提示词失败:', error);
-      toast.error('刷新数据失败');
+      toast.error('刷新数据失败: ' + (error instanceof Error ? error.message : '未知错误'));
     }
   };
 

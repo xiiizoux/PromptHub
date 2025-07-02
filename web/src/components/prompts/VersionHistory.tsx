@@ -54,6 +54,8 @@ const VersionHistory: React.FC<VersionHistoryProps> = ({
     setError(null);
 
     try {
+      console.log('开始获取版本历史，promptId:', promptId);
+
       // 获取认证 token
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
       if (sessionError || !session?.access_token) {
@@ -66,13 +68,19 @@ const VersionHistory: React.FC<VersionHistoryProps> = ({
           'Content-Type': 'application/json',
         },
       });
+
+      console.log('版本历史API响应状态:', response.status);
+
       const data = await response.json();
+      console.log('版本历史API响应数据:', data);
 
       if (!response.ok) {
         throw new Error(data.error || '获取版本历史失败');
       }
 
-      setVersions(data.data || []);
+      const versions = data.data || [];
+      console.log('获取到版本历史数量:', versions.length);
+      setVersions(versions);
     } catch (err) {
       console.error('获取版本历史失败:', err);
       setError(err instanceof Error ? err.message : '获取版本历史失败');
@@ -302,8 +310,10 @@ const VersionHistory: React.FC<VersionHistoryProps> = ({
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
+                          console.log('点击查看版本:', version);
                           setSelectedVersion(version);
                           setShowContent(true);
+                          console.log('设置状态完成 - selectedVersion:', version.id, 'showContent:', true);
                         }}
                         className="px-3 py-1 rounded bg-neon-cyan/10 text-neon-cyan hover:bg-neon-cyan/20 transition-colors text-sm flex items-center space-x-1"
                       >
@@ -389,18 +399,19 @@ const VersionHistory: React.FC<VersionHistoryProps> = ({
         </div>
 
         {/* 内容查看模态框 */}
-        <Transition appear show={showContent}>
-          <Dialog as="div" className="relative z-60" onClose={() => setShowContent(false)}>
-            <Transition.Child
-              as="div"
-              enter="ease-out duration-300"
-              enterFrom="opacity-0"
-              enterTo="opacity-100"
-              leave="ease-in duration-200"
-              leaveFrom="opacity-100"
-              leaveTo="opacity-0"
-              className="fixed inset-0 bg-black bg-opacity-50"
-            />
+        {showContent && selectedVersion && (
+          <Transition appear show={showContent}>
+            <Dialog as="div" className="relative z-[70]" onClose={() => setShowContent(false)}>
+              <Transition.Child
+                as="div"
+                enter="ease-out duration-300"
+                enterFrom="opacity-0"
+                enterTo="opacity-100"
+                leave="ease-in duration-200"
+                leaveFrom="opacity-100"
+                leaveTo="opacity-0"
+                className="fixed inset-0 bg-black bg-opacity-50"
+              />
 
             <div className="fixed inset-0 overflow-y-auto">
               <div className="flex min-h-full items-center justify-center p-4 text-center">
@@ -468,6 +479,7 @@ const VersionHistory: React.FC<VersionHistoryProps> = ({
             </div>
           </Dialog>
         </Transition>
+        )}
       </Dialog>
 
       {/* 版本对比弹窗 */}

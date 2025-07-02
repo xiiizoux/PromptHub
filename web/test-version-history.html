@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>版本历史测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #1a1a1a;
+            color: white;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #333;
+            border-radius: 8px;
+            background-color: #2a2a2a;
+        }
+        .test-button {
+            background-color: #0066cc;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .test-button:hover {
+            background-color: #0052a3;
+        }
+        .result {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 4px;
+            background-color: #333;
+        }
+        .success {
+            border-left: 4px solid #00cc66;
+        }
+        .error {
+            border-left: 4px solid #cc0000;
+        }
+    </style>
+</head>
+<body>
+    <h1>提示词版本历史测试</h1>
+    
+    <div class="test-section">
+        <h2>测试1: 获取版本历史</h2>
+        <p>测试提示词ID: f7773e49-bb58-4ba7-a484-3e893db615b0</p>
+        <button class="test-button" onclick="testGetVersions()">获取版本历史</button>
+        <div id="versions-result" class="result" style="display: none;"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>测试2: 获取提示词详情</h2>
+        <button class="test-button" onclick="testGetPrompt()">获取提示词详情</button>
+        <div id="prompt-result" class="result" style="display: none;"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>测试3: 检查分类一致性</h2>
+        <button class="test-button" onclick="testCategoryConsistency()">检查分类一致性</button>
+        <div id="category-result" class="result" style="display: none;"></div>
+    </div>
+
+    <script>
+        const PROMPT_ID = 'f7773e49-bb58-4ba7-a484-3e893db615b0';
+        
+        async function testGetVersions() {
+            const resultDiv = document.getElementById('versions-result');
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = '正在测试...';
+            
+            try {
+                const response = await fetch(`/api/prompts/${PROMPT_ID}/versions`);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultDiv.className = 'result success';
+                    resultDiv.innerHTML = `
+                        <strong>✅ 成功</strong><br>
+                        版本数量: ${data.data?.length || 0}<br>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.innerHTML = `
+                        <strong>❌ 失败</strong><br>
+                        错误: ${data.error || '未知错误'}<br>
+                        状态码: ${response.status}
+                    `;
+                }
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = `
+                    <strong>❌ 网络错误</strong><br>
+                    ${error.message}
+                `;
+            }
+        }
+        
+        async function testGetPrompt() {
+            const resultDiv = document.getElementById('prompt-result');
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = '正在测试...';
+            
+            try {
+                const response = await fetch(`/api/prompts/${PROMPT_ID}`);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    const prompt = data.data?.prompt;
+                    resultDiv.className = 'result success';
+                    resultDiv.innerHTML = `
+                        <strong>✅ 成功</strong><br>
+                        名称: ${prompt?.name || 'N/A'}<br>
+                        分类: ${prompt?.category || 'N/A'}<br>
+                        分类ID: ${prompt?.category_id || 'N/A'}<br>
+                        版本: ${prompt?.version || 'N/A'}<br>
+                        公开: ${prompt?.is_public ? '是' : '否'}
+                    `;
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.innerHTML = `
+                        <strong>❌ 失败</strong><br>
+                        错误: ${data.error || '未知错误'}<br>
+                        状态码: ${response.status}
+                    `;
+                }
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = `
+                    <strong>❌ 网络错误</strong><br>
+                    ${error.message}
+                `;
+            }
+        }
+        
+        async function testCategoryConsistency() {
+            const resultDiv = document.getElementById('category-result');
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = '正在测试...';
+            
+            try {
+                // 先获取提示词信息
+                const promptResponse = await fetch(`/api/prompts/${PROMPT_ID}`);
+                const promptData = await promptResponse.json();
+                
+                if (!promptResponse.ok) {
+                    throw new Error('无法获取提示词信息');
+                }
+                
+                const prompt = promptData.data?.prompt;
+                if (!prompt) {
+                    throw new Error('提示词数据为空');
+                }
+                
+                // 检查分类一致性
+                const categoryResponse = await fetch('/api/categories');
+                const categoryData = await categoryResponse.json();
+                
+                if (!categoryResponse.ok) {
+                    throw new Error('无法获取分类信息');
+                }
+                
+                const categories = categoryData.data || [];
+                const matchingCategory = categories.find(cat => cat.id === prompt.category_id);
+                
+                const isConsistent = matchingCategory && matchingCategory.name === prompt.category;
+                
+                resultDiv.className = `result ${isConsistent ? 'success' : 'error'}`;
+                resultDiv.innerHTML = `
+                    <strong>${isConsistent ? '✅ 一致' : '❌ 不一致'}</strong><br>
+                    提示词分类: ${prompt.category}<br>
+                    提示词分类ID: ${prompt.category_id}<br>
+                    数据库分类: ${matchingCategory?.name || '未找到'}<br>
+                    数据库分类ID: ${matchingCategory?.id || '未找到'}
+                `;
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = `
+                    <strong>❌ 测试失败</strong><br>
+                    ${error.message}
+                `;
+            }
+        }
+    </script>
+</body>
+</html>
