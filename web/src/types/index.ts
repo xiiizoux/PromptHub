@@ -82,9 +82,33 @@ export interface PromptInfo {
   parameters?: PromptParameters;         // 生成参数
 }
 
+// Context Engineering内容结构
+export interface PromptContentJsonb {
+  type: 'context_engineering';
+  static_content: string;
+  dynamic_context: {
+    adaptation_rules?: any[];
+    examples?: {
+      selection_strategy: string;
+      max_examples: number;
+      example_pool: any[];
+    };
+    tools?: {
+      available_tools: string[];
+      tool_selection_criteria: string;
+    };
+  };
+  fallback_content: string;
+  metadata?: {
+    version: string;
+    created_at: string;
+    last_modified: string;
+  };
+}
+
 // 提示词详情
 export interface PromptDetails extends PromptInfo {
-  content: string;                        // 内容字段，现在是必需的
+  content: string | PromptContentJsonb;    // 内容字段，支持JSONB格式
   template_format?: string;
   input_variables?: string[];
   examples?: PromptExample[];
@@ -99,6 +123,11 @@ export interface PromptDetails extends PromptInfo {
   created_by?: string;                    // 创建者ID
   last_modified_by?: string;              // 最后修改者ID
   category_id?: string;                   // 分类 ID，对应数据库中的category_id字段
+  
+  // Context Engineering相关字段
+  content_text?: string;                  // 从 JSONB 提取的可编辑文本内容
+  content_structure?: PromptContentJsonb; // 完整的 JSONB 结构
+  context_engineering_enabled?: boolean; // 是否启用 Context Engineering
   
   // 表单专用字段
   preview_assets?: Array<{

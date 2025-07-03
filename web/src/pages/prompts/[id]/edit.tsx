@@ -3,13 +3,14 @@ import { useRouter } from 'next/router';
 import { GetServerSideProps } from 'next/types';
 import Link from 'next/link';
 import { toast } from 'react-hot-toast';
-import { ChevronLeftIcon, ShieldExclamationIcon } from '@heroicons/react/24/outline';
+import { ChevronLeftIcon, ShieldExclamationIcon, SparklesIcon } from '@heroicons/react/24/outline';
 
 import { useAuth, withAuth } from '@/contexts/AuthContext';
 import { updatePrompt, getCategories } from '@/lib/api';
 import { databaseService } from '@/lib/database-service';
 import { PromptDetails, PermissionCheck } from '@/types';
 import PromptFormContainer, { PromptFormData } from '@/components/prompts/PromptFormContainer';
+import ContextualPromptEditor from '@/components/prompts/ContextualPromptEditor';
 import { useBeforeUnload } from '@/hooks/useBeforeUnload';
 import { UnsavedChangesDialog } from '@/components/ConfirmDialog';
 import {
@@ -111,6 +112,7 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
   const [permissionCheck, setPermissionCheck] = useState<PermissionCheck | null>(null);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const [editMode, setEditMode] = useState<'traditional' | 'context_engineering'>('traditional');
 
   // 浏览器离开页面警告 - 使用自定义对话框
   const { showConfirmDialog, onConfirmLeave, onCancelLeave, forceNavigate } = useBeforeUnload(
@@ -231,23 +233,23 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
   // 权限检查失败时显示错误页面
   if (permissionCheck && !permissionCheck.canEdit) {
     return (
-      <div className="bg-gray-50 min-h-screen py-8">
+      <div className="bg-dark-bg-primary min-h-screen py-8">
         <div className="container-custom">
           {/* 返回按钮 */}
           <div className="mb-6">
-            <Link href={`/prompts/${prompt.id}`} className="inline-flex items-center text-sm font-medium text-primary-600 hover:text-primary-700">
+            <Link href={`/prompts/${prompt.id}`} className="inline-flex items-center text-sm font-medium text-neon-cyan hover:text-white transition-colors">
               <ChevronLeftIcon className="h-5 w-5 mr-1" />
               返回提示词详情
             </Link>
           </div>
 
-          <div className="bg-white shadow-sm rounded-lg p-8 text-center">
+          <div className="glass rounded-xl p-8 text-center border border-red-400/30 bg-red-500/10">
             <ShieldExclamationIcon className="mx-auto h-16 w-16 text-red-400 mb-4" />
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">访问被拒绝</h1>
-            <p className="text-gray-600 mb-6">{permissionCheck.message}</p>
+            <h1 className="text-2xl font-bold text-white mb-2">访问被拒绝</h1>
+            <p className="text-gray-300 mb-6">{permissionCheck.message}</p>
             
-            <div className="bg-yellow-50 border border-yellow-200 rounded-md p-4 mb-6">
-              <div className="text-sm text-yellow-800">
+            <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4 mb-6">
+              <div className="text-sm text-yellow-300">
                 <p className="font-medium mb-2">编辑权限说明：</p>
                 <ul className="list-disc list-inside space-y-1 text-left">
                   <li>您可以编辑自己创建的提示词</li>
@@ -261,13 +263,13 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
             <div className="flex justify-center space-x-4">
               <Link
                 href={`/prompts/${prompt.id}`}
-                className="btn-primary"
+                className="px-6 py-3 bg-neon-cyan text-black rounded-lg hover:bg-cyan-400 transition-colors font-medium"
               >
                 查看提示词详情
               </Link>
               <Link
                 href="/prompts"
-                className="btn-secondary"
+                className="px-6 py-3 border border-gray-600 text-gray-300 rounded-lg hover:bg-gray-700 transition-colors"
               >
                 浏览其他提示词
               </Link>
@@ -282,26 +284,100 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
     );
   }
 
+  // Context Engineering模式的保存处理
+  const handleContextEngineeringSave = async (updatedPrompt: Partial<PromptDetails>) => {
+    if (!permissionCheck?.canEdit) {
+      toast.error('您没有编辑此提示词的权限');
+      return;
+    }
+
+    try {
+      const result = await updatePrompt(prompt.id, updatedPrompt);
+      setSaveSuccess(true);
+      setHasUnsavedChanges(false);
+      
+      toast.success('提示词更新成功！', {
+        duration: 2000,
+        position: 'top-center',
+      });
+      
+      forceNavigate(`/prompts/${prompt.id}`);
+    } catch (error) {
+      console.error('更新提示词失败:', error);
+      toast.error(`❌ 更新失败: ${error instanceof Error ? error.message : '未知错误'}`);
+      throw error;
+    }
+  };
+
   return (
-    <>
-      <PromptFormContainer
-        mode="edit"
-        initialData={safePromptData}
-        onSubmit={handleSubmit}
-        onCancel={() => router.push(`/prompts/${prompt.id}`)}
-        categoriesByType={categoriesByType}
-        pageTitle="编辑提示词"
-        pageSubtitle="完善您的智能提示词，让AI更好地理解您的需求"
-        submitButtonText="更新提示词"
-        backLink={{
-          href: `/prompts/${prompt.id}`,
-          label: '返回提示词详情',
-        }}
-        permissionCheck={permissionCheck}
-        hasUnsavedChanges={hasUnsavedChanges}
-        saveSuccess={saveSuccess}
-        onUnsavedChanges={setHasUnsavedChanges}
-      />
+    <div className="min-h-screen bg-dark-bg-primary">
+      {/* 编辑模式选择器 */}
+      <div className="container-custom py-6">
+        <div className="flex justify-between items-center mb-6">
+          {/* 返回按钮 */}
+          <Link href={`/prompts/${prompt.id}`} className="inline-flex items-center text-sm font-medium text-neon-cyan hover:text-white transition-colors">
+            <ChevronLeftIcon className="h-5 w-5 mr-1" />
+            返回提示词详情
+          </Link>
+
+          {/* 编辑模式切换 */}
+          <div className="flex items-center space-x-4">
+            <span className="text-sm text-gray-300">编辑模式:</span>
+            <div className="flex bg-dark-bg-secondary rounded-lg p-1 border border-neon-cyan/30">
+              <button
+                onClick={() => setEditMode('traditional')}
+                className={`px-4 py-2 text-sm rounded-lg transition-all duration-200 ${
+                  editMode === 'traditional' 
+                    ? 'bg-neon-cyan text-black font-medium' 
+                    : 'text-gray-400 hover:text-white'
+                }`}
+              >
+                传统编辑
+              </button>
+              <button
+                onClick={() => setEditMode('context_engineering')}
+                className={`px-4 py-2 text-sm rounded-lg transition-all duration-200 flex items-center ${
+                  editMode === 'context_engineering' 
+                    ? 'bg-neon-purple text-white font-medium' 
+                    : 'text-gray-400 hover:text-white'
+                }`}
+              >
+                <SparklesIcon className="h-4 w-4 mr-1" />
+                Context Engineering
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* 条件渲染不同的编辑器 */}
+        {editMode === 'traditional' ? (
+          <PromptFormContainer
+            mode="edit"
+            initialData={safePromptData}
+            onSubmit={handleSubmit}
+            onCancel={() => router.push(`/prompts/${prompt.id}`)}
+            categoriesByType={categoriesByType}
+            pageTitle="编辑提示词 - 传统模式"
+            pageSubtitle="使用简单的表单编辑您的提示词"
+            submitButtonText="更新提示词"
+            backLink={{
+              href: `/prompts/${prompt.id}`,
+              label: '返回提示词详情',
+            }}
+            permissionCheck={permissionCheck}
+            hasUnsavedChanges={hasUnsavedChanges}
+            saveSuccess={saveSuccess}
+            onUnsavedChanges={setHasUnsavedChanges}
+          />
+        ) : (
+          <ContextualPromptEditor
+            prompt={safePromptData as PromptDetails}
+            onSave={handleContextEngineeringSave}
+            onCancel={() => router.push(`/prompts/${prompt.id}`)}
+            isLoading={false}
+          />
+        )}
+      </div>
       
       {/* 统一的未保存更改确认对话框 */}
       <UnsavedChangesDialog
@@ -310,7 +386,7 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
         onCancel={onCancelLeave}
         context="form"
       />
-    </>
+    </div>
   );
 }
 

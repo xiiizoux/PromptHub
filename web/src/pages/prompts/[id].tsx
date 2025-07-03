@@ -77,6 +77,7 @@ import { formatVersionDisplay } from '@/lib/version-utils';
 import { RatingSystem } from '@/components/RatingSystem';
 import PromptInteractions from '@/components/social/PromptInteractions';
 import VersionHistory from '@/components/prompts/VersionHistory';
+import UserPromptContext from '@/components/prompts/UserPromptContext';
 import { toast } from 'react-hot-toast';
 
 interface PromptDetailsPageProps {
@@ -973,6 +974,15 @@ export default function PromptDetailsPage() {
                 })()}
               </motion.div>
             )}
+
+            {/* 用户个性化上下文模块 - Context Engineering核心功能 */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: 0.25 }}
+            >
+              <UserPromptContext promptId={prompt.id} isLoggedIn={!!user} />
+            </motion.div>
 
             {/* 社交互动组件 */}
             <motion.div
