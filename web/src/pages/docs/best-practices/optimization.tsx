@@ -234,21 +234,6 @@ function generatePrompt(inputType, complexity, userLevel) {
         { name: '优化技巧', href: '/docs/best-practices/optimization' },
       ]}
     >
-      {/* 返回按钮 */}
-      <motion.div 
-        initial={{ opacity: 0, x: -20 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ duration: 0.5 }}
-        className="mb-8"
-      >
-        <Link 
-          href="/docs/best-practices" 
-          className="inline-flex items-center text-neon-cyan hover:text-white transition-colors duration-300 group"
-        >
-          <ChevronLeftIcon className="h-5 w-5 mr-2 group-hover:-translate-x-1 transition-transform duration-300" />
-          返回最佳实践
-        </Link>
-      </motion.div>
 
       {/* 优化策略概述 */}
       <DocSection title="优化策略概述" delay={0.1}>

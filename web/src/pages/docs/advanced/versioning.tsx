@@ -1,473 +1,235 @@
 import React from 'react';
 import Link from 'next/link';
-import { ChevronLeftIcon } from '@heroicons/react/24/outline';
+import { ChevronLeftIcon, DocumentTextIcon, ArrowPathIcon, TagIcon, BranchingIcon, ClockIcon, CheckCircleIcon, ShieldCheckIcon, RocketLaunchIcon } from '@heroicons/react/24/outline';
+import DocLayout from '@/components/DocLayout';
+import { DocSection, DocGrid, DocCard, DocCodeBlock, DocList, DocHighlight } from '@/components/DocContent';
 
 const VersioningPage: React.FC = () => {
+  const versioningBenefits = [
+    { title: '变更追踪', description: '记录每次修改和标识修改原因' },
+    { title: '性能监控', description: '追踪性能影响和维护变更日志' },
+    { title: '团队协作', description: '多人并行开发和冲突解决机制' },
+    { title: '代码审查', description: '实施代码审查流程和权限管理' },
+    { title: '发布管理', description: '分阶段发布和快速回滚能力' },
+    { title: 'A/B测试', description: 'A/B测试支持和环境隔离' },
+  ];
+
+  const versionTypes = [
+    { title: 'MAJOR', description: '重大变更，不兼容的API修改', color: 'red' },
+    { title: 'MINOR', description: '功能更新，向后兼容的新功能', color: 'orange' },
+    { title: 'PATCH', description: '问题修复，错误修正和小幅改进', color: 'green' },
+  ];
+
+  const workflowSteps = [
+    { title: '创建特性分支', description: '为新功能或修复创建独立分支' },
+    { title: '开发和测试', description: '在特性分支上进行开发和单元测试' },
+    { title: '代码审查', description: '提交Pull Request进行代码审查' },
+    { title: '合并到主分支', description: '审查通过后合并到主分支' },
+    { title: '创建版本标签', description: '为发布版本创建Git标签' },
+    { title: '部署到生产', description: '将标签版本部署到生产环境' },
+  ];
+
+  const bestPractices = [
+    { title: '清晰的提交信息', description: '使用标准化的提交信息格式' },
+    { title: '频繁的小提交', description: '避免大型单体提交' },
+    { title: '完整的测试覆盖', description: '确保每个版本都经过充分测试' },
+    { title: '文档同步更新', description: '版本更新时同步更新文档' },
+  ];
+
+  const nextSteps = [
+    {
+      title: '系统集成',
+      description: '学习如何将提示词集成到现有系统',
+      href: '/docs/advanced/integration',
+    },
+    {
+      title: 'API参考',
+      description: '查看完整的API文档和使用示例',
+      href: '/docs/api',
+    },
+  ];
+
   return (
-    <div className="bg-gray-50 min-h-screen py-8">
-      <div className="container-custom">
-        {/* 返回按钮 */}
-        <div className="mb-6">
-          <Link href="/docs/advanced" className="inline-flex items-center text-sm font-medium text-primary-600 hover:text-primary-700">
-            <ChevronLeftIcon className="h-5 w-5 mr-1" />
-            返回高级功能
-          </Link>
-        </div>
+    <DocLayout
+      title="版本控制"
+      description="学习如何有效管理提示词的版本、变更历史和发布流程"
+      backLink="/docs/advanced"
+      backText="返回高级功能"
+      breadcrumbs={[
+        { name: '文档', href: '/docs' },
+        { name: '高级功能', href: '/docs/advanced' },
+        { name: '版本控制', href: '/docs/advanced/versioning' },
+      ]}
+    >
+      {/* 版本控制概述 */}
+      <DocSection title="为什么需要版本控制？" delay={0.1}>
+        <p className="text-dark-text-secondary leading-relaxed mb-8">
+          提示词版本控制帮助团队跟踪变更、回滚问题版本、协作开发，并确保生产环境的稳定性。
+        </p>
+        
+        <DocGrid cols={3}>
+          <DocCard
+            title="🔄 变更追踪"
+            description="完整记录提示词的演进历史"
+            icon={<ArrowPathIcon className="h-6 w-6" />}
+            color="blue"
+          >
+            <DocList items={versioningBenefits.slice(0, 2)} />
+          </DocCard>
+          
+          <DocCard
+            title="👥 团队协作"
+            description="支持多人协作和冲突管理"
+            icon={<CheckCircleIcon className="h-6 w-6" />}
+            color="green"
+          >
+            <DocList items={versioningBenefits.slice(2, 4)} />
+          </DocCard>
+          
+          <DocCard
+            title="🚀 发布管理"
+            description="安全可靠的发布和回滚机制"
+            icon={<RocketLaunchIcon className="h-6 w-6" />}
+            color="purple"
+          >
+            <DocList items={versioningBenefits.slice(4, 6)} />
+          </DocCard>
+        </DocGrid>
+      </DocSection>
 
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">版本控制</h1>
-          <p className="mt-2 text-gray-600">
-            学习如何有效管理提示词的版本、变更历史和发布流程
-          </p>
-        </div>
+      {/* 版本命名规范 */}
+      <DocSection title="版本命名规范" delay={0.2}>
+        <h3 className="text-xl font-semibold text-dark-text-primary mb-4">语义化版本控制 (SemVer)</h3>
+        <p className="text-dark-text-secondary leading-relaxed mb-6">
+          采用 MAJOR.MINOR.PATCH 格式，清晰表达变更的影响范围。
+        </p>
+        
+        <DocGrid cols={3}>
+          {versionTypes.map((type, index) => (
+            <DocCard
+              key={index}
+              title={type.title}
+              description={type.description}
+              icon={<TagIcon className="h-6 w-6" />}
+              color={type.color as any}
+            />
+          ))}
+        </DocGrid>
 
-        {/* 版本控制概述 */}
-        <div className="bg-white shadow-sm rounded-lg overflow-hidden mb-8">
-          <div className="p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">为什么需要版本控制？</h2>
-            <p className="text-gray-600 mb-6">
-              提示词版本控制帮助团队跟踪变更、回滚问题版本、协作开发，并确保生产环境的稳定性。
-            </p>
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <h3 className="text-lg font-medium text-blue-800 mb-3">🔄 变更追踪</h3>
-                <ul className="space-y-2 text-blue-700 text-sm">
-                  <li>• 记录每次修改</li>
-                  <li>• 标识修改原因</li>
-                  <li>• 追踪性能影响</li>
-                  <li>• 维护变更日志</li>
-                </ul>
+        <div className="mt-8">
+          <DocCodeBlock
+            language="text"
+            title="版本号示例"
+            code={`v1.0.0 - 初始稳定版本
+v1.1.0 - 添加新的上下文处理功能
+v1.1.1 - 修复输出格式问题
+v1.2.0 - 增加多语言支持
+v2.0.0 - 重构提示词结构（破坏性变更）`}
+          />
+        </div>
+        
+        <DocHighlight variant="info">
+          <strong>建议：</strong> 在开发阶段使用 0.x.x 版本号，首个稳定版本从 1.0.0 开始。
+        </DocHighlight>
+      </DocSection>
+
+      {/* Git工作流程 */}
+      <DocSection title="Git工作流程" delay={0.3}>
+        <p className="text-dark-text-secondary leading-relaxed mb-6">
+          推荐使用Git Flow工作流程来管理提示词的开发和发布：
+        </p>
+        
+        <DocGrid cols={2}>
+          {workflowSteps.map((step, index) => (
+            <DocCard
+              key={index}
+              title={`${index + 1}. ${step.title}`}
+              description={step.description}
+              icon={<ClockIcon className="h-6 w-6" />}
+              color="cyan"
+            />
+          ))}
+        </DocGrid>
+
+        <div className="mt-8">
+          <DocCodeBlock
+            language="bash"
+            title="Git工作流示例"
+            code={`# 1. 创建特性分支
+git checkout -b feature/improve-context-handling
+
+# 2. 进行开发工作
+git add .
+git commit -m "feat: 改进上下文处理逻辑"
+
+# 3. 推送分支并创建PR
+git push origin feature/improve-context-handling
+
+# 4. 代码审查通过后，合并到主分支
+git checkout main
+git merge feature/improve-context-handling
+
+# 5. 创建版本标签
+git tag -a v1.2.0 -m "Release version 1.2.0"
+git push origin v1.2.0
+
+# 6. 删除特性分支
+git branch -d feature/improve-context-handling`}
+          />
+        </div>
+      </DocSection>
+
+      {/* 分支策略 */}
+      <DocSection title="分支策略" delay={0.4}>
+        <DocGrid cols={2}>
+          <DocCard
+            title="主要分支"
+            description="长期存在的核心分支"
+            icon={<ShieldCheckIcon className="h-6 w-6" />}
+            color="blue"
+          >
+            <div className="space-y-3 mt-4">
+              <div>
+                <strong className="text-neon-cyan">main/master:</strong>
+                <p className="text-sm text-dark-text-secondary">生产就绪的稳定代码</p>
               </div>
-              
-              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                <h3 className="text-lg font-medium text-green-800 mb-3">👥 团队协作</h3>
-                <ul className="space-y-2 text-green-700 text-sm">
-                  <li>• 多人并行开发</li>
-                  <li>• 冲突解决机制</li>
-                  <li>• 代码审查流程</li>
-                  <li>• 权限管理</li>
-                </ul>
-              </div>
-              
-              <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
-                <h3 className="text-lg font-medium text-purple-800 mb-3">🚀 发布管理</h3>
-                <ul className="space-y-2 text-purple-700 text-sm">
-                  <li>• 分阶段发布</li>
-                  <li>• 快速回滚</li>
-                  <li>• A/B测试支持</li>
-                  <li>• 环境隔离</li>
-                </ul>
+              <div>
+                <strong className="text-neon-cyan">develop:</strong>
+                <p className="text-sm text-dark-text-secondary">开发集成分支</p>
               </div>
             </div>
-          </div>
-        </div>
-
-        {/* 版本命名规范 */}
-        <div className="bg-white shadow-sm rounded-lg overflow-hidden mb-8">
-          <div className="p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">版本命名规范</h2>
-            
-            <div className="space-y-6">
+          </DocCard>
+          
+          <DocCard
+            title="支持分支"
+            description="临时性的功能分支"
+            icon={<BranchingIcon className="h-6 w-6" />}
+            color="purple"
+          >
+            <div className="space-y-3 mt-4">
               <div>
-                <h3 className="text-lg font-medium text-gray-900 mb-3">语义化版本控制 (SemVer)</h3>
-                <p className="text-gray-600 mb-4">
-                  采用 MAJOR.MINOR.PATCH 格式，清晰表达变更的影响范围。
-                </p>
-                
-                <div className="bg-gray-50 p-4 rounded-lg mb-4">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                    <div className="text-center">
-                      <div className="text-2xl font-bold text-red-600 mb-2">MAJOR</div>
-                      <div className="text-gray-700">
-                        <p className="font-medium mb-1">重大变更</p>
-                        <p>不兼容的API修改</p>
-                        <p>输出格式重大调整</p>
-                      </div>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-2xl font-bold text-orange-600 mb-2">MINOR</div>
-                      <div className="text-gray-700">
-                        <p className="font-medium mb-1">功能更新</p>
-                        <p>向后兼容的新功能</p>
-                        <p>性能优化</p>
-                      </div>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-2xl font-bold text-green-600 mb-2">PATCH</div>
-                      <div className="text-gray-700">
-                        <p className="font-medium mb-1">问题修复</p>
-                        <p>错误修正</p>
-                        <p>小幅改进</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                  <h4 className="text-md font-medium text-blue-800 mb-2">版本示例：</h4>
-                  <ul className="text-blue-700 text-sm space-y-1">
-                    <li>• <code>1.0.0</code> - 初始发布版本</li>
-                    <li>• <code>1.0.1</code> - 修复小错误</li>
-                    <li>• <code>1.1.0</code> - 添加新功能</li>
-                    <li>• <code>2.0.0</code> - 重大架构调整</li>
-                  </ul>
-                </div>
+                <strong className="text-neon-purple">feature/*:</strong>
+                <p className="text-sm text-dark-text-secondary">新功能开发</p>
               </div>
-
               <div>
-                <h3 className="text-lg font-medium text-gray-900 mb-3">预发布版本</h3>
-                <p className="text-gray-600 mb-4">
-                  用于测试和验证的预发布版本标识。
-                </p>
-                
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                    <div>
-                      <h4 className="font-medium text-gray-800 mb-2">开发版本</h4>
-                      <ul className="text-gray-600 space-y-1">
-                        <li>• <code>1.1.0-alpha.1</code> - 内部测试</li>
-                        <li>• <code>1.1.0-beta.1</code> - 公开测试</li>
-                        <li>• <code>1.1.0-rc.1</code> - 发布候选</li>
-                      </ul>
-                    </div>
-                    <div>
-                      <h4 className="font-medium text-gray-800 mb-2">特殊标识</h4>
-                      <ul className="text-gray-600 space-y-1">
-                        <li>• <code>dev</code> - 开发分支</li>
-                        <li>• <code>staging</code> - 预发布环境</li>
-                        <li>• <code>hotfix</code> - 紧急修复</li>
-                      </ul>
-                    </div>
-                  </div>
-                </div>
+                <strong className="text-neon-purple">hotfix/*:</strong>
+                <p className="text-sm text-dark-text-secondary">紧急修复</p>
+              </div>
+              <div>
+                <strong className="text-neon-purple">release/*:</strong>
+                <p className="text-sm text-dark-text-secondary">发布准备</p>
               </div>
             </div>
-          </div>
-        </div>
+          </DocCard>
+        </DocGrid>
+      </DocSection>
 
-        {/* 分支策略 */}
-        <div className="bg-white shadow-sm rounded-lg overflow-hidden mb-8">
-          <div className="p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">分支管理策略</h2>
-            
-            <div className="space-y-6">
-              <div>
-                <h3 className="text-lg font-medium text-gray-900 mb-3">Git Flow 模型</h3>
-                <p className="text-gray-600 mb-4">
-                  适用于有明确发布周期的项目，提供完整的分支管理流程。
-                </p>
-                
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <div className="space-y-4">
-                    <div className="flex items-start space-x-3">
-                      <div className="w-3 h-3 bg-blue-500 rounded-full mt-1"></div>
-                      <div>
-                        <h4 className="font-medium text-gray-900">main/master</h4>
-                        <p className="text-sm text-gray-600">生产环境稳定版本，只接受来自release和hotfix的合并</p>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-start space-x-3">
-                      <div className="w-3 h-3 bg-green-500 rounded-full mt-1"></div>
-                      <div>
-                        <h4 className="font-medium text-gray-900">develop</h4>
-                        <p className="text-sm text-gray-600">开发主分支，集成所有新功能，准备下次发布</p>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-start space-x-3">
-                      <div className="w-3 h-3 bg-purple-500 rounded-full mt-1"></div>
-                      <div>
-                        <h4 className="font-medium text-gray-900">feature/*</h4>
-                        <p className="text-sm text-gray-600">功能开发分支，从develop分出，完成后合并回develop</p>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-start space-x-3">
-                      <div className="w-3 h-3 bg-orange-500 rounded-full mt-1"></div>
-                      <div>
-                        <h4 className="font-medium text-gray-900">release/*</h4>
-                        <p className="text-sm text-gray-600">发布准备分支，从develop分出，测试完成后合并到main和develop</p>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-start space-x-3">
-                      <div className="w-3 h-3 bg-red-500 rounded-full mt-1"></div>
-                      <div>
-                        <h4 className="font-medium text-gray-900">hotfix/*</h4>
-                        <p className="text-sm text-gray-600">紧急修复分支，从main分出，修复后合并到main和develop</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <h3 className="text-lg font-medium text-gray-900 mb-3">GitHub Flow 模型</h3>
-                <p className="text-gray-600 mb-4">
-                  适用于持续部署的项目，流程简单，发布频繁。
-                </p>
-                
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <div className="space-y-3">
-                    <div className="flex items-center space-x-2 text-sm">
-                      <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded">1</span>
-                      <span>从main分支创建功能分支</span>
-                    </div>
-                    <div className="flex items-center space-x-2 text-sm">
-                      <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded">2</span>
-                      <span>在功能分支上开发和测试</span>
-                    </div>
-                    <div className="flex items-center space-x-2 text-sm">
-                      <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded">3</span>
-                      <span>创建Pull Request进行代码审查</span>
-                    </div>
-                    <div className="flex items-center space-x-2 text-sm">
-                      <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded">4</span>
-                      <span>审查通过后合并到main分支</span>
-                    </div>
-                    <div className="flex items-center space-x-2 text-sm">
-                      <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded">5</span>
-                      <span>自动部署到生产环境</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* 变更管理 */}
-        <div className="bg-white shadow-sm rounded-lg overflow-hidden mb-8">
-          <div className="p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">变更管理流程</h2>
-            
-            <div className="space-y-6">
-              <div>
-                <h3 className="text-lg font-medium text-gray-900 mb-3">提交信息规范</h3>
-                <p className="text-gray-600 mb-4">
-                  使用结构化的提交信息，便于自动生成变更日志和版本发布。
-                </p>
-                
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <h4 className="text-md font-medium text-gray-900 mb-2">Conventional Commits 格式：</h4>
-                  <pre className="text-sm text-gray-700 mb-4">
-{`<type>[optional scope]: <description>
-
-[optional body]
-
-[optional footer(s)]`}
-                  </pre>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                    <div>
-                      <h5 className="font-medium text-gray-800 mb-2">常用类型：</h5>
-                      <ul className="text-gray-600 space-y-1">
-                        <li>• <code>feat</code> - 新功能</li>
-                        <li>• <code>fix</code> - 错误修复</li>
-                        <li>• <code>docs</code> - 文档更新</li>
-                        <li>• <code>style</code> - 格式调整</li>
-                        <li>• <code>refactor</code> - 重构</li>
-                        <li>• <code>test</code> - 测试相关</li>
-                        <li>• <code>chore</code> - 构建/工具</li>
-                      </ul>
-                    </div>
-                    <div>
-                      <h5 className="font-medium text-gray-800 mb-2">示例：</h5>
-                      <ul className="text-gray-600 space-y-1">
-                        <li><code>feat: 添加代码审查提示词</code></li>
-                        <li><code>fix: 修复输出格式错误</code></li>
-                        <li><code>docs: 更新API文档</code></li>
-                        <li><code>refactor: 优化提示词结构</code></li>
-                      </ul>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <h3 className="text-lg font-medium text-gray-900 mb-3">代码审查清单</h3>
-                <p className="text-gray-600 mb-4">
-                  确保每次变更都经过充分的审查和测试。
-                </p>
-                
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                      <h4 className="font-medium text-gray-800 mb-3">功能审查</h4>
-                      <ul className="text-sm text-gray-600 space-y-2">
-                        <li className="flex items-start space-x-2">
-                          <input 
-                            id="check-logic"
-                            name="check_logic"
-                            type="checkbox" 
-                            className="mt-1" 
-                            disabled 
-                          />
-                          <label htmlFor="check-logic" className="cursor-pointer">提示词逻辑正确</label>
-                        </li>
-                        <li className="flex items-start space-x-2">
-                          <input 
-                            id="check-format"
-                            name="check_format"
-                            type="checkbox" 
-                            className="mt-1" 
-                            disabled 
-                          />
-                          <label htmlFor="check-format" className="cursor-pointer">输出格式符合规范</label>
-                        </li>
-                        <li className="flex items-start space-x-2">
-                          <input 
-                            id="check-quality"
-                            name="check_quality"
-                            type="checkbox" 
-                            className="mt-1" 
-                            disabled 
-                          />
-                          <label htmlFor="check-quality" className="cursor-pointer">示例质量良好</label>
-                        </li>
-                        <li className="flex items-start space-x-2">
-                          <input 
-                            id="check-boundary"
-                            name="check_boundary"
-                            type="checkbox" 
-                            className="mt-1" 
-                            disabled 
-                          />
-                          <label htmlFor="check-boundary" className="cursor-pointer">边界情况处理</label>
-                        </li>
-                      </ul>
-                    </div>
-                    <div>
-                      <h4 className="font-medium text-gray-800 mb-3">质量审查</h4>
-                      <ul className="text-sm text-gray-600 space-y-2">
-                        <li className="flex items-start space-x-2">
-                          <input 
-                            id="check-performance"
-                            name="check_performance"
-                            type="checkbox" 
-                            className="mt-1" 
-                            disabled 
-                          />
-                          <label htmlFor="check-performance" className="cursor-pointer">性能测试通过</label>
-                        </li>
-                        <li className="flex items-start space-x-2">
-                          <input 
-                            id="check-ab-test"
-                            name="check_ab_test"
-                            type="checkbox" 
-                            className="mt-1" 
-                            disabled 
-                          />
-                          <label htmlFor="check-ab-test" className="cursor-pointer">A/B测试结果良好</label>
-                        </li>
-                        <li className="flex items-start space-x-2">
-                          <input 
-                            id="check-docs"
-                            name="check_docs"
-                            type="checkbox" 
-                            className="mt-1" 
-                            disabled 
-                          />
-                          <label htmlFor="check-docs" className="cursor-pointer">文档已更新</label>
-                        </li>
-                        <li className="flex items-start space-x-2">
-                          <input 
-                            id="check-changelog"
-                            name="check_changelog"
-                            type="checkbox" 
-                            className="mt-1" 
-                            disabled 
-                          />
-                          <label htmlFor="check-changelog" className="cursor-pointer">变更日志已记录</label>
-                        </li>
-                      </ul>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* 发布流程 */}
-        <div className="bg-white shadow-sm rounded-lg overflow-hidden mb-8">
-          <div className="p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">发布流程</h2>
-            
-            <div className="space-y-6">
-              <div>
-                <h3 className="text-lg font-medium text-gray-900 mb-3">分阶段发布</h3>
-                <p className="text-gray-600 mb-4">
-                  通过多个环境逐步验证，降低生产环境风险。
-                </p>
-                
-                <div className="space-y-4">
-                  <div className="flex items-start space-x-4">
-                    <div className="flex-shrink-0 w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                      <span className="text-blue-600 font-medium text-sm">1</span>
-                    </div>
-                    <div className="flex-1">
-                      <h4 className="font-medium text-gray-900">开发环境 (Development)</h4>
-                      <p className="text-sm text-gray-600 mt-1">开发者本地测试，快速迭代和调试</p>
-                      <div className="mt-2 text-xs text-gray-500">
-                        • 自动化单元测试 • 基础功能验证 • 快速反馈循环
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-start space-x-4">
-                    <div className="flex-shrink-0 w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                      <span className="text-green-600 font-medium text-sm">2</span>
-                    </div>
-                    <div className="flex-1">
-                      <h4 className="font-medium text-gray-900">测试环境 (Staging)</h4>
-                      <p className="text-sm text-gray-600 mt-1">模拟生产环境，全面功能测试</p>
-                      <div className="mt-2 text-xs text-gray-500">
-                        • 集成测试 • 性能测试 • 用户验收测试
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-start space-x-4">
-                    <div className="flex-shrink-0 w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center">
-                      <span className="text-orange-600 font-medium text-sm">3</span>
-                    </div>
-                    <div className="flex-1">
-                      <h4 className="font-medium text-gray-900">预发布环境 (Pre-production)</h4>
-                      <p className="text-sm text-gray-600 mt-1">生产环境的完全副本，最终验证</p>
-                      <div className="mt-2 text-xs text-gray-500">
-                        • 生产数据测试 • 负载测试 • 安全扫描
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-start space-x-4">
-                    <div className="flex-shrink-0 w-8 h-8 bg-red-100 rounded-full flex items-center justify-center">
-                      <span className="text-red-600 font-medium text-sm">4</span>
-                    </div>
-                    <div className="flex-1">
-                      <h4 className="font-medium text-gray-900">生产环境 (Production)</h4>
-                      <p className="text-sm text-gray-600 mt-1">正式发布，服务真实用户</p>
-                      <div className="mt-2 text-xs text-gray-500">
-                        • 灰度发布 • 实时监控 • 快速回滚准备
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <h3 className="text-lg font-medium text-gray-900 mb-3">自动化发布</h3>
-                <p className="text-gray-600 mb-4">
-                  使用CI/CD流水线自动化发布流程，减少人为错误。
-                </p>
-                
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <pre className="text-sm text-gray-700 whitespace-pre-wrap">
-{`# GitHub Actions 示例
-name: Release Workflow
+      {/* 版本发布流程 */}
+      <DocSection title="版本发布流程" delay={0.5}>
+        <DocCodeBlock
+          language="yaml"
+          title="自动化发布配置 (.github/workflows/release.yml)"
+          code={`name: Release Prompt Version
 
 on:
   push:
@@ -475,173 +237,155 @@ on:
       - 'v*'
 
 jobs:
-  test:
+  release:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
+      
+      - name: Validate Prompt
+        run: |
+          npm install
+          npm run validate-prompts
+          
       - name: Run Tests
         run: npm test
-      
-  deploy-staging:
-    needs: test
-    runs-on: ubuntu-latest
-    steps:
-      - name: Deploy to Staging
-        run: ./deploy-staging.sh
-      
-  deploy-production:
-    needs: deploy-staging
-    runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/tags/v')
-    steps:
+        
+      - name: Create Release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: \${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: \${{ github.ref }}
+          release_name: Release \${{ github.ref }}
+          draft: false
+          prerelease: false
+          
       - name: Deploy to Production
-        run: ./deploy-production.sh`}
-                  </pre>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+        run: |
+          npm run deploy:prod`}
+        />
 
-        {/* 回滚策略 */}
-        <div className="bg-white shadow-sm rounded-lg overflow-hidden mb-8">
-          <div className="p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">回滚策略</h2>
-            
-            <div className="space-y-6">
-              <div>
-                <h3 className="text-lg font-medium text-gray-900 mb-3">快速回滚机制</h3>
-                <p className="text-gray-600 mb-4">
-                  当发现问题时，能够快速恢复到稳定版本。
-                </p>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                    <h4 className="text-lg font-medium text-red-800 mb-3">紧急回滚</h4>
-                    <ul className="text-red-700 text-sm space-y-2">
-                      <li>• 立即切换到上一个稳定版本</li>
-                      <li>• 通知相关团队和用户</li>
-                      <li>• 记录问题和回滚原因</li>
-                      <li>• 启动问题调查流程</li>
-                    </ul>
-                  </div>
-                  
-                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                    <h4 className="text-lg font-medium text-yellow-800 mb-3">计划回滚</h4>
-                    <ul className="text-yellow-700 text-sm space-y-2">
-                      <li>• 评估回滚影响范围</li>
-                      <li>• 制定回滚计划和时间表</li>
-                      <li>• 准备数据迁移方案</li>
-                      <li>• 协调各团队配合</li>
-                    </ul>
-                  </div>
-                </div>
-              </div>
+        <DocHighlight variant="warning">
+          <strong>注意：</strong> 确保在发布前进行充分的测试，包括单元测试、集成测试和用户验收测试。
+        </DocHighlight>
+      </DocSection>
 
-              <div>
-                <h3 className="text-lg font-medium text-gray-900 mb-3">版本兼容性</h3>
-                <p className="text-gray-600 mb-4">
-                  确保不同版本之间的兼容性，支持平滑升级和降级。
-                </p>
-                
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <div className="space-y-4">
-                    <div>
-                      <h4 className="font-medium text-gray-800 mb-2">向后兼容</h4>
-                      <p className="text-sm text-gray-600">新版本能够处理旧版本的输入格式和参数</p>
-                    </div>
-                    <div>
-                      <h4 className="font-medium text-gray-800 mb-2">向前兼容</h4>
-                      <p className="text-sm text-gray-600">旧版本能够忽略新版本的扩展字段</p>
-                    </div>
-                    <div>
-                      <h4 className="font-medium text-gray-800 mb-2">渐进式迁移</h4>
-                      <p className="text-sm text-gray-600">提供迁移工具和指南，帮助用户平滑升级</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+      {/* 版本回滚策略 */}
+      <DocSection title="版本回滚策略" delay={0.6}>
+        <p className="text-dark-text-secondary leading-relaxed mb-6">
+          当新版本出现问题时，快速回滚到稳定版本是关键的运维能力：
+        </p>
+        
+        <DocCodeBlock
+          language="bash"
+          title="快速回滚示例"
+          code={`# 查看版本历史
+git tag -l
 
-        {/* 最佳实践总结 */}
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-8">
-          <h2 className="text-xl font-semibold text-blue-900 mb-4">📋 版本控制最佳实践</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <h3 className="text-lg font-medium text-blue-900 mb-3">核心原则</h3>
-              <ul className="space-y-2 text-blue-800">
-                <li>• 使用语义化版本号</li>
-                <li>• 保持清晰的分支策略</li>
-                <li>• 强制代码审查流程</li>
-                <li>• 自动化测试和部署</li>
-              </ul>
-            </div>
-            <div>
-              <h3 className="text-lg font-medium text-blue-900 mb-3">关键技巧</h3>
-              <ul className="space-y-2 text-blue-800">
-                <li>• 详细记录变更历史</li>
-                <li>• 分阶段发布验证</li>
-                <li>• 准备快速回滚方案</li>
-                <li>• 监控版本性能表现</li>
-              </ul>
-            </div>
-          </div>
-        </div>
+# 回滚到指定版本
+git checkout v1.1.1
 
-        {/* 工具推荐 */}
-        <div className="bg-white shadow-sm rounded-lg overflow-hidden mb-8">
-          <div className="p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">推荐工具</h2>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <h3 className="text-lg font-medium text-gray-900 mb-3">版本控制</h3>
-                <ul className="space-y-2 text-gray-600 text-sm">
-                  <li>• <strong>Git</strong> - 分布式版本控制</li>
-                  <li>• <strong>GitHub/GitLab</strong> - 代码托管平台</li>
-                  <li>• <strong>Semantic Release</strong> - 自动版本发布</li>
-                  <li>• <strong>Conventional Commits</strong> - 提交规范</li>
-                </ul>
-              </div>
-              
-              <div>
-                <h3 className="text-lg font-medium text-gray-900 mb-3">CI/CD</h3>
-                <ul className="space-y-2 text-gray-600 text-sm">
-                  <li>• <strong>GitHub Actions</strong> - 自动化工作流</li>
-                  <li>• <strong>Jenkins</strong> - 持续集成服务器</li>
-                  <li>• <strong>Docker</strong> - 容器化部署</li>
-                  <li>• <strong>Kubernetes</strong> - 容器编排</li>
-                </ul>
-              </div>
-            </div>
-          </div>
-        </div>
+# 创建回滚分支
+git checkout -b hotfix/rollback-to-v1.1.1
 
-        {/* 下一步 */}
-        <div className="bg-white shadow-sm rounded-lg overflow-hidden">
-          <div className="p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">下一步学习</h2>
-            <p className="text-gray-600 mb-4">
-              现在您已经了解了版本控制的重要性，可以继续学习：
-            </p>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Link href="/docs/advanced/performance-tracking" className="block p-4 bg-gray-50 rounded-lg hover:bg-gray-100">
-                <h3 className="text-md font-medium text-gray-900 mb-1">性能追踪与分析</h3>
-                <p className="text-sm text-gray-600">学习如何监控和分析提示词性能</p>
-              </Link>
-              
-              <Link href="/docs/advanced/integration" className="block p-4 bg-gray-50 rounded-lg hover:bg-gray-100">
-                <h3 className="text-md font-medium text-gray-900 mb-1">系统集成</h3>
-                <p className="text-sm text-gray-600">了解如何将提示词集成到现有系统</p>
-              </Link>
+# 如果需要，创建新的补丁版本
+git tag -a v1.1.2 -m "Rollback to stable version"
+
+# 部署回滚版本
+npm run deploy:prod`}
+        />
+
+        <DocGrid cols={2}>
+          <DocCard
+            title="自动回滚触发条件"
+            description="预设的自动回滚机制"
+            icon={<ArrowPathIcon className="h-6 w-6" />}
+            color="red"
+          >
+            <ul className="space-y-2 text-sm text-dark-text-secondary mt-4">
+              <li>• 错误率超过预设阈值</li>
+              <li>• 响应时间显著增加</li>
+              <li>• 用户满意度急剧下降</li>
+              <li>• 系统稳定性监控告警</li>
+            </ul>
+          </DocCard>
+          
+          <DocCard
+            title="手动回滚流程"
+            description="人工干预的回滚步骤"
+            icon={<CheckCircleIcon className="h-6 w-6" />}
+            color="green"
+          >
+            <ul className="space-y-2 text-sm text-dark-text-secondary mt-4">
+              <li>• 评估问题影响范围</li>
+              <li>• 确定目标回滚版本</li>
+              <li>• 执行回滚操作</li>
+              <li>• 验证系统恢复正常</li>
+            </ul>
+          </DocCard>
+        </DocGrid>
+      </DocSection>
+
+      {/* 最佳实践 */}
+      <DocSection title="版本控制最佳实践" delay={0.7}>
+        <DocHighlight variant="info" className="mb-6">
+          遵循这些最佳实践，确保版本控制流程的高效和可靠。
+        </DocHighlight>
+        
+        <DocGrid cols={2}>
+          <DocCard
+            title="开发实践"
+            description="日常开发中的规范"
+            icon={<DocumentTextIcon className="h-6 w-6" />}
+            color="blue"
+          >
+            <DocList items={bestPractices} />
+          </DocCard>
+          
+          <DocCard
+            title="提交信息规范"
+            description="标准化的提交信息格式"
+            icon={<TagIcon className="h-6 w-6" />}
+            color="purple"
+          >
+            <div className="space-y-3 mt-4">
+              <DocCodeBlock
+                language="text"
+                code={`feat: 添加新功能
+fix: 修复错误
+docs: 文档更新
+style: 格式调整
+refactor: 代码重构
+test: 测试相关
+chore: 构建过程或辅助工具的变动`}
+              />
             </div>
-          </div>
-        </div>
-      </div>
-    </div>
+          </DocCard>
+        </DocGrid>
+      </DocSection>
+
+      {/* 下一步学习 */}
+      <DocSection title="下一步学习" delay={0.8}>
+        <p className="text-dark-text-secondary leading-relaxed mb-6">
+          现在您已经掌握了版本控制的基础知识，可以继续学习：
+        </p>
+        
+        <DocGrid cols={2}>
+          {nextSteps.map((step, index) => (
+            <Link key={index} href={step.href}>
+              <DocCard
+                title={step.title}
+                description={step.description}
+                icon={<DocumentTextIcon className="h-6 w-6" />}
+                color="cyan"
+                className="hover:border-neon-cyan/50 transition-colors cursor-pointer"
+              />
+            </Link>
+          ))}
+        </DocGrid>
+      </DocSection>
+    </DocLayout>
   );
 };
 
-export default VersioningPage; 
+export default VersioningPage;

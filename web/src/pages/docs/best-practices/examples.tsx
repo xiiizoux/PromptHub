@@ -1,138 +1,72 @@
 import React from 'react';
 import Link from 'next/link';
-import { ChevronLeftIcon } from '@heroicons/react/24/outline';
+import { ChevronLeftIcon, SparklesIcon, CheckCircleIcon } from '@heroicons/react/24/outline';
 import { motion } from 'framer-motion';
+import DocLayout from '@/components/DocLayout';
+import { DocSection, DocGrid, DocCard, DocCodeBlock, DocList, DocHighlight } from '@/components/DocContent';
 
 const ExamplesPage: React.FC = () => {
   return (
-    <div className="min-h-screen bg-dark-bg-primary relative overflow-hidden">
-      {/* 背景网格效果 */}
-      <div className="fixed inset-0 bg-grid-pattern opacity-10 pointer-events-none"></div>
-      
-      {/* 背景装饰元素 */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-1/4 -right-48 w-96 h-96 bg-gradient-to-br from-neon-cyan/20 to-neon-purple/20 rounded-full blur-3xl animate-pulse-slow"></div>
-        <div className="absolute bottom-1/4 -left-48 w-96 h-96 bg-gradient-to-tr from-neon-pink/20 to-neon-purple/20 rounded-full blur-3xl animate-pulse-slow"></div>
-        <div className="absolute top-3/4 right-1/4 w-64 h-64 bg-gradient-to-br from-neon-yellow/10 to-neon-green/10 rounded-full blur-2xl"></div>
-      </div>
+    <DocLayout
+      title="添加有效示例"
+      description="学习如何在提示词中添加高质量的示例，显著提升AI模型的理解和输出质量"
+      breadcrumbs={[
+        { name: '文档', href: '/docs' },
+        { name: '最佳实践', href: '/docs/best-practices' },
+        { name: '添加有效示例', href: '/docs/best-practices/examples' },
+      ]}
+    >
 
-      <div className="relative z-10 py-8">
-        <div className="container-custom">
-          {/* 返回按钮 */}
-          <motion.div 
-            className="mb-8"
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.3 }}
-          >
-            <Link href="/docs/best-practices" className="inline-flex items-center text-sm font-medium text-neon-cyan hover:text-white transition-colors group">
-              <ChevronLeftIcon className="h-5 w-5 mr-2 group-hover:-translate-x-1 transition-transform" />
-              返回最佳实践
-            </Link>
-          </motion.div>
-
-          {/* 页面标题 */}
-          <motion.div 
-            className="mb-12"
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-          >
-            <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-neon-cyan via-neon-purple to-neon-pink bg-clip-text text-transparent mb-4">
-              添加有效示例
-            </h1>
-            <p className="text-xl text-gray-400 max-w-3xl leading-relaxed">
-              学习如何在提示词中添加高质量的示例，显著提升AI模型的理解和输出质量
-            </p>
-          </motion.div>
-
-          {/* 示例的重要性 */}
-          <motion.div 
-            className="glass rounded-2xl p-8 border border-neon-cyan/30 mb-8 hover:border-neon-cyan/50 transition-all duration-300"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-          >
-            <h2 className="text-2xl font-semibold bg-gradient-to-r from-neon-cyan to-neon-purple bg-clip-text text-transparent mb-6">
-              为什么示例如此重要？
-            </h2>
-            <p className="text-gray-300 mb-8 leading-relaxed">
-              示例是提示词工程中最强大的工具之一。它们通过具体的输入输出对，帮助AI模型理解任务的期望和格式，
-              大大减少歧义和错误输出。
-            </p>
+      <DocSection title="为什么示例如此重要？" delay={0.1}>
+        <div className="space-y-8">
+          <DocHighlight>
+            示例是提示词工程中最强大的工具之一。它们通过具体的输入输出对，帮助AI模型理解任务的期望和格式，
+            大大减少歧义和错误输出。
+          </DocHighlight>
+          
+          <DocGrid cols={2}>
+            <DocCard 
+              title="示例的优势"
+              description="使用示例能够带来的关键优势"
+              icon={<CheckCircleIcon className="h-6 w-6" />}
+              color="green"
+            >
+              <DocList 
+                items={[
+                  { title: '明确输出格式和风格', description: '通过具体示例定义期望的输出' },
+                  { title: '减少模型的理解歧义', description: '提供明确的任务解释' },
+                  { title: '提供具体的质量标准', description: '展示什么是高质量的输出' },
+                  { title: '展示复杂任务的处理方式', description: '分解复杂任务的处理步骤' },
+                  { title: '提高输出的一致性', description: '确保结果的稳定性' },
+                ]}
+                className="mt-4"
+              />
+            </DocCard>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <motion.div 
-                className="cyber-card group"
-                whileHover={{ scale: 1.02 }}
-                transition={{ duration: 0.2 }}
-              >
-                <div className="p-6">
-                  <h3 className="text-xl font-semibold text-neon-green mb-4 flex items-center">
-                    <span className="text-2xl mr-3">✅</span>
-                    <span className="neon-glow">示例的优势</span>
-                  </h3>
-                  <ul className="space-y-3 text-gray-300">
-                    <li className="flex items-center">
-                      <span className="text-neon-green mr-3">•</span>
-                      明确输出格式和风格
-                    </li>
-                    <li className="flex items-center">
-                      <span className="text-neon-green mr-3">•</span>
-                      减少模型的理解歧义
-                    </li>
-                    <li className="flex items-center">
-                      <span className="text-neon-green mr-3">•</span>
-                      提供具体的质量标准
-                    </li>
-                    <li className="flex items-center">
-                      <span className="text-neon-green mr-3">•</span>
-                      展示复杂任务的处理方式
-                    </li>
-                    <li className="flex items-center">
-                      <span className="text-neon-green mr-3">•</span>
-                      提高输出的一致性
-                    </li>
-                  </ul>
-                </div>
-              </motion.div>
-              
-              <motion.div 
-                className="cyber-card group"
-                whileHover={{ scale: 1.02 }}
-                transition={{ duration: 0.2 }}
-              >
-                <div className="p-6">
-                  <h3 className="text-xl font-semibold text-neon-blue mb-4 flex items-center">
-                    <span className="text-2xl mr-3">📊</span>
-                    <span className="neon-glow">效果对比</span>
-                  </h3>
-                  <ul className="space-y-3 text-gray-300">
-                    <li className="flex items-center justify-between">
-                      <span>准确率提升：</span>
-                      <span className="text-neon-cyan font-mono">60% → 85%</span>
-                    </li>
-                    <li className="flex items-center justify-between">
-                      <span>格式一致性：</span>
-                      <span className="text-neon-cyan font-mono">40% → 95%</span>
-                    </li>
-                    <li className="flex items-center justify-between">
-                      <span>任务理解度：</span>
-                      <span className="text-neon-cyan font-mono">70% → 90%</span>
-                    </li>
-                    <li className="flex items-center justify-between">
-                      <span>用户满意度：</span>
-                      <span className="text-neon-cyan font-mono">65% → 88%</span>
-                    </li>
-                    <li className="flex items-center justify-between">
-                      <span>错误率降低：</span>
-                      <span className="text-neon-cyan font-mono">30% → 8%</span>
-                    </li>
-                  </ul>
-                </div>
-              </motion.div>
-            </div>
-          </motion.div>
+            <DocCard 
+              title="效果对比"
+              description="使用示例前后的性能提升数据"
+              icon={<SparklesIcon className="h-6 w-6" />}
+              color="blue"
+            >
+              <div className="mt-4 space-y-3">
+                {[
+                  { label: '准确率提升', before: '60%', after: '85%' },
+                  { label: '格式一致性', before: '40%', after: '95%' },
+                  { label: '任务理解度', before: '70%', after: '90%' },
+                  { label: '用户满意度', before: '65%', after: '88%' },
+                  { label: '错误率降低', before: '30%', after: '8%' },
+                ].map((metric, index) => (
+                  <div key={index} className="flex items-center justify-between text-sm">
+                    <span className="text-dark-text-secondary">{metric.label}：</span>
+                    <span className="text-neon-cyan font-mono">{metric.before} → {metric.after}</span>
+                  </div>
+                ))}
+              </div>
+            </DocCard>
+          </DocGrid>
+        </div>
+      </DocSection>
 
           {/* 示例类型 */}
           <motion.div 
@@ -357,10 +291,8 @@ const ExamplesPage: React.FC = () => {
               </div>
             </div>
           </motion.div>
-        </div>
-      </div>
-    </div>
+    </DocLayout>
   );
 };
 
-export default ExamplesPage; 
+export default ExamplesPage;

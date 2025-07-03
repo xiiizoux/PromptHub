@@ -2,160 +2,82 @@ import React from 'react';
 import Link from 'next/link';
 import { ChevronLeftIcon, CubeIcon, LinkIcon, CommandLineIcon } from '@heroicons/react/24/outline';
 import { motion } from 'framer-motion';
+import DocLayout from '@/components/DocLayout';
+import { DocSection, DocGrid, DocCard, DocCodeBlock, DocList, DocHighlight } from '@/components/DocContent';
 
 const IntegrationPage: React.FC = () => {
   return (
-    <div className="min-h-screen bg-dark-bg-primary relative overflow-hidden">
-      {/* 背景网格效果 */}
-      <div className="fixed inset-0 bg-grid-pattern opacity-10 pointer-events-none"></div>
-      
-      {/* 背景装饰元素 */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-1/4 -right-48 w-96 h-96 bg-gradient-to-br from-neon-cyan/20 to-neon-purple/20 rounded-full blur-3xl animate-pulse-slow"></div>
-        <div className="absolute bottom-1/4 -left-48 w-96 h-96 bg-gradient-to-tr from-neon-pink/20 to-neon-purple/20 rounded-full blur-3xl animate-pulse-slow"></div>
-        <div className="absolute top-3/4 right-1/4 w-64 h-64 bg-gradient-to-br from-neon-yellow/10 to-neon-green/10 rounded-full blur-2xl"></div>
-      </div>
+    <DocLayout
+      title="系统集成"
+      description="学习如何将PromptHub与其他系统集成，包括MCP协议支持和各种集成方案"
+      breadcrumbs={[
+        { name: '文档', href: '/docs' },
+        { name: '高级功能', href: '/docs/advanced' },
+        { name: '系统集成', href: '/docs/advanced/integration' },
+      ]}
+    >
 
-      <div className="relative z-10 py-8">
-        <div className="container-custom">
-          {/* 返回按钮 */}
-          <motion.div 
-            className="mb-8"
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.3 }}
-          >
-            <Link href="/docs/advanced" className="inline-flex items-center text-sm font-medium text-neon-cyan hover:text-white transition-colors group">
-              <ChevronLeftIcon className="h-5 w-5 mr-2 group-hover:-translate-x-1 transition-transform" />
-              返回高级功能
-            </Link>
-          </motion.div>
-
-          {/* 页面标题 */}
-          <motion.div 
-            className="mb-12"
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-          >
-            <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-neon-cyan via-neon-purple to-neon-pink bg-clip-text text-transparent mb-4">
-              系统集成
-            </h1>
-            <p className="text-xl text-gray-400 max-w-3xl leading-relaxed">
-              学习如何将PromptHub与其他系统集成，包括MCP协议支持和各种集成方案
-            </p>
-          </motion.div>
-
-          {/* 集成概述 */}
-          <motion.div 
-            className="glass rounded-2xl p-8 border border-neon-cyan/30 mb-8 hover:border-neon-cyan/50 transition-all duration-300"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-          >
-            <h2 className="text-2xl font-semibold bg-gradient-to-r from-neon-cyan to-neon-purple bg-clip-text text-transparent mb-6">
-              集成概述
-            </h2>
-            <p className="text-gray-300 mb-8 leading-relaxed">
-              PromptHub提供多种集成方式，支持与AI工具、开发环境、企业系统的无缝对接。
-              通过标准化的API和MCP协议，实现提示词的统一管理和智能调用。
-            </p>
+      <DocSection title="集成概述" delay={0.1}>
+        <div className="space-y-8">
+          <DocHighlight>
+            PromptHub提供多种集成方式，支持与AI工具、开发环境、企业系统的无缝对接。
+            通过标准化的API和MCP协议，实现提示词的统一管理和智能调用。
+          </DocHighlight>
+          
+          <DocGrid cols={3}>
+            <DocCard 
+              title="MCP协议"
+              description="标准化的AI模型上下文协议"
+              icon={<CubeIcon className="h-6 w-6" />}
+              color="blue"
+            >
+              <DocList 
+                items={[
+                  { title: '标准化提示词交互', description: '统一的协议接口' },
+                  { title: '跨平台兼容性', description: '支持多种AI工具' },
+                  { title: '自动工具发现', description: '动态发现可用工具' },
+                  { title: '实时通信支持', description: '高效的数据交换' },
+                ]}
+                className="mt-4"
+              />
+            </DocCard>
             
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <motion.div 
-                className="cyber-card group"
-                whileHover={{ scale: 1.02 }}
-                transition={{ duration: 0.2 }}
-              >
-                <div className="p-6">
-                  <div className="flex items-center mb-4">
-                    <CubeIcon className="h-8 w-8 text-neon-blue mr-3" />
-                    <h3 className="text-xl font-semibold text-neon-blue neon-glow">MCP协议</h3>
-                  </div>
-                  <ul className="space-y-2 text-gray-300 text-sm">
-                    <li className="flex items-center">
-                      <span className="text-neon-green mr-2">•</span>
-                      标准化提示词交互
-                    </li>
-                    <li className="flex items-center">
-                      <span className="text-neon-green mr-2">•</span>
-                      跨平台兼容性
-                    </li>
-                    <li className="flex items-center">
-                      <span className="text-neon-green mr-2">•</span>
-                      自动工具发现
-                    </li>
-                    <li className="flex items-center">
-                      <span className="text-neon-green mr-2">•</span>
-                      实时通信支持
-                    </li>
-                  </ul>
-                </div>
-              </motion.div>
-              
-              <motion.div 
-                className="cyber-card group"
-                whileHover={{ scale: 1.02 }}
-                transition={{ duration: 0.2 }}
-              >
-                <div className="p-6">
-                  <div className="flex items-center mb-4">
-                    <LinkIcon className="h-8 w-8 text-neon-green mr-3" />
-                    <h3 className="text-xl font-semibold text-neon-green neon-glow">REST API</h3>
-                  </div>
-                  <ul className="space-y-2 text-gray-300 text-sm">
-                    <li className="flex items-center">
-                      <span className="text-neon-green mr-2">•</span>
-                      完整的CRUD操作
-                    </li>
-                    <li className="flex items-center">
-                      <span className="text-neon-green mr-2">•</span>
-                      认证和权限控制
-                    </li>
-                    <li className="flex items-center">
-                      <span className="text-neon-green mr-2">•</span>
-                      批量操作支持
-                    </li>
-                    <li className="flex items-center">
-                      <span className="text-neon-green mr-2">•</span>
-                      详细的错误处理
-                    </li>
-                  </ul>
-                </div>
-              </motion.div>
-              
-              <motion.div 
-                className="cyber-card group"
-                whileHover={{ scale: 1.02 }}
-                transition={{ duration: 0.2 }}
-              >
-                <div className="p-6">
-                  <div className="flex items-center mb-4">
-                    <CommandLineIcon className="h-8 w-8 text-neon-purple mr-3" />
-                    <h3 className="text-xl font-semibold text-neon-purple neon-glow">SDK和工具</h3>
-                  </div>
-                  <ul className="space-y-2 text-gray-300 text-sm">
-                    <li className="flex items-center">
-                      <span className="text-neon-green mr-2">•</span>
-                      JavaScript/Node.js SDK
-                    </li>
-                    <li className="flex items-center">
-                      <span className="text-neon-green mr-2">•</span>
-                      Python客户端库
-                    </li>
-                    <li className="flex items-center">
-                      <span className="text-neon-green mr-2">•</span>
-                      CLI工具
-                    </li>
-                    <li className="flex items-center">
-                      <span className="text-neon-green mr-2">•</span>
-                      浏览器扩展
-                    </li>
-                  </ul>
-                </div>
-              </motion.div>
-            </div>
-          </motion.div>
+            <DocCard 
+              title="REST API"
+              description="完整的HTTP API接口"
+              icon={<LinkIcon className="h-6 w-6" />}
+              color="green"
+            >
+              <DocList 
+                items={[
+                  { title: '完整的CRUD操作', description: '增删改查全支持' },
+                  { title: '认证和权限控制', description: '安全的访问机制' },
+                  { title: '批量操作支持', description: '高效的批处理' },
+                  { title: '详细的错误处理', description: '清晰的错误信息' },
+                ]}
+                className="mt-4"
+              />
+            </DocCard>
+            
+            <DocCard 
+              title="SDK和工具"
+              description="多语言SDK和开发工具"
+              icon={<CommandLineIcon className="h-6 w-6" />}
+              color="purple"
+            >
+              <DocList 
+                items={[
+                  { title: 'JavaScript/Node.js SDK', description: 'Web开发支持' },
+                  { title: 'Python客户端库', description: 'AI开发友好' },
+                  { title: 'CLI工具', description: '命令行操作' },
+                  { title: '浏览器扩展', description: '便捷的浏览器集成' },
+                ]}
+                className="mt-4"
+              />
+            </DocCard>
+          </DocGrid>
+        </div>
+      </DocSection>
 
           {/* MCP协议集成 */}
           <motion.div 
@@ -370,9 +292,7 @@ const IntegrationPage: React.FC = () => {
               </div>
             </div>
           </motion.div>
-        </div>
-      </div>
-    </div>
+    </DocLayout>
   );
 };
 
