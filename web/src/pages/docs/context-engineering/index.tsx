@@ -215,50 +215,50 @@ export default function ContextEngineeringIndex() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               <FeatureCard
                 icon={UserIcon}
-                title="个人化上下文"
-                description="每个用户都有独立的上下文档案，包含偏好设置、使用模式和学习历史"
+                title="核心概念"
+                description="深入了解Context Engineering的理论基础和技术架构"
                 color="neon-blue"
-                href="/docs/context-engineering/personal-context"
+                href="/docs/context-engineering/concepts"
               />
               
               <FeatureCard
                 icon={CogIcon}
-                title="智能适应规则"
-                description="可视化创建条件规则，让AI根据不同情境自动调整回应策略"
+                title="快速入门"
+                description="5分钟快速上手Context Engineering功能"
                 color="neon-purple"
-                href="/docs/context-engineering/adaptation-rules"
+                href="/docs/context-engineering/getting-started"
               />
               
               <FeatureCard
                 icon={ChartBarIcon}
-                title="使用分析洞察"
-                description="深度分析您的AI使用模式，发现最佳实践和改进机会"
+                title="用户指南"
+                description="详细的功能使用教程和操作指南"
                 color="neon-yellow"
-                href="/docs/context-engineering/analytics"
+                href="/docs/context-engineering/user-guide"
               />
               
               <FeatureCard
                 icon={BeakerIcon}
-                title="A/B测试优化"
-                description="科学地测试不同策略的效果，持续优化AI交互质量"
+                title="最佳实践"
+                description="专家经验分享和实战技巧"
                 color="neon-green"
-                href="/docs/context-engineering/ab-testing"
+                href="/docs/context-engineering/best-practices"
               />
               
               <FeatureCard
                 icon={BoltIcon}
-                title="实时效果预测"
-                description="基于机器学习预测规则变更对性能的影响，降低试错成本"
+                title="高级工具"
+                description="访问高级Context Engineering工具中心"
                 color="neon-pink"
-                href="/docs/context-engineering/prediction"
+                href="/tools/advanced-ce"
               />
               
               <FeatureCard
                 icon={AcademicCapIcon}
-                title="高级工具集"
-                description="专业级的Context Engineering工具，让复杂的AI优化变得简单直观"
+                title="提示词分析"
+                description="个人提示词深度分析和优化建议"
                 color="neon-cyan"
-                href="/docs/context-engineering/advanced-tools"
+                href="/prompts/analytics"
               />
             </div>
           </div>
