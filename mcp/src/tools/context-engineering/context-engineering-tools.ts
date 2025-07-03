@@ -134,35 +134,38 @@ export const contextPipelineToolDef: ToolDescription = {
 /**
  * Context Engineering 主处理器
  */
-export async function handleContextEngineering(params: any, context?: any): Promise<MCPToolResponse> {
+export async function handleContextEngineering(params: unknown, context?: unknown): Promise<MCPToolResponse> {
   try {
+    const typedParams = params as { promptId?: string; input?: string; sessionId?: string; pipeline?: string; requiredContext?: string[]; preferences?: Record<string, unknown> };
+    const typedContext = context as { userId?: string };
+
     logger.info('执行Context Engineering处理', { 
-      promptId: params.promptId,
-      userId: context?.userId,
-      pipeline: params.pipeline || 'default'
+      promptId: typedParams.promptId,
+      userId: typedContext?.userId,
+      pipeline: typedParams.pipeline || 'default'
     });
 
     // 验证必需参数
-    if (!params.promptId || !params.input) {
+    if (!typedParams.promptId || !typedParams.input) {
       return handleToolError('context_engineering', new Error('缺少必需参数: promptId 和 input'));
     }
 
-    if (!context?.userId) {
+    if (!typedContext?.userId) {
       return handleToolError('context_engineering', new Error('需要用户身份验证'));
     }
 
     // 构建Context Engineering请求
     const contextRequest: ContextRequest = {
-      promptId: params.promptId,
-      userId: context.userId,
-      currentInput: params.input,
-      sessionId: params.sessionId,
-      requiredContext: params.requiredContext,
-      preferences: params.preferences
+      promptId: typedParams.promptId,
+      userId: typedContext.userId,
+      currentInput: typedParams.input,
+      sessionId: typedParams.sessionId,
+      requiredContext: typedParams.requiredContext,
+      preferences: typedParams.preferences
     };
 
     // 选择处理流水线
-    const pipeline = params.pipeline || 'default';
+    const pipeline = typedParams.pipeline || 'default';
     
     // 执行Context Engineering编排
     const orchestrationResult = await contextOrchestrator.orchestrateContext(
@@ -205,8 +208,8 @@ export async function handleContextEngineering(params: any, context?: any): Prom
     };
 
     logger.info('Context Engineering处理完成', {
-      userId: context.userId,
-      promptId: params.promptId,
+      userId: typedContext.userId,
+      promptId: typedParams.promptId,
       processingTime: result.metadata.processingTime,
       pipeline
     });
@@ -216,7 +219,7 @@ export async function handleContextEngineering(params: any, context?: any): Prom
   } catch (error) {
     logger.error('Context Engineering处理失败', {
       error: error instanceof Error ? error.message : error,
-      params
+      params: typedParams
     });
 
     return handleToolError('context_engineering', error);
@@ -226,14 +229,17 @@ export async function handleContextEngineering(params: any, context?: any): Prom
 /**
  * Context State 查询处理器
  */
-export async function handleContextState(params: any, context?: any): Promise<MCPToolResponse> {
+export async function handleContextState(params: unknown, context?: unknown): Promise<MCPToolResponse> {
   try {
+    const typedParams = params as { sessionId?: string; includeHistory?: boolean; historyLimit?: number };
+    const typedContext = context as { userId?: string };
+
     logger.info('查询Context Engineering状态', { 
-      userId: context?.userId,
-      sessionId: params.sessionId
+      userId: typedContext?.userId,
+      sessionId: typedParams.sessionId
     });
 
-    if (!context?.userId) {
+    if (!typedContext?.userId) {
       return handleToolError('context_state', new Error('需要用户身份验证'));
     }
 
@@ -242,10 +248,10 @@ export async function handleContextState(params: any, context?: any): Promise<MC
     // 当前返回模拟数据
 
     const mockState = {
-      userId: context.userId,
+      userId: typedContext.userId,
       activeSessions: [
         {
-          sessionId: params.sessionId || 'mock_session_1',
+          sessionId: typedParams.sessionId || 'mock_session_1',
           status: 'active',
           startedAt: new Date().toISOString(),
           lastActivity: new Date().toISOString(),
@@ -308,7 +314,7 @@ export async function handleContextState(params: any, context?: any): Promise<MC
   } catch (error) {
     logger.error('Context Engineering状态查询失败', {
       error: error instanceof Error ? error.message : error,
-      params
+      params: typedParams
     });
 
     return handleToolError('context_state', error);
@@ -318,23 +324,26 @@ export async function handleContextState(params: any, context?: any): Promise<MC
 /**
  * Context Config 配置处理器
  */
-export async function handleContextConfig(params: any, context?: any): Promise<MCPToolResponse> {
+export async function handleContextConfig(params: unknown, context?: unknown): Promise<MCPToolResponse> {
   try {
+    const typedParams = params as { action?: string; configType?: string; configData?: unknown; configId?: string };
+    const typedContext = context as { userId?: string };
+
     logger.info('管理Context Engineering配置', { 
-      action: params.action,
-      configType: params.configType,
-      userId: context?.userId
+      action: typedParams.action,
+      configType: typedParams.configType,
+      userId: typedContext?.userId
     });
 
-    if (!params.action || !params.configType) {
+    if (!typedParams.action || !typedParams.configType) {
       return handleToolError('context_config', new Error('缺少必需参数: action 和 configType'));
     }
 
-    if (!context?.userId) {
+    if (!typedContext?.userId) {
       return handleToolError('context_config', new Error('需要用户身份验证'));
     }
 
-    const { action, configType, configData, configId } = params;
+    const { action, configType, configData, configId } = typedParams;
 
     // TODO: 实现配置管理逻辑
     // 这里需要与数据库交互，管理用户的Context Engineering配置
@@ -386,7 +395,7 @@ export async function handleContextConfig(params: any, context?: any): Promise<M
   } catch (error) {
     logger.error('Context Engineering配置管理失败', {
       error: error instanceof Error ? error.message : error,
-      params
+      params: typedParams
     });
 
     return handleToolError('context_config', error);
@@ -396,19 +405,22 @@ export async function handleContextConfig(params: any, context?: any): Promise<M
 /**
  * Context Pipeline 流水线管理处理器
  */
-export async function handleContextPipeline(params: any, context?: any): Promise<MCPToolResponse> {
+export async function handleContextPipeline(params: unknown, context?: unknown): Promise<MCPToolResponse> {
   try {
+    const typedParams = params as { action?: string; pipelineName?: string; pipelineConfig?: unknown };
+    const typedContext = context as { userId?: string };
+
     logger.info('管理Context Engineering流水线', { 
-      action: params.action,
-      pipelineName: params.pipelineName,
-      userId: context?.userId
+      action: typedParams.action,
+      pipelineName: typedParams.pipelineName,
+      userId: typedContext?.userId
     });
 
-    if (!params.action) {
+    if (!typedParams.action) {
       return handleToolError('context_pipeline', new Error('缺少必需参数: action'));
     }
 
-    const { action, pipelineName, pipelineConfig } = params;
+    const { action, pipelineName, pipelineConfig } = typedParams;
 
     switch (action) {
       case 'list':
@@ -486,7 +498,7 @@ export async function handleContextPipeline(params: any, context?: any): Promise
   } catch (error) {
     logger.error('Context Engineering流水线管理失败', {
       error: error instanceof Error ? error.message : error,
-      params
+      params: typedParams
     });
 
     return handleToolError('context_pipeline', error);

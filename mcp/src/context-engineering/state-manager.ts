@@ -3,7 +3,7 @@
  * 负责用户上下文状态的持久化和管理
  */
 
-import { storage } from '../shared/services.js';
+// import { storage } from '../shared/services.js'; // 暂未使用
 import logger from '../utils/logger.js';
 import { 
   ContextState, 
@@ -26,7 +26,7 @@ export interface StateStorage {
   // 用户档案管理
   saveUserProfile(userId: string, profile: PersonalizedContext): Promise<void>;
   loadUserProfile(userId: string): Promise<PersonalizedContext | null>;
-  updateUserPreferences(userId: string, preferences: Record<string, any>): Promise<void>;
+  updateUserPreferences(userId: string, preferences: Record<string, unknown>): Promise<void>;
   
   // 适应规则管理
   saveAdaptationRules(userId: string, rules: AdaptationRule[]): Promise<void>;
@@ -45,8 +45,8 @@ export interface StateStorage {
   getInteractionHistory(userId: string, sessionId?: string, limit?: number): Promise<ContextSnapshot[]>;
   
   // 性能指标管理
-  recordMetric(userId: string, metricType: string, value: number, metadata?: Record<string, any>): Promise<void>;
-  getMetrics(userId: string, metricType?: string, timeRange?: { start: Date; end: Date }): Promise<any[]>;
+  recordMetric(userId: string, metricType: string, value: number, metadata?: Record<string, unknown>): Promise<void>;
+  getMetrics(userId: string, metricType?: string, timeRange?: { start: Date; end: Date }): Promise<unknown[]>;
 }
 
 /**
@@ -55,7 +55,7 @@ export interface StateStorage {
  */
 export class ContextStateManager implements StateStorage {
   private static instance: ContextStateManager;
-  private cache = new Map<string, any>();
+  private cache = new Map<string, unknown>();
   private cacheTimeout = 5 * 60 * 1000; // 5分钟缓存
 
   static getInstance(): ContextStateManager {
@@ -257,7 +257,7 @@ export class ContextStateManager implements StateStorage {
     }
   }
 
-  async updateUserPreferences(userId: string, preferences: Record<string, any>): Promise<void> {
+  async updateUserPreferences(userId: string, preferences: Record<string, unknown>): Promise<void> {
     try {
       const profile = await this.loadUserProfile(userId);
       if (profile) {
@@ -568,7 +568,7 @@ export class ContextStateManager implements StateStorage {
 
   // ===== 性能指标管理 =====
 
-  async recordMetric(userId: string, metricType: string, value: number, metadata?: Record<string, any>): Promise<void> {
+  async recordMetric(userId: string, metricType: string, value: number, metadata?: Record<string, unknown>): Promise<void> {
     try {
       await this.executeQuery(`
         INSERT INTO performance_metrics (user_id, metric_type, metric_value, metadata)
@@ -591,7 +591,7 @@ export class ContextStateManager implements StateStorage {
     }
   }
 
-  async getMetrics(userId: string, metricType?: string, timeRange?: { start: Date; end: Date }): Promise<any[]> {
+  async getMetrics(userId: string, metricType?: string, timeRange?: { start: Date; end: Date }): Promise<unknown[]> {
     try {
       let query = `
         SELECT metric_type, metric_value, metadata, measured_at
@@ -638,7 +638,7 @@ export class ContextStateManager implements StateStorage {
 
   // ===== 私有辅助方法 =====
 
-  private async executeQuery(query: string, params: any[]): Promise<any[]> {
+  private async executeQuery(query: string, params: unknown[]): Promise<unknown[]> {
     // TODO: 实现真实的数据库查询
     // 这里需要使用实际的数据库连接
     // 当前返回模拟数据用于演示
@@ -646,7 +646,7 @@ export class ContextStateManager implements StateStorage {
     return [];
   }
 
-  private setCacheItem(key: string, value: any): void {
+  private setCacheItem(key: string, value: unknown): void {
     this.cache.set(key, {
       value,
       timestamp: Date.now(),
@@ -654,7 +654,7 @@ export class ContextStateManager implements StateStorage {
     });
   }
 
-  private getCacheItem(key: string): any {
+  private getCacheItem(key: string): unknown {
     const item = this.cache.get(key);
     if (!item) return null;
 

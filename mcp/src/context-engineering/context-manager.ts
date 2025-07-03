@@ -3,7 +3,7 @@
  * 实现动态上下文编排和状态管理
  */
 
-import { ToolContext } from '../shared/base-tool.js';
+// import { ToolContext } from '../shared/base-tool.js'; // 暂未使用
 import { storage } from '../shared/services.js';
 import logger from '../utils/logger.js';
 import { contextStateManager } from './state-manager.js';
@@ -14,7 +14,7 @@ import { contextStateManager } from './state-manager.js';
 export interface ContextState {
   sessionId: string;
   userId: string;
-  currentContext: Record<string, any>;
+  currentContext: Record<string, unknown>;
   contextHistory: ContextSnapshot[];
   adaptationRules: AdaptationRule[];
   personalizedData: PersonalizedContext;
@@ -27,9 +27,9 @@ export interface ContextState {
 export interface ContextSnapshot {
   timestamp: number;
   triggerEvent: string;
-  contextData: Record<string, any>;
+  contextData: Record<string, unknown>;
   effectiveness?: number;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 /**
@@ -50,7 +50,7 @@ export interface AdaptationRule {
 export interface ContextAction {
   type: 'modify' | 'append' | 'replace' | 'filter';
   target: string; // JSONPath
-  value?: any;
+  value?: unknown;
   template?: string;
   function?: string;
 }
@@ -59,8 +59,8 @@ export interface ContextAction {
  * 个性化上下文
  */
 export interface PersonalizedContext {
-  preferences: Record<string, any>;
-  learningData: Record<string, any>;
+  preferences: Record<string, unknown>;
+  learningData: Record<string, unknown>;
   usagePatterns: UsagePattern[];
   contextualMemory: ContextualMemory[];
 }
@@ -73,7 +73,7 @@ export interface UsagePattern {
   frequency: number;
   effectiveness: number;
   lastUsed: Date;
-  context: Record<string, any>;
+  context: Record<string, unknown>;
 }
 
 /**
@@ -81,7 +81,7 @@ export interface UsagePattern {
  */
 export interface ContextualMemory {
   key: string;
-  value: any;
+  value: unknown;
   relevanceScore: number;
   createdAt: Date;
   lastAccessed: Date;
@@ -94,7 +94,7 @@ export interface ContextualMemory {
 export interface ExperimentConfig {
   experimentId: string;
   variant: string;
-  parameters: Record<string, any>;
+  parameters: Record<string, unknown>;
   startDate: Date;
   endDate?: Date;
 }
@@ -108,7 +108,7 @@ export interface ContextRequest {
   sessionId?: string;
   currentInput: string;
   requiredContext?: string[];
-  preferences?: Record<string, any>;
+  preferences?: Record<string, unknown>;
 }
 
 /**
@@ -116,7 +116,7 @@ export interface ContextRequest {
  */
 export interface ContextResponse {
   adaptedContent: string;
-  contextUsed: Record<string, any>;
+  contextUsed: Record<string, unknown>;
   adaptationApplied: string[];
   personalizations: string[];
   experimentVariant?: string;
@@ -367,7 +367,7 @@ export class ContextManager {
    */
   private async applyExperimentVariant(
     content: string,
-    experimentConfig: ExperimentConfig
+    _experimentConfig: ExperimentConfig
   ): Promise<string> {
     // 根据实验配置修改内容
     // 这里可以实现A/B测试逻辑
@@ -417,7 +417,7 @@ export class ContextManager {
 
   private async selectRelevantHistory(
     history: ContextSnapshot[],
-    currentInput: string
+    _currentInput: string
   ): Promise<ContextSnapshot[]> {
     // 使用相似度算法选择相关历史
     // TODO: 实现语义相似度计算
@@ -426,7 +426,7 @@ export class ContextManager {
 
   private async selectRelevantPatterns(
     patterns: UsagePattern[],
-    currentInput: string
+    _currentInput: string
   ): Promise<UsagePattern[]> {
     // 选择相关的使用模式
     return patterns.filter(pattern => 
@@ -437,7 +437,7 @@ export class ContextManager {
 
   private async selectRelevantMemory(
     memory: ContextualMemory[],
-    currentInput: string
+    _currentInput: string
   ): Promise<ContextualMemory[]> {
     // 选择相关的上下文记忆
     return memory
@@ -454,7 +454,7 @@ export class ContextManager {
     return 'evening';
   }
 
-  private async extractTaskContext(prompt: any, input: string): Promise<Record<string, any>> {
+  private async extractTaskContext(_prompt: unknown, _input: string): Promise<Record<string, unknown>> {
     // 从提示词和输入中提取任务上下文
     return {
       taskType: 'general', // TODO: 智能识别任务类型
@@ -463,15 +463,15 @@ export class ContextManager {
     };
   }
 
-  private async evaluateCondition(condition: string, context: Record<string, any>): Promise<boolean> {
+  private async evaluateCondition(_condition: string, _context: Record<string, unknown>): Promise<boolean> {
     // TODO: 实现JSON Logic条件评估
     return true; // 简单实现
   }
 
   private async applyContextAction(
     content: string,
-    action: ContextAction,
-    context: Record<string, any>
+    _action: ContextAction,
+    _context: Record<string, unknown>
   ): Promise<string> {
     // TODO: 实现上下文动作应用
     return content; // 简单实现
@@ -479,7 +479,7 @@ export class ContextManager {
 
   private async applyUserPreferences(
     content: string,
-    preferences: Record<string, any>
+    _preferences: Record<string, unknown>
   ): Promise<string> {
     // TODO: 应用用户偏好
     return content;
@@ -487,8 +487,8 @@ export class ContextManager {
 
   private async applyLearningData(
     content: string,
-    learningData: Record<string, any>,
-    input: string
+    _learningData: Record<string, unknown>,
+    _input: string
   ): Promise<string> {
     // TODO: 应用学习数据
     return content;

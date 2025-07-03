@@ -12,8 +12,8 @@ import logger from '../utils/logger.js';
 export interface PipelineStage {
   name: string;
   priority: number;
-  processor: (context: any, metadata: any) => Promise<any>;
-  condition?: (context: any) => boolean;
+  processor: (context: unknown, metadata: unknown) => Promise<unknown>;
+  condition?: (context: unknown) => boolean;
   timeout?: number; // 超时时间（毫秒）
 }
 
@@ -247,7 +247,7 @@ export class ContextOrchestrator {
    */
   private async postprocessResult(
     result: ContextResponse,
-    originalRequest: ContextRequest
+    _originalRequest: ContextRequest
   ): Promise<ContextResponse> {
     // 结果验证
     if (!result.adaptedContent?.trim()) {
@@ -257,11 +257,9 @@ export class ContextOrchestrator {
     // 安全检查
     result.adaptedContent = this.sanitizeOutput(result.adaptedContent);
 
-    // 添加追踪信息
-    result.metadata = {
-      ...result.metadata,
-      processingVersion: '1.0'
-    };
+    // 添加追踪信息 - 扩展metadata
+    const extendedMetadata = result.metadata as Record<string, unknown>;
+    extendedMetadata.processingVersion = '1.0';
 
     return result;
   }
@@ -271,9 +269,11 @@ export class ContextOrchestrator {
    */
   private sanitizeInput(input: string): string {
     // 移除潜在的恶意内容
+    // eslint-disable-next-line no-control-regex
     return input
-      .replace(/\0/g, '') // 移除空字符
-      .replace(/[\x00-\x1F\x7F]/g, '') // 移除控制字符
+      .replace(/\u0000/g, '') // 移除空字符
+      // eslint-disable-next-line no-control-regex
+      .replace(/[\u0000-\u001F\u007F]/g, '') // 移除控制字符
       .trim();
   }
 
@@ -282,8 +282,9 @@ export class ContextOrchestrator {
    */
   private sanitizeOutput(output: string): string {
     // 确保输出安全
+    // eslint-disable-next-line no-control-regex
     return output
-      .replace(/\0/g, '')
+      .replace(/\u0000/g, '')
       .trim();
   }
 
@@ -333,7 +334,7 @@ export class ContextOrchestrator {
           name: 'experiment_assignment',
           priority: 4,
           processor: this.assignExperiment.bind(this),
-          condition: (ctx) => ctx.allowExperiments !== false,
+          condition: (ctx) => (ctx as Record<string, unknown>)?.allowExperiments !== false,
           timeout: 1000
         }
       ],
@@ -393,20 +394,21 @@ export class ContextOrchestrator {
 
   // ===== 流水线阶段处理器 =====
 
-  private async analyzeInput(context: any): Promise<any> {
+  private async analyzeInput(context: unknown): Promise<unknown> {
     // 分析输入内容的意图、复杂度、领域等
+    const typedContext = context as { currentInput?: string };
     return {
       inputAnalysis: {
         intent: 'general', // TODO: 实现意图识别
         complexity: 'medium', // TODO: 复杂度评估
         domain: 'general', // TODO: 领域识别
-        length: context.currentInput.length,
+        length: typedContext.currentInput?.length || 0,
         language: 'zh-CN' // TODO: 语言检测
       }
     };
   }
 
-  private async enrichContext(context: any): Promise<any> {
+  private async enrichContext(_context: unknown): Promise<unknown> {
     // 丰富上下文信息
     return {
       enrichedContext: {
@@ -417,7 +419,7 @@ export class ContextOrchestrator {
     };
   }
 
-  private async checkPersonalization(context: any): Promise<any> {
+  private async checkPersonalization(_context: unknown): Promise<unknown> {
     // 检查个性化需求
     return {
       personalizationNeeds: {
@@ -428,7 +430,7 @@ export class ContextOrchestrator {
     };
   }
 
-  private async assignExperiment(context: any): Promise<any> {
+  private async assignExperiment(_context: unknown): Promise<unknown> {
     // 分配实验变体
     return {
       experiment: {
@@ -439,7 +441,7 @@ export class ContextOrchestrator {
     };
   }
 
-  private async basicContextProcessing(context: any): Promise<any> {
+  private async basicContextProcessing(_context: unknown): Promise<unknown> {
     // 基础上下文处理
     return {
       basicContext: {
@@ -449,7 +451,7 @@ export class ContextOrchestrator {
     };
   }
 
-  private async deepAnalysis(context: any): Promise<any> {
+  private async deepAnalysis(_context: unknown): Promise<unknown> {
     // 深度分析
     return {
       deepAnalysis: {
@@ -460,7 +462,7 @@ export class ContextOrchestrator {
     };
   }
 
-  private async advancedContextProcessing(context: any): Promise<any> {
+  private async advancedContextProcessing(_context: unknown): Promise<unknown> {
     // 高级上下文处理
     return {
       advancedContext: {
@@ -471,7 +473,7 @@ export class ContextOrchestrator {
     };
   }
 
-  private async mlPersonalization(context: any): Promise<any> {
+  private async mlPersonalization(_context: unknown): Promise<unknown> {
     // 机器学习个性化
     return {
       mlPersonalization: {
@@ -482,7 +484,7 @@ export class ContextOrchestrator {
     };
   }
 
-  private async adaptiveOptimization(context: any): Promise<any> {
+  private async adaptiveOptimization(_context: unknown): Promise<unknown> {
     // 自适应优化
     return {
       optimization: {
