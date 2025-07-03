@@ -7,6 +7,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
+import DocLayout from '@/components/DocLayout';
 import {
   RocketLaunchIcon,
   PlayIcon,
@@ -117,30 +118,15 @@ export default function ContextEngineeringGettingStarted() {
   const currentStepData = QUICK_START_STEPS.find(s => s.id === currentStep);
 
   return (
-    <div className="min-h-screen bg-dark-bg-primary">
-      <div className="container-custom py-12">
-        {/* 页面头部 */}
-        <motion.div
-          className="mb-12"
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-        >
-          <nav className="text-sm breadcrumbs mb-6">
-            <Link href="/docs" className="text-neon-cyan hover:text-cyan-400">文档</Link>
-            <span className="mx-2 text-gray-400">/</span>
-            <Link href="/docs/context-engineering" className="text-neon-cyan hover:text-cyan-400">Context Engineering</Link>
-            <span className="mx-2 text-gray-400">/</span>
-            <span className="text-gray-400">快速入门</span>
-          </nav>
-          
-          <h1 className="text-4xl font-bold text-white gradient-text mb-4 flex items-center">
-            <RocketLaunchIcon className="h-10 w-10 mr-3 text-neon-green" />
-            Context Engineering 快速入门
-          </h1>
-          <p className="text-xl text-gray-300 max-w-3xl leading-relaxed">
-            5分钟快速体验Context Engineering的强大功能，从零开始构建您的个性化AI助手。
-          </p>
-        </motion.div>
+    <DocLayout
+      title="Context Engineering 快速入门"
+      description="5分钟快速体验Context Engineering的强大功能，从零开始构建您的个性化AI助手。"
+      breadcrumbs={[
+        { name: '文档', href: '/docs' },
+        { name: 'Context Engineering', href: '/docs/context-engineering' },
+        { name: '快速入门', href: '/docs/context-engineering/getting-started' },
+      ]}
+    >
 
         {/* 快速概览 */}
         <motion.section
@@ -324,8 +310,7 @@ export default function ContextEngineeringGettingStarted() {
             </div>
           </div>
         </motion.section>
-      </div>
-    </div>
+    </DocLayout>
   );
 }
 

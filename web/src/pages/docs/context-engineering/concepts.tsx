@@ -7,6 +7,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
+import DocLayout from '@/components/DocLayout';
 import {
   AcademicCapIcon,
   CpuChipIcon,
@@ -28,31 +29,15 @@ import {
 
 export default function ContextEngineeringConcepts() {
   return (
-    <div className="min-h-screen bg-dark-bg-primary">
-      <div className="container-custom py-12">
-        {/* 页面头部 */}
-        <motion.div
-          className="mb-12"
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-        >
-          <nav className="text-sm breadcrumbs mb-6">
-            <Link href="/docs" className="text-neon-cyan hover:text-cyan-400">文档</Link>
-            <span className="mx-2 text-gray-400">/</span>
-            <Link href="/docs/context-engineering" className="text-neon-cyan hover:text-cyan-400">Context Engineering</Link>
-            <span className="mx-2 text-gray-400">/</span>
-            <span className="text-gray-400">核心概念</span>
-          </nav>
-          
-          <h1 className="text-4xl font-bold text-white gradient-text mb-4 flex items-center">
-            <AcademicCapIcon className="h-10 w-10 mr-3 text-neon-purple" />
-            Context Engineering 核心概念
-          </h1>
-          <p className="text-xl text-gray-300 max-w-3xl leading-relaxed">
-            深入理解Context Engineering的理论基础、技术架构和设计原理，
-            掌握下一代AI交互范式的核心要素。
-          </p>
-        </motion.div>
+    <DocLayout
+      title="Context Engineering 核心概念"
+      description="深入理解Context Engineering的理论基础、技术架构和设计原理，掌握下一代AI交互范式的核心要素。"
+      breadcrumbs={[
+        { name: '文档', href: '/docs' },
+        { name: 'Context Engineering', href: '/docs/context-engineering' },
+        { name: '核心概念', href: '/docs/context-engineering/concepts' },
+      ]}
+    >
 
         {/* 理论基础 */}
         <motion.section
@@ -433,8 +418,7 @@ adaptationRules
             </div>
           </div>
         </motion.section>
-      </div>
-    </div>
+    </DocLayout>
   );
 }
 

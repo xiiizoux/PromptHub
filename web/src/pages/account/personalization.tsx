@@ -27,11 +27,13 @@ import {
   ArrowDownTrayIcon,
   ExclamationTriangleIcon,
   LightBulbIcon,
-  AdjustmentsHorizontalIcon
+  AdjustmentsHorizontalIcon,
+  ArrowLeftIcon
 } from '@heroicons/react/24/outline';
 import { toast } from 'react-hot-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/router';
+import Link from 'next/link';
 
 // 用户偏好接口
 interface UserPreferences {
@@ -315,6 +317,21 @@ export default function PersonalizationPage() {
   return (
     <div className="min-h-screen bg-dark-bg-primary">
       <div className="container-custom py-8">
+        {/* 返回按钮 */}
+        <motion.div
+          className="mb-6"
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+        >
+          <Link 
+            href="/profile#context-engineering"
+            className="inline-flex items-center text-gray-400 hover:text-neon-cyan transition-colors duration-200 group"
+          >
+            <ArrowLeftIcon className="h-5 w-5 mr-2 group-hover:-translate-x-1 transition-transform duration-200" />
+            返回 Context Engineering
+          </Link>
+        </motion.div>
+
         {/* 页面头部 */}
         <motion.div
           className="mb-8"

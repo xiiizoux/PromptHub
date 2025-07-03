@@ -28,6 +28,7 @@ import {
   ExclamationTriangleIcon,
   CheckCircleIcon
 } from '@heroicons/react/24/outline';
+import DocLayout from '@/components/DocLayout';
 
 interface GuideSection {
   id: string;
@@ -269,34 +270,21 @@ export default function ContextEngineeringUserGuide() {
   const currentSection = GUIDE_SECTIONS.find(s => s.id === activeSection);
 
   return (
-    <div className="min-h-screen bg-dark-bg-primary">
-      <div className="container-custom py-12">
-        {/* 页面头部 */}
-        <motion.div
-          className="mb-12"
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-        >
-          <nav className="text-sm breadcrumbs mb-6">
-            <Link href="/docs" className="text-neon-cyan hover:text-cyan-400">文档</Link>
-            <span className="mx-2 text-gray-400">/</span>
-            <Link href="/docs/context-engineering" className="text-neon-cyan hover:text-cyan-400">Context Engineering</Link>
-            <span className="mx-2 text-gray-400">/</span>
-            <span className="text-gray-400">用户指南</span>
-          </nav>
-          
-          <h1 className="text-4xl font-bold text-white gradient-text mb-4 flex items-center">
-            <BookOpenIcon className="h-10 w-10 mr-3 text-neon-blue" />
-            Context Engineering 用户指南
-          </h1>
-          <p className="text-xl text-gray-300 max-w-3xl leading-relaxed">
-            详细的功能使用教程，帮助您充分利用Context Engineering的所有功能，成为AI个性化的专家。
-          </p>
-        </motion.div>
+    <DocLayout
+      title="Context Engineering 用户指南"
+      description="详细的功能使用教程，帮助您充分利用Context Engineering的所有功能，成为AI个性化的专家。"
+      backLink="/docs"
+      backText="返回文档首页"
+      breadcrumbs={[
+        { name: '文档', href: '/docs' },
+        { name: 'Context Engineering', href: '/docs/context-engineering' },
+        { name: '用户指南', href: '/docs/context-engineering/user-guide' }
+      ]}
+    >
 
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-          {/* 侧边导航 */}
-          <div className="lg:col-span-1">
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+        {/* 侧边导航 */}
+        <div className="lg:col-span-1">
             <div className="glass rounded-2xl p-6 border border-neon-blue/30 sticky top-8">
               <h3 className="text-lg font-bold text-white mb-4">功能指南</h3>
               <nav className="space-y-2">
@@ -321,10 +309,10 @@ export default function ContextEngineeringUserGuide() {
                 })}
               </nav>
             </div>
-          </div>
+        </div>
 
-          {/* 主要内容 */}
-          <div className="lg:col-span-3">
+        {/* 主要内容 */}
+        <div className="lg:col-span-3">
             {currentSection && (
               <motion.div
                 key={activeSection}
@@ -361,59 +349,58 @@ export default function ContextEngineeringUserGuide() {
                 </div>
               </motion.div>
             )}
+        </div>
+      </div>
+
+      {/* 底部导航 */}
+      <motion.section
+        className="mt-16"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.3 }}
+      >
+        <div className="glass rounded-2xl p-8 border border-neon-purple/30 text-center">
+          <h2 className="text-2xl font-bold text-white mb-6">
+            继续深入学习
+          </h2>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-4xl mx-auto">
+            <Link href="/docs/context-engineering/best-practices">
+              <motion.div
+                className="p-6 bg-neon-purple/10 border border-neon-purple/30 rounded-xl hover:border-neon-purple/50 transition-colors cursor-pointer"
+                whileHover={{ scale: 1.02 }}
+              >
+                <LightBulbIcon className="h-8 w-8 text-neon-purple mx-auto mb-3" />
+                <h3 className="text-lg font-semibold text-white mb-2">最佳实践</h3>
+                <p className="text-gray-400 text-sm">专家经验和使用技巧</p>
+              </motion.div>
+            </Link>
+            
+            <Link href="/docs/context-engineering/advanced-tools">
+              <motion.div
+                className="p-6 bg-neon-green/10 border border-neon-green/30 rounded-xl hover:border-neon-green/50 transition-colors cursor-pointer"
+                whileHover={{ scale: 1.02 }}
+              >
+                <RocketLaunchIcon className="h-8 w-8 text-neon-green mx-auto mb-3" />
+                <h3 className="text-lg font-semibold text-white mb-2">高级工具</h3>
+                <p className="text-gray-400 text-sm">专业级功能和API</p>
+              </motion.div>
+            </Link>
+            
+            <Link href="/docs/context-engineering/concepts">
+              <motion.div
+                className="p-6 bg-neon-cyan/10 border border-neon-cyan/30 rounded-xl hover:border-neon-cyan/50 transition-colors cursor-pointer"
+                whileHover={{ scale: 1.02 }}
+              >
+                <PuzzlePieceIcon className="h-8 w-8 text-neon-cyan mx-auto mb-3" />
+                <h3 className="text-lg font-semibold text-white mb-2">核心概念</h3>
+                <p className="text-gray-400 text-sm">理论基础和设计原理</p>
+              </motion.div>
+            </Link>
           </div>
         </div>
-
-        {/* 底部导航 */}
-        <motion.section
-          className="mt-16"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-        >
-          <div className="glass rounded-2xl p-8 border border-neon-purple/30 text-center">
-            <h2 className="text-2xl font-bold text-white mb-6">
-              继续深入学习
-            </h2>
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-4xl mx-auto">
-              <Link href="/docs/context-engineering/best-practices">
-                <motion.div
-                  className="p-6 bg-neon-purple/10 border border-neon-purple/30 rounded-xl hover:border-neon-purple/50 transition-colors cursor-pointer"
-                  whileHover={{ scale: 1.02 }}
-                >
-                  <LightBulbIcon className="h-8 w-8 text-neon-purple mx-auto mb-3" />
-                  <h3 className="text-lg font-semibold text-white mb-2">最佳实践</h3>
-                  <p className="text-gray-400 text-sm">专家经验和使用技巧</p>
-                </motion.div>
-              </Link>
-              
-              <Link href="/docs/context-engineering/advanced-tools">
-                <motion.div
-                  className="p-6 bg-neon-green/10 border border-neon-green/30 rounded-xl hover:border-neon-green/50 transition-colors cursor-pointer"
-                  whileHover={{ scale: 1.02 }}
-                >
-                  <RocketLaunchIcon className="h-8 w-8 text-neon-green mx-auto mb-3" />
-                  <h3 className="text-lg font-semibold text-white mb-2">高级工具</h3>
-                  <p className="text-gray-400 text-sm">专业级功能和API</p>
-                </motion.div>
-              </Link>
-              
-              <Link href="/docs/context-engineering/concepts">
-                <motion.div
-                  className="p-6 bg-neon-cyan/10 border border-neon-cyan/30 rounded-xl hover:border-neon-cyan/50 transition-colors cursor-pointer"
-                  whileHover={{ scale: 1.02 }}
-                >
-                  <PuzzlePieceIcon className="h-8 w-8 text-neon-cyan mx-auto mb-3" />
-                  <h3 className="text-lg font-semibold text-white mb-2">核心概念</h3>
-                  <p className="text-gray-400 text-sm">理论基础和设计原理</p>
-                </motion.div>
-              </Link>
-            </div>
-          </div>
-        </motion.section>
-      </div>
-    </div>
+      </motion.section>
+    </DocLayout>
   );
 }
 

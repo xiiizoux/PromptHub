@@ -27,6 +27,7 @@ import {
   RocketLaunchIcon,
   BoltIcon
 } from '@heroicons/react/24/outline';
+import DocLayout from '@/components/DocLayout';
 
 interface BestPractice {
   id: string;
@@ -277,38 +278,25 @@ export default function ContextEngineeringBestPractices() {
   });
 
   return (
-    <div className="min-h-screen bg-dark-bg-primary">
-      <div className="container-custom py-12">
-        {/* 页面头部 */}
-        <motion.div
-          className="mb-12"
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-        >
-          <nav className="text-sm breadcrumbs mb-6">
-            <Link href="/docs" className="text-neon-cyan hover:text-cyan-400">文档</Link>
-            <span className="mx-2 text-gray-400">/</span>
-            <Link href="/docs/context-engineering" className="text-neon-cyan hover:text-cyan-400">Context Engineering</Link>
-            <span className="mx-2 text-gray-400">/</span>
-            <span className="text-gray-400">最佳实践</span>
-          </nav>
-          
-          <h1 className="text-4xl font-bold text-white gradient-text mb-4 flex items-center">
-            <TrophyIcon className="h-10 w-10 mr-3 text-neon-yellow" />
-            Context Engineering 最佳实践
-          </h1>
-          <p className="text-xl text-gray-300 max-w-3xl leading-relaxed">
-            专家总结的实用经验和技巧，帮助您避免常见陷阱，最大化Context Engineering的价值。
-          </p>
-        </motion.div>
+    <DocLayout
+      title="Context Engineering 最佳实践"
+      description="专家总结的实用经验和技巧，帮助您避免常见陷阱，最大化Context Engineering的价值。"
+      backLink="/docs"
+      backText="返回文档首页"
+      breadcrumbs={[
+        { name: '文档', href: '/docs' },
+        { name: 'Context Engineering', href: '/docs/context-engineering' },
+        { name: '最佳实践', href: '/docs/context-engineering/best-practices' }
+      ]}
+    >
 
-        {/* 关键原则概览 */}
-        <motion.section
-          className="mb-12"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-        >
+      {/* 关键原则概览 */}
+      <motion.section
+        className="mb-12"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
+      >
           <div className="glass rounded-2xl p-8 border border-neon-yellow/30">
             <h2 className="text-3xl font-bold text-white mb-6 flex items-center">
               <AcademicCapIcon className="h-8 w-8 mr-3 text-neon-yellow" />
@@ -338,15 +326,15 @@ export default function ContextEngineeringBestPractices() {
               />
             </div>
           </div>
-        </motion.section>
+      </motion.section>
 
-        {/* 筛选和分类 */}
-        <motion.section
-          className="mb-8"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-        >
+      {/* 筛选和分类 */}
+      <motion.section
+        className="mb-8"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2 }}
+      >
           <div className="glass rounded-2xl p-6 border border-neon-cyan/30">
             <div className="flex flex-wrap gap-4 items-center justify-between">
               {/* 分类筛选 */}
@@ -396,15 +384,15 @@ export default function ContextEngineeringBestPractices() {
               </div>
             </div>
           </div>
-        </motion.section>
+      </motion.section>
 
-        {/* 最佳实践列表 */}
-        <motion.section
-          className="mb-12"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-        >
+      {/* 最佳实践列表 */}
+      <motion.section
+        className="mb-12"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.3 }}
+      >
           <div className="space-y-6">
             {filteredPractices.map((practice, index) => (
               <PracticeCard
@@ -418,15 +406,15 @@ export default function ContextEngineeringBestPractices() {
               />
             ))}
           </div>
-        </motion.section>
+      </motion.section>
 
-        {/* 实施路线图 */}
-        <motion.section
-          className="mb-12"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-        >
+      {/* 实施路线图 */}
+      <motion.section
+        className="mb-12"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.4 }}
+      >
           <div className="glass rounded-2xl p-8 border border-neon-green/30">
             <h2 className="text-3xl font-bold text-white mb-8 flex items-center">
               <RocketLaunchIcon className="h-8 w-8 mr-3 text-neon-green" />
@@ -466,15 +454,15 @@ export default function ContextEngineeringBestPractices() {
               />
             </div>
           </div>
-        </motion.section>
+      </motion.section>
 
-        {/* 常见陷阱警告 */}
-        <motion.section
-          className="mb-12"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
-        >
+      {/* 常见陷阱警告 */}
+      <motion.section
+        className="mb-12"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.5 }}
+      >
           <div className="glass rounded-2xl p-8 border border-red-500/30">
             <h2 className="text-3xl font-bold text-white mb-8 flex items-center">
               <ExclamationTriangleIcon className="h-8 w-8 mr-3 text-red-500" />
@@ -508,15 +496,15 @@ export default function ContextEngineeringBestPractices() {
               />
             </div>
           </div>
-        </motion.section>
+      </motion.section>
 
-        {/* 成功案例 */}
-        <motion.section
-          className="mb-12"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.6 }}
-        >
+      {/* 成功案例 */}
+      <motion.section
+        className="mb-12"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.6 }}
+      >
           <div className="glass rounded-2xl p-8 border border-neon-pink/30">
             <h2 className="text-3xl font-bold text-white mb-8 flex items-center">
               <StarIcon className="h-8 w-8 mr-3 text-neon-pink" />
@@ -541,57 +529,56 @@ export default function ContextEngineeringBestPractices() {
               />
             </div>
           </div>
-        </motion.section>
+      </motion.section>
 
-        {/* 进一步学习 */}
-        <motion.section
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.7 }}
-        >
-          <div className="glass rounded-2xl p-8 border border-neon-cyan/30 text-center">
-            <h2 className="text-3xl font-bold text-white mb-6">
-              准备成为Context Engineering专家？
-            </h2>
+      {/* 进一步学习 */}
+      <motion.section
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.7 }}
+      >
+        <div className="glass rounded-2xl p-8 border border-neon-cyan/30 text-center">
+          <h2 className="text-3xl font-bold text-white mb-6">
+            准备成为Context Engineering专家？
+          </h2>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-4xl mx-auto">
+            <Link href="/docs/context-engineering/advanced-tools">
+              <motion.div
+                className="p-6 bg-neon-green/10 border border-neon-green/30 rounded-xl hover:border-neon-green/50 transition-colors cursor-pointer"
+                whileHover={{ scale: 1.02 }}
+              >
+                <BoltIcon className="h-8 w-8 text-neon-green mx-auto mb-3" />
+                <h3 className="text-lg font-semibold text-white mb-2">高级工具</h3>
+                <p className="text-gray-400 text-sm">探索专业级功能和API</p>
+              </motion.div>
+            </Link>
             
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-4xl mx-auto">
-              <Link href="/docs/context-engineering/advanced-tools">
-                <motion.div
-                  className="p-6 bg-neon-green/10 border border-neon-green/30 rounded-xl hover:border-neon-green/50 transition-colors cursor-pointer"
-                  whileHover={{ scale: 1.02 }}
-                >
-                  <BoltIcon className="h-8 w-8 text-neon-green mx-auto mb-3" />
-                  <h3 className="text-lg font-semibold text-white mb-2">高级工具</h3>
-                  <p className="text-gray-400 text-sm">探索专业级功能和API</p>
-                </motion.div>
-              </Link>
-              
-              <Link href="/docs/context-engineering/user-guide">
-                <motion.div
-                  className="p-6 bg-neon-blue/10 border border-neon-blue/30 rounded-xl hover:border-neon-blue/50 transition-colors cursor-pointer"
-                  whileHover={{ scale: 1.02 }}
-                >
-                  <BookOpenIcon className="h-8 w-8 text-neon-blue mx-auto mb-3" />
-                  <h3 className="text-lg font-semibold text-white mb-2">用户指南</h3>
-                  <p className="text-gray-400 text-sm">详细的功能使用教程</p>
-                </motion.div>
-              </Link>
-              
-              <Link href="/prompts/analytics">
-                <motion.div
-                  className="p-6 bg-neon-purple/10 border border-neon-purple/30 rounded-xl hover:border-neon-purple/50 transition-colors cursor-pointer"
-                  whileHover={{ scale: 1.02 }}
-                >
-                  <ChartBarIcon className="h-8 w-8 text-neon-purple mx-auto mb-3" />
-                  <h3 className="text-lg font-semibold text-white mb-2">分析中心</h3>
-                  <p className="text-gray-400 text-sm">查看您的使用分析</p>
-                </motion.div>
-              </Link>
-            </div>
+            <Link href="/docs/context-engineering/user-guide">
+              <motion.div
+                className="p-6 bg-neon-blue/10 border border-neon-blue/30 rounded-xl hover:border-neon-blue/50 transition-colors cursor-pointer"
+                whileHover={{ scale: 1.02 }}
+              >
+                <BookOpenIcon className="h-8 w-8 text-neon-blue mx-auto mb-3" />
+                <h3 className="text-lg font-semibold text-white mb-2">用户指南</h3>
+                <p className="text-gray-400 text-sm">详细的功能使用教程</p>
+              </motion.div>
+            </Link>
+            
+            <Link href="/prompts/analytics">
+              <motion.div
+                className="p-6 bg-neon-purple/10 border border-neon-purple/30 rounded-xl hover:border-neon-purple/50 transition-colors cursor-pointer"
+                whileHover={{ scale: 1.02 }}
+              >
+                <ChartBarIcon className="h-8 w-8 text-neon-purple mx-auto mb-3" />
+                <h3 className="text-lg font-semibold text-white mb-2">分析中心</h3>
+                <p className="text-gray-400 text-sm">查看您的使用分析</p>
+              </motion.div>
+            </Link>
           </div>
-        </motion.section>
-      </div>
-    </div>
+        </div>
+      </motion.section>
+    </DocLayout>
   );
 }
 
