@@ -4,7 +4,7 @@
  */
 
 import { BaseMCPTool, ToolContext, ToolResult } from '../../shared/base-tool.js';
-import { ToolDescription, ToolParameter, Prompt } from '../../types.js';
+import { ToolDescription, ToolParameter, Prompt, PromptContentJsonb } from '../../types.js';
 
 /**
  * 简洁搜索工具类
@@ -12,6 +12,26 @@ import { ToolDescription, ToolParameter, Prompt } from '../../types.js';
 export class ConversationalSearchTool extends BaseMCPTool {
   readonly name = 'search';
   readonly description = '🔍 智能搜索提示词 - 简洁对话界面，快速选择使用';
+
+  /**
+   * 从 PromptContentJsonb | string 类型中提取字符串内容
+   */
+  private extractStringContent(content: PromptContentJsonb | string): string {
+    if (typeof content === 'string') {
+      return content;
+    }
+    
+    // 如果是 JSONB 对象，按优先级提取内容
+    if (content.static_content) {
+      return content.static_content;
+    }
+    
+    if (content.legacy_content) {
+      return content.legacy_content;
+    }
+    
+    return '';
+  }
 
   // 缓存最近的搜索结果，供用户选择使用
   private static searchCache = new Map<string, {
@@ -205,6 +225,26 @@ export class DirectUseTool extends BaseMCPTool {
   readonly name = 'use';
   readonly description = '📋 直接使用提示词 - 输入编号或名称，立即获得可用格式';
 
+  /**
+   * 从 PromptContentJsonb | string 类型中提取字符串内容
+   */
+  private extractStringContent(content: PromptContentJsonb | string): string {
+    if (typeof content === 'string') {
+      return content;
+    }
+    
+    // 如果是 JSONB 对象，按优先级提取内容
+    if (content.static_content) {
+      return content.static_content;
+    }
+    
+    if (content.legacy_content) {
+      return content.legacy_content;
+    }
+    
+    return '';
+  }
+
   getToolDefinition(): ToolDescription {
     return {
       name: this.name,
@@ -307,7 +347,7 @@ export class DirectUseTool extends BaseMCPTool {
     let content = '';
     
     // 提取消息内容
-    content = prompt.content || '';
+    content = this.extractStringContent(prompt.content || '');
 
     // 应用变量替换
     if (Object.keys(vars).length > 0) {

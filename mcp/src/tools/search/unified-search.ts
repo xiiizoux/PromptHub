@@ -922,11 +922,17 @@ export class UnifiedSearchTool extends BaseMCPTool {
    * 提取提示词内容
    */
   private extractPromptContent(prompt: Prompt): string {
-    // 使用content字段
-    if (prompt.content && prompt.content.trim()) {
-      return prompt.content;
+    // 处理JSONB格式的content字段
+    if (prompt.content) {
+      if (typeof prompt.content === 'string') {
+        return prompt.content.trim();
+      } else {
+        // 从JSONB结构中提取文本
+        const jsonbContent = prompt.content as any;
+        const contentText = jsonbContent?.static_content || jsonbContent?.legacy_content || '';
+        return contentText;
+      }
     }
-
 
     // 如果没有提取到内容，使用描述作为备选
     return prompt.description || '';

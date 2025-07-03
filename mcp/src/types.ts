@@ -1,11 +1,55 @@
-// 导入共享类型定义
-import type {
-  PromptContentJsonb,
-  OptimizationTemplateJsonb,
-  CategoryType,
-  ContentConversionResult,
-  OptimizationTemplateConversionResult
-} from '../../supabase/lib/types.js';
+// =============================================
+// 共享类型定义 (与 supabase/lib/types.ts 保持同步)
+// =============================================
+
+// 提示词内容 JSONB 结构 (Context Engineering)
+export interface PromptContentJsonb {
+  type: 'context_engineering' | 'legacy_text' | 'simple_text';
+  static_content?: string;
+  dynamic_context?: {
+    adaptation_rules?: Record<string, any>;
+    examples?: {
+      selection_strategy?: string;
+      max_examples?: number;
+      example_pool?: any[];
+    };
+    tools?: {
+      available_tools?: any[];
+      tool_selection_criteria?: string;
+    };
+    state?: {
+      conversation_history?: any[];
+      user_preferences?: Record<string, any>;
+      context_variables?: Record<string, any>;
+    };
+  };
+  // 向后兼容：如果是从旧的 TEXT 格式迁移过来的
+  legacy_content?: string;
+  migrated_at?: string;
+}
+
+// 分类优化模板 JSONB 结构
+export interface OptimizationTemplateJsonb {
+  type: 'legacy_text' | 'structured' | 'context_engineering';
+  template?: string;
+  structure?: {
+    system_prompt?: string;
+    optimization_rules?: any[];
+    context_variables?: Record<string, any>;
+    adaptation_strategies?: Record<string, any>;
+  };
+  // Context Engineering 扩展
+  context_engineering?: {
+    dynamic_adaptation?: boolean;
+    user_context_integration?: boolean;
+    example_selection_strategy?: string;
+    tool_integration?: boolean;
+  };
+  migrated_at?: string;
+}
+
+// 分类类型枚举
+export type CategoryType = 'chat' | 'image' | 'video';
 
 export interface PromptMessage {
   role: 'system' | 'user' | 'assistant';
@@ -15,8 +59,7 @@ export interface PromptMessage {
   };
 }
 
-// 重新导出共享类型
-export type { CategoryType, PromptContentJsonb, OptimizationTemplateJsonb };
+// 类型已在上面定义，不需要重新导出
 
 // 分类接口 - 扩展共享类型
 export interface Category {
@@ -317,6 +360,20 @@ export interface ContentExtractionOptions {
   preferJsonb?: boolean;
   fallbackToString?: boolean;
   validateStructure?: boolean;
+}
+
+// 内容转换结果
+export interface ContentConversionResult {
+  success: boolean;
+  data: PromptContentJsonb | string;
+  error?: string;
+}
+
+// 优化模板转换结果
+export interface OptimizationTemplateConversionResult {
+  success: boolean;
+  data: OptimizationTemplateJsonb | string;
+  error?: string;
 }
 
 // 内容提取结果

@@ -4,7 +4,7 @@
  */
 
 import { BaseMCPTool, ToolContext, ToolResult } from '../../shared/base-tool.js';
-import { ToolDescription, ToolParameter, Prompt } from '../../types.js';
+import { ToolDescription, ToolParameter, Prompt, PromptContentJsonb } from '../../types.js';
 
 /**
  * 智能推荐工具类
@@ -12,6 +12,26 @@ import { ToolDescription, ToolParameter, Prompt } from '../../types.js';
 export class SmartRecommendationTool extends BaseMCPTool {
   readonly name = 'smart_recommendation';
   readonly description = '基于用户偏好和历史使用提供智能推荐';
+
+  /**
+   * 从 PromptContentJsonb | string 类型中提取字符串内容
+   */
+  private extractStringContent(content: PromptContentJsonb | string): string {
+    if (typeof content === 'string') {
+      return content;
+    }
+    
+    // 如果是 JSONB 对象，按优先级提取内容
+    if (content.static_content) {
+      return content.static_content;
+    }
+    
+    if (content.legacy_content) {
+      return content.legacy_content;
+    }
+    
+    return '';
+  }
 
   getToolDefinition(): ToolDescription {
     return {
@@ -78,6 +98,26 @@ export class SimilarPromptsTool extends BaseMCPTool {
   readonly name = 'find_similar_prompts';
   readonly description = '基于给定提示词查找相似内容';
 
+  /**
+   * 从 PromptContentJsonb | string 类型中提取字符串内容
+   */
+  private extractStringContent(content: PromptContentJsonb | string): string {
+    if (typeof content === 'string') {
+      return content;
+    }
+    
+    // 如果是 JSONB 对象，按优先级提取内容
+    if (content.static_content) {
+      return content.static_content;
+    }
+    
+    if (content.legacy_content) {
+      return content.legacy_content;
+    }
+    
+    return '';
+  }
+
   getToolDefinition(): ToolDescription {
     return {
       name: this.name,
@@ -130,7 +170,7 @@ export class SimilarPromptsTool extends BaseMCPTool {
   }
 
   private extractContentFromPrompt(prompt: Prompt): string {
-    if (prompt.content) return prompt.content;
+    if (prompt.content) return this.extractStringContent(prompt.content);
     return prompt.description || prompt.name || '';
   }
 

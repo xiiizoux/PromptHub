@@ -4,7 +4,7 @@
  */
 
 import { ToolDescription, MCPToolResponse } from '../../types.js';
-import { contextOrchestrator } from '../../context-engineering/context-orchestrator.js';
+import { contextOrchestrator, PipelineConfig } from '../../context-engineering/context-orchestrator.js';
 import { ContextRequest } from '../../context-engineering/context-manager.js';
 import { handleToolSuccess, handleToolError } from '../../shared/error-handler.js';
 import logger from '../../utils/logger.js';
@@ -135,9 +135,10 @@ export const contextPipelineToolDef: ToolDescription = {
  * Context Engineering 主处理器
  */
 export async function handleContextEngineering(params: unknown, context?: unknown): Promise<MCPToolResponse> {
+  const typedParams = params as { promptId?: string; input?: string; sessionId?: string; pipeline?: string; requiredContext?: string[]; preferences?: Record<string, unknown> };
+  const typedContext = context as { userId?: string };
+  
   try {
-    const typedParams = params as { promptId?: string; input?: string; sessionId?: string; pipeline?: string; requiredContext?: string[]; preferences?: Record<string, unknown> };
-    const typedContext = context as { userId?: string };
 
     logger.info('执行Context Engineering处理', { 
       promptId: typedParams.promptId,
@@ -230,9 +231,10 @@ export async function handleContextEngineering(params: unknown, context?: unknow
  * Context State 查询处理器
  */
 export async function handleContextState(params: unknown, context?: unknown): Promise<MCPToolResponse> {
+  const typedParams = params as { sessionId?: string; includeHistory?: boolean; historyLimit?: number };
+  const typedContext = context as { userId?: string };
+  
   try {
-    const typedParams = params as { sessionId?: string; includeHistory?: boolean; historyLimit?: number };
-    const typedContext = context as { userId?: string };
 
     logger.info('查询Context Engineering状态', { 
       userId: typedContext?.userId,
@@ -325,9 +327,10 @@ export async function handleContextState(params: unknown, context?: unknown): Pr
  * Context Config 配置处理器
  */
 export async function handleContextConfig(params: unknown, context?: unknown): Promise<MCPToolResponse> {
+  const typedParams = params as { action?: string; configType?: string; configData?: unknown; configId?: string };
+  const typedContext = context as { userId?: string };
+  
   try {
-    const typedParams = params as { action?: string; configType?: string; configData?: unknown; configId?: string };
-    const typedContext = context as { userId?: string };
 
     logger.info('管理Context Engineering配置', { 
       action: typedParams.action,
@@ -406,9 +409,10 @@ export async function handleContextConfig(params: unknown, context?: unknown): P
  * Context Pipeline 流水线管理处理器
  */
 export async function handleContextPipeline(params: unknown, context?: unknown): Promise<MCPToolResponse> {
+  const typedParams = params as { action?: string; pipelineName?: string; pipelineConfig?: unknown };
+  const typedContext = context as { userId?: string };
+  
   try {
-    const typedParams = params as { action?: string; pipelineName?: string; pipelineConfig?: unknown };
-    const typedContext = context as { userId?: string };
 
     logger.info('管理Context Engineering流水线', { 
       action: typedParams.action,
@@ -467,7 +471,7 @@ export async function handleContextPipeline(params: unknown, context?: unknown):
           return handleToolError('context_pipeline', new Error('register操作需要提供pipelineName和pipelineConfig'));
         }
         
-        contextOrchestrator.registerPipeline(pipelineName, pipelineConfig);
+        contextOrchestrator.registerPipeline(pipelineName, pipelineConfig as PipelineConfig);
         
         return handleToolSuccess({ 
           name: pipelineName, 
@@ -480,7 +484,7 @@ export async function handleContextPipeline(params: unknown, context?: unknown):
         }
         
         // 更新现有流水线
-        contextOrchestrator.registerPipeline(pipelineName, pipelineConfig);
+        contextOrchestrator.registerPipeline(pipelineName, pipelineConfig as PipelineConfig);
         
         return handleToolSuccess({ 
           name: pipelineName, 

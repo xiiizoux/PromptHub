@@ -4,7 +4,7 @@
  */
 
 import { BaseMCPTool, ToolContext, ToolResult } from '../../shared/base-tool.js';
-import { ToolDescription, ToolParameter, Prompt } from '../../types.js';
+import { ToolDescription, ToolParameter, Prompt, PromptContentJsonb } from '../../types.js';
 
 /**
  * 快速复制工具类
@@ -12,6 +12,26 @@ import { ToolDescription, ToolParameter, Prompt } from '../../types.js';
 export class QuickCopyTool extends BaseMCPTool {
   readonly name = 'quick_copy_prompt';
   readonly description = '快速获取提示词内容，支持多种格式输出，便于复制到第三方AI客户端';
+
+  /**
+   * 从 PromptContentJsonb | string 类型中提取字符串内容
+   */
+  private extractStringContent(content: PromptContentJsonb | string): string {
+    if (typeof content === 'string') {
+      return content;
+    }
+    
+    // 如果是 JSONB 对象，按优先级提取内容
+    if (content.static_content) {
+      return content.static_content;
+    }
+    
+    if (content.legacy_content) {
+      return content.legacy_content;
+    }
+    
+    return '';
+  }
 
   getToolDefinition(): ToolDescription {
     return {
@@ -128,7 +148,7 @@ export class QuickCopyTool extends BaseMCPTool {
     customVariables: any
   ): string {
     // 提取消息内容
-    let content = prompt.content || '';
+    let content = this.extractStringContent(prompt.content || '');
 
     // 替换自定义变量
     if (Object.keys(customVariables).length > 0) {
@@ -234,6 +254,26 @@ export class PromptPreviewTool extends BaseMCPTool {
   readonly name = 'preview_prompt';
   readonly description = '预览提示词效果，支持变量替换和格式化预览';
 
+  /**
+   * 从 PromptContentJsonb | string 类型中提取字符串内容
+   */
+  private extractStringContent(content: PromptContentJsonb | string): string {
+    if (typeof content === 'string') {
+      return content;
+    }
+    
+    // 如果是 JSONB 对象，按优先级提取内容
+    if (content.static_content) {
+      return content.static_content;
+    }
+    
+    if (content.legacy_content) {
+      return content.legacy_content;
+    }
+    
+    return '';
+  }
+
   getToolDefinition(): ToolDescription {
     return {
       name: this.name,
@@ -313,7 +353,7 @@ export class PromptPreviewTool extends BaseMCPTool {
     let content = '';
     
     // 提取消息内容
-    content = prompt.content || '';
+    content = this.extractStringContent(prompt.content || '');
 
     // 替换变量
     if (Object.keys(sampleVariables).length > 0) {

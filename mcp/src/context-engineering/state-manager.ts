@@ -104,7 +104,7 @@ export class ContextStateManager implements StateStorage {
     try {
       // 先尝试从缓存获取
       const cacheKey = `session_${userId}_${sessionId}`;
-      const cached = this.getCacheItem(cacheKey);
+      const cached = this.getCacheItem(cacheKey) as ContextState | null;
       if (cached) {
         return cached;
       }
@@ -120,7 +120,7 @@ export class ContextStateManager implements StateStorage {
         return null;
       }
 
-      const sessionData = JSON.parse(result[0].session_data);
+      const sessionData = JSON.parse((result[0] as any).session_data) as ContextState;
       
       // 缓存结果
       this.setCacheItem(cacheKey, sessionData);
@@ -170,7 +170,7 @@ export class ContextStateManager implements StateStorage {
         ORDER BY last_activity_at DESC
       `, [userId]);
 
-      return result.map(row => row.id);
+      return result.map(row => (row as any).id as string);
 
     } catch (error) {
       logger.error('获取用户活跃会话失败', { 
@@ -217,7 +217,7 @@ export class ContextStateManager implements StateStorage {
     try {
       // 先尝试从缓存获取
       const cacheKey = `profile_${userId}`;
-      const cached = this.getCacheItem(cacheKey);
+      const cached = this.getCacheItem(cacheKey) as PersonalizedContext | null;
       if (cached) {
         return cached;
       }
@@ -240,7 +240,7 @@ export class ContextStateManager implements StateStorage {
         return defaultProfile;
       }
 
-      const profileData = JSON.parse(result[0].context_data);
+      const profileData = JSON.parse((result[0] as any).context_data) as PersonalizedContext;
       
       // 缓存结果
       this.setCacheItem(cacheKey, profileData);
@@ -311,7 +311,7 @@ export class ContextStateManager implements StateStorage {
     try {
       // 先尝试从缓存获取
       const cacheKey = `rules_${userId}`;
-      const cached = this.getCacheItem(cacheKey);
+      const cached = this.getCacheItem(cacheKey) as AdaptationRule[] | null;
       if (cached) {
         return cached;
       }
@@ -323,7 +323,7 @@ export class ContextStateManager implements StateStorage {
         WHERE user_id = $1
       `, [userId]);
 
-      const rules = result.map(row => JSON.parse(row.adaptation_data));
+      const rules = result.map(row => JSON.parse((row as any).adaptation_data) as AdaptationRule);
       
       // 缓存结果
       this.setCacheItem(cacheKey, rules);
@@ -442,7 +442,7 @@ export class ContextStateManager implements StateStorage {
     try {
       // 先尝试从缓存获取
       const cacheKey = `experiment_${userId}`;
-      const cached = this.getCacheItem(cacheKey);
+      const cached = this.getCacheItem(cacheKey) as ExperimentConfig | null;
       if (cached) {
         return cached;
       }
@@ -460,7 +460,7 @@ export class ContextStateManager implements StateStorage {
         return null;
       }
 
-      const config = JSON.parse(result[0].participation_data);
+      const config = JSON.parse((result[0] as any).participation_data) as ExperimentConfig;
       
       // 缓存结果
       this.setCacheItem(cacheKey, config);
@@ -546,12 +546,15 @@ export class ContextStateManager implements StateStorage {
 
       const result = await this.executeQuery(query, params);
 
-      const history = result.map(row => ({
-        timestamp: new Date(row.created_at).getTime(),
-        triggerEvent: row.interaction_type,
-        contextData: JSON.parse(row.context_snapshot),
-        metadata: JSON.parse(row.interaction_data)
-      }));
+      const history = result.map(row => {
+        const rowData = row as any;
+        return {
+          timestamp: new Date(rowData.created_at).getTime(),
+          triggerEvent: rowData.interaction_type,
+          contextData: JSON.parse(rowData.context_snapshot),
+          metadata: JSON.parse(rowData.interaction_data)
+        } as ContextSnapshot;
+      });
 
       logger.debug('获取交互历史成功', { userId, sessionId, count: history.length });
       return history;
@@ -616,12 +619,15 @@ export class ContextStateManager implements StateStorage {
 
       const result = await this.executeQuery(query, params);
 
-      const metrics = result.map(row => ({
-        type: row.metric_type,
-        value: row.metric_value,
-        metadata: JSON.parse(row.metadata),
-        timestamp: row.measured_at
-      }));
+      const metrics = result.map(row => {
+        const rowData = row as any;
+        return {
+          type: rowData.metric_type,
+          value: rowData.metric_value,
+          metadata: JSON.parse(rowData.metadata),
+          timestamp: rowData.measured_at
+        };
+      });
 
       logger.debug('获取性能指标成功', { userId, metricType, count: metrics.length });
       return metrics;
@@ -655,7 +661,7 @@ export class ContextStateManager implements StateStorage {
   }
 
   private getCacheItem(key: string): unknown {
-    const item = this.cache.get(key);
+    const item = this.cache.get(key) as { value: unknown; timestamp: number; ttl: number } | undefined;
     if (!item) return null;
 
     if (Date.now() - item.timestamp > item.ttl) {
@@ -672,7 +678,8 @@ export class ContextStateManager implements StateStorage {
   clearExpiredCache(): void {
     const now = Date.now();
     for (const [key, item] of this.cache.entries()) {
-      if (now - item.timestamp > item.ttl) {
+      const cacheItem = item as { value: unknown; timestamp: number; ttl: number };
+      if (now - cacheItem.timestamp > cacheItem.ttl) {
         this.cache.delete(key);
       }
     }

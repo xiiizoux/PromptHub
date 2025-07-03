@@ -1253,8 +1253,10 @@ export class SupabaseAdapter implements StorageAdapter {
           category: 1.0     // 分类权重较低
         };
         
-        // 直接使用content字段（已迁移的内容）
-        const contentText = prompt.content || '';
+        // 提取content字段文本（处理JSONB格式）
+        const contentText = typeof prompt.content === 'string' 
+          ? prompt.content 
+          : (prompt.content as any)?.static_content || (prompt.content as any)?.legacy_content || '';
 
         // 计算各字段匹配分数
         const fields = {
@@ -1265,7 +1267,7 @@ export class SupabaseAdapter implements StorageAdapter {
         };
         
         Object.entries(fields).forEach(([field, text]) => {
-          const fieldText = text.toLowerCase();
+          const fieldText = typeof text === 'string' ? text.toLowerCase() : '';
           const weight = weights[field as keyof typeof weights];
           
           // 1. 精确匹配（最高分）

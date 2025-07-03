@@ -295,9 +295,15 @@ export class ReadyToUseTool extends BaseMCPTool {
   }
 
   private extractPromptContent(prompt: Prompt): string {
-    // 使用content字段
+    // 处理JSONB格式的content字段
     if (prompt.content) {
-      return prompt.content;
+      if (typeof prompt.content === 'string') {
+        return prompt.content;
+      } else {
+        // 从JSONB结构中提取文本
+        const jsonbContent = prompt.content as any;
+        return jsonbContent?.static_content || jsonbContent?.legacy_content || '';
+      }
     }
     return prompt.description || '';
   }

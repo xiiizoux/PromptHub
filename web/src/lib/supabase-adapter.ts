@@ -83,6 +83,66 @@ export interface ApiKey {
   expires_at?: string;
 }
 
+// 分类类型定义
+export type CategoryType = 'chat' | 'image' | 'video';
+
+export interface Category {
+  id: string;
+  name: string;
+  name_en?: string;
+  icon?: string;
+  description?: string;
+  type: CategoryType;
+  sort_order?: number;
+  is_active?: boolean;
+  created_at?: string;
+  updated_at?: string;
+  optimization_template?: any;
+}
+
+// JSONB 相关类型（复制自 MCP 服务）
+export interface PromptContentJsonb {
+  type: 'context_engineering' | 'legacy_text' | 'simple_text';
+  static_content?: string;
+  dynamic_context?: {
+    adaptation_rules?: Record<string, any>;
+    examples?: {
+      selection_strategy?: string;
+      max_examples?: number;
+      example_pool?: any[];
+    };
+    tools?: {
+      available_tools?: any[];
+      tool_selection_criteria?: string;
+    };
+    state?: {
+      conversation_history?: any[];
+      user_preferences?: Record<string, any>;
+      context_variables?: Record<string, any>;
+    };
+  };
+  legacy_content?: string;
+  migrated_at?: string;
+}
+
+export interface OptimizationTemplateJsonb {
+  type: 'legacy_text' | 'structured' | 'context_engineering';
+  template?: string;
+  structure?: {
+    system_prompt?: string;
+    optimization_rules?: any[];
+    context_variables?: Record<string, any>;
+    adaptation_strategies?: Record<string, any>;
+  };
+  context_engineering?: {
+    dynamic_adaptation?: boolean;
+    user_context_integration?: boolean;
+    example_selection_strategy?: string;
+    tool_integration?: boolean;
+  };
+  migrated_at?: string;
+}
+
 // Supabase客户端创建函数
 export function createSupabaseClient(): SupabaseClient {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -1044,6 +1104,74 @@ export class SupabaseAdapter {
       
       throw err;
     }
+  }
+
+  // ===== 分类管理方法 =====
+
+  /**
+   * 获取完整的分类信息（包含类型等字段）
+   */
+  async getCategoriesWithType(): Promise<Category[]> {
+    console.log('=== SupabaseAdapter: 开始获取完整分类信息 ===');
+
+    const { data: categoriesData, error: categoriesError } = await this.supabase
+      .from('categories')
+      .select('*')
+      .eq('is_active', true)
+      .order('sort_order');
+
+    console.log('完整分类查询结果:', {
+      error: categoriesError,
+      count: categoriesData?.length || 0,
+      sample: categoriesData?.slice(0, 3),
+    });
+
+    if (categoriesError) {
+      console.error('获取完整分类信息失败:', categoriesError);
+      throw new Error(`获取分类失败: ${categoriesError.message}`);
+    }
+
+    if (!categoriesData || categoriesData.length === 0) {
+      console.warn('categories表中没有数据');
+      return [];
+    }
+
+    console.log('成功获取完整分类信息');
+    return categoriesData as Category[];
+  }
+
+  /**
+   * 按类型获取分类
+   */
+  async getCategoriesByType(type: CategoryType): Promise<Category[]> {
+    console.log('=== SupabaseAdapter: 按类型获取分类 ===', { type });
+
+    const { data: categoriesData, error: categoriesError } = await this.supabase
+      .from('categories')
+      .select('*')
+      .eq('is_active', true)
+      .eq('type', type)
+      .order('sort_order');
+
+    console.log('按类型分类查询结果:', {
+      type,
+      error: categoriesError,
+      count: categoriesData?.length || 0,
+      sample: categoriesData?.slice(0, 3),
+    });
+
+    if (categoriesError) {
+      console.error('按类型获取分类失败:', categoriesError);
+      throw new Error(`获取${type}类型分类失败: ${categoriesError.message}`);
+    }
+
+    if (!categoriesData || categoriesData.length === 0) {
+      console.warn(`没有找到${type}类型的分类`);
+      return [];
+    }
+
+    console.log(`成功获取${type}类型分类`);
+    return categoriesData as Category[];
   }
 }
 

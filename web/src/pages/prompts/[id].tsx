@@ -178,7 +178,15 @@ export default function PromptDetailsPage() {
   // 获取完整内容和提取变量 - 需要在hooks之前计算
   const getFullContent = () => {
     if (!prompt) return '';
-    return prompt.content || '';
+    // 处理可能的 JSONB 格式内容
+    if (typeof prompt.content === 'string') {
+      return prompt.content;
+    } else if (prompt.content && typeof prompt.content === 'object') {
+      // 如果是 JSONB 对象，提取文本内容
+      const jsonbContent = prompt.content as any;
+      return jsonbContent.static_content || jsonbContent.legacy_content || '';
+    }
+    return '';
   };
 
   const fullContent = getFullContent();

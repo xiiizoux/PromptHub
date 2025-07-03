@@ -4,7 +4,7 @@
  */
 
 import { BaseMCPTool, ToolContext, ToolResult } from '../../shared/base-tool.js';
-import { ToolDescription, ToolParameter, Prompt } from '../../types.js';
+import { ToolDescription, ToolParameter, Prompt, PromptContentJsonb } from '../../types.js';
 
 
 // 外部AI分析结果接口
@@ -28,6 +28,26 @@ export interface ExternalAIAnalysis {
 export class IntelligentPromptSelectionTool extends BaseMCPTool {
   readonly name = 'intelligent_prompt_selection';
   readonly description = '智能推荐最合适的提示词';
+
+  /**
+   * 从 PromptContentJsonb | string 类型中提取字符串内容
+   */
+  private extractStringContent(content: PromptContentJsonb | string): string {
+    if (typeof content === 'string') {
+      return content;
+    }
+    
+    // 如果是 JSONB 对象，按优先级提取内容
+    if (content.static_content) {
+      return content.static_content;
+    }
+    
+    if (content.legacy_content) {
+      return content.legacy_content;
+    }
+    
+    return '';
+  }
 
   getToolDefinition(): ToolDescription {
     return {
@@ -123,7 +143,7 @@ export class IntelligentPromptSelectionTool extends BaseMCPTool {
 
     // 使用content字段
     if (prompt.content) {
-      content = prompt.content;
+      content = this.extractStringContent(prompt.content);
     }
 
     if (content.length > 500) {

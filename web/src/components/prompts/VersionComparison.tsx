@@ -18,6 +18,16 @@ const VersionComparison: React.FC<VersionComparisonProps> = ({
   version1,
   version2,
 }) => {
+  // 提取内容的辅助函数
+  const extractContent = (content: any): string => {
+    if (typeof content === 'string') {
+      return content;
+    } else if (content && typeof content === 'object') {
+      // 如果是 JSONB 对象，提取文本内容
+      return content.static_content || content.legacy_content || '';
+    }
+    return '';
+  };
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleString('zh-CN', {
@@ -121,11 +131,11 @@ const VersionComparison: React.FC<VersionComparisonProps> = ({
                       <h5 className="text-sm font-medium text-gray-400 mb-2">内容</h5>
                       <div className="bg-dark-bg-secondary rounded-lg p-3 border border-gray-600">
                         <pre className="text-gray-300 font-mono text-xs whitespace-pre-wrap overflow-auto max-h-64">
-                          {version1.content}
+                          {extractContent(version1.content)}
                         </pre>
                       </div>
                       <p className="text-xs text-gray-500 mt-1">
-                        {version1.content.length} 字符
+                        {extractContent(version1.content).length} 字符
                       </p>
                     </div>
 
@@ -172,19 +182,19 @@ const VersionComparison: React.FC<VersionComparisonProps> = ({
                       <h5 className="text-sm font-medium text-gray-400 mb-2">内容</h5>
                       <div className="bg-dark-bg-secondary rounded-lg p-3 border border-gray-600">
                         <pre className="text-gray-300 font-mono text-xs whitespace-pre-wrap overflow-auto max-h-64">
-                          {version2.content}
+                          {extractContent(version2.content)}
                         </pre>
                       </div>
                       <p className="text-xs text-gray-500 mt-1">
-                        {version2.content.length} 字符 
+                        {extractContent(version2.content).length} 字符 
                         <span className={`ml-2 ${
-                          version2.content.length > version1.content.length 
+                          extractContent(version2.content).length > extractContent(version1.content).length 
                             ? 'text-neon-green' 
-                            : version2.content.length < version1.content.length 
+                            : extractContent(version2.content).length < extractContent(version1.content).length 
                             ? 'text-neon-red' 
                             : 'text-gray-400'
                         }`}>
-                          ({getContentDiff(version1.content, version2.content)})
+                          ({getContentDiff(extractContent(version1.content), extractContent(version2.content))})
                         </span>
                       </p>
                     </div>
@@ -238,9 +248,9 @@ const VersionComparison: React.FC<VersionComparisonProps> = ({
                         • 描述已更改
                       </div>
                     )}
-                    {version1.content !== version2.content && (
+                    {extractContent(version1.content) !== extractContent(version2.content) && (
                       <div className="text-neon-orange">
-                        • 内容已更改 ({getContentDiff(version1.content, version2.content)})
+                        • 内容已更改 ({getContentDiff(extractContent(version1.content), extractContent(version2.content))})
                       </div>
                     )}
                     {version1.category !== version2.category && (

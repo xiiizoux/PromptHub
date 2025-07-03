@@ -15,7 +15,7 @@ import {
   isJsonbContent,
   isJsonbTemplate,
   createEmptyContextEngineeringContent
-} from '../../supabase/lib/jsonb-utils';
+} from './jsonb-utils';
 
 // 扩展的提示词详情接口
 export interface PromptDetails extends Prompt {
@@ -118,9 +118,12 @@ export class DatabaseService {
         details.content_structure = prompt.content;
         details.content_text = extractContentFromJsonb(prompt.content);
         details.context_engineering_enabled = prompt.content.type === 'context_engineering';
+        // 为前端兼容性，将 content 字段设置为字符串格式
+        details.content = details.content_text;
       } else if (typeof prompt.content === 'string') {
         details.content_text = prompt.content;
         details.context_engineering_enabled = false;
+        // content 字段已经是字符串格式，无需处理
       }
     }
 
