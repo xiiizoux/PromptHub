@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth, withAuth } from '@/contexts/AuthContext';
+import { useInteractions } from '@/contexts/InteractionsContext';
 import { supabase } from '@/lib/supabase';
 import Link from 'next/link';
 import { ProtectedLink, ProtectedButton } from '@/components/ProtectedLink';
@@ -77,6 +78,7 @@ interface UserPrompt {
 
 const ProfilePage = () => {
   const { user, getToken } = useAuth();
+  const { loadInteractions } = useInteractions();
   // 使用ref来跟踪组件挂载状态
   const isMountedRef = useRef(false);
 
@@ -545,14 +547,15 @@ const ProfilePage = () => {
 
       safeSetState(() => {
         if (data.success) {
-          setUserPrompts(data.data.prompts || []);
+          const prompts = data.data.prompts || [];
+          setUserPrompts(prompts);
           const pagination = data.data.pagination;
           setPromptTotalPages(pagination?.totalPages || 1);
           setPromptTotalCount(pagination?.total || 0);
 
           // 更新统计
           const totalPrompts = pagination?.total || 0;
-          const publicPrompts = data.data.prompts?.filter((p: any) => p.is_public)?.length || 0;
+          const publicPrompts = prompts.filter((p: any) => p.is_public)?.length || 0;
           const privatePrompts = totalPrompts - publicPrompts;
 
           setPromptCounts({
@@ -560,6 +563,16 @@ const ProfilePage = () => {
             public: publicPrompts,
             private: privatePrompts,
           });
+
+          // 批量加载提示词的互动数据
+          if (prompts.length > 0) {
+            const promptIds = prompts.map((p: any) => p.id).filter(Boolean);
+            if (promptIds.length > 0) {
+              loadInteractions(promptIds).catch(err => {
+                console.warn('批量加载互动数据失败:', err);
+              });
+            }
+          }
         } else {
           throw new Error(data.message || '获取用户提示词失败');
         }

@@ -2,8 +2,9 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { HeartIcon, BookmarkIcon } from '@heroicons/react/24/outline';
 import { HeartIcon as HeartSolidIcon, BookmarkIcon as BookmarkSolidIcon } from '@heroicons/react/24/solid';
-import { toggleBookmark, toggleLike, getPromptInteractions } from '@/lib/api';
+import { toggleBookmark, toggleLike } from '@/lib/api';
 import { useAuth } from '@/contexts/AuthContext';
+import { useInteractions } from '@/contexts/InteractionsContext';
 import toast from 'react-hot-toast';
 
 interface BookmarkButtonProps {
@@ -22,8 +23,7 @@ export const BookmarkButton: React.FC<BookmarkButtonProps> = React.memo(({
   className = '',
 }) => {
   const { user } = useAuth();
-  const [isActive, setIsActive] = useState(false);
-  const [count, setCount] = useState(0);
+  const { interactions, loadInteractions, updateInteraction } = useInteractions();
   const [isLoading, setIsLoading] = useState(false);
   const [mounted, setMounted] = useState(false);
 
@@ -32,27 +32,17 @@ export const BookmarkButton: React.FC<BookmarkButtonProps> = React.memo(({
     setMounted(true);
   }, []);
 
-  // 获取初始状态 - 使用useCallback稳定引用
-  const fetchInteractions = useCallback(async () => {
-    if (!promptId || !mounted) return;
-    
-    try {
-      const data = await getPromptInteractions(promptId);
-      if (variant === 'bookmark') {
-        setIsActive(data.userBookmarked);
-        setCount(data.bookmarks);
-      } else {
-        setIsActive(data.userLiked);
-        setCount(data.likes);
-      }
-    } catch (error) {
-      console.error('获取互动状态失败:', error);
-    }
-  }, [promptId, variant, mounted]);
+  // 从context获取互动数据
+  const interaction = interactions[promptId];
+  const isActive = mounted ? (variant === 'bookmark' ? interaction?.userBookmarked : interaction?.userLiked) || false : false;
+  const count = mounted ? (variant === 'bookmark' ? interaction?.bookmarks : interaction?.likes) || 0 : 0;
 
+  // 在组件挂载时请求加载此提示词的互动数据
   useEffect(() => {
-    fetchInteractions();
-  }, [fetchInteractions]);
+    if (mounted && promptId && !interaction) {
+      loadInteractions([promptId]);
+    }
+  }, [mounted, promptId, interaction, loadInteractions]);
 
   const handleToggle = useCallback(async () => {
     if (!user) {
@@ -67,13 +57,19 @@ export const BookmarkButton: React.FC<BookmarkButtonProps> = React.memo(({
     try {
       if (variant === 'bookmark') {
         const result = await toggleBookmark(promptId);
-        setIsActive(result.bookmarked);
-        setCount(prev => result.bookmarked ? prev + 1 : Math.max(0, prev - 1));
+        // 更新context中的数据
+        updateInteraction(promptId, {
+          userBookmarked: result.bookmarked,
+          bookmarks: result.bookmarked ? count + 1 : Math.max(0, count - 1),
+        });
         toast.success(result.bookmarked ? '已添加到收藏' : '已取消收藏');
       } else {
         const result = await toggleLike(promptId);
-        setIsActive(result.liked);
-        setCount(prev => result.liked ? prev + 1 : Math.max(0, prev - 1));
+        // 更新context中的数据
+        updateInteraction(promptId, {
+          userLiked: result.liked,
+          likes: result.liked ? count + 1 : Math.max(0, count - 1),
+        });
         toast.success(result.liked ? '已点赞' : '已取消点赞');
       }
     } catch (error: unknown) {
@@ -83,7 +79,7 @@ export const BookmarkButton: React.FC<BookmarkButtonProps> = React.memo(({
     } finally {
       setIsLoading(false);
     }
-  }, [user, isLoading, variant, promptId]);
+  }, [user, isLoading, variant, promptId, updateInteraction, count]);
 
   if (!mounted) {
     return null; // 避免水合错误
