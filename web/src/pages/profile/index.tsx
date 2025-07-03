@@ -149,6 +149,14 @@ const ProfilePage = () => {
     
     return () => {
       isMountedRef.current = false;
+      // 组件卸载时取消所有正在进行的请求
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+      // 清理防抖定时器
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
     };
   }, []);
 
@@ -209,7 +217,8 @@ const ProfilePage = () => {
   // 加载用户提示词 - 统一处理标签页、页码和类型变化
   useEffect(() => {
     if (activeTab === 'my-prompts') {
-      fetchUserPrompts(promptCurrentPage, activePromptType);
+      // 使用防抖函数，避免快速切换时产生过多请求
+      debouncedFetchUserPrompts(promptCurrentPage, activePromptType);
     }
   }, [activeTab, promptCurrentPage, activePromptType]);
 
@@ -468,9 +477,37 @@ const ProfilePage = () => {
     }
   };
 
+  // 请求取消控制器
+  const abortControllerRef = useRef<AbortController | null>(null);
+  
+  // 防抖定时器
+  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // 防抖版本的获取用户提示词
+  const debouncedFetchUserPrompts = (page: number = 1, type?: string, delay: number = 300) => {
+    // 清除之前的定时器
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+
+    // 设置新的定时器
+    debounceTimerRef.current = setTimeout(() => {
+      fetchUserPrompts(page, type);
+    }, delay);
+  };
+
   // 获取用户提示词
   const fetchUserPrompts = async (page: number = 1, type?: string) => {
     if (!user?.id || !isMountedRef.current) return;
+
+    // 取消之前的请求
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+
+    // 创建新的取消控制器
+    abortControllerRef.current = new AbortController();
+    const controller = abortControllerRef.current;
 
     safeSetState(() => setPromptsLoading(true));
 
@@ -481,12 +518,22 @@ const ProfilePage = () => {
       }
 
       const typeParam = type ? `&type=${type}` : '';
+      
+      // 创建超时Promise
+      const timeoutId = setTimeout(() => {
+        controller.abort();
+      }, 8000);
+
       const response = await fetch(`/api/profile/prompts?page=${page}&pageSize=${promptPageSize}${typeParam}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
+        signal: controller.signal,
       });
+
+      // 清除超时
+      clearTimeout(timeoutId);
 
       if (!response.ok) {
         throw new Error(`请求失败: ${response.status}`);
@@ -517,7 +564,13 @@ const ProfilePage = () => {
           throw new Error(data.message || '获取用户提示词失败');
         }
       });
-    } catch (error) {
+    } catch (error: any) {
+      // 如果是请求被取消，不处理错误
+      if (error.name === 'AbortError') {
+        console.log('请求被取消');
+        return;
+      }
+      
       console.error('获取用户提示词失败:', error);
       if (!isMountedRef.current) return;
 
@@ -528,7 +581,9 @@ const ProfilePage = () => {
         setPromptCounts({ total: 0, public: 0, private: 0 });
       });
     } finally {
-      safeSetState(() => setPromptsLoading(false));
+      if (!abortControllerRef.current?.signal.aborted) {
+        safeSetState(() => setPromptsLoading(false));
+      }
     }
   };
 

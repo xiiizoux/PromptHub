@@ -109,7 +109,7 @@ function extractPaginatedData<T>(response: NetworkResponse): {
 // 创建Axios实例 - Docker部署配置
 const api = axios.create({
   baseURL: '/api',
-  timeout: 15000, // 减少到15秒超时
+  timeout: 8000, // 大幅减少到8秒超时
   headers: {
     'Content-Type': 'application/json',
   },
@@ -176,6 +176,39 @@ const getAuthTokenWithRetry = async (maxRetries: number = 3): Promise<string | n
     }
   }
   return null;
+};
+
+// 通用重试机制函数 - 减少重试次数和延迟
+const withRetry = async <T>(
+  fn: () => Promise<T>,
+  maxRetries: number = 2, // 从3减少到2
+  retryDelay: number = 500 // 从1000减少到500
+): Promise<T> => {
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      return await fn();
+    } catch (error: any) {
+      console.error(`[API重试] 第${attempt}次尝试失败:`, error.message);
+      
+      if (attempt >= maxRetries) {
+        throw error;
+      }
+      
+      // 检查是否是需要重试的错误 - 更严格的条件
+      const isRetryableError = error.code === 'ECONNABORTED' || 
+                             error.code === 'ECONNRESET' ||
+                             error.code === 'ETIMEDOUT' ||
+                             (error.response?.status >= 500 && error.response?.status < 600);
+      
+      if (!isRetryableError) {
+        throw error;
+      }
+      
+      const delay = Math.min(retryDelay * Math.pow(2, attempt - 1), 2000); // 最大延迟从5000减少到2000
+      await new Promise(resolve => setTimeout(resolve, delay));
+    }
+  }
+  throw new Error('重试次数已耗尽');
 };
 
 // 请求拦截器添加认证和API密钥
@@ -557,21 +590,54 @@ export interface PromptInteractions {
   userBookmarked: boolean;
 }
 
+// 请求缓存机制
+const interactionCache = new Map<string, {
+  data: PromptInteractions;
+  timestamp: number;
+  ttl: number;
+}>();
+
 export async function getPromptInteractions(promptId: string): Promise<PromptInteractions> {
+  // 检查缓存
+  const cacheKey = `interactions:${promptId}`;
+  const cached = interactionCache.get(cacheKey);
+  const now = Date.now();
+  
+  if (cached && now - cached.timestamp < cached.ttl) {
+    return cached.data;
+  }
+
   try {
-    const response = await api.get(`/social/interactions?promptId=${promptId}`);
+    const response = await withRetry(
+      async () => {
+        return await api.get(`/social/interactions?promptId=${promptId}`, {
+          timeout: 5000, // 进一步降低超时时间
+        });
+      },
+      2, // 减少重试次数
+      500 // 减少延迟
+    );
     
     if (!response.data.success) {
       throw new Error(response.data.message || '获取互动数据失败');
     }
     
     const data = response.data.data;
-    return {
+    const result: PromptInteractions = {
       likes: data.likes || 0,
       bookmarks: data.bookmarks || 0,
       userLiked: data.userLiked || false,
       userBookmarked: data.userBookmarked || false,
     };
+    
+    // 缓存结果，TTL为30秒
+    interactionCache.set(cacheKey, {
+      data: result,
+      timestamp: now,
+      ttl: 30000
+    });
+    
+    return result;
   } catch (error: ApiError) {
     console.error('获取提示词互动状态失败:', error);
     // 返回默认值而不是抛出错误，避免组件崩溃

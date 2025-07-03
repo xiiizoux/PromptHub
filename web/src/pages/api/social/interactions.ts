@@ -64,52 +64,92 @@ const createSocialExtensions = (supabase: any) => ({
   },
 
   async getPromptInteractions(promptId: string, type?: string, userId?: string) {
-    let query = supabase
-      .from('social_interactions')
-      .select('type')
-      .eq('prompt_id', promptId);
-
-    if (type) {
-      query = query.eq('type', type);
+    try {
+      // 使用单个SQL查询获取聚合数据，大幅提升性能
+      const { data: aggregatedData, error: aggregatedError } = await supabase.rpc('get_prompt_interactions', {
+        p_prompt_id: promptId,
+        p_user_id: userId || null
+      });
+      
+      if (aggregatedError) {
+        // 如果RPC函数不存在，退回到基本查询
+        console.warn('RPC函数不存在，使用基本查询:', aggregatedError);
+        return await this.getPromptInteractionsBasic(promptId, userId);
+      }
+      
+      // 处理聚合结果
+      const result = aggregatedData[0] || {};
+      
+      return {
+        likes: result.likes || 0,
+        bookmarks: result.bookmarks || 0,
+        shares: result.shares || 0,
+        userLiked: result.user_liked || false,
+        userBookmarked: result.user_bookmarked || false,
+        userShared: result.user_shared || false,
+      };
+    } catch (error) {
+      console.error('获取交互数据时出错:', error);
+      // 退回到基本查询
+      return await this.getPromptInteractionsBasic(promptId, userId);
     }
+  },
 
-    const { data, error } = await query;
-
-    if (error) {
-      throw new Error(`获取互动数据失败: ${error.message}`);
-    }
-
-    const counts = {
-      likes: data.filter((i: any) => i.type === 'like').length,
-      bookmarks: data.filter((i: any) => i.type === 'bookmark').length,
-      shares: data.filter((i: any) => i.type === 'share').length,
-    };
-
-    let userInteraction;
-    if (userId) {
-      const { data: userInteractions, error: userError } = await supabase
+  // 基本查询方法作为后备
+  async getPromptInteractionsBasic(promptId: string, userId?: string) {
+    try {
+      // 使用数据库聚合查询，减少数据传输
+      const { data: countsData, error: countsError } = await supabase
         .from('social_interactions')
         .select('type')
-        .eq('prompt_id', promptId)
-        .eq('user_id', userId);
-
-      if (!userError) {
-        userInteraction = {
-          liked: userInteractions.some((i: any) => i.type === 'like'),
-          bookmarked: userInteractions.some((i: any) => i.type === 'bookmark'),
-          shared: userInteractions.some((i: any) => i.type === 'share'),
-        };
+        .eq('prompt_id', promptId);
+      
+      if (countsError) {
+        throw new Error(`获取互动数据失败: ${countsError.message}`);
       }
+      
+      // 快速计数
+      const typeCount = new Map<string, number>();
+      countsData.forEach((item: any) => {
+        typeCount.set(item.type, (typeCount.get(item.type) || 0) + 1);
+      });
+      
+      // 获取用户交互状态（如果有用户ID）
+      let userInteraction = {
+        liked: false,
+        bookmarked: false,
+        shared: false,
+      };
+      
+      if (userId) {
+        const { data: userData, error: userError } = await supabase
+          .from('social_interactions')
+          .select('type')
+          .eq('prompt_id', promptId)
+          .eq('user_id', userId);
+        
+        if (!userError && userData) {
+          const userTypes = new Set(userData.map((item: any) => item.type));
+          userInteraction = {
+            liked: userTypes.has('like'),
+            bookmarked: userTypes.has('bookmark'),
+            shared: userTypes.has('share'),
+          };
+        }
+      }
+      
+      return {
+        likes: typeCount.get('like') || 0,
+        bookmarks: typeCount.get('bookmark') || 0,
+        shares: typeCount.get('share') || 0,
+        userLiked: userInteraction.liked,
+        userBookmarked: userInteraction.bookmarked,
+        userShared: userInteraction.shared,
+      };
+    } catch (error) {
+      console.error('获取交互数据时出错:', error);
+      throw error;
     }
-
-    return {
-      likes: counts.likes,
-      bookmarks: counts.bookmarks,
-      shares: counts.shares,
-      userLiked: userInteraction?.liked || false,
-      userBookmarked: userInteraction?.bookmarked || false,
-      userShared: userInteraction?.shared || false,
-    };
   },
 });
 
