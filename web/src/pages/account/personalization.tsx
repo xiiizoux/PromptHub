@@ -347,7 +347,7 @@ export default function PersonalizationPage() {
               color="neon-purple"
             />
             <StatCard 
-              icon={BrainIcon} 
+              icon={CpuChipIcon} 
               title="学习模式" 
               value={learnedPatterns.length}
               subtitle="识别模式"
@@ -742,7 +742,7 @@ export default function PersonalizationPage() {
           </div>
         ) : (
           <div className="text-center py-12">
-            <BrainIcon className="h-16 w-16 text-gray-500 mx-auto mb-4" />
+            <CpuChipIcon className="h-16 w-16 text-gray-500 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-400 mb-2">暂无学习模式</h3>
             <p className="text-gray-500">继续使用提示词，AI将逐渐学习您的偏好模式</p>
           </div>

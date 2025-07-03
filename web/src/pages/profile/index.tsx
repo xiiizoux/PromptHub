@@ -49,6 +49,8 @@ import {
   HeartIcon as HealthIcon,
   CpuChipIcon,
   PhotoIcon,
+  RocketLaunchIcon,
+  CogIcon,
 } from '@heroicons/react/24/outline';
 
 // 定义与适配器返回的API密钥兼容的接口
@@ -172,6 +174,7 @@ const ProfilePage = () => {
   const tabs = [
     { id: 'profile', name: '个人资料', icon: UserIcon },
     { id: 'my-prompts', name: '我的提示词', icon: DocumentTextIcon },
+    { id: 'context-engineering', name: 'Context Engineering', icon: CpuChipIcon },
     { id: 'bookmarks', name: '收藏夹', icon: BookmarkIcon },
     { id: 'ratings-reviews', name: '评分评论', icon: StarIcon },
     { id: 'import-export', name: '导入导出', icon: ArrowUpTrayIcon },
@@ -1887,6 +1890,188 @@ const ProfilePage = () => {
                     {renderPromptPagination()}
                   </>
                 )}
+              </div>
+            )}
+
+            {/* Context Engineering 标签页 */}
+            {activeTab === 'context-engineering' && (
+              <div className="space-y-6">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <h2 className="text-2xl font-bold text-white">Context Engineering</h2>
+                    <p className="text-gray-400 mt-1">管理您的个性化AI设置</p>
+                  </div>
+                </div>
+
+                {/* Context Engineering 功能卡片 */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {/* 个性化设置 */}
+                  <Link href="/account/personalization">
+                    <motion.div
+                      className="glass rounded-2xl p-6 border border-neon-purple/30 hover:border-neon-purple/50 transition-all duration-300 cursor-pointer group"
+                      whileHover={{ scale: 1.02, y: -2 }}
+                    >
+                      <div className="flex items-center mb-4">
+                        <div className="p-3 bg-neon-purple/20 rounded-xl mr-4">
+                          <UserIcon className="h-6 w-6 text-neon-purple" />
+                        </div>
+                        <div>
+                          <h3 className="text-lg font-semibold text-white group-hover:text-neon-purple transition-colors">个性化设置</h3>
+                          <p className="text-gray-400 text-sm">配置AI偏好和行为</p>
+                        </div>
+                      </div>
+                      <p className="text-gray-300 text-sm mb-4">
+                        设置您的语言风格、回答偏好、专业领域等个人化配置，让AI更好地理解您的需求。
+                      </p>
+                      <div className="flex items-center text-neon-purple text-sm group-hover:translate-x-1 transition-transform">
+                        进入设置 →
+                      </div>
+                    </motion.div>
+                  </Link>
+
+                  {/* 交互历史 */}
+                  <Link href="/account/history">
+                    <motion.div
+                      className="glass rounded-2xl p-6 border border-neon-cyan/30 hover:border-neon-cyan/50 transition-all duration-300 cursor-pointer group"
+                      whileHover={{ scale: 1.02, y: -2 }}
+                    >
+                      <div className="flex items-center mb-4">
+                        <div className="p-3 bg-neon-cyan/20 rounded-xl mr-4">
+                          <ClockIcon className="h-6 w-6 text-neon-cyan" />
+                        </div>
+                        <div>
+                          <h3 className="text-lg font-semibold text-white group-hover:text-neon-cyan transition-colors">交互历史</h3>
+                          <p className="text-gray-400 text-sm">查看使用记录和分析</p>
+                        </div>
+                      </div>
+                      <p className="text-gray-300 text-sm mb-4">
+                        查看您的AI交互历史、使用模式分析、满意度统计等详细数据。
+                      </p>
+                      <div className="flex items-center text-neon-cyan text-sm group-hover:translate-x-1 transition-transform">
+                        查看历史 →
+                      </div>
+                    </motion.div>
+                  </Link>
+
+                  {/* 使用分析 */}
+                  <Link href="/prompts/analytics">
+                    <motion.div
+                      className="glass rounded-2xl p-6 border border-neon-yellow/30 hover:border-neon-yellow/50 transition-all duration-300 cursor-pointer group"
+                      whileHover={{ scale: 1.02, y: -2 }}
+                    >
+                      <div className="flex items-center mb-4">
+                        <div className="p-3 bg-neon-yellow/20 rounded-xl mr-4">
+                          <ChartBarIcon className="h-6 w-6 text-neon-yellow" />
+                        </div>
+                        <div>
+                          <h3 className="text-lg font-semibold text-white group-hover:text-neon-yellow transition-colors">使用分析</h3>
+                          <p className="text-gray-400 text-sm">深度分析您的AI使用</p>
+                        </div>
+                      </div>
+                      <p className="text-gray-300 text-sm mb-4">
+                        查看个人AI使用分析、提示词效果统计、优化建议等深度洞察。
+                      </p>
+                      <div className="flex items-center text-neon-yellow text-sm group-hover:translate-x-1 transition-transform">
+                        查看分析 →
+                      </div>
+                    </motion.div>
+                  </Link>
+
+                  {/* 高级工具 */}
+                  <Link href="/tools/advanced-ce">
+                    <motion.div
+                      className="glass rounded-2xl p-6 border border-neon-green/30 hover:border-neon-green/50 transition-all duration-300 cursor-pointer group"
+                      whileHover={{ scale: 1.02, y: -2 }}
+                    >
+                      <div className="flex items-center mb-4">
+                        <div className="p-3 bg-neon-green/20 rounded-xl mr-4">
+                          <CogIcon className="h-6 w-6 text-neon-green" />
+                        </div>
+                        <div>
+                          <h3 className="text-lg font-semibold text-white group-hover:text-neon-green transition-colors">高级工具</h3>
+                          <p className="text-gray-400 text-sm">专业级Context Engineering</p>
+                        </div>
+                      </div>
+                      <p className="text-gray-300 text-sm mb-4">
+                        使用高级Context Engineering工具，创建复杂规则、进行A/B测试等。
+                      </p>
+                      <div className="flex items-center text-neon-green text-sm group-hover:translate-x-1 transition-transform">
+                        打开工具 →
+                      </div>
+                    </motion.div>
+                  </Link>
+
+                  {/* 文档学习 */}
+                  <Link href="/docs/context-engineering">
+                    <motion.div
+                      className="glass rounded-2xl p-6 border border-neon-pink/30 hover:border-neon-pink/50 transition-all duration-300 cursor-pointer group"
+                      whileHover={{ scale: 1.02, y: -2 }}
+                    >
+                      <div className="flex items-center mb-4">
+                        <div className="p-3 bg-neon-pink/20 rounded-xl mr-4">
+                          <BookOpenIcon className="h-6 w-6 text-neon-pink" />
+                        </div>
+                        <div>
+                          <h3 className="text-lg font-semibold text-white group-hover:text-neon-pink transition-colors">学习文档</h3>
+                          <p className="text-gray-400 text-sm">深入了解Context Engineering</p>
+                        </div>
+                      </div>
+                      <p className="text-gray-300 text-sm mb-4">
+                        学习Context Engineering的核心概念、最佳实践和高级技巧。
+                      </p>
+                      <div className="flex items-center text-neon-pink text-sm group-hover:translate-x-1 transition-transform">
+                        查看文档 →
+                      </div>
+                    </motion.div>
+                  </Link>
+
+                  {/* 快速入门 */}
+                  <Link href="/docs/context-engineering/getting-started">
+                    <motion.div
+                      className="glass rounded-2xl p-6 border border-neon-blue/30 hover:border-neon-blue/50 transition-all duration-300 cursor-pointer group"
+                      whileHover={{ scale: 1.02, y: -2 }}
+                    >
+                      <div className="flex items-center mb-4">
+                        <div className="p-3 bg-neon-blue/20 rounded-xl mr-4">
+                          <RocketLaunchIcon className="h-6 w-6 text-neon-blue" />
+                        </div>
+                        <div>
+                          <h3 className="text-lg font-semibold text-white group-hover:text-neon-blue transition-colors">快速入门</h3>
+                          <p className="text-gray-400 text-sm">5分钟上手Context Engineering</p>
+                        </div>
+                      </div>
+                      <p className="text-gray-300 text-sm mb-4">
+                        通过交互式指南快速学习Context Engineering的基本使用方法。
+                      </p>
+                      <div className="flex items-center text-neon-blue text-sm group-hover:translate-x-1 transition-transform">
+                        开始学习 →
+                      </div>
+                    </motion.div>
+                  </Link>
+                </div>
+
+                {/* Context Engineering 状态概览 */}
+                <div className="glass rounded-2xl p-6 border border-neon-cyan/20">
+                  <h3 className="text-lg font-semibold text-white mb-4 flex items-center">
+                    <CpuChipIcon className="h-5 w-5 mr-2 text-neon-cyan" />
+                    Context Engineering 状态
+                  </h3>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="text-center p-4 glass rounded-xl border border-neon-cyan/10">
+                      <div className="text-2xl font-bold text-neon-cyan">5</div>
+                      <div className="text-sm text-gray-400">个性化提示词</div>
+                    </div>
+                    <div className="text-center p-4 glass rounded-xl border border-neon-purple/10">
+                      <div className="text-2xl font-bold text-neon-purple">12</div>
+                      <div className="text-sm text-gray-400">适应规则</div>
+                    </div>
+                    <div className="text-center p-4 glass rounded-xl border border-neon-green/10">
+                      <div className="text-2xl font-bold text-neon-green">89%</div>
+                      <div className="text-sm text-gray-400">平均满意度</div>
+                    </div>
+                  </div>
+                </div>
               </div>
             )}
 
