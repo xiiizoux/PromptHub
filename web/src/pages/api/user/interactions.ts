@@ -1,33 +1,34 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { supabase } from '@/lib/supabase';
-import jwt from 'jsonwebtoken';
+import { createClient } from '@supabase/supabase-js';
 
-// 验证JWT令牌
-const verifyToken = (token: string) => {
-  try {
-    return jwt.verify(token, process.env.JWT_SECRET || 'default-secret');
-  } catch (error) {
-    return null;
-  }
-};
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!,
+);
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const { method } = req;
-  
+
   // 验证身份
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
     return res.status(401).json({ error: 'Missing or invalid authorization header' });
   }
-  
-  const token = authHeader.split(' ')[1];
-  const decoded = verifyToken(token);
-  
-  if (!decoded || typeof decoded === 'string') {
+
+  const token = authHeader.replace('Bearer ', '');
+
+  if (!token || token === 'undefined' || token === 'null') {
+    return res.status(401).json({ error: 'Invalid token format' });
+  }
+
+  // 验证用户token
+  const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+
+  if (authError || !user) {
     return res.status(401).json({ error: 'Invalid token' });
   }
-  
-  const userId = (decoded as any).sub;
+
+  const userId = user.id;
   const { timeFilter = 'month' } = req.query;
 
   switch (method) {

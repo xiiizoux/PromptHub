@@ -89,19 +89,24 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     let authorMap: Record<string, any> = {};
     
     if (authorIds.length > 0) {
-      const { data: authors } = await supabase
+      const { data: authors, error: authorsError } = await supabase
         .from('users')
         .select('id, display_name')
         .in('id', authorIds);
-      
-              if (authors) {
-          authorMap = authors.reduce((acc: Record<string, any>, author: any) => {
-            if (author.id) {
-              acc[author.id] = author;
-            }
-            return acc;
-          }, {});
-        }
+
+      if (authorsError) {
+        console.error('收藏夹API: 查询作者信息错误:', authorsError);
+        // 不抛出错误，继续处理，只是作者信息为空
+      }
+
+      if (authors) {
+        authorMap = authors.reduce((acc: Record<string, any>, author: any) => {
+          if (author.id) {
+            acc[author.id] = author;
+          }
+          return acc;
+        }, {});
+      }
     }
 
     // 合并数据并格式化
