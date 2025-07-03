@@ -1,259 +1,357 @@
 -- =============================================
--- PromptHub 完整数据库结构 (整合版本)
--- 基于真实Supabase数据库结构重新整合
--- 在 Supabase SQL 编辑器中执行此脚本以创建完整的数据库结构
--- 此文件用于一次性创建全新的数据库，包含所有功能模块
--- 也可以在现有数据库上运行以添加缺失的表和字段
+-- PromptHub Database Schema (Corrected)
+-- Generated: 2025-07-02
+-- Updated to match actual Supabase database structure with Context Engineering
 -- =============================================
 
--- 启用UUID扩展（如果尚未启用）
+-- Enable necessary extensions
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
 -- =============================================
--- 基础枚举类型
+-- Custom Types
 -- =============================================
 
--- 创建分类类型枚举（基于真实数据库）
-CREATE TYPE IF NOT EXISTS category_type AS ENUM ('chat', 'image', 'video');
-
--- 注意：prompt_category 枚举类型已废弃
--- 现在使用 categories 表进行动态分类管理，不再使用硬编码的枚举类型
--- 如果需要兼容旧代码，可以保留此枚举，但不应在新代码中使用
+-- Category type enum (matches actual database)
+CREATE TYPE category_type AS ENUM ('chat', 'image', 'video');
 
 -- =============================================
--- 核心表结构
+-- Core Tables (in dependency order)
 -- =============================================
 
--- 用户表 - 用于身份验证和权限控制，与auth.users同步
-CREATE TABLE IF NOT EXISTS users (
-  id UUID REFERENCES auth.users PRIMARY KEY,
-  email VARCHAR(255),
-  display_name VARCHAR(100),
-  username VARCHAR(100),
-  role VARCHAR(50) DEFAULT 'user',
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW()
+-- Users table
+CREATE TABLE users (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    username VARCHAR(50) UNIQUE NOT NULL,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    password_hash VARCHAR(255) NOT NULL,
+    display_name VARCHAR(100),
+    avatar_url TEXT,
+    bio TEXT,
+    is_active BOOLEAN DEFAULT true,
+    is_verified BOOLEAN DEFAULT false,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    last_login_at TIMESTAMP WITH TIME ZONE,
+    preferences JSONB DEFAULT '{}'::jsonb,
+    role VARCHAR(20) DEFAULT 'user' CHECK (role IN ('user', 'admin', 'moderator'))
 );
 
--- 类别表 - 必须在prompts表之前创建，包含新的type字段
-CREATE TABLE IF NOT EXISTS categories (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  name TEXT NOT NULL UNIQUE,
-  name_en TEXT,
-  icon TEXT,
-  description TEXT,
-  sort_order INT DEFAULT 0,
-  is_active BOOLEAN DEFAULT TRUE,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW(),
-  type category_type DEFAULT 'chat'
+-- Categories table (with JSONB optimization_template)
+CREATE TABLE categories (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    name VARCHAR(100) NOT NULL,
+    name_en VARCHAR(100) NOT NULL,
+    icon VARCHAR(50),
+    description TEXT,
+    sort_order INTEGER DEFAULT 0,
+    is_active BOOLEAN DEFAULT true,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    type category_type NOT NULL DEFAULT 'chat',
+    optimization_template JSONB
 );
 
--- 提示词表 - 存储所有提示词的主表，基于真实数据库结构
-CREATE TABLE IF NOT EXISTS prompts (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  name TEXT NOT NULL,
-  description TEXT,
-  category TEXT NOT NULL DEFAULT '通用', -- 使用重构后的分类名称 -- 注意：此默认值需要与categories表中的实际分类名称保持一致
-  tags TEXT[],
-  messages JSONB NOT NULL,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW(),
-  version NUMERIC DEFAULT 1,
-  is_public BOOLEAN DEFAULT FALSE,
-  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
-  allow_collaboration BOOLEAN DEFAULT false,
-  edit_permission VARCHAR(20) DEFAULT 'owner_only',
-  created_by UUID REFERENCES users(id) ON DELETE SET NULL,
-  last_modified_by UUID REFERENCES users(id) ON DELETE SET NULL,
-  category_id UUID REFERENCES categories(id),
-  view_count INTEGER DEFAULT 0,
-  input_variables TEXT[],
-  compatible_models TEXT[],
-  template_format TEXT DEFAULT 'text',
-  preview_asset_url TEXT,
-  parameters JSONB DEFAULT '{}',
-  category_type VARCHAR,
-  UNIQUE(name, user_id)
+-- API Keys table
+CREATE TABLE api_keys (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    key_hash VARCHAR(255) NOT NULL UNIQUE,
+    name VARCHAR(100) NOT NULL,
+    permissions JSONB DEFAULT '[]'::jsonb,
+    is_active BOOLEAN DEFAULT true,
+    expires_at TIMESTAMP WITH TIME ZONE,
+    last_used_at TIMESTAMP WITH TIME ZONE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
--- 提示词版本表 - 存储提示词的所有历史版本，基于真实数据库结构
-CREATE TABLE IF NOT EXISTS prompt_versions (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  prompt_id UUID REFERENCES prompts(id) ON DELETE CASCADE,
-  version NUMERIC NOT NULL,
-  messages JSONB NOT NULL,
-  description TEXT,
-  tags TEXT[],
-  category TEXT,
-  category_id UUID REFERENCES categories(id),
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
-  preview_asset_url TEXT,
-  parameters JSONB DEFAULT '{}',
-  UNIQUE(prompt_id, version)
-);
-
--- =============================================
--- 社交功能表结构
--- =============================================
-
--- 统一的社交互动表
-CREATE TABLE IF NOT EXISTS social_interactions (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  prompt_id UUID NOT NULL REFERENCES prompts(id),
-  user_id UUID NOT NULL REFERENCES users(id),
-  type TEXT NOT NULL,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  UNIQUE(prompt_id, user_id, type)
-);
-
--- 评论表
-CREATE TABLE IF NOT EXISTS comments (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  prompt_id UUID NOT NULL REFERENCES prompts(id),
-  user_id UUID NOT NULL REFERENCES users(id),
-  content TEXT NOT NULL,
-  parent_id UUID REFERENCES comments(id),
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
--- 用户关注表
-CREATE TABLE IF NOT EXISTS user_follows (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  follower_id UUID NOT NULL REFERENCES users(id),
-  following_id UUID NOT NULL REFERENCES users(id),
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  UNIQUE(follower_id, following_id)
-);
-
--- 话题表
-CREATE TABLE IF NOT EXISTS topics (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  title TEXT NOT NULL,
-  description TEXT,
-  creator_id UUID NOT NULL REFERENCES users(id),
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
--- 话题帖子表
-CREATE TABLE IF NOT EXISTS topic_posts (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  topic_id UUID NOT NULL REFERENCES topics(id),
-  user_id UUID NOT NULL REFERENCES users(id),
-  title TEXT NOT NULL,
-  content TEXT NOT NULL,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
--- 通知表
-CREATE TABLE IF NOT EXISTS notifications (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  type TEXT NOT NULL,
-  title TEXT,
-  content TEXT NOT NULL,
-  resource_id UUID,
-  trigger_user_id UUID REFERENCES users(id) ON DELETE CASCADE,
-  is_read BOOLEAN DEFAULT FALSE,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+-- Prompts table (with Context Engineering fields and correct field order)
+CREATE TABLE prompts (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    name VARCHAR(255) NOT NULL,
+    description TEXT,
+    content JSONB,
+    category VARCHAR(50),
+    tags TEXT[],
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    version INTEGER DEFAULT 1,
+    is_public BOOLEAN DEFAULT true,
+    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    allow_collaboration BOOLEAN DEFAULT false,
+    edit_permission VARCHAR(20) DEFAULT 'owner' CHECK (edit_permission IN ('owner', 'collaborators', 'public')),
+    created_by UUID REFERENCES users(id),
+    last_modified_by UUID REFERENCES users(id),
+    category_id UUID REFERENCES categories(id),
+    view_count INTEGER DEFAULT 0,
+    input_variables JSONB DEFAULT '[]'::jsonb,
+    compatible_models TEXT[],
+    template_format VARCHAR(50) DEFAULT 'text',
+    preview_asset_url TEXT,
+    parameters JSONB DEFAULT '{}'::jsonb,
+    category_type category_type,
+    migration_status VARCHAR(50) DEFAULT 'pending',
+    context_engineering_enabled BOOLEAN DEFAULT false,
+    context_variables JSONB DEFAULT '{}'::jsonb,
+    adaptation_rules JSONB DEFAULT '[]'::jsonb,
+    effectiveness_score DECIMAL(3,2) DEFAULT 0.00 CHECK (effectiveness_score >= 0 AND effectiveness_score <= 5)
 );
 
 -- =============================================
--- 评分和社交功能表
+-- Context Engineering Tables
 -- =============================================
 
--- 评分表
-CREATE TABLE IF NOT EXISTS prompt_ratings (
-    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+-- User Context Profiles
+CREATE TABLE user_context_profiles (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    profile_name VARCHAR(100) NOT NULL,
+    context_data JSONB NOT NULL DEFAULT '{}'::jsonb,
+    preferences JSONB DEFAULT '{}'::jsonb,
+    is_active BOOLEAN DEFAULT true,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(user_id, profile_name)
+);
+
+-- Context Sessions
+CREATE TABLE context_sessions (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    profile_id UUID REFERENCES user_context_profiles(id) ON DELETE SET NULL,
+    session_data JSONB NOT NULL DEFAULT '{}'::jsonb,
+    status VARCHAR(20) DEFAULT 'active' CHECK (status IN ('active', 'paused', 'completed', 'expired')),
+    started_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    last_activity_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    expires_at TIMESTAMP WITH TIME ZONE
+);
+
+-- User Interactions
+CREATE TABLE user_interactions (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    session_id UUID REFERENCES context_sessions(id) ON DELETE CASCADE,
+    prompt_id UUID REFERENCES prompts(id) ON DELETE SET NULL,
+    interaction_type VARCHAR(50) NOT NULL,
+    interaction_data JSONB NOT NULL DEFAULT '{}'::jsonb,
+    context_snapshot JSONB DEFAULT '{}'::jsonb,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Context Experiments
+CREATE TABLE context_experiments (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    experiment_name VARCHAR(200) NOT NULL,
+    experiment_type VARCHAR(50) NOT NULL,
+    configuration JSONB NOT NULL DEFAULT '{}'::jsonb,
+    status VARCHAR(20) DEFAULT 'draft' CHECK (status IN ('draft', 'active', 'paused', 'completed', 'cancelled')),
+    start_date TIMESTAMP WITH TIME ZONE,
+    end_date TIMESTAMP WITH TIME ZONE,
+    created_by UUID REFERENCES users(id),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Experiment Participations
+CREATE TABLE experiment_participations (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    experiment_id UUID NOT NULL REFERENCES context_experiments(id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    variant_assigned VARCHAR(100),
+    participation_data JSONB DEFAULT '{}'::jsonb,
+    completion_rate DECIMAL(5,2) DEFAULT 0.00 CHECK (completion_rate >= 0 AND completion_rate <= 100),
+    joined_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    completed_at TIMESTAMP WITH TIME ZONE,
+    UNIQUE(experiment_id, user_id)
+);
+
+-- Performance Metrics
+CREATE TABLE performance_metrics (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    prompt_id UUID REFERENCES prompts(id) ON DELETE CASCADE,
+    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    session_id UUID REFERENCES context_sessions(id) ON DELETE CASCADE,
+    metric_type VARCHAR(50) NOT NULL,
+    metric_value DECIMAL(10,4) NOT NULL,
+    metadata JSONB DEFAULT '{}'::jsonb,
+    measured_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Prompt Relationships
+CREATE TABLE prompt_relationships (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    source_prompt_id UUID NOT NULL REFERENCES prompts(id) ON DELETE CASCADE,
+    target_prompt_id UUID NOT NULL REFERENCES prompts(id) ON DELETE CASCADE,
+    relationship_type VARCHAR(50) NOT NULL,
+    relationship_config JSONB DEFAULT '{}'::jsonb,
+    effectiveness_score DECIMAL(3,2) DEFAULT 0.00 CHECK (effectiveness_score >= 0 AND effectiveness_score <= 5),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(source_prompt_id, target_prompt_id, relationship_type)
+);
+
+-- Context Adaptations
+CREATE TABLE context_adaptations (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     prompt_id UUID NOT NULL REFERENCES prompts(id) ON DELETE CASCADE,
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    rating INTEGER NOT NULL CHECK (rating >= 1 AND rating <= 5),
-    comment TEXT,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    adaptation_data JSONB NOT NULL DEFAULT '{}'::jsonb,
+    effectiveness_rating DECIMAL(3,2) CHECK (effectiveness_rating >= 0 AND effectiveness_rating <= 5),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- =============================================
+-- Legacy Tables (maintained for compatibility)
+-- =============================================
+
+-- Prompt versions table
+CREATE TABLE prompt_versions (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    prompt_id UUID NOT NULL REFERENCES prompts(id) ON DELETE CASCADE,
+    version_number INTEGER NOT NULL,
+    content TEXT NOT NULL,
+    description TEXT,
+    created_by UUID REFERENCES users(id),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    changes_summary TEXT,
+    is_current BOOLEAN DEFAULT false,
+    UNIQUE(prompt_id, version_number)
+);
+
+-- Collaborations table
+CREATE TABLE collaborations (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    prompt_id UUID NOT NULL REFERENCES prompts(id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    role VARCHAR(20) DEFAULT 'editor' CHECK (role IN ('viewer', 'editor', 'admin')),
+    invited_by UUID REFERENCES users(id),
+    invited_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    accepted_at TIMESTAMP WITH TIME ZONE,
+    status VARCHAR(20) DEFAULT 'pending' CHECK (status IN ('pending', 'accepted', 'declined', 'revoked')),
     UNIQUE(prompt_id, user_id)
 );
 
--- 提示词点赞表
-CREATE TABLE IF NOT EXISTS prompt_likes (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  prompt_id UUID NOT NULL REFERENCES prompts(id) ON DELETE CASCADE,
-  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  UNIQUE(prompt_id, user_id)
-);
-
--- 提示词收藏表
-CREATE TABLE IF NOT EXISTS prompt_bookmarks (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  prompt_id UUID NOT NULL REFERENCES prompts(id) ON DELETE CASCADE,
-  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  UNIQUE(prompt_id, user_id)
-);
-
--- 提示词评论表
-CREATE TABLE IF NOT EXISTS prompt_comments (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  prompt_id UUID NOT NULL REFERENCES prompts(id) ON DELETE CASCADE,
-  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  parent_id UUID REFERENCES prompt_comments(id) ON DELETE CASCADE,
-  content TEXT NOT NULL,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW()
+-- User prompt usage logs table
+CREATE TABLE user_prompt_usage_logs (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    public_prompt_id UUID REFERENCES prompts(id) ON DELETE SET NULL,
+    private_prompt_id UUID REFERENCES prompts(id) ON DELETE CASCADE,
+    used_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    usage_context JSONB DEFAULT '{}'::jsonb,
+    user_feedback DECIMAL(3,2) CHECK (user_feedback >= 0 AND user_feedback <= 5),
+    feedback_text TEXT,
+    session_id VARCHAR(255)
 );
 
 -- =============================================
--- 权限管理表结构
+-- Indexes for Performance
 -- =============================================
 
--- 协作者表
-CREATE TABLE IF NOT EXISTS prompt_collaborators (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  prompt_id UUID REFERENCES prompts(id) ON DELETE CASCADE,
-  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
-  permission_level VARCHAR(20) DEFAULT 'edit',
-  granted_by UUID REFERENCES users(id) ON DELETE SET NULL,
-  granted_at TIMESTAMPTZ DEFAULT NOW(),
-  UNIQUE(prompt_id, user_id)
-);
+-- Users table indexes
+CREATE INDEX idx_users_username ON users(username);
+CREATE INDEX idx_users_email ON users(email);
+CREATE INDEX idx_users_created_at ON users(created_at);
+CREATE INDEX idx_users_role ON users(role);
 
--- 审计日志表
-CREATE TABLE IF NOT EXISTS prompt_audit_logs (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  prompt_id UUID REFERENCES prompts(id) ON DELETE CASCADE,
-  user_id UUID REFERENCES users(id) ON DELETE SET NULL,
-  action VARCHAR(50) NOT NULL,
-  changes JSONB,
-  ip_address INET,
-  user_agent TEXT,
-  created_at TIMESTAMPTZ DEFAULT NOW()
-);
+-- Categories table indexes
+CREATE INDEX idx_categories_type ON categories(type);
+CREATE INDEX idx_categories_sort_order ON categories(sort_order);
+CREATE INDEX idx_categories_is_active ON categories(is_active);
+CREATE INDEX idx_categories_name_en ON categories(name_en);
+CREATE INDEX idx_categories_optimization_template ON categories USING GIN(optimization_template);
 
--- API密钥表
-CREATE TABLE IF NOT EXISTS api_keys (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
-  name TEXT NOT NULL,
-  key_hash TEXT NOT NULL,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  expires_at TIMESTAMPTZ,
-  last_used_at TIMESTAMPTZ,
-  UNIQUE(user_id, name)
-);
+-- API Keys table indexes
+CREATE INDEX idx_api_keys_user_id ON api_keys(user_id);
+CREATE INDEX idx_api_keys_key_hash ON api_keys(key_hash);
+CREATE INDEX idx_api_keys_is_active ON api_keys(is_active);
 
+-- Prompts table indexes
+CREATE INDEX idx_prompts_user_id ON prompts(user_id);
+CREATE INDEX idx_prompts_category_id ON prompts(category_id);
+CREATE INDEX idx_prompts_is_public ON prompts(is_public);
+CREATE INDEX idx_prompts_created_at ON prompts(created_at);
+CREATE INDEX idx_prompts_category_type ON prompts(category_type);
+CREATE INDEX idx_prompts_context_engineering_enabled ON prompts(context_engineering_enabled);
+CREATE INDEX idx_prompts_effectiveness_score ON prompts(effectiveness_score);
+CREATE INDEX idx_prompts_tags ON prompts USING GIN(tags);
+CREATE INDEX idx_prompts_input_variables ON prompts USING GIN(input_variables);
+CREATE INDEX idx_prompts_parameters ON prompts USING GIN(parameters);
+CREATE INDEX idx_prompts_content ON prompts USING GIN(content);
+CREATE INDEX idx_prompts_context_variables ON prompts USING GIN(context_variables);
+CREATE INDEX idx_prompts_adaptation_rules ON prompts USING GIN(adaptation_rules);
 
+-- Context Engineering table indexes
+CREATE INDEX idx_user_context_profiles_user_id ON user_context_profiles(user_id);
+CREATE INDEX idx_user_context_profiles_is_active ON user_context_profiles(is_active);
+CREATE INDEX idx_user_context_profiles_context_data ON user_context_profiles USING GIN(context_data);
+
+CREATE INDEX idx_context_sessions_user_id ON context_sessions(user_id);
+CREATE INDEX idx_context_sessions_profile_id ON context_sessions(profile_id);
+CREATE INDEX idx_context_sessions_status ON context_sessions(status);
+CREATE INDEX idx_context_sessions_started_at ON context_sessions(started_at);
+CREATE INDEX idx_context_sessions_session_data ON context_sessions USING GIN(session_data);
+
+CREATE INDEX idx_user_interactions_user_id ON user_interactions(user_id);
+CREATE INDEX idx_user_interactions_session_id ON user_interactions(session_id);
+CREATE INDEX idx_user_interactions_prompt_id ON user_interactions(prompt_id);
+CREATE INDEX idx_user_interactions_interaction_type ON user_interactions(interaction_type);
+CREATE INDEX idx_user_interactions_created_at ON user_interactions(created_at);
+CREATE INDEX idx_user_interactions_interaction_data ON user_interactions USING GIN(interaction_data);
+
+CREATE INDEX idx_context_experiments_status ON context_experiments(status);
+CREATE INDEX idx_context_experiments_created_by ON context_experiments(created_by);
+CREATE INDEX idx_context_experiments_start_date ON context_experiments(start_date);
+CREATE INDEX idx_context_experiments_configuration ON context_experiments USING GIN(configuration);
+
+CREATE INDEX idx_experiment_participations_experiment_id ON experiment_participations(experiment_id);
+CREATE INDEX idx_experiment_participations_user_id ON experiment_participations(user_id);
+CREATE INDEX idx_experiment_participations_completion_rate ON experiment_participations(completion_rate);
+CREATE INDEX idx_experiment_participations_participation_data ON experiment_participations USING GIN(participation_data);
+
+CREATE INDEX idx_performance_metrics_prompt_id ON performance_metrics(prompt_id);
+CREATE INDEX idx_performance_metrics_user_id ON performance_metrics(user_id);
+CREATE INDEX idx_performance_metrics_session_id ON performance_metrics(session_id);
+CREATE INDEX idx_performance_metrics_metric_type ON performance_metrics(metric_type);
+CREATE INDEX idx_performance_metrics_measured_at ON performance_metrics(measured_at);
+CREATE INDEX idx_performance_metrics_metadata ON performance_metrics USING GIN(metadata);
+
+CREATE INDEX idx_prompt_relationships_source_prompt_id ON prompt_relationships(source_prompt_id);
+CREATE INDEX idx_prompt_relationships_target_prompt_id ON prompt_relationships(target_prompt_id);
+CREATE INDEX idx_prompt_relationships_relationship_type ON prompt_relationships(relationship_type);
+CREATE INDEX idx_prompt_relationships_effectiveness_score ON prompt_relationships(effectiveness_score);
+CREATE INDEX idx_prompt_relationships_relationship_config ON prompt_relationships USING GIN(relationship_config);
+
+CREATE INDEX idx_context_adaptations_prompt_id ON context_adaptations(prompt_id);
+CREATE INDEX idx_context_adaptations_user_id ON context_adaptations(user_id);
+CREATE INDEX idx_context_adaptations_effectiveness_rating ON context_adaptations(effectiveness_rating);
+CREATE INDEX idx_context_adaptations_adaptation_data ON context_adaptations USING GIN(adaptation_data);
+
+-- Legacy table indexes
+CREATE INDEX idx_prompt_versions_prompt_id ON prompt_versions(prompt_id);
+CREATE INDEX idx_prompt_versions_version_number ON prompt_versions(version_number);
+CREATE INDEX idx_prompt_versions_is_current ON prompt_versions(is_current);
+CREATE INDEX idx_prompt_versions_created_by ON prompt_versions(created_by);
+
+CREATE INDEX idx_collaborations_prompt_id ON collaborations(prompt_id);
+CREATE INDEX idx_collaborations_user_id ON collaborations(user_id);
+CREATE INDEX idx_collaborations_status ON collaborations(status);
+CREATE INDEX idx_collaborations_invited_by ON collaborations(invited_by);
+
+CREATE INDEX idx_user_prompt_usage_logs_user_id ON user_prompt_usage_logs(user_id);
+CREATE INDEX idx_user_prompt_usage_logs_public_prompt_id ON user_prompt_usage_logs(public_prompt_id);
+CREATE INDEX idx_user_prompt_usage_logs_private_prompt_id ON user_prompt_usage_logs(private_prompt_id);
+CREATE INDEX idx_user_prompt_usage_logs_used_at ON user_prompt_usage_logs(used_at);
+CREATE INDEX idx_user_prompt_usage_logs_usage_context ON user_prompt_usage_logs USING GIN(usage_context);
 
 -- =============================================
--- 数据库视图
+-- Views for Analytics and Reporting
 -- =============================================
 
--- 分类统计视图
-CREATE OR REPLACE VIEW category_stats AS
+-- Category Statistics View
+CREATE VIEW category_stats AS
 SELECT
     c.id,
     c.name,
@@ -271,8 +369,8 @@ WHERE c.is_active = true
 GROUP BY c.id, c.name, c.name_en, c.type, c.icon, c.description, c.sort_order
 ORDER BY c.sort_order;
 
--- 分类类型统计视图
-CREATE OR REPLACE VIEW category_type_stats AS
+-- Category Type Statistics View
+CREATE VIEW category_type_stats AS
 SELECT
     type,
     COUNT(*) AS category_count,
@@ -289,19 +387,119 @@ ORDER BY
         ELSE 4
     END;
 
--- 带分类类型的提示词视图
-CREATE OR REPLACE VIEW prompts_with_category_type AS
+-- Context Engineering Dashboard View
+CREATE VIEW context_engineering_dashboard AS
 SELECT
-    p.*,
-    c.name AS category_name,
-    c.name_en AS category_name_en,
-    c.type AS category_type,
-    c.icon AS category_icon
-FROM prompts p
-LEFT JOIN categories c ON p.category_id = c.id;
+    'prompts' AS component,
+    jsonb_build_object(
+        'total_prompts', COUNT(*),
+        'context_enabled', COUNT(*) FILTER (WHERE context_engineering_enabled = true),
+        'public_prompts', COUNT(*) FILTER (WHERE is_public = true),
+        'avg_effectiveness', COALESCE(AVG(effectiveness_score), 0)
+    ) AS metrics
+FROM prompts
+UNION ALL
+SELECT
+    'users' AS component,
+    jsonb_build_object(
+        'total_profiles', COUNT(*),
+        'active_sessions', (
+            SELECT COUNT(*)
+            FROM context_sessions
+            WHERE status = 'active'
+        )
+    ) AS metrics
+FROM user_context_profiles;
 
--- 存储统计视图
-CREATE OR REPLACE VIEW storage_stats AS
+-- Context Engineering Health Check View
+CREATE VIEW context_engineering_health AS
+SELECT
+    'database_health' AS check_category,
+    jsonb_build_object(
+        'prompts_with_context', (
+            SELECT COUNT(*)
+            FROM prompts
+            WHERE context_engineering_enabled = true
+        ),
+        'active_user_sessions', (
+            SELECT COUNT(*)
+            FROM context_sessions
+            WHERE status = 'active'
+        ),
+        'cache_hit_rate', (
+            SELECT COALESCE(AVG(metric_value), 0)
+            FROM performance_metrics
+            WHERE metric_type = 'cache_hit_rate'
+            AND measured_at >= NOW() - INTERVAL '1 hour'
+        )
+    ) AS health_metrics;
+
+-- Experiment Analytics View
+CREATE VIEW experiment_analytics AS
+SELECT
+    ce.id,
+    ce.experiment_name,
+    ce.experiment_type,
+    ce.status,
+    COALESCE(AVG(ep.completion_rate), 0) AS avg_completion_rate,
+    COALESCE(COUNT(DISTINCT ep.user_id), 0) AS participant_count,
+    ce.start_date,
+    ce.end_date
+FROM context_experiments ce
+LEFT JOIN experiment_participations ep ON ce.id = ep.experiment_id
+WHERE ce.status IN ('active', 'completed')
+GROUP BY ce.id, ce.experiment_name, ce.experiment_type, ce.status, ce.start_date, ce.end_date;
+
+-- Prompt Dependency Graph View
+CREATE VIEW prompt_dependency_graph AS
+SELECT
+    pr.source_prompt_id,
+    p1.name AS source_prompt_name,
+    pr.target_prompt_id,
+    p2.name AS target_prompt_name,
+    pr.relationship_type,
+    pr.effectiveness_score,
+    COALESCE((pr.relationship_config->>'strength')::numeric, 0.5) AS strength,
+    pr.created_at
+FROM prompt_relationships pr
+JOIN prompts p1 ON pr.source_prompt_id = p1.id
+JOIN prompts p2 ON pr.target_prompt_id = p2.id
+WHERE p1.is_public = true AND p2.is_public = true;
+
+-- Prompt Performance Analysis View
+CREATE VIEW prompt_performance_analysis AS
+SELECT
+    p.id,
+    p.name,
+    p.context_engineering_enabled,
+    COALESCE(AVG(pm.metric_value), 0) AS avg_response_time,
+    COALESCE(COUNT(pm.id), 0) AS usage_count,
+    COALESCE(AVG(CASE WHEN pm.metric_type = 'user_satisfaction' THEN pm.metric_value END), 0) AS avg_satisfaction,
+    MAX(pm.measured_at) AS last_used
+FROM prompts p
+LEFT JOIN performance_metrics pm ON p.id = pm.prompt_id
+WHERE p.is_public = true
+AND (pm.measured_at >= NOW() - INTERVAL '7 days' OR pm.measured_at IS NULL)
+GROUP BY p.id, p.name, p.context_engineering_enabled;
+
+-- Public Prompt Statistics View
+CREATE VIEW public_prompt_stats AS
+SELECT
+    p.id,
+    p.name,
+    p.category_type,
+    p.is_public,
+    p.view_count,
+    p.created_at,
+    COALESCE(COUNT(uul.id), 0) AS usage_count,
+    COALESCE(AVG(uul.user_feedback), 0) AS avg_feedback
+FROM prompts p
+LEFT JOIN user_prompt_usage_logs uul ON p.id = uul.public_prompt_id
+WHERE p.is_public = true
+GROUP BY p.id, p.name, p.category_type, p.is_public, p.view_count, p.created_at;
+
+-- Storage Statistics View
+CREATE VIEW storage_stats AS
 SELECT
     'prompts' AS table_name,
     COUNT(*) AS total_count,
@@ -316,613 +514,28 @@ SELECT
     COUNT(CASE WHEN is_active = false THEN 1 END) AS private_count
 FROM categories;
 
-
-
--- =============================================
--- 更新现有表结构（兼容性处理）
--- =============================================
-
--- 为现有表添加缺失字段
-DO $$
-BEGIN
-    -- 添加preview_asset_url字段到prompts表（如果不存在）
-    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'prompts' AND column_name = 'preview_asset_url') THEN
-        ALTER TABLE prompts ADD COLUMN preview_asset_url TEXT;
-    END IF;
-
-    -- 添加parameters字段到prompts表（如果不存在）
-    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'prompts' AND column_name = 'parameters') THEN
-        ALTER TABLE prompts ADD COLUMN parameters JSONB DEFAULT '{}';
-    END IF;
-
-    -- 添加category_type字段到prompts表（如果不存在）
-    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'prompts' AND column_name = 'category_type') THEN
-        ALTER TABLE prompts ADD COLUMN category_type VARCHAR;
-    END IF;
-
-    -- 添加type字段到categories表（如果不存在）
-    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'categories' AND column_name = 'type') THEN
-        ALTER TABLE categories ADD COLUMN type category_type DEFAULT 'chat';
-    END IF;
-END $$;
-
-
-
--- =============================================
--- 索引创建（基于真实数据库结构）
--- =============================================
-
--- 核心表索引
-CREATE INDEX IF NOT EXISTS idx_prompts_allow_collaboration ON prompts(allow_collaboration);
-CREATE INDEX IF NOT EXISTS idx_prompts_category_id ON prompts(category_id);
-CREATE INDEX IF NOT EXISTS idx_prompts_created_by ON prompts(created_by);
-CREATE INDEX IF NOT EXISTS idx_prompts_edit_permission ON prompts(edit_permission);
-CREATE INDEX IF NOT EXISTS idx_prompts_preview_asset_url ON prompts(preview_asset_url) WHERE preview_asset_url IS NOT NULL;
-
-CREATE INDEX IF NOT EXISTS idx_prompt_versions_category_id ON prompt_versions(category_id);
-
-CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);
-
--- 类别表索引
-CREATE INDEX IF NOT EXISTS idx_categories_is_active ON categories(is_active);
-CREATE INDEX IF NOT EXISTS idx_categories_sort_order ON categories(sort_order);
-CREATE INDEX IF NOT EXISTS idx_categories_type ON categories(type);
-CREATE INDEX IF NOT EXISTS idx_categories_type_sort_order ON categories(type, sort_order);
-
--- 社交功能索引
-CREATE INDEX IF NOT EXISTS idx_social_interactions_prompt_id ON social_interactions(prompt_id);
-CREATE INDEX IF NOT EXISTS idx_social_interactions_user_id ON social_interactions(user_id);
-CREATE INDEX IF NOT EXISTS idx_social_interactions_type ON social_interactions(type);
-
-CREATE INDEX IF NOT EXISTS idx_comments_prompt_id ON comments(prompt_id);
-CREATE INDEX IF NOT EXISTS idx_comments_user_id ON comments(user_id);
-CREATE INDEX IF NOT EXISTS idx_comments_parent_id ON comments(parent_id);
-
-CREATE INDEX IF NOT EXISTS idx_user_follows_follower_id ON user_follows(follower_id);
-CREATE INDEX IF NOT EXISTS idx_user_follows_following_id ON user_follows(following_id);
-
-CREATE INDEX IF NOT EXISTS idx_topics_creator_id ON topics(creator_id);
-CREATE INDEX IF NOT EXISTS idx_topic_posts_topic_id ON topic_posts(topic_id);
-CREATE INDEX IF NOT EXISTS idx_topic_posts_user_id ON topic_posts(user_id);
-
-CREATE INDEX IF NOT EXISTS idx_notifications_user_id ON notifications(user_id);
-CREATE INDEX IF NOT EXISTS idx_notifications_is_read ON notifications(is_read);
-CREATE INDEX IF NOT EXISTS idx_notifications_created_at ON notifications(created_at);
-
--- 评分和社交功能索引
-CREATE INDEX IF NOT EXISTS idx_prompt_ratings_prompt_id ON prompt_ratings(prompt_id);
-CREATE INDEX IF NOT EXISTS idx_prompt_ratings_user_id ON prompt_ratings(user_id);
-
-CREATE INDEX IF NOT EXISTS idx_prompt_likes_prompt_id ON prompt_likes(prompt_id);
-CREATE INDEX IF NOT EXISTS idx_prompt_likes_user_id ON prompt_likes(user_id);
-
-CREATE INDEX IF NOT EXISTS idx_prompt_bookmarks_prompt_id ON prompt_bookmarks(prompt_id);
-CREATE INDEX IF NOT EXISTS idx_prompt_bookmarks_user_id ON prompt_bookmarks(user_id);
-
-CREATE INDEX IF NOT EXISTS idx_prompt_comments_prompt_id ON prompt_comments(prompt_id);
-CREATE INDEX IF NOT EXISTS idx_prompt_comments_user_id ON prompt_comments(user_id);
-
--- 权限管理索引
-CREATE INDEX IF NOT EXISTS idx_prompt_collaborators_prompt_id ON prompt_collaborators(prompt_id);
-CREATE INDEX IF NOT EXISTS idx_prompt_collaborators_user_id ON prompt_collaborators(user_id);
-CREATE INDEX IF NOT EXISTS idx_prompt_audit_logs_prompt_id ON prompt_audit_logs(prompt_id);
-CREATE INDEX IF NOT EXISTS idx_prompt_audit_logs_user_id ON prompt_audit_logs(user_id);
-CREATE INDEX IF NOT EXISTS idx_prompt_audit_logs_created_at ON prompt_audit_logs(created_at);
-
--- =============================================
--- 辅助函数
--- =============================================
-
--- 优化auth.uid()调用的辅助函数
-CREATE OR REPLACE FUNCTION get_auth_uid()
-RETURNS uuid
-LANGUAGE sql STABLE
-SECURITY DEFINER
-SET search_path = public
-AS $$
-  SELECT auth.uid()
-$$;
-
--- 用户验证函数
-CREATE OR REPLACE FUNCTION user_owns_prompt(prompt_id uuid)
-RETURNS boolean
-LANGUAGE sql STABLE
-SECURITY DEFINER
-SET search_path = public
-AS $$
-  SELECT EXISTS (
-    SELECT 1 FROM prompts
-    WHERE id = prompt_id
-    AND (created_by = get_auth_uid() OR user_id = get_auth_uid())
-  );
-$$;
-
--- 检查提示词是否公开的函数
-CREATE OR REPLACE FUNCTION is_prompt_public(prompt_id uuid)
-RETURNS boolean
-LANGUAGE sql STABLE
-SECURITY DEFINER
-SET search_path = public
-AS $$
-  SELECT is_public FROM prompts WHERE id = prompt_id;
-$$;
-
-
-
--- 递增视图计数的函数
-CREATE OR REPLACE FUNCTION increment_view_count(prompt_id UUID)
-RETURNS void
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path = public
-AS $$
-BEGIN
-    UPDATE prompts
-    SET view_count = COALESCE(view_count, 0) + 1,
-        updated_at = NOW()
-    WHERE id = prompt_id;
-END;
-$$;
-
--- 获取提示词公共统计的函数
-CREATE OR REPLACE FUNCTION get_prompt_public_stats(prompt_uuid uuid)
-RETURNS jsonb
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path = public
-AS $$
-DECLARE
-  result jsonb := '{}';
-  likes_count int := 0;
-  bookmarks_count int := 0;
-  ratings_avg numeric(3,2) := 0;
-  ratings_count int := 0;
-BEGIN
-  -- 获取点赞数和收藏数
-  SELECT
-    COUNT(*) FILTER (WHERE type = 'like'),
-    COUNT(*) FILTER (WHERE type = 'bookmark')
-  INTO likes_count, bookmarks_count
-  FROM social_interactions
-  WHERE prompt_id = prompt_uuid;
-
-  -- 获取评分统计
-  SELECT AVG(rating), COUNT(*)
-  INTO ratings_avg, ratings_count
-  FROM prompt_ratings
-  WHERE prompt_id = prompt_uuid;
-
-  result := jsonb_build_object(
-    'likes', COALESCE(likes_count, 0),
-    'bookmarks', COALESCE(bookmarks_count, 0),
-    'avg_rating', COALESCE(ratings_avg, 0),
-    'rating_count', COALESCE(ratings_count, 0)
-  );
-
-  RETURN result;
-END;
-$$;
-
--- 获取用户互动状态查询函数
-CREATE OR REPLACE FUNCTION get_user_prompt_interactions(prompt_uuid uuid, user_uuid uuid)
-RETURNS jsonb
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path = public
-AS $$
-DECLARE
-  result jsonb := '{}';
-  is_liked boolean := false;
-  is_bookmarked boolean := false;
-  user_rating int := 0;
-BEGIN
-  -- 检查点赞和收藏状态
-  SELECT
-    EXISTS(SELECT 1 WHERE type = 'like'),
-    EXISTS(SELECT 1 WHERE type = 'bookmark')
-  INTO is_liked, is_bookmarked
-  FROM social_interactions
-  WHERE prompt_id = prompt_uuid AND user_id = user_uuid;
-
-  -- 检查用户评分
-  SELECT rating INTO user_rating
-  FROM prompt_ratings
-  WHERE prompt_id = prompt_uuid AND user_id = user_uuid
-  LIMIT 1;
-
-  result := jsonb_build_object(
-    'liked', COALESCE(is_liked, false),
-    'bookmarked', COALESCE(is_bookmarked, false),
-    'rating', COALESCE(user_rating, 0)
-  );
-
-  RETURN result;
-END;
-$$;
-
--- =============================================
--- 触发器函数
--- =============================================
-
--- 用户数据同步触发器函数
-CREATE OR REPLACE FUNCTION handle_new_user()
-RETURNS trigger
-LANGUAGE plpgsql
-SECURITY DEFINER SET search_path = public
-AS $$
-BEGIN
-  INSERT INTO public.users (id, email, display_name, username, role, created_at)
-  VALUES (
-    NEW.id,
-    NEW.email,
-    COALESCE(
-      NEW.raw_user_meta_data->>'display_name',
-      NEW.raw_user_meta_data->>'full_name',
-      NEW.raw_user_meta_data->>'name'
-    ),
-    COALESCE(
-      NEW.raw_user_meta_data->>'username',
-      NEW.raw_user_meta_data->>'preferred_username',
-      NEW.raw_user_meta_data->>'name',
-      NEW.raw_user_meta_data->>'display_name',
-      NEW.raw_user_meta_data->>'full_name'
-    ),
-    'user',
-    NOW()
-  ) ON CONFLICT (id) DO UPDATE SET
-    email = EXCLUDED.email,
-    display_name = COALESCE(
-      EXCLUDED.display_name,
-      users.display_name
-    ),
-    username = COALESCE(
-      EXCLUDED.username,
-      users.username
-    ),
-    updated_at = NOW();
-
-  RETURN NEW;
-END;
-$$;
-
-
-
--- 更新时间触发器函数
-CREATE OR REPLACE FUNCTION update_updated_at_column()
-RETURNS trigger
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path = public
-AS $$
-BEGIN
-  NEW.updated_at = NOW();
-  RETURN NEW;
-END;
-$$;
-
-
-
-
-
--- =============================================
--- 创建触发器
--- =============================================
-
--- 用户数据同步触发器
-CREATE OR REPLACE TRIGGER on_auth_user_created
-  AFTER INSERT OR UPDATE ON auth.users
-  FOR EACH ROW EXECUTE FUNCTION handle_new_user();
-
-
-
--- 用户表更新时间触发器
-CREATE OR REPLACE TRIGGER update_users_updated_at
-  BEFORE UPDATE ON users
-  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-
--- 评分表更新时间触发器
-CREATE OR REPLACE TRIGGER update_prompt_ratings_updated_at
-    BEFORE UPDATE ON prompt_ratings
-    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-
--- 评论表更新时间触发器
-CREATE OR REPLACE TRIGGER update_comments_updated_at
-    BEFORE UPDATE ON comments
-    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-
--- 话题表更新时间触发器
-CREATE OR REPLACE TRIGGER update_topics_updated_at
-    BEFORE UPDATE ON topics
-    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-
--- 话题帖子表更新时间触发器
-CREATE OR REPLACE TRIGGER update_topic_posts_updated_at
-    BEFORE UPDATE ON topic_posts
-    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-
-
-
-
-
--- =============================================
--- 启用行级安全
--- =============================================
-
-ALTER TABLE users ENABLE ROW LEVEL SECURITY;
-ALTER TABLE prompts ENABLE ROW LEVEL SECURITY;
-ALTER TABLE prompt_versions ENABLE ROW LEVEL SECURITY;
-ALTER TABLE categories ENABLE ROW LEVEL SECURITY;
-ALTER TABLE social_interactions ENABLE ROW LEVEL SECURITY;
-ALTER TABLE comments ENABLE ROW LEVEL SECURITY;
-ALTER TABLE user_follows ENABLE ROW LEVEL SECURITY;
-ALTER TABLE topics ENABLE ROW LEVEL SECURITY;
-ALTER TABLE topic_posts ENABLE ROW LEVEL SECURITY;
-ALTER TABLE notifications ENABLE ROW LEVEL SECURITY;
-ALTER TABLE prompt_ratings ENABLE ROW LEVEL SECURITY;
-ALTER TABLE prompt_likes ENABLE ROW LEVEL SECURITY;
-ALTER TABLE prompt_bookmarks ENABLE ROW LEVEL SECURITY;
-ALTER TABLE prompt_comments ENABLE ROW LEVEL SECURITY;
-
-ALTER TABLE prompt_collaborators ENABLE ROW LEVEL SECURITY;
-ALTER TABLE prompt_audit_logs ENABLE ROW LEVEL SECURITY;
-ALTER TABLE api_keys ENABLE ROW LEVEL SECURITY;
-
--- =============================================
--- 行级安全策略
--- =============================================
-
--- 用户表策略
-CREATE POLICY "Users can view own user data" ON users
-  FOR SELECT USING (id = auth.uid());
-
-CREATE POLICY "Users can update own user data" ON users
-  FOR UPDATE USING (id = auth.uid());
-
-CREATE POLICY "Users cannot delete user data" ON users
-  FOR DELETE USING (false);
-
-CREATE POLICY "Users can insert on signup" ON users
-  FOR INSERT WITH CHECK (id = auth.uid());
-
--- 类别表策略 - 所有人都可以查看类别
-CREATE POLICY "Everyone can view categories" ON categories
-  FOR SELECT USING (is_active = true);
-
--- 只有认证用户可以管理类别
-CREATE POLICY "Authenticated users can manage categories" ON categories
-  FOR ALL USING (auth.role() = 'authenticated');
-
--- 提示词表策略
-CREATE POLICY "prompts_read_public" ON prompts
-FOR SELECT USING (
-    is_public = true OR
-    auth.uid() = user_id OR
-    auth.uid() IS NULL
-);
-
-CREATE POLICY "prompts_manage_own" ON prompts
-FOR ALL USING (
-    auth.uid() = user_id OR
-    auth.uid() IS NULL
-);
-
--- 提示词版本表策略
-CREATE POLICY "Comprehensive prompt versions access" ON prompt_versions
-  FOR SELECT USING (
-    auth.uid() IN (SELECT user_id FROM prompts WHERE id = prompt_id)
-    OR prompt_id IN (SELECT id FROM prompts WHERE is_public = true)
-  );
-
-CREATE POLICY "Users can insert own prompt versions" ON prompt_versions
-  FOR INSERT WITH CHECK (
-    auth.uid() IN (SELECT user_id FROM prompts WHERE id = prompt_id)
-  );
-
-CREATE POLICY "Users can update own prompt versions" ON prompt_versions
-  FOR UPDATE USING (
-    auth.uid() IN (SELECT user_id FROM prompts WHERE id = prompt_id)
-  );
-
-CREATE POLICY "Users can delete own prompt versions" ON prompt_versions
-  FOR DELETE USING (
-    auth.uid() IN (SELECT user_id FROM prompts WHERE id = prompt_id)
-  );
-
-
-
--- 协作者表策略
-CREATE POLICY "Users can view their own collaborations" ON prompt_collaborators
-  FOR SELECT USING (user_id = auth.uid());
-
-CREATE POLICY "Prompt owners can manage collaborators" ON prompt_collaborators
-  FOR ALL USING (
-    EXISTS (
-      SELECT 1 FROM prompts
-      WHERE prompts.id = prompt_collaborators.prompt_id
-      AND (prompts.created_by = auth.uid() OR prompts.user_id = auth.uid())
-    )
-  );
-
--- 审计日志表策略
-CREATE POLICY "Users can view audit logs for their prompts" ON prompt_audit_logs
-  FOR SELECT USING (
-    user_id = auth.uid() OR
-    EXISTS (
-      SELECT 1 FROM prompts
-      WHERE prompts.id = prompt_audit_logs.prompt_id
-      AND (prompts.created_by = auth.uid() OR prompts.user_id = auth.uid())
-    )
-  );
-
--- API密钥表策略
-CREATE POLICY "用户可以查看自己的API密钥" ON api_keys
-  FOR SELECT USING (auth.uid() = user_id);
-
-CREATE POLICY "用户可以创建自己的API密钥" ON api_keys
-  FOR INSERT WITH CHECK (auth.uid() = user_id);
-
-CREATE POLICY "用户可以删除自己的API密钥" ON api_keys
-  FOR DELETE USING (auth.uid() = user_id);
-
--- 社交功能表策略
-CREATE POLICY "social_interactions_read_all" ON social_interactions FOR SELECT USING (true);
-CREATE POLICY "social_interactions_manage_own" ON social_interactions
-  FOR ALL USING (auth.uid() IS NULL OR auth.uid() = user_id);
-
--- 评论表策略
-CREATE POLICY "comments_read_all" ON comments FOR SELECT USING (true);
-CREATE POLICY "comments_manage_own" ON comments
-  FOR ALL USING (auth.uid() IS NULL OR auth.uid() = user_id);
-
--- 用户关注表策略
-CREATE POLICY "user_follows_read_all" ON user_follows FOR SELECT USING (true);
-CREATE POLICY "user_follows_manage_own" ON user_follows
-  FOR ALL USING (auth.uid() IS NULL OR auth.uid() = follower_id);
-
--- 话题表策略
-CREATE POLICY "topics_read_all" ON topics FOR SELECT USING (true);
-CREATE POLICY "topics_manage_own" ON topics
-  FOR ALL USING (auth.uid() IS NULL OR auth.uid() = creator_id);
-
--- 话题帖子表策略
-CREATE POLICY "topic_posts_read_all" ON topic_posts FOR SELECT USING (true);
-CREATE POLICY "topic_posts_manage_own" ON topic_posts
-  FOR ALL USING (auth.uid() IS NULL OR auth.uid() = user_id);
-
--- 通知表策略
-CREATE POLICY "notifications_own_only" ON notifications
-  FOR ALL USING (auth.uid() IS NULL OR auth.uid() = user_id);
-
--- 评分表策略
-CREATE POLICY "prompt_ratings_read_all" ON prompt_ratings FOR SELECT USING (true);
-CREATE POLICY "prompt_ratings_manage_own" ON prompt_ratings
-  FOR ALL USING (auth.uid() IS NULL OR auth.uid() = user_id);
-
--- 点赞表策略
-CREATE POLICY "prompt_likes_read_all" ON prompt_likes FOR SELECT USING (true);
-CREATE POLICY "prompt_likes_manage_own" ON prompt_likes
-  FOR ALL USING (auth.uid() IS NULL OR auth.uid() = user_id);
-
--- 收藏表策略
-CREATE POLICY "prompt_bookmarks_read_all" ON prompt_bookmarks FOR SELECT USING (true);
-CREATE POLICY "prompt_bookmarks_manage_own" ON prompt_bookmarks
-  FOR ALL USING (auth.uid() IS NULL OR auth.uid() = user_id);
-
--- 评论表策略
-CREATE POLICY "prompt_comments_read_all" ON prompt_comments FOR SELECT USING (true);
-CREATE POLICY "prompt_comments_manage_own" ON prompt_comments
-  FOR ALL USING (auth.uid() IS NULL OR auth.uid() = user_id);
-
-
-
--- 注意：以上策略已在前面定义，此处为重复定义，已清理
-
--- =============================================
--- 初始化示例数据
--- =============================================
-
--- 注意：以下分类数据仅作为schema参考，实际分类数据应从数据库动态获取
--- 不建议在生产环境中执行此INSERT语句，因为分类数据会经常变化
--- 当前数据库已包含重构后的分类数据，使用更详细的分类名称
-
--- 示例分类数据结构（基于当前数据库的实际分类）：
--- Chat类型分类示例：
--- ('通用对话', 'general', 'chat-bubble-left-right', '适用于日常生活交流、基础问题咨询、通用助手对话等场景...', 101, 'chat'),
--- ('客服助手', 'customer_service', 'phone', '专门用于客户服务场景的对话提示词...', 102, 'chat'),
--- ('角色扮演', 'role_playing', 'user-group', '用于角色扮演和情景模拟的对话提示词...', 103, 'chat'),
---
--- Image类型分类示例：
--- ('真实摄影', 'realistic_photo', 'camera', '真实摄影风格的图像生成提示词...', 201, 'image'),
--- ('人像摄影', 'portrait', 'user', '人像摄影专业提示词...', 202, 'image'),
---
--- Video类型分类示例：
--- ('故事叙述', 'storytelling', 'book-open', '故事叙述和剧情创作的视频提示词...', 301, 'video'),
--- ('纪录片', 'documentary', 'film', '纪录片制作和纪实拍摄的专业提示词...', 302, 'video'),
-
-/*
--- 如需重新初始化分类数据，请使用以下格式，但建议通过API动态管理：
-INSERT INTO categories (name, name_en, icon, description, sort_order, type) VALUES
-
--- 以上分类数据已注释，因为：
--- 1. 数据库已包含重构后的实际分类数据
--- 2. 分类数据应通过API动态管理，而非硬编码在schema中
--- 3. 避免与现有数据库数据冲突
-*/
-
--- 分类数据管理说明：
--- - 当前数据库使用动态分类管理，分类数据存储在categories表中
--- - 分类数据会根据业务需求动态调整，不应硬编码在schema文件中
--- - 如需查看当前分类数据，请查询categories表：SELECT * FROM categories ORDER BY sort_order;
--- - 新增分类请通过API接口或管理后台进行，确保数据一致性
-
-
-
--- 为现有数据设置created_by字段（使用user_id字段的值）
-UPDATE prompts
-SET created_by = user_id
-WHERE created_by IS NULL AND user_id IS NOT NULL;
-
--- 更新现有提示词的category_id
-UPDATE prompts
-SET category_id = c.id
-FROM categories c
-WHERE prompts.category = c.name
-  AND prompts.category_id IS NULL;
-
--- 更新现有提示词版本的category_id
-UPDATE prompt_versions
-SET category_id = c.id
-FROM categories c
-WHERE prompt_versions.category = c.name
-  AND prompt_versions.category_id IS NULL;
-
--- 更新现有记录的默认值
-UPDATE prompts
-SET input_variables = ARRAY[]::TEXT[]
-WHERE input_variables IS NULL;
-
-UPDATE prompts
-SET compatible_models = ARRAY['GPT-4', 'GPT-3.5', 'Claude-2']::TEXT[]
-WHERE compatible_models IS NULL;
-
-UPDATE prompts
-SET template_format = 'text'
-WHERE template_format IS NULL;
-
-UPDATE prompts
-SET parameters = '{}'::JSONB
-WHERE parameters IS NULL;
-
-
-
--- =============================================
--- 表字段注释
--- =============================================
-
--- 添加注释
-COMMENT ON COLUMN prompts.allow_collaboration IS '是否允许协作编辑';
-COMMENT ON COLUMN prompts.edit_permission IS '编辑权限级别: owner_only, collaborators, public';
-COMMENT ON COLUMN prompts.created_by IS '创建者用户ID';
-COMMENT ON COLUMN prompts.last_modified_by IS '最后修改者用户ID';
-COMMENT ON COLUMN prompts.input_variables IS '提示词输入变量数组';
-COMMENT ON COLUMN prompts.compatible_models IS '兼容的AI模型列表';
-COMMENT ON COLUMN prompts.template_format IS '模板格式：text, json等';
-COMMENT ON COLUMN prompts.version IS '版本号';
-COMMENT ON COLUMN prompts.preview_asset_url IS '预览资源URL，用于图像和视频类型提示词';
-COMMENT ON COLUMN prompts.parameters IS '提示词参数，JSON格式存储各种配置';
-COMMENT ON COLUMN prompts.category_type IS '分类类型，关联到categories表的type字段';
-
-COMMENT ON TABLE prompt_collaborators IS '提示词协作者表';
-COMMENT ON TABLE prompt_audit_logs IS '提示词操作审计日志表';
-COMMENT ON TABLE categories IS '提示词类别管理表，支持chat/image/video三种类型';
-COMMENT ON TABLE social_interactions IS '社交互动表，统一管理点赞、收藏等操作';
-COMMENT ON TABLE prompt_versions IS '提示词版本历史表';
-
-COMMENT ON COLUMN categories.type IS '分类类型：chat对话类、image图像类、video视频类';
-
--- 添加权限说明
-COMMENT ON FUNCTION increment_view_count(UUID) IS '安全函数：递增提示词查看次数';
-COMMENT ON FUNCTION get_prompt_public_stats(UUID) IS '安全函数：获取提示词公共统计信息';
-COMMENT ON FUNCTION get_user_prompt_interactions(UUID, UUID) IS '安全函数：获取用户与提示词的互动状态';
-COMMENT ON FUNCTION handle_new_user() IS '安全函数：处理新用户注册';
-COMMENT ON FUNCTION update_updated_at_column() IS '安全函数：更新时间戳';
+-- System Performance Dashboard View
+CREATE VIEW system_performance_dashboard AS
+SELECT
+    'response_time' AS metric_category,
+    COALESCE(AVG(metric_value), 0) AS avg_value,
+    COALESCE(MIN(metric_value), 0) AS min_value,
+    COALESCE(MAX(metric_value), 0) AS max_value,
+    COUNT(*) AS sample_count,
+    DATE_TRUNC('hour', COALESCE(measured_at, NOW())) AS time_bucket
+FROM performance_metrics
+WHERE metric_type = 'response_time'
+AND measured_at >= NOW() - INTERVAL '24 hours'
+GROUP BY DATE_TRUNC('hour', COALESCE(measured_at, NOW()))
+UNION ALL
+SELECT
+    'cache_hit_rate' AS metric_category,
+    COALESCE(AVG(metric_value), 0) AS avg_value,
+    COALESCE(MIN(metric_value), 0) AS min_value,
+    COALESCE(MAX(metric_value), 0) AS max_value,
+    COUNT(*) AS sample_count,
+    DATE_TRUNC('hour', COALESCE(measured_at, NOW())) AS time_bucket
+FROM performance_metrics
+WHERE metric_type = 'cache_hit_rate'
+AND measured_at >= NOW() - INTERVAL '24 hours'
+GROUP BY DATE_TRUNC('hour', COALESCE(measured_at, NOW()));
