@@ -30,8 +30,7 @@ INSERT INTO categories (id, name, name_en, icon, description, sort_order, is_act
     "context_variables": {},
     "optimization_rules": [],
     "adaptation_strategies": {}
-  },
-  "migrated_at": "2025-07-02T22:30:07.505249+00:00"
+  }
 }'),
 
 -- Academic Research
@@ -43,8 +42,7 @@ INSERT INTO categories (id, name, name_en, icon, description, sort_order, is_act
     "context_variables": {},
     "optimization_rules": [],
     "adaptation_strategies": {}
-  },
-  "migrated_at": "2025-07-02T22:30:07.505249+00:00"
+  }
 }'),
 
 -- Professional Career
@@ -56,8 +54,7 @@ INSERT INTO categories (id, name, name_en, icon, description, sort_order, is_act
     "context_variables": {},
     "optimization_rules": [],
     "adaptation_strategies": {}
-  },
-  "migrated_at": "2025-07-02T22:30:07.505249+00:00"
+  }
 }'),
 
 -- Finance & Investment
@@ -69,8 +66,7 @@ INSERT INTO categories (id, name, name_en, icon, description, sort_order, is_act
     "context_variables": {},
     "optimization_rules": [],
     "adaptation_strategies": {}
-  },
-  "migrated_at": "2025-07-02T22:30:07.505249+00:00"
+  }
 }'),
 
 -- Customer Service
@@ -82,8 +78,7 @@ INSERT INTO categories (id, name, name_en, icon, description, sort_order, is_act
     "context_variables": {},
     "optimization_rules": [],
     "adaptation_strategies": {}
-  },
-  "migrated_at": "2025-07-02T22:30:07.505249+00:00"
+  }
 }'),
 
 -- Role Playing
@@ -95,8 +90,7 @@ INSERT INTO categories (id, name, name_en, icon, description, sort_order, is_act
     "context_variables": {},
     "optimization_rules": [],
     "adaptation_strategies": {}
-  },
-  "migrated_at": "2025-07-02T22:30:07.505249+00:00"
+  }
 }'),
 
 -- Programming Development
@@ -108,8 +102,7 @@ INSERT INTO categories (id, name, name_en, icon, description, sort_order, is_act
     "context_variables": {},
     "optimization_rules": [],
     "adaptation_strategies": {}
-  },
-  "migrated_at": "2025-07-02T22:30:07.505249+00:00"
+  }
 }'),
 
 -- Content Creation
@@ -121,8 +114,7 @@ INSERT INTO categories (id, name, name_en, icon, description, sort_order, is_act
     "context_variables": {},
     "optimization_rules": [],
     "adaptation_strategies": {}
-  },
-  "migrated_at": "2025-07-02T22:30:07.505249+00:00"
+  }
 }'),
 
 -- Psychology Counseling
@@ -134,8 +126,7 @@ INSERT INTO categories (id, name, name_en, icon, description, sort_order, is_act
     "context_variables": {},
     "optimization_rules": [],
     "adaptation_strategies": {}
-  },
-  "migrated_at": "2025-07-02T22:30:07.505249+00:00"
+  }
 }'),
 
 -- Legal Advisor
@@ -147,8 +138,7 @@ INSERT INTO categories (id, name, name_en, icon, description, sort_order, is_act
     "context_variables": {},
     "optimization_rules": [],
     "adaptation_strategies": {}
-  },
-  "migrated_at": "2025-07-02T22:30:07.505249+00:00"
+  }
 }'),
 
 -- Life Knowledge
@@ -160,8 +150,7 @@ INSERT INTO categories (id, name, name_en, icon, description, sort_order, is_act
     "context_variables": {},
     "optimization_rules": [],
     "adaptation_strategies": {}
-  },
-  "migrated_at": "2025-07-02T22:30:07.505249+00:00"
+  }
 }'),
 
 -- Copywriting
@@ -173,8 +162,7 @@ INSERT INTO categories (id, name, name_en, icon, description, sort_order, is_act
     "context_variables": {},
     "optimization_rules": [],
     "adaptation_strategies": {}
-  },
-  "migrated_at": "2025-07-02T22:30:07.505249+00:00"
+  }
 }'),
 
 -- Business Consulting
@@ -186,8 +174,7 @@ INSERT INTO categories (id, name, name_en, icon, description, sort_order, is_act
     "context_variables": {},
     "optimization_rules": [],
     "adaptation_strategies": {}
-  },
-  "migrated_at": "2025-07-02T22:30:07.505249+00:00"
+  }
 }'),
 
 -- Educational Tutoring
@@ -199,8 +186,7 @@ INSERT INTO categories (id, name, name_en, icon, description, sort_order, is_act
     "context_variables": {},
     "optimization_rules": [],
     "adaptation_strategies": {}
-  },
-  "migrated_at": "2025-07-02T22:30:07.505249+00:00"
+  }
 }'),
 
 -- Travel Guide
@@ -212,8 +198,7 @@ INSERT INTO categories (id, name, name_en, icon, description, sort_order, is_act
     "context_variables": {},
     "optimization_rules": [],
     "adaptation_strategies": {}
-  },
-  "migrated_at": "2025-07-02T22:30:07.505249+00:00"
+  }
 }'),
 
 -- =============================================
@@ -230,8 +215,7 @@ INSERT INTO categories (id, name, name_en, icon, description, sort_order, is_act
     "context_variables": {},
     "optimization_rules": [],
     "adaptation_strategies": {}
-  },
-  "migrated_at": "2025-07-02T22:30:07.505249+00:00"
+  }
 }'),
 
 -- Landscape Photography (Image Category)
@@ -243,8 +227,7 @@ INSERT INTO categories (id, name, name_en, icon, description, sort_order, is_act
     "context_variables": {},
     "optimization_rules": [],
     "adaptation_strategies": {}
-  },
-  "migrated_at": "2025-07-02T22:30:07.505249+00:00"
+  }
 }'),
 
 -- Painting Art (Image Category)
@@ -256,8 +239,7 @@ INSERT INTO categories (id, name, name_en, icon, description, sort_order, is_act
     "context_variables": {},
     "optimization_rules": [],
     "adaptation_strategies": {}
-  },
-  "migrated_at": "2025-07-02T22:30:07.505249+00:00"
+  }
 }'),
 
 -- Sci-Fi Fantasy (Image Category)
@@ -269,8 +251,7 @@ INSERT INTO categories (id, name, name_en, icon, description, sort_order, is_act
     "context_variables": {},
     "optimization_rules": [],
     "adaptation_strategies": {}
-  },
-  "migrated_at": "2025-07-02T22:30:07.505249+00:00"
+  }
 }'),
 
 -- Anime Illustration (Image Category)
@@ -282,8 +263,7 @@ INSERT INTO categories (id, name, name_en, icon, description, sort_order, is_act
     "context_variables": {},
     "optimization_rules": [],
     "adaptation_strategies": {}
-  },
-  "migrated_at": "2025-07-02T22:30:07.505249+00:00"
+  }
 }'),
 
 -- Fashion Design (Image Category)
@@ -295,8 +275,7 @@ INSERT INTO categories (id, name, name_en, icon, description, sort_order, is_act
     "context_variables": {},
     "optimization_rules": [],
     "adaptation_strategies": {}
-  },
-  "migrated_at": "2025-07-02T22:30:07.505249+00:00"
+  }
 }'),
 
 -- Retro Nostalgia (Image Category)
@@ -308,8 +287,7 @@ INSERT INTO categories (id, name, name_en, icon, description, sort_order, is_act
     "context_variables": {},
     "optimization_rules": [],
     "adaptation_strategies": {}
-  },
-  "migrated_at": "2025-07-02T22:30:07.505249+00:00"
+  }
 }'),
 
 -- Logo Brand (Image Category)
@@ -321,8 +299,7 @@ INSERT INTO categories (id, name, name_en, icon, description, sort_order, is_act
     "context_variables": {},
     "optimization_rules": [],
     "adaptation_strategies": {}
-  },
-  "migrated_at": "2025-07-02T22:30:07.505249+00:00"
+  }
 }'),
 
 -- Product Photography (Image Category)
@@ -334,8 +311,7 @@ INSERT INTO categories (id, name, name_en, icon, description, sort_order, is_act
     "context_variables": {},
     "optimization_rules": [],
     "adaptation_strategies": {}
-  },
-  "migrated_at": "2025-07-02T22:30:07.505249+00:00"
+  }
 }')
 
 -- =============================================
@@ -351,8 +327,7 @@ INSERT INTO categories (id, name, name_en, icon, description, sort_order, is_act
     "context_variables": {},
     "optimization_rules": [],
     "adaptation_strategies": {}
-  },
-  "migrated_at": "2025-07-02T22:30:07.505249+00:00"
+  }
 }'),
 
 -- Advertising Creative (Video Category)
@@ -364,8 +339,7 @@ INSERT INTO categories (id, name, name_en, icon, description, sort_order, is_act
     "context_variables": {},
     "optimization_rules": [],
     "adaptation_strategies": {}
-  },
-  "migrated_at": "2025-07-02T22:30:07.505249+00:00"
+  }
 }'),
 
 -- Animation Production (Video Category)
@@ -377,8 +351,7 @@ INSERT INTO categories (id, name, name_en, icon, description, sort_order, is_act
     "context_variables": {},
     "optimization_rules": [],
     "adaptation_strategies": {}
-  },
-  "migrated_at": "2025-07-02T22:30:07.505249+00:00"
+  }
 }'),
 
 -- Documentary (Video Category)
@@ -390,8 +363,7 @@ INSERT INTO categories (id, name, name_en, icon, description, sort_order, is_act
     "context_variables": {},
     "optimization_rules": [],
     "adaptation_strategies": {}
-  },
-  "migrated_at": "2025-07-02T22:30:07.505249+00:00"
+  }
 }'),
 
 -- Music Video (Video Category)
@@ -403,8 +375,7 @@ INSERT INTO categories (id, name, name_en, icon, description, sort_order, is_act
     "context_variables": {},
     "optimization_rules": [],
     "adaptation_strategies": {}
-  },
-  "migrated_at": "2025-07-02T22:30:07.505249+00:00"
+  }
 }'),
 
 -- Educational Video (Video Category)
@@ -416,8 +387,7 @@ INSERT INTO categories (id, name, name_en, icon, description, sort_order, is_act
     "context_variables": {},
     "optimization_rules": [],
     "adaptation_strategies": {}
-  },
-  "migrated_at": "2025-07-02T22:30:07.505249+00:00"
+  }
 }'),
 
 -- Game Video (Video Category)
@@ -429,8 +399,7 @@ INSERT INTO categories (id, name, name_en, icon, description, sort_order, is_act
     "context_variables": {},
     "optimization_rules": [],
     "adaptation_strategies": {}
-  },
-  "migrated_at": "2025-07-02T22:30:07.505249+00:00"
+  }
 }'),
 
 -- Travel Vlog (Video Category)
@@ -442,8 +411,7 @@ INSERT INTO categories (id, name, name_en, icon, description, sort_order, is_act
     "context_variables": {},
     "optimization_rules": [],
     "adaptation_strategies": {}
-  },
-  "migrated_at": "2025-07-02T22:30:07.505249+00:00"
+  }
 }'),
 
 -- Lifestyle Video (Video Category)
@@ -455,8 +423,7 @@ INSERT INTO categories (id, name, name_en, icon, description, sort_order, is_act
     "context_variables": {},
     "optimization_rules": [],
     "adaptation_strategies": {}
-  },
-  "migrated_at": "2025-07-02T22:30:07.505249+00:00"
+  }
 }'),
 
 -- Technology Review (Video Category)
@@ -468,8 +435,7 @@ INSERT INTO categories (id, name, name_en, icon, description, sort_order, is_act
     "context_variables": {},
     "optimization_rules": [],
     "adaptation_strategies": {}
-  },
-  "migrated_at": "2025-07-02T22:30:07.505249+00:00"
+  }
 }'),
 
 -- Sports Video (Video Category)
@@ -481,8 +447,7 @@ INSERT INTO categories (id, name, name_en, icon, description, sort_order, is_act
     "context_variables": {},
     "optimization_rules": [],
     "adaptation_strategies": {}
-  },
-  "migrated_at": "2025-07-02T22:30:07.505249+00:00"
+  }
 }')
 
 -- Add constraint to ensure data integrity
