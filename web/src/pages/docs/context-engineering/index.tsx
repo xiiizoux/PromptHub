@@ -7,6 +7,8 @@
 import React from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
+import DocLayout from '@/components/DocLayout';
+import { DocSection, DocGrid, DocCard, DocCodeBlock, DocList, DocHighlight } from '@/components/DocContent';
 import {
   CpuChipIcon,
   SparklesIcon,
@@ -25,9 +27,16 @@ import {
 
 export default function ContextEngineeringIndex() {
   return (
-    <div className="min-h-screen bg-dark-bg-primary">
-      <div className="container-custom py-12">
+    <DocLayout
+      title="Context Engineering"
+      description="下一代AI交互范式 - 让人工智能真正理解并适应您的需求，从静态提示词进化为智能化的个性化AI助手"
+      breadcrumbs={[
+        { name: '文档', href: '/docs' },
+        { name: 'Context Engineering', href: '/docs/context-engineering' },
+      ]}
+    >
         {/* 页面头部 */}
+        <DocSection title="" delay={0.1}>
         <motion.div
           className="text-center mb-16"
           initial={{ opacity: 0, y: -20 }}
@@ -301,8 +310,8 @@ export default function ContextEngineeringIndex() {
             </div>
           </div>
         </motion.section>
-      </div>
-    </div>
+        </DocSection>
+    </DocLayout>
   );
 }
 
