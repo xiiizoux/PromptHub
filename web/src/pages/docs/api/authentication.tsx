@@ -16,7 +16,6 @@ const AuthenticationPage: React.FC = () => {
         { name: '认证与授权', href: '/docs/api/authentication' },
       ]}
     >
-
       <DocSection title="认证方式概述" delay={0.1}>
         <div className="space-y-8">
           <DocHighlight>
@@ -81,7 +80,8 @@ const AuthenticationPage: React.FC = () => {
               <div>
                 <h4 className="text-lg font-semibold text-neon-cyan mb-3">1. 请求头 (推荐)</h4>
                 <DocCodeBlock 
-                  code="curl -H \"x-api-key: your-api-key-here\" \\\n     https://api.prompthub.com/v1/prompts"
+                  code={`curl -H "x-api-key: your-api-key-here" \\
+     https://api.prompthub.com/v1/prompts`}
                   language="bash"
                 />
               </div>
@@ -89,7 +89,8 @@ const AuthenticationPage: React.FC = () => {
               <div>
                 <h4 className="text-lg font-semibold text-neon-purple mb-3">2. Authorization 头</h4>
                 <DocCodeBlock 
-                  code="curl -H \"Authorization: Bearer your-api-key-here\" \\\n     https://api.prompthub.com/v1/prompts"
+                  code={`curl -H "Authorization: Bearer your-api-key-here" \\
+     https://api.prompthub.com/v1/prompts`}
                   language="bash"
                 />
               </div>
@@ -97,7 +98,7 @@ const AuthenticationPage: React.FC = () => {
               <div>
                 <h4 className="text-lg font-semibold text-neon-pink mb-3">3. 查询参数 (不推荐)</h4>
                 <DocCodeBlock 
-                  code="curl \"https://api.prompthub.com/v1/prompts?api_key=your-api-key-here\""
+                  code={`curl "https://api.prompthub.com/v1/prompts?api_key=your-api-key-here"`}
                   language="bash"
                 />
                 <p className="text-dark-text-tertiary text-sm mt-3">
@@ -148,7 +149,8 @@ Content-Type: application/json
               在请求头中包含 JWT Token：
             </p>
             <DocCodeBlock 
-              code="curl -H \"Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\" \\\n     https://api.prompthub.com/v1/prompts"
+              code={`curl -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." \\
+     https://api.prompthub.com/v1/prompts`}
               language="bash"
             />
           </div>

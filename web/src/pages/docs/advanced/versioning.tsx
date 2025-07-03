@@ -1,6 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
-import { ChevronLeftIcon, DocumentTextIcon, ArrowPathIcon, TagIcon, BranchingIcon, ClockIcon, CheckCircleIcon, ShieldCheckIcon, RocketLaunchIcon } from '@heroicons/react/24/outline';
+import { ChevronLeftIcon, DocumentTextIcon, ArrowPathIcon, TagIcon, ClockIcon, CheckCircleIcon, ShieldCheckIcon, RocketLaunchIcon, CodeBracketIcon } from '@heroicons/react/24/outline';
 import DocLayout from '@/components/DocLayout';
 import { DocSection, DocGrid, DocCard, DocCodeBlock, DocList, DocHighlight } from '@/components/DocContent';
 
@@ -203,7 +203,7 @@ git branch -d feature/improve-context-handling`}
           <DocCard
             title="支持分支"
             description="临时性的功能分支"
-            icon={<BranchingIcon className="h-6 w-6" />}
+            icon={<CodeBracketIcon className="h-6 w-6" />}
             color="purple"
           >
             <div className="space-y-3 mt-4">
