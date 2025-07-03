@@ -621,14 +621,14 @@ function PracticeCard({ practice, index, isExpanded, onToggle }: {
     switch (level) {
       case 'beginner': return 'neon-green';
       case 'intermediate': return 'neon-yellow';
-      case 'advanced': return 'neon-red';
+      case 'advanced': return 'red-500';
       default: return 'gray-500';
     }
   };
 
   const getImpactColor = (impact: string) => {
     switch (impact) {
-      case 'high': return 'neon-red';
+      case 'high': return 'red-500';
       case 'medium': return 'neon-yellow';
       case 'low': return 'neon-green';
       default: return 'gray-500';

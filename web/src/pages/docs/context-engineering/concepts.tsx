@@ -21,7 +21,7 @@ import {
   BeakerIcon,
   PuzzlePieceIcon,
   ClockIcon,
-  BrainIcon,
+  CpuChipIcon as BrainIcon,
   EyeIcon,
   InformationCircleIcon
 } from '@heroicons/react/24/outline';
@@ -370,7 +370,8 @@ adaptationRules
                 <h3 className="text-xl font-semibold text-white mb-4">价值主张</h3>
                 <div className="p-6 bg-gradient-to-br from-neon-yellow/10 to-neon-green/10 rounded-xl border border-neon-yellow/20">
                   <blockquote className="text-lg text-gray-300 italic leading-relaxed mb-4">
-                    "Context Engineering不是为了让AI更聪明，<br />
+                    "Context Engineering不是为了让AI更聪明，
+                    <br />
                     而是为了让AI更懂你。"
                   </blockquote>
                   <div className="space-y-3 text-sm text-gray-400">

@@ -1,7 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { BookOpenIcon, CodeBracketIcon, BeakerIcon, LightBulbIcon, DocumentTextIcon, CubeIcon, RocketLaunchIcon } from '@heroicons/react/24/outline';
+import { BookOpenIcon, CodeBracketIcon, BeakerIcon, LightBulbIcon, DocumentTextIcon, CubeIcon, RocketLaunchIcon, CpuChipIcon } from '@heroicons/react/24/outline';
 
 const DocsPage: React.FC = () => {
   const cardVariants = {
@@ -58,7 +58,7 @@ const DocsPage: React.FC = () => {
           </motion.div>
 
           {/* 文档卡片网格 */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16">
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8 mb-16">
             {/* 入门指南 */}
             <motion.div
               variants={cardVariants}
@@ -102,12 +102,56 @@ const DocsPage: React.FC = () => {
               </div>
             </motion.div>
 
+            {/* Context Engineering */}
+            <motion.div
+              variants={cardVariants}
+              initial="hidden"
+              animate="visible"
+              transition={{ duration: 0.8, delay: 0.7 }}
+              className="bg-dark-card/50 backdrop-blur-md rounded-2xl border border-dark-border shadow-2xl overflow-hidden hover:border-neon-cyan/50 transition-all duration-300 group"
+            >
+              <div className="p-8">
+                <div className="flex items-center mb-6">
+                  <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-gradient-to-r from-neon-cyan via-neon-purple to-neon-pink p-0.5">
+                    <div className="w-full h-full bg-dark-bg-primary rounded-xl flex items-center justify-center">
+                      <CpuChipIcon className="h-6 w-6 text-neon-cyan" />
+                    </div>
+                  </div>
+                  <h2 className="ml-4 text-2xl font-bold text-white group-hover:text-neon-cyan transition-colors duration-300">Context Engineering</h2>
+                </div>
+                <p className="text-gray-400 mb-8 leading-relaxed">
+                  下一代AI交互范式，让人工智能真正理解并适应您的需求，构建个性化的AI助手。
+                </p>
+                <div className="space-y-3">
+                  {[
+                    { href: '/docs/context-engineering/concepts', text: '核心概念与原理' },
+                    { href: '/docs/context-engineering/getting-started', text: '5分钟快速入门' },
+                    { href: '/docs/context-engineering/user-guide', text: '详细功能指南' },
+                    { href: '/docs/context-engineering/best-practices', text: '最佳实践与技巧' },
+                  ].map((link, index) => (
+                    <motion.div
+                      key={link.href}
+                      variants={linkVariants}
+                      initial="hidden"
+                      animate="visible"
+                      transition={{ duration: 0.6, delay: 0.9 + index * 0.1 }}
+                    >
+                      <Link href={link.href} className="flex items-center text-gray-300 hover:text-neon-cyan transition-colors duration-300 group/link">
+                        <div className="w-2 h-2 bg-neon-cyan rounded-full mr-3 group-hover/link:shadow-neon-sm"></div>
+                        <span className="group-hover/link:translate-x-1 transition-transform duration-300">{link.text}</span>
+                      </Link>
+                    </motion.div>
+                  ))}
+                </div>
+              </div>
+            </motion.div>
+
             {/* API参考 */}
             <motion.div
               variants={cardVariants}
               initial="hidden"
               animate="visible"
-              transition={{ duration: 0.8, delay: 0.8 }}
+              transition={{ duration: 0.8, delay: 0.9 }}
               className="bg-dark-card/50 backdrop-blur-md rounded-2xl border border-dark-border shadow-2xl overflow-hidden hover:border-neon-purple/50 transition-all duration-300 group"
             >
               <div className="p-8">
@@ -134,7 +178,7 @@ const DocsPage: React.FC = () => {
                       variants={linkVariants}
                       initial="hidden"
                       animate="visible"
-                      transition={{ duration: 0.6, delay: 1.0 + index * 0.1 }}
+                      transition={{ duration: 0.6, delay: 1.1 + index * 0.1 }}
                     >
                       <Link href={link.href} className="flex items-center text-gray-300 hover:text-neon-purple transition-colors duration-300 group/link">
                         <div className="w-2 h-2 bg-neon-purple rounded-full mr-3 group-hover/link:shadow-neon-sm"></div>
@@ -151,7 +195,7 @@ const DocsPage: React.FC = () => {
               variants={cardVariants}
               initial="hidden"
               animate="visible"
-              transition={{ duration: 0.8, delay: 1.0 }}
+              transition={{ duration: 0.8, delay: 1.1 }}
               className="bg-dark-card/50 backdrop-blur-md rounded-2xl border border-dark-border shadow-2xl overflow-hidden hover:border-neon-pink/50 transition-all duration-300 group"
             >
               <div className="p-8">
@@ -179,7 +223,7 @@ const DocsPage: React.FC = () => {
                       variants={linkVariants}
                       initial="hidden"
                       animate="visible"
-                      transition={{ duration: 0.6, delay: 1.2 + index * 0.1 }}
+                      transition={{ duration: 0.6, delay: 1.3 + index * 0.1 }}
                     >
                       <Link href={link.href} className="flex items-center text-gray-300 hover:text-neon-pink transition-colors duration-300 group/link">
                         <div className="w-2 h-2 bg-neon-pink rounded-full mr-3 group-hover/link:shadow-neon-sm"></div>
@@ -196,7 +240,7 @@ const DocsPage: React.FC = () => {
               variants={cardVariants}
               initial="hidden"
               animate="visible"
-              transition={{ duration: 0.8, delay: 1.2 }}
+              transition={{ duration: 0.8, delay: 1.3 }}
               className="bg-dark-card/50 backdrop-blur-md rounded-2xl border border-dark-border shadow-2xl overflow-hidden hover:border-neon-cyan/50 transition-all duration-300 group"
             >
               <div className="p-8">
@@ -224,7 +268,7 @@ const DocsPage: React.FC = () => {
                       variants={linkVariants}
                       initial="hidden"
                       animate="visible"
-                      transition={{ duration: 0.6, delay: 1.4 + index * 0.1 }}
+                      transition={{ duration: 0.6, delay: 1.5 + index * 0.1 }}
                     >
                       <Link href={link.href} className="flex items-center text-gray-300 hover:text-neon-cyan transition-colors duration-300 group/link">
                         <div className="w-2 h-2 bg-neon-cyan rounded-full mr-3 group-hover/link:shadow-neon-sm"></div>
@@ -241,7 +285,7 @@ const DocsPage: React.FC = () => {
           <motion.div
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 1.6 }}
+            transition={{ duration: 0.8, delay: 1.8 }}
             className="bg-dark-card/50 backdrop-blur-md rounded-2xl border border-dark-border shadow-2xl overflow-hidden mb-12"
           >
             <div className="p-8">
@@ -294,7 +338,7 @@ const DocsPage: React.FC = () => {
           <motion.div
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 1.8 }}
+            transition={{ duration: 0.8, delay: 2.0 }}
             className="bg-dark-card/50 backdrop-blur-md rounded-2xl border border-dark-border shadow-2xl overflow-hidden"
           >
             <div className="p-8">
@@ -319,7 +363,7 @@ const DocsPage: React.FC = () => {
                     key={index}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.6, delay: 2 + index * 0.2 }}
+                    transition={{ duration: 0.6, delay: 2.2 + index * 0.2 }}
                     className="border-l-4 border-neon-cyan pl-6"
                   >
                     <h3 className="text-lg font-medium text-white mb-3">{faq.question}</h3>
