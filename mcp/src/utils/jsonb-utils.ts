@@ -8,7 +8,7 @@ import {
   OptimizationTemplateJsonb,
   ContentConversionResult,
   OptimizationTemplateConversionResult
-} from '../types';
+} from '../types.js';
 
 /**
  * 检查是否为 JSONB 内容格式

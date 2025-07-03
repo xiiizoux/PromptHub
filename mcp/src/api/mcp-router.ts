@@ -7,6 +7,18 @@ import {
   McpArguments
 } from '../types.js';
 
+// Context Engineering工具导入
+import {
+  contextEngineeringToolDef,
+  contextStateToolDef,
+  contextConfigToolDef,
+  contextPipelineToolDef,
+  handleContextEngineering,
+  handleContextState,
+  handleContextConfig,
+  handleContextPipeline
+} from '../tools/context-engineering/context-engineering-tools.js';
+
 // MCP 路由参数类型定义
 interface McpRouterParams extends Record<string, McpArguments> {
   // 通用参数
@@ -45,7 +57,8 @@ const getMcpServerInfo = () => ({
     'version_control',
     'intelligent_ai_tools',
     'enhanced_search',
-    'unified_search_engine'
+    'unified_search_engine',
+    'context_engineering'
   ]
 });
 import { authenticateRequest, optionalAuthMiddleware } from './auth-middleware.js';
@@ -357,7 +370,11 @@ router.get('/tools', authenticateRequest, (req, res) => {
     // 🎯 提示词优化工具
     promptOptimizerMCPToolDef,  // 提示词优化器 - 为第三方AI客户端提供结构化优化指导
 
-
+    // 🚀 Context Engineering工具 - 智能上下文处理和个性化
+    contextEngineeringToolDef,  // Context Engineering核心工具 - 动态上下文编排和个性化适应
+    contextStateToolDef,        // Context Engineering状态查询 - 获取用户上下文状态和会话信息
+    contextConfigToolDef,       // Context Engineering配置管理 - 管理用户偏好和适应规则
+    contextPipelineToolDef,     // Context Engineering流水线管理 - 配置和管理处理流水线
 
   ];
 
@@ -562,7 +579,58 @@ router.post('/tools/:name/invoke', optionalAuthMiddleware, async (req, res) => {
         });
         break;
 
+      // 🚀 Context Engineering工具处理
+      case 'context_engineering':
+        result = await handleContextEngineering(params, {
+          userId: req?.user?.id,
+          requestId: Array.isArray(req?.headers?.['x-request-id'])
+            ? req.headers['x-request-id'][0]
+            : req?.headers?.['x-request-id'],
+          userAgent: Array.isArray(req?.headers?.['user-agent'])
+            ? req.headers['user-agent'][0]
+            : req?.headers?.['user-agent'],
+          timestamp: Date.now()
+        });
+        break;
 
+      case 'context_state':
+        result = await handleContextState(params, {
+          userId: req?.user?.id,
+          requestId: Array.isArray(req?.headers?.['x-request-id'])
+            ? req.headers['x-request-id'][0]
+            : req?.headers?.['x-request-id'],
+          userAgent: Array.isArray(req?.headers?.['user-agent'])
+            ? req.headers['user-agent'][0]
+            : req?.headers?.['user-agent'],
+          timestamp: Date.now()
+        });
+        break;
+
+      case 'context_config':
+        result = await handleContextConfig(params, {
+          userId: req?.user?.id,
+          requestId: Array.isArray(req?.headers?.['x-request-id'])
+            ? req.headers['x-request-id'][0]
+            : req?.headers?.['x-request-id'],
+          userAgent: Array.isArray(req?.headers?.['user-agent'])
+            ? req.headers['user-agent'][0]
+            : req?.headers?.['user-agent'],
+          timestamp: Date.now()
+        });
+        break;
+
+      case 'context_pipeline':
+        result = await handleContextPipeline(params, {
+          userId: req?.user?.id,
+          requestId: Array.isArray(req?.headers?.['x-request-id'])
+            ? req.headers['x-request-id'][0]
+            : req?.headers?.['x-request-id'],
+          userAgent: Array.isArray(req?.headers?.['user-agent'])
+            ? req.headers['user-agent'][0]
+            : req?.headers?.['user-agent'],
+          timestamp: Date.now()
+        });
+        break;
 
       default:
         throw new Error(`未知工具: ${name}`);

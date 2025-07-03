@@ -5,7 +5,7 @@
  */
 
 import axios from 'axios';
-import { extractTemplateFromJsonb, isJsonbTemplate } from '../utils/jsonb-utils';
+import { extractTemplateFromJsonb, isJsonbTemplate } from '../utils/jsonb-utils.js';
 
 export interface MCPCategoryInfo {
   id: number;

@@ -3,6 +3,9 @@
  * 导出所有工具分类模块
  */
 
+// Context Engineering工具 - 核心功能
+export * as ContextEngineeringTools from './context-engineering/index.js';
+
 // 搜索工具
 export * as SearchTools from './search/index.js';
 
@@ -22,6 +25,7 @@ export * as ConfigTools from './config/index.js';
 export * as UITools from './ui/index.js';
 
 // 便捷的单独导入
+export * from './context-engineering/index.js';
 export * from './search/index.js';
 export * from './storage/index.js';
 export * from './recommendations/index.js';
