@@ -1,6 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { promptCategoryMatcher } from '@/services/promptCategoryMatcher';
 import { logger } from '@/lib/error-handler';
+import { extractTemplateFromJsonb, isJsonbTemplate } from '@/lib/jsonb-utils';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {

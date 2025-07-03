@@ -35,9 +35,30 @@ function validateUpdateData(data: any): { isValid: boolean; errors: string[] } {
     }
   }
 
+  // 支持新的 JSONB 内容字段
   if (data.content !== undefined) {
-    if (typeof data.content !== 'string' || data.content.length > 10000) {
+    if (typeof data.content !== 'string' && typeof data.content !== 'object') {
+      errors.push('内容必须是字符串或对象格式');
+    } else if (typeof data.content === 'string' && data.content.length > 10000) {
       errors.push('内容长度不能超过10000个字符');
+    }
+  }
+
+  if (data.content_text !== undefined) {
+    if (typeof data.content_text !== 'string' || data.content_text.length > 10000) {
+      errors.push('内容文本长度不能超过10000个字符');
+    }
+  }
+
+  if (data.content_structure !== undefined) {
+    if (typeof data.content_structure !== 'object') {
+      errors.push('内容结构必须是对象格式');
+    }
+  }
+
+  if (data.context_engineering_enabled !== undefined) {
+    if (typeof data.context_engineering_enabled !== 'boolean') {
+      errors.push('Context Engineering 启用状态必须是布尔值');
     }
   }
 

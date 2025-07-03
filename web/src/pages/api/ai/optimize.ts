@@ -1,6 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { promptCategoryMatcher } from '@/services/promptCategoryMatcher';
 import { logger } from '@/lib/error-handler';
+import { extractTemplateFromJsonb, isJsonbTemplate } from '@/lib/jsonb-utils';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
@@ -38,8 +39,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         categoryId: manualCategory.id,
       });
 
+      // 处理 JSONB 优化模板
+      const templateText = isJsonbTemplate(manualCategory.optimization_template)
+        ? extractTemplateFromJsonb(manualCategory.optimization_template)
+        : manualCategory.optimization_template;
+
       templateResult = {
-        template: manualCategory.optimization_template,
+        template: templateText,
         category: {
           id: manualCategory.id,
           name: manualCategory.name,

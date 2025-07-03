@@ -1,3 +1,12 @@
+// 导入共享类型定义
+import type {
+  PromptContentJsonb,
+  OptimizationTemplateJsonb,
+  CategoryType,
+  ContentConversionResult,
+  OptimizationTemplateConversionResult
+} from '../../supabase/lib/types.js';
+
 export interface PromptMessage {
   role: 'system' | 'user' | 'assistant';
   content: {
@@ -6,10 +15,10 @@ export interface PromptMessage {
   };
 }
 
-// 分类类型枚举
-export type CategoryType = 'chat' | 'image' | 'video';
+// 重新导出共享类型
+export type { CategoryType, PromptContentJsonb, OptimizationTemplateJsonb };
 
-// 分类接口
+// 分类接口 - 扩展共享类型
 export interface Category {
   id: string;
   name: string;
@@ -21,6 +30,7 @@ export interface Category {
   is_active?: boolean;
   created_at?: string;
   updated_at?: string;
+  optimization_template?: OptimizationTemplateJsonb | null;
 }
 
 // 媒体参数接口
@@ -63,13 +73,14 @@ export interface Prompt {
   description: string;
   category: string;
   tags: string[];
-  content: string;  // 内容字段，现在是必需的
+  // JSONB 内容字段 - 支持 Context Engineering
+  content: PromptContentJsonb | string;  // 支持新的 JSONB 格式和向后兼容的字符串格式
   created_at?: string;
   updated_at?: string;
   version?: number;
   is_public?: boolean;
   allow_collaboration?: boolean; // 新增：是否允许协作编辑
-  edit_permission?: 'owner_only' | 'collaborators' | 'public'; // 新增：编辑权限级别
+  edit_permission?: 'owner' | 'collaborators' | 'public'; // 更新：编辑权限级别
   user_id?: string;
   error?: string;  // 添加错误属性，用于存储错误信息
   difficulty?: 'beginner' | 'intermediate' | 'advanced'; // 新增：难度级别
@@ -90,13 +101,28 @@ export interface Prompt {
   parameters?: MediaParameters; // 生成参数（JSON格式）
   category_id?: string; // 分类ID，关联到categories表
   category_type?: CategoryType; // 分类类型，从关联的category获取
+
+  // 扩展字段以匹配数据库 schema
+  created_by?: string;
+  last_modified_by?: string;
+  view_count?: number;
+  input_variables?: any[] | string[];
+  template_format?: string;
+  migration_status?: string;
+
+  // Context Engineering 字段
+  context_engineering_enabled?: boolean;
+  context_variables?: Record<string, any>;
+  adaptation_rules?: any[];
+  effectiveness_score?: number;
 }
 
 export interface PromptVersion {
   id?: string;
   prompt_id: string;
   version: number;
-  content: string;  // 使用content字段替代messages
+  // JSONB 内容字段
+  content: PromptContentJsonb | string;  // 支持新的 JSONB 格式和向后兼容
   description: string;
   category: string;
   tags: string[];
@@ -280,4 +306,31 @@ export interface ToolInvocationResponse {
   error?: {
     message: string;
   };
+}
+
+// =============================================
+// JSONB 数据转换工具类型 (MCP 特定)
+// =============================================
+
+// 内容提取选项
+export interface ContentExtractionOptions {
+  preferJsonb?: boolean;
+  fallbackToString?: boolean;
+  validateStructure?: boolean;
+}
+
+// 内容提取结果
+export interface ContentExtractionResult {
+  content: string;
+  isJsonb: boolean;
+  structure?: PromptContentJsonb;
+  error?: string;
+}
+
+// 优化模板提取结果
+export interface OptimizationTemplateExtractionResult {
+  template: string;
+  isJsonb: boolean;
+  structure?: OptimizationTemplateJsonb;
+  error?: string;
 }

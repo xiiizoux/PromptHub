@@ -7,8 +7,19 @@ import {
   AuthResponse,
   PromptFilters,
   PaginatedResponse,
-  ApiKey
+  ApiKey,
+  Category,
+  PromptContentJsonb,
+  OptimizationTemplateJsonb
 } from './types.js';
+import {
+  extractContentFromJsonb,
+  extractTemplateFromJsonb,
+  safeConvertPromptContent,
+  safeConvertOptimizationTemplate,
+  isJsonbContent,
+  isJsonbTemplate
+} from './jsonb-utils.js';
 
 /**
  * Supabase适配器 - 提供对Supabase数据的访问
@@ -31,6 +42,78 @@ export class SupabaseAdapter {
    */
   getType(): string {
     return 'supabase';
+  }
+
+  // ========= JSONB 数据处理辅助方法 =========
+
+  /**
+   * 处理从数据库读取的提示词内容
+   * @param rawPrompt 从数据库读取的原始提示词数据
+   * @returns 处理后的提示词对象
+   */
+  private processPromptContent(rawPrompt: any): Prompt {
+    if (!rawPrompt) return rawPrompt;
+
+    // 处理 content 字段
+    if (rawPrompt.content) {
+      // 如果是 JSONB 格式，提取可显示的内容
+      if (isJsonbContent(rawPrompt.content)) {
+        // 保留原始 JSONB 结构，同时提供字符串访问
+        rawPrompt.content = rawPrompt.content;
+      } else if (typeof rawPrompt.content === 'string') {
+        // 如果是字符串，保持不变
+        rawPrompt.content = rawPrompt.content;
+      } else {
+        // 其他情况，尝试转换
+        const conversion = safeConvertPromptContent(rawPrompt.content);
+        rawPrompt.content = conversion.success ? conversion.data : rawPrompt.content;
+      }
+    }
+
+    return rawPrompt;
+  }
+
+  /**
+   * 处理要写入数据库的提示词内容
+   * @param prompt 要写入的提示词数据
+   * @returns 处理后的数据库写入对象
+   */
+  private preparePromptForDatabase(prompt: Partial<Prompt>): any {
+    const dbPrompt = { ...prompt };
+
+    // 处理 content 字段
+    if (dbPrompt.content !== undefined) {
+      if (typeof dbPrompt.content === 'string') {
+        // 如果是字符串，转换为 JSONB 格式
+        const conversion = safeConvertPromptContent(dbPrompt.content);
+        dbPrompt.content = conversion.success ? conversion.data : dbPrompt.content;
+      } else if (isJsonbContent(dbPrompt.content)) {
+        // 如果已经是 JSONB 格式，保持不变
+        dbPrompt.content = dbPrompt.content;
+      }
+    }
+
+    return dbPrompt;
+  }
+
+  /**
+   * 处理分类的优化模板
+   * @param rawCategory 从数据库读取的原始分类数据
+   * @returns 处理后的分类对象
+   */
+  private processCategoryTemplate(rawCategory: any): Category {
+    if (!rawCategory) return rawCategory;
+
+    // 处理 optimization_template 字段
+    if (rawCategory.optimization_template) {
+      if (!isJsonbTemplate(rawCategory.optimization_template)) {
+        // 如果不是 JSONB 格式，尝试转换
+        const conversion = safeConvertOptimizationTemplate(rawCategory.optimization_template);
+        rawCategory.optimization_template = conversion.success ? conversion.data : null;
+      }
+    }
+
+    return rawCategory;
   }
 
   // ========= 基本提示词管理 =========
@@ -59,6 +142,50 @@ export class SupabaseAdapter {
     // 提取分类名称
     const categories = data.map(item => item.name).filter(Boolean);
     return categories as string[];
+  }
+
+  /**
+   * 获取完整分类信息（包含 JSONB 优化模板）
+   * @returns 完整分类列表
+   */
+  async getCategoriesWithType(): Promise<Category[]> {
+    const { data, error } = await this.supabase
+      .from('categories')
+      .select('*')
+      .eq('is_active', true)
+      .order('sort_order');
+
+    if (error) {
+      console.error('获取完整分类信息失败:', error);
+      throw new Error(`获取完整分类信息失败: ${error.message}`);
+    }
+
+    // 处理优化模板 JSONB 数据
+    const processedData = (data || []).map(category => this.processCategoryTemplate(category));
+    return processedData;
+  }
+
+  /**
+   * 按类型获取分类
+   * @param type 分类类型
+   * @returns 指定类型的分类列表
+   */
+  async getCategoriesByType(type: 'chat' | 'image' | 'video'): Promise<Category[]> {
+    const { data, error } = await this.supabase
+      .from('categories')
+      .select('*')
+      .eq('is_active', true)
+      .eq('type', type)
+      .order('sort_order');
+
+    if (error) {
+      console.error(`获取${type}类型分类失败:`, error);
+      throw new Error(`获取${type}类型分类失败: ${error.message}`);
+    }
+
+    // 处理优化模板 JSONB 数据
+    const processedData = (data || []).map(category => this.processCategoryTemplate(category));
+    return processedData;
   }
   
   /**
@@ -126,7 +253,9 @@ export class SupabaseAdapter {
         return [];
       }
 
-      return data || [];
+      // 处理 JSONB 内容
+      const processedData = (data || []).map(prompt => this.processPromptContent(prompt));
+      return processedData;
     } catch (err) {
       console.error('按分类获取提示词时出错:', err);
       return [];
@@ -231,8 +360,11 @@ export class SupabaseAdapter {
       // 计算总页数
       const totalPages = count ? Math.ceil(count / pageSize) : 0;
 
+      // 处理 JSONB 内容
+      const processedData = (data || []).map(prompt => this.processPromptContent(prompt));
+
       return {
-        data: data || [],
+        data: processedData,
         total: count || 0,
         page,
         pageSize,
@@ -287,7 +419,8 @@ export class SupabaseAdapter {
         return null;
       }
 
-      return data || null;
+      // 处理 JSONB 内容
+      return data ? this.processPromptContent(data) : null;
     } catch (err) {
       console.error(`获取提示词 ${nameOrId} 时出错:`, err);
       return null;
@@ -341,8 +474,10 @@ export class SupabaseAdapter {
           console.error(`搜索提示词失败: ${error.message}`);
           return [];
         }
-  
-        return data || [];
+
+        // 处理 JSONB 内容
+        const processedData = (data || []).map(prompt => this.processPromptContent(prompt));
+        return processedData;
       } catch (err) {
         console.error('搜索提示词时出错:', err);
         return [];

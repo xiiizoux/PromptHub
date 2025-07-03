@@ -6,6 +6,7 @@
 import { CategoryInfo } from './categoryService';
 import { logger } from '@/lib/error-handler';
 import { databaseService } from '@/lib/database-service';
+import { extractTemplateFromJsonb, isJsonbTemplate } from '@/lib/jsonb-utils';
 
 export interface CategoryMatchResult {
   category: CategoryInfo;
@@ -37,7 +38,7 @@ class PromptCategoryMatcher {
         // 直接使用数据库服务，避免HTTP请求循环
         const categoriesData = await databaseService.getCategories();
 
-        // 转换为CategoryInfo格式
+        // 转换为CategoryInfo格式，处理 JSONB 优化模板
         this.categoryCache = categoriesData.map((category) => ({
           id: category.id,
           name: category.name,
@@ -49,7 +50,12 @@ class PromptCategoryMatcher {
           is_active: category.is_active,
           created_at: category.created_at,
           updated_at: category.updated_at,
-          optimization_template: category.optimization_template,
+          optimization_template: category.optimization_template_text ||
+            (category.optimization_template
+              ? (isJsonbTemplate(category.optimization_template)
+                  ? extractTemplateFromJsonb(category.optimization_template)
+                  : category.optimization_template)
+              : undefined),
         }));
 
         this.lastCacheUpdate = now;

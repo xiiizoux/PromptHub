@@ -67,6 +67,9 @@ export interface PromptFormData {
   preview_assets?: AssetFile[];
   preview_asset_url?: string;
   parameters?: Record<string, unknown>;
+  // JSONB 内容相关字段
+  content_text?: string; // 可编辑的文本内容
+  context_engineering_enabled?: boolean; // 是否启用 Context Engineering
 }
 
 // 组件属性接口
@@ -187,6 +190,9 @@ export default function PromptFormContainer({
       template_format: initialData?.template_format || 'text',
       version: initialData?.version || 1.0,
       parameters: initialData?.parameters || {},
+      // JSONB 内容相关字段
+      content_text: initialData?.content_text || initialData?.content || '',
+      context_engineering_enabled: initialData?.context_engineering_enabled ?? false,
     },
   });
 
@@ -699,9 +705,10 @@ export default function PromptFormContainer({
                   className="mt-4 glass rounded-2xl border border-neon-purple/20 p-4"
                 >
                   <SmartWritingAssistant
-                    content={currentContent || watch('content') || ''}
+                    content={currentContent || watch('content_text') || watch('content') || ''}
                     onContentChange={(newContent) => {
-                      setValue('content', newContent);
+                      setValue('content_text', newContent);
+                      setValue('content', newContent); // 保持向后兼容
                       setCurrentContent(newContent);
                     }}
                     onAnalysisComplete={(_result) => {
@@ -1426,9 +1433,10 @@ export default function PromptFormContainer({
               className="hidden lg:block glass rounded-3xl border border-neon-purple/20 shadow-2xl p-6"
             >
               <SmartWritingAssistant
-                content={currentContent || watch('content') || ''}
+                content={currentContent || watch('content_text') || watch('content') || ''}
                 onContentChange={(newContent) => {
-                  setValue('content', newContent);
+                  setValue('content_text', newContent);
+                  setValue('content', newContent); // 保持向后兼容
                   setCurrentContent(newContent);
                 }}
                 onAnalysisComplete={(_result) => {

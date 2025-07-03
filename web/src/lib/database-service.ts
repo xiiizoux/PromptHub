@@ -5,15 +5,24 @@
  * 使用Supabase作为数据库访问层
  */
 
-import { SupabaseAdapter, Prompt, PromptFilters, PaginatedResponse, User } from './supabase-adapter';
+import { SupabaseAdapter, Prompt, PromptFilters, PaginatedResponse, User, Category, PromptContentJsonb, OptimizationTemplateJsonb } from './supabase-adapter';
 import type { PromptTemplate, TemplateCategory } from '../types';
+import {
+  extractContentFromJsonb,
+  extractTemplateFromJsonb,
+  safeConvertPromptContent,
+  safeConvertOptimizationTemplate,
+  isJsonbContent,
+  isJsonbTemplate,
+  createEmptyContextEngineeringContent
+} from '../../supabase/lib/jsonb-utils';
 
 // 扩展的提示词详情接口
 export interface PromptDetails extends Prompt {
   input_variables?: string[];
   author?: string;
   collaborators?: string[]; // 协作者用户名列表
-  
+
   // 表单专用字段
   preview_assets?: Array<{
     id: string;
@@ -22,6 +31,11 @@ export interface PromptDetails extends Prompt {
     size: number;
     type: string;
   }>;
+
+  // JSONB 内容处理字段
+  content_text?: string; // 从 JSONB 提取的可编辑文本内容
+  content_structure?: PromptContentJsonb; // 完整的 JSONB 结构
+  context_engineering_enabled?: boolean; // 是否启用 Context Engineering
 }
 
 // 移除社交功能相关接口 - MCP服务专注于提示词管理
@@ -88,6 +102,81 @@ export class DatabaseService {
     this.adapter = new SupabaseAdapter(true); // 使用管理员权限以便查询用户信息
   }
 
+  // ===== JSONB 数据处理方法 =====
+
+  /**
+   * 处理从数据库读取的提示词，提取 JSONB 内容
+   * @param prompt 原始提示词数据
+   * @returns 处理后的提示词详情
+   */
+  private processPromptDetails(prompt: Prompt): PromptDetails {
+    const details: PromptDetails = { ...prompt };
+
+    // 处理 content 字段
+    if (prompt.content) {
+      if (isJsonbContent(prompt.content)) {
+        details.content_structure = prompt.content;
+        details.content_text = extractContentFromJsonb(prompt.content);
+        details.context_engineering_enabled = prompt.content.type === 'context_engineering';
+      } else if (typeof prompt.content === 'string') {
+        details.content_text = prompt.content;
+        details.context_engineering_enabled = false;
+      }
+    }
+
+    return details;
+  }
+
+  /**
+   * 准备要写入数据库的提示词数据
+   * @param promptDetails 提示词详情
+   * @returns 数据库写入格式的数据
+   */
+  private preparePromptForDatabase(promptDetails: Partial<PromptDetails>): Partial<Prompt> {
+    const dbPrompt: Partial<Prompt> = { ...promptDetails };
+
+    // 处理 content 字段
+    if (promptDetails.content_text !== undefined || promptDetails.content_structure !== undefined) {
+      if (promptDetails.context_engineering_enabled && promptDetails.content_structure) {
+        // 使用 Context Engineering 结构
+        dbPrompt.content = promptDetails.content_structure;
+      } else if (promptDetails.content_text) {
+        // 转换文本为 JSONB 格式
+        const conversion = safeConvertPromptContent(promptDetails.content_text);
+        dbPrompt.content = conversion.success ? conversion.data : promptDetails.content_text;
+      }
+    }
+
+    // 移除 Web 专用字段
+    delete (dbPrompt as any).content_text;
+    delete (dbPrompt as any).content_structure;
+    delete (dbPrompt as any).context_engineering_enabled;
+    delete (dbPrompt as any).preview_assets;
+    delete (dbPrompt as any).author;
+    delete (dbPrompt as any).collaborators;
+
+    return dbPrompt;
+  }
+
+  /**
+   * 创建空的 Context Engineering 提示词
+   * @returns 空的 Context Engineering 结构
+   */
+  createEmptyContextEngineeringPrompt(): PromptDetails {
+    return {
+      id: '',
+      name: '',
+      description: '',
+      category: '',
+      tags: [],
+      content: createEmptyContextEngineeringContent(),
+      content_structure: createEmptyContextEngineeringContent(),
+      content_text: '',
+      context_engineering_enabled: true,
+      is_public: false
+    };
+  }
+
   // ===== 提示词管理 =====
 
   /**
@@ -106,28 +195,29 @@ export class DatabaseService {
     is_active?: boolean;
     created_at?: string;
     updated_at?: string;
-    optimization_template?: string;
+    optimization_template?: OptimizationTemplateJsonb | string;
+    optimization_template_text?: string; // 提取的文本版本
   }>> {
-    let query = this.adapter.supabase
-      .from('categories')
-      .select('id, name, name_en, icon, description, sort_order, is_active, type, created_at, updated_at, optimization_template')
-      .eq('is_active', true);
+    try {
+      let categories: Category[];
 
-    // 如果指定了type，则按type过滤
-    if (type && ['chat', 'image', 'video'].includes(type)) {
-      query = query.eq('type', type);
+      if (type && ['chat', 'image', 'video'].includes(type)) {
+        categories = await this.adapter.getCategoriesByType(type as 'chat' | 'image' | 'video');
+      } else {
+        categories = await this.adapter.getCategoriesWithType();
+      }
+
+      // 处理优化模板 JSONB 数据
+      return categories.map(category => ({
+        ...category,
+        optimization_template_text: category.optimization_template
+          ? extractTemplateFromJsonb(category.optimization_template)
+          : undefined
+      }));
+    } catch (error) {
+      console.error('获取分类失败:', error);
+      throw error;
     }
-
-    const { data: categoriesData, error: categoriesError } = await query.order('sort_order');
-
-    if (categoriesError) {
-      throw new Error(`获取分类失败: ${categoriesError.message}`);
-    }
-
-    if (!categoriesData || categoriesData.length === 0) {
-      throw new Error('categories表中没有数据');
-    }
-    return categoriesData;
   }
 
   /**
@@ -161,8 +251,16 @@ export class DatabaseService {
   /**
    * 获取提示词列表
    */
-  async getPrompts(filters?: PromptFilters): Promise<PaginatedResponse<Prompt>> {
-    return await this.adapter.getPrompts(filters);
+  async getPrompts(filters?: PromptFilters): Promise<PaginatedResponse<PromptDetails>> {
+    const result = await this.adapter.getPrompts(filters);
+
+    // 处理 JSONB 内容
+    const processedData = result.data.map(prompt => this.processPromptDetails(prompt));
+
+    return {
+      ...result,
+      data: processedData
+    };
   }
 
   /**
@@ -254,30 +352,14 @@ export class DatabaseService {
         console.error('[DatabaseService] 获取协作者信息失败:', collaboratorError);
       }
 
-      // 处理内容提取
-      const content = prompt.content || '';
+      // 使用新的 JSONB 处理逻辑
+      const processedPrompt = this.processPromptDetails(prompt);
 
       // 转换为PromptDetails格式
       const promptDetails: PromptDetails = {
-        id: prompt.id,
-        name: prompt.name,
-        description: prompt.description || '',
-        category: prompt.category || '通用',
-        category_type: prompt.category_type || 'chat', // 添加category_type字段
-        tags: Array.isArray(prompt.tags) ? prompt.tags : [],
-        content: content,
-        is_public: Boolean(prompt.is_public),
-        user_id: prompt.user_id,
-        version: prompt.version || 1,
-        created_at: prompt.created_at,
-        updated_at: prompt.updated_at,
-
-        // 媒体相关字段
-        preview_asset_url: prompt.preview_asset_url,
-        parameters: prompt.parameters,
-
-        // 扩展字段
-        input_variables: this.extractInputVariables(content),
+        ...processedPrompt,
+        // 保持原有的扩展字段
+        input_variables: this.extractInputVariables(processedPrompt.content_text || ''),
         author: authorName,
         collaborators: collaborators, // 添加协作者列表
       };
@@ -290,7 +372,8 @@ export class DatabaseService {
         input_variables: promptDetails.input_variables,
         author: promptDetails.author,
         user_id: promptDetails.user_id,
-        contentLength: content.length,
+        contentLength: promptDetails.content_text?.length || 0,
+        context_engineering_enabled: promptDetails.context_engineering_enabled,
         preview_asset_url: promptDetails.preview_asset_url,
         parameters: promptDetails.parameters,
         hasMediaFiles: promptDetails.parameters?.media_files?.length || 0,
@@ -333,23 +416,16 @@ export class DatabaseService {
       }
     }
 
-    // 转换PromptDetails为Prompt格式
-    const prompt: Partial<Prompt> = {
-      name: promptData.name,
-      description: promptData.description,
-      category: promptData.category,
-      category_type: promptData.category_type || 'chat', // 添加category_type字段
-      tags: promptData.tags,
-      content: promptData.content || '',
-      is_public: promptData.is_public,
-      user_id: promptData.user_id,
-      version: promptData.version ? Number(promptData.version) : 1.0, // 新建提示词默认版本为1.0
-      compatible_models: promptData.compatible_models, // 添加兼容模型字段
-      preview_asset_url: previewAssetUrl, // 使用第一个媒体文件作为封面
-      parameters: parameters, // 添加处理后的参数
-    };
+    // 使用新的 JSONB 处理逻辑转换数据
+    const dbPrompt = this.preparePromptForDatabase({
+      ...promptData,
+      preview_asset_url: previewAssetUrl,
+      parameters: parameters,
+      category_type: promptData.category_type || 'chat',
+      version: promptData.version ? Number(promptData.version) : 1.0
+    });
 
-    return await this.adapter.createPrompt(prompt);
+    return await this.adapter.createPrompt(dbPrompt);
   }
 
   /**
@@ -411,23 +487,12 @@ export class DatabaseService {
         previewAssetUrl = undefined;
       }
 
-      // 转换更新数据
-      const updateData: any = {};
-
-      if (promptData.name !== undefined) updateData.name = promptData.name;
-      if (promptData.description !== undefined) updateData.description = promptData.description;
-      if (promptData.category !== undefined) updateData.category = promptData.category;
-      if (promptData.category_type !== undefined) updateData.category_type = promptData.category_type; // 添加category_type字段处理
-      if (promptData.tags !== undefined) updateData.tags = promptData.tags;
-      if (promptData.is_public !== undefined) updateData.is_public = promptData.is_public;
-      if (promptData.compatible_models !== undefined) updateData.compatible_models = promptData.compatible_models;
-      if (previewAssetUrl !== undefined) updateData.preview_asset_url = previewAssetUrl; // 使用处理后的预览资源URL
-      updateData.parameters = parameters; // 添加处理后的参数
-
-      // 处理content字段
-      if (promptData.content !== undefined) {
-        updateData.content = promptData.content;
-      }
+      // 使用新的 JSONB 处理逻辑转换更新数据
+      const updateData = this.preparePromptForDatabase({
+        ...promptData,
+        preview_asset_url: previewAssetUrl,
+        parameters: parameters
+      });
 
       // 版本号处理 - 编辑时默认+0.1（支持小数版本号）
       const currentVersion = existingPrompt.version || 1.0;

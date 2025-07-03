@@ -5,6 +5,7 @@
  */
 
 import axios from 'axios';
+import { extractTemplateFromJsonb, isJsonbTemplate } from '../utils/jsonb-utils';
 
 export interface MCPCategoryInfo {
   id: number;
@@ -62,7 +63,18 @@ class MCPPromptCategoryMatcher {
         });
 
         if (response.data && response.data.success && Array.isArray(response.data.data)) {
-          this.categoryCache = response.data.data.filter((cat: any) => cat.is_active);
+          // 处理 JSONB 优化模板
+          this.categoryCache = response.data.data
+            .filter((cat: any) => cat.is_active)
+            .map((cat: any) => ({
+              ...cat,
+              optimization_template: cat.optimization_template_text ||
+                (cat.optimization_template
+                  ? (isJsonbTemplate(cat.optimization_template)
+                      ? extractTemplateFromJsonb(cat.optimization_template)
+                      : cat.optimization_template)
+                  : '')
+            }));
           this.lastCacheUpdate = now;
           console.log(`[MCP分类匹配] 成功获取分类数据: ${this.categoryCache.length}个分类`);
         } else {
