@@ -207,7 +207,7 @@ export default function PreviewAssetManager({
       className="relative group bg-dark-bg-secondary rounded-lg overflow-hidden border border-gray-600"
     >
       {/* 预览内容 */}
-      <div className="aspect-video">
+      <div className="relative w-full h-32 sm:h-40 md:h-48 lg:h-56">
         {isImageType ? (
           <img
             src={asset.url}
@@ -346,9 +346,9 @@ export default function PreviewAssetManager({
       <AnimatePresence>
         {assets.length > 0 && (
           <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
             className="grid grid-cols-1 md:grid-cols-2 gap-4"
           >
             {assets.map(renderAssetPreview)}

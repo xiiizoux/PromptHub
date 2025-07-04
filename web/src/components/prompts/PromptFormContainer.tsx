@@ -858,7 +858,7 @@ export default function PromptFormContainer({
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                               {previewUrls.map((url, index) => (
                                 <div key={index} className="relative group bg-dark-bg-secondary rounded-lg overflow-hidden border border-gray-600">
-                                  <div className="aspect-video">
+                                  <div className="relative w-full h-32 sm:h-40 md:h-48 lg:h-56">
                                     {currentType === 'image' ? (
                                       <Image
                                         src={url}
