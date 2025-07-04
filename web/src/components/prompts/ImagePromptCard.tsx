@@ -72,25 +72,6 @@ const ImagePromptCard: React.FC<ImagePromptCardProps> = React.memo(({ prompt }) 
     };
   }, [prompt?.tags]);
 
-  // 获取主要参数用于显示
-  const keyParameters = useMemo(() => {
-    if (!prompt?.parameters) return null;
-    const params: Array<{key: string; value: string}> = [];
-    
-    // 优先显示重要参数
-    if (prompt.parameters.style) {
-      params.push({ key: 'Style', value: String(prompt.parameters.style) });
-    }
-    if (prompt.parameters.aspect_ratio) {
-      params.push({ key: 'Ratio', value: String(prompt.parameters.aspect_ratio) });
-    }
-    if (prompt.parameters.resolution) {
-      params.push({ key: 'Resolution', value: String(prompt.parameters.resolution) });
-    }
-    
-    return params.slice(0, 2); // 最多显示2个参数
-  }, [prompt?.parameters]);
-
   // 如果没有必要的数据，不渲染 - 移到hooks之后
   if (!prompt || !prompt.id) {
     return null;
@@ -287,22 +268,14 @@ const ImagePromptCard: React.FC<ImagePromptCardProps> = React.memo(({ prompt }) 
                 </div>
               </div>
             </div>
-            
-            {/* 参数显示 */}
-            {keyParameters && keyParameters.length > 0 && (
-              <div className="flex flex-wrap gap-1.5 mb-2">
-                {keyParameters.map((param, index) => (
-                  <div 
-                    key={`${prompt.id}-param-${index}`}
-                    className="inline-flex items-center space-x-1 px-2 py-1 rounded-md text-xs bg-gray-800/50 border border-gray-600/30"
-                  >
-                    <span className="text-gray-300">{param.key}:</span>
-                    <span className="text-gray-400">{param.value}</span>
-                  </div>
-                ))}
-              </div>
-            )}
-            
+
+            {/* 描述 */}
+            <div className="text-sm text-gray-400 mb-4 h-[4.5rem] flex items-start">
+              <p className="line-clamp-3 leading-6">
+                {prompt.description || '暂无描述'}
+              </p>
+            </div>
+
             {/* 标签 */}
             {tagsToShow && (
               <div className="flex flex-wrap gap-1.5 mb-3">
