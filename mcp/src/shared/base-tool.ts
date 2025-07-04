@@ -94,12 +94,7 @@ export abstract class BaseMCPTool {
    * 记录工具执行日志
    */
   protected logExecution(action: string, context: ToolContext, metadata?: Record<string, unknown>): void {
-    console.log(`[${this.name}] ${action}:`, {
-      userId: context.userId,
-      requestId: context.requestId,
-      timestamp: context.timestamp,
-      ...metadata
-    });
+    // Execution logging disabled - use proper logging framework in production
   }
 
   /**
@@ -211,7 +206,6 @@ export class ToolRegistry {
    */
   static register(tool: BaseMCPTool): void {
     this.tools.set(tool.name, tool);
-    console.log(`[工具注册] 已注册工具: ${tool.name}`);
   }
 
   /**

@@ -82,9 +82,9 @@ export const CollaborativeEditor: React.FC<CollaborativeEditorProps> = ({
     return () => {
       cleanup();
     };
-  }, [user, promptId]);
+  }, [user, promptId, initializeCollaboration, cleanup]);
 
-  const initializeCollaboration = async () => {
+  const initializeCollaboration = useCallback(async () => {
     try {
       // 加入协作会话
       const sessionData = await joinCollaborativeSession(promptId, user!.id);
@@ -108,14 +108,14 @@ export const CollaborativeEditor: React.FC<CollaborativeEditorProps> = ({
       console.error('初始化协作失败:', error);
       toast.error('连接协作服务失败: ' + (error instanceof Error ? error.message : '未知错误'));
     }
-  };
+  }, [promptId, user]);
 
-  const cleanup = async () => {
+  const cleanup = useCallback(async () => {
     if (session && user) {
       await leaveCollaborativeSession(promptId, user.id);
       setIsConnected(false);
     }
-  };
+  }, [session, user, promptId]);
 
   const handleRemoteOperation = (operation: Operation) => {
     if (operation.userId === user?.id) return; // 忽略自己的操作

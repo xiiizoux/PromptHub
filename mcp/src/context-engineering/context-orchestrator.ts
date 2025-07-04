@@ -269,11 +269,9 @@ export class ContextOrchestrator {
    */
   private sanitizeInput(input: string): string {
     // 移除潜在的恶意内容
-    // eslint-disable-next-line no-control-regex
     return input
-      .replace(/\u0000/g, '') // 移除空字符
-      // eslint-disable-next-line no-control-regex
-      .replace(/[\u0000-\u001F\u007F]/g, '') // 移除控制字符
+      .replace(/\0/g, '') // 移除空字符
+      .replace(/[\u0001-\u001F\u007F]/g, '') // 移除控制字符
       .trim();
   }
 
@@ -282,9 +280,8 @@ export class ContextOrchestrator {
    */
   private sanitizeOutput(output: string): string {
     // 确保输出安全
-    // eslint-disable-next-line no-control-regex
     return output
-      .replace(/\u0000/g, '')
+      .replace(/\0/g, '')
       .trim();
   }
 

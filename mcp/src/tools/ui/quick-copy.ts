@@ -63,7 +63,15 @@ export class QuickCopyTool extends BaseMCPTool {
     };
   }
 
-  async execute(params: any, context: ToolContext): Promise<ToolResult> {
+  // 工具参数接口
+  interface QuickCopyParams {
+    prompt_id: string;
+    format?: 'plain' | 'markdown' | 'json' | 'template';
+    include_variables?: boolean;
+    custom_variables?: Record<string, string | number | boolean>;
+  }
+
+  async execute(params: QuickCopyParams, context: ToolContext): Promise<ToolResult> {
     // 验证必需参数
     this.validateParams(params, ['prompt_id']);
 
@@ -145,7 +153,7 @@ export class QuickCopyTool extends BaseMCPTool {
     prompt: Prompt,
     format: string,
     includeVariables: boolean,
-    customVariables: any
+    customVariables: Record<string, string | number | boolean>
   ): string {
     // 提取消息内容
     let content = this.extractStringContent(prompt.content || '');
@@ -172,7 +180,7 @@ export class QuickCopyTool extends BaseMCPTool {
 
     if (includeVariables && prompt.variables?.length) {
       result += '\n\n--- 变量说明 ---\n';
-      prompt.variables.forEach((variable: any) => {
+      prompt.variables.forEach((variable: string | { name: string; description?: string }) => {
         const name = typeof variable === 'string' ? variable : variable.name;
         const desc = typeof variable === 'string' ? '需要替换的变量' : (variable.description || '需要替换的变量');
         result += `${name}: ${desc}\n`;
@@ -195,7 +203,7 @@ export class QuickCopyTool extends BaseMCPTool {
 
     if (includeVariables && prompt.variables?.length) {
       result += '## 变量说明\n\n';
-      prompt.variables.forEach((variable: any) => {
+      prompt.variables.forEach((variable: string | { name: string; description?: string }) => {
         const name = typeof variable === 'string' ? variable : variable.name;
         const desc = typeof variable === 'string' ? '需要替换的变量' : (variable.description || '需要替换的变量');
         result += `- **${name}**: ${desc}\n`;
@@ -206,7 +214,14 @@ export class QuickCopyTool extends BaseMCPTool {
   }
 
   private formatAsJSON(prompt: Prompt, content: string, includeVariables: boolean): string {
-    const data: any = {
+    const data: {
+      name?: string;
+      description?: string;
+      content: string;
+      category?: string;
+      tags?: string[];
+      variables?: (string | { name: string; description?: string })[];
+    } = {
       name: prompt.name,
       description: prompt.description,
       content: content,
@@ -227,7 +242,7 @@ export class QuickCopyTool extends BaseMCPTool {
 
     if (includeVariables && prompt.variables?.length) {
       result += '\n\n<!-- 变量列表:\n';
-      prompt.variables.forEach((variable: any) => {
+      prompt.variables.forEach((variable: string | { name: string; description?: string }) => {
         const name = typeof variable === 'string' ? variable : variable.name;
         result += `${name}: 在此输入值\n`;
       });
@@ -237,7 +252,7 @@ export class QuickCopyTool extends BaseMCPTool {
     return result;
   }
 
-  private replaceVariables(content: string, variables: any): string {
+  private replaceVariables(content: string, variables: Record<string, string | number | boolean>): string {
     let result = content;
     for (const [key, value] of Object.entries(variables)) {
       const regex = new RegExp(`\\{\\{${key}\\}\\}|\\$\\{${key}\\}|\\[${key}\\]`, 'g');
@@ -299,7 +314,14 @@ export class PromptPreviewTool extends BaseMCPTool {
     };
   }
 
-  async execute(params: any, context: ToolContext): Promise<ToolResult> {
+  // 预览工具参数接口
+  interface PreviewParams {
+    prompt_id: string;
+    sample_variables?: Record<string, string | number | boolean>;
+    target_model?: string;
+  }
+
+  async execute(params: PreviewParams, context: ToolContext): Promise<ToolResult> {
     this.validateParams(params, ['prompt_id']);
 
     const {
@@ -349,7 +371,7 @@ export class PromptPreviewTool extends BaseMCPTool {
     }
   }
 
-  private generatePromptPreview(prompt: Prompt, sampleVariables: any, targetModel?: string): string {
+  private generatePromptPreview(prompt: Prompt, sampleVariables: Record<string, string | number | boolean>, targetModel?: string): string {
     let content = '';
     
     // 提取消息内容
@@ -411,7 +433,7 @@ export class PromptPreviewTool extends BaseMCPTool {
     return '通用优化：保持指令清晰简洁，提供必要的上下文';
   }
 
-  private replaceVariables(content: string, variables: any): string {
+  private replaceVariables(content: string, variables: Record<string, string | number | boolean>): string {
     let result = content;
     for (const [key, value] of Object.entries(variables)) {
       const regex = new RegExp(`\\{\\{${key}\\}\\}|\\$\\{${key}\\}|\\[${key}\\]`, 'g');
@@ -477,7 +499,14 @@ export class BatchExportTool extends BaseMCPTool {
     };
   }
 
-  async execute(params: any, context: ToolContext): Promise<ToolResult> {
+  // 批量导出参数接口
+  interface BatchExportParams {
+    prompt_ids: string[];
+    export_format?: 'json' | 'csv' | 'markdown' | 'txt';
+    include_metadata?: boolean;
+  }
+
+  async execute(params: BatchExportParams, context: ToolContext): Promise<ToolResult> {
     this.validateParams(params, ['prompt_ids']);
 
     const {
@@ -591,15 +620,15 @@ export const batchExportTool = new BatchExportTool();
 export const promptPreviewTool = new PromptPreviewTool();
 
 // 向后兼容的函数导出（保持现有API不变）
-export async function handleQuickCopy(params: any, userId?: string) {
+export async function handleQuickCopy(params: Record<string, unknown>, userId?: string) {
   return quickCopyTool.handleExecution(params, userId);
 }
 
-export async function handleBatchExport(params: any, userId?: string) {
+export async function handleBatchExport(params: Record<string, unknown>, userId?: string) {
   return batchExportTool.handleExecution(params, userId);
 }
 
-export async function handlePromptPreview(params: any, userId?: string) {
+export async function handlePromptPreview(params: Record<string, unknown>, userId?: string) {
   return promptPreviewTool.handleExecution(params, userId);
 }
 

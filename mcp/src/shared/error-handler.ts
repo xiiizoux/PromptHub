@@ -40,7 +40,7 @@ export interface EnhancedError extends Error {
 /**
  * 分析错误类型和严重程度
  */
-function analyzeError(error: any): { type: ErrorType; severity: ErrorSeverity } {
+function analyzeError(error: unknown): { type: ErrorType; severity: ErrorSeverity } {
   const errorMessage = (error?.message || error || '').toLowerCase();
 
   // 验证错误
@@ -87,9 +87,9 @@ function analyzeError(error: any): { type: ErrorType; severity: ErrorSeverity } 
  */
 export function handleToolError(
   toolName: string,
-  error: any,
+  error: unknown,
   customMessage?: string,
-  context?: Record<string, any>
+  context?: Record<string, unknown>
 ): MCPToolResponse {
   const errorMessage = error?.message || error || '未知错误';
   const { type, severity } = analyzeError(error);
@@ -157,10 +157,10 @@ export function handleToolError(
  * @returns 标准化的成功响应
  */
 export function handleToolSuccess(
-  data: any,
+  data: unknown,
   message?: string,
   toolName?: string,
-  context?: Record<string, any>
+  context?: Record<string, unknown>
 ): MCPToolResponse {
   // 记录成功日志
   if (toolName) {
@@ -205,7 +205,7 @@ export function createTextResponse(text: string): MCPToolResponse {
  * @param requiredFields 必需字段列表
  * @throws EnhancedError 如果缺少必需参数
  */
-export function validateRequiredParams(params: any, requiredFields: string[]): void {
+export function validateRequiredParams(params: Record<string, unknown>, requiredFields: string[]): void {
   const missingFields = requiredFields.filter(field =>
     params[field] === undefined || params[field] === null || params[field] === ''
   );
@@ -246,7 +246,7 @@ export function createEnhancedError(
  * @param space 缩进空格数
  * @returns 序列化后的字符串
  */
-export function safeJsonStringify(obj: any, space: number = 2): string {
+export function safeJsonStringify(obj: unknown, space: number = 2): string {
   try {
     return JSON.stringify(obj, (key, value) => {
       // 过滤敏感信息

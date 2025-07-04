@@ -19,7 +19,6 @@ export class StorageFactory {
     const storageType = config.storage.type || 'supabase';
     
     // 输出存储类型信息
-    console.log(`使用存储类型: ${storageType}`);
     
     // TODO: 根据配置的存储类型创建相应的适配器
     // 当前只实现了supabase适配器，其他类型将在未来扩展

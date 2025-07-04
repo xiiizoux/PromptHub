@@ -50,7 +50,7 @@ import {
 } from '@heroicons/react/24/outline';
 
 // 简单的图标组件映射表
-export const ICON_COMPONENTS: Record<string, React.ComponentType<any>> = {
+export const ICON_COMPONENTS: Record<string, React.ComponentType<{ className?: string }>> = {
   // 支持数据库中常用的图标名称格式
   'sparkles': SparklesIcon,
   'academic-cap': AcademicCapIcon,
@@ -100,7 +100,7 @@ export const ICON_COMPONENTS: Record<string, React.ComponentType<any>> = {
  * 根据图标名称获取图标组件
  * 如果不存在则返回null（不使用回退机制）
  */
-export function getIconComponent(iconName: string | null | undefined): React.ComponentType<any> | null {
+export function getIconComponent(iconName: string | null | undefined): React.ComponentType<{ className?: string }> | null {
   if (!iconName) return null;
   return ICON_COMPONENTS[iconName] || null;
 }

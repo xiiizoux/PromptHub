@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import {
@@ -293,9 +293,9 @@ export const BeginnerFriendlyRecommendations: React.FC<BeginnerFriendlyRecommend
     fetchRecommendations();
     generateLearningPaths();
     generatePersonalizedRecommendations();
-  }, [userLevel, currentPromptId, userId]);
+  }, [userLevel, currentPromptId, userId, fetchRecommendations, generateLearningPaths, generatePersonalizedRecommendations]);
 
-  const fetchRecommendations = async () => {
+  const fetchRecommendations = useCallback(async () => {
     try {
       setIsLoading(true);
       let results: RecommendationResult[] = [];
@@ -345,15 +345,15 @@ export const BeginnerFriendlyRecommendations: React.FC<BeginnerFriendlyRecommend
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [activeTab, user, maxRecommendations, userLevel]);
 
-  const generateLearningPaths = () => {
+  const generateLearningPaths = useCallback(() => {
     // Implementation of generateLearningPaths function
-  };
+  }, []);
 
-  const generatePersonalizedRecommendations = () => {
+  const generatePersonalizedRecommendations = useCallback(() => {
     // Implementation of generatePersonalizedRecommendations function
-  };
+  }, []);
 
   const _getRecommendationScore = (score: number) => {
     return Math.round(score * 100);

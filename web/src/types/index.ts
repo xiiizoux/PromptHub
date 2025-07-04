@@ -87,11 +87,11 @@ export interface PromptContentJsonb {
   type: 'context_engineering';
   static_content: string;
   dynamic_context: {
-    adaptation_rules?: any[];
+    adaptation_rules?: Record<string, unknown>[];
     examples?: {
       selection_strategy: string;
       max_examples: number;
-      example_pool: any[];
+      example_pool: Record<string, unknown>[];
     };
     tools?: {
       available_tools: string[];

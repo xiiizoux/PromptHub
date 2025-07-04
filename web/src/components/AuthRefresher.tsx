@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { supabase, clearAuthState, isSessionValid } from '@/lib/supabase';
+import { supabase, clearAuthState } from '@/lib/supabase';
 
 /**
  * 智能认证刷新组件 - 用于自动刷新认证状态并保持会话有效
@@ -18,11 +18,8 @@ const AuthRefresher = () => {
 
       try {
         if (isInitialCheck) {
-          console.log('AuthRefresher: 初始化认证状态检查...');
           // 初始检查时等待更长时间确保Supabase完全初始化
           await new Promise(resolve => setTimeout(resolve, 500));
-        } else {
-          console.log('AuthRefresher: 定期检查认证会话...');
         }
 
         // 首先直接从Supabase获取会话，不依赖isSessionValid
@@ -37,7 +34,6 @@ const AuthRefresher = () => {
               (sessionError.message.includes('Invalid') ||
                sessionError.message.includes('Expired') ||
                sessionError.message.includes('JWT'))) {
-            console.log('AuthRefresher: 连续多次认证失败，清理状态');
             clearAuthState();
             failureCountRef.current = 0;
           }
@@ -46,14 +42,12 @@ const AuthRefresher = () => {
 
         if (!session) {
           // 没有会话，但不立即清理状态，可能是正常的未登录状态
-          console.log('AuthRefresher: 当前没有活跃会话');
           failureCountRef.current = 0;
           return;
         }
 
         // 有会话，重置失败计数
         failureCountRef.current = 0;
-        console.log('AuthRefresher: 会话检查通过，用户已认证');
 
         // 检查会话是否即将过期（提前10分钟刷新）
         const expiresAt = session.expires_at;
@@ -61,7 +55,6 @@ const AuthRefresher = () => {
         const timeUntilExpiry = (expiresAt || 0) - now;
 
         if (timeUntilExpiry < 600) { // 10分钟 = 600秒
-          console.log('AuthRefresher: 会话即将过期，尝试刷新...');
 
           try {
             const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
@@ -74,12 +67,10 @@ const AuthRefresher = () => {
               if (failureCountRef.current >= 2 &&
                   (refreshError.message.includes('Invalid') ||
                    refreshError.message.includes('refresh_token'))) {
-                console.log('AuthRefresher: 刷新令牌连续失败，清理状态');
                 clearAuthState();
                 failureCountRef.current = 0;
               }
             } else if (refreshData?.session) {
-              console.log('AuthRefresher: 会话刷新成功，有效期至:', new Date((refreshData.session.expires_at || 0) * 1000));
               failureCountRef.current = 0;
             }
           } catch (refreshErr) {
@@ -88,13 +79,10 @@ const AuthRefresher = () => {
 
             // 只有在连续多次异常时才清理状态
             if (failureCountRef.current >= 3) {
-              console.log('AuthRefresher: 刷新会话连续异常，清理状态');
               clearAuthState();
               failureCountRef.current = 0;
             }
           }
-        } else {
-          console.log(`AuthRefresher: 会话有效，剩余时间: ${Math.floor(timeUntilExpiry / 60)} 分钟`);
         }
       } catch (err) {
         console.error('AuthRefresher: 检查认证会话时出错:', err);
@@ -105,11 +93,10 @@ const AuthRefresher = () => {
             (err.message.includes('Network') ||
              err.message.includes('Failed to fetch') ||
              err.message.includes('timeout'))) {
-          console.log('AuthRefresher: 网络错误，跳过状态清理');
+          // 网络错误，跳过状态清理
         } else {
           // 只有在连续多次未知错误时才清理状态
           if (failureCountRef.current >= 5) {
-            console.log('AuthRefresher: 连续多次未知错误，清理状态');
             clearAuthState();
             failureCountRef.current = 0;
           }
@@ -151,7 +138,6 @@ const AuthRefresher = () => {
   useEffect(() => {
     const handleVisibilityChange = async () => {
       if (document.visibilityState === 'visible' && mountedRef.current && isInitialized) {
-        console.log('AuthRefresher: 页面重新可见，检查认证状态');
         // 延迟一点再检查，确保网络连接稳定
         setTimeout(async () => {
           if (mountedRef.current) {
@@ -159,10 +145,6 @@ const AuthRefresher = () => {
               const { data: { session }, error } = await supabase.auth.getSession();
               if (error) {
                 console.warn('AuthRefresher: 页面可见性检查会话失败:', error);
-              } else if (session) {
-                console.log('AuthRefresher: 页面可见性检查通过，会话有效');
-              } else {
-                console.log('AuthRefresher: 页面可见性检查，无活跃会话');
               }
             } catch (err) {
               console.error('AuthRefresher: 页面可见性检查异常:', err);

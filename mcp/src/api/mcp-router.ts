@@ -395,7 +395,6 @@ router.post('/tools/:name/invoke', optionalAuthMiddleware, async (req, res) => {
     // 安全处理请求体，确保params存在
     const params = (req.body && (req.body.params || req.body)) || {};
 
-    console.log(`[MCP Router] 调用工具: ${name}`, params);
 
     // 🔥 记录开始时间用于性能统计
     const _startTime = Date.now();

@@ -57,7 +57,7 @@ interface RuleCondition {
   type: 'user_preference' | 'time_based' | 'usage_pattern' | 'content_type' | 'custom';
   field: string;
   operator: 'equals' | 'not_equals' | 'contains' | 'greater_than' | 'less_than' | 'in_range';
-  value: any;
+  value: string | number | boolean | string[] | number[];
   logicalOperator?: 'AND' | 'OR';
 }
 
@@ -134,7 +134,7 @@ export default function AdvancedCEToolsPage() {
   
   // UI状态
   const [showRuleEditor, setShowRuleEditor] = useState(false);
-  const [draggedItem, setDraggedItem] = useState<any>(null);
+  const [draggedItem, setDraggedItem] = useState<ContextRule | RuleCondition | RuleAction | null>(null);
 
   useEffect(() => {
     if (!user) {
@@ -898,7 +898,10 @@ function RuleEditorModal({ rule, onSave, onCancel }: {
                     value={condition.type}
                     onChange={(e) => {
                       const newConditions = [...editingRule.conditions];
-                      newConditions[index] = { ...condition, type: e.target.value as any };
+                      newConditions[index] = { 
+                        ...condition, 
+                        type: e.target.value as 'user_preference' | 'time_based' | 'usage_pattern' | 'content_type' | 'custom'
+                      };
                       setEditingRule(prev => ({ ...prev, conditions: newConditions }));
                     }}
                     className="px-2 py-1 bg-dark-bg-primary border border-gray-600 rounded text-white text-sm"
@@ -924,7 +927,10 @@ function RuleEditorModal({ rule, onSave, onCancel }: {
                     value={condition.operator}
                     onChange={(e) => {
                       const newConditions = [...editingRule.conditions];
-                      newConditions[index] = { ...condition, operator: e.target.value as any };
+                      newConditions[index] = { 
+                        ...condition, 
+                        operator: e.target.value as 'equals' | 'not_equals' | 'contains' | 'greater_than' | 'less_than' | 'in_range'
+                      };
                       setEditingRule(prev => ({ ...prev, conditions: newConditions }));
                     }}
                     className="px-2 py-1 bg-dark-bg-primary border border-gray-600 rounded text-white text-sm"
@@ -985,7 +991,10 @@ function RuleEditorModal({ rule, onSave, onCancel }: {
                       value={action.type}
                       onChange={(e) => {
                         const newActions = [...editingRule.actions];
-                        newActions[index] = { ...action, type: e.target.value as any };
+                        newActions[index] = { 
+                          ...action, 
+                          type: e.target.value as 'append' | 'prepend' | 'replace' | 'modify_tone' | 'add_examples' | 'adjust_complexity'
+                        };
                         setEditingRule(prev => ({ ...prev, actions: newActions }));
                       }}
                       className="px-2 py-1 bg-dark-bg-primary border border-gray-600 rounded text-white text-sm"
@@ -1047,7 +1056,7 @@ function RuleEditorModal({ rule, onSave, onCancel }: {
 
 // 统计卡片组件
 function StatCard({ icon: Icon, title, value, subtitle, color }: {
-  icon: any;
+  icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
   title: string;
   value: string | number;
   subtitle?: string;

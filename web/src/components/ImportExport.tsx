@@ -33,7 +33,7 @@ export const ImportExport: React.FC<ImportExportProps> = ({
   const [isExporting, setIsExporting] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
   const [importData, setImportData] = useState('');
-  const [importFile, setImportFile] = useState<File | null>(null);
+  const [importFile] = useState<File | null>(null);
   const [importOptions, setImportOptions] = useState({
     allowDuplicates: false,
     skipDuplicates: true,
@@ -113,7 +113,7 @@ export const ImportExport: React.FC<ImportExportProps> = ({
       let parsedData: ImportData;
       try {
         parsedData = JSON.parse(importData);
-      } catch (parseError) {
+      } catch (_parseError) {
         // 如果不是JSON，创建一个简单的ImportData对象
         parsedData = {
           prompts: [{
@@ -235,7 +235,7 @@ export const ImportExport: React.FC<ImportExportProps> = ({
                             type="radio"
                             value={option.value}
                             checked={exportFormat === option.value}
-                            onChange={(e) => setExportFormat(e.target.value as any)}
+                            onChange={(e) => setExportFormat(e.target.value as 'json' | 'csv' | 'txt')}
                             className="sr-only"
                           />
                           <IconComponent className="h-5 w-5 text-neon-cyan mt-0.5" />

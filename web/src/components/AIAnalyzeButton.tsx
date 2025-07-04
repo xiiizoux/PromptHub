@@ -63,17 +63,7 @@ export const AIAnalyzeButton: React.FC<AIAnalyzeButtonProps> = ({
   const hasValidContent = content && typeof content === 'string' && content.trim().length > 0;
   const isButtonDisabled = disabled || isAnalyzing || !hasValidContent;
 
-  // 调试信息 (仅在开发环境显示)
-  if (process.env.NODE_ENV === 'development') {
-    console.log('AIAnalyzeButton Debug:', {
-      content: content ? `"${content.substring(0, 50)}..."` : 'null/undefined',
-      contentLength: content?.length || 0,
-      hasValidContent,
-      isButtonDisabled,
-      disabled,
-      isAnalyzing,
-    });
-  }
+  // 调试信息已移除
 
   const handleAnalyze = async () => {
     if (!hasValidContent) {
@@ -108,15 +98,7 @@ export const AIAnalyzeButton: React.FC<AIAnalyzeButtonProps> = ({
         requestBody.existingTags = existingTags || [];
         requestBody.existingModels = existingModels || [];
         
-        if (process.env.NODE_ENV === 'development') {
-          console.log('🔍 增量分析参数:', {
-            原始内容长度: originalContent?.length || 0,
-            当前内容长度: content.length,
-            现有分类: existingCategory,
-            现有标签数量: existingTags?.length || 0,
-            现有模型数量: existingModels?.length || 0,
-          });
-        }
+        // 增量分析参数调试信息已移除
       }
 
       const response = await fetch('/api/ai/analyze', {
@@ -136,10 +118,7 @@ export const AIAnalyzeButton: React.FC<AIAnalyzeButtonProps> = ({
       if (result.success) {
         onAnalysisComplete(result.data);
         
-        // 显示成功提示
-        if (variant === 'full' && process.env.NODE_ENV === 'development') {
-          console.log('AI分析完成，置信度:', result.data.confidence);
-        }
+        // 分析完成
       } else {
         throw new Error(result.error || '分析结果异常');
       }

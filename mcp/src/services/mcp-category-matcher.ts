@@ -53,7 +53,6 @@ class MCPPromptCategoryMatcher {
       try {
         // 通过API获取分类数据
         const url = `${this.API_BASE_URL}/api/categories${type ? `?type=${type}` : ''}`;
-        console.log(`[MCP分类匹配] 获取分类数据: ${url}`);
         
         const response = await axios.get(url, {
           timeout: 10000,
@@ -76,7 +75,6 @@ class MCPPromptCategoryMatcher {
                   : '')
             }));
           this.lastCacheUpdate = now;
-          console.log(`[MCP分类匹配] 成功获取分类数据: ${this.categoryCache.length}个分类`);
         } else {
           throw new Error('API返回数据格式错误');
         }
@@ -262,7 +260,6 @@ class MCPPromptCategoryMatcher {
       const maxPossibleScore = 10; // 假设的最大可能分数
       const confidence = Math.min(bestScore / maxPossibleScore, 1);
 
-      console.log(`[MCP分类匹配] 匹配完成: ${bestCategory.name}, 置信度: ${confidence.toFixed(2)}`);
 
       return {
         category: bestCategory,
@@ -312,7 +309,6 @@ class MCPPromptCategoryMatcher {
   clearCache(): void {
     this.categoryCache = [];
     this.lastCacheUpdate = 0;
-    console.log('[MCP分类匹配] 缓存已清除');
   }
 }
 

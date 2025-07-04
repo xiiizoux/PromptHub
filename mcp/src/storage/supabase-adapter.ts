@@ -25,7 +25,7 @@ interface ConnectionConfig {
 // 查询缓存
 interface QueryCache {
   [key: string]: {
-    data: any;
+    data: unknown;
     timestamp: number;
     ttl: number;
   };
@@ -680,7 +680,6 @@ export class SupabaseAdapter implements StorageAdapter {
    * 验证用户是否存在于数据库中
    */
   private async validateUserExists(userId: string): Promise<void> {
-    console.log(`[SupabaseAdapter] 开始验证用户ID: ${userId}`);
     
     const user = await this.getUser(userId);
     if (!user) {
@@ -728,7 +727,6 @@ export class SupabaseAdapter implements StorageAdapter {
       throw new Error(`用户验证失败: 用户ID ${userId} 在数据库中不存在`);
     }
     
-    console.log(`[SupabaseAdapter] ✅ 用户验证成功: ${user.display_name} (${user.email})`);
   }
 
   async createPrompt(prompt: Prompt): Promise<Prompt> {
@@ -737,10 +735,7 @@ export class SupabaseAdapter implements StorageAdapter {
         const finalUserId = prompt.user_id;
 
         if (!finalUserId) {
-          console.log('[SupabaseAdapter] 提示词缺少用户ID，无法创建提示词');
           throw new Error('无法确定用户身份，请检查API密钥认证');
-        } else {
-          console.log('[SupabaseAdapter] 使用传入的用户ID:', finalUserId);
         }
         
         const promptData = {
@@ -770,7 +765,6 @@ export class SupabaseAdapter implements StorageAdapter {
           promptData.category_type = 'chat';
         }
         
-        console.log('[SupabaseAdapter] 验证用户是否存在于数据库中');
         if (finalUserId) {
           await this.validateUserExists(finalUserId);
         }
@@ -787,21 +781,12 @@ export class SupabaseAdapter implements StorageAdapter {
 
             if (categoryData) {
               promptData.category_id = categoryData.id;
-              console.log(`[SupabaseAdapter] 找到分类ID: ${promptData.category} -> ${categoryData.id}`);
             }
           } catch (error) {
             console.warn('[SupabaseAdapter] 查找分类ID失败:', error);
           }
         }
 
-        console.log('[SupabaseAdapter] 准备创建提示词:', {
-          name: promptData.name,
-          category: promptData.category,
-          category_id: promptData.category_id,
-          user_id: promptData.user_id,
-          created_by: promptData.created_by,
-          is_public: promptData.is_public
-        });
         
         // 创建提示词，使用管理员客户端绕过RLS策略
         const client = this.adminSupabase || this.supabase;
@@ -822,11 +807,6 @@ export class SupabaseAdapter implements StorageAdapter {
         }
         
         const createdPrompt = data[0];
-        console.log('[SupabaseAdapter] 提示词创建成功:', {
-          id: createdPrompt.id,
-          name: createdPrompt.name,
-          user_id: createdPrompt.user_id
-        });
         
         // 创建初始版本
         try {
@@ -839,7 +819,6 @@ export class SupabaseAdapter implements StorageAdapter {
             tags: prompt.tags || [],
             user_id: finalUserId
           });
-          console.log('[SupabaseAdapter] 初始版本创建成功');
         } catch (versionError) {
           console.warn('[SupabaseAdapter] 创建初始版本失败:', versionError);
           // 版本创建失败不应该影响主要创建流程
@@ -970,8 +949,6 @@ export class SupabaseAdapter implements StorageAdapter {
         const deleteResult = await this.deleteAsset(filename);
         if (!deleteResult.success) {
           console.warn(`删除文件失败: ${filename}`, deleteResult.message);
-        } else {
-          console.log(`文件删除成功: ${filename}`);
         }
       } catch (error) {
         console.warn(`删除文件时出错: ${filename}`, error);
@@ -1018,7 +995,6 @@ export class SupabaseAdapter implements StorageAdapter {
       const cleanQuery = query.trim().toLowerCase();
       const keywords = this.extractSearchKeywords(cleanQuery);
       
-      console.log(`[SearchPrompts] 原始查询: "${query}", 提取关键词: [${keywords.join(', ')}]`);
       
       // 1. 精确匹配搜索（最高优先级）
       const exactResults = await this.executeExactSearch(cleanQuery, userId, includePublic);
@@ -1035,7 +1011,6 @@ export class SupabaseAdapter implements StorageAdapter {
       // 计算相关性评分并排序
       const scoredResults = this.calculateRelevanceScore(allResults, cleanQuery, keywords);
       
-      console.log(`[SearchPrompts] 搜索完成，共找到 ${scoredResults.length} 个结果`);
       
       return scoredResults;
       
@@ -1086,7 +1061,6 @@ export class SupabaseAdapter implements StorageAdapter {
       }
     });
     
-    console.log(`[关键词提取] 原始查询: "${query}" => 关键词: [${uniqueWords.join(', ')}]`);
     
     // 限制关键词数量以优化性能（原始查询 + 最多9个分词结果）
     return uniqueWords.slice(0, 10);
@@ -1097,7 +1071,6 @@ export class SupabaseAdapter implements StorageAdapter {
    */
   private async executeExactSearch(query: string, userId?: string, includePublic: boolean = true): Promise<Prompt[]> {
     try {
-      console.log(`[精确搜索] 查询: "${query}"`);
       
       // 使用新的content字段进行统一搜索
       let dbQuery = this.supabase
@@ -1114,7 +1087,6 @@ export class SupabaseAdapter implements StorageAdapter {
         return [];
       }
 
-      console.log(`[精确搜索] 找到 ${results?.length || 0} 个结果`);
       return results || [];
       
 
@@ -1131,7 +1103,6 @@ export class SupabaseAdapter implements StorageAdapter {
     if (keywords.length === 0) return [];
     
     try {
-      console.log(`[关键词搜索] 关键词: [${keywords.join(', ')}]`);
       const results = new Set<Prompt>();
       
       // 对每个关键词进行搜索（并行处理前5个关键词）
@@ -1151,7 +1122,6 @@ export class SupabaseAdapter implements StorageAdapter {
             data.forEach(prompt => results.add(prompt));
           }
 
-          console.log(`[关键词搜索] 关键词 "${keyword}" 找到 ${data?.length || 0} 个结果`);
         } catch (err) {
           console.warn(`关键词 "${keyword}" 搜索失败:`, err);
         }
@@ -1159,7 +1129,6 @@ export class SupabaseAdapter implements StorageAdapter {
       
       await Promise.all(searchPromises);
       
-      console.log(`[关键词搜索] 总共找到 ${results.size} 个去重结果`);
       return Array.from(results);
     } catch (err) {
       console.warn('关键词搜索出错:', err);
@@ -1172,7 +1141,6 @@ export class SupabaseAdapter implements StorageAdapter {
    */
   private async executeFuzzySearch(query: string, userId?: string, includePublic: boolean = true): Promise<Prompt[]> {
     try {
-      console.log(`[模糊搜索] 查询: "${query}"`);
       
       // 生成模糊匹配查询
       const fuzzyQuery = query.split('').join('%');
@@ -1192,7 +1160,6 @@ export class SupabaseAdapter implements StorageAdapter {
         return [];
       }
 
-      console.log(`[模糊搜索] 找到 ${data?.length || 0} 个结果`);
       return data || [];
     } catch (err) {
       console.warn('模糊搜索出错:', err);
@@ -1307,7 +1274,6 @@ export class SupabaseAdapter implements StorageAdapter {
           score *= 1.1;
         }
         
-        console.log(`[相关性评分] "${prompt.name}" => ${score.toFixed(2)}`);
         
         return { ...prompt, _score: score };
       })
@@ -1914,7 +1880,6 @@ export class SupabaseAdapter implements StorageAdapter {
   // 获取用户信息
   async getUser(userId: string): Promise<User | null> {
     try {
-      console.log(`[MCP Adapter] 获取用户信息，用户ID: ${userId}`);
 
       // 使用管理员客户端绕过RLS策略
       const client = this.adminSupabase || this.supabase;
@@ -1935,7 +1900,6 @@ export class SupabaseAdapter implements StorageAdapter {
         return null;
       }
 
-      console.log(`[MCP Adapter] 成功获取用户信息: ${data.display_name || data.email}`);
       return {
         id: data.id,
         email: data.email,

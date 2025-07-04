@@ -127,7 +127,6 @@ export class DIContainer {
       // 调用工厂函数创建实例
       const instance = descriptor.factory(...dependencies);
       
-      console.log(`[DI容器] 创建服务实例: ${descriptor.key} (${descriptor.lifetime})`);
       return instance;
     } catch (error) {
       throw new Error(`创建服务实例失败 ${descriptor.key}: ${error}`);
@@ -153,7 +152,6 @@ export class DIContainer {
    */
   clearScope(): void {
     this.scopedInstances.clear();
-    console.log('[DI容器] 已清除作用域实例');
   }
 
   /**
@@ -163,7 +161,6 @@ export class DIContainer {
     this.instances.clear();
     this.scopedInstances.clear();
     this.services.clear();
-    console.log('[DI容器] 容器已销毁');
   }
 
   /**
@@ -242,7 +239,6 @@ export const container = new DIContainer();
  */
 export function registerDefaultServices(): void {
   // 在这里注册基础服务
-  console.log('[DI容器] 注册默认服务...');
   
   // 验证依赖关系
   const validation = container.validateDependencies();
@@ -251,5 +247,4 @@ export function registerDefaultServices(): void {
     throw new Error(`依赖注入配置错误: ${validation.errors.join(', ')}`);
   }
   
-  console.log('[DI容器] 默认服务注册完成');
 } 

@@ -534,7 +534,7 @@ export class ContextStateManager implements StateStorage {
         FROM user_interactions
         WHERE user_id = $1
       `;
-      const params: any[] = [userId];
+      const params: (string | Date)[] = [userId];
 
       if (sessionId) {
         query += ` AND session_id = $2`;
@@ -601,7 +601,7 @@ export class ContextStateManager implements StateStorage {
         FROM performance_metrics
         WHERE user_id = $1
       `;
-      const params: any[] = [userId];
+      const params: (string | Date)[] = [userId];
 
       if (metricType) {
         query += ` AND metric_type = $2`;

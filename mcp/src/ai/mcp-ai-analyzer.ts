@@ -167,12 +167,6 @@ export class MCPAIAnalyzer {
       console.warn('[MCP AI] OpenAI API key not found. AI analysis features will be disabled.');
     }
     
-    console.log('[MCP AI] Analyzer initialized:', {
-      baseURL: this.baseURL,
-      fullAnalysisModel: this.fullAnalysisModel,
-      quickTasksModel: this.quickTasksModel,
-      hasApiKey: !!this.apiKey
-    });
   }
 
   /**

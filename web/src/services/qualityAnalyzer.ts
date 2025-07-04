@@ -207,7 +207,7 @@ export class PromptQualityAnalyzer {
     else suggestions.push('添加必要的限制条件');
 
     // 检查变量定义
-    const variables = (prompt as any).variables || [];
+    const variables = (prompt as PromptDetails & { variables?: string[] }).variables || [];
     if (variables.length > 0) {
       score += 5;
     }
@@ -405,14 +405,13 @@ export class PromptQualityAnalyzer {
   /**
    * 计算总体得分
    */
-  private calculateOverallScore(dimensions: any): number {
+  private calculateOverallScore(dimensions: Record<string, QualityDimension>): number {
     let weightedSum = 0;
     let totalWeight = 0;
 
     for (const [key, dimension] of Object.entries(dimensions)) {
-      const dim = dimension as QualityDimension;
-      weightedSum += dim.score * dim.weight;
-      totalWeight += dim.weight;
+      weightedSum += dimension.score * dimension.weight;
+      totalWeight += dimension.weight;
     }
 
     return Math.round(weightedSum / totalWeight);
@@ -431,13 +430,12 @@ export class PromptQualityAnalyzer {
   /**
    * 识别优势
    */
-  private identifyStrengths(dimensions: any): string[] {
+  private identifyStrengths(dimensions: Record<string, QualityDimension>): string[] {
     const strengths: string[] = [];
     
     for (const [key, dimension] of Object.entries(dimensions)) {
-      const dim = dimension as QualityDimension;
-      if (dim.score >= 80) {
-        strengths.push(`${dim.name}表现优秀 (${dim.score}分)`);
+      if (dimension.score >= 80) {
+        strengths.push(`${dimension.name}表现优秀 (${dimension.score}分)`);
       }
     }
 
@@ -447,13 +445,12 @@ export class PromptQualityAnalyzer {
   /**
    * 识别劣势
    */
-  private identifyWeaknesses(dimensions: any): string[] {
+  private identifyWeaknesses(dimensions: Record<string, QualityDimension>): string[] {
     const weaknesses: string[] = [];
     
     for (const [key, dimension] of Object.entries(dimensions)) {
-      const dim = dimension as QualityDimension;
-      if (dim.score < 60) {
-        weaknesses.push(`${dim.name}需要改进 (${dim.score}分)`);
+      if (dimension.score < 60) {
+        weaknesses.push(`${dimension.name}需要改进 (${dimension.score}分)`);
       }
     }
 
@@ -463,11 +460,11 @@ export class PromptQualityAnalyzer {
   /**
    * 生成改进建议
    */
-  private generateRecommendations(dimensions: any, prompt: PromptDetails): string[] {
+  private generateRecommendations(dimensions: Record<string, QualityDimension>, prompt: PromptDetails): string[] {
     const recommendations: string[] = [];
     
     // 收集各维度的建议
-    for (const dimension of Object.values(dimensions) as QualityDimension[]) {
+    for (const dimension of Object.values(dimensions)) {
       if (dimension.suggestions) {
         recommendations.push(...dimension.suggestions);
       }

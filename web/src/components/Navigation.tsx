@@ -4,7 +4,6 @@ import { useRouter } from 'next/router';
 import {
   HomeIcon,
   BookmarkIcon,
-  Squares2X2Icon,
   ChatBubbleLeftRightIcon,
   PhotoIcon,
   FilmIcon,
@@ -12,7 +11,6 @@ import {
 import {
   HomeIcon as HomeSolidIcon,
   BookmarkIcon as BookmarkSolidIcon,
-  Squares2X2Icon as Squares2X2SolidIcon,
   ChatBubbleLeftRightIcon as ChatBubbleLeftRightSolidIcon,
   PhotoIcon as PhotoSolidIcon,
   FilmIcon as FilmSolidIcon,

@@ -13,7 +13,7 @@ import {
 /**
  * 检查是否为 JSONB 内容格式
  */
-export function isJsonbContent(content: any): content is PromptContentJsonb {
+export function isJsonbContent(content: unknown): content is PromptContentJsonb {
   return (
     typeof content === 'object' &&
     content !== null &&
@@ -25,7 +25,7 @@ export function isJsonbContent(content: any): content is PromptContentJsonb {
 /**
  * 检查是否为 JSONB 优化模板格式
  */
-export function isJsonbTemplate(template: any): template is OptimizationTemplateJsonb {
+export function isJsonbTemplate(template: unknown): template is OptimizationTemplateJsonb {
   return (
     typeof template === 'object' &&
     template !== null &&

@@ -18,14 +18,12 @@ import {
   OptimizationRequest,
   OptimizationResult,
   IterationRequest,
-  optimizePrompt,
   iteratePrompt,
   analyzePrompt,
 } from '@/lib/prompt-optimizer';
 import { AIAnalyzeButton, AIAnalysisResultDisplay } from '@/components/AIAnalyzeButton';
 import { AIAnalysisResult } from '@/lib/ai-analyzer';
 import { categoryService, CategoryInfo } from '@/services/categoryService';
-import { promptCategoryMatcher } from '@/services/promptCategoryMatcher';
 import { getIconComponent } from '@/utils/categoryIcons';
 import toast from 'react-hot-toast';
 

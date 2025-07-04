@@ -10,7 +10,7 @@ export enum ResponseType {
 }
 
 export class ResponseFormatter {
-  static success(data: any, message?: string): MCPToolResponse {
+  static success(data: unknown, message?: string): MCPToolResponse {
     return {
       content: [{
         type: 'text',
@@ -19,7 +19,7 @@ export class ResponseFormatter {
     };
   }
 
-  static error(message: string, details?: any): MCPToolResponse {
+  static error(message: string, details?: unknown): MCPToolResponse {
     return {
       content: [{
         type: 'text',

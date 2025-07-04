@@ -27,7 +27,7 @@ export interface CategoryDisplayInfo {
   color: string;
   gradient: string;
   iconName: string | null;
-  iconComponent?: React.ComponentType<any>;
+  iconComponent?: React.ComponentType<{ className?: string }>;
 }
 
 // 分类统计信息接口
