@@ -1,14 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { addSecurityHeaders, handleCORS } from './middleware/security';
 
-// API基础URL
-const API_BASE_URL = process.env.API_URL || 'http://localhost:9010';
-// API密钥
-const API_KEY = process.env.API_KEY;
 
-if (!API_KEY) {
-  console.error('API_KEY环境变量未设置。请在.env文件中设置API_KEY。');
-}
 
 // 需要认证的API路由模式
 const PROTECTED_ROUTES = [
@@ -85,11 +78,8 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // 添加API密钥到请求头
+  // 添加请求头
   const requestHeaders = new Headers(request.headers);
-  if (API_KEY) {
-    requestHeaders.set('x-api-key', API_KEY);
-  }
 
   // 添加请求ID用于追踪
   const requestId = `req_${Date.now()}_${Math.random().toString(36).substring(2, 10)}`;

@@ -60,12 +60,8 @@ function getAllowedOrigins(): string | string[] | boolean {
     // 开发环境：允许常见的开发端口和本地访问
     return [
       'http://localhost:3000',
-      'http://localhost:9010',  // MCP服务
-      'http://localhost:9011',  // Web服务
       'http://localhost:8080',
       'http://127.0.0.1:3000',
-      'http://127.0.0.1:9010',
-      'http://127.0.0.1:9011',
       'http://127.0.0.1:8080',
       // 支持常见的开发工具
       'http://localhost:3001',
@@ -74,12 +70,7 @@ function getAllowedOrigins(): string | string[] | boolean {
     ];
   } else if (nodeEnv === 'production') {
     // 生产环境：更严格但仍保持必要的灵活性
-    const allowedOrigins = [
-      'http://localhost:9010',  // 本地MCP服务
-      'http://localhost:9011',  // 本地Web服务
-      'http://127.0.0.1:9010',
-      'http://127.0.0.1:9011',
-    ];
+    const allowedOrigins: string[] = [];
     
     // 如果设置了前端URL，添加到允许列表
     if (process.env.FRONTEND_URL) {
@@ -94,12 +85,10 @@ function getAllowedOrigins(): string | string[] | boolean {
     return allowedOrigins;
   }
   
-  // 默认情况：允许本地服务间通信
+  // 默认情况：允许本地访问
   return [
-    'http://localhost:9010',
-    'http://localhost:9011',
-    'http://127.0.0.1:9010',
-    'http://127.0.0.1:9011',
+    'http://localhost:3000',
+    'http://127.0.0.1:3000',
   ];
 }
 

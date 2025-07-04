@@ -4,14 +4,13 @@
  */
 
 import axios, { AxiosInstance } from 'axios';
-import { 
-  ApiResponse, 
+import {
+  ApiResponse,
   PaginatedResponse,
   PromptFilterParams,
-  PromptApi, 
-  UserApi, 
-  McpApi, 
-} from '@/types/api';
+  PromptApi,
+  UserApi,
+} from '../types/api';
 import { Prompt, PromptVersion } from '../../../supabase/lib/types';
 
 // 网络响应类型定义
@@ -53,14 +52,7 @@ const apiClient = axios.create({
   },
 });
 
-// 创建MCP API实例 - 直接访问MCP服务器
-// 注意：大部分情况下应该通过Next.js API Routes代理请求，这里提供作为备选
-const mcpApiClient = axios.create({
-  baseURL: 'http://localhost:9010/api',
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
+
 
 // 请求拦截器：添加认证信息
 const addAuthInterceptor = (client: AxiosInstance) => {
@@ -127,9 +119,7 @@ const addResponseInterceptor = (client: AxiosInstance) => {
 
 // 添加拦截器
 addAuthInterceptor(apiClient);
-addAuthInterceptor(mcpApiClient);
 addResponseInterceptor(apiClient);
-addResponseInterceptor(mcpApiClient);
 
 /**
  * 提示词相关API
@@ -288,25 +278,7 @@ export const authApi = {
   },
 };
 
-/**
- * AI工具调用API (通过Web服务器代理到MCP服务器)
- */
-export const mcpApi = {
-  // 调用AI工具
-  invokeTool: async (name: string, args: Record<string, unknown> = {}): Promise<McpApi.McpToolResponse['data'] | undefined> => {
-    const response = await apiClient.post<McpApi.McpToolResponse>('/ai-tools', { name, arguments: args });
-    return extractResponseData(response, undefined) as McpApi.McpToolResponse['data'] | undefined;
-  },
-
-  // 获取可用AI工具列表
-  getTools: async (): Promise<Array<Record<string, unknown>>> => {
-    const response = await apiClient.get<ApiResponse<Array<Record<string, unknown>>>>('/ai-tools');
-    return extractResponseData(response, []);
-  },
-};
-
 export default {
   prompts: promptsApi,
   auth: authApi,
-  mcp: mcpApi,
 };

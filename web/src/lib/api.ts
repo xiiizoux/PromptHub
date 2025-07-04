@@ -558,27 +558,7 @@ export interface McpToolResponse {
   [key: string]: unknown;
 }
 
-// MCP工具信息类型
-export interface McpToolInfo {
-  name: string;
-  description?: string;
-  inputSchema?: Record<string, unknown>;
-  [key: string]: unknown;
-}
 
-// 调用AI工具 (通过Web服务器代理到MCP服务器)
-export const invokeMcpTool = async (toolName: string, params: McpToolParams): Promise<McpToolResponse> => {
-  // 使用Web API代理调用AI工具
-  const response = await api.post<NetworkResponse>('/ai-tools', { name: toolName, arguments: params });
-  return extractData(response, {} as McpToolResponse);
-};
-
-// 获取可用AI工具列表
-export const getMcpTools = async (): Promise<McpToolInfo[]> => {
-  // 使用Web API代理获取AI工具列表
-  const response = await api.get<NetworkResponse>('/ai-tools');
-  return extractArrayData<McpToolInfo>(response, []);
-};
 
 // 移除社交功能接口定义 - MCP服务专注于提示词管理
 
@@ -721,10 +701,9 @@ export async function toggleLike(promptId: string): Promise<{ liked: boolean }> 
 }
 
 export async function getUserBookmarks(): Promise<PromptDetails[]> {
-  const apiKey = process.env.API_KEY || localStorage.getItem('api_key');
-  const response = await fetch(`${process.env.API_BASE_URL}/api/user/bookmarks`, {
+  const response = await fetch('/api/user/bookmarks', {
     headers: {
-      'Authorization': `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
     },
   });
 

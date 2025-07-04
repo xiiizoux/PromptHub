@@ -54,15 +54,6 @@ const nextConfig = {
   },
   // 跳过静态导出中的预渲染错误
   trailingSlash: false,
-  // Docker部署时的API代理配置
-  async rewrites() {
-    return [
-      {
-        source: '/api/mcp/:path*',
-        destination: `${process.env.MCP_URL || 'http://localhost:9010'}/api/:path*`,
-      },
-    ];
-  },
 };
 
 module.exports = nextConfig;

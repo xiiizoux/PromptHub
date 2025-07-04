@@ -45,12 +45,8 @@ function getAllowedOrigins(): string[] {
   if (nodeEnv === 'development' || nodeEnv === 'test') {
     return [
       'http://localhost:3000',
-      'http://localhost:9010',  // MCP服务
-      'http://localhost:9011',  // Web服务
       'http://localhost:8080',
       'http://127.0.0.1:3000',
-      'http://127.0.0.1:9010',
-      'http://127.0.0.1:9011',
       'http://127.0.0.1:8080',
       'http://localhost:3001',
       'http://localhost:5173',  // Vite
@@ -60,11 +56,6 @@ function getAllowedOrigins(): string[] {
     const allowedOrigins = [
       'https://prompt-hub.cc',
       'https://www.prompt-hub.cc',
-      'https://mcp.prompt-hub.cc',
-      'http://localhost:9010',  // 本地MCP服务
-      'http://localhost:9011',  // 本地Web服务
-      'http://127.0.0.1:9010',
-      'http://127.0.0.1:9011',
     ];
     
     if (process.env.FRONTEND_URL) {
@@ -79,10 +70,8 @@ function getAllowedOrigins(): string[] {
   }
   
   return [
-    'http://localhost:9010',
-    'http://localhost:9011',
-    'http://127.0.0.1:9010',
-    'http://127.0.0.1:9011',
+    'http://localhost:3000',
+    'http://127.0.0.1:3000',
   ];
 }
 
