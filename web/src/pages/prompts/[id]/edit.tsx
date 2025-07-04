@@ -360,10 +360,6 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
             pageTitle="编辑提示词 - 传统模式"
             pageSubtitle="使用简单的表单编辑您的提示词"
             submitButtonText="更新提示词"
-            backLink={{
-              href: `/prompts/${prompt.id}`,
-              label: '返回提示词详情',
-            }}
             permissionCheck={permissionCheck}
             hasUnsavedChanges={hasUnsavedChanges}
             saveSuccess={saveSuccess}
