@@ -1,9 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   MagnifyingGlassIcon,
-  FunnelIcon,
   StarIcon,
   HeartIcon,
   ClockIcon,
@@ -66,7 +65,7 @@ const ExpandedTemplateLibrary: React.FC = () => {
   const [selectedSubcategory, setSelectedSubcategory] = useState<string>('all');
   const [selectedDifficulty, setSelectedDifficulty] = useState<string>('all');
   const [sortBy, setSortBy] = useState<'popular' | 'newest' | 'rating' | 'usage'>('popular');
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [viewMode] = useState<'grid' | 'list'>('grid');
 
   // 生成模板数据
   const generateTemplates = (): Template[] => {
@@ -181,7 +180,7 @@ const ExpandedTemplateLibrary: React.FC = () => {
   };
 
   // 生成分类数据
-  const generateCategories = (): Category[] => {
+  const generateCategories = useCallback((): Category[] => {
     return [
       {
         id: 'writing',
@@ -304,14 +303,17 @@ const ExpandedTemplateLibrary: React.FC = () => {
         featured: templates.filter(t => t.category === 'personal').slice(0, 3),
       },
     ];
-  };
+  }, [templates]);
 
   useEffect(() => {
     const templateData = generateTemplates();
     setTemplates(templateData);
-    setCategories(generateCategories());
     setFilteredTemplates(templateData);
   }, []);
+
+  useEffect(() => {
+    setCategories(generateCategories());
+  }, [generateCategories]);
 
   // 筛选和搜索逻辑
   useEffect(() => {

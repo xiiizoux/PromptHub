@@ -1,13 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   SparklesIcon,
   ArrowPathIcon,
   ChartBarIcon,
   CheckCircleIcon,
-  ExclamationTriangleIcon,
   InformationCircleIcon,
-  XMarkIcon,
   ClipboardDocumentIcon,
   LightBulbIcon,
   AdjustmentsHorizontalIcon,
@@ -64,6 +62,36 @@ export const PromptOptimizer: React.FC<PromptOptimizerProps> = ({
     }
   }, [initialPrompt]);
 
+  const handleAnalyze = useCallback(async () => {
+    if (!prompt.trim()) {
+      toast.error('请输入要分析的提示词');
+      return;
+    }
+
+    setIsAnalyzing(true);
+    try {
+      const score = await analyzePrompt(prompt);
+      if (score) {
+        setAnalysisScore(score);
+        // 如果当前有结果，也更新结果中的评分
+        if (result) {
+          setResult({
+            ...result,
+            score,
+          });
+        }
+        toast.success('质量分析完成！');
+      } else {
+        toast.error('分析失败：请检查API配置');
+      }
+    } catch (error) {
+      console.error('分析失败:', error);
+      toast.error('分析失败：请检查网络连接');
+    } finally {
+      setIsAnalyzing(false);
+    }
+  }, [prompt, result]);
+
   // 当提示词改变时，清空之前的分析结果
   useEffect(() => {
     if (prompt.trim() && prompt.length > 10) {
@@ -74,7 +102,7 @@ export const PromptOptimizer: React.FC<PromptOptimizerProps> = ({
     } else {
       setAnalysisScore(null);
     }
-  }, [prompt, activeTab]);
+  }, [prompt, activeTab, handleAnalyze]);
 
   const handleOptimize = async () => {
     if (!prompt.trim()) {
@@ -142,40 +170,8 @@ export const PromptOptimizer: React.FC<PromptOptimizerProps> = ({
     }
   };
 
-  const handleAnalyze = async () => {
-    if (!prompt.trim()) {
-      toast.error('请输入要分析的提示词');
-      return;
-    }
-
-    setIsAnalyzing(true);
-    try {
-      const score = await analyzePrompt(prompt);
-      if (score) {
-        setAnalysisScore(score);
-        // 如果当前有结果，也更新结果中的评分
-        if (result) {
-          setResult({
-            ...result,
-            score,
-          });
-        }
-        toast.success('质量分析完成！');
-      } else {
-        toast.error('分析失败：请检查API配置');
-      }
-    } catch (error) {
-      console.error('分析失败:', error);
-      toast.error('分析失败：请检查网络连接');
-    } finally {
-      setIsAnalyzing(false);
-    }
-  };
-
   // AI分析完成处理
   const handleAIAnalysisComplete = (result: Partial<AIAnalysisResult>) => {
-    console.log('优化器收到AI分析结果:', result);
-    
     if (result as AIAnalysisResult) {
       setAiAnalysisResult(result as AIAnalysisResult);
       setShowAiAnalysisResult(true);

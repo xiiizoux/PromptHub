@@ -1,8 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   MagnifyingGlassIcon,
-  AdjustmentsHorizontalIcon,
   PencilIcon,
   SparklesIcon,
   BriefcaseIcon,
@@ -14,12 +13,11 @@ import {
   HeartIcon,
   StarIcon,
   ClockIcon,
-  TagIcon,
   EyeIcon,
   FireIcon,
 } from '@heroicons/react/24/outline';
-import { HeartIcon as HeartSolidIcon, StarIcon as StarSolidIcon } from '@heroicons/react/24/solid';
-import type { PromptTemplate, TemplateCategory, TemplateFilters } from '@/types';
+import { StarIcon as StarSolidIcon } from '@heroicons/react/24/solid';
+import type { PromptTemplate, TemplateCategory } from '@/types';
 
 // 图标映射
 const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -51,15 +49,7 @@ const DatabaseTemplateLibrary: React.FC<DatabaseTemplateLibraryProps> = ({
   const [showFeaturedOnly, setShowFeaturedOnly] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
-  useEffect(() => {
-    fetchData();
-  }, []);
-
-  useEffect(() => {
-    filterTemplates();
-  }, [templates, selectedCategory, selectedDifficulty, showFeaturedOnly, searchQuery]);
-
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       setLoading(true);
       const [templatesResponse, categoriesResponse] = await Promise.all([
@@ -82,9 +72,9 @@ const DatabaseTemplateLibrary: React.FC<DatabaseTemplateLibraryProps> = ({
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const filterTemplates = () => {
+  const filterTemplates = useCallback(() => {
     let filtered = [...templates];
 
     if (selectedCategory) {
@@ -109,7 +99,15 @@ const DatabaseTemplateLibrary: React.FC<DatabaseTemplateLibraryProps> = ({
     }
 
     setFilteredTemplates(filtered);
-  };
+  }, [templates, selectedCategory, selectedDifficulty, showFeaturedOnly, searchQuery]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  useEffect(() => {
+    filterTemplates();
+  }, [filterTemplates]);
 
   const handleUseTemplate = async (template: PromptTemplate) => {
     try {
