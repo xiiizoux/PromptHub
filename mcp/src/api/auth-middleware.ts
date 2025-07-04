@@ -75,7 +75,9 @@ const RATE_LIMIT_MAX_REQUESTS = 100; // 每个窗口最多100个请求
 
 function _isSessionValid(sessionId: string): boolean {
   const session = activeSessions.get(sessionId);
-  if (!session) return false;
+  if (!session) {
+    return false;
+  }
 
   const now = Date.now();
   if (now > session.expiresAt) {
@@ -405,16 +407,16 @@ function getAuthValue(request: Request, key: string): string {
   // 从查询参数获取值
   if (request.query && request.query[lowerKey]) {
     const value = request.query[lowerKey];
-    if (typeof value === 'string') return value.trim();
-    if (Array.isArray(value) && value.length > 0) return String(value[0]).trim();
+    if (typeof value === 'string') {return value.trim();}
+    if (Array.isArray(value) && value.length > 0) {return String(value[0]).trim();}
     return '';
   }
 
   // 从headers获取值
   if (request.headers && request.headers[lowerKey]) {
     const value = request.headers[lowerKey];
-    if (typeof value === 'string') return value.trim();
-    if (Array.isArray(value) && value.length > 0) return String(value[0]).trim();
+    if (typeof value === 'string') {return value.trim();}
+    if (Array.isArray(value) && value.length > 0) {return String(value[0]).trim();}
     return '';
   }
 

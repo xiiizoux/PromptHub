@@ -1,5 +1,4 @@
-import express from 'express';
-import type { Request, Response, NextFunction } from 'express';
+import express, { Request, Response, NextFunction } from 'express';
 import { storage } from '../shared/services.js';
 import { authenticateRequest } from './auth-middleware.js';
 import logger, { logApiKeyActivity, AuditEventType } from '../utils/logger.js';
@@ -44,7 +43,7 @@ router.get('/', authenticateRequest, async (req: Request, res: Response, _next: 
   try {
     const metadata = getRequestMetadata(req);
     
-    if (!req.user || !req.user.id) {
+    if (!req.user?.id) {
       return res.status(401).json({
         success: false,
         error: '未授权访问',
@@ -85,7 +84,7 @@ router.post('/', authenticateRequest, async (req: Request, res: Response, _next:
   try {
     const metadata = getRequestMetadata(req);
     
-    if (!req.user || !req.user.id) {
+    if (!req.user?.id) {
       return res.status(401).json({
         success: false,
         error: '未授权访问',
@@ -150,7 +149,7 @@ router.delete('/:id', authenticateRequest, async (req: Request, res: Response, _
   try {
     const metadata = getRequestMetadata(req);
     
-    if (!req.user || !req.user.id) {
+    if (!req.user?.id) {
       return res.status(401).json({
         success: false,
         error: '未授权访问',

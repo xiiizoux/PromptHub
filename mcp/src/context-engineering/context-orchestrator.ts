@@ -271,6 +271,7 @@ export class ContextOrchestrator {
     // 移除潜在的恶意内容
     return input
       .replace(/\0/g, '') // 移除空字符
+      // eslint-disable-next-line no-control-regex
       .replace(/[\u0001-\u001F\u007F]/g, '') // 移除控制字符
       .trim();
   }

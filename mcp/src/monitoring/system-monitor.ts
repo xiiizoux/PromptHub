@@ -326,7 +326,7 @@ export class SystemMonitor {
 
   private checkAlerts(metrics: SystemMetrics): void {
     for (const rule of this.alertRules) {
-      if (!rule.enabled) continue;
+      if (!rule.enabled) {continue;}
 
       const value = this.getMetricValue(metrics, rule.metric);
       if (value !== null && this.evaluateCondition(value, rule.threshold, rule.operator)) {

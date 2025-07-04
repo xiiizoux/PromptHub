@@ -61,7 +61,7 @@ class MCPPromptCategoryMatcher {
           }
         });
 
-        if (response.data && response.data.success && Array.isArray(response.data.data)) {
+        if (response.data?.success && Array.isArray(response.data.data)) {
           // 处理 JSONB 优化模板
           this.categoryCache = response.data.data
             .filter((cat: any) => cat.is_active)
@@ -209,7 +209,7 @@ class MCPPromptCategoryMatcher {
     const lowerPrompt = prompt.toLowerCase();
 
     categories.forEach(category => {
-      if (!category.description) return;
+      if (!category.description) {return;}
 
       const description = category.description.toLowerCase();
       let score = 0;

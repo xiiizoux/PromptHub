@@ -194,10 +194,10 @@ export class SupabaseAdapter implements StorageAdapter {
    * 映射Supabase错误到内部错误类型
    */
   private mapErrorType(error: any): ErrorType {
-    if (error.code === 'PGRST116') return ErrorType.NOT_FOUND;
-    if (error.code === 'PGRST301') return ErrorType.AUTHENTICATION;
-    if (error.code === 'PGRST302') return ErrorType.AUTHORIZATION;
-    if (error.message?.includes('network')) return ErrorType.NETWORK;
+    if (error.code === 'PGRST116') {return ErrorType.NOT_FOUND;}
+    if (error.code === 'PGRST301') {return ErrorType.AUTHENTICATION;}
+    if (error.code === 'PGRST302') {return ErrorType.AUTHORIZATION;}
+    if (error.message?.includes('network')) {return ErrorType.NETWORK;}
     return ErrorType.STORAGE;
   }
 
@@ -205,9 +205,9 @@ export class SupabaseAdapter implements StorageAdapter {
    * 映射错误严重程度
    */
   private mapErrorSeverity(error: any): ErrorSeverity {
-    if (error.code === 'PGRST116') return ErrorSeverity.LOW; // Not found
-    if (error.code?.startsWith('08')) return ErrorSeverity.HIGH; // Connection errors
-    if (error.message?.includes('timeout')) return ErrorSeverity.MEDIUM;
+    if (error.code === 'PGRST116') {return ErrorSeverity.LOW;} // Not found
+    if (error.code?.startsWith('08')) {return ErrorSeverity.HIGH;} // Connection errors
+    if (error.message?.includes('timeout')) {return ErrorSeverity.MEDIUM;}
     return ErrorSeverity.MEDIUM;
   }
 
@@ -1043,11 +1043,11 @@ export class SupabaseAdapter implements StorageAdapter {
       .split(/[\s,，。！？、；：""''（）()[\]【】\-_=+|\\/*&%$#@~`]+/)
       .filter(word => {
         // 过滤条件
-        if (word.length === 0) return false;
-        if (word.length < 2) return false; // 至少2个字符
-        if (stopWords.includes(word)) return false;
-        if (/^[0-9]+$/.test(word)) return false; // 排除纯数字
-        if (/^[^\u4e00-\u9fa5a-zA-Z]+$/.test(word)) return false; // 排除纯符号
+        if (word.length === 0) {return false;}
+        if (word.length < 2) {return false;} // 至少2个字符
+        if (stopWords.includes(word)) {return false;}
+        if (/^[0-9]+$/.test(word)) {return false;} // 排除纯数字
+        if (/^[^\u4e00-\u9fa5a-zA-Z]+$/.test(word)) {return false;} // 排除纯符号
         return true;
       });
     
@@ -1100,7 +1100,7 @@ export class SupabaseAdapter implements StorageAdapter {
    * 关键词分词搜索
    */
   private async executeKeywordSearch(keywords: string[], userId?: string, includePublic: boolean = true): Promise<Prompt[]> {
-    if (keywords.length === 0) return [];
+    if (keywords.length === 0) {return [];}
     
     try {
       const results = new Set<Prompt>();

@@ -213,13 +213,13 @@ export class MCPAIAnalyzer {
       );
 
       // 验证响应格式
-      if (!_response.data || !_response.data.choices || !Array.isArray(_response.data.choices) || _response.data.choices.length === 0) {
+      if (!_response.data?.choices || !Array.isArray(_response.data.choices) || _response.data.choices.length === 0) {
         console.error('[MCP AI] API返回格式异常:', _response.data);
         throw new Error('AI服务返回格式异常，请重试');
       }
 
       const choice = _response.data.choices[0];
-      if (!choice || !choice.message || !choice.message.content) {
+      if (!choice?.message?.content) {
         console.error('[MCP AI] API返回内容为空:', choice);
         throw new Error('AI服务返回内容为空，请重试');
       }

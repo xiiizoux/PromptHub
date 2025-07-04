@@ -662,7 +662,7 @@ export class ContextStateManager implements StateStorage {
 
   private getCacheItem(key: string): unknown {
     const item = this.cache.get(key) as { value: unknown; timestamp: number; ttl: number } | undefined;
-    if (!item) return null;
+    if (!item) {return null;}
 
     if (Date.now() - item.timestamp > item.ttl) {
       this.cache.delete(key);

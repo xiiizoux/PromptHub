@@ -166,7 +166,7 @@ export abstract class BaseMCPTool {
    * 转换为Markdown格式
    */
   private toMarkdown(data: unknown): string {
-    if (typeof data === 'string') return data;
+    if (typeof data === 'string') {return data;}
     if (Array.isArray(data)) {
       return data.map((item, index) => `${index + 1}. ${this.toMarkdown(item)}`).join('\n');
     }
@@ -182,7 +182,7 @@ export abstract class BaseMCPTool {
    * 转换为纯文本格式
    */
   private toPlainText(data: unknown): string {
-    if (typeof data === 'string') return data;
+    if (typeof data === 'string') {return data;}
     if (Array.isArray(data)) {
       return data.map((item, index) => `${index + 1}. ${this.toPlainText(item)}`).join('\n');
     }
