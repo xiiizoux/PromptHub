@@ -363,7 +363,6 @@ ${requirements}${context}`;
         },
         body: JSON.stringify({
           prompt: userPrompt, // 传递用户提示词
-          optimizationType: 'general', // 默认优化类型
           requirements: '', // 可以从系统提示词中提取需求
           context: systemPrompt, // 将系统提示词作为上下文
         }),
@@ -515,7 +514,6 @@ export async function analyzePrompt(prompt: string): Promise<OptimizationResult[
 export async function optimizePromptAdvanced(
   prompt: string,
   options: {
-    type?: 'general' | 'creative' | 'technical' | 'business' | 'educational' | 'drawing' | 'advanced',
     requirements?: string,
     context?: string,
     complexity?: 'simple' | 'medium' | 'complex',
@@ -540,7 +538,6 @@ export async function optimizePromptAdvanced(
       },
       body: JSON.stringify({
         prompt,
-        optimizationType: options.type || 'general',
         requirements: options.requirements || '',
         context: options.context || '',
         complexity: options.complexity || 'medium',
@@ -571,17 +568,16 @@ export async function optimizePromptAdvanced(
 export async function optimizePromptBatch(
   prompts: Array<{
     prompt: string;
-    type?: 'general' | 'creative' | 'technical' | 'business' | 'educational' | 'drawing' | 'advanced';
     requirements?: string;
   }>,
 ): Promise<Array<OptimizationResult | null>> {
   const results = [];
-  
+
   for (const item of prompts) {
     try {
-      const result = await optimizePrompt(item.prompt, item.requirements, item.type);
+      const result = await optimizePrompt(item.prompt, item.requirements);
       results.push(result);
-      
+
       // 添加延迟避免API限流
       await new Promise(resolve => setTimeout(resolve, 500));
     } catch (error) {
@@ -589,7 +585,7 @@ export async function optimizePromptBatch(
       results.push(null);
     }
   }
-  
+
   return results;
 }
 

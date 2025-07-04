@@ -31,7 +31,7 @@ const formatDate = (dateString?: string) => {
 
 const PromptCard: React.FC<PromptCardProps> = React.memo(({ prompt }) => {
   // 使用优化的分类显示Hook，无延迟加载
-  const categoryInfo = useOptimizedCategoryDisplay(prompt?.category || '通用对话', 'chat');
+  const categoryInfo = useOptimizedCategoryDisplay(prompt?.category || '', 'chat');
 
   const rating = useMemo(() => {
     // 优先使用 average_rating，如果没有则使用 rating 字段

@@ -1,7 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { promptCategoryMatcher } from '@/services/promptCategoryMatcher';
 import { logger } from '@/lib/error-handler';
-import { extractTemplateFromJsonb, isJsonbTemplate } from '@/lib/jsonb-utils';
+import { extractTemplateFromJsonb, isJsonbTemplate, extractSystemUserTemplate } from '@/lib/jsonb-utils';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
@@ -59,16 +59,35 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       templateResult = await promptCategoryMatcher.getOptimizationTemplate(prompt);
     }
 
-    // 构建优化提示词
-    const optimizationTemplate = templateResult.template;
+    // 提取System+User模板结构
+    const systemUserTemplate = extractSystemUserTemplate(templateResult.template);
     const requirementsText = requirements ? `\n\n特殊要求：${requirements}` : '';
     const contextText = context ? `\n\n使用场景：${context}` : '';
-    const optimizationPrompt = optimizationTemplate
+
+    // 构建用户消息
+    const userPrompt = systemUserTemplate.user
       .replace('{prompt}', prompt)
       .replace('{requirements}', requirementsText + contextText);
 
     // 选择模型
     const model = 'gpt-4o-mini';
+
+    // 构建消息数组
+    const messages: Array<{role: string, content: string}> = [];
+
+    // 如果有System角色，添加system消息
+    if (systemUserTemplate.system) {
+      messages.push({
+        role: 'system',
+        content: systemUserTemplate.system
+      });
+    }
+
+    // 添加用户消息
+    messages.push({
+      role: 'user',
+      content: userPrompt
+    });
 
     // 调用OpenAI API
     const response = await fetch(`${baseURL}/chat/completions`, {
@@ -79,12 +98,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       },
       body: JSON.stringify({
         model,
-        messages: [
-          {
-            role: 'user',
-            content: optimizationPrompt,
-          },
-        ],
+        messages,
         max_tokens: 1500,
         temperature: 0.7,
       }),

@@ -455,39 +455,27 @@ ${content}
   private recommendCompatibleModels(category: string, content: string): string[] {
     const recommendations: string[] = [];
     
-    // 基于分类推荐
-    switch (category) {
-      case '编程':
-        recommendations.push('code-specialized', 'llm-large');
-        break;
-      case '文案':
-        recommendations.push('llm-large', 'llm-medium');
-        break;
-      case '翻译':
-        recommendations.push('translation-specialized', 'llm-large');
-        break;
-      case '设计':
-        recommendations.push('image-generation', 'image-analysis');
-        break;
-      case '绘画':
-        recommendations.push('image-generation');
-        break;
-      case '视频':
-        recommendations.push('video-generation');
-        break;
-      case '播客':
-      case '音乐':
-        recommendations.push('audio-generation', 'audio-tts');
-        break;
-      case '学术':
-        recommendations.push('llm-large', 'reasoning-specialized');
-        break;
-      case '健康':
-      case '科技':
-        recommendations.push('llm-large', 'reasoning-specialized');
-        break;
-      default:
-        recommendations.push('llm-large', 'llm-medium');
+    // 基于分类关键词推荐
+    const lowerCategory = category.toLowerCase();
+
+    if (lowerCategory.includes('编程') || lowerCategory.includes('代码') || lowerCategory.includes('开发')) {
+      recommendations.push('code-specialized', 'llm-large');
+    } else if (lowerCategory.includes('文案') || lowerCategory.includes('写作') || lowerCategory.includes('创作')) {
+      recommendations.push('llm-large', 'llm-medium');
+    } else if (lowerCategory.includes('翻译') || lowerCategory.includes('语言')) {
+      recommendations.push('translation-specialized', 'llm-large');
+    } else if (lowerCategory.includes('设计') || lowerCategory.includes('绘画') || lowerCategory.includes('图像')) {
+      recommendations.push('image-generation', 'image-analysis');
+    } else if (lowerCategory.includes('视频') || lowerCategory.includes('影像')) {
+      recommendations.push('video-generation');
+    } else if (lowerCategory.includes('播客') || lowerCategory.includes('音乐') || lowerCategory.includes('音频')) {
+      recommendations.push('audio-generation', 'audio-tts');
+    } else if (lowerCategory.includes('学术') || lowerCategory.includes('研究') || lowerCategory.includes('科研')) {
+      recommendations.push('llm-large', 'reasoning-specialized');
+    } else if (lowerCategory.includes('健康') || lowerCategory.includes('科技') || lowerCategory.includes('技术')) {
+      recommendations.push('llm-large', 'reasoning-specialized');
+    } else {
+      recommendations.push('llm-large', 'llm-medium');
     }
     
     // 基于内容特征推荐

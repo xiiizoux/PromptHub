@@ -3,12 +3,13 @@
  * 与 supabase/lib/jsonb-utils.ts 保持同步
  */
 
-import { 
-  PromptContentJsonb, 
+import {
+  PromptContentJsonb,
   OptimizationTemplateJsonb,
   ContentConversionResult,
   OptimizationTemplateConversionResult
 } from '../types.js';
+import { getOptimizationSystemTemplate } from '../constants/system-templates.js';
 
 /**
  * 检查是否为 JSONB 内容格式
@@ -61,7 +62,81 @@ export function extractContentFromJsonb(content: PromptContentJsonb | string): s
 }
 
 /**
- * 从 JSONB 优化模板中提取模板文本
+ * System+User模板结构接口
+ */
+export interface SystemUserTemplate {
+  system: string;
+  user: string;
+}
+
+/**
+ * 从JSONB优化模板中提取System和User角色模板
+ * System角色使用硬编码模板，User角色从数据库提取
+ */
+export function extractSystemUserTemplate(template: any): SystemUserTemplate {
+  // System角色始终使用硬编码模板
+  const systemTemplate = getOptimizationSystemTemplate();
+
+  if (!template) {
+    return {
+      system: systemTemplate,
+      user: ''
+    };
+  }
+
+  let templateObj = template;
+
+  // 如果是字符串，先尝试解析
+  if (typeof template === 'string') {
+    try {
+      templateObj = JSON.parse(template);
+    } catch {
+      // 如果解析失败，作为user模板返回
+      return {
+        system: systemTemplate,
+        user: template
+      };
+    }
+  }
+
+  // 如果不是对象，作为user模板返回
+  if (typeof templateObj !== 'object' || templateObj === null) {
+    return {
+      system: systemTemplate,
+      user: String(template)
+    };
+  }
+
+  // 提取User角色模板
+  let userTemplate = '';
+
+  // 优先使用user字段（当前格式）
+  if (templateObj.user) {
+    userTemplate = templateObj.user;
+  }
+  // 兼容user_template字段（迁移过程中的临时格式）
+  else if (templateObj.user_template) {
+    userTemplate = templateObj.user_template;
+  }
+  // 兼容旧格式：从legacy结构中提取
+  else if (templateObj.template) {
+    userTemplate = templateObj.template;
+  } else if (templateObj.structure?.system_prompt) {
+    userTemplate = templateObj.structure.system_prompt;
+  } else if (templateObj.system_prompt) {
+    userTemplate = templateObj.system_prompt;
+  } else {
+    userTemplate = JSON.stringify(templateObj);
+  }
+
+  return {
+    system: systemTemplate,
+    user: userTemplate
+  };
+}
+
+/**
+ * 从 JSONB 优化模板中提取模板文本（向后兼容）
  */
 export function extractTemplateFromJsonb(template: OptimizationTemplateJsonb | string): string {
   if (typeof template === 'string') {
@@ -69,7 +144,12 @@ export function extractTemplateFromJsonb(template: OptimizationTemplateJsonb | s
   }
 
   if (!isJsonbTemplate(template)) {
-    return '';
+    // 尝试提取System+User结构
+    const systemUser = extractSystemUserTemplate(template);
+    if (systemUser.system) {
+      return `${systemUser.system}\n\n${systemUser.user}`;
+    }
+    return systemUser.user;
   }
 
   switch (template.type) {

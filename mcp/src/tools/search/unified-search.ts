@@ -1083,73 +1083,87 @@ export class UnifiedSearchTool extends BaseMCPTool {
   }
 
   /**
-   * 获取分类对应的emoji
+   * 基于分类关键词动态获取emoji
    */
   private getCategoryEmoji(category: string): string {
-    const emojiMap: { [key: string]: string } = {
-      // Chat类型
-      '写作': '✍️',
-      '编程': '💻',
-      '商务': '💼',
-      '教育': '📚',
-      '创意': '🎨',
-      '分析': '📊',
-      '翻译': '🌐',
-      '营销': '📢',
-      '客服': '🎧',
-      '法律': '⚖️',
-      '医疗': '🏥',
-      '金融': '💰',
-      '金融投资': '💰',
-      '研究': '🔬',
-      '管理': '📋',
-      '技术': '⚙️',
-      '娱乐': '🎮',
-      '生活': '🏠',
-      '学习': '📖',
-      '通用': '📝',
-      '学术': '🎓',
-      '职业': '💼',
-      '文案': '📝',
-      '情感': '❤️',
-      '游戏': '🎮',
-      '办公': '🏢',
-      '健康': '🏥',
-      '科技': '🔬',
-      
-      // Image类型
-      '绘画': '🎨',
-      '设计': '🎨',
-      '摄影': '📷',
-      '插画': '🖼️',
-      'UI设计': '📱',
-      '品牌设计': '🏪',
-      '海报设计': '📋',
-      '3D建模': '🧊',
-      '动漫风格': '🎭',
-      '写实风格': '👁️',
-      '抽象艺术': '🎨',
-      '建筑设计': '🏗️',
-      '时尚设计': '👗',
-      '游戏美术': '🎮',
-      '科幻风格': '🚀',
-      
-      // Video类型
-      '视频制作': '🎬',
-      '动画制作': '🎞️',
-      '短视频': '📱',
-      '纪录片': '📹',
-      '广告视频': '📺',
-      '教学视频': '🎓',
-      '音乐视频': '🎵',
-      '游戏视频': '🎮',
-      '直播内容': '📡',
-      '企业宣传': '🏢',
-      '旅行视频': '✈️',
-      '生活记录': '📝'
-    };
+    const lowerCategory = category.toLowerCase();
 
-    return emojiMap[category] || '📝';
+    // 基于关键词智能匹配emoji
+    if (lowerCategory.includes('写作') || lowerCategory.includes('文案') || lowerCategory.includes('创作')) {
+      return '✍️';
+    }
+    if (lowerCategory.includes('编程') || lowerCategory.includes('代码') || lowerCategory.includes('开发')) {
+      return '💻';
+    }
+    if (lowerCategory.includes('商务') || lowerCategory.includes('商业') || lowerCategory.includes('管理')) {
+      return '💼';
+    }
+    if (lowerCategory.includes('教育') || lowerCategory.includes('教学') || lowerCategory.includes('学习')) {
+      return '📚';
+    }
+    if (lowerCategory.includes('创意') || lowerCategory.includes('设计') || lowerCategory.includes('绘画')) {
+      return '🎨';
+    }
+    if (lowerCategory.includes('分析') || lowerCategory.includes('研究') || lowerCategory.includes('科研')) {
+      return '📊';
+    }
+    if (lowerCategory.includes('翻译') || lowerCategory.includes('语言')) {
+      return '🌐';
+    }
+    if (lowerCategory.includes('营销') || lowerCategory.includes('推广')) {
+      return '📢';
+    }
+    if (lowerCategory.includes('客服') || lowerCategory.includes('服务')) {
+      return '🎧';
+    }
+    if (lowerCategory.includes('法律') || lowerCategory.includes('法规')) {
+      return '⚖️';
+    }
+    if (lowerCategory.includes('医疗') || lowerCategory.includes('健康')) {
+      return '🏥';
+    }
+    if (lowerCategory.includes('金融') || lowerCategory.includes('投资') || lowerCategory.includes('财务')) {
+      return '💰';
+    }
+    if (lowerCategory.includes('技术') || lowerCategory.includes('科技')) {
+      return '⚙️';
+    }
+    if (lowerCategory.includes('娱乐') || lowerCategory.includes('游戏')) {
+      return '🎮';
+    }
+    if (lowerCategory.includes('生活') || lowerCategory.includes('日常')) {
+      return '🏠';
+    }
+    if (lowerCategory.includes('学术') || lowerCategory.includes('论文')) {
+      return '🎓';
+    }
+    if (lowerCategory.includes('情感') || lowerCategory.includes('心理')) {
+      return '❤️';
+    }
+    if (lowerCategory.includes('办公') || lowerCategory.includes('工作')) {
+      return '🏢';
+    }
+    if (lowerCategory.includes('摄影') || lowerCategory.includes('拍摄')) {
+      return '📷';
+    }
+    if (lowerCategory.includes('插画') || lowerCategory.includes('图像')) {
+      return '🖼️';
+    }
+    if (lowerCategory.includes('视频') || lowerCategory.includes('影像')) {
+      return '🎬';
+    }
+    if (lowerCategory.includes('动画') || lowerCategory.includes('动漫')) {
+      return '🎞️';
+    }
+    if (lowerCategory.includes('音乐') || lowerCategory.includes('音频')) {
+      return '🎵';
+    }
+    if (lowerCategory.includes('播客') || lowerCategory.includes('广播')) {
+      return '📡';
+    }
+
+    // 默认emoji
+    return '📝';
   }
 }
 

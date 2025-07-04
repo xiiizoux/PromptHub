@@ -4,7 +4,7 @@
  */
 
 import axios from 'axios';
-import { MODEL_TAGS, ModelCapability, getModelTagsByCapability } from '@/constants/ai-models';
+import { MODEL_TAGS } from '@/constants/ai-models';
 import { categoryService } from '@/services/categoryService';
 
 // AI分析结果接口
@@ -516,31 +516,41 @@ class AIAnalyzer {
       // 从预设的MODEL_TAGS中获取模型ID
       const availableModels = MODEL_TAGS.map(tag => tag.id);
       
-      // 基于分类的初步推荐
-      const categoryRecommendations: { [key: string]: string[] } = {
-        '编程': ['code-specialized', 'llm-large'],
-        '文案': ['llm-large', 'llm-medium'],
-        '创意写作': ['llm-large', 'llm-medium'], 
-        '翻译': ['translation-specialized', 'llm-large'],
-        '设计': ['image-generation'],
-        '绘画': ['image-generation'],
-        '视频': ['video-generation'],
-        '播客': ['audio-generation', 'audio-tts'],
-        '音乐': ['audio-generation', 'audio-tts'],
-        '学术': ['llm-large', 'reasoning-specialized'],
-        '健康': ['llm-large', 'reasoning-specialized'],
-        '科技': ['llm-large', 'reasoning-specialized'],
-        '金融': ['llm-large', 'reasoning-specialized'],
-        '写作': ['llm-large', 'llm-medium'],
-        '商业': ['llm-large', 'llm-medium'],
-        '办公': ['llm-medium', 'llm-large'],
-        '教育': ['llm-large', 'llm-medium'],
-        '游戏': ['llm-medium', 'llm-large'],
-        '默认': ['llm-large', 'llm-medium'],
+      // 基于分类关键词的智能推荐
+      const getRecommendationsByKeywords = (category: string): string[] => {
+        const lowerCategory = category.toLowerCase();
+
+        if (lowerCategory.includes('编程') || lowerCategory.includes('代码') || lowerCategory.includes('开发')) {
+          return ['code-specialized', 'llm-large'];
+        }
+        if (lowerCategory.includes('文案') || lowerCategory.includes('写作') || lowerCategory.includes('创作')) {
+          return ['llm-large', 'llm-medium'];
+        }
+        if (lowerCategory.includes('翻译') || lowerCategory.includes('语言')) {
+          return ['translation-specialized', 'llm-large'];
+        }
+        if (lowerCategory.includes('设计') || lowerCategory.includes('绘画') || lowerCategory.includes('图像')) {
+          return ['image-generation'];
+        }
+        if (lowerCategory.includes('视频') || lowerCategory.includes('影像')) {
+          return ['video-generation'];
+        }
+        if (lowerCategory.includes('播客') || lowerCategory.includes('音乐') || lowerCategory.includes('音频')) {
+          return ['audio-generation', 'audio-tts'];
+        }
+        if (lowerCategory.includes('学术') || lowerCategory.includes('研究') || lowerCategory.includes('科研')) {
+          return ['llm-large', 'reasoning-specialized'];
+        }
+        if (lowerCategory.includes('商业') || lowerCategory.includes('管理') || lowerCategory.includes('营销')) {
+          return ['llm-large', 'llm-medium'];
+        }
+
+        // 默认推荐
+        return ['llm-medium', 'llm-large'];
       };
-      
+
       // 获取基础推荐
-      const baseRecommendations = categoryRecommendations[category] || categoryRecommendations['默认'];
+      const baseRecommendations = getRecommendationsByKeywords(category);
       recommendations.push(...baseRecommendations);
       
       // 基于内容特征的智能推荐
@@ -671,397 +681,7 @@ class AIAnalyzer {
     }
 
 
-  /**
-   * 智能生成描述
-   */
-  private generateIntelligentDescription(content: string, category: string, tags: string[]): string {
-    const lowerContent = content.toLowerCase();
-    
-    // 检测角色扮演类型
-    const isRolePlay = tags.includes('角色扮演') || content.includes('你是') || content.includes('你拥有') || content.includes('你的身份');
-    
-    // 检测核心能力
-    const coreAbilities = [];
-    if (tags.includes('系统思维') || lowerContent.includes('系统')) coreAbilities.push('系统性思维');
-    if (tags.includes('模式识别') || lowerContent.includes('模式')) coreAbilities.push('模式识别');
-    if (tags.includes('深度洞察') || lowerContent.includes('洞察')) coreAbilities.push('深度洞察');
-    if (tags.includes('分析') || lowerContent.includes('分析')) coreAbilities.push('智能分析');
-    if (tags.includes('创作') || lowerContent.includes('创作')) coreAbilities.push('创意生成');
-    
-    // 检测独特方法/视角
-    const uniqueMethods = [];
-    if (lowerContent.includes('跨域') || lowerContent.includes('跨领域')) uniqueMethods.push('跨领域连接');
-    if (lowerContent.includes('直觉') || lowerContent.includes('感知')) uniqueMethods.push('直觉感知');
-    if (lowerContent.includes('抽象') || lowerContent.includes('本质')) uniqueMethods.push('抽象思维');
-    if (lowerContent.includes('结构') || lowerContent.includes('框架')) uniqueMethods.push('结构化分析');
-    
-    // 检测解决的问题
-    const problemsSolved = [];
-    if (lowerContent.includes('复杂') || lowerContent.includes('系统')) problemsSolved.push('复杂问题分析');
-    if (lowerContent.includes('隐藏') || lowerContent.includes('潜在')) problemsSolved.push('隐藏规律发现');
-    if (lowerContent.includes('联系') || lowerContent.includes('关系')) problemsSolved.push('要素关联识别');
-    if (lowerContent.includes('决策') || lowerContent.includes('选择')) problemsSolved.push('决策支持');
-    
-    // 根据类型生成描述
-    if (isRolePlay && category === '学术') {
-      const ability = coreAbilities.length > 0 ? coreAbilities[0] : '深度分析';
-      const method = uniqueMethods.length > 0 ? uniqueMethods[0] : '专业视角';
-      const problem = problemsSolved.length > 0 ? problemsSolved[0] : '复杂问题解决';
-      const value = '更高层次的理解和洞察';
-      
-      return `具有${ability}能力的AI角色，专门用于发现复杂系统中的隐藏模式和规律。通过${method}，帮助用户进行${problem}，从而获得${value}。`;
-    }
-    
-    if (category === '编程') {
-      return '专业的编程开发工具，能够生成高质量代码和提供技术解决方案。支持多种编程语言和开发场景，帮助用户提升开发效率和代码质量。';
-    }
-    
-    if (category === '文案') {
-      return '创意文案创作助手，结合营销策略和用户心理生成吸引人的文案内容。适用于广告、营销、品牌传播等场景，帮助用户实现更好的传播效果。';
-    }
-    
-    if (category === '翻译') {
-      return '智能多语言翻译工具，通过上下文理解和文化适配提供准确的翻译服务。支持多种语言对，帮助用户实现跨语言沟通和内容本地化。';
-    }
-    
-    if (category === '设计') {
-      return '专业设计顾问工具，能够提供创意设计方案和视觉建议。结合美学原理和用户体验，帮助用户创造出色的设计作品。';
-    }
-    
-    if (category === '视频') {
-      return '专业视频制作助手，提供从策划到后期的全流程支持。擅长剪辑技巧、视觉效果和叙事结构，帮助用户创作引人入胜的视频内容。';
-    }
-    
-    if (category === '音乐') {
-      return '智能音乐创作工具，能够协助旋律创作、歌词编写和编曲制作。结合音乐理论和情感表达，帮助用户创造动人的音乐作品。';
-    }
-    
-    if (category === 'TTS音频') {
-      return '专业语音合成助手，提供自然流畅的语音生成服务。支持多种音色和情感表达，适用于有声读物、配音和语音导航等场景。';
-    }
-    
-    if (category === '图片') {
-      return '智能图像设计工具，能够生成各类视觉内容和设计方案。结合美学原理和用户需求，帮助用户创作专业的图像作品。';
-    }
-    
-    if (category === '播客') {
-      return '专业播客制作助手，提供节目策划、内容创作和制作指导。帮助用户打造高质量的音频节目，实现有效的知识传播和观众互动。';
-    }
-    
-    // 通用描述模板
-    const mainFunction = coreAbilities.length > 0 ? coreAbilities.join('和') : '智能分析';
-    const approach = uniqueMethods.length > 0 ? uniqueMethods[0] : '专业方法';
-    const outcome = problemsSolved.length > 0 ? problemsSolved[0] : '问题解决';
-    
-    return `智能${mainFunction}工具，通过${approach}深入理解用户需求。提供专业的分析和建议，帮助用户实现${outcome}和效率提升。`;
-  }
 
-  /**
-   * 智能生成改进建议
-   */
-  private generateIntelligentImprovements(content: string, category: string, tags: string[]): string[] {
-    const improvements: string[] = [];
-    const lowerContent = content.toLowerCase();
-    
-    // 基于内容长度的建议
-    if (content.length < 50) {
-      improvements.push('建议增加更详细的描述和上下文信息');
-    } else if (content.length > 2000) {
-      improvements.push('考虑将长提示词拆分为多个更专注的子提示词');
-    }
-    
-    // 基于变量使用的建议
-    const variables = this.extractVariables(content);
-    if (variables.length === 0 && content.length > 100) {
-      improvements.push('考虑添加变量以提高提示词的复用性');
-    } else if (variables.length > 5) {
-      improvements.push('变量较多，建议优化变量命名和组织结构');
-    }
-    
-    // 基于分类的专业建议
-    switch (category) {
-      case '编程':
-        if (!lowerContent.includes('示例') && !lowerContent.includes('example')) {
-          improvements.push('建议添加代码示例以提高输出质量');
-        }
-        if (!lowerContent.includes('格式') && !lowerContent.includes('format')) {
-          improvements.push('明确指定代码格式和注释要求');
-        }
-        break;
-      case '文案':
-        if (!lowerContent.includes('目标') && !lowerContent.includes('受众')) {
-          improvements.push('建议明确目标受众和传播目标');
-        }
-        if (!lowerContent.includes('风格') && !lowerContent.includes('tone')) {
-          improvements.push('指定文案风格和语调要求');
-        }
-        break;
-      case '学术':
-        if (!lowerContent.includes('引用') && !lowerContent.includes('参考')) {
-          improvements.push('考虑添加引用格式和参考文献要求');
-        }
-        if (!lowerContent.includes('结构') && !lowerContent.includes('框架')) {
-          improvements.push('建议明确论述结构和逻辑框架');
-        }
-        break;
-      case '翻译':
-        if (!lowerContent.includes('语境') && !lowerContent.includes('context')) {
-          improvements.push('建议提供更多语境信息以提高翻译准确性');
-        }
-        break;
-      case '视频':
-        if (!lowerContent.includes('时长') && !lowerContent.includes('duration')) {
-          improvements.push('建议明确视频时长和节奏要求');
-        }
-        if (!lowerContent.includes('风格') && !lowerContent.includes('style')) {
-          improvements.push('指定视频风格和视觉效果要求');
-        }
-        if (!lowerContent.includes('目标') && !lowerContent.includes('audience')) {
-          improvements.push('明确目标观众和传播平台');
-        }
-        break;
-      case '音乐':
-        if (!lowerContent.includes('风格') && !lowerContent.includes('genre')) {
-          improvements.push('建议指定音乐风格和流派');
-        }
-        if (!lowerContent.includes('时长') && !lowerContent.includes('duration')) {
-          improvements.push('明确音乐时长和结构要求');
-        }
-        if (!lowerContent.includes('情感') && !lowerContent.includes('mood')) {
-          improvements.push('描述期望的情感表达和氛围');
-        }
-        break;
-      case 'TTS音频':
-        if (!lowerContent.includes('语速') && !lowerContent.includes('speed')) {
-          improvements.push('建议指定语速和停顿要求');
-        }
-        if (!lowerContent.includes('音色') && !lowerContent.includes('voice')) {
-          improvements.push('明确音色和语调风格');
-        }
-        if (!lowerContent.includes('情感') && !lowerContent.includes('emotion')) {
-          improvements.push('描述期望的情感表达方式');
-        }
-        break;
-      case '图片':
-        if (!lowerContent.includes('尺寸') && !lowerContent.includes('size')) {
-          improvements.push('建议明确图片尺寸和分辨率要求');
-        }
-        if (!lowerContent.includes('风格') && !lowerContent.includes('style')) {
-          improvements.push('指定图片风格和视觉效果');
-        }
-        if (!lowerContent.includes('用途') && !lowerContent.includes('purpose')) {
-          improvements.push('明确图片用途和应用场景');
-        }
-        break;
-      case '播客':
-        if (!lowerContent.includes('时长') && !lowerContent.includes('duration')) {
-          improvements.push('建议明确播客时长和节目结构');
-        }
-        if (!lowerContent.includes('受众') && !lowerContent.includes('audience')) {
-          improvements.push('明确目标听众和内容定位');
-        }
-        if (!lowerContent.includes('风格') && !lowerContent.includes('style')) {
-          improvements.push('指定播客风格和主持方式');
-        }
-        break;
-    }
-    
-    // 基于标签的建议
-    if (tags.includes('角色扮演')) {
-      if (!lowerContent.includes('背景') && !lowerContent.includes('身份')) {
-        improvements.push('丰富角色背景设定，增强角色扮演效果');
-      }
-    }
-    
-    if (tags.includes('创作')) {
-      if (!lowerContent.includes('创意') && !lowerContent.includes('原创')) {
-        improvements.push('强调创意性和原创性要求');
-      }
-    }
-    
-    // 通用改进建议
-    if (!lowerContent.includes('输出') && !lowerContent.includes('格式')) {
-      improvements.push('明确输出格式和结构要求');
-    }
-    
-    // 确保至少有2-3个建议
-    if (improvements.length === 0) {
-      improvements.push('建议添加更多上下文信息以提高输出质量');
-      improvements.push('考虑明确输出格式和期望结果');
-    } else if (improvements.length === 1) {
-      improvements.push('可以添加示例来指导AI更好地理解需求');
-    }
-    
-    return improvements.slice(0, 5); // 最多返回5个建议
-  }
-
-  /**
-   * 智能生成使用场景
-   */
-  private generateIntelligentUseCases(content: string, category: string, tags: string[]): string[] {
-    const useCases: string[] = [];
-    const lowerContent = content.toLowerCase();
-    
-    // 基于分类的使用场景
-    switch (category) {
-      case '编程':
-        useCases.push('代码开发与调试', '技术文档编写', '代码审查与优化');
-        break;
-      case '文案':
-        useCases.push('营销文案创作', '品牌内容策划', '社交媒体运营');
-        break;
-      case '学术':
-        useCases.push('学术研究辅助', '论文写作支持', '知识整理分析');
-        break;
-      case '翻译':
-        useCases.push('多语言翻译', '文档本地化', '跨文化交流');
-        break;
-      case '设计':
-        useCases.push('创意设计指导', '视觉方案策划', '用户体验优化');
-        break;
-      case '教育':
-        useCases.push('教学内容设计', '学习辅导支持', '知识传授优化');
-        break;
-      case '商业':
-        useCases.push('商业策略分析', '市场调研支持', '决策辅助工具');
-        break;
-      case '视频':
-        useCases.push('短视频制作', '宣传片策划', '教学视频创作', '社交媒体内容', '品牌推广视频');
-        break;
-      case '音乐':
-        useCases.push('原创音乐创作', '背景音乐制作', '广告配乐', '情感表达音乐', '主题歌创作');
-        break;
-      case 'TTS音频':
-        useCases.push('有声读物制作', '语音导航系统', '教学音频', '广告配音', '播客内容');
-        break;
-      case '图片':
-        useCases.push('海报设计', '社交媒体配图', '产品展示图', '插画创作', '品牌视觉设计');
-        break;
-      case '播客':
-        useCases.push('知识分享节目', '访谈类节目', '故事播讲', '新闻解读', '专业领域讨论');
-        break;
-      default:
-        useCases.push('通用AI对话', '内容生成辅助', '问题解决支持');
-    }
-    
-    // 基于标签的额外场景
-    if (tags.includes('角色扮演')) {
-      useCases.push('情景模拟训练', '角色对话练习');
-    }
-    
-    if (tags.includes('分析')) {
-      useCases.push('数据分析解读', '趋势预测分析');
-    }
-    
-    if (tags.includes('创作')) {
-      useCases.push('创意内容生成', '灵感激发工具');
-    }
-    
-    if (tags.includes('咨询')) {
-      useCases.push('专业咨询服务', '解决方案提供');
-    }
-    
-    // 基于内容特征的场景
-    if (lowerContent.includes('步骤') || lowerContent.includes('流程')) {
-      useCases.push('流程指导工具', '操作步骤生成');
-    }
-    
-    if (lowerContent.includes('比较') || lowerContent.includes('对比')) {
-      useCases.push('对比分析工具', '选择决策支持');
-    }
-    
-    if (lowerContent.includes('总结') || lowerContent.includes('摘要')) {
-      useCases.push('内容总结工具', '信息提炼助手');
-    }
-    
-    // 去重并限制数量
-    const uniqueUseCases = Array.from(new Set(useCases));
-    return uniqueUseCases.slice(0, 5); // 最多返回5个使用场景
-  }
-
-  /**
-   * 智能生成标题
-   */
-  private generateIntelligentTitle(content: string, category: string): string {
-    const lowerContent = content.toLowerCase();
-    
-    // 特殊类型检测和标题生成
-    const specialPatterns = [
-      {
-        patterns: ['模式', '觉察', '洞察', '系统', '规律', '结构'],
-        roleIndicators: ['你拥有', '你是', '你的天赋', '你活着就是为了'],
-        titleTemplates: ['模式识别专家', '系统洞察大师', '规律发现者', '跨域分析师'],
-      },
-      {
-        patterns: ['思维', '分析', '理性', '逻辑', '推理'],
-        roleIndicators: ['专家', '分析师', '顾问'],
-        titleTemplates: ['思维分析专家', '逻辑推理助手', '理性分析师', '深度思考者'],
-      },
-      {
-        patterns: ['创意', '创作', '灵感', '想象'],
-        roleIndicators: ['创作者', '艺术家', '设计师'],
-        titleTemplates: ['创意思维激发器', '灵感创作助手', '想象力增强器'],
-      },
-    ];
-
-    // 检查特殊模式
-    for (const pattern of specialPatterns) {
-      const hasPattern = pattern.patterns.some(p => lowerContent.includes(p));
-      const hasRole = pattern.roleIndicators.some(r => content.includes(r));
-      
-      if (hasPattern && hasRole) {
-        return pattern.titleTemplates[0]; // 返回最匹配的标题
-      }
-    }
-
-    // 基于关键功能词生成标题
-    const functionKeywords = {
-      '写作': ['写作助手', '文字创作师', '内容生成器'],
-      '翻译': ['翻译专家', '语言转换器', '多语言助手'], 
-      '编程': ['代码生成器', '编程助手', '开发顾问'],
-      '分析': ['数据分析师', '洞察专家', '分析顾问'],
-      '设计': ['设计师', '创意总监', '视觉顾问'],
-      '教学': ['教学助手', '学习导师', '知识传播者'],
-      '咨询': ['专业顾问', '解决方案专家', '策略分析师'],
-      '管理': ['管理顾问', '项目专家', '效率优化师'],
-    };
-
-    const foundKeyword = '';
-    for (const [keyword, titles] of Object.entries(functionKeywords)) {
-      if (lowerContent.includes(keyword)) {
-        return titles[0];
-      }
-    }
-
-    // 基于类别生成通用标题
-    const categoryTitles: Record<string, string[]> = {
-      '学术': ['学术研究助手', '知识分析专家', '思维导师', '洞察分析师'],
-      '编程': ['代码助手', '编程顾问', '开发专家', '技术助理'],
-      '文案': ['文案创作师', '内容生成器', '写作助手', '营销文案专家'],
-      '设计': ['设计顾问', '创意助手', '视觉专家', '美学顾问'],
-      '翻译': ['翻译专家', '语言助手', '多语言顾问', '国际化专家'],
-      '教育': ['教学助手', '学习顾问', '知识导师', '教育专家'],
-      '商业': ['商业顾问', '策略专家', '管理助手', '商务分析师'],
-      '视频': ['视频制作专家', '影像创作师', '视觉导演', '多媒体制作师'],
-      '音乐': ['音乐创作大师', '作曲家助手', '音频制作师', '旋律创作者'],
-      'TTS音频': ['语音合成专家', '音频制作师', '配音导师', '声音设计师'],
-      '图片': ['图像设计师', '视觉创作者', '插画师助手', '图形设计专家'],
-      '播客': ['播客制作人', '节目策划师', '音频内容创作者', '主播助手'],
-      '通用': ['智能助手', '问题解决专家', '多功能顾问', '通用分析师'],
-    };
-
-    const titles = categoryTitles[category] || categoryTitles['通用'];
-    
-    // 如果内容包含哲学性、抽象性词汇，优先选择高级标题
-    const abstractKeywords = ['哲学', '思想', '智慧', '洞察', '觉悟', '意识', '灵魂', '精神'];
-    const hasAbstractConcepts = abstractKeywords.some(keyword => lowerContent.includes(keyword));
-    
-    if (hasAbstractConcepts && category === '学术') {
-      return '哲学思维导师';
-    }
-
-    return titles[0];
-  }
 
   /**
    * 提取变量（正则表达式方法）
@@ -1069,7 +689,7 @@ class AIAnalyzer {
   private extractVariables(content: string): string[] {
     const matches = content.match(/\{\{([^}]+)\}\}/g);
     if (!matches) return [];
-    
+
     const uniqueVariables = new Set(
       matches.map(match => match.replace(/^\{\{|\}\}$/g, '').trim()),
     );
@@ -1082,23 +702,39 @@ class AIAnalyzer {
   private extractTagsByKeywords(content: string): string[] {
     const lowerContent = content.toLowerCase();
     const tags: string[] = [];
-    
-    // 功能类标签检测
-    const functionTags = {
-      '分析': ['分析', '解析', '研究', '调查', '评估', '检测'],
-      '创作': ['创作', '写作', '生成', '创建', '制作', '编写'],
-      '翻译': ['翻译', '转换', '语言', '英文', '中文', '多语言'],
-      '编程': ['编程', '代码', '开发', '函数', '算法', 'javascript', 'python'],
-      '设计': ['设计', '界面', '视觉', '布局', 'ui', 'ux', '美术'],
-      '教学': ['教学', '培训', '指导', '辅导', '学习', '课程'],
-      '咨询': ['咨询', '建议', '推荐', '指导', '解答', '帮助'],
-      '管理': ['管理', '规划', '组织', '协调', '优化', '策略'],
-      '视频制作': ['视频', '剪辑', '制作', '拍摄', '后期', '特效', '蒙太奇'],
-      '音乐创作': ['音乐', '歌曲', '旋律', '歌词', '编曲', '作曲', '乐谱'],
-      '语音合成': ['语音', '音频', 'tts', '朗读', '播音', '配音', '声音'],
-      '图像设计': ['图片', '图像', '照片', '绘画', '插画', '海报', '设计图'],
-      '播客制作': ['播客', 'podcast', '电台', '广播', '节目', '主持'],
+
+    // 基于关键词动态生成功能标签
+    const generateFunctionTags = (content: string): string[] => {
+      const lowerContent = content.toLowerCase();
+      const detectedTags: string[] = [];
+
+      // 功能类关键词检测规则
+      const functionRules = [
+        { keywords: ['分析', '解析', '研究', '调查', '评估', '检测'], tag: '分析' },
+        { keywords: ['创作', '写作', '生成', '创建', '制作', '编写'], tag: '创作' },
+        { keywords: ['翻译', '转换', '语言', '英文', '中文', '多语言'], tag: '翻译' },
+        { keywords: ['编程', '代码', '开发', '函数', '算法', 'javascript', 'python'], tag: '编程' },
+        { keywords: ['设计', '界面', '视觉', '布局', 'ui', 'ux', '美术'], tag: '设计' },
+        { keywords: ['教学', '培训', '指导', '辅导', '学习', '课程'], tag: '教学' },
+        { keywords: ['咨询', '建议', '推荐', '指导', '解答', '帮助'], tag: '咨询' },
+        { keywords: ['管理', '规划', '组织', '协调', '优化', '策略'], tag: '管理' },
+        { keywords: ['视频', '剪辑', '制作', '拍摄', '后期', '特效', '蒙太奇'], tag: '视频制作' },
+        { keywords: ['音乐', '歌曲', '旋律', '歌词', '编曲', '作曲', '乐谱'], tag: '音乐创作' },
+        { keywords: ['语音', '音频', 'tts', '朗读', '播音', '配音', '声音'], tag: '语音合成' },
+        { keywords: ['图片', '图像', '照片', '绘画', '插画', '海报', '设计图'], tag: '图像设计' },
+        { keywords: ['播客', 'podcast', '电台', '广播', '节目', '主持'], tag: '播客制作' },
+      ];
+
+      functionRules.forEach(rule => {
+        if (rule.keywords.some(keyword => lowerContent.includes(keyword))) {
+          detectedTags.push(rule.tag);
+        }
+      });
+
+      return detectedTags;
     };
+
+    const functionTags = generateFunctionTags(lowerContent);
 
     // 思维方式标签检测
     const thinkingTags = {
@@ -1141,10 +777,10 @@ class AIAnalyzer {
 
     // 检测各类标签
     const allTagCategories = [functionTags, thinkingTags, roleTags, scenarioTags, featureTags];
-    
+
     for (const tagCategory of allTagCategories) {
       for (const [tag, keywords] of Object.entries(tagCategory)) {
-        if (keywords.some(keyword => lowerContent.includes(keyword))) {
+        if ((keywords as string[]).some((keyword: string) => lowerContent.includes(keyword))) {
           if (!tags.includes(tag)) {
             tags.push(tag);
           }
@@ -1183,80 +819,19 @@ class AIAnalyzer {
 
     return sortedTags.slice(0, 8); // 最多8个标签
   }
-  
-    /**
-     * 基于关键词的本地分类算法（降级处理）
-     */
-    private classifyByKeywords(content: string): string {
-      const lowerContent = content.toLowerCase();
-      
-      // 定义分类关键词映射
-      const categoryKeywords = {
-        '编程': ['代码', '编程', '函数', '算法', '脚本', '开发', 'code', 'program', 'function', 'script', 'development', 'python', 'javascript', 'java', 'c++', 'html', 'css', 'api', '数据库', 'database'],
-        '翻译': ['翻译', '转换', '语言', '中文', '英文', 'translate', 'translation', 'language', 'chinese', 'english', '日语', '韩语', '法语', '德语'],
-        '设计': ['设计', '图片', '图像', '海报', '封面', '布局', 'design', 'image', 'poster', 'cover', 'layout', 'ui', 'ux', '界面', '视觉'],
-        '绘画': ['画', '绘制', '插画', '艺术', '创作', 'draw', 'painting', 'art', 'illustration', '素描', '水彩', '油画'],
-        '视频': ['视频', '动画', '影片', '短片', '录制', 'video', 'animation', 'film', '剪辑', '特效'],
-        '音乐': ['音乐', '歌曲', '作曲', '编曲', 'music', 'song', 'compose', '旋律', '和弦', '节奏'],
-        '播客': ['播客', '主播', '音频', '录音', 'podcast', 'audio', 'voice', '配音', '访谈'],
-        '学术': ['学术', '研究', '论文', '分析', '理论', 'academic', 'research', 'paper', 'analysis', 'theory', '科学', '实验', '数据'],
-        '商业': ['商业', '市场', '营销', '销售', '投资', 'business', 'market', 'marketing', 'sales', 'investment', '创业', '管理', '策略'],
-        '办公': ['办公', '会议', '报告', '文档', '表格', 'office', 'meeting', 'report', 'document', '邮件', '计划', '总结'],
-        '教育': ['教学', '教育', '课程', '学习', '培训', 'education', 'teaching', 'course', 'learning', 'training', '老师', '学生', '考试'],
-        '健康': ['健康', '医疗', '运动', '饮食', '心理', 'health', 'medical', 'exercise', 'diet', 'psychology', '治疗', '康复', '保健'],
-        '科技': ['科技', '技术', '创新', '人工智能', '机器学习', 'technology', 'innovation', 'ai', 'ml', '物联网', '区块链', '大数据'],
-        '文案': ['文案', '写作', '内容', '文章', '广告', 'copywriting', 'writing', 'content', 'article', 'advertisement', '宣传', '推广'],
-        '写作': ['写作', '文章', '创作', '文字', '内容', 'writing', 'article', 'creative', 'text', 'content', '小说', '散文', '诗歌'],
-        '金融': ['金融', '投资', '理财', '股票', '基金', 'finance', 'investment', 'money', 'stock', 'fund', '银行', '保险', '财务'],
-        '游戏': ['游戏', '娱乐', '玩法', '关卡', '角色', 'game', 'entertainment', 'gameplay', 'level', 'character', '剧情', '策略'],
-        '生活': ['生活', '日常', '家庭', '旅行', '美食', 'life', 'daily', 'family', 'travel', 'food', '购物', '时尚', '兴趣'],
-      };
-      
-      // 计算每个分类的匹配分数
-      const scores: { [key: string]: number } = {};
-      
-      Object.entries(categoryKeywords).forEach(([category, keywords]) => {
-        let score = 0;
-        keywords.forEach(keyword => {
-          // 完全匹配得3分
-          if (lowerContent === keyword) {
-            score += 3;
-          }
-          // 独立词匹配得2分（前后有空格或标点）
-          else if (new RegExp(`\\b${keyword}\\b`, 'i').test(lowerContent)) {
-            score += 2;
-          }
-          // 包含匹配得1分
-          else if (lowerContent.includes(keyword)) {
-            score += 1;
-          }
-        });
-        scores[category] = score;
-      });
-      
-      // 找出得分最高的分类
-      const maxScore = Math.max(...Object.values(scores));
-      
-      if (maxScore > 0) {
-        const bestCategory = Object.entries(scores).find(([_, score]) => score === maxScore)?.[0];
-        if (bestCategory) {
-          return bestCategory;
-        }
-      }
-      
-      // 如果没有匹配到任何关键词，基于内容长度和复杂度判断
-      if (content.length > 200) {
-        // 长文本倾向于学术或商业
-        if (lowerContent.includes('分析') || lowerContent.includes('研究') || lowerContent.includes('analysis')) {
-          return '学术';
-        } else if (lowerContent.includes('计划') || lowerContent.includes('方案') || lowerContent.includes('strategy')) {
-          return '商业';
-        }
-      }
-      
-      // 默认分类
-      return '通用';
-    }
+
+  /**
+   * 基于关键词的本地分类算法（已废弃 - 使用数据库动态分类）
+   */
+  private classifyByKeywords(_content: string): string {
+    // 此函数已废弃，不再使用硬编码分类
+    // 所有分类应通过数据库动态获取
+    console.warn('classifyByKeywords函数已废弃，请使用数据库动态分类');
+    return '通用对话'; // 返回默认分类
+  }
+
+
+
   /**
    * 快速分类（仅返回分类，不调用完整API）
    */
@@ -1265,31 +840,31 @@ class AIAnalyzer {
         // 没有API密钥时使用本地智能分类算法
         return this.classifyByKeywords(content);
       }
-  
+
       try {
         const response = await axios.post(
           `${this.baseURL}/chat/completions`,
           {
             model: this.quickTasksModel,
             messages: [
-              { 
-                role: 'system', 
+              {
+                role: 'system',
                 content: `你是一个专业的AI提示词分类专家。请根据提示词内容，从以下分类中选择最合适的一个：
-  
+
   通用、学术、职业、文案、设计、绘画、教育、情感、娱乐、游戏、生活、商业、办公、编程、翻译、视频、播客、音乐、健康、科技
-  
+
   分类原则：
   1. 优先考虑提示词的核心功能领域，而非表面词汇
   2. 仔细理解提示词的实际功能，避免被比喻性或示例性词汇误导
   3. 如果涉及多个领域，选择最主要的功能领域
   4. 考虑实际使用场景和目标用户群体
-  
+
   示例：
   - "请帮我写一个健康管理的应用程序" → 编程（因为核心任务是编程开发）
   - "分析这个商业计划的可行性" → 商业（核心功能是商业分析）
   - "设计一个健康主题的海报" → 设计（核心功能是设计工作）
-  
-  只返回分类名称，不要其他内容。`, 
+
+  只返回分类名称，不要其他内容。`,
               },
               { role: 'user', content: `请为以下提示词分类：\n\n${content}` },
             ],
@@ -1303,9 +878,9 @@ class AIAnalyzer {
             },
           },
         );
-  
+
         const result = response.data.choices[0].message.content.trim();
-        
+
         // 验证返回的分类是否在有效列表中
         let validCategories: string[] = [];
         try {
@@ -1320,7 +895,7 @@ class AIAnalyzer {
           // 如果无法获取分类列表，跳过分类验证
           validCategories = [];
         }
-        
+
         // 如果有有效分类列表，进行验证
         if (validCategories.length > 0) {
           if (validCategories.includes(result)) {
@@ -1334,14 +909,13 @@ class AIAnalyzer {
           console.warn('无法验证分类有效性，直接使用AI返回结果');
           return result;
         }
-  
+
       } catch (error) {
         console.error('Quick classify failed:', error);
         // API调用失败时使用本地分类算法
         return this.classifyByKeywords(content);
       }
     }
-
 
   /**
    * 智能标签合并 - 优先使用已有的相似标签
@@ -1665,7 +1239,7 @@ class AIAnalyzer {
       }
 
       // 发送一个简单的请求来测试连接
-      const response = await axios.post(
+      await axios.post(
         `${this.baseURL}/chat/completions`,
         {
           model: this.quickTasksModel,

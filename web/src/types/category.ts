@@ -123,11 +123,8 @@ export const CATEGORY_TYPE_LABELS: Record<CategoryType, string> = {
   video: '视频',
 };
 
-export const DEFAULT_CATEGORY_NAMES = {
-  chat: '通用对话',
-  image: '真实摄影',
-  video: '故事叙述',
-} as const;
+// 默认分类名称已废弃 - 所有分类数据应从数据库动态获取
+// export const DEFAULT_CATEGORY_NAMES = { ... } // 已删除
 
 // 分类验证函数类型
 export type CategoryValidator = (category: string, type?: CategoryType) => boolean;

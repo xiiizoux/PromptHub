@@ -696,20 +696,52 @@ export class UnifiedStoreTool extends BaseMCPTool {
   }
 
   /**
+   * 基于分类名称动态生成标签
+   */
+  private generateTagsByCategory(category: string): string[] {
+    const keywordRules = [
+      // 商务相关
+      { keywords: ['商务', '商业', '企业', '职场'], tags: ['商务', '专业'] },
+
+      // 技术相关
+      { keywords: ['技术', '开发', '编程', '代码'], tags: ['技术', '开发'] },
+
+      // 创意相关
+      { keywords: ['创意', '写作', '文案', '创作'], tags: ['创意', '写作'] },
+
+      // 教育相关
+      { keywords: ['教育', '学习', '培训', '教学'], tags: ['教育', '学习'] },
+
+      // 对话相关
+      { keywords: ['对话', '聊天', '交流', '沟通'], tags: ['对话', '交流'] },
+
+      // 学术相关
+      { keywords: ['学术', '研究', '论文', '科研'], tags: ['学术', '研究'] },
+
+      // 翻译相关
+      { keywords: ['翻译', '语言', '转换'], tags: ['翻译', '语言'] },
+    ];
+
+    // 查找匹配的规则
+    for (const rule of keywordRules) {
+      if (rule.keywords.some(keyword => category.includes(keyword))) {
+        return rule.tags;
+      }
+    }
+
+    // 默认标签：基于分类名称本身
+    return [category];
+  }
+
+  /**
    * 提取标签
    */
   private extractTags(content: string, category: string): string[] {
     const lowerContent = content.toLowerCase();
     const tags: string[] = [];
 
-    // 基于分类的基础标签
-    const categoryTags = {
-      '商务': ['商务', '专业'],
-      '技术': ['技术', '开发'],
-      '创意': ['创意', '写作'],
-      '教育': ['教育', '学习'],
-      '通用': ['通用']
-    }[category] || ['通用'];
+    // 基于分类的基础标签 - 动态生成
+    const categoryTags = this.generateTagsByCategory(category);
 
     tags.push(...categoryTags);
 

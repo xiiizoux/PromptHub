@@ -78,95 +78,92 @@ class PromptCategoryMatcher {
     const lowerPrompt = prompt.toLowerCase();
     const scores: { [categoryName: string]: number } = {};
 
-    // 定义关键词权重
-    const keywordPatterns = {
-      // 对话类关键词
-      '通用对话': ['对话', '聊天', '回答', '问答', '交流', '沟通', 'chat', 'conversation', 'talk', 'discuss'],
-      '客服助手': ['客服', '服务', '帮助', '支持', '咨询', '解答', 'customer', 'service', 'support', 'help'],
-      '角色扮演': ['角色', '扮演', '模拟', '假设', '扮演', 'role', 'play', 'character', 'persona'],
-      '学术研究': ['学术', '研究', '论文', '分析', '理论', '科研', 'academic', 'research', 'paper', 'study'],
-      '编程开发': ['编程', '代码', '开发', '技术', '算法', '系统', 'code', 'programming', 'development', 'algorithm'],
-      '商业咨询': ['商业', '营销', '销售', '市场', '策略', '管理', 'business', 'marketing', 'strategy', 'management'],
-      '法律顾问': ['法律', '法规', '合同', '条款', '法条', '诉讼', 'legal', 'law', 'contract', 'regulation'],
-      '医疗健康': ['医疗', '健康', '疾病', '治疗', '药物', '症状', 'medical', 'health', 'disease', 'treatment'],
-      '文案写作': ['文案', '写作', '创作', '广告', '宣传', '营销', 'copywriting', 'writing', 'advertising', 'content'],
-      '翻译语言': ['翻译', '语言', '英语', '中文', '外语', 'translation', 'language', 'translate', 'english'],
-      '教育辅导': ['教育', '教学', '学习', '培训', '课程', 'education', 'teaching', 'learning', 'training'],
-      '心理咨询': ['心理', '情感', '情绪', '咨询', '心理健康', 'psychology', 'emotional', 'mental', 'counseling'],
-      '旅行攻略': ['旅行', '旅游', '攻略', '景点', '路线', 'travel', 'tourism', 'trip', 'destination'],
-      '生活常识': ['生活', '日常', '常识', '技巧', '建议', 'life', 'daily', 'tips', 'advice'],
-      '金融投资': ['金融', '投资', '理财', '股票', '基金', 'finance', 'investment', 'financial', 'stock'],
+    // 基于数据库分类动态匹配关键词
+    const matchCategoryByKeywords = (content: string, categories: any[]): string | null => {
+      const lowerContent = content.toLowerCase();
 
-      // 图像类关键词
-      '真实摄影': ['摄影', '照片', '真实', '写实', '纪实', 'photography', 'photo', 'realistic', 'portrait'],
-      '艺术绘画': ['绘画', '艺术', '画作', '油画', '水彩', 'painting', 'art', 'artwork', 'drawing'],
-      '插画设计': ['插画', '设计', '图标', '海报', 'illustration', 'design', 'graphic', 'poster'],
-      '建筑空间': ['建筑', '空间', '室内', '装修', 'architecture', 'interior', 'building', 'space'],
-      '概念设计': ['概念', '设计', '创意', '想象', 'concept', 'creative', 'imagination', 'fantasy'],
-      '科幻奇幻': ['科幻', '奇幻', '未来', '魔法', 'sci-fi', 'fantasy', 'futuristic', 'magic'],
-      '复古怀旧': ['复古', '怀旧', 'vintage', '老式', 'retro', 'vintage', 'nostalgic', 'classic'],
+      // 为每个分类计算匹配分数
+      const categoryScores = categories.map(category => {
+        let score = 0;
+        const categoryName = category.name.toLowerCase();
+        const categoryDesc = (category.description || '').toLowerCase();
 
-      // 视频类关键词
-      '故事叙述': ['故事', '叙述', '剧情', '情节', 'story', 'narrative', 'plot', 'storytelling'],
-      '纪录片': ['纪录', '记录', '真实', '纪实', 'documentary', 'record', 'factual', 'real'],
-      '教学视频': ['教学', '教程', '演示', '指导', 'tutorial', 'instruction', 'demonstration', 'guide'],
-      '访谈对话': ['访谈', '采访', '对话', '交流', 'interview', 'conversation', 'dialogue', 'talk'],
-      '产品展示': ['产品', '展示', '演示', '介绍', 'product', 'demo', 'showcase', 'presentation'],
-      '广告营销': ['广告', '营销', '宣传', '推广', 'advertising', 'marketing', 'promotion', 'commercial'],
-      '企业宣传': ['企业', '公司', '宣传', '介绍', 'corporate', 'company', 'business', 'introduction'],
-      '活动记录': ['活动', '事件', '记录', '现场', 'event', 'activity', 'live', 'recording'],
-      '动画特效': ['动画', '特效', '动态', '效果', 'animation', 'effects', 'motion', 'animated'],
-      '音乐视频': ['音乐', '歌曲', 'MV', '音频', 'music', 'song', 'audio', 'musical'],
-      '艺术短片': ['艺术', '短片', '创意', '实验', 'art', 'short', 'creative', 'experimental'],
-      '自然风景': ['自然', '风景', '风光', '户外', 'nature', 'landscape', 'scenery', 'outdoor'],
+        // 分类名称直接匹配
+        if (lowerContent.includes(categoryName)) {
+          score += 10;
+        }
+
+        // 描述关键词匹配
+        if (categoryDesc) {
+          const descWords = categoryDesc.split(/[，。、\s]+/).filter(word => word.length > 1);
+          descWords.forEach(word => {
+            if (lowerContent.includes(word)) {
+              score += 3;
+            }
+          });
+        }
+
+        // 通用关键词匹配规则
+        const keywordRules = [
+          { patterns: ['对话', '聊天', '回答', '问答', '交流', '沟通'], categories: ['对话', '通用', '聊天'] },
+          { patterns: ['客服', '服务', '帮助', '支持', '咨询', '解答'], categories: ['客服', '服务', '支持'] },
+          { patterns: ['角色', '扮演', '模拟', '假设'], categories: ['角色', '扮演', '模拟'] },
+          { patterns: ['学术', '研究', '论文', '分析', '理论', '科研'], categories: ['学术', '研究', '科研'] },
+          { patterns: ['编程', '代码', '开发', '技术', '算法', '系统'], categories: ['编程', '开发', '技术', '代码'] },
+          { patterns: ['商业', '营销', '销售', '市场', '策略', '管理'], categories: ['商业', '营销', '管理', '策略'] },
+          { patterns: ['法律', '法规', '合同', '条款', '法条', '诉讼'], categories: ['法律', '法规', '合同'] },
+          { patterns: ['医疗', '健康', '疾病', '治疗', '药物', '症状'], categories: ['医疗', '健康', '治疗'] },
+        ];
+
+        keywordRules.forEach(rule => {
+          const hasPattern = rule.patterns.some(pattern => lowerContent.includes(pattern));
+          const matchesCategory = rule.categories.some(cat => categoryName.includes(cat));
+          if (hasPattern && matchesCategory) {
+            score += 5;
+          }
+        });
+
+        return { category, score };
+      });
+
+      // 找到最高分的分类
+      const bestMatch = categoryScores.reduce((best, current) =>
+        current.score > best.score ? current : best
+      );
+
+      return bestMatch.score > 0 ? bestMatch.category.name : null;
     };
 
-    // 计算每个分类的匹配分数
-    Object.entries(keywordPatterns).forEach(([categoryName, keywords]) => {
-      let score = 0;
-      keywords.forEach(keyword => {
-        const regex = new RegExp(keyword, 'gi');
-        const matches = lowerPrompt.match(regex);
-        if (matches) {
-          score += matches.length;
-        }
-      });
-      if (score > 0) {
-        scores[categoryName] = score;
-      }
-    });
-
-    return scores;
+    return null; // 如果没有匹配的分类，返回null
   }
 
   /**
-   * 通过描述相似度匹配分类
+   * 基于描述分析提示词分类
    */
   private analyzePromptByDescription(prompt: string, categories: CategoryInfo[]): { [categoryName: string]: number } {
     const scores: { [categoryName: string]: number } = {};
     const lowerPrompt = prompt.toLowerCase();
 
+    // 基于分类描述进行匹配
     categories.forEach(category => {
-      if (!category.description) return;
-
-      const description = category.description.toLowerCase();
       let score = 0;
+      const description = category.description?.toLowerCase() || '';
 
-      // 计算描述中关键词在提示词中的出现频率
-      const descWords = description.split(/[，。、；：！？\s,.\-;:!?]+/).filter(word => word.length > 1);
-      descWords.forEach(word => {
-        if (lowerPrompt.includes(word)) {
-          score += 1;
-        }
-      });
+      // 基于描述关键词匹配
+      if (description) {
+        const descriptionWords = description.split(/\s+/);
+        descriptionWords.forEach(word => {
+          if (word.length > 2 && lowerPrompt.includes(word)) {
+            score += 1;
+          }
+        });
+      }
 
-      // 计算提示词中关键词在描述中的出现频率
-      const promptWords = lowerPrompt.split(/[，。、；：！？\s,.\-;:!?]+/).filter(word => word.length > 1);
-      promptWords.forEach(word => {
-        if (description.includes(word)) {
-          score += 0.5;
-        }
-      });
+      // 基于分类名称匹配
+      const categoryName = category.name.toLowerCase();
+      if (lowerPrompt.includes(categoryName)) {
+        score += 3;
+      }
 
       if (score > 0) {
         scores[category.name] = score;
@@ -175,6 +172,8 @@ class PromptCategoryMatcher {
 
     return scores;
   }
+
+
 
   /**
    * 智能匹配最适合的分类

@@ -323,7 +323,7 @@ export default function PromptFormContainer({
         (watchedData.name && watchedData.name !== '') ||
         (watchedData.description && watchedData.description !== '') ||
         (watchedData.content && watchedData.content !== '') ||
-        (watchedData.category && watchedData.category !== '' && watchedData.category !== '通用') ||
+        (watchedData.category && watchedData.category !== '') ||
         (watchedData.tags && watchedData.tags.length > 0) ||
         (watchedData.compatible_models && watchedData.compatible_models.length > 0) ||
         (watchedData.input_variables && watchedData.input_variables.length > 0) ||
