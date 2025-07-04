@@ -512,23 +512,27 @@ const VideoPromptCard: React.FC<VideoPromptCardProps> = React.memo(({ prompt }) 
             </div>
 
             {/* 标签 */}
-            {tagsToShow && (
-              <div className="flex flex-wrap gap-1.5 mb-3">
-                {tagsToShow.visible.map((tag, index) => (
-                  <span 
-                    key={`${prompt.id}-tag-${tag}-${index}`}
-                    className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium glass border border-sky-200/20 text-sky-200"
-                  >
-                    #{tag}
-                  </span>
-                ))}
-                {tagsToShow.remaining > 0 && (
-                  <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium glass border border-gray-600 text-gray-400">
-                    +{tagsToShow.remaining}
-                  </span>
-                )}
-              </div>
-            )}
+            <div className="flex flex-wrap gap-1.5 mb-3">
+              {tagsToShow ? (
+                <>
+                  {tagsToShow.visible.map((tag, index) => (
+                    <span
+                      key={`${prompt.id}-tag-${tag}-${index}`}
+                      className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium glass border border-sky-200/20 text-sky-200"
+                    >
+                      #{tag}
+                    </span>
+                  ))}
+                  {tagsToShow.remaining > 0 && (
+                    <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium glass border border-gray-600 text-gray-400">
+                      +{tagsToShow.remaining}
+                    </span>
+                  )}
+                </>
+              ) : (
+                <span className="text-xs text-gray-500">暂无标签</span>
+              )}
+            </div>
             
             {/* 底部信息 */}
             <div className="mt-auto pt-4 border-t border-sky-200/10 space-y-3">

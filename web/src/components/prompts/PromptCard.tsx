@@ -101,23 +101,27 @@ const PromptCard: React.FC<PromptCardProps> = React.memo(({ prompt }) => {
           </div>
           
           {/* 标签 */}
-          {tagsToShow && (
-            <div className="flex flex-wrap gap-2 mb-4">
-              {tagsToShow.visible.map((tag, index) => (
-                <span 
-                  key={`${prompt.id}-tag-${tag}-${index}`}
-                  className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium glass border border-neon-cyan/20 text-neon-cyan"
-                >
-                  #{tag}
-                </span>
-              ))}
-              {tagsToShow.remaining > 0 && (
-                <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium glass border border-gray-600 text-gray-400">
-                  +{tagsToShow.remaining}
-                </span>
-              )}
-            </div>
-          )}
+          <div className="flex flex-wrap gap-2 mb-4">
+            {tagsToShow ? (
+              <>
+                {tagsToShow.visible.map((tag, index) => (
+                  <span
+                    key={`${prompt.id}-tag-${tag}-${index}`}
+                    className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium glass border border-neon-cyan/20 text-neon-cyan"
+                  >
+                    #{tag}
+                  </span>
+                ))}
+                {tagsToShow.remaining > 0 && (
+                  <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium glass border border-gray-600 text-gray-400">
+                    +{tagsToShow.remaining}
+                  </span>
+                )}
+              </>
+            ) : (
+              <span className="text-xs text-gray-500">暂无标签</span>
+            )}
+          </div>
           
           {/* 底部信息 */}
           <div className="mt-auto pt-4 border-t border-neon-cyan/10 space-y-3">

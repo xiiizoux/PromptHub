@@ -442,38 +442,42 @@ const UserMediaPromptCard: React.FC<UserMediaPromptCardProps> = React.memo(({ pr
               )}
             </div>
             
-            {/* 描述 */}
-            {prompt.description && (
-              <p className="text-sm text-gray-400 line-clamp-3 mb-4">
-                {prompt.description}
+            {/* 描述 - 固定高度确保卡片一致性 */}
+            <div className="text-sm text-gray-400 mb-4 h-[4.5rem] flex items-start">
+              <p className="line-clamp-3 leading-6">
+                {prompt.description || '暂无描述'}
               </p>
-            )}
+            </div>
             
             {/* 标签 */}
-            {tagsToShow && (
-              <div className="flex flex-wrap gap-1.5 mb-3">
-                {tagsToShow.visible.map((tag, index) => (
-                  <span 
-                    key={`${prompt.id}-tag-${tag}-${index}`}
-                    className={clsx(
-                      'inline-flex items-center px-2 py-1 rounded-md text-xs font-medium glass border',
-                      prompt.category_type === 'image' 
-                        ? 'border-pink-500/20 text-pink-400' 
-                        : prompt.category_type === 'video'
-                        ? 'border-sky-200/20 text-sky-200'
-                        : 'border-neon-cyan/20 text-neon-cyan',
-                    )}
-                  >
-                    #{tag}
-                  </span>
-                ))}
-                {tagsToShow.remaining > 0 && (
-                  <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium glass border border-gray-600 text-gray-400">
-                    +{tagsToShow.remaining}
-                  </span>
-                )}
-              </div>
-            )}
+            <div className="flex flex-wrap gap-1.5 mb-3">
+              {tagsToShow ? (
+                <>
+                  {tagsToShow.visible.map((tag, index) => (
+                    <span
+                      key={`${prompt.id}-tag-${tag}-${index}`}
+                      className={clsx(
+                        'inline-flex items-center px-2 py-1 rounded-md text-xs font-medium glass border',
+                        prompt.category_type === 'image'
+                          ? 'border-pink-500/20 text-pink-400'
+                          : prompt.category_type === 'video'
+                          ? 'border-sky-200/20 text-sky-200'
+                          : 'border-neon-cyan/20 text-neon-cyan',
+                      )}
+                    >
+                      #{tag}
+                    </span>
+                  ))}
+                  {tagsToShow.remaining > 0 && (
+                    <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium glass border border-gray-600 text-gray-400">
+                      +{tagsToShow.remaining}
+                    </span>
+                  )}
+                </>
+              ) : (
+                <span className="text-xs text-gray-500">暂无标签</span>
+              )}
+            </div>
             
             {/* 底部信息 */}
             <div className={clsx(
