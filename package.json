@@ -3,21 +3,5 @@
     "@supabase/supabase-js": "^2.50.2",
     "dotenv": "^16.6.0",
     "playwright": "^1.53.1"
-  },
-  "scripts": {
-    "prepare": "husky"
-  },
-  "lint-staged": {
-    "mcp/**/*.{ts,js}": [
-      "prettier --write",
-      "eslint --fix --no-error-on-unmatched-pattern"
-    ],
-    "web/**/*.{ts,tsx,js,jsx}": [
-      "prettier --write",
-      "eslint --fix --no-error-on-unmatched-pattern"
-    ],
-    "**/*.{json,md}": [
-      "prettier --write"
-    ]
   }
 }
