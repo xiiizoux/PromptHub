@@ -566,17 +566,17 @@ export interface McpToolInfo {
   [key: string]: unknown;
 }
 
-// 调用MCP工具
+// 调用AI工具 (通过Web服务器代理到MCP服务器)
 export const invokeMcpTool = async (toolName: string, params: McpToolParams): Promise<McpToolResponse> => {
-  // 使用Web API代理调用MCP工具
-  const response = await api.post<NetworkResponse>('/mcp/tools', { name: toolName, arguments: params });
+  // 使用Web API代理调用AI工具
+  const response = await api.post<NetworkResponse>('/ai-tools', { name: toolName, arguments: params });
   return extractData(response, {} as McpToolResponse);
 };
 
-// 获取可用工具列表
+// 获取可用AI工具列表
 export const getMcpTools = async (): Promise<McpToolInfo[]> => {
-  // 使用Web API代理获取MCP工具列表
-  const response = await api.get<NetworkResponse>('/mcp/tools');
+  // 使用Web API代理获取AI工具列表
+  const response = await api.get<NetworkResponse>('/ai-tools');
   return extractArrayData<McpToolInfo>(response, []);
 };
 

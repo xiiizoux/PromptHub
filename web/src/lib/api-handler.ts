@@ -270,17 +270,27 @@ export const errorResponse = (
 };
 
 /**
+ * 用户认证信息接口
+ */
+interface UserAuthInfo {
+  userApiKey?: string;
+  authHeader?: string;
+  userId?: string;
+}
+
+/**
  * MCP服务代理辅助函数
  */
 export const mcpProxy = async (
   endpoint: string,
   method: 'GET' | 'POST' | 'PUT' | 'DELETE' = 'POST',
   data?: any,
+  userAuth?: UserAuthInfo,
 ) => {
   const mcpUrl = process.env.MCP_URL || 'http://localhost:9010';
   const url = `${mcpUrl}${endpoint}`;
 
-  logger.debug('代理请求到MCP服务', { endpoint, method });
+  logger.debug('代理请求到MCP服务', { endpoint, method, hasUserAuth: !!userAuth });
 
   try {
     // 准备认证头
@@ -288,10 +298,25 @@ export const mcpProxy = async (
       'Content-Type': 'application/json',
     };
 
-    // 添加API密钥认证（优先使用系统级API密钥）
-    const apiKey = process.env.API_KEY || process.env.MCP_API_KEY;
-    if (apiKey) {
-      headers['x-api-key'] = apiKey;
+    // 优先使用用户的认证信息
+    if (userAuth?.userApiKey) {
+      headers['x-api-key'] = userAuth.userApiKey;
+      logger.debug('使用用户API密钥进行认证');
+    } else if (userAuth?.authHeader) {
+      headers['authorization'] = userAuth.authHeader;
+      logger.debug('使用用户JWT令牌进行认证');
+    } else {
+      // 回退到系统级API密钥（用于不需要用户身份的工具）
+      const systemApiKey = process.env.API_KEY || process.env.MCP_API_KEY;
+      if (systemApiKey) {
+        headers['x-api-key'] = systemApiKey;
+        logger.debug('使用系统级API密钥进行认证');
+      }
+    }
+
+    // 添加用户ID到请求头（如果有）
+    if (userAuth?.userId) {
+      headers['x-user-id'] = userAuth.userId;
     }
 
     // 添加会话ID用于审计

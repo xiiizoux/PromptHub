@@ -112,14 +112,14 @@ export namespace UserApi {
   export type DeleteApiKeyResponse = ApiResponse<{ deleted: boolean }>;
 }
 
-// MCP代理API端点
+// AI工具代理API端点 (Web服务器代理到MCP服务器)
 export namespace McpApi {
-  // POST /api/mcp/tools
+  // POST /api/ai-tools
   export interface McpToolRequest {
     name: string;
     arguments?: Record<string, unknown>;
   }
-  
+
   export interface McpToolResponse extends ApiResponse {
     data?: {
       content: {

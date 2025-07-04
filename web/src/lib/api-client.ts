@@ -289,18 +289,18 @@ export const authApi = {
 };
 
 /**
- * MCP工具调用API
+ * AI工具调用API (通过Web服务器代理到MCP服务器)
  */
 export const mcpApi = {
-  // 调用MCP工具
+  // 调用AI工具
   invokeTool: async (name: string, args: Record<string, unknown> = {}): Promise<McpApi.McpToolResponse['data'] | undefined> => {
-    const response = await apiClient.post<McpApi.McpToolResponse>('/mcp/tools', { name, arguments: args });
+    const response = await apiClient.post<McpApi.McpToolResponse>('/ai-tools', { name, arguments: args });
     return extractResponseData(response, undefined) as McpApi.McpToolResponse['data'] | undefined;
   },
-  
-  // 获取可用工具列表
+
+  // 获取可用AI工具列表
   getTools: async (): Promise<Array<Record<string, unknown>>> => {
-    const response = await apiClient.get<ApiResponse<Array<Record<string, unknown>>>>('/mcp/tools');
+    const response = await apiClient.get<ApiResponse<Array<Record<string, unknown>>>>('/ai-tools');
     return extractResponseData(response, []);
   },
 };

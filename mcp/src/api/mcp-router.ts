@@ -389,7 +389,29 @@ router.get('/tools', authenticateRequest, (req, res) => {
 
 
 // MCP 工具调用
-router.post('/tools/:name/invoke', optionalAuthMiddleware, async (req, res) => {
+router.post('/tools/:name/invoke', async (req, res) => {
+  const { name } = req.params;
+
+  // Context Engineering 相关工具需要强制认证
+  const requiresAuth = ['context_engineering', 'context_state', 'context_config', 'context_pipeline'].includes(name);
+
+  if (requiresAuth) {
+    // 使用强制认证中间件
+    await new Promise<void>((resolve, reject) => {
+      authenticateRequest(req, res, (error) => {
+        if (error) reject(error);
+        else resolve();
+      });
+    });
+  } else {
+    // 使用可选认证中间件
+    await new Promise<void>((resolve, reject) => {
+      optionalAuthMiddleware(req, res, (error) => {
+        if (error) reject(error);
+        else resolve();
+      });
+    });
+  }
   try {
     const { name } = req.params;
     // 安全处理请求体，确保params存在
