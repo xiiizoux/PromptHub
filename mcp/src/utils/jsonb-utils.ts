@@ -17,8 +17,9 @@ export function isJsonbContent(content: unknown): content is PromptContentJsonb 
   return (
     typeof content === 'object' &&
     content !== null &&
-    typeof content.type === 'string' &&
-    ['context_engineering', 'legacy_text', 'simple_text'].includes(content.type)
+    'type' in content &&
+    typeof (content as any).type === 'string' &&
+    ['context_engineering', 'legacy_text', 'simple_text'].includes((content as any).type)
   );
 }
 
@@ -29,8 +30,9 @@ export function isJsonbTemplate(template: unknown): template is OptimizationTemp
   return (
     typeof template === 'object' &&
     template !== null &&
-    typeof template.type === 'string' &&
-    ['legacy_text', 'structured', 'context_engineering'].includes(template.type)
+    'type' in template &&
+    typeof (template as any).type === 'string' &&
+    ['legacy_text', 'structured', 'context_engineering'].includes((template as any).type)
   );
 }
 

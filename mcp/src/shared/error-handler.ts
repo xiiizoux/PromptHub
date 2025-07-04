@@ -41,7 +41,11 @@ export interface EnhancedError extends Error {
  * 分析错误类型和严重程度
  */
 function analyzeError(error: unknown): { type: ErrorType; severity: ErrorSeverity } {
-  const errorMessage = (error?.message || error || '').toLowerCase();
+  const errorMessage = (
+    (error && typeof error === 'object' && 'message' in error && typeof error.message === 'string')
+      ? error.message
+      : String(error || '')
+  ).toLowerCase();
 
   // 验证错误
   if (errorMessage.includes('缺少必需参数') || errorMessage.includes('invalid') || errorMessage.includes('validation')) {
@@ -91,7 +95,11 @@ export function handleToolError(
   customMessage?: string,
   context?: Record<string, unknown>
 ): MCPToolResponse {
-  const errorMessage = error?.message || error || '未知错误';
+  const errorMessage = (
+    (error && typeof error === 'object' && 'message' in error && typeof error.message === 'string')
+      ? error.message
+      : String(error || '未知错误')
+  );
   const { type, severity } = analyzeError(error);
 
   // 生成错误ID用于追踪
@@ -99,11 +107,15 @@ export function handleToolError(
 
   // 构建增强的错误对象
   const _enhancedError: EnhancedError = {
-    name: error?.name || 'Error',
+    name: (error && typeof error === 'object' && 'name' in error && typeof error.name === 'string')
+      ? error.name
+      : 'Error',
     message: errorMessage,
     type,
     severity,
-    code: error?.code,
+    code: (error && typeof error === 'object' && 'code' in error && typeof (error as any).code === 'string')
+      ? (error as any).code
+      : undefined,
     context: {
       toolName,
       errorId,
@@ -111,7 +123,9 @@ export function handleToolError(
       ...context
     },
     toolName,
-    stack: error?.stack
+    stack: (error && typeof error === 'object' && 'stack' in error && typeof error.stack === 'string')
+      ? error.stack
+      : undefined
   };
 
   // 根据严重程度选择日志级别
@@ -127,7 +141,9 @@ export function handleToolError(
     severity,
     message: errorMessage,
     context,
-    stack: error?.stack
+    stack: (error && typeof error === 'object' && 'stack' in error && typeof error.stack === 'string')
+      ? error.stack
+      : undefined
   });
 
   // 构建用户友好的错误消息

@@ -224,7 +224,7 @@ export class SupabaseAdapter implements StorageAdapter {
   private getCachedResult<T>(cacheKey: string): T | null {
     const cached = this.queryCache[cacheKey];
     if (cached && Date.now() - cached.timestamp < cached.ttl) {
-      return cached.data;
+      return cached.data as T;
     }
     return null;
   }

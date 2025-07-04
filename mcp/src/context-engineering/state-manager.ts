@@ -542,7 +542,7 @@ export class ContextStateManager implements StateStorage {
       }
 
       query += ` ORDER BY created_at DESC LIMIT $${params.length + 1}`;
-      params.push(limit);
+      params.push(limit.toString());
 
       const result = await this.executeQuery(query, params);
 

@@ -6,6 +6,26 @@
 import { BaseMCPTool, ToolContext, ToolResult } from '../../shared/base-tool.js';
 import { ToolDescription, ToolParameter, Prompt, PromptContentJsonb } from '../../types.js';
 
+// 工具参数接口
+interface QuickCopyParams {
+  prompt_id: string;
+  format?: 'plain' | 'markdown' | 'json' | 'template';
+  include_variables?: boolean;
+  custom_variables?: Record<string, string | number | boolean>;
+}
+
+interface PreviewParams {
+  prompt_id: string;
+  sample_variables?: Record<string, string | number | boolean>;
+  target_model?: string;
+}
+
+interface BatchExportParams {
+  prompt_ids: string[];
+  export_format?: 'json' | 'csv' | 'markdown' | 'txt';
+  include_metadata?: boolean;
+}
+
 /**
  * 快速复制工具类
  */
@@ -61,14 +81,6 @@ export class QuickCopyTool extends BaseMCPTool {
         } as ToolParameter,
       },
     };
-  }
-
-  // 工具参数接口
-  interface QuickCopyParams {
-    prompt_id: string;
-    format?: 'plain' | 'markdown' | 'json' | 'template';
-    include_variables?: boolean;
-    custom_variables?: Record<string, string | number | boolean>;
   }
 
   async execute(params: QuickCopyParams, context: ToolContext): Promise<ToolResult> {
@@ -314,13 +326,6 @@ export class PromptPreviewTool extends BaseMCPTool {
     };
   }
 
-  // 预览工具参数接口
-  interface PreviewParams {
-    prompt_id: string;
-    sample_variables?: Record<string, string | number | boolean>;
-    target_model?: string;
-  }
-
   async execute(params: PreviewParams, context: ToolContext): Promise<ToolResult> {
     this.validateParams(params, ['prompt_id']);
 
@@ -497,13 +502,6 @@ export class BatchExportTool extends BaseMCPTool {
         } as ToolParameter,
       },
     };
-  }
-
-  // 批量导出参数接口
-  interface BatchExportParams {
-    prompt_ids: string[];
-    export_format?: 'json' | 'csv' | 'markdown' | 'txt';
-    include_metadata?: boolean;
   }
 
   async execute(params: BatchExportParams, context: ToolContext): Promise<ToolResult> {
