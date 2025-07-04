@@ -99,7 +99,7 @@ const TOOL_TABS = [
   { id: 'builder', name: '规则构建器', icon: WrenchScrewdriverIcon, description: '可视化创建适应规则' },
   { id: 'optimizer', name: '智能优化', icon: SparklesIcon, description: 'AI驱动的规则建议' },
   { id: 'predictor', name: '效果预测', icon: BeakerIcon, description: '预测规则实施效果' },
-  { id: 'library', name: '规则库', icon: AcademicCapIcon, description: '管理所有规则' }
+  { id: 'library', name: '规则库', icon: AcademicCapIcon, description: '管理所有规则' },
 ];
 
 const CONDITION_TYPES = [
@@ -107,7 +107,7 @@ const CONDITION_TYPES = [
   { value: 'time_based', label: '时间条件', description: '基于时间或日期的条件' },
   { value: 'usage_pattern', label: '使用模式', description: '基于历史使用模式' },
   { value: 'content_type', label: '内容类型', description: '基于内容类别或主题' },
-  { value: 'custom', label: '自定义', description: '自定义逻辑条件' }
+  { value: 'custom', label: '自定义', description: '自定义逻辑条件' },
 ];
 
 const ACTION_TYPES = [
@@ -116,7 +116,7 @@ const ACTION_TYPES = [
   { value: 'replace', label: '替换内容', description: '替换特定部分' },
   { value: 'modify_tone', label: '调整语调', description: '改变回答的语调风格' },
   { value: 'add_examples', label: '添加示例', description: '插入相关示例' },
-  { value: 'adjust_complexity', label: '调整复杂度', description: '简化或详化内容' }
+  { value: 'adjust_complexity', label: '调整复杂度', description: '简化或详化内容' },
 ];
 
 export default function AdvancedCEToolsPage() {
@@ -285,7 +285,7 @@ export default function AdvancedCEToolsPage() {
       actions: [],
       priority: contextRules.length + 1,
       createdAt: new Date().toISOString(),
-      lastModified: new Date().toISOString()
+      lastModified: new Date().toISOString(),
     };
     
     setCurrentRule(newRule);
@@ -813,7 +813,7 @@ function RuleEditorModal({ rule, onSave, onCancel }: {
       type: 'user_preference',
       field: '',
       operator: 'equals',
-      value: ''
+      value: '',
     };
     setEditingRule(prev => ({
       ...prev,
@@ -825,7 +825,7 @@ function RuleEditorModal({ rule, onSave, onCancel }: {
     const newAction: RuleAction = {
       id: Date.now().toString(),
       type: 'append',
-      content: ''
+      content: '',
     };
     setEditingRule(prev => ({
       ...prev,
