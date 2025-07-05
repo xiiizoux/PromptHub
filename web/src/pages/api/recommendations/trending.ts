@@ -46,7 +46,6 @@ async function getTrendingPrompts(limit: number) {
         is_public,
         created_at,
         updated_at,
-        version,
         user_id,
         users (
           display_name,

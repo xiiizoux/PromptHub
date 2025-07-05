@@ -425,7 +425,7 @@ export class DatabaseService {
       preview_asset_url: previewAssetUrl,
       parameters: parameters,
       category_type: promptData.category_type || 'chat',
-      version: promptData.version ? Number(promptData.version) : 1.0
+      version: promptData.version ? Number(promptData.version) : 1.0, // 恢复 version 字段，确保数字类型
     });
 
     return await this.adapter.createPrompt(dbPrompt);
@@ -497,9 +497,10 @@ export class DatabaseService {
         parameters: parameters
       });
 
-      // 版本号处理 - 编辑时默认+0.1（支持小数版本号）
-      const currentVersion = existingPrompt.version || 1.0;
-      updateData.version = Math.round((currentVersion + 0.1) * 10) / 10;
+      // 处理版本号更新，确保数字类型
+      if (promptData.version !== undefined) {
+        updateData.version = Number(promptData.version);
+      }
       updateData.updated_at = new Date().toISOString();
 
       // 执行更新

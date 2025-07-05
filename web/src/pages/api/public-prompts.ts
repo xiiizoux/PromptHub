@@ -90,7 +90,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         description,
         category,
         tags,
-        version,
         is_public,
         user_id,
         created_at,

@@ -34,7 +34,7 @@ export interface Prompt {
   content: string;  // 内容字段，现在是必需的
   is_public: boolean;
   user_id: string;
-  version?: number;
+  version?: number; // 版本号，支持小数格式如1.0, 1.1, 2.0
   created_at: string;
   updated_at?: string;
   compatible_models?: string[];
@@ -1031,7 +1031,7 @@ export class SupabaseAdapter {
         user_id: userId,
         created_by: userId, // 设置创建者ID
         category_id: categoryId, // 设置分类ID
-        version: typeof promptData.version === 'number' ? promptData.version : 1, // 确保版本是整数
+        version: promptData.version ? Number(promptData.version) : 1.0, // 恢复 version 字段，确保数字类型
         compatible_models: Array.isArray(promptData.compatible_models) ? promptData.compatible_models : [], // 添加兼容模型字段
         category_type: promptData.category_type || 'chat', // 添加分类类型
         preview_asset_url: promptData.preview_asset_url || null, // 添加预览资源URL

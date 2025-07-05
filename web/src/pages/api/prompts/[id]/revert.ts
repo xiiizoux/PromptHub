@@ -44,7 +44,7 @@ export default async function handler(
     // 检查用户是否有权限编辑这个提示词
     const { data: prompt, error: promptError } = await supabase
       .from('prompts')
-      .select('id, user_id, version')
+      .select('id, user_id')
       .eq('id', id)
       .single();
 
@@ -69,8 +69,7 @@ export default async function handler(
     }
 
     // 开始事务：先创建当前状态的版本记录，然后更新主记录
-    const currentVersion = prompt.version || 1.0;
-    const newVersion = Math.round((currentVersion + 0.1) * 10) / 10;
+    // version 字段已移除，版本信息现在通过 prompt_versions 表管理
 
     // 首先保存当前状态到版本历史（回滚前的备份）
     const { data: currentPrompt, error: currentPromptError } = await supabase
