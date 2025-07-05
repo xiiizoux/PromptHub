@@ -1,7 +1,7 @@
 -- =============================================
--- PromptHub Database Schema (Corrected)
--- Generated: 2025-07-02
--- Updated to match actual Supabase database structure with Context Engineering
+-- PromptHub Database Schema (Complete)
+-- Generated: 2025-07-05
+-- Updated to match actual Supabase database structure with all 47 tables
 -- =============================================
 
 -- Enable necessary extensions
@@ -14,6 +14,9 @@ CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
 -- Category type enum (matches actual database)
 CREATE TYPE category_type AS ENUM ('chat', 'image', 'video');
+
+-- Prompt category enum (matches actual database)
+CREATE TYPE prompt_category AS ENUM ('chat', 'image', 'video');
 
 -- =============================================
 -- Core Tables (in dependency order)
@@ -96,6 +99,153 @@ CREATE TABLE prompts (
     context_variables JSONB DEFAULT '{}'::jsonb,
     adaptation_rules JSONB DEFAULT '[]'::jsonb,
     effectiveness_score DECIMAL(3,2) DEFAULT 0.00 CHECK (effectiveness_score >= 0 AND effectiveness_score <= 5)
+);
+
+-- Comments table
+CREATE TABLE comments (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    prompt_id UUID NOT NULL REFERENCES prompts(id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    parent_id UUID REFERENCES comments(id) ON DELETE CASCADE,
+    content TEXT NOT NULL,
+    is_edited BOOLEAN DEFAULT false,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Favorites table
+CREATE TABLE favorites (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    prompt_id UUID NOT NULL REFERENCES prompts(id) ON DELETE CASCADE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(user_id, prompt_id)
+);
+
+-- Likes table
+CREATE TABLE likes (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    prompt_id UUID NOT NULL REFERENCES prompts(id) ON DELETE CASCADE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(user_id, prompt_id)
+);
+
+-- Notifications table
+CREATE TABLE notifications (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    type VARCHAR(50) NOT NULL,
+    title VARCHAR(255) NOT NULL,
+    message TEXT,
+    data JSONB DEFAULT '{}'::jsonb,
+    is_read BOOLEAN DEFAULT false,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Prompt version history table
+CREATE TABLE prompt_version_history (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    prompt_id UUID NOT NULL REFERENCES prompts(id) ON DELETE CASCADE,
+    version_number INTEGER NOT NULL,
+    content JSONB NOT NULL,
+    description TEXT,
+    created_by UUID REFERENCES users(id),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    changes_summary TEXT,
+    is_current BOOLEAN DEFAULT false,
+    UNIQUE(prompt_id, version_number)
+);
+
+-- Public prompt analytics table
+CREATE TABLE public_prompt_analytics (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    prompt_id UUID NOT NULL REFERENCES prompts(id) ON DELETE CASCADE,
+    date DATE NOT NULL,
+    views INTEGER DEFAULT 0,
+    likes INTEGER DEFAULT 0,
+    favorites INTEGER DEFAULT 0,
+    comments INTEGER DEFAULT 0,
+    shares INTEGER DEFAULT 0,
+    UNIQUE(prompt_id, date)
+);
+
+-- Reports table
+CREATE TABLE reports (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    reporter_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    reported_prompt_id UUID REFERENCES prompts(id) ON DELETE CASCADE,
+    reported_user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    reported_comment_id UUID REFERENCES comments(id) ON DELETE CASCADE,
+    reason VARCHAR(100) NOT NULL,
+    description TEXT,
+    status VARCHAR(20) DEFAULT 'pending' CHECK (status IN ('pending', 'reviewed', 'resolved', 'dismissed')),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    resolved_at TIMESTAMP WITH TIME ZONE,
+    resolved_by UUID REFERENCES users(id)
+);
+
+-- Social interactions table
+CREATE TABLE social_interactions (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    target_user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    prompt_id UUID REFERENCES prompts(id) ON DELETE CASCADE,
+    interaction_type VARCHAR(50) NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Tags table
+CREATE TABLE tags (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    name VARCHAR(50) UNIQUE NOT NULL,
+    description TEXT,
+    usage_count INTEGER DEFAULT 0,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- User activity logs table
+CREATE TABLE user_activity_logs (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    activity_type VARCHAR(50) NOT NULL,
+    target_id UUID,
+    target_type VARCHAR(50),
+    metadata JSONB DEFAULT '{}'::jsonb,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- User follows table
+CREATE TABLE user_follows (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    follower_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    following_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(follower_id, following_id),
+    CHECK (follower_id != following_id)
+);
+
+-- User preferences table
+CREATE TABLE user_preferences (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    preference_key VARCHAR(100) NOT NULL,
+    preference_value JSONB NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(user_id, preference_key)
+);
+
+-- User sessions table
+CREATE TABLE user_sessions (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    session_token VARCHAR(255) UNIQUE NOT NULL,
+    ip_address INET,
+    user_agent TEXT,
+    expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    last_activity_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
 -- =============================================
@@ -539,3 +689,108 @@ FROM performance_metrics
 WHERE metric_type = 'cache_hit_rate'
 AND measured_at >= NOW() - INTERVAL '24 hours'
 GROUP BY DATE_TRUNC('hour', COALESCE(measured_at, NOW()));
+
+-- =============================================
+-- Row Level Security (RLS) Policies
+-- =============================================
+
+-- Enable RLS on all tables
+ALTER TABLE users ENABLE ROW LEVEL SECURITY;
+ALTER TABLE categories ENABLE ROW LEVEL SECURITY;
+ALTER TABLE api_keys ENABLE ROW LEVEL SECURITY;
+ALTER TABLE prompts ENABLE ROW LEVEL SECURITY;
+ALTER TABLE comments ENABLE ROW LEVEL SECURITY;
+ALTER TABLE favorites ENABLE ROW LEVEL SECURITY;
+ALTER TABLE likes ENABLE ROW LEVEL SECURITY;
+ALTER TABLE notifications ENABLE ROW LEVEL SECURITY;
+ALTER TABLE prompt_versions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE prompt_version_history ENABLE ROW LEVEL SECURITY;
+ALTER TABLE collaborations ENABLE ROW LEVEL SECURITY;
+ALTER TABLE user_prompt_usage_logs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public_prompt_analytics ENABLE ROW LEVEL SECURITY;
+ALTER TABLE reports ENABLE ROW LEVEL SECURITY;
+ALTER TABLE social_interactions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE tags ENABLE ROW LEVEL SECURITY;
+ALTER TABLE user_activity_logs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE user_follows ENABLE ROW LEVEL SECURITY;
+ALTER TABLE user_preferences ENABLE ROW LEVEL SECURITY;
+ALTER TABLE user_sessions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE user_context_profiles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE context_sessions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE user_interactions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE context_experiments ENABLE ROW LEVEL SECURITY;
+ALTER TABLE experiment_participations ENABLE ROW LEVEL SECURITY;
+ALTER TABLE performance_metrics ENABLE ROW LEVEL SECURITY;
+ALTER TABLE prompt_relationships ENABLE ROW LEVEL SECURITY;
+ALTER TABLE context_adaptations ENABLE ROW LEVEL SECURITY;
+
+-- Users table policies
+CREATE POLICY "Users can view their own profile" ON users FOR SELECT USING (auth.uid() = id);
+CREATE POLICY "Users can update their own profile" ON users FOR UPDATE USING (auth.uid() = id);
+CREATE POLICY "Public user profiles are viewable" ON users FOR SELECT USING (is_active = true);
+
+-- Categories table policies
+CREATE POLICY "Categories are viewable by everyone" ON categories FOR SELECT USING (is_active = true);
+CREATE POLICY "Only admins can modify categories" ON categories FOR ALL USING (
+    EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND role = 'admin')
+);
+
+-- API Keys table policies
+CREATE POLICY "Users can view their own API keys" ON api_keys FOR SELECT USING (user_id = auth.uid());
+CREATE POLICY "Users can manage their own API keys" ON api_keys FOR ALL USING (user_id = auth.uid());
+
+-- Prompts table policies
+CREATE POLICY "Public prompts are viewable by everyone" ON prompts FOR SELECT USING (is_public = true);
+CREATE POLICY "Users can view their own prompts" ON prompts FOR SELECT USING (user_id = auth.uid());
+CREATE POLICY "Users can manage their own prompts" ON prompts FOR ALL USING (user_id = auth.uid());
+CREATE POLICY "Collaborators can view shared prompts" ON prompts FOR SELECT USING (
+    EXISTS (SELECT 1 FROM collaborations WHERE prompt_id = prompts.id AND user_id = auth.uid() AND status = 'accepted')
+);
+
+-- Comments table policies
+CREATE POLICY "Comments on public prompts are viewable" ON comments FOR SELECT USING (
+    EXISTS (SELECT 1 FROM prompts WHERE id = comments.prompt_id AND is_public = true)
+);
+CREATE POLICY "Users can manage their own comments" ON comments FOR ALL USING (user_id = auth.uid());
+
+-- Favorites table policies
+CREATE POLICY "Users can manage their own favorites" ON favorites FOR ALL USING (user_id = auth.uid());
+
+-- Likes table policies
+CREATE POLICY "Users can manage their own likes" ON likes FOR ALL USING (user_id = auth.uid());
+
+-- Notifications table policies
+CREATE POLICY "Users can view their own notifications" ON notifications FOR SELECT USING (user_id = auth.uid());
+CREATE POLICY "Users can update their own notifications" ON notifications FOR UPDATE USING (user_id = auth.uid());
+
+-- User activity logs policies
+CREATE POLICY "Users can view their own activity" ON user_activity_logs FOR SELECT USING (user_id = auth.uid());
+
+-- User follows policies
+CREATE POLICY "Users can manage their own follows" ON user_follows FOR ALL USING (follower_id = auth.uid());
+CREATE POLICY "Follow relationships are viewable" ON user_follows FOR SELECT USING (true);
+
+-- User preferences policies
+CREATE POLICY "Users can manage their own preferences" ON user_preferences FOR ALL USING (user_id = auth.uid());
+
+-- User sessions policies
+CREATE POLICY "Users can view their own sessions" ON user_sessions FOR SELECT USING (user_id = auth.uid());
+CREATE POLICY "Users can manage their own sessions" ON user_sessions FOR ALL USING (user_id = auth.uid());
+
+-- Context Engineering policies
+CREATE POLICY "Users can manage their own context profiles" ON user_context_profiles FOR ALL USING (user_id = auth.uid());
+CREATE POLICY "Users can manage their own context sessions" ON context_sessions FOR ALL USING (user_id = auth.uid());
+CREATE POLICY "Users can view their own interactions" ON user_interactions FOR SELECT USING (user_id = auth.uid());
+CREATE POLICY "Users can manage their own context adaptations" ON context_adaptations FOR ALL USING (user_id = auth.uid());
+
+-- Performance metrics policies (admin only)
+CREATE POLICY "Only admins can view performance metrics" ON performance_metrics FOR SELECT USING (
+    EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND role = 'admin')
+);
+
+-- Reports policies
+CREATE POLICY "Users can create reports" ON reports FOR INSERT WITH CHECK (reporter_id = auth.uid());
+CREATE POLICY "Users can view their own reports" ON reports FOR SELECT USING (reporter_id = auth.uid());
+CREATE POLICY "Admins can manage all reports" ON reports FOR ALL USING (
+    EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND role = 'admin')
+);
