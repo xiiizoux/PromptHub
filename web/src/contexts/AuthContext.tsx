@@ -86,7 +86,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // 确保用户数据在数据库中 - 使用useCallback确保引用稳定
   const ensureUserInDatabase = useCallback(async (authUser: SupabaseUser) => {
-    if (!mounted.current) return;
+    if (!mounted.current) {return;}
     
     try {
       // 检查用户是否已存在于users表
@@ -244,7 +244,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     let authSubscription: { unsubscribe: () => void } | null = null;
 
     const initAuth = async () => {
-      if (typeof window === 'undefined' || authInitialized.current) return;
+      if (typeof window === 'undefined' || authInitialized.current) {return;}
 
       authInitialized.current = true;
 
@@ -268,7 +268,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         // 监听认证状态变化
         const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event: AuthEvent, session: AuthSession | null) => {
-          if (!mounted.current) return;
+          if (!mounted.current) {return;}
 
           if (event === 'SIGNED_IN' && session?.user) {
             // 异步确保用户在数据库中，不阻塞认证流程
@@ -447,7 +447,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const updateProfile = useCallback(async (data: Partial<User>): Promise<void> => {
-    if (!user) return;
+    if (!user) {return;}
     
     const { error } = await supabase
       .from('users')
@@ -504,7 +504,7 @@ export const withAuth = <P extends object>(Component: React.ComponentType<P>): R
 
     useEffect(() => {
       // 如果还在加载认证状态，不做任何操作
-      if (isLoading) return;
+      if (isLoading) {return;}
 
       // 如果未登录且未在重定向中，重定向到登录页面
       if (!isAuthenticated && !redirecting) {

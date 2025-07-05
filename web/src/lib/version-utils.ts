@@ -13,7 +13,7 @@ export const validateVersionFormat = (version: string | number): boolean => {
     const trimmed = version.trim();
     // 匹配格式：整数或一位小数（如 "1", "1.0", "1.6"）
     const regex = /^\d+(\.\d)?$/;
-    if (!regex.test(trimmed)) return false;
+    if (!regex.test(trimmed)) {return false;}
     
     const num = parseFloat(trimmed);
     return num > 0 && Number((num * 10) % 1) === 0;
@@ -27,8 +27,8 @@ export const compareVersions = (v1: string | number, v2: string | number): numbe
   const num1 = typeof v1 === 'number' ? v1 : parseFloat(v1.toString());
   const num2 = typeof v2 === 'number' ? v2 : parseFloat(v2.toString());
   
-  if (num1 > num2) return 1;
-  if (num1 < num2) return -1;
+  if (num1 > num2) {return 1;}
+  if (num1 < num2) {return -1;}
   return 0;
 };
 
@@ -47,7 +47,7 @@ export const suggestNextVersion = (currentVersion: string | number, increment: '
     ? currentVersion 
     : parseFloat(currentVersion.toString());
     
-  if (isNaN(current)) return 1.0;
+  if (isNaN(current)) {return 1.0;}
   
   if (increment === 'minor') {
     // +0.1 增量

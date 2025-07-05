@@ -5,11 +5,11 @@ import { withApiAuth } from '@/middleware/withApiAuth';
 /**
  * 处理用户资料更新的API端点
  */
-export default withApiAuth(async function handler(
+export default withApiAuth(async (
   req: NextApiRequest,
   res: NextApiResponse,
   userId: string,
-) {
+) => {
   // 只允许PUT方法
   if (req.method !== 'PUT') {
     return res.status(405).json({ success: false, message: 'Method not allowed' });

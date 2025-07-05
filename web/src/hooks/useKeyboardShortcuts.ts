@@ -10,7 +10,7 @@ interface KeyboardShortcuts {
 export const useKeyboardShortcuts = (shortcuts: KeyboardShortcuts) => {
   const handleKeyDown = useCallback((event: KeyboardEvent) => {
     // 确保在浏览器环境中运行
-    if (!isBrowser()) return;
+    if (!isBrowser()) {return;}
     
     // 忽略在输入框中的按键事件
     const activeElement = document?.activeElement;
@@ -20,13 +20,13 @@ export const useKeyboardShortcuts = (shortcuts: KeyboardShortcuts) => {
       (activeElement as HTMLElement).contentEditable === 'true'
     );
 
-    if (isInputActive) return;
+    if (isInputActive) {return;}
 
     // 构建快捷键字符串
     const keys = [];
-    if (event.ctrlKey || event.metaKey) keys.push('ctrl');
-    if (event.altKey) keys.push('alt');
-    if (event.shiftKey) keys.push('shift');
+    if (event.ctrlKey || event.metaKey) {keys.push('ctrl');}
+    if (event.altKey) {keys.push('alt');}
+    if (event.shiftKey) {keys.push('shift');}
     // 添加空值检查防止toLowerCase错误
     if (event.key) {
       keys.push(event.key.toLowerCase());
@@ -41,7 +41,7 @@ export const useKeyboardShortcuts = (shortcuts: KeyboardShortcuts) => {
   }, [shortcuts]);
 
   useEffect(() => {
-    if (!isBrowser()) return;
+    if (!isBrowser()) {return;}
     
     const added = safeDocument.addEventListener('keydown', handleKeyDown);
     return () => {
@@ -181,7 +181,7 @@ const showKeyboardHelp = () => {
 
   closeButton?.addEventListener('click', closeModal);
   helpModal.addEventListener('click', (e) => {
-    if (e.target === helpModal) closeModal();
+    if (e.target === helpModal) {closeModal();}
   });
   document.addEventListener('keydown', escapeHandler);
 

@@ -82,7 +82,7 @@ export const supabase = getSupabaseClient();
 
 // 工具函数：安全地清理认证状态
 export const clearAuthState = async () => {
-  if (typeof window === 'undefined') return;
+  if (typeof window === 'undefined') {return;}
 
   try {
     console.log('开始清理认证状态...');

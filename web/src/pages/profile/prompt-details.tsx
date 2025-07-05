@@ -18,7 +18,7 @@ const PromptDetails = () => {
   const [showVersionHistory, setShowVersionHistory] = useState(false);
 
   const fetchPrompt = async () => {
-    if (!id || !user) return;
+    if (!id || !user) {return;}
     
     setLoading(true);
     try {
@@ -85,7 +85,7 @@ const PromptDetails = () => {
   };
   
   const formatDate = (dateString?: string) => {
-    if (!dateString) return '未知日期';
+    if (!dateString) {return '未知日期';}
     const date = new Date(dateString);
     return date.toLocaleDateString('zh-CN', { 
       year: 'numeric', 

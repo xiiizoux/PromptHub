@@ -28,7 +28,7 @@ export const InteractionsProvider: React.FC<{ children: React.ReactNode }> = ({ 
     // 过滤掉已经加载的提示词
     const newPromptIds = promptIds.filter(id => !interactions[id] && !loadingPrompts.has(id));
     
-    if (newPromptIds.length === 0) return;
+    if (newPromptIds.length === 0) {return;}
 
     // 标记正在加载的提示词
     setLoadingPrompts(prev => {
@@ -64,7 +64,7 @@ export const InteractionsProvider: React.FC<{ children: React.ReactNode }> = ({ 
                 bookmarks: 0,
                 userLiked: false,
                 userBookmarked: false,
-              } as PromptInteractions
+              } as PromptInteractions,
             };
           }
         });

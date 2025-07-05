@@ -839,28 +839,28 @@ const checkOutputFormat = (content: string): boolean => {
 const calculateBasicScore = (content: string): number => {
   let score = 50; // 基础分
   
-  if (checkRoleDefinition(content)) score += 15;
-  if (checkContext(content)) score += 10;
-  if (checkTaskDescription(content)) score += 15;
-  if (checkOutputFormat(content)) score += 10;
+  if (checkRoleDefinition(content)) {score += 15;}
+  if (checkContext(content)) {score += 10;}
+  if (checkTaskDescription(content)) {score += 15;}
+  if (checkOutputFormat(content)) {score += 10;}
   
   // 长度调整
-  if (content.length > 100) score += 5;
-  if (content.length > 200) score += 5;
-  if (content.length > 500) score -= 5; // 太长扣分
+  if (content.length > 100) {score += 5;}
+  if (content.length > 200) {score += 5;}
+  if (content.length > 500) {score -= 5;} // 太长扣分
   
   return Math.min(100, Math.max(0, score));
 };
 
 const getQualityColor = (score: number): string => {
-  if (score >= 80) return 'bg-green-400';
-  if (score >= 60) return 'bg-yellow-400';
+  if (score >= 80) {return 'bg-green-400';}
+  if (score >= 60) {return 'bg-yellow-400';}
   return 'bg-red-400';
 };
 
 const getQualityText = (score: number): string => {
-  if (score >= 80) return '优秀';
-  if (score >= 60) return '良好';
+  if (score >= 80) {return '优秀';}
+  if (score >= 60) {return '良好';}
   return '需要改进';
 };
 

@@ -30,7 +30,7 @@ import {
   PauseIcon,
   CheckCircleIcon,
   XMarkIcon,
-  ArrowLeftIcon
+  ArrowLeftIcon,
 } from '@heroicons/react/24/outline';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/router';
@@ -94,7 +94,7 @@ const TABS = [
   { id: 'overview', name: '总览', icon: ChartBarIcon, description: '个人AI使用全景' },
   { id: 'prompts', name: '提示词分析', icon: DocumentTextIcon, description: '深度性能洞察' },
   { id: 'experiments', name: 'A/B测试', icon: BeakerIcon, description: '个人优化实验' },
-  { id: 'optimization', name: '优化建议', icon: LightBulbIcon, description: 'AI驱动改进方案' }
+  { id: 'optimization', name: '优化建议', icon: LightBulbIcon, description: 'AI驱动改进方案' },
 ];
 
 export default function PromptAnalyticsPage() {
@@ -135,7 +135,7 @@ export default function PromptAnalyticsPage() {
         Promise.resolve(generateMockUsagePattern()),
         Promise.resolve(generateMockPromptAnalytics()),
         Promise.resolve(generateMockExperiments()),
-        Promise.resolve(generateMockOptimizationSuggestions())
+        Promise.resolve(generateMockOptimizationSuggestions()),
       ]);
 
       setUsagePattern(usageRes);
@@ -154,19 +154,19 @@ export default function PromptAnalyticsPage() {
   const generateMockUsagePattern = (): UsagePattern => ({
     timeOfDay: Array.from({ length: 24 }, (_, i) => ({
       hour: i,
-      usage: Math.floor(Math.random() * 50) + (i >= 9 && i <= 17 ? 20 : 5)
+      usage: Math.floor(Math.random() * 50) + (i >= 9 && i <= 17 ? 20 : 5),
     })),
     weeklyPattern: ['周一', '周二', '周三', '周四', '周五', '周六', '周日'].map(day => ({
       day,
-      usage: Math.floor(Math.random() * 100) + 20
+      usage: Math.floor(Math.random() * 100) + 20,
     })),
     topPrompts: [],
     performanceMetrics: {
       totalInteractions: 1247,
       avgSatisfaction: 4.3,
       mostProductiveHour: 14,
-      favoriteCategories: ['编程助手', '写作优化', '数据分析']
-    }
+      favoriteCategories: ['编程助手', '写作优化', '数据分析'],
+    },
   });
 
   const generateMockPromptAnalytics = (): PromptAnalytics[] => [
@@ -181,7 +181,7 @@ export default function PromptAnalyticsPage() {
       trend: 'up',
       trendValue: 12,
       categories: ['编程', '优化'],
-      contextEngineering: true
+      contextEngineering: true,
     },
     {
       id: '2', 
@@ -194,7 +194,7 @@ export default function PromptAnalyticsPage() {
       trend: 'stable',
       trendValue: 0,
       categories: ['写作', '技术'],
-      contextEngineering: false
+      contextEngineering: false,
     },
     {
       id: '3',
@@ -207,8 +207,8 @@ export default function PromptAnalyticsPage() {
       trend: 'up',
       trendValue: 8,
       categories: ['数据', '分析'],
-      contextEngineering: true
-    }
+      contextEngineering: true,
+    },
   ];
 
   const generateMockExperiments = (): PersonalExperiment[] => [
@@ -220,11 +220,11 @@ export default function PromptAnalyticsPage() {
       status: 'running',
       variants: [
         { name: '正式风格', traffic: 50, successRate: 92, avgSatisfaction: 4.5 },
-        { name: '友好风格', traffic: 50, successRate: 89, avgSatisfaction: 4.3 }
+        { name: '友好风格', traffic: 50, successRate: 89, avgSatisfaction: 4.3 },
       ],
       startDate: '2023-12-01',
-      insights: ['正式风格在复杂任务中表现更好', '友好风格提升了用户参与度']
-    }
+      insights: ['正式风格在复杂任务中表现更好', '友好风格提升了用户参与度'],
+    },
   ];
 
   const generateMockOptimizationSuggestions = (): OptimizationSuggestion[] => [
@@ -237,9 +237,9 @@ export default function PromptAnalyticsPage() {
       actionItems: [
         '为"Python代码优化助手"添加用户偏好适应',
         '配置基于历史交互的动态示例选择',
-        '设置智能上下文记忆机制'
+        '设置智能上下文记忆机制',
       ],
-      promptId: '1'
+      promptId: '1',
     },
     {
       type: 'efficiency',
@@ -250,9 +250,9 @@ export default function PromptAnalyticsPage() {
       actionItems: [
         '将复杂编程任务安排在14:00-16:00',
         '利用午后高效时段处理创作任务',
-        '设置智能提醒优化工作节奏'
-      ]
-    }
+        '设置智能提醒优化工作节奏',
+      ],
+    },
   ];
 
   if (loading) {
@@ -428,7 +428,7 @@ export default function PromptAnalyticsPage() {
 
   // 总览选项卡
   function OverviewTab() {
-    if (!usagePattern) return null;
+    if (!usagePattern) {return null;}
 
     return (
       <div className="space-y-8">

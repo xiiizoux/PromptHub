@@ -244,18 +244,18 @@ export default function PromptFormContainer({
 
   // 工具函数：安全的数组比较
   const arraysEqual = (a: unknown[], b: unknown[]): boolean => {
-    if (!Array.isArray(a) || !Array.isArray(b)) return false;
-    if (a.length !== b.length) return false;
+    if (!Array.isArray(a) || !Array.isArray(b)) {return false;}
+    if (a.length !== b.length) {return false;}
     return a.every((val, index) => val === b[index]);
   };
 
   // 工具函数：深度比较对象
   const objectsEqual = useCallback((a: unknown, b: unknown): boolean => {
-    if (a === b) return true;
-    if (!a || !b) return a === b;
+    if (a === b) {return true;}
+    if (!a || !b) {return a === b;}
 
     // Type guard to ensure we're working with objects
-    if (typeof a !== 'object' || typeof b !== 'object') return false;
+    if (typeof a !== 'object' || typeof b !== 'object') {return false;}
 
     const objA = a as Record<string, unknown>;
     const objB = b as Record<string, unknown>;
@@ -263,7 +263,7 @@ export default function PromptFormContainer({
     const keysA = Object.keys(objA);
     const keysB = Object.keys(objB);
 
-    if (keysA.length !== keysB.length) return false;
+    if (keysA.length !== keysB.length) {return false;}
 
     return keysA.every(key => {
       const valueA = objA[key];
@@ -291,7 +291,7 @@ export default function PromptFormContainer({
   // 监听表单变化，检测是否有未保存的更改
   const watchedData = watch();
   useEffect(() => {
-    if (!onUnsavedChanges) return;
+    if (!onUnsavedChanges) {return;}
 
     // 只有在初始化完成后才开始检测未保存状态
     if (!isInitialized) {
@@ -499,7 +499,7 @@ export default function PromptFormContainer({
     // 移除自动类型检测逻辑，避免与用户手动选择的类型冲突
     // 用户手动选择的类型应该优先，不应该被内容自动覆盖
 
-    if (!content || typeof content !== 'string') return;
+    if (!content || typeof content !== 'string') {return;}
 
     // 修复正则表达式以正确匹配 {{variable}} 格式
     const matches = content.match(/\{\{([^}]+)\}\}/g);
@@ -833,7 +833,7 @@ export default function PromptFormContainer({
                           accept={currentType === 'image' ? 'image/*' : 'video/*'}
                           onChange={(e) => {
                             const files = Array.from(e.target.files || []);
-                            if (files.length === 0) return;
+                            if (files.length === 0) {return;}
                             handleFilesUpload(files);
                           }}
                           className="hidden"

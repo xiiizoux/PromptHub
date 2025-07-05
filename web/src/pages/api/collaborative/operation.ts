@@ -74,7 +74,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         cursor_position: operation.cursor ? JSON.stringify(operation.cursor) : null,
       });
 
-    if (operationError) throw operationError;
+    if (operationError) {throw operationError;}
 
     // 更新参与者的最后活动时间
     await supabase
@@ -133,7 +133,7 @@ async function detectConflicts(sessionId: string, operation: any) {
       .gte('timestamp', startTime.toISOString())
       .lte('timestamp', endTime.toISOString());
 
-    if (error) throw error;
+    if (error) {throw error;}
 
     const conflicts = [];
     for (const recentOp of recentOperations || []) {
@@ -190,7 +190,7 @@ async function applyOperationalTransform(sessionId: string, operation: any) {
       .lt('timestamp', operation.timestamp)
       .order('timestamp', { ascending: true });
 
-    if (error) throw error;
+    if (error) {throw error;}
 
     const transformedOp = { ...operation };
 

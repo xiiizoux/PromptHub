@@ -52,50 +52,50 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             privacy_updates: true,
             data_usage_reports: false,
             security_alerts: true,
-            feature_updates: true
+            feature_updates: true,
           },
           consent_records: [
             {
               type: 'data_collection',
               granted: true,
               timestamp: '2024-01-01T00:00:00Z',
-              version: '1.0'
+              version: '1.0',
             },
             {
               type: 'personalization',
               granted: true,
               timestamp: '2024-01-01T00:00:00Z',
-              version: '1.0'
+              version: '1.0',
             },
             {
               type: 'analytics',
               granted: false,
               timestamp: '2024-01-01T00:00:00Z',
-              version: '1.0'
-            }
+              version: '1.0',
+            },
           ],
           data_categories: {
             interaction_history: { 
               enabled: true, 
               retention_days: 365,
-              description: '您与AI的对话记录，用于个性化改进'
+              description: '您与AI的对话记录，用于个性化改进',
             },
             preference_learning: { 
               enabled: true, 
               retention_days: 730,
-              description: '从您的使用习惯中学习到的偏好模式'
+              description: '从您的使用习惯中学习到的偏好模式',
             },
             performance_metrics: { 
               enabled: true, 
               retention_days: 180,
-              description: '响应时间、满意度等性能指标'
+              description: '响应时间、满意度等性能指标',
             },
             context_adaptations: { 
               enabled: true, 
               retention_days: 365,
-              description: 'AI根据您的需求进行的适应性调整记录'
-            }
-          }
+              description: 'AI根据您的需求进行的适应性调整记录',
+            },
+          },
         };
         
         res.status(200).json(privacySettings);
@@ -114,7 +114,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         
         res.status(200).json({ 
           message: 'Privacy settings updated successfully',
-          updated_at: new Date().toISOString()
+          updated_at: new Date().toISOString(),
         });
       } catch (error) {
         console.error('Error updating privacy settings:', error);
@@ -133,7 +133,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
               export_id: `export_${Date.now()}`,
               status: 'processing',
               estimated_completion: new Date(Date.now() + 300000).toISOString(), // 5分钟后
-              download_url: null
+              download_url: null,
             };
             res.status(202).json(exportData);
             break;
@@ -143,7 +143,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             console.log('Deleting data category for user:', userId, data.category);
             res.status(200).json({ 
               message: `Data category '${data.category}' deleted successfully`,
-              deleted_records: Math.floor(Math.random() * 100) + 1
+              deleted_records: Math.floor(Math.random() * 100) + 1,
             });
             break;
             
@@ -152,7 +152,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             console.log('Revoking consent for user:', userId, data.consent_type);
             res.status(200).json({ 
               message: `Consent for '${data.consent_type}' revoked successfully`,
-              effective_date: new Date().toISOString()
+              effective_date: new Date().toISOString(),
             });
             break;
             

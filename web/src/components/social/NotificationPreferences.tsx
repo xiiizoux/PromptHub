@@ -48,13 +48,13 @@ export default function NotificationPreferences({ onSaved }: NotificationPrefere
 
   // 处理开关变更
   const handleSwitchChange = (checked: boolean, name: keyof NotificationPreference) => {
-    if (!preferences) return;
+    if (!preferences) {return;}
     setPreferences({ ...preferences, [name]: checked });
   };
 
   // 处理下拉菜单变更
   const handleSelectChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    if (!preferences) return;
+    if (!preferences) {return;}
     
     const name = event.target.name as keyof NotificationPreference;
     const value = event.target.value;
@@ -65,7 +65,7 @@ export default function NotificationPreferences({ onSaved }: NotificationPrefere
 
   // 保存偏好设置
   const savePreferences = async () => {
-    if (!preferences) return;
+    if (!preferences) {return;}
     
     try {
       setSaving(true);

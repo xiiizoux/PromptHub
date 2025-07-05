@@ -84,7 +84,7 @@ const ApiDocsPage: React.FC = () => {
                         { name: 'search', type: 'string', desc: '在名称和描述中搜索' },
                         { name: 'author', type: 'string', desc: '按作者筛选提示词' },
                         { name: 'page', type: 'number', desc: '页码，默认为1' },
-                        { name: 'pageSize', type: 'number', desc: '每页条数，默认为10' }
+                        { name: 'pageSize', type: 'number', desc: '每页条数，默认为10' },
                       ].map((param, index) => (
                         <div key={index} className="p-4 hover:bg-dark-bg-secondary/30 transition-colors">
                           <div className="grid grid-cols-3 gap-4 text-sm">
@@ -276,7 +276,7 @@ const ApiDocsPage: React.FC = () => {
                 { code: '401', desc: '未授权', example: 'API密钥无效或过期' },
                 { code: '404', desc: '资源不存在', example: '请求的提示词不存在' },
                 { code: '429', desc: '请求过多', example: '超出API速率限制' },
-                { code: '500', desc: '服务器错误', example: '服务器内部错误' }
+                { code: '500', desc: '服务器错误', example: '服务器内部错误' },
               ].map((error, index) => (
                 <div key={index} className="p-4 hover:bg-dark-bg-secondary/30 transition-colors">
                   <div className="grid grid-cols-3 gap-4 text-sm">

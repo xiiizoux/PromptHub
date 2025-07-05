@@ -150,12 +150,12 @@ const getAuthTokenWithRetry = async (maxRetries: number = 3): Promise<string | n
       let token: string | null = null;
       if (typeof window !== 'undefined') {
         token = localStorage.getItem('auth.token');
-        if (token) return token;
+        if (token) {return token;}
 
         const { supabase } = await import('@/lib/supabase');
         const { data: { session }, error } = await supabase.auth.getSession();
 
-        if (error) throw new Error(`Supabase认证错误: ${error.message}`);
+        if (error) {throw new Error(`Supabase认证错误: ${error.message}`);}
         
         if (session?.access_token) {
           localStorage.setItem('auth.token', session.access_token);
@@ -164,7 +164,7 @@ const getAuthTokenWithRetry = async (maxRetries: number = 3): Promise<string | n
       }
 
       // 如果在服务器端或无法获取，则返回 null
-      if (attempt === 1) return null;
+      if (attempt === 1) {return null;}
 
     } catch (error: ApiError) {
       console.error(`[Token获取] 第${attempt}次尝试失败:`, error.message);
@@ -182,7 +182,7 @@ const getAuthTokenWithRetry = async (maxRetries: number = 3): Promise<string | n
 const withRetry = async <T>(
   fn: () => Promise<T>,
   maxRetries: number = 2, // 从3减少到2
-  retryDelay: number = 500 // 从1000减少到500
+  retryDelay: number = 500, // 从1000减少到500
 ): Promise<T> => {
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
@@ -595,7 +595,7 @@ export async function getPromptInteractions(promptId: string): Promise<PromptInt
         });
       },
       2, // 减少重试次数
-      500 // 减少延迟
+      500, // 减少延迟
     );
     
     if (!response.data.success) {
@@ -614,7 +614,7 @@ export async function getPromptInteractions(promptId: string): Promise<PromptInt
     interactionCache.set(cacheKey, {
       data: result,
       timestamp: now,
-      ttl: 30000
+      ttl: 30000,
     });
     
     return result;
@@ -761,8 +761,8 @@ export async function getPromptRatings(promptId: string, params?: {
   const queryParams = new URLSearchParams();
   queryParams.append('promptId', promptId);
   
-  if (params?.page) queryParams.append('page', params.page.toString());
-  if (params?.pageSize) queryParams.append('pageSize', params.pageSize.toString());
+  if (params?.page) {queryParams.append('page', params.page.toString());}
+  if (params?.pageSize) {queryParams.append('pageSize', params.pageSize.toString());}
 
   const response = await api.get(`/prompts/ratings?${queryParams}`);
 

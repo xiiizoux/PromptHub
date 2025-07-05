@@ -12,7 +12,7 @@ export const getRedirectUrl = (router: NextRouter): string | null => {
 
 // 构建带重定向参数的URL
 export const buildUrlWithRedirect = (baseUrl: string, redirectUrl?: string | null): string => {
-  if (!redirectUrl) return baseUrl;
+  if (!redirectUrl) {return baseUrl;}
   
   const separator = baseUrl.includes('?') ? '&' : '?';
   return `${baseUrl}${separator}redirect=${encodeURIComponent(redirectUrl)}`;

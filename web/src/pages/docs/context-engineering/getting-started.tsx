@@ -23,7 +23,7 @@ import {
   InformationCircleIcon,
   ExclamationTriangleIcon,
   BookOpenIcon,
-  AcademicCapIcon
+  AcademicCapIcon,
 } from '@heroicons/react/24/outline';
 
 interface QuickStartStep {
@@ -46,9 +46,9 @@ const QUICK_START_STEPS: QuickStartStep[] = [
     tips: [
       '建议先从热门的"代码助手"或"写作助手"提示词开始',
       '选择与您工作相关的领域提示词，体验更佳',
-      '新用户建议从简单的通用提示词开始练习'
+      '新用户建议从简单的通用提示词开始练习',
     ],
-    nextStep: 'step2'
+    nextStep: 'step2',
   },
   {
     id: 'step2',
@@ -59,9 +59,9 @@ const QUICK_START_STEPS: QuickStartStep[] = [
     tips: [
       '第一次使用会看到"开始个性化之旅"的提示',
       '登录后才能看到完整的个性化功能',
-      '每个提示词都有独立的个性化上下文'
+      '每个提示词都有独立的个性化上下文',
     ],
-    nextStep: 'step3'
+    nextStep: 'step3',
   },
   {
     id: 'step3',
@@ -72,9 +72,9 @@ const QUICK_START_STEPS: QuickStartStep[] = [
     tips: [
       '可以询问任何与提示词相关的问题',
       '系统会记录您的偏好和反馈',
-      '不必担心说错，每次交互都是学习机会'
+      '不必担心说错，每次交互都是学习机会',
     ],
-    nextStep: 'step4'
+    nextStep: 'step4',
   },
   {
     id: 'step4',
@@ -85,9 +85,9 @@ const QUICK_START_STEPS: QuickStartStep[] = [
     tips: [
       '语言风格、专业程度、回答长度等都很重要',
       '偏好设置会影响所有提示词的表现',
-      '可以随时修改，不用一次性设置完美'
+      '可以随时修改，不用一次性设置完美',
     ],
-    nextStep: 'step5'
+    nextStep: 'step5',
   },
   {
     id: 'step5',
@@ -98,9 +98,9 @@ const QUICK_START_STEPS: QuickStartStep[] = [
     tips: [
       '多次使用后，回应会越来越符合您的偏好',
       '在"我的上下文"中可以看到学习进度',
-      '给予反馈能加速个性化效果'
-    ]
-  }
+      '给予反馈能加速个性化效果',
+    ],
+  },
 ];
 
 export default function ContextEngineeringGettingStarted() {

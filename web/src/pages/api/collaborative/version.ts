@@ -52,7 +52,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       .order('version_number', { ascending: false })
       .limit(1);
 
-    if (countError) throw countError;
+    if (countError) {throw countError;}
 
     const nextVersionNumber = (existingVersions?.[0]?.version_number || 0) + 1;
 
@@ -93,7 +93,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       .select()
       .single();
 
-    if (versionError) throw versionError;
+    if (versionError) {throw versionError;}
 
     // 更新提示词表的版本信息
     await supabase

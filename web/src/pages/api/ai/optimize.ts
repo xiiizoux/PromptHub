@@ -79,14 +79,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (systemUserTemplate.system) {
       messages.push({
         role: 'system',
-        content: systemUserTemplate.system
+        content: systemUserTemplate.system,
       });
     }
 
     // 添加用户消息
     messages.push({
       role: 'user',
-      content: userPrompt
+      content: userPrompt,
     });
 
     // 调用OpenAI API
@@ -203,7 +203,7 @@ function extractImprovements(content: string): string[] {
 // 提取使用建议
 function extractSuggestions(content: string): string[] {
   const match = content.match(/### 使用建议\s*([\s\S]*?)\s*(?:###|$)/);
-  if (!match) return [];
+  if (!match) {return [];}
   
   return match[1].trim()
     .split('\n')

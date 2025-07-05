@@ -30,7 +30,7 @@ import {
   ArrowTopRightOnSquareIcon,
   FaceSmileIcon,
   FaceFrownIcon,
-  ArrowLeftIcon
+  ArrowLeftIcon,
 } from '@heroicons/react/24/outline';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/router';
@@ -93,14 +93,14 @@ const TIME_FILTERS = [
   { value: 'month', label: '本月' },
   { value: 'quarter', label: '本季度' },
   { value: 'year', label: '今年' },
-  { value: 'all', label: '全部' }
+  { value: 'all', label: '全部' },
 ];
 
 const SATISFACTION_FILTERS = [
   { value: 'all', label: '全部' },
   { value: 'high', label: '满意 (4-5分)' },
   { value: 'medium', label: '一般 (2-3分)' },
-  { value: 'low', label: '不满意 (1分)' }
+  { value: 'low', label: '不满意 (1分)' },
 ];
 
 export default function HistoryPage() {
@@ -138,13 +138,13 @@ export default function HistoryPage() {
       const params = new URLSearchParams({
         timeFilter,
         satisfactionFilter,
-        search: searchQuery
+        search: searchQuery,
       });
 
       const [sessionsRes, interactionsRes, statsRes] = await Promise.all([
         fetch(`/api/user/sessions?${params}`),
         fetch(`/api/user/interactions?${params}`),
-        fetch(`/api/user/history-stats?${params}`)
+        fetch(`/api/user/history-stats?${params}`),
       ]);
 
       if (sessionsRes.ok) {
@@ -182,9 +182,9 @@ export default function HistoryPage() {
 
   // 获取满意度图标
   const getSatisfactionIcon = (score?: number) => {
-    if (!score) return null;
-    if (score >= 4) return <FaceSmileIcon className="h-4 w-4 text-green-400" />;
-    if (score >= 2) return <UserIcon className="h-4 w-4 text-yellow-400" />;
+    if (!score) {return null;}
+    if (score >= 4) {return <FaceSmileIcon className="h-4 w-4 text-green-400" />;}
+    if (score >= 2) {return <UserIcon className="h-4 w-4 text-yellow-400" />;}
     return <FaceFrownIcon className="h-4 w-4 text-red-400" />;
   };
 
@@ -300,7 +300,7 @@ export default function HistoryPage() {
               {[
                 { id: 'timeline', name: '时间线', icon: ClockIcon },
                 { id: 'sessions', name: '会话视图', icon: ChatBubbleLeftRightIcon },
-                { id: 'analytics', name: '分析报告', icon: ChartBarIcon }
+                { id: 'analytics', name: '分析报告', icon: ChartBarIcon },
               ].map(mode => {
                 const Icon = mode.icon;
                 return (
@@ -548,7 +548,7 @@ export default function HistoryPage() {
 
   // 分析视图
   function AnalyticsView() {
-    if (!stats) return null;
+    if (!stats) {return null;}
 
     return (
       <div className="space-y-8">

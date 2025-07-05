@@ -59,12 +59,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       userProfile,
       prompt,
       recentInteractions,
-      contextStats
+      contextStats,
     ] = await Promise.all([
       getUserProfile(supabase, userId),
       getPromptInfo(supabase, promptId),
       getRecentInteractions(supabase, userId, promptId),
-      getContextStats(supabase, userId, promptId)
+      getContextStats(supabase, userId, promptId),
     ]);
 
     if (!prompt) {
@@ -79,7 +79,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       promptRules: extractPromptRules(prompt),
       recentInteractions: recentInteractions,
       learningInsights,
-      contextStats
+      contextStats,
     };
 
     res.status(200).json(responseData);
@@ -88,7 +88,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     console.error(`Error fetching user context for prompt ${req.query.id}:`, error);
     res.status(500).json({ 
       error: 'Internal Server Error',
-      message: '获取用户上下文信息失败，请稍后重试'
+      message: '获取用户上下文信息失败，请稍后重试',
     });
   }
 }
@@ -164,7 +164,7 @@ async function getRecentInteractions(supabase: any, userId: string, promptId: st
         input: interactionData.input || interactionData.user_input,
         output: interactionData.output || interactionData.ai_response,
         feedback: getFeedbackType(interaction.feedback_score),
-        context_applied: interactionData.context_applied || {}
+        context_applied: interactionData.context_applied || {},
       };
     });
   } catch (error) {
@@ -214,7 +214,7 @@ async function getContextStats(supabase: any, userId: string, promptId: string) 
       totalInteractions: totalInteractions || 0,
       successRate: Math.round(successRate * 10) / 10,
       avgSatisfaction: Math.round(avgSatisfaction * 10) / 10,
-      personalizedSince: firstInteraction?.[0]?.created_at || new Date().toISOString()
+      personalizedSince: firstInteraction?.[0]?.created_at || new Date().toISOString(),
     };
   } catch (error) {
     console.error('获取上下文统计失败:', error);
@@ -222,7 +222,7 @@ async function getContextStats(supabase: any, userId: string, promptId: string) 
       totalInteractions: 0,
       successRate: 0,
       avgSatisfaction: 0,
-      personalizedSince: new Date().toISOString()
+      personalizedSince: new Date().toISOString(),
     };
   }
 }
@@ -231,7 +231,7 @@ async function getContextStats(supabase: any, userId: string, promptId: string) 
  * 提取提示词的适应规则
  */
 function extractPromptRules(prompt: any): Array<any> {
-  if (!prompt) return [];
+  if (!prompt) {return [];}
   
   try {
     // 处理 JSONB 内容结构
@@ -269,14 +269,14 @@ function generateLearningInsights(userProfile: any, interactions: any[]): {
   const insights = {
     usagePatterns: {},
     preferredStyles: [],
-    improvementSuggestions: []
+    improvementSuggestions: [],
   };
 
   if (!interactions || interactions.length === 0) {
     insights.improvementSuggestions = [
       '开始使用这个提示词来建立您的个性化档案',
       '尝试不同的输入方式以获得更好的效果',
-      '使用反馈功能帮助系统学习您的偏好'
+      '使用反馈功能帮助系统学习您的偏好',
     ];
     return insights;
   }
@@ -288,7 +288,7 @@ function generateLearningInsights(userProfile: any, interactions: any[]): {
   insights.usagePatterns = {
     mostActiveTime: timeDistribution.peak,
     averageInputLength: inputLengthPattern.average,
-    interactionFrequency: calculateFrequency(interactions)
+    interactionFrequency: calculateFrequency(interactions),
   };
 
   // 分析偏好风格
@@ -318,18 +318,18 @@ function analyzeTimePatterns(interactions: any[]) {
     morning: '早上 (6-12点)',
     afternoon: '下午 (12-18点)', 
     evening: '晚上 (18-24点)',
-    night: '深夜 (0-6点)'
+    night: '深夜 (0-6点)',
   };
 
   const hour = parseInt(peakHour || '12');
   let range = 'afternoon';
-  if (hour >= 6 && hour < 12) range = 'morning';
-  else if (hour >= 18 && hour < 24) range = 'evening';
-  else if (hour >= 0 && hour < 6) range = 'night';
+  if (hour >= 6 && hour < 12) {range = 'morning';}
+  else if (hour >= 18 && hour < 24) {range = 'evening';}
+  else if (hour >= 0 && hour < 6) {range = 'night';}
 
   return {
     peak: timeRanges[range as keyof typeof timeRanges],
-    peakHour: hour
+    peakHour: hour,
   };
 }
 
@@ -352,7 +352,7 @@ function analyzeInputPatterns(interactions: any[]) {
  * 计算交互频率
  */
 function calculateFrequency(interactions: any[]): string {
-  if (interactions.length < 2) return '首次使用';
+  if (interactions.length < 2) {return '首次使用';}
   
   const timestamps = interactions.map(i => new Date(i.timestamp).getTime()).sort((a, b) => b - a);
   const intervals = [];
@@ -364,8 +364,8 @@ function calculateFrequency(interactions: any[]): string {
   const averageInterval = intervals.reduce((a, b) => a + b, 0) / intervals.length;
   const days = averageInterval / (1000 * 60 * 60 * 24);
   
-  if (days < 1) return '高频使用';
-  if (days < 7) return '常规使用';
+  if (days < 1) {return '高频使用';}
+  if (days < 7) {return '常规使用';}
   return '偶尔使用';
 }
 
@@ -435,7 +435,7 @@ function generateImprovementSuggestions(interactions: any[], userProfile: any): 
   
   return suggestions.length > 0 ? suggestions : [
     '您的使用情况很好，继续保持！',
-    '可以尝试探索更多高级功能'
+    '可以尝试探索更多高级功能',
   ];
 }
 
@@ -443,6 +443,6 @@ function generateImprovementSuggestions(interactions: any[], userProfile: any): 
  * 将数字评分转换为反馈类型
  */
 function getFeedbackType(score: number | null): 'positive' | 'negative' | null {
-  if (score === null || score === undefined) return null;
+  if (score === null || score === undefined) {return null;}
   return score > 3 ? 'positive' : 'negative';
 }

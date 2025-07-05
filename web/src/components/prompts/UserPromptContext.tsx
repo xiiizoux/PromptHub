@@ -26,7 +26,7 @@ import {
   BeakerIcon,
   RocketLaunchIcon,
   ShieldCheckIcon,
-  InformationCircleIcon
+  InformationCircleIcon,
 } from '@heroicons/react/24/outline';
 import { getContextAccessLevel, getPermissionDescription } from '@/lib/context-permissions';
 import { useAuth } from '@/contexts/AuthContext';
@@ -64,7 +64,7 @@ interface UserContextData {
 
 const fetcher = (url: string) => fetch(url).then((res) => {
   if (!res.ok) {
-    if (res.status === 401) return null; // 用户未登录，正常处理
+    if (res.status === 401) {return null;} // 用户未登录，正常处理
     throw new Error('Failed to fetch user context');
   }
   return res.json();
@@ -74,7 +74,7 @@ const TABS = [
   { id: 'overview', name: '个性化概览', icon: SparklesIcon },
   { id: 'interactions', name: '交互历史', icon: ClockIcon },
   { id: 'rules', name: '适用规则', icon: CogIcon },
-  { id: 'insights', name: '学习洞察', icon: LightBulbIcon }
+  { id: 'insights', name: '学习洞察', icon: LightBulbIcon },
 ];
 
 // 简化/专业模式
@@ -85,7 +85,7 @@ export default function UserPromptContext({
   isLoggedIn, 
   promptOwnerId, 
   promptIsPublic, 
-  isCollaborator = false 
+  isCollaborator = false, 
 }: UserPromptContextProps) {
   const { user } = useAuth();
   
@@ -95,7 +95,7 @@ export default function UserPromptContext({
     promptId,
     promptOwnerId,
     promptIsPublic,
-    isCollaborator
+    isCollaborator,
   ) : null;
   
   const permissionDesc = accessLevel ? getPermissionDescription(accessLevel) : null;
@@ -107,7 +107,7 @@ export default function UserPromptContext({
       refreshInterval: 30000, // 30秒刷新一次
       revalidateOnFocus: false,
       errorRetryCount: 3,
-    }
+    },
   );
 
   const [activeTab, setActiveTab] = useState(TABS[0].id);
@@ -332,7 +332,7 @@ export default function UserPromptContext({
                   <motion.div
                     className="absolute inset-0 bg-neon-cyan/20 rounded-lg"
                     layoutId="activeTab"
-                    transition={{ type: "spring", duration: 0.3 }}
+                    transition={{ type: 'spring', duration: 0.3 }}
                   />
                 )}
               </button>
@@ -608,9 +608,9 @@ function calculateDaysPersonalized(since: string): string {
   const diffTime = Math.abs(now.getTime() - start.getTime());
   const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
   
-  if (diffDays === 0) return '今天';
-  if (diffDays === 1) return '1天';
-  if (diffDays < 30) return `${diffDays}天`;
-  if (diffDays < 365) return `${Math.floor(diffDays / 30)}个月`;
+  if (diffDays === 0) {return '今天';}
+  if (diffDays === 1) {return '1天';}
+  if (diffDays < 30) {return `${diffDays}天`;}
+  if (diffDays < 365) {return `${Math.floor(diffDays / 30)}个月`;}
   return `${Math.floor(diffDays / 365)}年`;
 }

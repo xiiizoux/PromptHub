@@ -115,14 +115,14 @@ class WebSocketServer {
     // 订阅特定主题
     socket.on(WebSocketEvents.SUBSCRIBE, (topic: string, callback?: Function) => {
       if (!this.isValidTopic(topic)) {
-        if (callback) callback({ success: false, error: '无效的主题' });
+        if (callback) {callback({ success: false, error: '无效的主题' });}
         return;
       }
       
       socket.join(topic);
       logger.debug(`客户端 ${clientId} 订阅了主题: ${topic}`);
       
-      if (callback) callback({ success: true });
+      if (callback) {callback({ success: true });}
     });
     
     // 取消订阅特定主题
@@ -130,20 +130,20 @@ class WebSocketServer {
       socket.leave(topic);
       logger.debug(`客户端 ${clientId} 取消订阅了主题: ${topic}`);
       
-      if (callback) callback({ success: true });
+      if (callback) {callback({ success: true });}
     });
     
     // 加入房间
     socket.on(WebSocketEvents.JOIN_ROOM, (room: string, callback?: Function) => {
       if (!this.isValidRoom(room, socket.user)) {
-        if (callback) callback({ success: false, error: '无法加入房间' });
+        if (callback) {callback({ success: false, error: '无法加入房间' });}
         return;
       }
       
       socket.join(room);
       logger.debug(`客户端 ${clientId} 加入了房间: ${room}`);
       
-      if (callback) callback({ success: true });
+      if (callback) {callback({ success: true });}
     });
     
     // 离开房间
@@ -151,7 +151,7 @@ class WebSocketServer {
       socket.leave(room);
       logger.debug(`客户端 ${clientId} 离开了房间: ${room}`);
       
-      if (callback) callback({ success: true });
+      if (callback) {callback({ success: true });}
     });
     
     // 处理断开连接

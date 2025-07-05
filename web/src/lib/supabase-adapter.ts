@@ -29,9 +29,10 @@ export interface Prompt {
   name: string;
   description: string;
   category: string;
+  category_id?: string; // 分类ID字段
   category_type?: 'chat' | 'image' | 'video'; // 添加category_type字段
   tags: string[];
-  content: string;  // 内容字段，现在是必需的
+  content: string | PromptContentJsonb;  // 内容字段，支持JSONB格式
   is_public: boolean;
   user_id: string;
   version?: number; // 版本号，支持小数格式如1.0, 1.1, 2.0
@@ -48,7 +49,7 @@ export interface Prompt {
 
   // 媒体相关字段
   preview_asset_url?: string;
-  parameters?: Record<string, any>;
+  parameters?: { media_files?: Array<{ url: string; [key: string]: unknown }> } & Record<string, unknown>;
 
   // 作者信息字段
   author?: string;
@@ -97,7 +98,7 @@ export interface Category {
   is_active?: boolean;
   created_at?: string;
   updated_at?: string;
-  optimization_template?: any;
+  optimization_template?: OptimizationTemplateJsonb | string;
 }
 
 // JSONB 相关类型（复制自 MCP 服务）
@@ -105,20 +106,20 @@ export interface PromptContentJsonb {
   type: 'context_engineering' | 'legacy_text' | 'simple_text';
   static_content?: string;
   dynamic_context?: {
-    adaptation_rules?: Record<string, any>;
+    adaptation_rules?: Record<string, unknown>;
     examples?: {
       selection_strategy?: string;
       max_examples?: number;
-      example_pool?: any[];
+      example_pool?: unknown[];
     };
     tools?: {
-      available_tools?: any[];
+      available_tools?: unknown[];
       tool_selection_criteria?: string;
     };
     state?: {
-      conversation_history?: any[];
-      user_preferences?: Record<string, any>;
-      context_variables?: Record<string, any>;
+      conversation_history?: unknown[];
+      user_preferences?: Record<string, unknown>;
+      context_variables?: Record<string, unknown>;
     };
   };
   legacy_content?: string;
@@ -130,9 +131,9 @@ export interface OptimizationTemplateJsonb {
   template?: string;
   structure?: {
     system_prompt?: string;
-    optimization_rules?: any[];
-    context_variables?: Record<string, any>;
-    adaptation_strategies?: Record<string, any>;
+    optimization_rules?: unknown[];
+    context_variables?: Record<string, unknown>;
+    adaptation_strategies?: Record<string, unknown>;
   };
   context_engineering?: {
     dynamic_adaptation?: boolean;
@@ -255,7 +256,7 @@ export class SupabaseAdapter {
       
       data.forEach(item => {
         const tags = item.tags || [];
-        tags.forEach((tag: any) => {
+        tags.forEach((tag: string) => {
           if (tag && typeof tag === 'string') {
             tagCounts.set(tag, (tagCounts.get(tag) || 0) + 1);
           }
@@ -431,7 +432,7 @@ export class SupabaseAdapter {
         }
 
         // 移除嵌套的用户对象，避免数据结构混乱
-        const { users, ...promptWithoutUsers } = prompt;
+        const { users: _users, ...promptWithoutUsers } = prompt;
 
         return {
           ...promptWithoutUsers,
@@ -562,9 +563,9 @@ export class SupabaseAdapter {
         },
         token: authData.session?.access_token,
       };
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('注册用户时出错:', err);
-      return { user: null, error: err.message || '注册失败' };
+      return { user: null, error: err instanceof Error ? err.message : '注册失败' };
     }
   }
 
@@ -583,7 +584,7 @@ export class SupabaseAdapter {
         return { user: null, error: '登录成功，但未能获取用户信息' };
       }
       
-      const { data: userData, error: userError } = await this.supabase
+      const { data: userData, error: _userError } = await this.supabase
         .from('users')
         .select('*')
         .eq('id', data.user.id)
@@ -600,9 +601,9 @@ export class SupabaseAdapter {
         },
         token: data.session?.access_token,
       };
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('用户登录时出错:', err);
-      return { user: null, error: err.message || '登录失败' };
+      return { user: null, error: err instanceof Error ? err.message : '登录失败' };
     }
   }
 
@@ -780,7 +781,7 @@ export class SupabaseAdapter {
     newPassword?: string;
   }): Promise<User> {
     try {
-      const { username, email, currentPassword, newPassword } = updateData;
+      const { username, email: _email, currentPassword, newPassword } = updateData;
       
       // 如果要更改密码，先验证当前密码
       if (currentPassword && newPassword) {
@@ -794,7 +795,7 @@ export class SupabaseAdapter {
       }
       
       // 更新用户表中的信息
-      const updateFields: any = {};
+      const updateFields: Record<string, unknown> = {};
       if (username) {
         updateFields.display_name = username;
       }
@@ -829,14 +830,14 @@ export class SupabaseAdapter {
         created_at: userData.created_at,
         role: userData.role || 'user',
       };
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('更新用户资料时出错:', err);
       throw err;
     }
   }
 
   // API密钥管理
-  async generateApiKey(userId: string, name: string, expiresInDays?: number): Promise<any> {
+  async generateApiKey(userId: string, name: string, expiresInDays?: number): Promise<{ id: string; name: string; key: string; user_id: string; created_at: string; expires_at?: string }> {
     try {
       // 生成随机密钥和哈希
       const apiKey = crypto.randomBytes(32).toString('hex');
@@ -876,9 +877,9 @@ export class SupabaseAdapter {
         key: apiKey, // 返回真实的API密钥（仅在创建时）
         user_id: userId,
         created_at: data.created_at,
-        expires_in_days: expiresInDays || -1,
+        expires_at: data.expires_at,
       };
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('生成API密钥时出错:', err);
       throw err;
     }
@@ -929,7 +930,7 @@ export class SupabaseAdapter {
           expires_in_days,
         };
       });
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('获取API密钥列表时出错:', err);
       return [];
     }
@@ -985,8 +986,8 @@ export class SupabaseAdapter {
             console.error('未能从会话获取用户ID');
             throw new Error('用户未登录或会话已过期');
           }
-        } catch (error: any) {
-          if (error.message?.includes('超时')) {
+        } catch (error: unknown) {
+          if (error instanceof Error && error.message?.includes('超时')) {
             throw new Error('获取用户信息超时，请重新登录');
           }
           throw error;
@@ -994,9 +995,15 @@ export class SupabaseAdapter {
       }
       
       // 处理content字段
-      const contentValue = (promptData as any).content || '';
-
-      if (!contentValue.trim()) {
+      const contentValue = (promptData as { content?: string | PromptContentJsonb }).content;
+      
+      if (!contentValue) {
+        throw new Error('提示词内容不能为空');
+      }
+      
+      // 检查内容是否为空
+      const contentText = typeof contentValue === 'string' ? contentValue : (contentValue.static_content || contentValue.legacy_content || '');
+      if (!contentText.trim()) {
         throw new Error('提示词内容不能为空');
       }
       
@@ -1072,8 +1079,8 @@ export class SupabaseAdapter {
         const result = await Promise.race([insertPromise, timeoutPromise]);
         data = result.data;
         error = result.error;
-      } catch (timeoutError: any) {
-        if (timeoutError.message?.includes('超时')) {
+      } catch (timeoutError: unknown) {
+        if (timeoutError instanceof Error && timeoutError.message?.includes('超时')) {
           throw new Error('数据库操作超时，请检查网络连接并重试');
         }
         throw timeoutError;
@@ -1090,15 +1097,15 @@ export class SupabaseAdapter {
       
       console.log('提示词创建成功:', data);
       return data as Prompt;
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('创建提示词时出错:', err);
       
       // 提供更友好的错误信息
-      if (err.message?.includes('超时')) {
+      if (err instanceof Error && err.message?.includes('超时')) {
         throw new Error('操作超时，请检查网络连接并重试');
-      } else if (err.message?.includes('duplicate') || err.message?.includes('重复')) {
+      } else if (err instanceof Error && (err.message?.includes('duplicate') || err.message?.includes('重复'))) {
         throw new Error('提示词名称已存在，请使用其他名称');
-      } else if (err.message?.includes('permission') || err.message?.includes('权限')) {
+      } else if (err instanceof Error && (err.message?.includes('permission') || err.message?.includes('权限'))) {
         throw new Error('权限不足，无法创建提示词');
       }
       

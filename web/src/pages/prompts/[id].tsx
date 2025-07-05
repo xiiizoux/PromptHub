@@ -108,7 +108,7 @@ export default function PromptDetailsPage() {
 
   // 客户端数据获取
   useEffect(() => {
-    if (!id || typeof id !== 'string') return;
+    if (!id || typeof id !== 'string') {return;}
 
     const fetchPrompt = async () => {
       try {
@@ -178,7 +178,7 @@ export default function PromptDetailsPage() {
 
   // 获取完整内容和提取变量 - 需要在hooks之前计算
   const getFullContent = () => {
-    if (!prompt) return '';
+    if (!prompt) {return '';}
     // 处理可能的 JSONB 格式内容
     if (typeof prompt.content === 'string') {
       return prompt.content;
@@ -379,7 +379,7 @@ export default function PromptDetailsPage() {
   const handleVersionRevert = async (versionId: string) => {
     // 版本回滚成功后，重新获取提示词数据
     try {
-      if (!id || typeof id !== 'string') return;
+      if (!id || typeof id !== 'string') {return;}
 
       console.log('开始重新获取提示词数据，ID:', id);
 
@@ -489,7 +489,7 @@ export default function PromptDetailsPage() {
 
   // 格式化日期
   const formatDate = (dateString?: string) => {
-    if (!dateString) return '未知日期';
+    if (!dateString) {return '未知日期';}
     const date = new Date(dateString);
     return date.toLocaleDateString('zh-CN', { 
       year: 'numeric', 
@@ -537,7 +537,7 @@ export default function PromptDetailsPage() {
 
   // 渲染标签
   const renderTags = (tags?: string[]) => {
-    if (!tags || tags.length === 0) return null;
+    if (!tags || tags.length === 0) {return null;}
     
     return (
       <div className="flex flex-wrap gap-2 mt-4">
@@ -558,7 +558,7 @@ export default function PromptDetailsPage() {
 
   // 渲染版本选择器
   const renderVersionSelector = () => {
-    if (!prompt.versions || prompt.versions.length <= 1) return null;
+    if (!prompt.versions || prompt.versions.length <= 1) {return null;}
     
     return (
       <motion.div 

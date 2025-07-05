@@ -30,7 +30,7 @@ export default function PromptsPage() {
 
   // 获取分类数据
   useEffect(() => {
-    if (!mounted) return;
+    if (!mounted) {return;}
     
     const abortController = new AbortController();
     
@@ -70,7 +70,7 @@ export default function PromptsPage() {
   
   // 获取标签数据
   useEffect(() => {
-    if (!mounted) return;
+    if (!mounted) {return;}
     
     const abortController = new AbortController();
     
@@ -109,7 +109,7 @@ export default function PromptsPage() {
 
   // 获取提示词数据
   useEffect(() => {
-    if (!mounted) return;
+    if (!mounted) {return;}
 
     const abortController = new AbortController();
 
@@ -198,7 +198,7 @@ export default function PromptsPage() {
   };
 
   const renderPagination = () => {
-    if (totalPages <= 1) return null;
+    if (totalPages <= 1) {return null;}
 
     const currentPage = filters.page || 1;
     const maxVisiblePages = 5;

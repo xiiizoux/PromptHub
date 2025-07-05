@@ -45,8 +45,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             impact_score: 8.5,
             examples: [
               '当询问技术问题时，用户更喜欢步骤化的简短回答',
-              '长篇解释通常被跳过或获得较低评分'
-            ]
+              '长篇解释通常被跳过或获得较低评分',
+            ],
           },
           {
             id: '2',
@@ -59,8 +59,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             impact_score: 9.2,
             examples: [
               '抽象概念配合实际案例时，满意度提升35%',
-              '代码示例比纯理论解释更受欢迎'
-            ]
+              '代码示例比纯理论解释更受欢迎',
+            ],
           },
           {
             id: '3',
@@ -73,8 +73,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             impact_score: 7.8,
             examples: [
               '包含"您是否需要我详细解释..."的回答获得更多互动',
-              '开放式问题比封闭式结论更能延续对话'
-            ]
+              '开放式问题比封闭式结论更能延续对话',
+            ],
           },
           {
             id: '4',
@@ -87,8 +87,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             impact_score: 8.1,
             examples: [
               '跳过基本概念解释时满意度更高',
-              '过于高深的架构讨论获得较低评分'
-            ]
+              '过于高深的架构讨论获得较低评分',
+            ],
           },
           {
             id: '5',
@@ -101,8 +101,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             impact_score: 6.9,
             examples: [
               '工作时间内的咨询更偏好直接答案',
-              '晚间使用时对探索性对话更开放'
-            ]
+              '晚间使用时对探索性对话更开放',
+            ],
           },
           {
             id: '6',
@@ -115,9 +115,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             impact_score: 8.7,
             examples: [
               '使用项目符号的回答满意度高出25%',
-              '明确的段落结构帮助快速理解'
-            ]
-          }
+              '明确的段落结构帮助快速理解',
+            ],
+          },
         ];
         
         res.status(200).json(patterns);

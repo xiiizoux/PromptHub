@@ -25,7 +25,7 @@ import {
   PlayIcon,
   CheckCircleIcon,
   ExclamationTriangleIcon,
-  InformationCircleIcon
+  InformationCircleIcon,
 } from '@heroicons/react/24/outline';
 import { PromptDetails, PromptContentJsonb } from '@/types';
 
@@ -41,19 +41,19 @@ const TABS = [
   { id: 'dynamic', name: '动态上下文', icon: SparklesIcon, description: '智能适应规则和示例' },
   { id: 'variables', name: '变量', icon: TagIcon, description: '输入参数定义' },
   { id: 'settings', name: '设置', icon: CogIcon, description: '元数据和配置' },
-  { id: 'preview', name: '预览', icon: EyeIcon, description: '实时效果预览' }
+  { id: 'preview', name: '预览', icon: EyeIcon, description: '实时效果预览' },
 ];
 
 export default function ContextualPromptEditor({ 
   prompt, 
   onSave, 
   onCancel, 
-  isLoading = false 
+  isLoading = false, 
 }: ContextualPromptEditorProps) {
   const [isCeEnabled, setIsCeEnabled] = useState(prompt.context_engineering_enabled || false);
   const [activeTab, setActiveTab] = useState(TABS[0].id);
   const [content, setContent] = useState<PromptContentJsonb | string>(
-    prompt.content_structure || prompt.content || ''
+    prompt.content_structure || prompt.content || '',
   );
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
@@ -67,7 +67,7 @@ export default function ContextualPromptEditor({
     version: '1.0',
     isPublic: prompt.is_public || false,
     compatibleModels: prompt.compatible_models || [],
-    tags: prompt.tags || []
+    tags: prompt.tags || [],
   });
 
   // 初始化编辑器状态
@@ -98,19 +98,19 @@ export default function ContextualPromptEditor({
           examples: {
             selection_strategy: 'similarity_based',
             max_examples: 3,
-            example_pool: []
+            example_pool: [],
           },
           tools: {
             available_tools: [],
-            tool_selection_criteria: 'task_based'
-          }
+            tool_selection_criteria: 'task_based',
+          },
         },
         fallback_content: typeof content === 'string' ? content : staticContent,
         metadata: {
           version: '1.0',
           created_at: new Date().toISOString(),
-          last_modified: new Date().toISOString()
-        }
+          last_modified: new Date().toISOString(),
+        },
       };
       setContent(ceContent);
     } else {
@@ -136,7 +136,7 @@ export default function ContextualPromptEditor({
         input_variables: variables,
         tags: settings.tags,
         is_public: settings.isPublic,
-        compatible_models: settings.compatibleModels
+        compatible_models: settings.compatibleModels,
       };
 
       if (isCeEnabled) {
@@ -149,19 +149,19 @@ export default function ContextualPromptEditor({
             examples: {
               selection_strategy: 'similarity_based',
               max_examples: 3,
-              example_pool: examples
+              example_pool: examples,
             },
             tools: {
               available_tools: [],
-              tool_selection_criteria: 'task_based'
-            }
+              tool_selection_criteria: 'task_based',
+            },
           },
           fallback_content: staticContent,
           metadata: {
             version: settings.version,
             created_at: new Date().toISOString(),
-            last_modified: new Date().toISOString()
-          }
+            last_modified: new Date().toISOString(),
+          },
         };
         updatedPrompt.content_structure = ceContent;
         updatedPrompt.content_text = staticContent;
@@ -196,9 +196,9 @@ export default function ContextualPromptEditor({
   // 提取变量
   const extractVariables = (text: string): string[] => {
     const matches = text.match(/\{\{([^}]+)\}\}/g);
-    if (!matches) return [];
+    if (!matches) {return [];}
     return Array.from(new Set(
-      matches.map(match => match.replace(/^\{\{|\}\}$/g, '').trim())
+      matches.map(match => match.replace(/^\{\{|\}\}$/g, '').trim()),
     ));
   };
 
@@ -665,7 +665,7 @@ export default function ContextualPromptEditor({
           ) : (
             <div className="p-6 border-2 border-dashed border-gray-600 rounded-lg text-center">
               <TagIcon className="h-8 w-8 text-gray-500 mx-auto mb-2" />
-              <p className="text-gray-500">在静态内容中使用 {"{{"} 变量名 {"}}"} 来定义变量</p>
+              <p className="text-gray-500">在静态内容中使用 {'{{'} 变量名 {'}}'} 来定义变量</p>
             </div>
           )}
           
@@ -760,7 +760,7 @@ export default function ContextualPromptEditor({
                     onClick={() => {
                       setSettings(prev => ({
                         ...prev,
-                        tags: prev.tags.filter((_, i) => i !== index)
+                        tags: prev.tags.filter((_, i) => i !== index),
                       }));
                       setHasUnsavedChanges(true);
                     }}

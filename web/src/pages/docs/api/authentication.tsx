@@ -98,7 +98,7 @@ const AuthenticationPage: React.FC = () => {
               <div>
                 <h4 className="text-lg font-semibold text-neon-pink mb-3">3. 查询参数 (不推荐)</h4>
                 <DocCodeBlock 
-                  code={`curl "https://api.prompthub.com/v1/prompts?api_key=your-api-key-here"`}
+                  code={'curl "https://api.prompthub.com/v1/prompts?api_key=your-api-key-here"'}
                   language="bash"
                 />
                 <p className="text-dark-text-tertiary text-sm mt-3">

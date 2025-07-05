@@ -64,7 +64,7 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
 
   // 分类数据标准化处理 - 移除硬编码映射
   const normalizeCategoryName = (category: string | undefined): string => {
-    if (!category) return '';
+    if (!category) {return '';}
 
     // 只做基本的清理：去除多余空格
     return category.trim();

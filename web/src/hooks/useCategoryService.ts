@@ -54,7 +54,7 @@ export function useCategoryService(options: UseCategoryServiceOptions = {}): Use
 
   // 获取分类数据
   const fetchCategories = useCallback(async () => {
-    if (loading) return; // 防止重复请求
+    if (loading) {return;} // 防止重复请求
 
     setLoading(true);
     setError(null);

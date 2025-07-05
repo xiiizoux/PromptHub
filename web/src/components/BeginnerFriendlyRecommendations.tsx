@@ -360,8 +360,8 @@ export const BeginnerFriendlyRecommendations: React.FC<BeginnerFriendlyRecommend
   };
 
   const _getScoreColor = (score: number) => {
-    if (score >= 0.8) return 'text-green-400 bg-green-400/10';
-    if (score >= 0.6) return 'text-yellow-400 bg-yellow-400/10';
+    if (score >= 0.8) {return 'text-green-400 bg-green-400/10';}
+    if (score >= 0.6) {return 'text-yellow-400 bg-yellow-400/10';}
     return 'text-orange-400 bg-orange-400/10';
   };
 

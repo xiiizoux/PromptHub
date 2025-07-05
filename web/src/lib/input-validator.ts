@@ -45,7 +45,7 @@ export class DataSanitizer {
    * 清理HTML标签和危险字符
    */
   static sanitizeHtml(input: string): string {
-    if (typeof input !== 'string') return '';
+    if (typeof input !== 'string') {return '';}
     
     return input
       .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '') // 移除script标签
@@ -59,7 +59,7 @@ export class DataSanitizer {
    * 清理SQL注入字符
    */
   static sanitizeSql(input: string): string {
-    if (typeof input !== 'string') return '';
+    if (typeof input !== 'string') {return '';}
     
     return input
       .replace(/['"`;\\]/g, '') // 移除SQL特殊字符
@@ -71,7 +71,7 @@ export class DataSanitizer {
    * 清理XSS攻击字符
    */
   static sanitizeXss(input: string): string {
-    if (typeof input !== 'string') return '';
+    if (typeof input !== 'string') {return '';}
     
     return input
       .replace(/[<>'"&]/g, (match) => {
@@ -95,7 +95,7 @@ export class DataSanitizer {
     removeXss?: boolean;
     maxLength?: number;
   } = {}): string {
-    if (typeof input !== 'string') return '';
+    if (typeof input !== 'string') {return '';}
     
     let result = input.trim();
     
@@ -122,7 +122,7 @@ export class DataSanitizer {
    * 清理数组
    */
   static sanitizeArray(input: any[], itemSanitizer?: (item: any) => any): any[] {
-    if (!Array.isArray(input)) return [];
+    if (!Array.isArray(input)) {return [];}
     
     return input
       .filter(item => item !== null && item !== undefined)

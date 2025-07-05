@@ -106,7 +106,7 @@ export const CategoryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       // 在所有类型中查找
       for (const categoryType of Object.keys(categories) as CategoryType[]) {
         categoryData = categories[categoryType]?.find(cat => cat.name === categoryName);
-        if (categoryData) break;
+        if (categoryData) {break;}
       }
     }
 

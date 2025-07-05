@@ -12,7 +12,7 @@ export const isBrowser = (): boolean => {
 export const safeLocalStorage = {
   getItem: (key: string): string | null => {
     try {
-      if (!isBrowser()) return null;
+      if (!isBrowser()) {return null;}
       return localStorage.getItem(key);
     } catch (error) {
       console.warn('无法访问localStorage:', error);
@@ -22,7 +22,7 @@ export const safeLocalStorage = {
   
   setItem: (key: string, value: string): boolean => {
     try {
-      if (!isBrowser()) return false;
+      if (!isBrowser()) {return false;}
       localStorage.setItem(key, value);
       return true;
     } catch (error) {
@@ -33,7 +33,7 @@ export const safeLocalStorage = {
   
   removeItem: (key: string): boolean => {
     try {
-      if (!isBrowser()) return false;
+      if (!isBrowser()) {return false;}
       localStorage.removeItem(key);
       return true;
     } catch (error) {
@@ -47,7 +47,7 @@ export const safeLocalStorage = {
 export const safeDocument = {
   querySelector: (selector: string): Element | null => {
     try {
-      if (!isBrowser()) return null;
+      if (!isBrowser()) {return null;}
       return document.querySelector(selector);
     } catch (error) {
       console.warn('无法查询DOM元素:', error);
@@ -57,7 +57,7 @@ export const safeDocument = {
   
   addEventListener: (type: string, listener: any): boolean => {
     try {
-      if (!isBrowser()) return false;
+      if (!isBrowser()) {return false;}
       document.addEventListener(type, listener);
       return true;
     } catch (error) {
@@ -68,7 +68,7 @@ export const safeDocument = {
   
   removeEventListener: (type: string, listener: any): boolean => {
     try {
-      if (!isBrowser()) return false;
+      if (!isBrowser()) {return false;}
       document.removeEventListener(type, listener);
       return true;
     } catch (error) {
@@ -82,7 +82,7 @@ export const safeDocument = {
 export const safeWindow = {
   getProperty: (property: string): any => {
     try {
-      if (!isBrowser()) return undefined;
+      if (!isBrowser()) {return undefined;}
       return (window as any)[property];
     } catch (error) {
       console.warn(`无法访问window.${property}:`, error);
@@ -93,7 +93,7 @@ export const safeWindow = {
 
 // 延迟执行，确保DOM已加载
 export const afterDOMReady = (callback: () => void, delay: number = 100): void => {
-  if (!isBrowser()) return;
+  if (!isBrowser()) {return;}
   
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {

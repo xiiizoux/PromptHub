@@ -48,8 +48,8 @@ async function getSimilarPrompts(promptId: string, limit: number) {
       .eq('id', promptId)
       .single();
 
-    if (sourceError) throw sourceError;
-    if (!sourcePrompt) throw new Error('提示词不存在');
+    if (sourceError) {throw sourceError;}
+    if (!sourcePrompt) {throw new Error('提示词不存在');}
 
     // 获取候选提示词
     const { data: candidates, error: candidatesError } = await supabase
@@ -73,7 +73,7 @@ async function getSimilarPrompts(promptId: string, limit: number) {
       .neq('id', promptId) // 排除自身
       .limit(limit * 5); // 获取更多候选以便筛选
 
-    if (candidatesError) throw candidatesError;
+    if (candidatesError) {throw candidatesError;}
 
     // 计算相似度分数
     const scoredPrompts = await Promise.all(
@@ -185,8 +185,8 @@ function calculateSimilarity(source: any, candidate: any) {
 }
 
 function calculateTagSimilarity(tags1: string[], tags2: string[]): number {
-  if (tags1.length === 0 && tags2.length === 0) return 0;
-  if (tags1.length === 0 || tags2.length === 0) return 0;
+  if (tags1.length === 0 && tags2.length === 0) {return 0;}
+  if (tags1.length === 0 || tags2.length === 0) {return 0;}
 
   // 转换为小写进行比较
   const set1 = new Set(tags1.map(tag => tag.toLowerCase()));
@@ -201,13 +201,13 @@ function calculateTagSimilarity(tags1: string[], tags2: string[]): number {
 }
 
 function calculateContentSimilarity(content1: string, content2: string): number {
-  if (!content1 || !content2) return 0;
+  if (!content1 || !content2) {return 0;}
 
   // 简单的词汇重叠度计算
   const words1 = extractKeywords(content1);
   const words2 = extractKeywords(content2);
 
-  if (words1.length === 0 || words2.length === 0) return 0;
+  if (words1.length === 0 || words2.length === 0) {return 0;}
 
   const set1 = new Set(words1);
   const set2 = new Set(words2);
@@ -219,13 +219,13 @@ function calculateContentSimilarity(content1: string, content2: string): number 
 }
 
 function calculateTextSimilarity(text1: string, text2: string): number {
-  if (!text1 || !text2) return 0;
+  if (!text1 || !text2) {return 0;}
 
   // 简单的字符串相似度计算
   const words1 = text1.toLowerCase().split(/\W+/).filter(w => w.length > 2);
   const words2 = text2.toLowerCase().split(/\W+/).filter(w => w.length > 2);
 
-  if (words1.length === 0 || words2.length === 0) return 0;
+  if (words1.length === 0 || words2.length === 0) {return 0;}
 
   const set1 = new Set(words1);
   const set2 = new Set(words2);

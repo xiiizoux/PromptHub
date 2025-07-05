@@ -57,7 +57,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           .eq('prompt_id', promptId)
           .eq('user_id', user.id);
 
-        if (updateError) throw updateError;
+        if (updateError) {throw updateError;}
       } else {
         // 创建新评分
         const { error: insertError } = await supabase
@@ -69,7 +69,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             comment: comment || null,
           });
 
-        if (insertError) throw insertError;
+        if (insertError) {throw insertError;}
       }
 
       res.status(200).json({ success: true });
@@ -91,7 +91,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         .eq('prompt_id', promptId)
         .eq('user_id', user.id);
 
-      if (updateError) throw updateError;
+      if (updateError) {throw updateError;}
 
       res.status(200).json({ success: true });
     } else if (req.method === 'DELETE') {
@@ -102,7 +102,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         .eq('prompt_id', promptId)
         .eq('user_id', user.id);
 
-      if (deleteError) throw deleteError;
+      if (deleteError) {throw deleteError;}
 
       res.status(200).json({ success: true });
     } else {

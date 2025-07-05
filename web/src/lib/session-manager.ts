@@ -74,7 +74,7 @@ class SessionManager {
    */
   getSession(sessionId: string): SessionInfo | null {
     const session = this.sessions.get(sessionId);
-    if (!session) return null;
+    if (!session) {return null;}
 
     const now = Date.now();
     const timeUntilExpiry = session.expiresAt - now;
@@ -119,7 +119,7 @@ class SessionManager {
    */
   renewSession(sessionId: string): boolean {
     const session = this.sessions.get(sessionId);
-    if (!session) return false;
+    if (!session) {return false;}
 
     const now = Date.now();
     const sessionAge = now - session.createdAt;

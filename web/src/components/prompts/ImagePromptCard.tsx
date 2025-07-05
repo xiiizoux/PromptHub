@@ -32,7 +32,7 @@ interface ImagePromptCardProps {
 
 // 格式化日期函数
 const formatDate = (dateString?: string) => {
-  if (!dateString) return '未知日期';
+  if (!dateString) {return '未知日期';}
   const date = new Date(dateString);
   return date.toLocaleDateString('zh-CN', { 
     year: 'numeric', 
@@ -58,14 +58,14 @@ const ImagePromptCard: React.FC<ImagePromptCardProps> = React.memo(({ prompt }) 
   });
 
   const rating = useMemo(() => {
-    if (!prompt) return { value: 0, percentage: 0 };
+    if (!prompt) {return { value: 0, percentage: 0 };}
     const ratingValue = prompt.average_rating !== undefined ? prompt.average_rating : (prompt.rating || 0);
     const percentage = (ratingValue / 5) * 100;
     return { value: ratingValue, percentage };
   }, [prompt?.average_rating, prompt?.rating]);
 
   const tagsToShow = useMemo(() => {
-    if (!prompt?.tags || prompt.tags.length === 0) return null;
+    if (!prompt?.tags || prompt.tags.length === 0) {return null;}
     return {
       visible: prompt.tags.slice(0, 2), // 图像卡片显示较少标签，留更多空间给预览
       remaining: Math.max(0, prompt.tags.length - 2),

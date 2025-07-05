@@ -68,7 +68,7 @@ const createSocialExtensions = (supabase: any) => ({
       // 使用单个SQL查询获取聚合数据，大幅提升性能
       const { data: aggregatedData, error: aggregatedError } = await supabase.rpc('get_prompt_interactions', {
         p_prompt_id: promptId,
-        p_user_id: userId || null
+        p_user_id: userId || null,
       });
       
       if (aggregatedError) {

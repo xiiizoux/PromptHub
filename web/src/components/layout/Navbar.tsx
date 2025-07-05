@@ -91,7 +91,7 @@ const Navbar: React.FC = () => {
 
   // 处理登出
   const handleLogout = async () => {
-    if (isLoggingOut) return; // 防止重复点击
+    if (isLoggingOut) {return;} // 防止重复点击
 
     try {
       setIsLoggingOut(true);

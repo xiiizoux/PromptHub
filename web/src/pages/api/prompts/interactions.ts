@@ -31,7 +31,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       .select('*')
       .eq('prompt_id', promptId);
 
-    if (likesError) throw likesError;
+    if (likesError) {throw likesError;}
 
     // 获取收藏数
     const { data: bookmarks, error: bookmarksError } = await supabase
@@ -39,7 +39,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       .select('*')
       .eq('prompt_id', promptId);
 
-    if (bookmarksError) throw bookmarksError;
+    if (bookmarksError) {throw bookmarksError;}
 
     // 检查用户是否已点赞和收藏
     let userLiked = false;

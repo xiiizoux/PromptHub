@@ -26,7 +26,7 @@ import {
   ChevronRightIcon,
   InformationCircleIcon,
   ExclamationTriangleIcon,
-  CheckCircleIcon
+  CheckCircleIcon,
 } from '@heroicons/react/24/outline';
 import DocLayout from '@/components/DocLayout';
 
@@ -59,13 +59,13 @@ const GUIDE_SECTIONS: GuideSection[] = [
         tips: [
           '首次使用时会显示"开始个性化之旅"的引导',
           '每个提示词都有独立的上下文数据',
-          '上下文数据完全归您个人所有'
+          '上下文数据完全归您个人所有',
         ],
         examples: [
           '总使用次数：显示您使用这个提示词的频率',
           '成功率：基于您的反馈计算的满意度',
-          '个性化天数：从首次使用到现在的时间'
-        ]
+          '个性化天数：从首次使用到现在的时间',
+        ],
       },
       {
         id: 'interaction-history',
@@ -74,12 +74,12 @@ const GUIDE_SECTIONS: GuideSection[] = [
         tips: [
           '可以切换简洁/专业视图模式',
           '专业模式显示更多技术细节',
-          '历史记录支持搜索和筛选'
+          '历史记录支持搜索和筛选',
         ],
         warnings: [
           '历史记录仅保存最近100条交互',
-          '删除历史记录会影响个性化效果'
-        ]
+          '删除历史记录会影响个性化效果',
+        ],
       },
       {
         id: 'learning-insights',
@@ -88,10 +88,10 @@ const GUIDE_SECTIONS: GuideSection[] = [
         examples: [
           '使用模式：您偏好的交互时间和频率',
           '偏好风格：AI总结出的您喜欢的回答风格',
-          '改进建议：基于使用数据的个性化建议'
-        ]
-      }
-    ]
+          '改进建议：基于使用数据的个性化建议',
+        ],
+      },
+    ],
   },
   {
     id: 'adaptation-rules',
@@ -106,13 +106,13 @@ const GUIDE_SECTIONS: GuideSection[] = [
         tips: [
           '从简单规则开始，逐步增加复杂度',
           '规则有优先级，避免冲突',
-          '定期检查规则效果并调整'
+          '定期检查规则效果并调整',
         ],
         examples: [
           '时间规则：工作时间回答更正式，休闲时间更轻松',
           '设备规则：手机上回答更简洁，电脑上更详细',
-          '场景规则：编程问题更技术化，写作问题更创意化'
-        ]
+          '场景规则：编程问题更技术化，写作问题更创意化',
+        ],
       },
       {
         id: 'creating-rules',
@@ -121,12 +121,12 @@ const GUIDE_SECTIONS: GuideSection[] = [
         tips: [
           '使用可视化规则构建器，无需编程知识',
           '规则可以随时启用/禁用',
-          '支持A/B测试验证规则效果'
+          '支持A/B测试验证规则效果',
         ],
         warnings: [
           '过多复杂规则可能导致行为不一致',
-          '规则冲突时系统会选择优先级最高的'
-        ]
+          '规则冲突时系统会选择优先级最高的',
+        ],
       },
       {
         id: 'rule-management',
@@ -135,10 +135,10 @@ const GUIDE_SECTIONS: GuideSection[] = [
         examples: [
           '规则列表：查看所有激活和禁用的规则',
           '效果统计：每个规则的触发次数和满意度',
-          '规则冲突检测：自动识别可能的规则冲突'
-        ]
-      }
-    ]
+          '规则冲突检测：自动识别可能的规则冲突',
+        ],
+      },
+    ],
   },
   {
     id: 'analytics',
@@ -153,13 +153,13 @@ const GUIDE_SECTIONS: GuideSection[] = [
         tips: [
           '定期查看分析报告，了解使用习惯',
           '关注满意度趋势，发现问题及时调整',
-          '利用使用模式优化工作流程'
+          '利用使用模式优化工作流程',
         ],
         examples: [
           '使用频率：每日、每周、每月的使用统计',
           '提示词偏好：最常用的提示词类型和领域',
-          '效果趋势：个性化效果随时间的改善'
-        ]
+          '效果趋势：个性化效果随时间的改善',
+        ],
       },
       {
         id: 'prompt-specific',
@@ -168,8 +168,8 @@ const GUIDE_SECTIONS: GuideSection[] = [
         examples: [
           '交互模式：在该提示词上的典型使用模式',
           '效果评分：基于反馈的客观效果评估',
-          '改进空间：个性化还可以优化的方向'
-        ]
+          '改进空间：个性化还可以优化的方向',
+        ],
       },
       {
         id: 'comparative-analysis',
@@ -177,10 +177,10 @@ const GUIDE_SECTIONS: GuideSection[] = [
         content: '通过对比不同时期、不同提示词、不同规则的效果，发现最适合您的AI使用方式。',
         warnings: [
           '对比分析需要足够的使用数据支撑',
-          '短期波动不代表长期趋势'
-        ]
-      }
-    ]
+          '短期波动不代表长期趋势',
+        ],
+      },
+    ],
   },
   {
     id: 'experiments',
@@ -195,13 +195,13 @@ const GUIDE_SECTIONS: GuideSection[] = [
         tips: [
           '每次只测试一个变量，确保结果可靠',
           '设置合理的测试周期，通常1-2周',
-          '收集足够的样本量再做决策'
+          '收集足够的样本量再做决策',
         ],
         examples: [
           '规则测试：比较有无特定规则的效果',
           '风格测试：比较不同回答风格的满意度',
-          '长度测试：比较简洁vs详细回答的偏好'
-        ]
+          '长度测试：比较简洁vs详细回答的偏好',
+        ],
       },
       {
         id: 'experiment-analysis',
@@ -209,8 +209,8 @@ const GUIDE_SECTIONS: GuideSection[] = [
         content: '系统提供详细的实验结果分析，包括统计显著性检验、置信区间、效果大小等专业指标。',
         warnings: [
           '避免过度解读小样本结果',
-          '考虑外部因素对实验的影响'
-        ]
+          '考虑外部因素对实验的影响',
+        ],
       },
       {
         id: 'optimization',
@@ -219,10 +219,10 @@ const GUIDE_SECTIONS: GuideSection[] = [
         tips: [
           '渐进式优化，避免大幅度改变',
           '定期重新评估，适应需求变化',
-          '记录优化历程，便于回溯'
-        ]
-      }
-    ]
+          '记录优化历程，便于回溯',
+        ],
+      },
+    ],
   },
   {
     id: 'advanced-features',
@@ -237,8 +237,8 @@ const GUIDE_SECTIONS: GuideSection[] = [
         tips: [
           '建议有一定使用经验后再尝试高级功能',
           '高级工具需要更多的配置和维护',
-          '充分利用预设模板快速开始'
-        ]
+          '充分利用预设模板快速开始',
+        ],
       },
       {
         id: 'api-integration',
@@ -247,8 +247,8 @@ const GUIDE_SECTIONS: GuideSection[] = [
         examples: [
           'Webhook：当个性化效果达到阈值时自动通知',
           'REST API：程序化访问个人上下文数据',
-          'GraphQL：灵活查询个性化分析数据'
-        ]
+          'GraphQL：灵活查询个性化分析数据',
+        ],
       },
       {
         id: 'export-import',
@@ -256,11 +256,11 @@ const GUIDE_SECTIONS: GuideSection[] = [
         content: '您可以导出个人的Context Engineering数据用于备份或迁移，也可以导入预配置的规则集。',
         warnings: [
           '导入规则时注意与现有规则的兼容性',
-          '个人数据导出包含敏感信息，请妥善保管'
-        ]
-      }
-    ]
-  }
+          '个人数据导出包含敏感信息，请妥善保管',
+        ],
+      },
+    ],
+  },
 ];
 
 export default function ContextEngineeringUserGuide() {
@@ -278,7 +278,7 @@ export default function ContextEngineeringUserGuide() {
       breadcrumbs={[
         { name: '文档', href: '/docs' },
         { name: 'Context Engineering', href: '/docs/context-engineering' },
-        { name: '用户指南', href: '/docs/context-engineering/user-guide' }
+        { name: '用户指南', href: '/docs/context-engineering/user-guide' },
       ]}
     >
 
@@ -342,7 +342,7 @@ export default function ContextEngineeringUserGuide() {
                       index={index}
                       isExpanded={expandedSubsection === subsection.id}
                       onToggle={() => setExpandedSubsection(
-                        expandedSubsection === subsection.id ? null : subsection.id
+                        expandedSubsection === subsection.id ? null : subsection.id,
                       )}
                     />
                   ))}

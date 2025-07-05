@@ -42,7 +42,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             action: 'set_tone_formal',
             priority: 1,
             enabled: true,
-            created_at: '2024-01-01T00:00:00Z'
+            created_at: '2024-01-01T00:00:00Z',
           },
           {
             id: '2',
@@ -52,7 +52,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             action: 'set_style_technical',
             priority: 2,
             enabled: true,
-            created_at: '2024-01-02T00:00:00Z'
+            created_at: '2024-01-02T00:00:00Z',
           },
           {
             id: '3',
@@ -62,8 +62,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             action: 'set_length_concise',
             priority: 3,
             enabled: false,
-            created_at: '2024-01-03T00:00:00Z'
-          }
+            created_at: '2024-01-03T00:00:00Z',
+          },
         ];
         
         res.status(200).json(rules);
@@ -83,7 +83,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         const newRule = {
           id: Date.now().toString(),
           ...rule,
-          created_at: new Date().toISOString()
+          created_at: new Date().toISOString(),
         };
         
         res.status(201).json(newRule);

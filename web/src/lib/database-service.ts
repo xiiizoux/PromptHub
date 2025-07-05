@@ -5,16 +5,14 @@
  * 使用Supabase作为数据库访问层
  */
 
-import { SupabaseAdapter, Prompt, PromptFilters, PaginatedResponse, User, Category, PromptContentJsonb, OptimizationTemplateJsonb } from './supabase-adapter';
-import type { PromptTemplate, TemplateCategory } from '../types';
+import { SupabaseAdapter, Prompt, PromptFilters, PaginatedResponse, Category, PromptContentJsonb, OptimizationTemplateJsonb } from './supabase-adapter';
+import type { PromptTemplate, TemplateCategory, TemplateVariable, TemplateField } from '../types';
 import {
   extractContentFromJsonb,
   extractTemplateFromJsonb,
   safeConvertPromptContent,
-  safeConvertOptimizationTemplate,
   isJsonbContent,
-  isJsonbTemplate,
-  createEmptyContextEngineeringContent
+  createEmptyContextEngineeringContent,
 } from './jsonb-utils';
 
 // 扩展的提示词详情接口
@@ -151,12 +149,12 @@ export class DatabaseService {
     }
 
     // 移除 Web 专用字段
-    delete (dbPrompt as any).content_text;
-    delete (dbPrompt as any).content_structure;
-    delete (dbPrompt as any).context_engineering_enabled;
-    delete (dbPrompt as any).preview_assets;
-    delete (dbPrompt as any).author;
-    delete (dbPrompt as any).collaborators;
+    delete (dbPrompt as Record<string, unknown>).content_text;
+    delete (dbPrompt as Record<string, unknown>).content_structure;
+    delete (dbPrompt as Record<string, unknown>).context_engineering_enabled;
+    delete (dbPrompt as Record<string, unknown>).preview_assets;
+    delete (dbPrompt as Record<string, unknown>).author;
+    delete (dbPrompt as Record<string, unknown>).collaborators;
 
     return dbPrompt;
   }
@@ -176,7 +174,9 @@ export class DatabaseService {
       content_structure: createEmptyContextEngineeringContent(),
       content_text: '',
       context_engineering_enabled: true,
-      is_public: false
+      is_public: false,
+      user_id: '',
+      created_at: new Date().toISOString(),
     };
   }
 
@@ -215,7 +215,7 @@ export class DatabaseService {
         ...category,
         optimization_template_text: category.optimization_template
           ? extractTemplateFromJsonb(category.optimization_template)
-          : undefined
+          : undefined,
       }));
     } catch (error) {
       console.error('获取分类失败:', error);
@@ -262,7 +262,7 @@ export class DatabaseService {
 
     return {
       ...result,
-      data: processedData
+      data: processedData,
     };
   }
 
@@ -342,8 +342,8 @@ export class DatabaseService {
         if (collaboratorError) {
           console.error('[DatabaseService] 获取协作者信息失败:', collaboratorError);
         } else if (collaboratorData && collaboratorData.length > 0) {
-          collaborators = collaboratorData.map((collab: any) => {
-            const user = collab.users;
+          collaborators = collaboratorData.map((collab: { user_id: string; users: Array<{ username: string; display_name: string; email: string }> }) => {
+            const user = collab.users[0]; // 假设 users 是数组，取第一个用户
             // 优先使用 username，然后是 display_name，最后是 email 的用户名部分
             return user?.username || user?.display_name || user?.email?.split('@')[0] || '未知用户';
           });
@@ -452,8 +452,8 @@ export class DatabaseService {
       const newMediaFiles = promptData.preview_assets || [];
 
       // 找出需要删除的文件（存在于旧列表但不在新列表中）
-      const filesToDelete = existingMediaFiles.filter((existingFile: any) => 
-        !newMediaFiles.some((newFile: any) => newFile.url === existingFile.url),
+      const filesToDelete = (existingMediaFiles as Array<{ url: string }>).filter((existingFile: { url: string }) => 
+        !newMediaFiles.some((newFile: { url: string }) => newFile.url === existingFile.url),
       );
 
       // 删除不再使用的文件
@@ -494,7 +494,7 @@ export class DatabaseService {
       const updateData = this.preparePromptForDatabase({
         ...promptData,
         preview_asset_url: previewAssetUrl,
-        parameters: parameters
+        parameters: parameters,
       });
 
       // 处理版本号更新，确保数字类型
@@ -540,7 +540,7 @@ export class DatabaseService {
   /**
    * 删除提示词关联的媒体文件
    */
-  private async deletePromptMediaFiles(prompt: any): Promise<void> {
+  private async deletePromptMediaFiles(prompt: { category_type?: string; parameters?: { media_files?: Array<{ url: string }> }; preview_asset_url?: string }): Promise<void> {
     if (!prompt || (prompt.category_type !== 'image' && prompt.category_type !== 'video')) {
       return; // 非媒体类型提示词，无需删除文件
     }
@@ -558,7 +558,7 @@ export class DatabaseService {
 
     // 2. parameters.media_files 中的文件
     const mediaFiles = prompt.parameters?.media_files || [];
-    mediaFiles.forEach((file: any) => {
+    mediaFiles.forEach((file: { url: string }) => {
       if (file.url) {
         const filename = this.extractFilenameFromUrl(file.url);
         if (filename && (filename.startsWith('image_') || filename.startsWith('video_'))) {
@@ -808,7 +808,7 @@ export class DatabaseService {
         return null;
       }
 
-      if (!data) return null;
+      if (!data) { return null; }
 
       // 获取分类信息
       const categories = await this.getTemplateCategories();
@@ -841,7 +841,7 @@ export class DatabaseService {
     }
   }
 
-  async incrementTemplateUsage(templateId: string, userId?: string): Promise<void> {
+  async incrementTemplateUsage(templateId: string, _userId?: string): Promise<void> {
     try {
       // 增加使用次数
       await this.adapter.supabase
@@ -878,7 +878,7 @@ export class DatabaseService {
         .select('rating')
         .eq('template_id', templateId);
 
-      if (error || !data || data.length === 0) return;
+      if (error || !data || data.length === 0) { return; }
 
       const averageRating = data.reduce((sum, r) => sum + r.rating, 0) / data.length;
 
@@ -891,30 +891,30 @@ export class DatabaseService {
     }
   }
 
-  private transformTemplateData(data: any, categoryInfo?: TemplateCategory): PromptTemplate {
+  private transformTemplateData(data: Record<string, unknown>, categoryInfo?: TemplateCategory): PromptTemplate {
     return {
-      id: data.id,
-      name: data.name,
-      title: data.title,
-      description: data.description,
-      content: data.content,
-      category: data.category,
-      subcategory: data.subcategory,
-      tags: data.tags || [],
-      difficulty: data.difficulty,
-      variables: data.variables || [],
-      fields: data.fields || [],
-      author: data.author,
-      likes: data.likes || 0,
-      usage_count: data.usage_count || 0,
-      rating: data.rating || 0,
-      estimated_time: data.estimated_time,
-      language: data.language || 'zh-CN',
-      is_featured: data.is_featured || false,
-      is_premium: data.is_premium || false,
-      is_official: data.is_official || false,
-      created_at: data.created_at,
-      updated_at: data.updated_at,
+      id: String(data.id || ''),
+      name: String(data.name || ''),
+      title: String(data.title || ''),
+      description: String(data.description || ''),
+      content: String(data.content || ''),
+      category: String(data.category || ''),
+      subcategory: data.subcategory ? String(data.subcategory) : undefined,
+      tags: Array.isArray(data.tags) ? data.tags as string[] : [],
+      difficulty: (data.difficulty as 'beginner' | 'intermediate' | 'advanced') || 'beginner',
+      variables: Array.isArray(data.variables) ? data.variables as TemplateVariable[] : [],
+      fields: Array.isArray(data.fields) ? data.fields as TemplateField[] : [],
+      author: data.author ? String(data.author) : undefined,
+      likes: Number(data.likes) || 0,
+      usage_count: Number(data.usage_count) || 0,
+      rating: Number(data.rating) || 0,
+      estimated_time: data.estimated_time ? String(data.estimated_time) : undefined,
+      language: String(data.language || 'zh-CN'),
+      is_featured: Boolean(data.is_featured),
+      is_premium: Boolean(data.is_premium),
+      is_official: Boolean(data.is_official),
+      created_at: String(data.created_at || ''),
+      updated_at: data.updated_at ? String(data.updated_at) : undefined,
       category_info: categoryInfo ? {
         name: categoryInfo.name,
         display_name: categoryInfo.display_name,
@@ -934,45 +934,16 @@ export class DatabaseService {
 
   // ===== 辅助方法 =====
 
-  /**
-   * 根据用户ID获取用户名
-   */
-  private async getUsernameById(userId: string): Promise<string> {
-    try {
-      console.log(`[DatabaseService] 获取用户名，用户ID: ${userId}`);
-      const { data, error } = await this.adapter.supabase
-        .from('users')
-        .select('display_name')
-        .eq('id', userId)
-        .maybeSingle(); // 使用 maybeSingle() 而不是 single()
-
-      if (error) {
-        console.warn('获取用户名时发生错误:', error);
-        return '未知用户';
-      }
-
-      if (!data || !data.display_name) {
-        console.warn(`用户 ${userId} 不存在或没有 display_name`);
-        return '未知用户';
-      }
-
-      console.log(`[DatabaseService] 成功获取用户名: ${data.display_name}`);
-      return data.display_name;
-    } catch (error) {
-      console.warn('获取用户名失败:', error);
-      return '未知用户';
-    }
-  }
 
   /**
    * 从提示词内容中提取输入变量
    */
   private extractInputVariables(content: string): string[] {
-    if (!content) return [];
+    if (!content) { return []; }
 
     // 修复正则表达式以正确匹配 {{variable}} 格式
     const matches = content.match(/\{\{([^}]+)\}\}/g);
-    if (!matches) return [];
+    if (!matches) { return []; }
 
     return Array.from(new Set(
       matches.map(match => match.replace(/^\{\{|\}\}$/g, '').trim()),

@@ -75,7 +75,7 @@ export const CollaborativeEditor: React.FC<CollaborativeEditorProps> = ({
   ];
 
   useEffect(() => {
-    if (!user || !promptId) return;
+    if (!user || !promptId) {return;}
 
     initializeCollaboration();
     
@@ -118,7 +118,7 @@ export const CollaborativeEditor: React.FC<CollaborativeEditorProps> = ({
   }, [session, user, promptId]);
 
   const handleRemoteOperation = (operation: Operation) => {
-    if (operation.userId === user?.id) return; // 忽略自己的操作
+    if (operation.userId === user?.id) {return;} // 忽略自己的操作
 
     try {
       // 应用远程操作到本地内容
@@ -142,7 +142,7 @@ export const CollaborativeEditor: React.FC<CollaborativeEditorProps> = ({
   };
 
   const handleLocalChange = useCallback(async (newContent: string) => {
-    if (!session || !user) return;
+    if (!session || !user) {return;}
 
     const cursorPos = editorRef.current?.selectionStart || 0;
     
@@ -223,7 +223,7 @@ export const CollaborativeEditor: React.FC<CollaborativeEditorProps> = ({
   };
 
   const handleLockSection = async (startPos: number, endPos: number) => {
-    if (!user) return;
+    if (!user) {return;}
     
     try {
       await lockSection(promptId, user.id, startPos, endPos);
@@ -236,7 +236,7 @@ export const CollaborativeEditor: React.FC<CollaborativeEditorProps> = ({
   };
 
   const _handleUnlockSection = async (startPos: number, endPos: number) => {
-    if (!user) return;
+    if (!user) {return;}
     
     try {
       await unlockSection(promptId, user.id, startPos, endPos);
@@ -472,7 +472,7 @@ export const CollaborativeEditor: React.FC<CollaborativeEditorProps> = ({
         {/* 锁定区域显示 */}
         {Array.from(lockedSections.entries()).map(([range, userId]) => {
           const collaborator = collaborators.find(c => c.id === userId);
-          if (!collaborator) return null;
+          if (!collaborator) {return null;}
           
           return (
             <div

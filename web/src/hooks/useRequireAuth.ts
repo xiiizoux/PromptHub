@@ -25,7 +25,7 @@ export const useRequireAuth = (options: UseRequireAuthOptions = {}) => {
 
   useEffect(() => {
     // 如果还在加载认证状态，不做任何操作
-    if (isLoading) return;
+    if (isLoading) {return;}
 
     // 如果未登录，重定向到登录页面
     if (!isAuthenticated) {

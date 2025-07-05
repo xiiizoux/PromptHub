@@ -146,7 +146,7 @@ export const RatingSystem: React.FC<RatingSystemProps> = ({
   };
 
   const handleDeleteRating = async () => {
-    if (!userRating) return;
+    if (!userRating) {return;}
 
     try {
       setIsLoading(true);

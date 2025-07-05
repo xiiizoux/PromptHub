@@ -14,7 +14,7 @@ const AuthRefresher = () => {
   useEffect(() => {
     // 智能会话检查函数
     const checkSession = async (isInitialCheck = false) => {
-      if (!mountedRef.current) return;
+      if (!mountedRef.current) {return;}
 
       try {
         if (isInitialCheck) {
@@ -106,7 +106,7 @@ const AuthRefresher = () => {
 
     // 初始化检查
     const initializeAuth = async () => {
-      if (!mountedRef.current) return;
+      if (!mountedRef.current) {return;}
 
       // 等待组件完全挂载和Supabase初始化
       await new Promise(resolve => setTimeout(resolve, 1000));

@@ -128,7 +128,7 @@ class PromptCategoryMatcher {
 
       // 找到最高分的分类
       const bestMatch = categoryScores.reduce((best, current) =>
-        current.score > best.score ? current : best
+        current.score > best.score ? current : best,
       );
 
       return bestMatch.score > 0 ? bestMatch.category.name : null;

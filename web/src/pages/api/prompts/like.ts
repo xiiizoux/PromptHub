@@ -53,7 +53,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         .delete()
         .eq('id', existingLike.id);
 
-      if (deleteError) throw deleteError;
+      if (deleteError) {throw deleteError;}
       liked = false;
     } else {
       // 未点赞，添加点赞
@@ -65,7 +65,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           created_at: new Date().toISOString(),
         });
 
-      if (insertError) throw insertError;
+      if (insertError) {throw insertError;}
       liked = true;
     }
 

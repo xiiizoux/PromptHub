@@ -194,17 +194,17 @@ export class PromptQualityAnalyzer {
     const hasFormat = /格式|输出|返回|结果/.test(content);
     const hasConstraints = /注意|限制|要求|不要|避免/.test(content);
 
-    if (hasContext) score += 15;
-    else suggestions.push('添加更多背景信息或上下文');
+    if (hasContext) {score += 15;}
+    else {suggestions.push('添加更多背景信息或上下文');}
 
-    if (hasTask) score += 20;
-    else suggestions.push('明确说明具体任务或目标');
+    if (hasTask) {score += 20;}
+    else {suggestions.push('明确说明具体任务或目标');}
 
-    if (hasFormat) score += 10;
-    else suggestions.push('指定期望的输出格式');
+    if (hasFormat) {score += 10;}
+    else {suggestions.push('指定期望的输出格式');}
 
-    if (hasConstraints) score += 10;
-    else suggestions.push('添加必要的限制条件');
+    if (hasConstraints) {score += 10;}
+    else {suggestions.push('添加必要的限制条件');}
 
     // 检查变量定义
     const variables = (prompt as PromptDetails & { variables?: string[] }).variables || [];
@@ -421,9 +421,9 @@ export class PromptQualityAnalyzer {
    * 确定质量等级
    */
   private determineQualityLevel(score: number): 'excellent' | 'good' | 'fair' | 'poor' {
-    if (score >= QUALITY_THRESHOLDS.excellent) return 'excellent';
-    if (score >= QUALITY_THRESHOLDS.good) return 'good';
-    if (score >= QUALITY_THRESHOLDS.fair) return 'fair';
+    if (score >= QUALITY_THRESHOLDS.excellent) {return 'excellent';}
+    if (score >= QUALITY_THRESHOLDS.good) {return 'good';}
+    if (score >= QUALITY_THRESHOLDS.fair) {return 'fair';}
     return 'poor';
   }
 
@@ -664,23 +664,23 @@ export class PromptQualityAnalyzer {
     let complexityScore = 0;
 
     // 长度复杂度
-    if (content.length > 500) complexityScore += 2;
-    else if (content.length > 200) complexityScore += 1;
+    if (content.length > 500) {complexityScore += 2;}
+    else if (content.length > 200) {complexityScore += 1;}
 
     // 结构复杂度
-    if (content.includes('步骤') || content.includes('分别')) complexityScore += 1;
-    if ((content.match(/\d+\./g)?.length || 0) > 3) complexityScore += 1;
+    if (content.includes('步骤') || content.includes('分别')) {complexityScore += 1;}
+    if ((content.match(/\d+\./g)?.length || 0) > 3) {complexityScore += 1;}
 
     // 专业术语
     const technicalTerms = ['算法', '机器学习', '深度学习', '神经网络', '数据结构'];
-    if (technicalTerms.some(term => content.includes(term))) complexityScore += 2;
+    if (technicalTerms.some(term => content.includes(term))) {complexityScore += 2;}
 
     // 变量使用
     const variableCount = (content.match(/\{\{[^}]+\}\}/g) || []).length;
-    if (variableCount > 3) complexityScore += 1;
+    if (variableCount > 3) {complexityScore += 1;}
 
-    if (complexityScore >= 4) return 'advanced';
-    if (complexityScore >= 2) return 'intermediate';
+    if (complexityScore >= 4) {return 'advanced';}
+    if (complexityScore >= 2) {return 'intermediate';}
     return 'beginner';
   }
 

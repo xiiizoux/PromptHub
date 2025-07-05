@@ -98,7 +98,7 @@ export const ProtectedButton: React.FC<ProtectedButtonProps> = ({
 
   const handleClick = () => {
     // 如果按钮被禁用，不处理点击
-    if (disabled) return;
+    if (disabled) {return;}
 
     // 如果不需要登录保护，直接执行点击
     if (!requireLogin) {

@@ -53,7 +53,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         .delete()
         .eq('id', existingBookmark.id);
 
-      if (deleteError) throw deleteError;
+      if (deleteError) {throw deleteError;}
       bookmarked = false;
     } else {
       // 未收藏，添加收藏
@@ -65,7 +65,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           created_at: new Date().toISOString(),
         });
 
-      if (insertError) throw insertError;
+      if (insertError) {throw insertError;}
       bookmarked = true;
     }
 

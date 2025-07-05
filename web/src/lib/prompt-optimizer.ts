@@ -390,7 +390,7 @@ ${requirements}${context}`;
 
   private extractImprovements(response: string): string[] {
     const match = response.match(/### 改进说明\s*([\s\S]*?)\s*(?:###|$)/);
-    if (!match) return [];
+    if (!match) {return [];}
     
     return match[1].trim().split('\n').map(line => line.replace(/^\s*[-*]?\s*/, '')).filter(Boolean);
   }

@@ -23,7 +23,7 @@ export function useIntersectionObserver(
 
   useEffect(() => {
     const element = elementRef.current;
-    if (!element) return;
+    if (!element) {return;}
 
     // 如果设置了 freezeOnceVisible 且已经可见过，则不再监听
     if (freezeOnceVisible && hasBeenVisible) {

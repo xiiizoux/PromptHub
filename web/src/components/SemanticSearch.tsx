@@ -67,7 +67,7 @@ export const SemanticSearch: React.FC<SemanticSearchProps> = ({
 
   // 执行语义搜索
   const performSearch = useCallback(async (searchQuery: string) => {
-    if (!searchQuery.trim()) return;
+    if (!searchQuery.trim()) {return;}
 
     try {
       setIsSearching(true);
@@ -122,7 +122,7 @@ export const SemanticSearch: React.FC<SemanticSearchProps> = ({
 
   // 键盘事件处理
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (!showSuggestionDropdown) return;
+    if (!showSuggestionDropdown) {return;}
 
     switch (e.key) {
       case 'ArrowDown':

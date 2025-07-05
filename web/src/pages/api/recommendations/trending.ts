@@ -64,7 +64,7 @@ async function getTrendingPrompts(limit: number) {
     const { data: usageStatsRaw, error: usageError } = await supabase
       .from('prompt_usage')
       .select('prompt_id');
-    if (usageError) throw usageError;
+    if (usageError) {throw usageError;}
     const usageStats = usageStatsRaw?.reduce((acc, cur) => {
       acc[cur.prompt_id] = (acc[cur.prompt_id] || 0) + 1;
       return acc;
@@ -74,22 +74,22 @@ async function getTrendingPrompts(limit: number) {
     const { data: socialStatsRaw, error: socialError } = await supabase
       .from('social_interactions')
       .select('prompt_id, type');
-    if (socialError) throw socialError;
+    if (socialError) {throw socialError;}
     const socialStats = {} as Record<string, { likes: number; bookmarks: number }>;
     socialStatsRaw?.forEach(stat => {
-      if (!socialStats[stat.prompt_id]) socialStats[stat.prompt_id] = { likes: 0, bookmarks: 0 };
-      if (stat.type === 'like') socialStats[stat.prompt_id].likes++;
-      if (stat.type === 'bookmark') socialStats[stat.prompt_id].bookmarks++;
+      if (!socialStats[stat.prompt_id]) {socialStats[stat.prompt_id] = { likes: 0, bookmarks: 0 };}
+      if (stat.type === 'like') {socialStats[stat.prompt_id].likes++;}
+      if (stat.type === 'bookmark') {socialStats[stat.prompt_id].bookmarks++;}
     });
 
     // 获取评分统计
     const { data: ratingStatsRaw, error: ratingError } = await supabase
       .from('ratings')
       .select('prompt_id, rating');
-    if (ratingError) throw ratingError;
+    if (ratingError) {throw ratingError;}
     const ratingStats = {} as Record<string, { sum: number; count: number }>;
     ratingStatsRaw?.forEach(stat => {
-      if (!ratingStats[stat.prompt_id]) ratingStats[stat.prompt_id] = { sum: 0, count: 0 };
+      if (!ratingStats[stat.prompt_id]) {ratingStats[stat.prompt_id] = { sum: 0, count: 0 };}
       ratingStats[stat.prompt_id].sum += stat.rating;
       ratingStats[stat.prompt_id].count++;
     });
@@ -166,10 +166,10 @@ function generateTrendingReason(
 ): string {
   const reasons = [];
   
-  if (usage > 50) reasons.push('高使用频率');
-  if (social.likes > 20) reasons.push('深受喜爱');
-  if (social.bookmarks > 15) reasons.push('广泛收藏');
-  if (rating.avg > 4 && rating.count > 5) reasons.push('高质量评分');
+  if (usage > 50) {reasons.push('高使用频率');}
+  if (social.likes > 20) {reasons.push('深受喜爱');}
+  if (social.bookmarks > 15) {reasons.push('广泛收藏');}
+  if (rating.avg > 4 && rating.count > 5) {reasons.push('高质量评分');}
   
   if (reasons.length === 0) {
     return '新兴热门';

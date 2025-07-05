@@ -127,7 +127,7 @@ export function extractSystemUserTemplate(template: any): SystemUserTemplate {
   if (!template) {
     return {
       system: systemTemplate,
-      user: ''
+      user: '',
     };
   }
 
@@ -141,7 +141,7 @@ export function extractSystemUserTemplate(template: any): SystemUserTemplate {
       // 如果解析失败，作为user模板返回
       return {
         system: systemTemplate,
-        user: template
+        user: template,
       };
     }
   }
@@ -150,7 +150,7 @@ export function extractSystemUserTemplate(template: any): SystemUserTemplate {
   if (typeof templateObj !== 'object' || templateObj === null) {
     return {
       system: systemTemplate,
-      user: String(template)
+      user: String(template),
     };
   }
 
@@ -178,7 +178,7 @@ export function extractSystemUserTemplate(template: any): SystemUserTemplate {
 
   return {
     system: systemTemplate,
-    user: userTemplate
+    user: userTemplate,
   };
 }
 
@@ -218,25 +218,25 @@ export function safeConvertPromptContent(content: string): ContentConversionResu
       return {
         success: false,
         error: '内容不能为空',
-        data: content
+        data: content,
       };
     }
 
     const jsonbContent: PromptContentJsonb = {
       type: 'simple_text',
       static_content: content,
-      migrated_at: new Date().toISOString()
+      migrated_at: new Date().toISOString(),
     };
 
     return {
       success: true,
-      data: jsonbContent
+      data: jsonbContent,
     };
   } catch (error) {
     return {
       success: false,
       error: error instanceof Error ? error.message : '转换失败',
-      data: content
+      data: content,
     };
   }
 }
@@ -250,25 +250,25 @@ export function safeConvertOptimizationTemplate(template: string): OptimizationT
       return {
         success: false,
         error: '模板不能为空',
-        data: template
+        data: template,
       };
     }
 
     const jsonbTemplate: OptimizationTemplateJsonb = {
       type: 'legacy_text',
       template: template,
-      migrated_at: new Date().toISOString()
+      migrated_at: new Date().toISOString(),
     };
 
     return {
       success: true,
-      data: jsonbTemplate
+      data: jsonbTemplate,
     };
   } catch (error) {
     return {
       success: false,
       error: error instanceof Error ? error.message : '转换失败',
-      data: template
+      data: template,
     };
   }
 }
@@ -285,19 +285,19 @@ export function createEmptyContextEngineeringContent(): PromptContentJsonb {
       examples: {
         selection_strategy: 'relevance',
         max_examples: 3,
-        example_pool: []
+        example_pool: [],
       },
       tools: {
         available_tools: [],
-        tool_selection_criteria: 'task_relevance'
+        tool_selection_criteria: 'task_relevance',
       },
       state: {
         conversation_history: [],
         user_preferences: {},
-        context_variables: {}
-      }
+        context_variables: {},
+      },
     },
-    migrated_at: new Date().toISOString()
+    migrated_at: new Date().toISOString(),
   };
 }
 
@@ -312,14 +312,14 @@ export function createEmptyContextEngineeringTemplate(): OptimizationTemplateJso
       system_prompt: '',
       optimization_rules: [],
       context_variables: {},
-      adaptation_strategies: {}
+      adaptation_strategies: {},
     },
     context_engineering: {
       dynamic_adaptation: true,
       user_context_integration: true,
       example_selection_strategy: 'relevance',
-      tool_integration: true
+      tool_integration: true,
     },
-    migrated_at: new Date().toISOString()
+    migrated_at: new Date().toISOString(),
   };
 }

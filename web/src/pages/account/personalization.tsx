@@ -28,7 +28,7 @@ import {
   ExclamationTriangleIcon,
   LightBulbIcon,
   AdjustmentsHorizontalIcon,
-  ArrowLeftIcon
+  ArrowLeftIcon,
 } from '@heroicons/react/24/outline';
 import { toast } from 'react-hot-toast';
 import { useAuth } from '@/contexts/AuthContext';
@@ -73,7 +73,7 @@ const TABS = [
   { id: 'preferences', name: '个人偏好', icon: AdjustmentsHorizontalIcon },
   { id: 'rules', name: '适应规则', icon: CogIcon },
   { id: 'patterns', name: '学习模式', icon: CpuChipIcon },
-  { id: 'privacy', name: '隐私控制', icon: ShieldCheckIcon }
+  { id: 'privacy', name: '隐私控制', icon: ShieldCheckIcon },
 ];
 
 // 预设偏好选项
@@ -82,39 +82,39 @@ const PREFERENCE_OPTIONS = {
     { value: 'zh-CN', label: '中文（简体）' },
     { value: 'zh-TW', label: '中文（繁体）' },
     { value: 'en-US', label: 'English' },
-    { value: 'ja-JP', label: '日本語' }
+    { value: 'ja-JP', label: '日本語' },
   ],
   style: [
     { value: 'formal', label: '正式' },
     { value: 'casual', label: '轻松' },
     { value: 'professional', label: '专业' },
     { value: 'friendly', label: '友好' },
-    { value: 'academic', label: '学术' }
+    { value: 'academic', label: '学术' },
   ],
   format: [
     { value: 'structured', label: '结构化' },
     { value: 'narrative', label: '叙述型' },
     { value: 'bullet_points', label: '要点列表' },
-    { value: 'step_by_step', label: '步骤指导' }
+    { value: 'step_by_step', label: '步骤指导' },
   ],
   tone: [
     { value: 'neutral', label: '中性' },
     { value: 'encouraging', label: '鼓励性' },
     { value: 'analytical', label: '分析型' },
-    { value: 'creative', label: '创意型' }
+    { value: 'creative', label: '创意型' },
   ],
   complexity: [
     { value: 'beginner', label: '初学者' },
     { value: 'intermediate', label: '中级' },
     { value: 'advanced', label: '高级' },
-    { value: 'expert', label: '专家' }
+    { value: 'expert', label: '专家' },
   ],
   output_length: [
     { value: 'concise', label: '简洁' },
     { value: 'moderate', label: '适中' },
     { value: 'detailed', label: '详细' },
-    { value: 'comprehensive', label: '全面' }
-  ]
+    { value: 'comprehensive', label: '全面' },
+  ],
 };
 
 export default function PersonalizationPage() {
@@ -136,7 +136,7 @@ export default function PersonalizationPage() {
     output_length: 'moderate',
     creative_freedom: 50,
     factual_accuracy: 80,
-    personalization_level: 70
+    personalization_level: 70,
   });
   
   const [adaptationRules, setAdaptationRules] = useState<AdaptationRule[]>([]);
@@ -145,7 +145,7 @@ export default function PersonalizationPage() {
     allowAnonymousAnalytics: true,
     dataRetentionDays: 365,
     shareInsights: false,
-    allowModelTraining: false
+    allowModelTraining: false,
   });
 
   // 加载用户数据
@@ -167,7 +167,7 @@ export default function PersonalizationPage() {
         fetch('/api/user/preferences'),
         fetch('/api/user/adaptation-rules'),
         fetch('/api/user/learned-patterns'),
-        fetch('/api/user/privacy-settings')
+        fetch('/api/user/privacy-settings'),
       ]);
 
       if (preferencesRes.ok) {
@@ -210,7 +210,7 @@ export default function PersonalizationPage() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ preferences })
+        body: JSON.stringify({ preferences }),
       });
 
       if (response.ok) {
@@ -235,7 +235,7 @@ export default function PersonalizationPage() {
       action: '',
       priority: 1,
       enabled: true,
-      created_at: new Date().toISOString()
+      created_at: new Date().toISOString(),
     };
     setAdaptationRules(prev => [...prev, newRule]);
   };
@@ -276,7 +276,7 @@ export default function PersonalizationPage() {
     
     try {
       const response = await fetch('/api/user/delete-all-data', {
-        method: 'DELETE'
+        method: 'DELETE',
       });
       
       if (response.ok) {
@@ -292,7 +292,7 @@ export default function PersonalizationPage() {
           output_length: 'moderate',
           creative_freedom: 50,
           factual_accuracy: 80,
-          personalization_level: 70
+          personalization_level: 70,
         });
         setAdaptationRules([]);
         setLearnedPatterns([]);
@@ -373,7 +373,7 @@ export default function PersonalizationPage() {
             <StatCard 
               icon={ShieldCheckIcon} 
               title="隐私级别" 
-              value={privacySettings.allowAnonymousAnalytics ? "标准" : "严格"}
+              value={privacySettings.allowAnonymousAnalytics ? '标准' : '严格'}
               subtitle="数据保护"
               color="neon-yellow"
             />
@@ -790,7 +790,7 @@ export default function PersonalizationPage() {
                     checked={privacySettings.allowAnonymousAnalytics}
                     onChange={(e) => setPrivacySettings(prev => ({ 
                       ...prev, 
-                      allowAnonymousAnalytics: e.target.checked 
+                      allowAnonymousAnalytics: e.target.checked, 
                     }))}
                     className="sr-only"
                   />
@@ -815,7 +815,7 @@ export default function PersonalizationPage() {
                     checked={privacySettings.shareInsights}
                     onChange={(e) => setPrivacySettings(prev => ({ 
                       ...prev, 
-                      shareInsights: e.target.checked 
+                      shareInsights: e.target.checked, 
                     }))}
                     className="sr-only"
                   />
@@ -840,7 +840,7 @@ export default function PersonalizationPage() {
                     checked={privacySettings.allowModelTraining}
                     onChange={(e) => setPrivacySettings(prev => ({ 
                       ...prev, 
-                      allowModelTraining: e.target.checked 
+                      allowModelTraining: e.target.checked, 
                     }))}
                     className="sr-only"
                   />
@@ -871,7 +871,7 @@ export default function PersonalizationPage() {
                 value={privacySettings.dataRetentionDays}
                 onChange={(e) => setPrivacySettings(prev => ({ 
                   ...prev, 
-                  dataRetentionDays: parseInt(e.target.value) 
+                  dataRetentionDays: parseInt(e.target.value), 
                 }))}
                 className="w-full"
               />
@@ -924,7 +924,7 @@ function StatCard({ icon: Icon, title, value, subtitle, color }: {
     <motion.div
       className="glass rounded-xl p-6 border border-gray-600/30 hover:border-gray-500/50 transition-colors"
       whileHover={{ scale: 1.02 }}
-      transition={{ type: "spring", duration: 0.3 }}
+      transition={{ type: 'spring', duration: 0.3 }}
     >
       <div className="flex items-center justify-between">
         <div>

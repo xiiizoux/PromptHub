@@ -133,7 +133,7 @@ function isOriginAllowed(origin: string, allowedOrigins: string[]): boolean {
  * 设置CORS头部（兼容性优化）
  */
 function setCORSHeaders(res: NextApiResponse | NextResponse, origin: string | undefined, config: SecurityConfig): void {
-  if (!config.enableCORS) return;
+  if (!config.enableCORS) {return;}
 
   // 获取浏览器兼容的CORS配置
   const corsConfig = browserCompatibility.getCompatibleCORSConfig();
@@ -218,7 +218,7 @@ export function addSecurityHeaders(response: NextResponse): NextResponse {
 export function handleCORS(request: NextRequest): NextResponse | null {
   const config = getSecurityConfig();
   
-  if (!config.enableCORS) return null;
+  if (!config.enableCORS) {return null;}
   
   const origin = request.headers.get('origin');
   
@@ -253,9 +253,9 @@ export function getSecurityReport(): {
     'Permissions-Policy',
   ];
   
-  if (config.enableCSP) headers.push('Content-Security-Policy');
-  if (config.enableHSTS) headers.push('Strict-Transport-Security');
-  if (config.enableCORS) headers.push('Access-Control-*');
+  if (config.enableCSP) {headers.push('Content-Security-Policy');}
+  if (config.enableHSTS) {headers.push('Strict-Transport-Security');}
+  if (config.enableCORS) {headers.push('Access-Control-*');}
   
   const recommendations = [];
   

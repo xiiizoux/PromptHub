@@ -5,7 +5,7 @@ import {
   ShareIcon,
   LinkIcon,
   ClipboardDocumentIcon,
-  XMarkIcon
+  XMarkIcon,
 } from '@heroicons/react/24/outline';
 import toast from 'react-hot-toast';
 
@@ -27,7 +27,7 @@ const ShareButton: React.FC<ShareButtonProps> = ({
   url,
   title,
   description = '',
-  className = ''
+  className = '',
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [buttonPosition, setButtonPosition] = useState({ top: 0, left: 0 });
@@ -78,7 +78,7 @@ const ShareButton: React.FC<ShareButtonProps> = ({
         }
         setIsOpen(false);
       },
-      color: 'text-gray-600 hover:text-gray-800'
+      color: 'text-gray-600 hover:text-gray-800',
     },
     {
       name: 'Twitter/X',
@@ -92,7 +92,7 @@ const ShareButton: React.FC<ShareButtonProps> = ({
         window.open(twitterUrl, '_blank', 'width=600,height=400');
         setIsOpen(false);
       },
-      color: 'text-gray-200 hover:text-white'
+      color: 'text-gray-200 hover:text-white',
     },
     {
       name: 'Facebook',
@@ -106,7 +106,7 @@ const ShareButton: React.FC<ShareButtonProps> = ({
         window.open(facebookUrl, '_blank', 'width=600,height=400');
         setIsOpen(false);
       },
-      color: 'text-blue-600 hover:text-blue-700'
+      color: 'text-blue-600 hover:text-blue-700',
     },
     {
       name: 'LinkedIn',
@@ -120,7 +120,7 @@ const ShareButton: React.FC<ShareButtonProps> = ({
         window.open(linkedinUrl, '_blank', 'width=600,height=400');
         setIsOpen(false);
       },
-      color: 'text-blue-700 hover:text-blue-800'
+      color: 'text-blue-700 hover:text-blue-800',
     },
     {
       name: 'WhatsApp',
@@ -134,7 +134,7 @@ const ShareButton: React.FC<ShareButtonProps> = ({
         window.open(whatsappUrl, '_blank');
         setIsOpen(false);
       },
-      color: 'text-green-600 hover:text-green-700'
+      color: 'text-green-600 hover:text-green-700',
     },
     {
       name: '微博',
@@ -148,8 +148,8 @@ const ShareButton: React.FC<ShareButtonProps> = ({
         window.open(weiboUrl, '_blank', 'width=600,height=400');
         setIsOpen(false);
       },
-      color: 'text-red-600 hover:text-red-700'
-    }
+      color: 'text-red-600 hover:text-red-700',
+    },
   ];
 
   // 确保组件已挂载（用于Portal）
@@ -267,7 +267,7 @@ const ShareButton: React.FC<ShareButtonProps> = ({
             </motion.div>
           )}
         </AnimatePresence>,
-        document.body
+        document.body,
       )}
     </div>
   );

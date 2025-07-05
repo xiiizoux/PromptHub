@@ -580,8 +580,8 @@ class AIAnalyzer {
         let score = 0;
         keywords.forEach(keyword => {
           // 完全匹配得2分，包含匹配得1分
-          if (lowerContent === keyword) score += 2;
-          else if (lowerContent.includes(keyword)) score += 1;
+          if (lowerContent === keyword) {score += 2;}
+          else if (lowerContent.includes(keyword)) {score += 1;}
         });
         featureScores[feature] = score;
       });
@@ -688,7 +688,7 @@ class AIAnalyzer {
    */
   private extractVariables(content: string): string[] {
     const matches = content.match(/\{\{([^}]+)\}\}/g);
-    if (!matches) return [];
+    if (!matches) {return [];}
 
     const uniqueVariables = new Set(
       matches.map(match => match.replace(/^\{\{|\}\}$/g, '').trim()),
@@ -792,13 +792,13 @@ class AIAnalyzer {
     // 哲学性/抽象性内容检测
     const philosophicalKeywords = ['哲学', '思想', '智慧', '觉悟', '意识', '精神', '灵魂', '本质', '真理'];
     if (philosophicalKeywords.some(keyword => lowerContent.includes(keyword))) {
-      if (!tags.includes('哲学思考')) tags.push('哲学思考');
+      if (!tags.includes('哲学思考')) {tags.push('哲学思考');}
     }
 
     // 比喻性表达检测
     const metaphorKeywords = ['像', '如同', '仿佛', '犹如', '当别人看见', '当别人听见'];
     if (metaphorKeywords.some(keyword => content.includes(keyword))) {
-      if (!tags.includes('抽象思维')) tags.push('抽象思维');
+      if (!tags.includes('抽象思维')) {tags.push('抽象思维');}
     }
 
     // 确保至少有基础标签
@@ -811,9 +811,9 @@ class AIAnalyzer {
     const sortedTags = tags.sort((a, b) => {
       const aIndex = priorityOrder.indexOf(a);
       const bIndex = priorityOrder.indexOf(b);
-      if (aIndex !== -1 && bIndex !== -1) return aIndex - bIndex;
-      if (aIndex !== -1) return -1;
-      if (bIndex !== -1) return 1;
+      if (aIndex !== -1 && bIndex !== -1) {return aIndex - bIndex;}
+      if (aIndex !== -1) {return -1;}
+      if (bIndex !== -1) {return 1;}
       return 0;
     });
 
@@ -950,18 +950,18 @@ class AIAnalyzer {
     
     // 1. 完全匹配
     const exactMatch = existingTags.find(tag => tag.toLowerCase().trim() === lowerAiTag);
-    if (exactMatch) return exactMatch;
+    if (exactMatch) {return exactMatch;}
     
     // 2. 包含关系匹配
     const containsMatch = existingTags.find(tag => {
       const lowerExistingTag = tag.toLowerCase().trim();
       return lowerExistingTag.includes(lowerAiTag) || lowerAiTag.includes(lowerExistingTag);
     });
-    if (containsMatch) return containsMatch;
+    if (containsMatch) {return containsMatch;}
     
     // 3. 同义词匹配
     const synonymMatch = this.findSynonymTag(lowerAiTag, existingTags);
-    if (synonymMatch) return synonymMatch;
+    if (synonymMatch) {return synonymMatch;}
     
     // 4. 相似度匹配（使用简单的字符串相似度）
     for (const existingTag of existingTags) {
@@ -996,7 +996,7 @@ class AIAnalyzer {
     for (const [synonym, alternatives] of Object.entries(synonyms)) {
       if (alternatives.includes(aiTag)) {
         const match = existingTags.find(tag => tag.toLowerCase().includes(synonym));
-        if (match) return match;
+        if (match) {return match;}
       }
     }
     
@@ -1007,12 +1007,12 @@ class AIAnalyzer {
    * 计算字符串相似度（简单版本）
    */
   private calculateStringSimilarity(str1: string, str2: string): number {
-    if (str1 === str2) return 1;
+    if (str1 === str2) {return 1;}
     
     const longer = str1.length > str2.length ? str1 : str2;
     const shorter = str1.length > str2.length ? str2 : str1;
     
-    if (longer.length === 0) return 1;
+    if (longer.length === 0) {return 1;}
     
     const editDistance = this.levenshteinDistance(longer, shorter);
     return (longer.length - editDistance) / longer.length;

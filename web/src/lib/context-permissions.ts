@@ -44,7 +44,7 @@ export function calculateContextPermissions(
   userId: string,
   promptOwnerId: string,
   promptIsPublic: boolean,
-  isCollaborator: boolean = false
+  isCollaborator: boolean = false,
 ): ContextPermission {
   
   const isOwner = userId === promptOwnerId;
@@ -62,7 +62,7 @@ export function calculateContextPermissions(
       canCreateExperiments: true,
       canViewMyContext: true,
       canManageMyContext: true,
-      canApplyPersonalRules: true
+      canApplyPersonalRules: true,
     };
   }
   
@@ -79,7 +79,7 @@ export function calculateContextPermissions(
       canCreateExperiments: false,
       canViewMyContext: true,
       canManageMyContext: true,
-      canApplyPersonalRules: true
+      canApplyPersonalRules: true,
     };
   }
   
@@ -96,7 +96,7 @@ export function calculateContextPermissions(
       canCreateExperiments: false,
       canViewMyContext: true, // 可以查看自己的使用上下文
       canManageMyContext: true, // 可以管理自己的上下文数据
-      canApplyPersonalRules: true // 可以应用个人规则
+      canApplyPersonalRules: true, // 可以应用个人规则
     };
   }
   
@@ -112,7 +112,7 @@ export function calculateContextPermissions(
     canCreateExperiments: false,
     canViewMyContext: false,
     canManageMyContext: false,
-    canApplyPersonalRules: false
+    canApplyPersonalRules: false,
   };
 }
 
@@ -124,7 +124,7 @@ export function getContextAccessLevel(
   promptId: string,
   promptOwnerId: string,
   promptIsPublic: boolean,
-  isCollaborator: boolean = false
+  isCollaborator: boolean = false,
 ): ContextAccessLevel {
   
   let ownership: PromptOwnership;
@@ -144,7 +144,7 @@ export function getContextAccessLevel(
     promptId,
     promptOwnerId,
     isCollaborator,
-    permissions: calculateContextPermissions(userId, promptOwnerId, promptIsPublic, isCollaborator)
+    permissions: calculateContextPermissions(userId, promptOwnerId, promptIsPublic, isCollaborator),
   };
 }
 
@@ -196,7 +196,7 @@ export function getFeatureVisibility(accessLevel: ContextAccessLevel): {
     showExperiments: permissions.canCreateExperiments,
     
     // 我的上下文：对所有可用提示词开放
-    showMyContext: permissions.canViewMyContext
+    showMyContext: permissions.canViewMyContext,
   };
 }
 
@@ -221,7 +221,7 @@ export function getDataScope(accessLevel: ContextAccessLevel): {
     
     // 实验范围
     experimentsScope: ownership === 'owned' ? 'prompt' :
-                     permissions.canApplyPersonalRules ? 'personal' : 'none'
+                     permissions.canApplyPersonalRules ? 'personal' : 'none',
   };
 }
 
@@ -230,7 +230,7 @@ export function getDataScope(accessLevel: ContextAccessLevel): {
  */
 export function requirePermission(
   accessLevel: ContextAccessLevel,
-  requiredPermission: keyof ContextPermission
+  requiredPermission: keyof ContextPermission,
 ): boolean {
   return accessLevel.permissions[requiredPermission];
 }
@@ -250,14 +250,14 @@ export function getPermissionDescription(accessLevel: ContextAccessLevel): {
       return {
         title: '完全控制权限',
         description: '这是您创建的提示词，您拥有完全的管理和分析权限',
-        limitations: []
+        limitations: [],
       };
       
     case 'shared':
       return {
         title: '协作编辑权限', 
         description: '您被授权协作编辑此提示词，可进行内容修改',
-        limitations: ['无法修改Context Engineering规则', '无法查看完整使用分析']
+        limitations: ['无法修改Context Engineering规则', '无法查看完整使用分析'],
       };
       
     case 'public':
@@ -267,15 +267,15 @@ export function getPermissionDescription(accessLevel: ContextAccessLevel): {
         limitations: [
           '无法修改提示词内容或规则', 
           '只能查看自己的使用数据',
-          '无法创建提示词级别的实验'
-        ]
+          '无法创建提示词级别的实验',
+        ],
       };
       
     default:
       return {
         title: '无访问权限',
         description: '您无权访问此私有提示词',
-        limitations: ['无任何操作权限']
+        limitations: ['无任何操作权限'],
       };
   }
 }

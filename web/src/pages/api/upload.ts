@@ -276,7 +276,7 @@ export function isVideoFile(mimeType: string): boolean {
 
 // 辅助函数：格式化文件大小
 export function formatFileSize(bytes: number): string {
-  if (bytes === 0) return '0 Bytes';
+  if (bytes === 0) {return '0 Bytes';}
   
   const k = 1024;
   const sizes = ['Bytes', 'KB', 'MB', 'GB'];

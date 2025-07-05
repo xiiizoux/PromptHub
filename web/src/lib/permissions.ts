@@ -213,7 +213,7 @@ export const getPermissionColor = (reason: PermissionCheck['reason']): string =>
 
 // 检查是否可以管理协作者
 export const canManageCollaborators = (prompt: PromptDetails, user: User | null): boolean => {
-  if (!user) return false;
+  if (!user) {return false;}
   
   // 只有创建者和管理员可以管理协作者
   return (prompt.created_by === user.id || 
@@ -225,7 +225,7 @@ export const canManageCollaborators = (prompt: PromptDetails, user: User | null)
 
 // 检查是否可以查看审计日志
 export const canViewAuditLogs = (prompt: PromptDetails, user: User | null): boolean => {
-  if (!user) return false;
+  if (!user) {return false;}
   
   // 1. 检查是否为创建者
   const isOwner = prompt.created_by === user.id || 

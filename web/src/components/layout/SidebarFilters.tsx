@@ -97,7 +97,7 @@ const SidebarFilters: React.FC<SidebarFiltersProps> = ({
       
       for (const tag of tags) {
         const tagLower = tag.toLowerCase();
-        if (!tagLower.includes(searchLower)) continue;
+        if (!tagLower.includes(searchLower)) {continue;}
         
         if (selectedTagsSet.has(tag)) {
           result.push(tag);
@@ -117,7 +117,7 @@ const SidebarFilters: React.FC<SidebarFiltersProps> = ({
     const otherUnselected = [];
     
     for (const tag of tags) {
-      if (selectedTagsSet.has(tag)) continue;
+      if (selectedTagsSet.has(tag)) {continue;}
       
       if (popularTagsSet.has(tag)) {
         popularUnselected.push(tag);

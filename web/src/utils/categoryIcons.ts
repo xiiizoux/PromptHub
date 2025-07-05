@@ -101,7 +101,7 @@ export const ICON_COMPONENTS: Record<string, React.ComponentType<{ className?: s
  * 如果不存在则返回null（不使用回退机制）
  */
 export function getIconComponent(iconName: string | null | undefined): React.ComponentType<{ className?: string }> | null {
-  if (!iconName) return null;
+  if (!iconName) {return null;}
   return ICON_COMPONENTS[iconName] || null;
 }
 

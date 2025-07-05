@@ -111,12 +111,12 @@ export function useSession(options: UseSessionOptions = {}): UseSessionReturn {
 
   // 续期会话
   const renewSession = useCallback(async (): Promise<boolean> => {
-    if (!sessionIdRef.current) return false;
+    if (!sessionIdRef.current) {return false;}
 
     try {
       // 刷新Supabase会话
       const { error } = await supabase.auth.refreshSession();
-      if (error) throw error;
+      if (error) {throw error;}
 
       // 续期本地会话
       const renewed = sessionManager.renewSession(sessionIdRef.current);
@@ -203,7 +203,7 @@ export function useSession(options: UseSessionOptions = {}): UseSessionReturn {
 
   // 定时更新会话状态
   useEffect(() => {
-    if (!session) return;
+    if (!session) {return;}
 
     const interval = setInterval(() => {
       if (sessionIdRef.current) {
@@ -226,7 +226,7 @@ export function useSession(options: UseSessionOptions = {}): UseSessionReturn {
 
   // 自动续期
   useEffect(() => {
-    if (!autoRenewal || !session?.needsRenewal) return;
+    if (!autoRenewal || !session?.needsRenewal) {return;}
 
     const autoRenewTimer = setTimeout(() => {
       renewSession();

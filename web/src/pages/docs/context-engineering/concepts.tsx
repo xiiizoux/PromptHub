@@ -24,7 +24,7 @@ import {
   ClockIcon,
   CpuChipIcon as BrainIcon,
   EyeIcon,
-  InformationCircleIcon
+  InformationCircleIcon,
 } from '@heroicons/react/24/outline';
 
 export default function ContextEngineeringConcepts() {
@@ -111,7 +111,7 @@ export default function ContextEngineeringConcepts() {
                 icon={UserIcon}
                 title="用户画像引擎"
                 description="构建多维度的用户模型，包含偏好、技能、习惯等特征"
-                features={["偏好学习", "行为分析", "技能评估", "情境感知"]}
+                features={['偏好学习', '行为分析', '技能评估', '情境感知']}
                 color="neon-blue"
               />
               
@@ -119,7 +119,7 @@ export default function ContextEngineeringConcepts() {
                 icon={CogIcon}
                 title="适应规则系统"
                 description="智能规则引擎，根据用户特征和情境动态调整AI行为"
-                features={["条件规则", "优先级管理", "冲突解决", "效果评估"]}
+                features={['条件规则', '优先级管理', '冲突解决', '效果评估']}
                 color="neon-green"
               />
               
@@ -127,7 +127,7 @@ export default function ContextEngineeringConcepts() {
                 icon={BrainIcon}
                 title="学习反馈机制"
                 description="从每次交互中学习，持续优化个性化效果"
-                features={["满意度跟踪", "效果分析", "策略调整", "模式识别"]}
+                features={['满意度跟踪', '效果分析', '策略调整', '模式识别']}
                 color="neon-yellow"
               />
               
@@ -135,7 +135,7 @@ export default function ContextEngineeringConcepts() {
                 icon={ChartBarIcon}
                 title="上下文记忆库"
                 description="存储和管理历史交互、偏好设置和学习成果"
-                features={["历史存储", "模式识别", "快速检索", "隐私保护"]}
+                features={['历史存储', '模式识别', '快速检索', '隐私保护']}
                 color="neon-pink"
               />
               
@@ -143,7 +143,7 @@ export default function ContextEngineeringConcepts() {
                 icon={BeakerIcon}
                 title="实验优化框架"
                 description="支持A/B测试和多变量实验，科学优化AI效果"
-                features={["实验设计", "效果测量", "统计分析", "自动优化"]}
+                features={['实验设计', '效果测量', '统计分析', '自动优化']}
                 color="neon-cyan"
               />
               
@@ -151,7 +151,7 @@ export default function ContextEngineeringConcepts() {
                 icon={EyeIcon}
                 title="透明化界面"
                 description="让用户理解AI的决策过程，建立信任和控制感"
-                features={["决策解释", "规则展示", "数据透明", "用户控制"]}
+                features={['决策解释', '规则展示', '数据透明', '用户控制']}
                 color="neon-purple"
               />
             </div>
@@ -189,10 +189,10 @@ export default function ContextEngineeringConcepts() {
                 title="初始化阶段"
                 description="用户首次使用时，系统建立基础画像"
                 details={[
-                  "收集基本偏好设置（语言、风格、领域等）",
-                  "分析用户的初次交互模式",
-                  "建立默认的适应规则集合",
-                  "设置学习目标和衡量指标"
+                  '收集基本偏好设置（语言、风格、领域等）',
+                  '分析用户的初次交互模式',
+                  '建立默认的适应规则集合',
+                  '设置学习目标和衡量指标',
                 ]}
                 color="neon-blue"
                 icon={UserIcon}
@@ -203,10 +203,10 @@ export default function ContextEngineeringConcepts() {
                 title="交互执行阶段"
                 description="每次AI交互时的动态处理过程"
                 details={[
-                  "解析用户输入和当前情境",
-                  "查询用户画像和历史上下文",
-                  "应用适配规则调整AI行为",
-                  "生成个性化的回应内容"
+                  '解析用户输入和当前情境',
+                  '查询用户画像和历史上下文',
+                  '应用适配规则调整AI行为',
+                  '生成个性化的回应内容',
                 ]}
                 color="neon-green"
                 icon={CogIcon}
@@ -217,10 +217,10 @@ export default function ContextEngineeringConcepts() {
                 title="反馈学习阶段"
                 description="从交互结果中学习和优化"
                 details={[
-                  "收集用户反馈（显式和隐式）",
-                  "分析交互效果和满意度",
-                  "更新用户画像和偏好模型",
-                  "调整和优化适应规则"
+                  '收集用户反馈（显式和隐式）',
+                  '分析交互效果和满意度',
+                  '更新用户画像和偏好模型',
+                  '调整和优化适应规则',
                 ]}
                 color="neon-yellow"
                 icon={ChartBarIcon}
@@ -231,10 +231,10 @@ export default function ContextEngineeringConcepts() {
                 title="持续优化阶段"
                 description="长期的系统改进和实验"
                 details={[
-                  "运行A/B测试验证新策略",
-                  "分析长期使用模式和趋势",
-                  "预测用户需求变化",
-                  "实施系统级别的优化"
+                  '运行A/B测试验证新策略',
+                  '分析长期使用模式和趋势',
+                  '预测用户需求变化',
+                  '实施系统级别的优化',
                 ]}
                 color="neon-pink"
                 icon={BeakerIcon}

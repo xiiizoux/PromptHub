@@ -78,7 +78,7 @@ export default function CollaborativePage() {
   };
 
   const handleSaveChanges = async () => {
-    if (!prompt || !hasUnsavedChanges) return;
+    if (!prompt || !hasUnsavedChanges) {return;}
 
     try {
       const response = await api.put(`/prompts/${prompt.id}`, {

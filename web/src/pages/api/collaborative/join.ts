@@ -48,7 +48,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         .select()
         .single();
 
-      if (createError) throw createError;
+      if (createError) {throw createError;}
       session = newSession;
     }
 
@@ -65,7 +65,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         onConflict: 'session_id,user_id',
       });
 
-    if (participantError) throw participantError;
+    if (participantError) {throw participantError;}
 
     // 更新会话的最后活动时间
     await supabase
@@ -89,7 +89,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       .eq('session_id', session.id)
       .eq('is_active', true);
 
-    if (participantsError) throw participantsError;
+    if (participantsError) {throw participantsError;}
 
     const sessionData = {
       id: session.id,

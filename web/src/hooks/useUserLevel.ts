@@ -67,22 +67,22 @@ const calculateUserLevel = (factors: UserLevelData['factors']): { level: UserLev
 const generateAchievements = (factors: UserLevelData['factors'], level: UserLevel): string[] => {
   const achievements: string[] = [];
 
-  if (factors.promptsCreated >= 1) achievements.push('🎉 首次创建');
-  if (factors.promptsCreated >= 5) achievements.push('✨ 创作新手');
-  if (factors.promptsCreated >= 20) achievements.push('🚀 创作达人');
-  if (factors.promptsCreated >= 50) achievements.push('👑 创作专家');
+  if (factors.promptsCreated >= 1) {achievements.push('🎉 首次创建');}
+  if (factors.promptsCreated >= 5) {achievements.push('✨ 创作新手');}
+  if (factors.promptsCreated >= 20) {achievements.push('🚀 创作达人');}
+  if (factors.promptsCreated >= 50) {achievements.push('👑 创作专家');}
 
-  if (factors.averageQuality >= 70) achievements.push('⭐ 质量保证');
-  if (factors.averageQuality >= 85) achievements.push('💎 精品创作者');
+  if (factors.averageQuality >= 70) {achievements.push('⭐ 质量保证');}
+  if (factors.averageQuality >= 85) {achievements.push('💎 精品创作者');}
 
-  if (factors.advancedFeaturesUsed >= 3) achievements.push('🔧 功能探索者');
-  if (factors.advancedFeaturesUsed >= 8) achievements.push('⚡ 高级用户');
+  if (factors.advancedFeaturesUsed >= 3) {achievements.push('🔧 功能探索者');}
+  if (factors.advancedFeaturesUsed >= 8) {achievements.push('⚡ 高级用户');}
 
-  if (factors.timeOnPlatform >= 30) achievements.push('📅 忠实用户');
-  if (factors.timeOnPlatform >= 90) achievements.push('🏆 资深会员');
+  if (factors.timeOnPlatform >= 30) {achievements.push('📅 忠实用户');}
+  if (factors.timeOnPlatform >= 90) {achievements.push('🏆 资深会员');}
 
-  if (factors.collaborations >= 1) achievements.push('🤝 团队协作');
-  if (factors.collaborations >= 5) achievements.push('👥 协作达人');
+  if (factors.collaborations >= 1) {achievements.push('🤝 团队协作');}
+  if (factors.collaborations >= 5) {achievements.push('👥 协作达人');}
 
   return achievements;
 };

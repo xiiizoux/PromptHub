@@ -124,8 +124,8 @@ export const RecommendationEngine: React.FC<RecommendationEngineProps> = ({
   };
 
   const getScoreColor = (score: number) => {
-    if (score >= 0.8) return 'text-green-400 bg-green-400/10';
-    if (score >= 0.6) return 'text-yellow-400 bg-yellow-400/10';
+    if (score >= 0.8) {return 'text-green-400 bg-green-400/10';}
+    if (score >= 0.6) {return 'text-yellow-400 bg-yellow-400/10';}
     return 'text-orange-400 bg-orange-400/10';
   };
 
@@ -189,7 +189,7 @@ export const RecommendationEngine: React.FC<RecommendationEngineProps> = ({
       <div className="flex items-start gap-3 p-4 bg-dark-bg-secondary/30 rounded-lg border border-gray-700/50">
         {(() => {
           const currentType = recommendationTypes.find(t => t.type === selectedType);
-          if (!currentType) return null;
+          if (!currentType) {return null;}
           const IconComponent = currentType.icon;
           return (
             <>
@@ -339,7 +339,7 @@ const RecommendationSettings: React.FC<RecommendationSettingsProps> = ({
     diversityFactor: 0.5,
   });
 
-  if (!userId) return null;
+  if (!userId) {return null;}
 
   return (
     <div className="border-t border-gray-700/50 pt-6">

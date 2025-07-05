@@ -90,7 +90,7 @@ const VersionHistory: React.FC<VersionHistoryProps> = ({
   };
 
   const handleRevert = async (versionId: string) => {
-    if (!onVersionRevert) return;
+    if (!onVersionRevert) {return;}
 
     setReverting(versionId);
 
@@ -135,7 +135,7 @@ const VersionHistory: React.FC<VersionHistoryProps> = ({
   };
 
   const handleCompareToggle = (version: PromptVersion) => {
-    if (!compareMode) return;
+    if (!compareMode) {return;}
     
     setSelectedForComparison(prev => {
       const isSelected = prev.some(v => v.id === version.id);

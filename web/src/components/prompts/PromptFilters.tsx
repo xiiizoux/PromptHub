@@ -65,7 +65,7 @@ const PromptFilters: React.FC<PromptFiltersProps> = ({
       // 一次遍历完成所有分类，提高性能
       for (const tag of tags) {
         const tagLower = tag.toLowerCase();
-        if (!tagLower.includes(searchLower)) continue;
+        if (!tagLower.includes(searchLower)) {continue;}
         
         if (selectedTagsSet.has(tag)) {
           result.push(tag); // 已选中的直接加到前面
@@ -87,7 +87,7 @@ const PromptFilters: React.FC<PromptFiltersProps> = ({
     
     // 一次遍历完成分类
     for (const tag of tags) {
-      if (selectedTagsSet.has(tag)) continue;
+      if (selectedTagsSet.has(tag)) {continue;}
       
       if (popularTagsSet.has(tag)) {
         popularUnselected.push(tag);
@@ -126,7 +126,7 @@ const PromptFilters: React.FC<PromptFiltersProps> = ({
 
   // 计算未显示的标签数量 - 优化版本
   const hiddenTagsCount = useMemo(() => {
-    if (showAllTags || tagSearchQuery.trim()) return 0;
+    if (showAllTags || tagSearchQuery.trim()) {return 0;}
     return Math.max(0, tags.length - visibleTags.length);
   }, [tags.length, visibleTags.length, showAllTags, tagSearchQuery]);
 

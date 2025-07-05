@@ -84,7 +84,7 @@ export const ImportExport: React.FC<ImportExportProps> = ({
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (!file) return;
+    if (!file) {return;}
 
     setImportFile(file);
     const reader = new FileReader();

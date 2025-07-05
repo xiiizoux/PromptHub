@@ -25,7 +25,7 @@ import {
   ArrowTrendingUpIcon,
   BookOpenIcon,
   RocketLaunchIcon,
-  BoltIcon
+  BoltIcon,
 } from '@heroicons/react/24/outline';
 import DocLayout from '@/components/DocLayout';
 
@@ -57,19 +57,19 @@ const BEST_PRACTICES: BestPractice[] = [
       '第1周：只设置基本偏好（语言风格、回答长度）',
       '第2周：添加时间和场景相关规则',
       '第3周：根据使用数据优化现有规则',
-      '持续：每月评估和调整一次'
+      '持续：每月评估和调整一次',
     ],
     benefits: [
       '避免规则冲突和复杂性',
       '更好地理解每个规则的影响',
-      '稳定的个性化体验'
+      '稳定的个性化体验',
     ],
     commonMistakes: [
       '一开始就设置过多复杂规则',
       '频繁修改规则导致体验不稳定',
-      '忽视规则之间的相互影响'
+      '忽视规则之间的相互影响',
     ],
-    example: '先设置"工作时间正式语调"，稳定一周后再添加"移动设备简洁回答"'
+    example: '先设置"工作时间正式语调"，稳定一周后再添加"移动设备简洁回答"',
   },
   {
     id: 'feedback-optimization',
@@ -83,19 +83,19 @@ const BEST_PRACTICES: BestPractice[] = [
       '每次交互后提供明确的满意度反馈',
       '对特别好或特别差的回答详细说明原因',
       '定期在"学习洞察"中查看反馈统计',
-      '针对反馈模式调整个人偏好设置'
+      '针对反馈模式调整个人偏好设置',
     ],
     benefits: [
       '加速AI学习过程',
       '提高个性化准确度',
-      '获得更贴合需求的回答'
+      '获得更贴合需求的回答',
     ],
     commonMistakes: [
       '只在不满意时才给反馈',
       '反馈过于模糊或主观',
-      '忽视积极反馈的重要性'
+      '忽视积极反馈的重要性',
     ],
-    relatedPractices: ['data-driven-optimization', 'regular-review']
+    relatedPractices: ['data-driven-optimization', 'regular-review'],
   },
   {
     id: 'context-isolation',
@@ -109,19 +109,19 @@ const BEST_PRACTICES: BestPractice[] = [
       '识别您的主要使用场景（工作、学习、娱乐等）',
       '为每个场景选择专门的提示词',
       '避免在跨场景的提示词中混用',
-      '定期清理不再使用的上下文数据'
+      '定期清理不再使用的上下文数据',
     ],
     benefits: [
       '更精准的场景适应',
       '避免不相关数据的干扰',
-      '提高专业领域的AI表现'
+      '提高专业领域的AI表现',
     ],
     commonMistakes: [
       '在同一个提示词中混合多种用途',
       '频繁切换使用场景',
-      '忽视上下文数据的清理'
+      '忽视上下文数据的清理',
     ],
-    example: '工作代码助手和娱乐写作助手分开使用，避免代码风格影响创意写作'
+    example: '工作代码助手和娱乐写作助手分开使用，避免代码风格影响创意写作',
   },
   {
     id: 'ab-testing-strategy',
@@ -136,20 +136,20 @@ const BEST_PRACTICES: BestPractice[] = [
       '设计对照组和实验组',
       '确保足够的样本量（建议20+交互）',
       '运行至少一周获得稳定数据',
-      '基于统计显著性做出决策'
+      '基于统计显著性做出决策',
     ],
     benefits: [
       '科学验证优化效果',
       '避免主观偏见',
-      '持续改进个性化体验'
+      '持续改进个性化体验',
     ],
     commonMistakes: [
       '样本量太小导致结果不可靠',
       '测试时间太短',
       '同时测试多个变量',
-      '忽视外部因素的影响'
+      '忽视外部因素的影响',
     ],
-    relatedPractices: ['data-driven-optimization', 'regular-review']
+    relatedPractices: ['data-driven-optimization', 'regular-review'],
   },
   {
     id: 'privacy-security',
@@ -163,18 +163,18 @@ const BEST_PRACTICES: BestPractice[] = [
       '定期审查和清理敏感交互历史',
       '使用数据导出功能备份重要配置',
       '了解数据共享政策和权限设置',
-      '避免在交互中包含个人敏感信息'
+      '避免在交互中包含个人敏感信息',
     ],
     benefits: [
       '保护个人隐私',
       '降低数据泄露风险',
-      '安心使用个性化功能'
+      '安心使用个性化功能',
     ],
     commonMistakes: [
       '在提示中包含密码、API密钥等敏感信息',
       '忽视定期数据清理',
-      '不了解数据使用政策'
-    ]
+      '不了解数据使用政策',
+    ],
   },
   {
     id: 'multi-persona',
@@ -188,18 +188,18 @@ const BEST_PRACTICES: BestPractice[] = [
       '分析您的不同使用角色（开发者、管理者、学习者等）',
       '为每个角色创建专门的规则集',
       '使用标签或命名系统区分不同配置',
-      '定期评估各人格的表现和适用性'
+      '定期评估各人格的表现和适用性',
     ],
     benefits: [
       '更精准的角色适应',
       '提高专业效率',
-      '更丰富的AI交互体验'
+      '更丰富的AI交互体验',
     ],
     commonMistakes: [
       '人格设置过于复杂',
       '角色界限不清晰',
-      '维护成本过高'
-    ]
+      '维护成本过高',
+    ],
   },
   {
     id: 'data-driven-optimization',
@@ -213,19 +213,19 @@ const BEST_PRACTICES: BestPractice[] = [
       '每周查看个人分析报告',
       '识别使用模式和趋势',
       '根据满意度数据调整规则',
-      '监控个性化效果的长期变化'
+      '监控个性化效果的长期变化',
     ],
     benefits: [
       '客观评估优化效果',
       '发现隐藏的使用模式',
-      '持续改进用户体验'
+      '持续改进用户体验',
     ],
     commonMistakes: [
       '忽视数据分析',
       '过度依赖主观感受',
-      '不定期回顾和调整'
+      '不定期回顾和调整',
     ],
-    relatedPractices: ['regular-review', 'ab-testing-strategy']
+    relatedPractices: ['regular-review', 'ab-testing-strategy'],
   },
   {
     id: 'regular-review',
@@ -239,19 +239,19 @@ const BEST_PRACTICES: BestPractice[] = [
       '每月进行一次完整的配置审查',
       '清理过时或无效的规则',
       '评估新功能和最佳实践',
-      '根据需求变化调整策略'
+      '根据需求变化调整策略',
     ],
     benefits: [
       '保持系统健康运行',
       '及时发现和解决问题',
-      '适应需求变化'
+      '适应需求变化',
     ],
     commonMistakes: [
       '设置后就忘记维护',
       '积累过多冗余配置',
-      '不关注新功能更新'
-    ]
-  }
+      '不关注新功能更新',
+    ],
+  },
 ];
 
 const PRACTICE_CATEGORIES = [
@@ -263,7 +263,7 @@ const PRACTICE_CATEGORIES = [
   { id: '隐私安全', name: '隐私安全', icon: ShieldCheckIcon },
   { id: '高级策略', name: '高级策略', icon: RocketLaunchIcon },
   { id: '数据分析', name: '数据分析', icon: ChartBarIcon },
-  { id: '维护策略', name: '维护策略', icon: CogIcon }
+  { id: '维护策略', name: '维护策略', icon: CogIcon },
 ];
 
 export default function ContextEngineeringBestPractices() {
@@ -286,7 +286,7 @@ export default function ContextEngineeringBestPractices() {
       breadcrumbs={[
         { name: '文档', href: '/docs' },
         { name: 'Context Engineering', href: '/docs/context-engineering' },
-        { name: '最佳实践', href: '/docs/context-engineering/best-practices' }
+        { name: '最佳实践', href: '/docs/context-engineering/best-practices' },
       ]}
     >
 
@@ -401,7 +401,7 @@ export default function ContextEngineeringBestPractices() {
                 index={index}
                 isExpanded={expandedPractice === practice.id}
                 onToggle={() => setExpandedPractice(
-                  expandedPractice === practice.id ? null : practice.id
+                  expandedPractice === practice.id ? null : practice.id,
                 )}
               />
             ))}
@@ -429,7 +429,7 @@ export default function ContextEngineeringBestPractices() {
                 items={[
                   '设置基本个人偏好',
                   '开始使用反馈机制',
-                  '选择主要使用场景'
+                  '选择主要使用场景',
                 ]}
               />
               <RoadmapPhase
@@ -439,7 +439,7 @@ export default function ContextEngineeringBestPractices() {
                 items={[
                   '添加场景相关规则',
                   '进行首次A/B测试',
-                  '分析使用数据'
+                  '分析使用数据',
                 ]}
               />
               <RoadmapPhase
@@ -449,7 +449,7 @@ export default function ContextEngineeringBestPractices() {
                 items={[
                   '探索高级工具',
                   '建立定期维护流程',
-                  '持续优化和迭代'
+                  '持续优化和迭代',
                 ]}
               />
             </div>

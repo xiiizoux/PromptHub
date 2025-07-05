@@ -108,10 +108,10 @@ export class BrowserCompatibilityManager {
    */
   isBrowserSupported(browser?: BrowserInfo): boolean {
     const info = browser || this.currentBrowser;
-    if (!info) return false;
+    if (!info) {return false;}
 
     const minVersion = this.config.minVersions[info.name.toLowerCase() as keyof typeof this.config.minVersions];
-    if (!minVersion) return true; // 未知浏览器默认支持
+    if (!minVersion) {return true;} // 未知浏览器默认支持
 
     return parseFloat(info.version) >= minVersion;
   }
@@ -127,7 +127,7 @@ export class BrowserCompatibilityManager {
     const polyfills: string[] = [];
     const features = this.currentBrowser?.features;
 
-    if (!features) return this.config.polyfills;
+    if (!features) {return this.config.polyfills;}
 
     // 根据缺失的功能添加polyfills
     if (!features.fetch) {
@@ -184,7 +184,7 @@ export class BrowserCompatibilityManager {
    * 应用兼容性修复
    */
   applyCompatibilityFixes(): void {
-    if (typeof window === 'undefined') return;
+    if (typeof window === 'undefined') {return;}
 
     const polyfills = this.getRequiredPolyfills();
     
@@ -375,19 +375,19 @@ export class BrowserCompatibilityManager {
   }
 
   private supportsCSS3(): boolean {
-    if (typeof document === 'undefined') return false;
+    if (typeof document === 'undefined') {return false;}
     const div = document.createElement('div');
     return 'borderRadius' in div.style;
   }
 
   private supportsFlexbox(): boolean {
-    if (typeof document === 'undefined') return false;
+    if (typeof document === 'undefined') {return false;}
     const div = document.createElement('div');
     return 'flexBasis' in div.style || 'webkitFlexBasis' in div.style;
   }
 
   private supportsGrid(): boolean {
-    if (typeof document === 'undefined') return false;
+    if (typeof document === 'undefined') {return false;}
     const div = document.createElement('div');
     return 'gridTemplateColumns' in div.style;
   }
@@ -396,11 +396,11 @@ export class BrowserCompatibilityManager {
     const name = browser.name.toLowerCase();
     const version = parseFloat(browser.version);
     
-    if (name === 'chrome') return version >= 25;
-    if (name === 'firefox') return version >= 23;
-    if (name === 'safari') return version >= 7;
-    if (name === 'edge') return version >= 12;
-    if (name === 'ie') return false; // IE不支持CSP
+    if (name === 'chrome') {return version >= 25;}
+    if (name === 'firefox') {return version >= 23;}
+    if (name === 'safari') {return version >= 7;}
+    if (name === 'edge') {return version >= 12;}
+    if (name === 'ie') {return false;} // IE不支持CSP
     
     return true; // 默认支持
   }
@@ -409,10 +409,10 @@ export class BrowserCompatibilityManager {
     const name = browser.name.toLowerCase();
     const version = parseFloat(browser.version);
     
-    if (name === 'chrome') return version >= 40;
-    if (name === 'firefox') return version >= 31;
-    if (name === 'safari') return version >= 10;
-    if (name === 'edge') return version >= 15;
+    if (name === 'chrome') {return version >= 40;}
+    if (name === 'firefox') {return version >= 31;}
+    if (name === 'safari') {return version >= 10;}
+    if (name === 'edge') {return version >= 15;}
     
     return false;
   }
@@ -429,11 +429,11 @@ export class BrowserCompatibilityManager {
   }
 
   private getPlatform(userAgent: string): string {
-    if (/Windows/.test(userAgent)) return 'Windows';
-    if (/Mac/.test(userAgent)) return 'macOS';
-    if (/Linux/.test(userAgent)) return 'Linux';
-    if (/Android/.test(userAgent)) return 'Android';
-    if (/iPhone|iPad/.test(userAgent)) return 'iOS';
+    if (/Windows/.test(userAgent)) {return 'Windows';}
+    if (/Mac/.test(userAgent)) {return 'macOS';}
+    if (/Linux/.test(userAgent)) {return 'Linux';}
+    if (/Android/.test(userAgent)) {return 'Android';}
+    if (/iPhone|iPad/.test(userAgent)) {return 'iOS';}
     return 'Unknown';
   }
 
@@ -508,7 +508,7 @@ export class BrowserCompatibilityManager {
   }
 
   private applyCSSFixes(): void {
-    if (typeof document === 'undefined') return;
+    if (typeof document === 'undefined') {return;}
     
     // 添加CSS兼容性修复
     const style = document.createElement('style');
@@ -532,7 +532,7 @@ export class BrowserCompatibilityManager {
 
   private applyJSFixes(): void {
     // JavaScript兼容性修复
-    if (typeof window === 'undefined') return;
+    if (typeof window === 'undefined') {return;}
     
     // 添加必要的polyfills和修复
     if (!window.fetch) {

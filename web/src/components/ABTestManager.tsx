@@ -381,7 +381,7 @@ const CreateTestModal: React.FC<CreateTestModalProps> = ({
     onSubmit(formData);
   };
 
-  if (!isOpen) return null;
+  if (!isOpen) {return null;}
 
   return (
     <AnimatePresence>
@@ -574,7 +574,7 @@ const TestResultsModal: React.FC<TestResultsModalProps> = ({
   results,
   onClose,
 }) => {
-  if (!test || !results) return null;
+  if (!test || !results) {return null;}
 
   return (
     <AnimatePresence>

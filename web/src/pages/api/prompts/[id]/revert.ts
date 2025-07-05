@@ -177,7 +177,7 @@ export default async function handler(
         tags: targetVersion.tags,
         category: categoryName,
         category_id: categoryId,
-        version: newVersion
+        version: newVersion,
       });
       return res.status(500).json({ error: '回滚失败: ' + updateError.message });
     }
@@ -188,7 +188,7 @@ export default async function handler(
       toVersion: targetVersion.version,
       newVersion: newVersion,
       category: categoryName,
-      category_id: categoryId
+      category_id: categoryId,
     });
 
     return res.status(200).json({

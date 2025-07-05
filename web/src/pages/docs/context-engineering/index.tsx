@@ -22,7 +22,7 @@ import {
   ArrowRightIcon,
   BookOpenIcon,
   PuzzlePieceIcon,
-  BoltIcon
+  BoltIcon,
 } from '@heroicons/react/24/outline';
 
 export default function ContextEngineeringIndex() {

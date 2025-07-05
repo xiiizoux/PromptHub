@@ -32,7 +32,7 @@ import {
   DocumentDuplicateIcon,
   CloudArrowUpIcon,
   ChartBarIcon,
-  ArrowLeftIcon
+  ArrowLeftIcon,
 } from '@heroicons/react/24/outline';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/router';
@@ -178,15 +178,15 @@ export default function AdvancedCEToolsPage() {
           type: 'user_preference',
           field: 'programming_language',
           operator: 'equals',
-          value: 'Python'
-        }
+          value: 'Python',
+        },
       ],
       actions: [
         {
           id: 'a1',
           type: 'append',
-          content: '请用Python语言提供示例代码。'
-        }
+          content: '请用Python语言提供示例代码。',
+        },
       ],
       priority: 1,
       createdAt: '2023-12-01',
@@ -196,8 +196,8 @@ export default function AdvancedCEToolsPage() {
         avgSatisfaction: 4.6,
         usageCount: 156,
         lastUsed: '2小时前',
-        trend: 'improving'
-      }
+        trend: 'improving',
+      },
     },
     {
       id: '2',
@@ -210,16 +210,16 @@ export default function AdvancedCEToolsPage() {
           type: 'time_based',
           field: 'hour',
           operator: 'in_range',
-          value: [9, 17]
-        }
+          value: [9, 17],
+        },
       ],
       actions: [
         {
           id: 'a2',
           type: 'modify_tone',
           content: '简洁专业',
-          parameters: { brevity: 'high', formality: 'medium' }
-        }
+          parameters: { brevity: 'high', formality: 'medium' },
+        },
       ],
       priority: 2,
       createdAt: '2023-12-02',
@@ -229,9 +229,9 @@ export default function AdvancedCEToolsPage() {
         avgSatisfaction: 4.2,
         usageCount: 89,
         lastUsed: '1天前',
-        trend: 'stable'
-      }
-    }
+        trend: 'stable',
+      },
+    },
   ];
 
   const generateMockOptimizationSuggestions = (): OptimizationSuggestion[] => [
@@ -242,7 +242,7 @@ export default function AdvancedCEToolsPage() {
       description: '建议添加对JavaScript和TypeScript的支持，您在这些语言上的使用频率很高',
       expectedImpact: '+23% 相关性, +15% 满意度',
       confidence: 92,
-      autoApplicable: true
+      autoApplicable: true,
     },
     {
       id: '2',
@@ -251,7 +251,7 @@ export default function AdvancedCEToolsPage() {
       description: '基于您的使用模式，建议在周末使用更友好轻松的语调',
       expectedImpact: '+18% 满意度',
       confidence: 78,
-      autoApplicable: false
+      autoApplicable: false,
     },
     {
       id: '3',
@@ -260,8 +260,8 @@ export default function AdvancedCEToolsPage() {
       description: '通过规则优先级调整，可以减少20%的处理时间',
       expectedImpact: '-20% 响应时间',
       confidence: 85,
-      autoApplicable: true
-    }
+      autoApplicable: true,
+    },
   ];
 
   const generateMockPredictions = (): PredictionResult[] => [
@@ -270,8 +270,8 @@ export default function AdvancedCEToolsPage() {
       expectedSatisfaction: 4.7,
       expectedSuccessRate: 96,
       potentialIssues: ['可能增加轻微的处理延迟', '需要适应期约1-2周'],
-      recommendations: ['分阶段启用规则', '密切监控第一周的效果', '准备回滚机制']
-    }
+      recommendations: ['分阶段启用规则', '密切监控第一周的效果', '准备回滚机制'],
+    },
   ];
 
   // 创建新规则
@@ -747,7 +747,7 @@ export default function AdvancedCEToolsPage() {
                         checked={rule.enabled}
                         onChange={(e) => {
                           const updatedRules = contextRules.map(r =>
-                            r.id === rule.id ? { ...r, enabled: e.target.checked } : r
+                            r.id === rule.id ? { ...r, enabled: e.target.checked } : r,
                           );
                           setContextRules(updatedRules);
                         }}
@@ -817,7 +817,7 @@ function RuleEditorModal({ rule, onSave, onCancel }: {
     };
     setEditingRule(prev => ({
       ...prev,
-      conditions: [...prev.conditions, newCondition]
+      conditions: [...prev.conditions, newCondition],
     }));
   };
 
@@ -829,7 +829,7 @@ function RuleEditorModal({ rule, onSave, onCancel }: {
     };
     setEditingRule(prev => ({
       ...prev,
-      actions: [...prev.actions, newAction]
+      actions: [...prev.actions, newAction],
     }));
   };
 
@@ -900,7 +900,7 @@ function RuleEditorModal({ rule, onSave, onCancel }: {
                       const newConditions = [...editingRule.conditions];
                       newConditions[index] = { 
                         ...condition, 
-                        type: e.target.value as 'user_preference' | 'time_based' | 'usage_pattern' | 'content_type' | 'custom'
+                        type: e.target.value as 'user_preference' | 'time_based' | 'usage_pattern' | 'content_type' | 'custom',
                       };
                       setEditingRule(prev => ({ ...prev, conditions: newConditions }));
                     }}
@@ -929,7 +929,7 @@ function RuleEditorModal({ rule, onSave, onCancel }: {
                       const newConditions = [...editingRule.conditions];
                       newConditions[index] = { 
                         ...condition, 
-                        operator: e.target.value as 'equals' | 'not_equals' | 'contains' | 'greater_than' | 'less_than' | 'in_range'
+                        operator: e.target.value as 'equals' | 'not_equals' | 'contains' | 'greater_than' | 'less_than' | 'in_range',
                       };
                       setEditingRule(prev => ({ ...prev, conditions: newConditions }));
                     }}
@@ -958,7 +958,7 @@ function RuleEditorModal({ rule, onSave, onCancel }: {
                       onClick={() => {
                         setEditingRule(prev => ({
                           ...prev,
-                          conditions: prev.conditions.filter(c => c.id !== condition.id)
+                          conditions: prev.conditions.filter(c => c.id !== condition.id),
                         }));
                       }}
                       className="px-2 py-1 bg-red-500/20 text-red-400 rounded-r border border-red-500/30 hover:bg-red-500/30"
@@ -993,7 +993,7 @@ function RuleEditorModal({ rule, onSave, onCancel }: {
                         const newActions = [...editingRule.actions];
                         newActions[index] = { 
                           ...action, 
-                          type: e.target.value as 'append' | 'prepend' | 'replace' | 'modify_tone' | 'add_examples' | 'adjust_complexity'
+                          type: e.target.value as 'append' | 'prepend' | 'replace' | 'modify_tone' | 'add_examples' | 'adjust_complexity',
                         };
                         setEditingRule(prev => ({ ...prev, actions: newActions }));
                       }}
@@ -1020,7 +1020,7 @@ function RuleEditorModal({ rule, onSave, onCancel }: {
                         onClick={() => {
                           setEditingRule(prev => ({
                             ...prev,
-                            actions: prev.actions.filter(a => a.id !== action.id)
+                            actions: prev.actions.filter(a => a.id !== action.id),
                           }));
                         }}
                         className="px-2 py-1 bg-red-500/20 text-red-400 rounded-r border border-red-500/30 hover:bg-red-500/30"

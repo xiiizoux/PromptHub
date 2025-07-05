@@ -206,7 +206,7 @@ function extractSection(content: string, sectionTitle: string): string {
 
 function extractListSection(content: string, sectionTitle: string): string[] {
   const section = extractSection(content, sectionTitle);
-  if (!section) return [];
+  if (!section) {return [];}
   
   return section
     .split('\n')

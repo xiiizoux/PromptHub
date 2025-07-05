@@ -48,7 +48,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             context_used: ['用户偏好', '历史对话'],
             adaptations_made: ['语调调整', '内容简化'],
             processing_time: 2.3,
-            tokens_used: 180
+            tokens_used: 180,
           },
           {
             id: '2',
@@ -62,7 +62,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             context_used: ['用户偏好', '会话历史'],
             adaptations_made: ['格式调整'],
             processing_time: 1.8,
-            tokens_used: 145
+            tokens_used: 145,
           },
           {
             id: '3',
@@ -76,7 +76,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             context_used: ['技术背景', '偏好设置'],
             adaptations_made: ['详细程度增加', '技术术语解释'],
             processing_time: 3.1,
-            tokens_used: 220
+            tokens_used: 220,
           },
           {
             id: '4',
@@ -90,13 +90,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             context_used: ['商业背景', '决策偏好'],
             adaptations_made: ['数据重点突出', 'ROI分析加强'],
             processing_time: 2.7,
-            tokens_used: 195
-          }
+            tokens_used: 195,
+          },
         ];
 
         // 根据时间过滤器过滤数据
         const now = new Date();
-        let filterDate = new Date();
+        const filterDate = new Date();
         
         switch (timeFilter) {
           case 'week':
@@ -116,7 +116,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         }
 
         const filteredInteractions = interactions.filter(interaction =>
-          new Date(interaction.timestamp) >= filterDate
+          new Date(interaction.timestamp) >= filterDate,
         );
         
         res.status(200).json(filteredInteractions);

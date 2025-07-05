@@ -135,7 +135,7 @@ export function useRouteGuard(
   // 监听路由变化
   useEffect(() => {
     const handleRouteChangeStart = async (url: string) => {
-      if (!hasUnsavedChangesRef.current) return;
+      if (!hasUnsavedChangesRef.current) {return;}
 
       const currentOptions = optionsRef.current;
       

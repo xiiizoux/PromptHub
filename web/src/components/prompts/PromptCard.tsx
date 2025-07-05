@@ -20,7 +20,7 @@ interface PromptCardProps {
 
 // 格式化日期函数 - 移到组件外部
 const formatDate = (dateString?: string) => {
-  if (!dateString) return '未知日期';
+  if (!dateString) {return '未知日期';}
   const date = new Date(dateString);
   return date.toLocaleDateString('zh-CN', { 
     year: 'numeric', 
@@ -41,7 +41,7 @@ const PromptCard: React.FC<PromptCardProps> = React.memo(({ prompt }) => {
   }, [prompt?.average_rating, prompt?.rating]);
 
   const tagsToShow = useMemo(() => {
-    if (!prompt?.tags || prompt.tags.length === 0) return null;
+    if (!prompt?.tags || prompt.tags.length === 0) {return null;}
     return {
       visible: prompt.tags.slice(0, 3),
       remaining: Math.max(0, prompt.tags.length - 3),

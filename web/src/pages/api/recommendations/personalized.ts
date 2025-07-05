@@ -77,7 +77,7 @@ async function getUserBehavior(userId: string) {
     .order('created_at', { ascending: false })
     .limit(100);
 
-  if (usageError) throw usageError;
+  if (usageError) {throw usageError;}
 
   // 获取用户收藏
   const { data: bookmarks, error: bookmarksError } = await supabase
@@ -93,7 +93,7 @@ async function getUserBehavior(userId: string) {
     .eq('user_id', userId)
     .eq('type', 'bookmark');
 
-  if (bookmarksError) throw bookmarksError;
+  if (bookmarksError) {throw bookmarksError;}
 
   // 获取用户评分
   const { data: ratings, error: ratingsError } = await supabase
@@ -108,7 +108,7 @@ async function getUserBehavior(userId: string) {
     `)
     .eq('user_id', userId);
 
-  if (ratingsError) throw ratingsError;
+  if (ratingsError) {throw ratingsError;}
 
   // 分析用户偏好
   const preferences = analyzeUserPreferences(usageHistory || [], bookmarks || [], ratings || []);
@@ -212,7 +212,7 @@ async function getCandidatePrompts(userId: string, limit: number) {
     .order('created_at', { ascending: false })
     .limit(limit);
 
-  if (error) throw error;
+  if (error) {throw error;}
 
   return prompts || [];
 }

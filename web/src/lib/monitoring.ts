@@ -212,7 +212,7 @@ export class WebMonitor {
     for (const action of relevantActions.filter(a => a.action === 'page_view')) {
       const stats = pageStats.get(action.page) || { views: 0, users: new Set() };
       stats.views++;
-      if (action.userId) stats.users.add(action.userId);
+      if (action.userId) {stats.users.add(action.userId);}
       pageStats.set(action.page, stats);
     }
 

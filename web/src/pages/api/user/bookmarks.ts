@@ -84,7 +84,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // 格式化收藏夹数据
     const formattedBookmarks = bookmarks.map((bookmark) => {
       const prompt = bookmark.prompts;
-      if (!prompt) return null;
+      if (!prompt) {return null;}
 
       const author = prompt.users?.display_name || prompt.users?.username || '匿名用户';
       return {

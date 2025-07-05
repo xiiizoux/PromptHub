@@ -48,7 +48,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             satisfaction_score: 4.5,
             context_adaptations: 8,
             learning_points: ['用户偏好简洁回答', '倾向创意性建议'],
-            status: 'completed'
+            status: 'completed',
           },
           {
             id: '2',
@@ -62,7 +62,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             satisfaction_score: 4.8,
             context_adaptations: 5,
             learning_points: ['用户喜欢详细步骤', '技术背景深厚'],
-            status: 'completed'
+            status: 'completed',
           },
           {
             id: '3',
@@ -76,8 +76,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             satisfaction_score: 4.2,
             context_adaptations: 12,
             learning_points: ['关注ROI分析', '偏好数据驱动决策'],
-            status: 'completed'
-          }
+            status: 'completed',
+          },
         ];
 
         // 根据查询参数过滤数据
@@ -89,13 +89,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           const maxScore = satisfactionFilter === 'high' ? 5 :
                           satisfactionFilter === 'medium' ? 4.4 : 3.4;
           filteredSessions = filteredSessions.filter(s => 
-            s.satisfaction_score >= minScore && s.satisfaction_score <= maxScore
+            s.satisfaction_score >= minScore && s.satisfaction_score <= maxScore,
           );
         }
 
         if (search) {
           filteredSessions = filteredSessions.filter(s =>
-            s.prompt_name.toLowerCase().includes(search.toString().toLowerCase())
+            s.prompt_name.toLowerCase().includes(search.toString().toLowerCase()),
           );
         }
         

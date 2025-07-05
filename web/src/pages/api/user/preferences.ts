@@ -43,7 +43,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           output_length: 'medium',
           creative_freedom: 7,
           factual_accuracy: 9,
-          personalization_level: 8
+          personalization_level: 8,
         };
         
         res.status(200).json(preferences);

@@ -39,7 +39,7 @@ export default function RegisterPage() {
   
   // 检查用户是否已经登录
   useEffect(() => {
-    if (typeof window === 'undefined') return;
+    if (typeof window === 'undefined') {return;}
     
     const checkSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();

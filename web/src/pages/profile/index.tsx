@@ -277,7 +277,7 @@ const ProfilePage = () => {
   // 简化的API密钥获取函数，专门用于统计
   const fetchApiKeysForStats = async () => {
     try {
-      if (!user?.id) return;
+      if (!user?.id) {return;}
       
       const { default: supabaseAdapter } = await import('@/lib/supabase-adapter');
       const apiKeysList = await supabaseAdapter.listApiKeys(user.id);
@@ -453,7 +453,7 @@ const ProfilePage = () => {
 
   // 处理提示词页面变更
   const handlePromptPageChange = (page: number) => {
-    if (!isMountedRef.current) return;
+    if (!isMountedRef.current) {return;}
     if (page >= 1 && page <= promptTotalPages) {
       setPromptCurrentPage(page);
     }
@@ -480,7 +480,7 @@ const ProfilePage = () => {
 
   // 获取用户提示词
   const fetchUserPrompts = async (page: number = 1, type?: string) => {
-    if (!user?.id || !isMountedRef.current) return;
+    if (!user?.id || !isMountedRef.current) {return;}
 
     // 取消之前的请求
     if (abortControllerRef.current) {
@@ -523,7 +523,7 @@ const ProfilePage = () => {
 
       const data = await response.json();
 
-      if (!isMountedRef.current) return;
+      if (!isMountedRef.current) {return;}
 
       safeSetState(() => {
         if (data.success) {
@@ -565,7 +565,7 @@ const ProfilePage = () => {
       }
       
       console.error('获取用户提示词失败:', error);
-      if (!isMountedRef.current) return;
+      if (!isMountedRef.current) {return;}
 
       safeSetState(() => {
         setUserPrompts([]);
@@ -584,7 +584,7 @@ const ProfilePage = () => {
 
   // 获取收藏夹
   const fetchBookmarks = async () => {
-    if (!isMountedRef.current) return;
+    if (!isMountedRef.current) {return;}
     
     safeSetState(() => setBookmarksLoading(true));
     
@@ -622,7 +622,7 @@ const ProfilePage = () => {
 
       if (response.ok) {
         const data = await response.json();
-        if (!isMountedRef.current) return;
+        if (!isMountedRef.current) {return;}
         
         safeSetState(() => {
           setBookmarks(Array.isArray(data) ? data : []);
@@ -636,7 +636,7 @@ const ProfilePage = () => {
           error: errorData.error || '未知错误',
         });
         
-        if (!isMountedRef.current) return;
+        if (!isMountedRef.current) {return;}
         
         // 根据错误类型提供不同的降级处理
         safeSetState(() => {
@@ -658,7 +658,7 @@ const ProfilePage = () => {
     } catch (error: any) {
       console.error('获取收藏夹网络错误:', error);
       
-      if (!isMountedRef.current) return;
+      if (!isMountedRef.current) {return;}
       
       // 区分不同类型的错误
       safeSetState(() => {
@@ -687,7 +687,7 @@ const ProfilePage = () => {
 
   // 获取用户评分评论
   const fetchUserRatings = async () => {
-          if (!isMountedRef.current) return;
+          if (!isMountedRef.current) {return;}
           
           safeSetState(() => setRatingsLoading(true));
           
@@ -727,7 +727,7 @@ const ProfilePage = () => {
         
               if (response.ok) {
                 const data = await response.json();
-                if (!isMountedRef.current) return;
+                if (!isMountedRef.current) {return;}
                 
                 safeSetState(() => {
                   if (data.success && Array.isArray(data.ratings)) {
@@ -749,12 +749,12 @@ const ProfilePage = () => {
               } else if (response.status === 404) {
                 // API端点不存在，使用空数组
                 console.log('评分API端点不存在，设置为空数组');
-                if (!isMountedRef.current) return;
+                if (!isMountedRef.current) {return;}
                 safeSetState(() => setUserRatings([]));
               } else {
                 // 其他错误，尝试降级处理
                 console.error('获取评分失败:', response.status);
-                if (!isMountedRef.current) return;
+                if (!isMountedRef.current) {return;}
                 safeSetState(() => {
                   setErrors(prev => ({ ...prev, ratings: `服务器错误 (${response.status})，尝试使用备用数据源...` }));
                 });
@@ -769,7 +769,7 @@ const ProfilePage = () => {
               }
               
               // 设置API错误状态并尝试降级处理
-              if (!isMountedRef.current) return;
+              if (!isMountedRef.current) {return;}
               safeSetState(() => {
                 setErrors(prev => ({ ...prev, ratings: `API请求失败：${apiError.message || '网络错误'}，尝试备用数据源...` }));
               });
@@ -778,7 +778,7 @@ const ProfilePage = () => {
           } catch (error: any) {
             console.error('获取评分评论失败:', error);
             
-            if (!isMountedRef.current) return;
+            if (!isMountedRef.current) {return;}
             
             safeSetState(() => {
               setUserRatings([]);
@@ -802,7 +802,7 @@ const ProfilePage = () => {
               // 检查用户是否存在
               if (!user?.id) {
                 console.log('用户不存在，无法获取评分数据');
-                if (!isMountedRef.current) return;
+                if (!isMountedRef.current) {return;}
                 safeSetState(() => setUserRatings([]));
                 return;
               }
@@ -824,7 +824,7 @@ const ProfilePage = () => {
                 .order('created_at', { ascending: false });
         
               if (!error && ratingsData && ratingsData.length > 0) {
-                if (!isMountedRef.current) return;
+                if (!isMountedRef.current) {return;}
                 
                 const formattedRatings = ratingsData.map((item: any) => ({
                   id: item.id,
@@ -841,7 +841,7 @@ const ProfilePage = () => {
               } else {
                 // 如果还是失败，设置为空数组
                 console.log('降级方案也失败，设置为空数组');
-                if (!isMountedRef.current) return;
+                if (!isMountedRef.current) {return;}
                 safeSetState(() => {
                   setUserRatings([]);
                   setErrors(prev => ({ ...prev, ratings: '无法加载评分评论数据，请稍后重试' }));
@@ -849,7 +849,7 @@ const ProfilePage = () => {
               }
             } catch (fallbackError) {
               console.error('降级方案失败:', fallbackError);
-              if (!isMountedRef.current) return;
+              if (!isMountedRef.current) {return;}
               safeSetState(() => {
                 setUserRatings([]);
                 setErrors(prev => ({ ...prev, ratings: `加载评分评论失败，无法从备用数据源获取：${fallbackError instanceof Error ? fallbackError.message : '未知错误'}` }));
@@ -867,7 +867,7 @@ const ProfilePage = () => {
   // 导出数据
   const handleExportData = async () => {
     try {
-      if (!user?.id) return;
+      if (!user?.id) {return;}
       
       // 获取用户所有数据
       const exportData = {
@@ -1349,7 +1349,7 @@ const ProfilePage = () => {
 
   // 渲染提示词分页组件
   const renderPromptPagination = () => {
-    if (promptTotalPages <= 1) return null;
+    if (promptTotalPages <= 1) {return null;}
 
     const maxVisiblePages = 7; // 显示7个页码
     const startPage = Math.max(1, promptCurrentPage - Math.floor(maxVisiblePages / 2));
@@ -1428,7 +1428,7 @@ const ProfilePage = () => {
   };
 
   const maskApiKey = (key: string) => {
-    if (key.length <= 8) return key;
+    if (key.length <= 8) {return key;}
     return key.substring(0, 4) + '••••••••' + key.substring(key.length - 4);
   };
   

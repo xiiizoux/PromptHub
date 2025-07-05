@@ -62,7 +62,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       .eq('session_id', session.id)
       .eq('is_active', true);
 
-    if (participantsError) throw participantsError;
+    if (participantsError) {throw participantsError;}
 
     // 清理非活跃用户（超过5分钟未活动）
     const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
@@ -99,7 +99,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       .eq('session_id', session.id)
       .eq('is_active', true);
 
-    if (locksError) throw locksError;
+    if (locksError) {throw locksError;}
 
     // 清理过期锁定（超过10分钟）
     const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000);

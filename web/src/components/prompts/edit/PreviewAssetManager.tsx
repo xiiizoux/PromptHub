@@ -51,8 +51,8 @@ export default function PreviewAssetManager({
 
   // 格式化文件大小
   const formatFileSize = (bytes: number) => {
-    if (bytes < 1024) return `${bytes} B`;
-    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    if (bytes < 1024) {return `${bytes} B`;}
+    if (bytes < 1024 * 1024) {return `${(bytes / 1024).toFixed(1)} KB`;}
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   };
 
@@ -139,7 +139,7 @@ export default function PreviewAssetManager({
 
   // 处理文件选择
   const handleFileSelect = async (files: FileList) => {
-    if (disabled) return;
+    if (disabled) {return;}
 
     const fileArray = Array.from(files);
     
@@ -172,7 +172,7 @@ export default function PreviewAssetManager({
   // 处理拖拽上传
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
-    if (!disabled) setDragOver(true);
+    if (!disabled) {setDragOver(true);}
   };
 
   const handleDragLeave = (e: React.DragEvent) => {
@@ -183,7 +183,7 @@ export default function PreviewAssetManager({
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setDragOver(false);
-    if (disabled) return;
+    if (disabled) {return;}
     
     const files = e.dataTransfer.files;
     if (files.length > 0) {

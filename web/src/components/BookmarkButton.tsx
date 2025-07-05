@@ -50,7 +50,7 @@ export const BookmarkButton: React.FC<BookmarkButtonProps> = React.memo(({
       return;
     }
 
-    if (isLoading) return;
+    if (isLoading) {return;}
 
     setIsLoading(true);
     
