@@ -49,6 +49,30 @@ export interface PromptVersion {
   user_id: string;                            // 创建者ID
 }
 
+// 智能删除保护系统相关类型定义
+
+/**
+ * 提示词删除/归档类型枚举
+ */
+export type PromptDeletionType = 'deleted' | 'archived' | 'restored' | 'error';
+
+/**
+ * 提示词删除/归档结果类型
+ */
+export interface PromptDeletionResult {
+  success: boolean;
+  type: PromptDeletionType;
+  message: string;
+  details?: string;
+  affectedUsers?: number;
+  preservedData?: Record<string, any>;
+  transferredAt?: string;
+  error?: string;
+  canRestore?: boolean;           // 是否可以恢复
+  transferReason?: string;        // 转移原因
+}
+
+
 // 版本比较结果
 export interface VersionComparison {
   current: PromptVersion;

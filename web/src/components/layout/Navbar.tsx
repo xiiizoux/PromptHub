@@ -17,6 +17,7 @@ import {
   ChatBubbleLeftRightIcon,
   PhotoIcon,
   FilmIcon,
+  ArchiveBoxIcon,
 } from '@heroicons/react/24/outline';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'react-hot-toast';
@@ -273,6 +274,10 @@ const Navbar: React.FC = () => {
                       <UserIcon className="h-5 w-5" />
                       <span>个人资料</span>
                     </Link>
+                    <Link href="/prompts/archived" className="flex items-center space-x-3 px-4 py-3 text-gray-300 hover:text-neon-cyan hover:bg-neon-cyan/10 transition-all">
+                      <ArchiveBoxIcon className="h-5 w-5" />
+                      <span>我的归档</span>
+                    </Link>
                     <div className="border-t border-neon-cyan/10 my-1" />
                     <button
                       onClick={handleLogout}
@@ -361,6 +366,14 @@ const Navbar: React.FC = () => {
                     >
                       <UserIcon className="h-5 w-5" />
                       <span>个人资料</span>
+                    </Link>
+                    <Link
+                      href="/prompts/archived"
+                      className="flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-400 hover:text-neon-cyan hover:bg-neon-cyan/5 transition-all"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      <ArchiveBoxIcon className="h-5 w-5" />
+                      <span>我的归档</span>
                     </Link>
                     <button
                       onClick={() => {

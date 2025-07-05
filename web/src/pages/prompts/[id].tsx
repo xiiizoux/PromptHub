@@ -427,19 +427,13 @@ export default function PromptDetailsPage() {
     }
   };
 
-  // 删除提示词
+  // 删除提示词 - 智能检测版本
   const handleDeletePrompt = async () => {
     if (!prompt || !user) {
       toast.error('请先登录');
       return;
     }
 
-    // 确认删除
-    if (!confirm(`确定要删除提示词"${prompt.name}"吗？此操作不可撤销。`)) {
-      return;
-    }
-
-    setIsDeleting(true);
     try {
       // 获取认证令牌
       const token = await getToken();
@@ -448,10 +442,59 @@ export default function PromptDetailsPage() {
         return;
       }
 
-      // 先删除关联的媒体文件
-      await deleteMediaFiles(token);
+      // 🔍 第一步：检查删除策略
+      const policyResponse = await fetch(`/api/prompts/check-deletion-policy`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ promptId: prompt.id }),
+      });
 
-      // 然后删除提示词记录
+      if (!policyResponse.ok) {
+        const error = await policyResponse.json();
+        toast.error('策略检查失败: ' + (error.message || '未知错误'));
+        return;
+      }
+
+      const policy = await policyResponse.json();
+
+      // 🎯 根据策略显示不同的确认对话框
+      let confirmMessage = '';
+      if (policy.mustArchive) {
+        confirmMessage = `⚠️ 检测到关联数据保护
+
+提示词"${prompt.name}"有 ${policy.contextUsersCount} 个用户正在使用：
+• 系统将自动归档此提示词（不会删除）
+• 提示词从您的列表中移除，但保持完整功能
+• 其他用户的个性化配置将得到保护
+• 您可以随时从"我的归档"中恢复
+
+原因：${policy.reason}
+
+确定要归档此提示词吗？`;
+      } else if (policy.canDelete) {
+        confirmMessage = `🗑️ 安全删除确认
+
+提示词"${prompt.name}"可以安全删除：
+• 没有其他用户在使用此提示词
+• 所有相关数据将被永久删除
+• 此操作不可恢复
+
+确定要删除此提示词吗？`;
+      } else {
+        toast.error(`无法操作此提示词：${policy.reason}`);
+        return;
+      }
+
+      if (!confirm(confirmMessage)) {
+        return;
+      }
+
+      setIsDeleting(true);
+
+      // 🎯 第二步：执行智能删除
       const response = await fetch(`/api/prompts/${prompt.id}`, {
         method: 'DELETE',
         headers: {
@@ -461,7 +504,52 @@ export default function PromptDetailsPage() {
       });
 
       if (response.ok) {
-        toast.success('提示词及相关文件已成功删除');
+        const result = await response.json();
+        
+        // 🎯 根据结果类型显示不同的成功消息
+        if (result.type === 'archived') {
+          // 显示归档成功信息
+          toast.success(
+            <div className="space-y-2">
+              <div className="font-semibold text-blue-800">📚 智能归档成功！</div>
+              <div className="text-sm text-blue-700">
+                {result.details}
+              </div>
+              {result.affectedUsers > 0 && (
+                <div className="text-sm text-green-700">
+                  ✓ 已保护 {result.affectedUsers} 个用户的个性化配置
+                </div>
+              )}
+              <div className="text-xs text-gray-600 mt-1 space-y-1">
+                <div>• 您可以在"我的归档"中找到此提示词</div>
+                <div>• 点击"恢复"即可重新激活</div>
+                <div>• 其他用户可以继续正常使用</div>
+              </div>
+            </div>,
+            { 
+              duration: 8000,
+              className: 'bg-blue-50 border-blue-200'
+            }
+          );
+        } else if (result.type === 'deleted') {
+          // 显示删除成功信息
+          toast.success(
+            <div className="space-y-2">
+              <div className="font-semibold text-green-800">🗑️ 删除成功！</div>
+              <div className="text-sm text-green-700">
+                {result.details}
+              </div>
+              <div className="text-xs text-gray-600 mt-1">
+                • 所有相关数据已永久删除
+              </div>
+            </div>,
+            { duration: 5000 }
+          );
+        } else {
+          // 默认成功消息
+          toast.success(result.message || '操作成功');
+        }
+
         // 根据提示词类型跳转到对应的页面
         const redirectPath = (() => {
           switch (prompt.category_type) {
@@ -474,17 +562,20 @@ export default function PromptDetailsPage() {
               return '/prompts';
           }
         })();
-        // 使用 setTimeout 延迟跳转，让用户看到成功提示
+
+        // 给用户足够时间阅读信息
+        const redirectDelay = result.type === 'archived' ? 4000 : 2000;
+        
         setTimeout(() => {
           router.push(redirectPath);
-        }, 1000);
+        }, redirectDelay);
       } else {
         const error = await response.json();
-        throw new Error(error.message || '删除提示词失败');
+        throw new Error(error.message || '操作失败');
       }
     } catch (error: any) {
       console.error('删除提示词失败:', error);
-      toast.error(`删除提示词失败: ${error.message || '请检查您的权限或网络连接'}`);
+      toast.error(`操作失败: ${error.message || '请检查您的权限或网络连接'}`);
     } finally {
       setIsDeleting(false);
     }

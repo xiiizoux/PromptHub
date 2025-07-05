@@ -188,28 +188,54 @@ async function updatePrompt(req: NextApiRequest, res: NextApiResponse, id: strin
 
 async function deletePrompt(req: NextApiRequest, res: NextApiResponse, id: string, userId: string) {
   try {
-    // 使用数据库服务删除提示词
-    const success = await databaseService.deletePrompt(id, userId);
+    // 使用增强的数据库服务删除提示词
+    const deleteResult = await databaseService.deletePromptEnhanced(id, userId);
 
-    if (!success) {
-      return errorResponse(res, '删除提示词失败', ErrorCode.INTERNAL_SERVER_ERROR);
+    if (!deleteResult.success) {
+      return errorResponse(res, deleteResult.message || '删除提示词失败', ErrorCode.INTERNAL_SERVER_ERROR);
     }
 
-    logger.info('提示词删除成功', { promptId: id, userId });
+    // 根据删除类型记录不同的日志和返回不同的消息
+    const logData = { 
+      promptId: id, 
+      userId, 
+      deleteType: deleteResult.type,
+      affectedUsers: deleteResult.affectedUsers || 0
+    };
 
-    return successResponse(res, {
-      message: '提示词删除成功',
-    });
+    if (deleteResult.type === 'archived') {
+      logger.info('提示词删除 - 已归档保护', logData);
+      
+      return successResponse(res, {
+        message: '已归档',
+        type: 'archived',
+        details: deleteResult.details,
+        affectedUsers: deleteResult.affectedUsers,
+        notice: '提示词已归档到您的个人归档中，其他用户的个性化配置得到保护。您可以随时从归档中恢复。'
+      });
+    } else {
+      logger.info('提示词删除 - 完全删除', logData);
+      
+      return successResponse(res, {
+        message: '提示词删除成功',
+        type: 'deleted',
+        details: deleteResult.message
+      });
+    }
   } catch (error: any) {
     logger.error('删除提示词失败', error, { promptId: id, userId });
 
+    // 增强错误处理
     if (error.message?.includes('不存在')) {
       return errorResponse(res, '未找到指定的提示词', ErrorCode.NOT_FOUND);
     }
     if (error.message?.includes('无权限')) {
       return errorResponse(res, '无权限删除此提示词', ErrorCode.FORBIDDEN);
     }
+    if (error.message?.includes('系统用户')) {
+      return errorResponse(res, '无法删除系统保护的提示词', ErrorCode.FORBIDDEN);
+    }
 
-    return errorResponse(res, '删除提示词失败', ErrorCode.INTERNAL_SERVER_ERROR);
+    return errorResponse(res, '删除提示词失败: ' + (error.message || '未知错误'), ErrorCode.INTERNAL_SERVER_ERROR);
   }
 }

@@ -6,7 +6,7 @@
  */
 
 import { SupabaseAdapter, Prompt, PromptFilters, PaginatedResponse, Category, PromptContentJsonb, OptimizationTemplateJsonb } from './supabase-adapter';
-import type { PromptTemplate, TemplateCategory, TemplateVariable, TemplateField } from '../types';
+import type { PromptTemplate, TemplateCategory, TemplateVariable, TemplateField, PromptDeletionResult } from '../types';
 import {
   extractContentFromJsonb,
   extractTemplateFromJsonb,
@@ -503,6 +503,28 @@ export class DatabaseService {
       }
       updateData.updated_at = new Date().toISOString();
 
+      // 🛡️ 保护检查：如果要将公开提示词改为私有，检查是否有其他用户的context数据
+      if (promptData.is_public !== undefined && 
+          existingPrompt.is_public === true && 
+          promptData.is_public === false && 
+          userId) {
+        
+        const { data: protectionCheck, error: protectionError } = await this.adapter.supabase
+          .rpc('can_make_prompt_private', {
+            prompt_id_param: existingPrompt.id,
+            user_id_param: userId
+          });
+
+        if (protectionError) {
+          throw new Error(`权限检查失败: ${protectionError.message}`);
+        }
+
+        const protection = protectionCheck[0];
+        if (protection && !protection.can_convert) {
+          throw new Error(protection.reason);
+        }
+      }
+
       // 执行更新
       const { data, error } = await this.adapter.supabase
         .from('prompts')
@@ -620,6 +642,191 @@ export class DatabaseService {
       return !error;
     } catch (error) {
       console.error('删除提示词失败:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * 智能删除/归档方法 - 检测后决定删除还是归档
+   * @param promptId 提示词ID
+   * @param userId 用户ID
+   * @returns 删除/归档结果详情
+   */
+  async deletePromptEnhanced(promptId: string, userId: string): Promise<PromptDeletionResult> {
+    try {
+      // 🎯 第一步：检查删除策略
+      const { data: policyCheck, error: policyError } = await this.adapter.supabase
+        .rpc('check_prompt_deletion_policy', {
+          prompt_id_param: promptId,
+          user_id_param: userId
+        });
+
+      if (policyError) {
+        throw new Error(`策略检查失败: ${policyError.message}`);
+      }
+
+      const policy = policyCheck[0];
+      if (!policy) {
+        throw new Error('无法获取删除策略');
+      }
+
+      // 🚫 不能删除也不能归档的情况
+      if (!policy.can_delete && !policy.must_archive) {
+        return {
+          success: false,
+          type: 'error',
+          message: policy.reason,
+          details: '操作被拒绝'
+        };
+      }
+
+      // 📚 必须归档的情况
+      if (policy.must_archive) {
+        const { data: archiveResult, error: archiveError } = await this.adapter.supabase
+          .rpc('archive_user_prompt', {
+            prompt_id_param: promptId,
+            user_id_param: userId,
+            reason_param: policy.reason
+          });
+
+        if (archiveError) {
+          throw new Error(`归档失败: ${archiveError.message}`);
+        }
+
+        return {
+          success: true,
+          type: 'archived',
+          message: '提示词已归档',
+          details: `${policy.reason}。提示词已从您的列表中移除，但仍保持公开状态，其他用户可以正常使用。您可以随时取消归档。`,
+          affectedUsers: policy.context_users_count,
+          canRestore: true,
+          transferReason: policy.reason
+        };
+      }
+
+      // 🗑️ 可以安全删除的情况
+      if (policy.can_delete) {
+        // 删除关联的媒体文件
+        const { data: prompt } = await this.adapter.supabase
+          .from('prompts')
+          .select('*')
+          .eq('id', promptId)
+          .single();
+
+        if (prompt) {
+          await this.deletePromptMediaFiles(prompt);
+        }
+
+        // 执行真正的删除
+        const { error: deleteError } = await this.adapter.supabase
+          .from('prompts')
+          .delete()
+          .eq('id', promptId)
+          .eq('user_id', userId);
+
+        if (deleteError) {
+          throw new Error(`删除失败: ${deleteError.message}`);
+        }
+
+        return {
+          success: true,
+          type: 'deleted',
+          message: '提示词已彻底删除',
+          details: '提示词及所有相关数据已永久删除。',
+          affectedUsers: 0
+        };
+      }
+
+      // 理论上不应该到达这里
+      throw new Error('未知的删除策略结果');
+    } catch (error: any) {
+      console.error('智能删除/归档失败:', error);
+      
+      return {
+        success: false,
+        type: 'error',
+        message: error.message || '操作过程中发生未知错误',
+        error: error.message
+      };
+    }
+  }
+
+  /**
+   * 取消归档（恢复到用户活跃列表）
+   * @param promptId 提示词ID
+   * @param userId 用户ID
+   * @returns 取消归档结果
+   */
+  async restoreArchivedPrompt(promptId: string, userId: string): Promise<PromptDeletionResult> {
+    try {
+      const { data: result, error } = await this.adapter.supabase
+        .rpc('unarchive_user_prompt', {
+          prompt_id_param: promptId,
+          user_id_param: userId
+        });
+
+      if (error) {
+        throw new Error(`取消归档失败: ${error.message}`);
+      }
+
+      if (!result) {
+        throw new Error('未找到归档记录或取消归档失败');
+      }
+
+      return {
+        success: true,
+        type: 'restored',
+        message: '已取消归档',
+        details: '提示词已重新出现在您的活跃列表中。'
+      };
+    } catch (error: any) {
+      console.error('取消归档失败:', error);
+      
+      return {
+        success: false,
+        type: 'error',
+        message: error.message || '取消归档过程中发生未知错误',
+        error: error.message
+      };
+    }
+  }
+
+  /**
+   * 检查删除策略
+   * @param promptId 提示词ID
+   * @param userId 用户ID
+   * @returns 删除策略信息
+   */
+  async checkDeletionPolicy(promptId: string, userId: string): Promise<{
+    canDelete: boolean;
+    mustArchive: boolean;
+    reason: string;
+    contextUsersCount: number;
+  }> {
+    try {
+      const { data: policyCheck, error: policyError } = await this.adapter.supabase
+        .rpc('check_prompt_deletion_policy', {
+          prompt_id_param: promptId,
+          user_id_param: userId
+        });
+
+      if (policyError) {
+        throw new Error(`策略检查失败: ${policyError.message}`);
+      }
+
+      const policy = policyCheck[0];
+      if (!policy) {
+        throw new Error('无法获取删除策略');
+      }
+
+      return {
+        canDelete: policy.can_delete,
+        mustArchive: policy.must_archive,
+        reason: policy.reason,
+        contextUsersCount: policy.context_users_count
+      };
+    } catch (error: any) {
+      console.error('检查删除策略失败:', error);
       throw error;
     }
   }
