@@ -39,7 +39,7 @@ export const BookmarkButton: React.FC<BookmarkButtonProps> = React.memo(({
 
   // 在组件挂载时请求加载此提示词的互动数据
   useEffect(() => {
-    if (mounted && promptId && !interaction) {
+    if (mounted && promptId && typeof promptId === 'string' && promptId.trim() !== '' && !interaction) {
       loadInteractions([promptId]);
     }
   }, [mounted, promptId, interaction, loadInteractions]);

@@ -25,8 +25,14 @@ export const InteractionsProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
   // 批量加载互动数据
   const loadInteractions = useCallback(async (promptIds: string[]) => {
-    // 过滤掉已经加载的提示词
-    const newPromptIds = promptIds.filter(id => !interactions[id] && !loadingPrompts.has(id));
+    // 过滤掉空值、无效值和已经加载的提示词
+    const newPromptIds = promptIds.filter(id => 
+      id && 
+      typeof id === 'string' && 
+      id.trim() !== '' && 
+      !interactions[id] && 
+      !loadingPrompts.has(id)
+    );
     
     if (newPromptIds.length === 0) {return;}
 

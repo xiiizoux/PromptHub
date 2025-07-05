@@ -54,7 +54,7 @@ export function useBeforeUnload(
           setPendingUrl(url);
           setShowConfirmDialog(true);
           router.events.emit('routeChangeError');
-          throw 'Route change aborted by user - showing custom dialog';
+          throw new Error('Route change aborted by user - showing custom dialog');
         } else {
           // 使用默认的confirm对话框
           const shouldLeave = window.confirm(
@@ -62,7 +62,7 @@ export function useBeforeUnload(
           );
           if (!shouldLeave) {
             router.events.emit('routeChangeError');
-            throw 'Route change aborted by user';
+            throw new Error('Route change aborted by user');
           }
         }
       }
@@ -144,7 +144,7 @@ export function useRouteGuard(
         const result = await currentOptions.onLeaveConfirm();
         if (!result) {
           router.events.emit('routeChangeError');
-          throw 'Route change aborted by user confirmation';
+          throw new Error('Route change aborted by user confirmation');
         }
         return;
       }
@@ -156,7 +156,7 @@ export function useRouteGuard(
       
       if (!shouldLeave) {
         router.events.emit('routeChangeError');
-        throw 'Route change aborted by user';
+        throw new Error('Route change aborted by user');
       }
     };
 

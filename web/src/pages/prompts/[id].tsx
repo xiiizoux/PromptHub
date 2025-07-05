@@ -430,7 +430,7 @@ export default function PromptDetailsPage() {
   // 删除提示词
   const handleDeletePrompt = async () => {
     if (!prompt || !user) {
-      alert('请先登录');
+      toast.error('请先登录');
       return;
     }
 
@@ -444,7 +444,7 @@ export default function PromptDetailsPage() {
       // 获取认证令牌
       const token = await getToken();
       if (!token) {
-        alert('无法获取认证令牌，请重新登录');
+        toast.error('无法获取认证令牌，请重新登录');
         return;
       }
 
@@ -461,7 +461,7 @@ export default function PromptDetailsPage() {
       });
 
       if (response.ok) {
-        alert('提示词及相关文件已成功删除');
+        toast.success('提示词及相关文件已成功删除');
         // 根据提示词类型跳转到对应的页面
         const redirectPath = (() => {
           switch (prompt.category_type) {
@@ -474,14 +474,17 @@ export default function PromptDetailsPage() {
               return '/prompts';
           }
         })();
-        router.push(redirectPath);
+        // 使用 setTimeout 延迟跳转，让用户看到成功提示
+        setTimeout(() => {
+          router.push(redirectPath);
+        }, 1000);
       } else {
         const error = await response.json();
         throw new Error(error.message || '删除提示词失败');
       }
     } catch (error: any) {
       console.error('删除提示词失败:', error);
-      alert(`删除提示词失败: ${error.message || '请检查您的权限或网络连接'}`);
+      toast.error(`删除提示词失败: ${error.message || '请检查您的权限或网络连接'}`);
     } finally {
       setIsDeleting(false);
     }

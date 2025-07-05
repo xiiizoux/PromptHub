@@ -578,6 +578,11 @@ const interactionCache = new Map<string, {
 }>();
 
 export async function getPromptInteractions(promptId: string): Promise<PromptInteractions> {
+  // 输入验证
+  if (!promptId || typeof promptId !== 'string' || promptId.trim() === '') {
+    throw new Error('Invalid promptId provided');
+  }
+  
   // 检查缓存
   const cacheKey = `interactions:${promptId}`;
   const cached = interactionCache.get(cacheKey);
