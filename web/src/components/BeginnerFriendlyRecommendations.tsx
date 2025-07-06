@@ -44,6 +44,7 @@ interface BeginnerFriendlyRecommendationsProps {
   className?: string;
   userLevel?: 'beginner' | 'intermediate' | 'advanced';
   showLearningPath?: boolean;
+  _showLearningPath?: boolean;
 }
 
 interface LearningPath {
@@ -71,11 +72,13 @@ interface PersonalizedRecommendation {
   title: string;
   description: string;
   reason: string;
+  confidence: number;
   difficulty: 'beginner' | 'intermediate' | 'advanced';
   estimatedTime: string;
   actionUrl: string;
   popularity: number;
   category: string;
+  tags: string[];
 }
 
 // 初学者学习路径
@@ -207,13 +210,14 @@ export const BeginnerFriendlyRecommendations: React.FC<BeginnerFriendlyRecommend
   maxRecommendations = 9,
   className = '',
   userLevel = 'beginner',
+  showLearningPath = true,
   _showLearningPath = true,
 }) => {
   const { user } = useAuth();
   const { levelData, isLoading: _userLevelLoading } = useUserLevel();
-  const [_recommendations, _setRecommendations] = useState<RecommendationResult[]>([]);
-  const [_learningPaths, _setLearningPaths] = useState<LearningPath[]>([]);
-  const [_personalizedRecs, _setPersonalizedRecs] = useState<PersonalizedRecommendation[]>([]);
+  const [recommendations, setRecommendations] = useState<RecommendationResult[]>([]);
+  const [learningPaths, setLearningPaths] = useState<LearningPath[]>([]);
+  const [personalizedRecs, setPersonalizedRecs] = useState<PersonalizedRecommendation[]>([]);
   const [activeTab, setActiveTab] = useState<'paths' | 'recommendations' | 'achievements'>('paths');
   const [filter, setFilter] = useState<'all' | 'beginner' | 'intermediate' | 'advanced'>('all');
   const [isLoading, setIsLoading] = useState(false);
@@ -289,12 +293,6 @@ export const BeginnerFriendlyRecommendations: React.FC<BeginnerFriendlyRecommend
     return [];
   };
 
-  useEffect(() => {
-    fetchRecommendations();
-    generateLearningPaths();
-    generatePersonalizedRecommendations();
-  }, [userLevel, currentPromptId, userId, fetchRecommendations, generateLearningPaths, generatePersonalizedRecommendations]);
-
   const fetchRecommendations = useCallback(async () => {
     try {
       setIsLoading(true);
@@ -348,12 +346,53 @@ export const BeginnerFriendlyRecommendations: React.FC<BeginnerFriendlyRecommend
   }, [activeTab, user, maxRecommendations, userLevel]);
 
   const generateLearningPaths = useCallback(() => {
-    // Implementation of generateLearningPaths function
+    // Mock implementation for learning paths
+    const mockPaths: LearningPath[] = [
+      {
+        id: '1',
+        title: '提示词基础入门',
+        description: '从零开始学习提示词的基本概念和使用方法',
+        difficulty: 'beginner',
+        estimatedTime: '30分钟',
+        steps: [
+          { id: '1', title: '了解什么是提示词', description: '学习提示词的基本概念', completed: false, type: 'read' },
+          { id: '2', title: '第一个提示词', description: '创建你的第一个提示词', completed: false, type: 'practice' }
+        ],
+        category: '基础教程',
+        tags: ['入门', '基础'],
+        popularity: 95,
+        successRate: 92
+      }
+    ];
+    setLearningPaths(mockPaths);
   }, []);
 
   const generatePersonalizedRecommendations = useCallback(() => {
-    // Implementation of generatePersonalizedRecommendations function
+    // Mock implementation for personalized recommendations
+    const mockRecs: PersonalizedRecommendation[] = [
+      {
+        id: '1',
+        type: 'template',
+        title: '个性化推荐示例',
+        description: '根据您的使用习惯推荐的提示词',
+        reason: '基于您的历史使用',
+        confidence: 0.85,
+        difficulty: 'beginner',
+        estimatedTime: '5分钟',
+        actionUrl: '/prompts/1',
+        popularity: 85,
+        category: '写作助手',
+        tags: ['写作', '创意']
+      }
+    ];
+    setPersonalizedRecs(mockRecs);
   }, []);
+
+  useEffect(() => {
+    fetchRecommendations();
+    generateLearningPaths();
+    generatePersonalizedRecommendations();
+  }, [userLevel, currentPromptId, userId, fetchRecommendations, generateLearningPaths, generatePersonalizedRecommendations]);
 
   const _getRecommendationScore = (score: number) => {
     return Math.round(score * 100);
@@ -365,7 +404,7 @@ export const BeginnerFriendlyRecommendations: React.FC<BeginnerFriendlyRecommend
     return 'text-orange-400 bg-orange-400/10';
   };
 
-  const _getLearningTip = (_prompt: { difficulty?: 'beginner' | 'intermediate' | 'advanced' }) => {
+  const _getLearningTip = (prompt: { difficulty?: 'beginner' | 'intermediate' | 'advanced' }) => {
     const difficulty = prompt.difficulty || 'intermediate';
     
     if (userLevel === 'beginner') {

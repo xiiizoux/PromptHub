@@ -89,7 +89,8 @@ const VideoPromptCard: React.FC<VideoPromptCardProps> = React.memo(({ prompt }) 
 
     // 备用方案：从parameters.media_files获取第一个文件
     if (prompt.parameters?.media_files && Array.isArray(prompt.parameters.media_files) && prompt.parameters.media_files.length > 0) {
-      return prompt.parameters.media_files[0].url;
+      const firstFile = prompt.parameters.media_files[0];
+      return typeof firstFile === 'object' && firstFile !== null && 'url' in firstFile ? (firstFile as any).url : null;
     }
 
     return null;
@@ -104,7 +105,7 @@ const VideoPromptCard: React.FC<VideoPromptCardProps> = React.memo(({ prompt }) 
     
     // 尝试从parameters中获取缩略图
     if (prompt.parameters?.thumbnail_url) {
-      return prompt.parameters.thumbnail_url;
+      return typeof prompt.parameters.thumbnail_url === 'string' ? prompt.parameters.thumbnail_url : String(prompt.parameters.thumbnail_url);
     }
     
     // 如果没有专门的缩略图，可以使用默认缩略图
@@ -312,7 +313,7 @@ const VideoPromptCard: React.FC<VideoPromptCardProps> = React.memo(({ prompt }) 
                 {shouldShowThumbnail && !showVideo && (
                   <>
                     <Image
-                      src={getThumbnailUrl()!}
+                      src={getThumbnailUrl() || ''}
                       alt="视频缩略图"
                       fill
                       className={clsx(

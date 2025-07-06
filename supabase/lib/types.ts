@@ -203,21 +203,8 @@ export interface OptimizationTemplateConversionResult {
 // 数据转换工具类型
 // =============================================
 
-// 内容转换结果
-export interface ContentConversionResult {
-  success: boolean;
-  data?: PromptContentJsonb;
-  error?: string;
-  isLegacy?: boolean;
-}
-
-// 优化模板转换结果
-export interface OptimizationTemplateConversionResult {
-  success: boolean;
-  data?: OptimizationTemplateJsonb;
-  error?: string;
-  isLegacy?: boolean;
-}
+// 注意：ContentConversionResult 和 OptimizationTemplateConversionResult 
+// 已在上面的 "JSONB 数据转换结果类型" 部分定义，避免重复定义
 
 // 提示词使用统计类型
 export interface PromptUsage {

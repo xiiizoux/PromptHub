@@ -74,16 +74,6 @@ export const CollaborativeEditor: React.FC<CollaborativeEditorProps> = ({
     'bg-blue-400', 'bg-green-400', 'bg-orange-400', 'bg-red-400',
   ];
 
-  useEffect(() => {
-    if (!user || !promptId) {return;}
-
-    initializeCollaboration();
-    
-    return () => {
-      cleanup();
-    };
-  }, [user, promptId, initializeCollaboration, cleanup]);
-
   const initializeCollaboration = useCallback(async () => {
     try {
       // 加入协作会话
@@ -116,6 +106,16 @@ export const CollaborativeEditor: React.FC<CollaborativeEditorProps> = ({
       setIsConnected(false);
     }
   }, [session, user, promptId]);
+
+  useEffect(() => {
+    if (!user || !promptId) {return;}
+
+    initializeCollaboration();
+    
+    return () => {
+      cleanup();
+    };
+  }, [user, promptId, initializeCollaboration, cleanup]);
 
   const handleRemoteOperation = (operation: Operation) => {
     if (operation.userId === user?.id) {return;} // 忽略自己的操作
@@ -255,10 +255,10 @@ export const CollaborativeEditor: React.FC<CollaborativeEditorProps> = ({
   const refreshCollaborators = async () => {
     try {
       const status = await getCollaborativeStatus(promptId);
-      const collaboratorList = status.collaborators.map((collab: { lastSeen: string }, index: number) => ({
+      const collaboratorList = status.collaborators.map((collab: { id: string; name: string; email: string; lastSeen: Date; cursor?: CursorPosition }, index: number) => ({
         ...collab,
         color: collaboratorColors[index % collaboratorColors.length],
-        isActive: (Date.now() - new Date(collab.lastSeen).getTime()) < 30000, // 30秒内活跃
+        isActive: (Date.now() - collab.lastSeen.getTime()) < 30000, // 30秒内活跃
       }));
       setCollaborators(collaboratorList);
     } catch (error: unknown) {

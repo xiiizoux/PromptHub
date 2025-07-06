@@ -489,7 +489,7 @@ function InteractionsTab({ data, viewMode }: { data: UserContextData; viewMode: 
                 <div className="mb-2">
                   <div className="text-xs font-medium text-neon-blue mb-1">输入:</div>
                   <div className="text-sm text-gray-300 font-mono bg-black/20 p-2 rounded">
-                    {interaction.input.length > 100 && viewMode === 'simple'
+                    {interaction.input.length > 100 && viewMode !== 'professional'
                       ? `${interaction.input.slice(0, 100)}...`
                       : interaction.input
                     }

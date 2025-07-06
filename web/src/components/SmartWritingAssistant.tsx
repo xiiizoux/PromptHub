@@ -119,7 +119,10 @@ const SmartWritingAssistant: React.FC<SmartWritingAssistantProps> = ({
   useEffect(() => {
     if (pendingAIAnalysis) {
       console.log('收到待应用的AI分析结果:', pendingAIAnalysis);
-      setAiAnalysisResult(pendingAIAnalysis);
+      setAiAnalysisResult({
+        category: pendingAIAnalysis.category || '',
+        ...pendingAIAnalysis
+      } as any);
       setShowAiAnalysisResult(true);
       setActiveTab('analysis'); // 自动切换到分析标签页
     }

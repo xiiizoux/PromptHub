@@ -35,42 +35,7 @@ import {
   inferSimplePermission,
 } from '@/lib/permissions';
 import PermissionPreview from '@/components/prompts/PermissionPreview';
-
-// 文件接口
-interface AssetFile {
-  id: string;
-  url: string;
-  name: string;
-  size: number;
-  type: string;
-}
-
-// 表单数据接口
-export interface PromptFormData {
-  name: string;
-  description: string;
-  content: string;
-  category_type: PromptType;
-  category: string;
-  tags: string[];
-  author: string;
-  is_public: boolean;
-  allow_collaboration: boolean;
-  edit_permission: 'owner_only' | 'collaborators' | 'public';
-  simple_permission: SimplePermissionType; // 新增：简化权限字段
-  collaborators: string[]; // 协作者列表
-  compatible_models: string[];
-  input_variables: string[];
-  template_format: string;
-  version: string | number;
-  // 媒体相关字段
-  preview_assets?: AssetFile[];
-  preview_asset_url?: string;
-  parameters?: Record<string, unknown>;
-  // JSONB 内容相关字段
-  content_text?: string; // 可编辑的文本内容
-  context_engineering_enabled?: boolean; // 是否启用 Context Engineering
-}
+import { PromptFormData, normalizeFormData, getContentValue } from '@/types/form';
 
 // 组件属性接口
 interface PromptFormContainerProps {
@@ -175,7 +140,7 @@ export default function PromptFormContainer({
     defaultValues: {
       name: initialData?.name || '',
       description: initialData?.description || '',
-      content: initialData?.content || '',
+      content: getContentValue(initialData?.content) || '',
       category_type: currentType,
       category: initialData?.category || '',
       tags: initialData?.tags || [],
@@ -191,7 +156,7 @@ export default function PromptFormContainer({
       version: initialData?.version || 1.0,
       parameters: initialData?.parameters || {},
       // JSONB 内容相关字段
-      content_text: initialData?.content_text || initialData?.content || '',
+      content_text: getContentValue(initialData?.content_text || initialData?.content) || '',
       context_engineering_enabled: initialData?.context_engineering_enabled ?? false,
     },
   });
@@ -562,7 +527,8 @@ export default function PromptFormContainer({
   }, [watchedData.content]);
 
   // 表单提交处理
-  const onFormSubmit = async (data: PromptFormData) => {
+  const onFormSubmit = async (rawData: any) => {
+    const data = normalizeFormData(rawData);
     // 基础输入验证
     if (!data.name || typeof data.name !== 'string' || data.name.trim().length === 0) {
       toast.error('提示词名称不能为空');
@@ -705,7 +671,7 @@ export default function PromptFormContainer({
                   className="mt-4 glass rounded-2xl border border-neon-purple/20 p-4"
                 >
                   <SmartWritingAssistant
-                    content={currentContent || watch('content_text') || watch('content') || ''}
+                    content={getContentValue(currentContent || watch('content_text') || watch('content')) || ''}
                     onContentChange={(newContent) => {
                       setValue('content_text', newContent);
                       setValue('content', newContent); // 保持向后兼容
@@ -753,7 +719,7 @@ export default function PromptFormContainer({
               transition={{ duration: 0.8, delay: 0.6 }}
               className="lg:col-span-2 glass rounded-3xl border border-neon-cyan/20 shadow-2xl p-8"
             >
-              <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-8">
+              <form onSubmit={handleSubmit(onFormSubmit as any)} className="space-y-8">
                 {/* 提示词内容 */}
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
@@ -1433,7 +1399,7 @@ export default function PromptFormContainer({
               className="hidden lg:block glass rounded-3xl border border-neon-purple/20 shadow-2xl p-6"
             >
               <SmartWritingAssistant
-                content={currentContent || watch('content_text') || watch('content') || ''}
+                content={currentContent || getContentValue(watch('content_text')) || getContentValue(watch('content')) || ''}
                 onContentChange={(newContent) => {
                   setValue('content_text', newContent);
                   setValue('content', newContent); // 保持向后兼容

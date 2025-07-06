@@ -6,14 +6,23 @@
 import { promptCategoryMatcher } from '@/services/promptCategoryMatcher';
 import { CategoryInfo } from '@/services/categoryService';
 
+// 优化类型定义
+export type OptimizationType = 'general' | 'creative' | 'technical' | 'business' | 'educational' | 'advanced' | 'drawing' | 'finance';
+
 // 类型定义
 export interface OptimizationRequest {
   prompt: string;
   category?: CategoryInfo; // 可选指定分类，否则使用智能匹配
+  manualCategory?: {
+    id: string;
+    name: string;
+    optimization_template: any;
+  };
   language?: 'zh' | 'en';
   requirements?: string;
   context?: string;
   complexity?: 'simple' | 'medium' | 'complex';
+  type?: OptimizationType; // 添加优化类型属性
 }
 
 

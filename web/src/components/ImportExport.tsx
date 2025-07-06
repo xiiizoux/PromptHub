@@ -33,7 +33,7 @@ export const ImportExport: React.FC<ImportExportProps> = ({
   const [isExporting, setIsExporting] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
   const [importData, setImportData] = useState('');
-  const [importFile] = useState<File | null>(null);
+  const [importFile, setImportFile] = useState<File | null>(null);
   const [importOptions, setImportOptions] = useState({
     allowDuplicates: false,
     skipDuplicates: true,
@@ -423,7 +423,7 @@ export const ImportExport: React.FC<ImportExportProps> = ({
 
                   {!importResult.success && (
                     <div className="bg-red-900/20 border border-red-400/20 rounded-lg p-3">
-                      <p className="text-red-300">{importResult.error}</p>
+                      <p className="text-red-300">{importResult.errors?.[0] || '导入失败'}</p>
                     </div>
                   )}
 

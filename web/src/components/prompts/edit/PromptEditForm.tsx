@@ -23,38 +23,7 @@ import VideoParametersForm, { VideoParameters } from './VideoParametersForm';
 import { ModelSelector } from '@/components/ModelSelector';
 
 import { PromptDetails } from '@/types';
-
-// 资源文件接口
-interface AssetFile {
-  id: string;
-  url: string;
-  name: string;
-  size: number;
-  type: string;
-}
-
-// 表单数据接口
-export interface PromptEditFormData {
-  name: string;
-  description: string;
-  content: string;
-  category_type: PromptType;
-  category: string;
-  tags: string[];
-  author: string;
-  is_public: boolean;
-  allow_collaboration: boolean;
-  edit_permission: 'owner_only' | 'collaborators' | 'public';
-  compatible_models: string[];
-  input_variables: string[];
-  template_format: string;
-  version: string | number;
-  
-  // 媒体相关字段
-  preview_assets: AssetFile[];
-  image_parameters?: ImageParameters;
-  video_parameters?: VideoParameters;
-}
+import { PromptEditFormData, AssetFile, getContentValue, normalizeFormData } from '@/types/form';
 
 interface PromptEditFormProps {
   initialData?: Partial<PromptDetails>;
@@ -106,7 +75,7 @@ export default function PromptEditForm({
     defaultValues: {
       name: initialData?.name || '',
       description: initialData?.description || '',
-      content: initialData?.content || '',
+      content: getContentValue(initialData?.content) || '',
       category_type: initialData?.category_type || 'chat',
       category: initialData?.category || '',
       tags: initialData?.tags || [],
@@ -218,7 +187,8 @@ export default function PromptEditForm({
   };
 
   // 表单提交处理
-  const onFormSubmit = async (data: PromptEditFormData) => {
+  const onFormSubmit = async (rawData: any) => {
+    const data = normalizeFormData(rawData) as PromptEditFormData;
     try {
       await onSubmit(data);
       onUnsavedChanges?.(false);
@@ -240,7 +210,7 @@ export default function PromptEditForm({
 
   return (
     <div className={`space-y-8 ${className}`}>
-      <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-8">
+      <form onSubmit={handleSubmit(onFormSubmit as any)} className="space-y-8">
 
         {/* 提示词内容 */}
         <motion.div
