@@ -134,7 +134,7 @@ export interface ContextResponse {
  */
 export class ContextManager {
   private activeContexts = new Map<string, ContextState>();
-  private contextCache = new Map<string, any>();
+  private contextCache = new Map<string, unknown>();
   private static instance: ContextManager;
 
   static getInstance(): ContextManager {
@@ -165,7 +165,7 @@ export class ContextManager {
       const dynamicContext = await this.assembleDynamicContext(
         contextState, 
         request, 
-        prompt
+        prompt as unknown as Record<string, unknown>
       );
 
       // 4. 应用适应规则
@@ -265,9 +265,9 @@ export class ContextManager {
   private async assembleDynamicContext(
     state: ContextState,
     request: ContextRequest,
-    prompt: any
-  ): Promise<Record<string, any>> {
-    const context: Record<string, any> = {
+    prompt: Record<string, unknown>
+  ): Promise<Record<string, unknown>> {
+    const context: Record<string, unknown> = {
       // 基础上下文
       currentInput: request.currentInput,
       sessionContext: state.currentContext,
@@ -308,8 +308,8 @@ export class ContextManager {
    * 应用适应规则
    */
   private async applyAdaptationRules(
-    content: any,
-    context: Record<string, any>,
+    content: unknown,
+    context: Record<string, unknown>,
     rules: AdaptationRule[]
   ): Promise<string> {
     let adaptedContent = typeof content === 'string' ? content : JSON.stringify(content);
@@ -380,7 +380,7 @@ export class ContextManager {
   private async updateContextState(
     state: ContextState,
     request: ContextRequest,
-    result: { content: string; context: Record<string, any> }
+    result: { content: string; context: Record<string, unknown> }
   ): Promise<void> {
     // 更新当前上下文
     state.currentContext = {

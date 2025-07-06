@@ -101,12 +101,12 @@ export class SupabaseAdapter implements StorageAdapter {
    * 执行带重试的查询
    */
   private async executeWithRetry<T>(
-    operation: () => Promise<{ data: T; error: any }>,
+    operation: () => Promise<{ data: T; error: unknown }>,
     operationName: string,
-    context?: Record<string, any>
+    context?: Record<string, unknown>
   ): Promise<T> {
     const startTime = Date.now();
-    let lastError: any;
+    let lastError: unknown;
 
     for (let attempt = 1; attempt <= this.connectionConfig.maxRetries; attempt++) {
       try {
@@ -119,7 +119,7 @@ export class SupabaseAdapter implements StorageAdapter {
           if (this.shouldRetry(error) && attempt < this.connectionConfig.maxRetries) {
             logger.warn(`Supabase operation failed, retrying (${attempt}/${this.connectionConfig.maxRetries})`, {
               operation: operationName,
-              error: error.message,
+              error: (error as Record<string, unknown>).message,
               attempt,
               context
             });
@@ -130,17 +130,18 @@ export class SupabaseAdapter implements StorageAdapter {
 
           // 记录错误并抛出
           const enhancedError = createEnhancedError(
-            `${operationName} failed: ${error.message}`,
+            `${operationName} failed: ${(error as Record<string, unknown>).message}`,
             this.mapErrorType(error),
             this.mapErrorSeverity(error),
             { ...context, attempt, supabaseError: error }
           );
 
+          const errorObj = error as Record<string, unknown>;
           logger.error('Supabase operation failed', {
             operation: operationName,
-            error: error.message,
-            code: error.code,
-            details: error.details,
+            error: errorObj.message,
+            code: errorObj.code,
+            details: errorObj.details,
             context
           });
 
@@ -159,7 +160,7 @@ export class SupabaseAdapter implements StorageAdapter {
         if (attempt < this.connectionConfig.maxRetries) {
           logger.warn(`Supabase operation exception, retrying (${attempt}/${this.connectionConfig.maxRetries})`, {
             operation: operationName,
-            error: error.message,
+            error: (error as Record<string, unknown>).message,
             attempt
           });
 
@@ -177,37 +178,50 @@ export class SupabaseAdapter implements StorageAdapter {
   /**
    * 判断错误是否应该重试
    */
-  private shouldRetry(error: any): boolean {
+  private shouldRetry(error: unknown): boolean {
     // 网络错误、超时错误、临时服务器错误应该重试
     const retryableCodes = ['PGRST301', 'PGRST302', '08000', '08003', '08006'];
     const retryableMessages = ['network', 'timeout', 'connection', 'temporary'];
 
-    if (retryableCodes.includes(error.code)) {
+    if (error && typeof error === 'object' && 'code' in error && 
+        retryableCodes.includes(String(error.code))) {
       return true;
     }
 
-    const errorMessage = (error.message || '').toLowerCase();
+    const errorMessage = (error && typeof error === 'object' && 'message' in error 
+      ? String(error.message) 
+      : String(error)).toLowerCase();
     return retryableMessages.some(msg => errorMessage.includes(msg));
   }
 
   /**
    * 映射Supabase错误到内部错误类型
    */
-  private mapErrorType(error: any): ErrorType {
-    if (error.code === 'PGRST116') {return ErrorType.NOT_FOUND;}
-    if (error.code === 'PGRST301') {return ErrorType.AUTHENTICATION;}
-    if (error.code === 'PGRST302') {return ErrorType.AUTHORIZATION;}
-    if (error.message?.includes('network')) {return ErrorType.NETWORK;}
+  private mapErrorType(error: unknown): ErrorType {
+    if (error && typeof error === 'object' && 'code' in error) {
+      if (error.code === 'PGRST116') {return ErrorType.NOT_FOUND;}
+      if (error.code === 'PGRST301') {return ErrorType.AUTHENTICATION;}
+      if (error.code === 'PGRST302') {return ErrorType.AUTHORIZATION;}
+    }
+    if (error && typeof error === 'object' && 'message' in error && 
+        String(error.message).includes('network')) {
+      return ErrorType.NETWORK;
+    }
     return ErrorType.STORAGE;
   }
 
   /**
    * 映射错误严重程度
    */
-  private mapErrorSeverity(error: any): ErrorSeverity {
-    if (error.code === 'PGRST116') {return ErrorSeverity.LOW;} // Not found
-    if (error.code?.startsWith('08')) {return ErrorSeverity.HIGH;} // Connection errors
-    if (error.message?.includes('timeout')) {return ErrorSeverity.MEDIUM;}
+  private mapErrorSeverity(error: unknown): ErrorSeverity {
+    if (error && typeof error === 'object' && 'code' in error) {
+      if (error.code === 'PGRST116') {return ErrorSeverity.LOW;} // Not found
+      if (String(error.code).startsWith('08')) {return ErrorSeverity.HIGH;} // Connection errors
+    }
+    if (error && typeof error === 'object' && 'message' in error && 
+        String(error.message).includes('timeout')) {
+      return ErrorSeverity.MEDIUM;
+    }
     return ErrorSeverity.MEDIUM;
   }
 
@@ -282,7 +296,7 @@ export class SupabaseAdapter implements StorageAdapter {
       throw new Error('categories表中没有数据');
     }
 
-    const categories = (categoryResult as any[])
+    const categories = (categoryResult as Array<{ name?: string }>)
       .map(item => item?.name)
       .filter(name => name && typeof name === 'string' && name.trim()) as string[];
 
@@ -447,7 +461,7 @@ export class SupabaseAdapter implements StorageAdapter {
       const data = tagResult || [];
 
       // 提取所有标签并去重，过滤空值
-      const allTags = (data as any[])
+      const allTags = (data as Array<{ tags?: string[] }>)
         .flatMap(item => item?.tags || [])
         .filter(tag => tag && typeof tag === 'string' && tag.trim())
         .map(tag => tag.trim());
@@ -913,7 +927,7 @@ export class SupabaseAdapter implements StorageAdapter {
   /**
    * 删除提示词关联的媒体文件
    */
-  private async deletePromptMediaFiles(prompt: any): Promise<void> {
+  private async deletePromptMediaFiles(prompt: Record<string, unknown>): Promise<void> {
     if (!prompt || (prompt.category_type !== 'image' && prompt.category_type !== 'video')) {
       return; // 非媒体类型提示词，无需删除文件
     }
@@ -923,17 +937,17 @@ export class SupabaseAdapter implements StorageAdapter {
     // 收集需要删除的文件
     // 1. preview_asset_url 中的文件
     if (prompt.preview_asset_url) {
-      const filename = this.extractFilenameFromUrl(prompt.preview_asset_url);
+      const filename = this.extractFilenameFromUrl(String(prompt.preview_asset_url));
       if (filename && (filename.startsWith('image_') || filename.startsWith('video_'))) {
         filesToDelete.push(filename);
       }
     }
 
     // 2. parameters.media_files 中的文件
-    const mediaFiles = prompt.parameters?.media_files || [];
-    mediaFiles.forEach((file: any) => {
+    const mediaFiles = (prompt.parameters as Record<string, unknown>)?.media_files || [];
+    (mediaFiles as Array<Record<string, unknown>>).forEach((file) => {
       if (file.url) {
-        const filename = this.extractFilenameFromUrl(file.url);
+        const filename = this.extractFilenameFromUrl(String(file.url));
         if (filename && (filename.startsWith('image_') || filename.startsWith('video_'))) {
           filesToDelete.push(filename);
         }
@@ -970,7 +984,7 @@ export class SupabaseAdapter implements StorageAdapter {
       }
 
       // 先删除关联的媒体文件
-      await this.deletePromptMediaFiles(existingPrompt);
+      await this.deletePromptMediaFiles(existingPrompt as unknown as Record<string, unknown>);
 
       // 然后删除提示词记录
       const { error } = await this.supabase
@@ -1223,7 +1237,7 @@ export class SupabaseAdapter implements StorageAdapter {
         // 提取content字段文本（处理JSONB格式）
         const contentText = typeof prompt.content === 'string' 
           ? prompt.content 
-          : (prompt.content as any)?.static_content || (prompt.content as any)?.legacy_content || '';
+          : String((prompt.content as unknown as Record<string, unknown>)?.static_content || (prompt.content as unknown as Record<string, unknown>)?.legacy_content || '');
 
         // 计算各字段匹配分数
         const fields = {
@@ -2006,7 +2020,7 @@ export class SupabaseAdapter implements StorageAdapter {
    * @param filename 文件名
    * @returns 文件信息
    */
-  async getAssetInfo(filename: string): Promise<{success: boolean; data?: any; message?: string}> {
+  async getAssetInfo(filename: string): Promise<{success: boolean; data?: Record<string, unknown>; message?: string}> {
     try {
       // 确定存储桶（根据文件名前缀）
       const isImage = filename.startsWith('image_');

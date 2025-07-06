@@ -19,8 +19,8 @@ export function isJsonbContent(content: unknown): content is PromptContentJsonb 
     typeof content === 'object' &&
     content !== null &&
     'type' in content &&
-    typeof (content as any).type === 'string' &&
-    ['context_engineering', 'legacy_text', 'simple_text'].includes((content as any).type)
+    typeof (content as Record<string, unknown>).type === 'string' &&
+    ['context_engineering', 'legacy_text', 'simple_text'].includes((content as Record<string, unknown>).type as string)
   );
 }
 
@@ -32,8 +32,8 @@ export function isJsonbTemplate(template: unknown): template is OptimizationTemp
     typeof template === 'object' &&
     template !== null &&
     'type' in template &&
-    typeof (template as any).type === 'string' &&
-    ['legacy_text', 'structured', 'context_engineering'].includes((template as any).type)
+    typeof (template as Record<string, unknown>).type === 'string' &&
+    ['legacy_text', 'structured', 'context_engineering'].includes((template as Record<string, unknown>).type as string)
   );
 }
 
@@ -73,7 +73,7 @@ export interface SystemUserTemplate {
  * 从JSONB优化模板中提取System和User角色模板
  * System角色使用硬编码模板，User角色从数据库提取
  */
-export function extractSystemUserTemplate(template: any): SystemUserTemplate {
+export function extractSystemUserTemplate(template: unknown): SystemUserTemplate {
   // System角色始终使用硬编码模板
   const systemTemplate = getOptimizationSystemTemplate();
 
@@ -109,22 +109,24 @@ export function extractSystemUserTemplate(template: any): SystemUserTemplate {
 
   // 提取User角色模板
   let userTemplate = '';
+  const templateRecord = templateObj as Record<string, unknown>;
 
   // 优先使用user字段（当前格式）
-  if (templateObj.user) {
-    userTemplate = templateObj.user;
+  if (templateRecord.user) {
+    userTemplate = String(templateRecord.user);
   }
   // 兼容user_template字段（迁移过程中的临时格式）
-  else if (templateObj.user_template) {
-    userTemplate = templateObj.user_template;
+  else if (templateRecord.user_template) {
+    userTemplate = String(templateRecord.user_template);
   }
   // 兼容旧格式：从legacy结构中提取
-  else if (templateObj.template) {
-    userTemplate = templateObj.template;
-  } else if (templateObj.structure?.system_prompt) {
-    userTemplate = templateObj.structure.system_prompt;
-  } else if (templateObj.system_prompt) {
-    userTemplate = templateObj.system_prompt;
+  else if (templateRecord.template) {
+    userTemplate = String(templateRecord.template);
+  } else if (templateRecord.structure && typeof templateRecord.structure === 'object' && 
+             templateRecord.structure !== null && 'system_prompt' in templateRecord.structure) {
+    userTemplate = String((templateRecord.structure as Record<string, unknown>).system_prompt);
+  } else if (templateRecord.system_prompt) {
+    userTemplate = String(templateRecord.system_prompt);
   } else {
     userTemplate = JSON.stringify(templateObj);
   }

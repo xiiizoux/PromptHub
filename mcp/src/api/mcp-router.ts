@@ -4,7 +4,8 @@ import {
   ToolDescription, 
   ToolParameter,
   PromptFilters,
-  McpArguments
+  McpArguments,
+  Prompt
 } from '../types.js';
 
 // Context Engineering工具导入
@@ -399,16 +400,22 @@ router.post('/tools/:name/invoke', async (req, res) => {
     // 使用强制认证中间件
     await new Promise<void>((resolve, reject) => {
       authenticateRequest(req, res, (error) => {
-        if (error) reject(error);
-        else resolve();
+        if (error) {
+          reject(error);
+        } else {
+          resolve();
+        }
       });
     });
   } else {
     // 使用可选认证中间件
     await new Promise<void>((resolve, reject) => {
       optionalAuthMiddleware(req, res, (error) => {
-        if (error) reject(error);
-        else resolve();
+        if (error) {
+          reject(error);
+        } else {
+          resolve();
+        }
       });
     });
   }
@@ -748,7 +755,7 @@ async function handleImportPrompts(params: McpRouterParams, req?: express.Reques
   const promptsArray = prompts as unknown[];
 
   // 这里需要进行类型转换，因为我们不能完全确保输入数据的结构
-  const result = await storage.importPrompts(promptsArray as unknown as any[], req?.user?.id);
+  const result = await storage.importPrompts(promptsArray as Prompt[], req?.user?.id);
 
   return {
     content: {
