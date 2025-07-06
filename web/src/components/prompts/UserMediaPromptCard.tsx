@@ -56,6 +56,8 @@ const UserMediaPromptCard: React.FC<UserMediaPromptCardProps> = React.memo(({ pr
   const [isHovered, setIsHovered] = useState(false);
   const [showFullMedia, setShowFullMedia] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [hasTriedFallback, setHasTriedFallback] = useState(false);
+  const [currentVideoUrl, setCurrentVideoUrl] = useState<string | null>(null);
   const videoRef = React.useRef<HTMLVideoElement>(null);
 
   // 使用优化的分类显示Hook
@@ -110,8 +112,8 @@ const UserMediaPromptCard: React.FC<UserMediaPromptCardProps> = React.memo(({ pr
     return null;
   };
 
-  // 获取原始媒体URL
-  const getOriginalMediaUrl = () => {
+  // 获取主要媒体URL（不包括占位符）
+  const getPrimaryMediaUrl = () => {
     if (prompt.preview_asset_url) {
       return prompt.preview_asset_url;
     }
@@ -120,14 +122,28 @@ const UserMediaPromptCard: React.FC<UserMediaPromptCardProps> = React.memo(({ pr
       return prompt.parameters.media_files[0].url;
     }
 
-    // 根据类型返回适合的占位符
+    return null;
+  };
+
+  // 获取占位符媒体URL
+  const getFallbackMediaUrl = () => {
     if (prompt.category_type === 'video') {
       return 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4';
     } else if (prompt.category_type === 'image') {
       return 'https://images.unsplash.com/photo-1541961017774-22349e4a1262?w=400&h=300&fit=crop&auto=format&q=80';
     }
-    
+
     return null;
+  };
+
+  // 获取原始媒体URL（包括占位符）
+  const getOriginalMediaUrl = () => {
+    const primaryUrl = getPrimaryMediaUrl();
+    if (primaryUrl) {
+      return primaryUrl;
+    }
+
+    return getFallbackMediaUrl();
   };
 
   // 获取当前应该显示的媒体URL
@@ -135,22 +151,70 @@ const UserMediaPromptCard: React.FC<UserMediaPromptCardProps> = React.memo(({ pr
     if (!isVisible) {
       return null;
     }
-    
+
     const thumbnailUrl = getThumbnailUrl();
-    const originalUrl = getOriginalMediaUrl();
-    
+
     if (thumbnailUrl && !showFullMedia) {
       return thumbnailUrl;
     }
-    
-    return originalUrl;
+
+    // 对于视频，使用专门的视频URL逻辑
+    if (prompt.category_type === 'video') {
+      if (currentVideoUrl) {
+        return currentVideoUrl;
+      }
+
+      const primaryUrl = getPrimaryMediaUrl();
+      if (primaryUrl && !hasTriedFallback) {
+        return primaryUrl;
+      }
+
+      return getFallbackMediaUrl();
+    }
+
+    // 对于图片，使用原始逻辑
+    return getOriginalMediaUrl();
+  };
+
+  // 初始化视频URL - 只有在组件可见时才初始化
+  React.useEffect(() => {
+    if (!isVisible || prompt.category_type !== 'video') {
+      return;
+    }
+
+    const primaryUrl = getPrimaryMediaUrl();
+    setCurrentVideoUrl(primaryUrl || getFallbackMediaUrl());
+    setHasTriedFallback(!primaryUrl);
+  }, [isVisible, prompt.category_type]);
+
+  // 重置媒体状态
+  const resetMediaState = () => {
+    setMediaLoaded(false);
+    setMediaError(false);
+    setIsPlaying(false);
+  };
+
+  // 切换到占位符视频
+  const switchToFallback = () => {
+    if (!hasTriedFallback && prompt.category_type === 'video') {
+      setHasTriedFallback(true);
+      setCurrentVideoUrl(getFallbackMediaUrl());
+      resetMediaState();
+
+      // 触发视频重新加载
+      if (videoRef.current) {
+        videoRef.current.load();
+      }
+    } else {
+      setMediaError(true);
+    }
   };
 
   // 处理视频播放/暂停
   const handleVideoToggle = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    
+
     if (videoRef.current) {
       if (isPlaying) {
         videoRef.current.pause();
@@ -242,7 +306,7 @@ const UserMediaPromptCard: React.FC<UserMediaPromptCardProps> = React.memo(({ pr
                 <>
                   {getCurrentMediaUrl() ? (
                     prompt.category_type === 'video' ? (
-                      <video 
+                      <video
                         ref={videoRef}
                         src={getCurrentMediaUrl()!}
                         className={clsx(
@@ -252,7 +316,10 @@ const UserMediaPromptCard: React.FC<UserMediaPromptCardProps> = React.memo(({ pr
                         )}
                         onLoadStart={() => setMediaLoaded(false)}
                         onCanPlay={() => setMediaLoaded(true)}
-                        onError={() => setMediaError(true)}
+                        onError={() => {
+                          console.log('视频加载失败，尝试切换到占位符视频');
+                          switchToFallback();
+                        }}
                         onEnded={() => setIsPlaying(false)}
                         muted
                         playsInline
@@ -292,15 +359,41 @@ const UserMediaPromptCard: React.FC<UserMediaPromptCardProps> = React.memo(({ pr
                   
                   {/* 错误状态 */}
                   {mediaError && (
-                    <div className="absolute inset-0 flex flex-col items-center justify-center">
-                      {prompt.category_type === 'image' ? (
-                        <PhotoIcon className="h-12 w-12 text-gray-500 mb-2" />
-                      ) : (
-                        <FilmIcon className="h-12 w-12 text-gray-500 mb-2" />
-                      )}
-                      <p className="text-xs text-gray-500">
-                        {prompt.category_type === 'image' ? '图像加载失败' : '视频加载失败'}
-                      </p>
+                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-900/80 backdrop-blur-sm">
+                      <div className="text-center">
+                        {prompt.category_type === 'image' ? (
+                          <>
+                            <PhotoIcon className="h-12 w-12 text-gray-500 mb-2 mx-auto" />
+                            <p className="text-xs text-gray-500 mb-2">图像加载失败</p>
+                          </>
+                        ) : (
+                          <>
+                            <div className="text-red-400 text-2xl mb-2">🎬</div>
+                            <p className="text-xs text-red-400 mb-2">视频加载失败</p>
+                            <button
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                if (videoRef.current) {
+                                  // 如果已经尝试过占位符还是失败，回到主视频重试
+                                  if (hasTriedFallback) {
+                                    const primaryUrl = getPrimaryMediaUrl();
+                                    if (primaryUrl) {
+                                      setHasTriedFallback(false);
+                                      setCurrentVideoUrl(primaryUrl);
+                                    }
+                                  }
+                                  resetMediaState();
+                                  videoRef.current.load();
+                                }
+                              }}
+                              className="text-xs text-gray-400 hover:text-red-400 underline"
+                            >
+                              重试
+                            </button>
+                          </>
+                        )}
+                      </div>
                     </div>
                   )}
                 </>
