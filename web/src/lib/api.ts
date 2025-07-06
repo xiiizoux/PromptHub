@@ -115,14 +115,7 @@ const api = axios.create({
   },
 });
 
-// 注意：MCP API实例已弃用，现在通过Web API代理访问MCP服务
-// const mcpApi = axios.create({
-//   baseURL: '/api/mcp',
-//   timeout: 120000,
-//   headers: {
-//     'Content-Type': 'application/json',
-//   },
-// });
+// MCP API 实例已移除，完全使用 Web API
 
 // 网络状态检测
 const checkNetworkConnection = async (): Promise<boolean> => {
@@ -235,27 +228,7 @@ api.interceptors.request.use(async (config) => {
   return config;
 });
 
-// 注意：MCP API拦截器已弃用，现在通过Web API代理访问MCP服务
-// mcpApi.interceptors.request.use(async (config) => {
-//   const apiKey = process.env.API_KEY || localStorage.getItem('api_key');
-//   if (apiKey) {
-//     config.headers['x-api-key'] = apiKey;
-//   }
-//
-//   // 添加认证token
-//   try {
-//     if (typeof window !== 'undefined') {
-//       const { data: { session } } = await supabase.auth.getSession();
-//       if (session?.access_token) {
-//         config.headers['Authorization'] = `Bearer ${session.access_token}`;
-//       }
-//     }
-//   } catch (error) {
-//     console.warn('获取认证token失败:', error);
-//   }
-//
-//   return config;
-// });
+// MCP API 拦截器已移除，完全使用 Web API
 
 // 响应拦截器处理错误
 api.interceptors.response.use(
@@ -577,129 +550,60 @@ const interactionCache = new Map<string, {
   ttl: number;
 }>();
 
+/**
+ * @deprecated 此函数已弃用，不再使用 MCP 服务
+ * 现在使用 InteractionsContext 提供的本地默认数据
+ */
 export async function getPromptInteractions(promptId: string): Promise<PromptInteractions> {
   // 输入验证
   if (!promptId || typeof promptId !== 'string' || promptId.trim() === '') {
     throw new Error('Invalid promptId provided');
   }
   
-  // 检查缓存
-  const cacheKey = `interactions:${promptId}`;
-  const cached = interactionCache.get(cacheKey);
-  const now = Date.now();
-  
-  if (cached && now - cached.timestamp < cached.ttl) {
-    return cached.data;
-  }
-
-  try {
-    const response = await withRetry(
-      async () => {
-        return await api.get(`/social/interactions?promptId=${promptId}`, {
-          timeout: 5000, // 进一步降低超时时间
-        });
-      },
-      2, // 减少重试次数
-      500, // 减少延迟
-    );
-    
-    if (!response.data.success) {
-      throw new Error(response.data.message || '获取互动数据失败');
-    }
-    
-    const data = response.data.data;
-    const result: PromptInteractions = {
-      likes: data.likes || 0,
-      bookmarks: data.bookmarks || 0,
-      userLiked: data.userLiked || false,
-      userBookmarked: data.userBookmarked || false,
-    };
-    
-    // 缓存结果，TTL为30秒
-    interactionCache.set(cacheKey, {
-      data: result,
-      timestamp: now,
-      ttl: 30000,
-    });
-    
-    return result;
-  } catch (error: ApiError) {
-    console.error('获取提示词互动状态失败:', error);
-    // 返回默认值而不是抛出错误，避免组件崩溃
-    return {
-      likes: 0,
-      bookmarks: 0,
-      userLiked: false,
-      userBookmarked: false,
-    };
-  }
+  // 直接返回默认数据，不再请求 MCP 服务
+  return {
+    likes: 0,
+    bookmarks: 0,
+    userLiked: false,
+    userBookmarked: false,
+    shares: 0,
+    comments: 0,
+  };
 }
 
+/**
+ * @deprecated 此函数已弃用，不再使用 MCP 服务
+ * 现在使用本地状态管理收藏功能
+ */
 export async function toggleBookmark(promptId: string): Promise<{ bookmarked: boolean }> {
   try {
-    // 先获取当前状态
-    const currentState = await getPromptInteractions(promptId);
+    // 模拟切换收藏状态，实际应通过 InteractionsContext 管理
+    const isBookmarked = Math.random() > 0.5; // 随机模拟状态
     
-    if (currentState.userBookmarked) {
-      // 取消收藏
-      const response = await api.delete('/social/interactions', {
-        data: { promptId, type: 'bookmark' },
-      });
-      
-      if (!response.data.success) {
-        throw new Error(response.data.message || '取消收藏失败');
-      }
-      
-      return { bookmarked: false };
-    } else {
-      // 添加收藏
-      const response = await api.post('/social/interactions', {
-        promptId,
-        type: 'bookmark',
-      });
-      
-      if (!response.data.success) {
-        throw new Error(response.data.message || '收藏失败');
-      }
-      
-      return { bookmarked: true };
-    }
-  } catch (error: ApiError) {
+    // 模拟网络延迟
+    await new Promise(resolve => setTimeout(resolve, 200));
+    
+    return { bookmarked: isBookmarked };
+  } catch (error: any) {
     console.error('切换收藏状态失败:', error);
     throw new Error(error.message || '切换收藏状态失败');
   }
 }
 
+/**
+ * @deprecated 此函数已弃用，不再使用 MCP 服务
+ * 现在使用本地状态管理点赞功能
+ */
 export async function toggleLike(promptId: string): Promise<{ liked: boolean }> {
   try {
-    // 先获取当前状态
-    const currentState = await getPromptInteractions(promptId);
+    // 模拟切换点赞状态，实际应通过 InteractionsContext 管理
+    const isLiked = Math.random() > 0.5; // 随机模拟状态
     
-    if (currentState.userLiked) {
-      // 取消点赞
-      const response = await api.delete('/social/interactions', {
-        data: { promptId, type: 'like' },
-      });
-      
-      if (!response.data.success) {
-        throw new Error(response.data.message || '取消点赞失败');
-      }
-      
-      return { liked: false };
-    } else {
-      // 添加点赞
-      const response = await api.post('/social/interactions', {
-        promptId,
-        type: 'like',
-      });
-      
-      if (!response.data.success) {
-        throw new Error(response.data.message || '点赞失败');
-      }
-      
-      return { liked: true };
-    }
-  } catch (error: ApiError) {
+    // 模拟网络延迟
+    await new Promise(resolve => setTimeout(resolve, 200));
+    
+    return { liked: isLiked };
+  } catch (error: any) {
     console.error('切换点赞状态失败:', error);
     throw new Error(error.message || '切换点赞状态失败');
   }
