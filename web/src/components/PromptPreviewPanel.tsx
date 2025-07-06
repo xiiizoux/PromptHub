@@ -10,7 +10,7 @@ import {
   CheckCircleIcon,
   ArrowPathIcon,
 } from '@heroicons/react/24/outline';
-import { AIAnalyzeButton } from './AIAnalyzeButton';
+// import { AIAnalyzeButton } from './AIAnalyzeButton';
 import toast from 'react-hot-toast';
 
 interface PromptPreviewPanelProps {
@@ -31,7 +31,7 @@ interface PreviewResult {
 
 export const PromptPreviewPanel: React.FC<PromptPreviewPanelProps> = ({
   content,
-  variables = {},
+  variables: _variables = {},
   className = '',
 }) => {
   const [isGenerating, setIsGenerating] = useState(false);
@@ -57,7 +57,7 @@ export const PromptPreviewPanel: React.FC<PromptPreviewPanelProps> = ({
         setTestVariables(prev => ({ ...prev, ...detectedVars }));
       }
     }
-  }, [content]);
+  }, [content, testVariables]);
 
   // 自动预览
   useEffect(() => {
@@ -67,7 +67,7 @@ export const PromptPreviewPanel: React.FC<PromptPreviewPanelProps> = ({
       }, 2000);
       return () => clearTimeout(timer);
     }
-  }, [content, testVariables, autoPreview]);
+  }, [content, testVariables, autoPreview]); // 移除generatePreview依赖
 
   const processPromptWithVariables = (prompt: string, vars: Record<string, string>): string => {
     let processedPrompt = prompt;
@@ -370,7 +370,7 @@ print(result)
       {!previewResult && !isGenerating && (
         <div className="text-center py-12 text-gray-500">
           <EyeIcon className="h-12 w-12 mx-auto mb-3 opacity-50" />
-          <p className="text-sm">输入提示词内容后，点击"生成预览"查看效果</p>
+          <p className="text-sm">输入提示词内容后，点击&quot;生成预览&quot;查看效果</p>
         </div>
       )}
     </div>

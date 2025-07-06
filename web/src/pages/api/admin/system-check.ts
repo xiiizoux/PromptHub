@@ -37,7 +37,7 @@ async function performSystemCheck(req: NextApiRequest, res: NextApiResponse, sup
   try {
     const { action = 'check' } = req.body;
 
-    let results: any = {};
+    const results: any = {};
 
     if (action === 'check' || action === 'full') {
       // 执行用户归档系统完整性检查
@@ -69,16 +69,16 @@ async function performSystemCheck(req: NextApiRequest, res: NextApiResponse, sup
           timestamp: new Date().toISOString(),
           results_summary: {
             checks_performed: Object.keys(results).length,
-            status: 'completed'
-          }
-        }
+            status: 'completed',
+          },
+        },
       });
 
     return successResponse(res, {
       action,
       timestamp: new Date().toISOString(),
       results,
-      summary: generateSummary(results)
+      summary: generateSummary(results),
     });
   } catch (error: any) {
     console.error('执行系统检查失败:', error);
@@ -94,13 +94,13 @@ async function getDetailedStats(supabase: any) {
       interactionsCount,
       totalPrompts,
       publicPrompts,
-      activeUsers
+      activeUsers,
     ] = await Promise.all([
       supabase.from('user_prompt_archives').select('id', { count: 'exact' }),
       supabase.from('user_interactions').select('id', { count: 'exact' }),
       supabase.from('prompts').select('id', { count: 'exact' }),
       supabase.from('prompts').select('id', { count: 'exact' }).eq('is_public', true),
-      supabase.from('users').select('id', { count: 'exact' }).eq('is_active', true)
+      supabase.from('users').select('id', { count: 'exact' }).eq('is_active', true),
     ]);
 
     return {
@@ -110,7 +110,7 @@ async function getDetailedStats(supabase: any) {
       public_prompts: publicPrompts.count || 0,
       active_users: activeUsers.count || 0,
       archive_ratio: totalPrompts.count ? 
-        ((archivedCount.count || 0) / totalPrompts.count * 100).toFixed(2) + '%' : '0%'
+        ((archivedCount.count || 0) / totalPrompts.count * 100).toFixed(2) + '%' : '0%',
     };
   } catch (error) {
     console.error('获取详细统计失败:', error);
@@ -132,7 +132,7 @@ async function verifyDataConsistency(supabase: any) {
 
     if (archivesWithPrompts) {
       const invalidArchives = archivesWithPrompts.filter(
-        (archive: any) => !archive.prompts
+        (archive: any) => !archive.prompts,
       );
 
       if (invalidArchives.length > 0) {
@@ -143,8 +143,8 @@ async function verifyDataConsistency(supabase: any) {
           affected_archives: invalidArchives.map((a: any) => ({ 
             id: a.id, 
             prompt_id: a.prompt_id,
-            user_id: a.user_id 
-          }))
+            user_id: a.user_id, 
+          })),
         });
       }
     }
@@ -160,7 +160,7 @@ async function verifyDataConsistency(supabase: any) {
 
     if (transfersWithoutOrphans) {
       const invalidTransfers = transfersWithoutOrphans.filter(
-        (transfer: any) => !transfer.prompt || !transfer.prompt.is_orphaned
+        (transfer: any) => !transfer.prompt || !transfer.prompt.is_orphaned,
       );
 
       if (invalidTransfers.length > 0) {
@@ -168,7 +168,7 @@ async function verifyDataConsistency(supabase: any) {
           type: 'invalid_transfer_records',
           count: invalidTransfers.length,
           description: '转移记录指向非孤儿提示词',
-          affected_transfers: invalidTransfers.map((t: any) => ({ id: t.id, prompt_id: t.prompt_id }))
+          affected_transfers: invalidTransfers.map((t: any) => ({ id: t.id, prompt_id: t.prompt_id })),
         });
       }
     }
@@ -176,7 +176,7 @@ async function verifyDataConsistency(supabase: any) {
     return {
       status: issues.length === 0 ? 'consistent' : 'has_issues',
       issues_found: issues.length,
-      issues: issues
+      issues: issues,
     };
   } catch (error) {
     console.error('数据一致性验证失败:', error);
@@ -236,14 +236,14 @@ async function checkArchiveSystemIntegrity(supabase: any) {
         check_name: 'user_archives_table',
         status: 'OK',
         details: '用户归档表结构正常',
-        affected_count: 0
+        affected_count: 0,
       });
     } else {
       checks.push({
         check_name: 'user_archives_table',
         status: 'ERROR',
         details: '用户归档表不存在',
-        affected_count: 1
+        affected_count: 1,
       });
     }
 
@@ -252,21 +252,21 @@ async function checkArchiveSystemIntegrity(supabase: any) {
       const { data: functionTest } = await supabase
         .rpc('has_other_users_context', {
           prompt_id_param: '00000000-0000-0000-0000-000000000000',
-          user_id_param: '00000000-0000-0000-0000-000000000000'
+          user_id_param: '00000000-0000-0000-0000-000000000000',
         });
 
       checks.push({
         check_name: 'archive_functions',
         status: 'OK',
         details: '归档系统函数正常',
-        affected_count: 0
+        affected_count: 0,
       });
     } catch (error) {
       checks.push({
         check_name: 'archive_functions',
         status: 'ERROR',
         details: '归档系统函数缺失或异常',
-        affected_count: 1
+        affected_count: 1,
       });
     }
 
@@ -284,14 +284,14 @@ async function checkArchiveSystemIntegrity(supabase: any) {
         check_name: 'archive_data_consistency',
         status: 'WARNING',
         details: `发现 ${inconsistentArchives.length} 个指向不存在提示词的归档记录`,
-        affected_count: inconsistentArchives.length
+        affected_count: inconsistentArchives.length,
       });
     } else {
       checks.push({
         check_name: 'archive_data_consistency',
         status: 'OK',
         details: '归档数据一致性正常',
-        affected_count: 0
+        affected_count: 0,
       });
     }
 
@@ -301,7 +301,7 @@ async function checkArchiveSystemIntegrity(supabase: any) {
       check_name: 'system_check',
       status: 'ERROR',
       details: `系统检查失败: ${error.message}`,
-      affected_count: 1
+      affected_count: 1,
     }];
   }
 }

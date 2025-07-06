@@ -200,7 +200,7 @@ async function deletePrompt(req: NextApiRequest, res: NextApiResponse, id: strin
       promptId: id, 
       userId, 
       deleteType: deleteResult.type,
-      affectedUsers: deleteResult.affectedUsers || 0
+      affectedUsers: deleteResult.affectedUsers || 0,
     };
 
     if (deleteResult.type === 'archived') {
@@ -211,7 +211,7 @@ async function deletePrompt(req: NextApiRequest, res: NextApiResponse, id: strin
         type: 'archived',
         details: deleteResult.details,
         affectedUsers: deleteResult.affectedUsers,
-        notice: '提示词已归档到您的个人归档中，其他用户的个性化配置得到保护。您可以随时从归档中恢复。'
+        notice: '提示词已归档到您的个人归档中，其他用户的个性化配置得到保护。您可以随时从归档中恢复。',
       });
     } else {
       logger.info('提示词删除 - 完全删除', logData);
@@ -219,7 +219,7 @@ async function deletePrompt(req: NextApiRequest, res: NextApiResponse, id: strin
       return successResponse(res, {
         message: '提示词删除成功',
         type: 'deleted',
-        details: deleteResult.message
+        details: deleteResult.message,
       });
     }
   } catch (error: any) {

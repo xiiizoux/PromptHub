@@ -55,7 +55,7 @@ export default apiHandler(async (req: NextApiRequest, res: NextApiResponse, user
       .rpc('admin_permanent_delete_prompt', {
         prompt_id_param: promptId,
         admin_user_id: userId,
-        deletion_reason: reason
+        deletion_reason: reason,
       });
 
     if (deleteError) {
@@ -74,9 +74,9 @@ export default apiHandler(async (req: NextApiRequest, res: NextApiResponse, user
       deletedPrompt: {
         id: promptId,
         name: promptInfo.name,
-        originalUserId: promptInfo.user_id
+        originalUserId: promptInfo.user_id,
       },
-      warning: '此操作不可撤销！所有相关数据已永久删除。'
+      warning: '此操作不可撤销！所有相关数据已永久删除。',
     });
   } catch (error: any) {
     console.error('管理员永久删除失败:', error);

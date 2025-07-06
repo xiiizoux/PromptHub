@@ -65,7 +65,7 @@ export interface PromptDeletionResult {
   message: string;
   details?: string;
   affectedUsers?: number;
-  preservedData?: Record<string, any>;
+  preservedData?: Record<string, unknown>;
   transferredAt?: string;
   error?: string;
   canRestore?: boolean;           // 是否可以恢复

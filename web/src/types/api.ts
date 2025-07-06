@@ -39,7 +39,7 @@ export interface PromptFilterParams extends PaginationParams {
 }
 
 // 提示词API端点
-export namespace PromptApi {
+export module PromptApi {
   // GET /api/prompts
   export type GetPromptsResponse = ApiResponse<PaginatedResponse<Prompt>>;
   
@@ -71,7 +71,7 @@ export namespace PromptApi {
 }
 
 // 用户API端点
-export namespace UserApi {
+export module UserApi {
   // POST /api/auth/signin
   export interface SignInRequest {
     email: string;
@@ -115,7 +115,7 @@ export namespace UserApi {
 // 移除社交API端点定义 - MCP服务专注于提示词管理
 
 // 通知API端点
-export namespace NotificationApi {
+export module NotificationApi {
   // 通知类型
   export type NotificationType =
     | 'follow'       // 关注通知

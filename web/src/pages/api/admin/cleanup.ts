@@ -72,7 +72,7 @@ async function analyzeSystemState(supabase: any) {
     oldArchives,
     activeUsers,
     totalInteractions,
-    recentActivity
+    recentActivity,
   ] = await Promise.all([
     // 总提示词数
     supabase.from('prompts').select('id', { count: 'exact' }),
@@ -92,7 +92,7 @@ async function analyzeSystemState(supabase: any) {
     
     // 最近归档活动
     supabase.from('user_prompt_archives').select('id', { count: 'exact' })
-      .gte('created_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString())
+      .gte('created_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()),
   ]);
 
   // 分析数据库大小（估算）
@@ -109,7 +109,7 @@ async function analyzeSystemState(supabase: any) {
       type: 'cleanup_old_archives',
       priority: 'medium',
       description: `建议清理 ${oldArchives.count} 个超过1年的用户归档记录`,
-      estimatedSpace: `约 ${((oldArchives.count || 0) * 0.001).toFixed(2)} MB`
+      estimatedSpace: `约 ${((oldArchives.count || 0) * 0.001).toFixed(2)} MB`,
     });
   }
 
@@ -117,7 +117,7 @@ async function analyzeSystemState(supabase: any) {
     recommendations.push({
       type: 'review_archives',
       priority: 'low',
-      description: '用户归档记录较多，建议审查归档策略和用户行为模式'
+      description: '用户归档记录较多，建议审查归档策略和用户行为模式',
     });
   }
 
@@ -129,13 +129,13 @@ async function analyzeSystemState(supabase: any) {
       activeUsers: activeUsers.count || 0,
       totalInteractions: totalInteractions.count || 0,
       recentArchives: recentActivity.count || 0,
-      archiveRatio: ((archivedPrompts.count || 0) / Math.max(totalPrompts.count || 1, 1) * 100).toFixed(1) + '%'
+      archiveRatio: ((archivedPrompts.count || 0) / Math.max(totalPrompts.count || 1, 1) * 100).toFixed(1) + '%',
     },
     estimatedSize: {
       total: Object.values(estimatedSize).reduce((a, b) => a + b, 0).toFixed(2) + ' MB',
-      breakdown: estimatedSize
+      breakdown: estimatedSize,
     },
-    recommendations
+    recommendations,
   };
 }
 
@@ -168,7 +168,7 @@ async function cleanupOldArchives(supabase: any, daysOld: number, dryRun: boolea
     found: oldArchives?.length || 0,
     deleted: 0,
     errors: [] as string[],
-    processedIds: [] as string[]
+    processedIds: [] as string[],
   };
 
   if (!oldArchives || oldArchives.length === 0) {
@@ -181,7 +181,7 @@ async function cleanupOldArchives(supabase: any, daysOld: number, dryRun: boolea
       promptName: archive.prompts?.name || '未知提示词',
       userId: archive.user_id,
       archivedDaysAgo: Math.floor((Date.now() - new Date(archive.created_at).getTime()) / (1000 * 60 * 60 * 24)),
-      reason: archive.archive_reason
+      reason: archive.archive_reason,
     }));
     return cleanupResults;
   }
@@ -216,7 +216,7 @@ async function cleanupOrphanedData(supabase: any, dryRun: boolean, adminUserId: 
     orphanedInteractions: 0,
     orphanedArchives: 0,
     invalidReferences: 0,
-    errors: [] as string[]
+    errors: [] as string[],
   };
 
   try {
@@ -234,7 +234,7 @@ async function cleanupOrphanedData(supabase: any, dryRun: boolean, adminUserId: 
       .not('prompt_id', 'is', null);
 
     const invalidInteractions = orphanedInteractions?.filter(
-      interaction => !existingPromptIds.has(interaction.prompt_id)
+      interaction => !existingPromptIds.has(interaction.prompt_id),
     ) || [];
 
     if (invalidInteractions.length > 0 && !dryRun) {
@@ -256,7 +256,7 @@ async function cleanupOrphanedData(supabase: any, dryRun: boolean, adminUserId: 
       .select('id, prompt_id');
 
     const invalidArchives = orphanedArchives?.filter(
-      archive => !existingPromptIds.has(archive.prompt_id)
+      archive => !existingPromptIds.has(archive.prompt_id),
     ) || [];
 
     if (invalidArchives.length > 0 && !dryRun) {
@@ -282,8 +282,8 @@ async function cleanupOrphanedData(supabase: any, dryRun: boolean, adminUserId: 
           activity_data: {
             action: 'cleanup_orphaned',
             results: cleanupResults,
-            timestamp: new Date().toISOString()
-          }
+            timestamp: new Date().toISOString(),
+          },
         });
     }
 

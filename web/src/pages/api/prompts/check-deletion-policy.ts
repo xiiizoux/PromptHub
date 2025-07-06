@@ -32,7 +32,7 @@ export default apiHandler(async (req: NextApiRequest, res: NextApiResponse, user
       userId,
       canDelete: policyResult.canDelete,
       mustArchive: policyResult.mustArchive,
-      contextUsersCount: policyResult.contextUsersCount
+      contextUsersCount: policyResult.contextUsersCount,
     });
 
     return successResponse(res, {
@@ -40,7 +40,7 @@ export default apiHandler(async (req: NextApiRequest, res: NextApiResponse, user
       mustArchive: policyResult.mustArchive,
       reason: policyResult.reason,
       contextUsersCount: policyResult.contextUsersCount,
-      promptId: promptId
+      promptId: promptId,
     });
   } catch (error: any) {
     logger.error('检查删除策略失败', error, { promptId, userId });

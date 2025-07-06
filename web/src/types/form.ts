@@ -32,21 +32,24 @@ export interface BaseFormData {
   // 媒体相关字段
   preview_assets?: AssetFile[];
   preview_asset_url?: string;
-  parameters?: Record<string, any>;
+  parameters?: Record<string, unknown>;
   // JSONB 内容相关字段
   content_text?: string;
   context_engineering_enabled?: boolean;
 }
 
 // 提示词表单数据接口
-export interface PromptFormData extends BaseFormData {}
+export interface PromptFormData extends BaseFormData {
+  // 继承BaseFormData的所有属性
+  additionalData?: Record<string, unknown>;
+}
 
 // 提示词编辑表单数据接口
 export interface PromptEditFormData extends BaseFormData {
   id?: string;
   preview_assets: AssetFile[];
-  image_parameters?: Record<string, any>;
-  video_parameters?: Record<string, any>;
+  image_parameters?: Record<string, unknown>;
+  video_parameters?: Record<string, unknown>;
 }
 
 // 表单状态接口
@@ -65,16 +68,22 @@ export interface FormActions {
 }
 
 // 内容类型处理工具
-export const getContentValue = (content: string | any): string => {
+export const getContentValue = (content: string | unknown): string => {
   if (typeof content === 'string') {
     return content;
   }
   
   // 处理 JSONB 格式的内容
   if (content && typeof content === 'object') {
-    if (content.text) return content.text;
-    if (content.content) return content.content;
-    if (content.prompt) return content.prompt;
+    if (content.text) {
+      return content.text;
+    }
+    if (content.content) {
+      return content.content;
+    }
+    if (content.prompt) {
+      return content.prompt;
+    }
     // 如果是其他格式，尝试序列化
     return JSON.stringify(content);
   }
@@ -83,7 +92,7 @@ export const getContentValue = (content: string | any): string => {
 };
 
 // 内容转换工具
-export const normalizeFormData = (data: any): PromptFormData => {
+export const normalizeFormData = (data: Record<string, unknown>): PromptFormData => {
   return {
     ...data,
     content: getContentValue(data.content),

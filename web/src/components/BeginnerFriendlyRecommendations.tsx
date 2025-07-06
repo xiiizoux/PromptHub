@@ -356,13 +356,13 @@ export const BeginnerFriendlyRecommendations: React.FC<BeginnerFriendlyRecommend
         estimatedTime: '30分钟',
         steps: [
           { id: '1', title: '了解什么是提示词', description: '学习提示词的基本概念', completed: false, type: 'read' },
-          { id: '2', title: '第一个提示词', description: '创建你的第一个提示词', completed: false, type: 'practice' }
+          { id: '2', title: '第一个提示词', description: '创建你的第一个提示词', completed: false, type: 'practice' },
         ],
         category: '基础教程',
         tags: ['入门', '基础'],
         popularity: 95,
-        successRate: 92
-      }
+        successRate: 92,
+      },
     ];
     setLearningPaths(mockPaths);
   }, []);
@@ -382,8 +382,8 @@ export const BeginnerFriendlyRecommendations: React.FC<BeginnerFriendlyRecommend
         actionUrl: '/prompts/1',
         popularity: 85,
         category: '写作助手',
-        tags: ['写作', '创意']
-      }
+        tags: ['写作', '创意'],
+      },
     ];
     setPersonalizedRecs(mockRecs);
   }, []);

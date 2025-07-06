@@ -512,7 +512,7 @@ export class DatabaseService {
         const { data: protectionCheck, error: protectionError } = await this.adapter.supabase
           .rpc('can_make_prompt_private', {
             prompt_id_param: existingPrompt.id,
-            user_id_param: userId
+            user_id_param: userId,
           });
 
         if (protectionError) {
@@ -658,7 +658,7 @@ export class DatabaseService {
       const { data: policyCheck, error: policyError } = await this.adapter.supabase
         .rpc('check_prompt_deletion_policy', {
           prompt_id_param: promptId,
-          user_id_param: userId
+          user_id_param: userId,
         });
 
       if (policyError) {
@@ -676,7 +676,7 @@ export class DatabaseService {
           success: false,
           type: 'error',
           message: policy.reason,
-          details: '操作被拒绝'
+          details: '操作被拒绝',
         };
       }
 
@@ -686,7 +686,7 @@ export class DatabaseService {
           .rpc('archive_user_prompt', {
             prompt_id_param: promptId,
             user_id_param: userId,
-            reason_param: policy.reason
+            reason_param: policy.reason,
           });
 
         if (archiveError) {
@@ -700,7 +700,7 @@ export class DatabaseService {
           details: `${policy.reason}。提示词已从您的列表中移除，但仍保持公开状态，其他用户可以正常使用。您可以随时取消归档。`,
           affectedUsers: policy.context_users_count,
           canRestore: true,
-          transferReason: policy.reason
+          transferReason: policy.reason,
         };
       }
 
@@ -733,7 +733,7 @@ export class DatabaseService {
           type: 'deleted',
           message: '提示词已彻底删除',
           details: '提示词及所有相关数据已永久删除。',
-          affectedUsers: 0
+          affectedUsers: 0,
         };
       }
 
@@ -746,7 +746,7 @@ export class DatabaseService {
         success: false,
         type: 'error',
         message: error.message || '操作过程中发生未知错误',
-        error: error.message
+        error: error.message,
       };
     }
   }
@@ -762,7 +762,7 @@ export class DatabaseService {
       const { data: result, error } = await this.adapter.supabase
         .rpc('unarchive_user_prompt', {
           prompt_id_param: promptId,
-          user_id_param: userId
+          user_id_param: userId,
         });
 
       if (error) {
@@ -777,7 +777,7 @@ export class DatabaseService {
         success: true,
         type: 'restored',
         message: '已取消归档',
-        details: '提示词已重新出现在您的活跃列表中。'
+        details: '提示词已重新出现在您的活跃列表中。',
       };
     } catch (error: any) {
       console.error('取消归档失败:', error);
@@ -786,7 +786,7 @@ export class DatabaseService {
         success: false,
         type: 'error',
         message: error.message || '取消归档过程中发生未知错误',
-        error: error.message
+        error: error.message,
       };
     }
   }
@@ -807,7 +807,7 @@ export class DatabaseService {
       const { data: policyCheck, error: policyError } = await this.adapter.supabase
         .rpc('check_prompt_deletion_policy', {
           prompt_id_param: promptId,
-          user_id_param: userId
+          user_id_param: userId,
         });
 
       if (policyError) {
@@ -823,7 +823,7 @@ export class DatabaseService {
         canDelete: policy.can_delete,
         mustArchive: policy.must_archive,
         reason: policy.reason,
-        contextUsersCount: policy.context_users_count
+        contextUsersCount: policy.context_users_count,
       };
     } catch (error: any) {
       console.error('检查删除策略失败:', error);

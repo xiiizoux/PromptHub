@@ -34,14 +34,14 @@ export default apiHandler(async (req: NextApiRequest, res: NextApiResponse, user
     logger.info('提示词恢复成功', { 
       promptId, 
       userId,
-      restoreType: restoreResult.type 
+      restoreType: restoreResult.type, 
     });
 
     return successResponse(res, {
       message: '提示词恢复成功',
       type: restoreResult.type,
       details: restoreResult.details,
-      promptId: promptId
+      promptId: promptId,
     });
   } catch (error: any) {
     logger.error('恢复提示词失败', error, { promptId, userId });

@@ -31,7 +31,7 @@ export const InteractionsProvider: React.FC<{ children: React.ReactNode }> = ({ 
       typeof id === 'string' && 
       id.trim() !== '' && 
       !interactions[id] && 
-      !loadingPrompts.has(id)
+      !loadingPrompts.has(id),
     );
     
     if (newPromptIds.length === 0) {return;}

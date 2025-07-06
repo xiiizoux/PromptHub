@@ -443,7 +443,7 @@ export default function PromptDetailsPage() {
       }
 
       // 🔍 第一步：检查删除策略
-      const policyResponse = await fetch(`/api/prompts/check-deletion-policy`, {
+      const policyResponse = await fetch('/api/prompts/check-deletion-policy', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -528,8 +528,8 @@ export default function PromptDetailsPage() {
             </div>,
             { 
               duration: 8000,
-              className: 'bg-blue-50 border-blue-200'
-            }
+              className: 'bg-blue-50 border-blue-200',
+            },
           );
         } else if (result.type === 'deleted') {
           // 显示删除成功信息
@@ -543,7 +543,7 @@ export default function PromptDetailsPage() {
                 • 所有相关数据已永久删除
               </div>
             </div>,
-            { duration: 5000 }
+            { duration: 5000 },
           );
         } else {
           // 默认成功消息

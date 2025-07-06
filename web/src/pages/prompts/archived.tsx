@@ -10,11 +10,11 @@ import {
   UserGroupIcon,
   EyeIcon,
   TagIcon,
-  InformationCircleIcon
+  InformationCircleIcon,
 } from '@heroicons/react/24/outline';
 import { 
   ArchiveBoxArrowDownIcon,
-  ExclamationTriangleIcon 
+  ExclamationTriangleIcon, 
 } from '@heroicons/react/24/solid';
 
 interface ArchivedPrompt {
@@ -100,10 +100,10 @@ export default function ArchivedPromptsPage() {
   }, [user]);
 
   const handleRestorePrompt = async (promptId: string, promptName: string) => {
-    if (restoringPrompts.has(promptId)) return;
+    if (restoringPrompts.has(promptId)) {return;}
 
     const confirmed = confirm(`确定要恢复提示词"${promptName}"吗？\n\n恢复后，此提示词将重新出现在您的活跃列表中。`);
-    if (!confirmed) return;
+    if (!confirmed) {return;}
 
     setRestoringPrompts(prev => new Set(prev).add(promptId));
 
@@ -129,7 +129,7 @@ export default function ArchivedPromptsPage() {
             <div className="font-semibold">🎉 恢复成功！</div>
             <div className="text-sm">提示词已重新加入您的活跃列表</div>
           </div>,
-          { duration: 4000 }
+          { duration: 4000 },
         );
         
         // 刷新列表
@@ -155,7 +155,7 @@ export default function ArchivedPromptsPage() {
       month: 'short',
       day: 'numeric',
       hour: '2-digit',
-      minute: '2-digit'
+      minute: '2-digit',
     });
   };
 
@@ -172,7 +172,7 @@ export default function ArchivedPromptsPage() {
   };
 
   const getContentPreview = (content: any) => {
-    if (!content) return '无内容';
+    if (!content) {return '无内容';}
     
     if (typeof content === 'string') {
       return content.length > 100 ? content.substring(0, 100) + '...' : content;

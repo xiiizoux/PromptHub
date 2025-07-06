@@ -74,8 +74,8 @@ export default apiHandler(async (req: NextApiRequest, res: NextApiResponse, user
         archiveInfo: {
           affectedUsers: archive.context_users_count || 0,
           archiveReason: archive.archive_reason || '用户归档',
-          archivedAt: archive.archived_at
-        }
+          archivedAt: archive.archived_at,
+        },
       };
     }).filter(Boolean); // 过滤掉null值
 
@@ -89,8 +89,8 @@ export default apiHandler(async (req: NextApiRequest, res: NextApiResponse, user
       },
       summary: {
         totalArchived: count || 0,
-        canRestoreAll: true
-      }
+        canRestoreAll: true,
+      },
     });
   } catch (error: any) {
     console.error('获取归档提示词失败:', error);
