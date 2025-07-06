@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
-import Layout from '@/components/Layout';
+import Layout from '@/components/layout/Layout';
 import { toast } from 'react-hot-toast';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/contexts/AuthContext';
 import {
   ArchiveBoxIcon,
   ArrowPathIcon,
