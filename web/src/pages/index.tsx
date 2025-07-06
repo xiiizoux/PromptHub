@@ -14,6 +14,8 @@ import {
   CommandLineIcon,
   CircleStackIcon,
   BoltIcon,
+  CogIcon,
+  PuzzlePieceIcon,
 } from '@heroicons/react/24/outline';
 import { PromptInfo } from '@/types';
 import PromptCard from '@/components/prompts/PromptCard';
@@ -52,18 +54,35 @@ export default function Home({ featuredPrompts }: HomeProps) {
       title: '智能提示词管理',
       description: '使用版本控制和智能分类，让您的提示词保持最佳状态',
       color: 'from-neon-cyan to-neon-cyan-dark',
+      glowColor: 'neon-cyan',
     },
     {
       icon: LightBulbIcon,
       title: '创新模板系统',
       description: '动态变量和模板让您的提示词适应各种场景',
       color: 'from-neon-pink to-neon-yellow',
+      glowColor: 'neon-pink',
     },
     {
       icon: SparklesIcon,
       title: '智能分析优化',
       description: 'AI驱动的提示词分析与优化，自动提升您的提示词效果和质量',
       color: 'from-neon-purple to-neon-pink',
+      glowColor: 'neon-purple',
+    },
+    {
+      icon: CogIcon,
+      title: 'Context Engineering',
+      description: '深度上下文工程技术，构建智能化的多轮对话体验和复杂任务执行链',
+      color: 'from-neon-green to-neon-cyan',
+      glowColor: 'neon-green',
+    },
+    {
+      icon: PuzzlePieceIcon,
+      title: 'MCP协议集成',
+      description: '基于Model Context Protocol，实现AI工具的无缝连接和智能协作',
+      color: 'from-neon-yellow to-neon-orange',
+      glowColor: 'neon-yellow',
     },
   ];
 
@@ -196,8 +215,8 @@ export default function Home({ featuredPrompts }: HomeProps) {
             </p>
           </motion.div>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {features.map((feature, index) => {
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {features.slice(0, 3).map((feature, index) => {
               const Icon = feature.icon;
               return (
                 <motion.div
@@ -206,22 +225,35 @@ export default function Home({ featuredPrompts }: HomeProps) {
                   initial={{ opacity: 0, y: 50 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
-                  transition={{ delay: index * 0.1 }}
+                  transition={{ delay: index * 0.1, duration: 0.6 }}
                 >
-                  <div className="card glass border border-neon-cyan/20 p-8 h-full hover:border-neon-cyan/40 transition-all duration-300">
+                  <div className="card glass border border-neon-cyan/20 p-8 h-full hover:border-neon-cyan/40 transition-all duration-300 relative overflow-hidden">
                     {/* 背景渐变 */}
                     <div className={`absolute inset-0 bg-gradient-to-br ${feature.color} opacity-5 group-hover:opacity-10 transition-opacity rounded-2xl`} />
                     
-                    <div className="relative">
-                      <div className={`inline-flex p-3 rounded-xl bg-gradient-to-br ${feature.color} mb-6`}>
+                    {/* 动态光晕效果 */}
+                    <div className={`absolute -top-10 -left-10 w-20 h-20 bg-${feature.glowColor} rounded-full blur-3xl opacity-0 group-hover:opacity-30 transition-all duration-500`} />
+                    
+                    <div className="relative z-10">
+                      <motion.div 
+                        className={`inline-flex p-3 rounded-xl bg-gradient-to-br ${feature.color} mb-6 relative`}
+                        whileHover={{ scale: 1.1, rotate: 5 }}
+                        transition={{ type: "spring", stiffness: 300 }}
+                      >
                         <Icon className="h-8 w-8 text-dark-bg-primary" />
-                      </div>
+                        {/* 图标光环 */}
+                        <div className={`absolute inset-0 rounded-xl bg-gradient-to-br ${feature.color} opacity-50 blur-sm group-hover:opacity-100 transition-opacity duration-300`} />
+                      </motion.div>
                       
-                      <h3 className="text-2xl font-semibold text-white mb-3">{feature.title}</h3>
-                      <p className="text-gray-400 leading-relaxed">{feature.description}</p>
+                      <h3 className="text-2xl font-semibold text-white mb-3 group-hover:text-neon-cyan transition-colors duration-300">
+                        {feature.title}
+                      </h3>
+                      <p className="text-gray-400 leading-relaxed mb-6">
+                        {feature.description}
+                      </p>
                       
                       <motion.div 
-                        className="mt-6 flex items-center text-neon-cyan opacity-0 group-hover:opacity-100 transition-opacity"
+                        className="flex items-center text-neon-cyan opacity-0 group-hover:opacity-100 transition-opacity duration-300 cursor-pointer"
                         whileHover={{ x: 5 }}
                       >
                         <span className="text-sm font-medium">了解更多</span>
@@ -233,6 +265,68 @@ export default function Home({ featuredPrompts }: HomeProps) {
               );
             })}
           </div>
+          
+          {/* 第二行 - 新增功能 */}
+          <motion.div 
+            className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-12"
+            initial={{ opacity: 0, y: 50 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.4, duration: 0.6 }}
+          >
+            {features.slice(3).map((feature, index) => {
+              const Icon = feature.icon;
+              return (
+                <motion.div
+                  key={feature.title}
+                  className="group relative"
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  whileInView={{ opacity: 1, scale: 1 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: index * 0.2, duration: 0.6 }}
+                >
+                  <div className="card glass border border-neon-cyan/20 p-8 h-full hover:border-neon-cyan/40 transition-all duration-300 relative overflow-hidden">
+                    {/* 背景渐变 */}
+                    <div className={`absolute inset-0 bg-gradient-to-br ${feature.color} opacity-5 group-hover:opacity-10 transition-opacity rounded-2xl`} />
+                    
+                    {/* 动态粒子效果 */}
+                    <div className="absolute inset-0 overflow-hidden">
+                      <div className={`absolute top-1/4 left-1/4 w-2 h-2 bg-${feature.glowColor} rounded-full opacity-0 group-hover:opacity-100 transition-all duration-700 group-hover:animate-bounce`} />
+                      <div className={`absolute bottom-1/4 right-1/4 w-1 h-1 bg-${feature.glowColor} rounded-full opacity-0 group-hover:opacity-100 transition-all duration-500 delay-200`} />
+                      <div className={`absolute top-1/2 right-1/3 w-1.5 h-1.5 bg-${feature.glowColor} rounded-full opacity-0 group-hover:opacity-100 transition-all duration-600 delay-100`} />
+                    </div>
+                    
+                    <div className="relative z-10">
+                      <motion.div 
+                        className={`inline-flex p-4 rounded-xl bg-gradient-to-br ${feature.color} mb-6 relative`}
+                        whileHover={{ scale: 1.05, rotate: -3 }}
+                        transition={{ type: "spring", stiffness: 300 }}
+                      >
+                        <Icon className="h-10 w-10 text-dark-bg-primary" />
+                        {/* 脉冲效果 */}
+                        <div className={`absolute inset-0 rounded-xl bg-gradient-to-br ${feature.color} opacity-0 group-hover:opacity-50 animate-ping`} />
+                      </motion.div>
+                      
+                      <h3 className="text-2xl font-semibold text-white mb-3 group-hover:text-neon-cyan transition-colors duration-300">
+                        {feature.title}
+                      </h3>
+                      <p className="text-gray-400 leading-relaxed mb-6">
+                        {feature.description}
+                      </p>
+                      
+                      <motion.div 
+                        className="flex items-center text-neon-cyan opacity-0 group-hover:opacity-100 transition-opacity duration-300 cursor-pointer"
+                        whileHover={{ x: 5 }}
+                      >
+                        <span className="text-sm font-medium">了解更多</span>
+                        <ArrowRightIcon className="h-4 w-4 ml-2" />
+                      </motion.div>
+                    </div>
+                  </div>
+                </motion.div>
+              );
+            })}
+          </motion.div>
         </div>
       </section>
 
