@@ -240,9 +240,9 @@ export default function Home({ featuredPrompts }: HomeProps) {
                         whileHover={{ scale: 1.1, rotate: 5 }}
                         transition={{ type: "spring", stiffness: 300 }}
                       >
-                        <Icon className="h-8 w-8 text-dark-bg-primary" />
+                        <Icon className="h-8 w-8 text-dark-bg-primary relative z-10" />
                         {/* 图标光环 */}
-                        <div className={`absolute inset-0 rounded-xl bg-gradient-to-br ${feature.color} opacity-50 blur-sm group-hover:opacity-100 transition-opacity duration-300`} />
+                        <div className={`absolute inset-0 rounded-xl bg-gradient-to-br ${feature.color} opacity-50 blur-sm group-hover:opacity-100 transition-opacity duration-300 -z-10`} />
                       </motion.div>
                       
                       <h3 className="text-2xl font-semibold text-white mb-3 group-hover:text-neon-cyan transition-colors duration-300">
@@ -302,9 +302,7 @@ export default function Home({ featuredPrompts }: HomeProps) {
                         whileHover={{ scale: 1.05, rotate: -3 }}
                         transition={{ type: "spring", stiffness: 300 }}
                       >
-                        <Icon className="h-10 w-10 text-dark-bg-primary" />
-                        {/* 脉冲效果 */}
-                        <div className={`absolute inset-0 rounded-xl bg-gradient-to-br ${feature.color} opacity-0 group-hover:opacity-50 animate-ping`} />
+                        <Icon className="h-10 w-10 text-dark-bg-primary relative z-10" />
                       </motion.div>
                       
                       <h3 className="text-2xl font-semibold text-white mb-3 group-hover:text-neon-cyan transition-colors duration-300">
