@@ -102,7 +102,7 @@ const DocsPage: React.FC = () => {
               </div>
             </motion.div>
 
-            {/* Context Engineering */}
+            {/* 上下文工程 */}
             <motion.div
               variants={cardVariants}
               initial="hidden"
@@ -117,7 +117,7 @@ const DocsPage: React.FC = () => {
                       <CpuChipIcon className="h-6 w-6 text-neon-cyan" />
                     </div>
                   </div>
-                  <h2 className="ml-4 text-2xl font-bold text-white group-hover:text-neon-cyan transition-colors duration-300">Context Engineering</h2>
+                  <h2 className="ml-4 text-2xl font-bold text-white group-hover:text-neon-cyan transition-colors duration-300">上下文工程</h2>
                 </div>
                 <p className="text-gray-400 mb-8 leading-relaxed">
                   下一代AI交互范式，让人工智能真正理解并适应您的需求，构建个性化的AI助手。

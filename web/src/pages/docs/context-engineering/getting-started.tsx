@@ -1,7 +1,7 @@
 /**
- * Context Engineering 快速入门指南
+ * 上下文工程快速入门指南
  * 
- * 为新用户提供5分钟快速上手体验，让用户迅速理解并开始使用Context Engineering功能
+ * 为新用户提供5分钟快速上手体验，让用户迅速理解并开始使用上下文工程功能
  */
 
 import React, { useState } from 'react';
@@ -66,7 +66,7 @@ const QUICK_START_STEPS: QuickStartStep[] = [
   {
     id: 'step3',
     title: '进行首次交互',
-    description: '使用提示词进行第一次AI对话，体验Context Engineering的学习过程',
+    description: '使用提示词进行第一次AI对话，体验上下文工程的学习过程',
     timeEstimate: '1分钟',
     action: '点击"立即体验"按钮，与AI进行第一次对话',
     tips: [
@@ -119,11 +119,11 @@ export default function ContextEngineeringGettingStarted() {
 
   return (
     <DocLayout
-      title="Context Engineering 快速入门"
-      description="5分钟快速体验Context Engineering的强大功能，从零开始构建您的个性化AI助手。"
+      title="上下文工程快速入门"
+      description="5分钟快速体验上下文工程的强大功能，从零开始构建您的个性化AI助手。"
       breadcrumbs={[
         { name: '文档', href: '/docs' },
-        { name: 'Context Engineering', href: '/docs/context-engineering' },
+        { name: '上下文工程', href: '/docs/context-engineering' },
         { name: '快速入门', href: '/docs/context-engineering/getting-started' },
       ]}
     >
@@ -242,7 +242,7 @@ export default function ContextEngineeringGettingStarted() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <FAQItem
                 question="需要技术背景才能使用吗？"
-                answer="完全不需要！Context Engineering设计为对所有用户友好，界面直观，无需任何编程知识。"
+                answer="完全不需要！上下文工程设计为对所有用户友好，界面直观，无需任何编程知识。"
               />
               <FAQItem
                 question="个性化需要多长时间生效？"
@@ -271,7 +271,7 @@ export default function ContextEngineeringGettingStarted() {
               🎉 恭喜！您已掌握基础操作
             </h2>
             <p className="text-gray-300 mb-8 max-w-2xl mx-auto">
-              现在您已经了解了Context Engineering的基本使用方法。继续探索高级功能，发现更多可能性。
+              现在您已经了解了上下文工程的基本使用方法。继续探索高级功能，发现更多可能性。
             </p>
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-4xl mx-auto">
@@ -304,7 +304,7 @@ export default function ContextEngineeringGettingStarted() {
                 >
                   <AcademicCapIcon className="h-8 w-8 text-neon-green mx-auto mb-3" />
                   <h3 className="text-lg font-semibold text-white mb-2">高级工具</h3>
-                  <p className="text-gray-400 text-sm">探索专业级Context Engineering功能</p>
+                  <p className="text-gray-400 text-sm">探索专业级上下文工程功能</p>
                 </motion.div>
               </Link>
             </div>

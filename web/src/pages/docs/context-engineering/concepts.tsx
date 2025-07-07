@@ -1,7 +1,7 @@
 /**
- * Context Engineering 核心概念详解
+ * 上下文工程核心概念详解
  * 
- * 深入解释Context Engineering的理论基础、技术原理和设计哲学
+ * 深入解释上下文工程的理论基础、技术原理和设计哲学
  */
 
 import React from 'react';
@@ -30,11 +30,11 @@ import {
 export default function ContextEngineeringConcepts() {
   return (
     <DocLayout
-      title="Context Engineering 核心概念"
-      description="深入理解Context Engineering的理论基础、技术架构和设计原理，掌握下一代AI交互范式的核心要素。"
+      title="上下文工程核心概念"
+      description="深入理解上下文工程的理论基础、技术架构和设计原理，掌握下一代AI交互范式的核心要素。"
       breadcrumbs={[
         { name: '文档', href: '/docs' },
-        { name: 'Context Engineering', href: '/docs/context-engineering' },
+        { name: '上下文工程', href: '/docs/context-engineering' },
         { name: '核心概念', href: '/docs/context-engineering/concepts' },
       ]}
     >
@@ -57,11 +57,11 @@ export default function ContextEngineeringConcepts() {
                 <h3 className="text-xl font-semibold text-white mb-4">认知科学基础</h3>
                 <div className="space-y-4 text-gray-300 leading-relaxed">
                   <p>
-                    Context Engineering的理论基础源于<strong className="text-neon-blue">认知科学</strong>和<strong className="text-neon-blue">人机交互</strong>研究。
+                    上下文工程的理论基础源于<strong className="text-neon-blue">认知科学</strong>和<strong className="text-neon-blue">人机交互</strong>研究。
                     人类的交流天然依赖于上下文，我们会根据对话者的背景、当前情境、历史交互来调整表达方式。
                   </p>
                   <p>
-                    传统的AI系统缺乏这种上下文感知能力，每次交互都是孤立的。Context Engineering试图让AI获得类似人类的上下文感知和适应能力。
+                    传统的AI系统缺乏这种上下文感知能力，每次交互都是孤立的。上下文工程试图让AI获得类似人类的上下文感知和适应能力。
                   </p>
                   <p>
                     关键洞察：<em className="text-neon-cyan">"最好的AI助手不是最聪明的，而是最了解用户的"</em>
@@ -84,7 +84,7 @@ export default function ContextEngineeringConcepts() {
                   />
                   <TimelineItem
                     year="2024"
-                    title="Context Engineering 诞生"
+                    title="上下文工程诞生"
                     description="动态、自适应的AI交互范式正式确立"
                   />
                 </div>
@@ -103,7 +103,7 @@ export default function ContextEngineeringConcepts() {
           <div className="glass rounded-2xl p-8 border border-neon-purple/30">
             <h2 className="text-3xl font-bold text-white mb-8 flex items-center">
               <PuzzlePieceIcon className="h-8 w-8 mr-3 text-neon-purple" />
-              Context Engineering 架构组件
+              上下文工程架构组件
             </h2>
             
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
@@ -180,7 +180,7 @@ export default function ContextEngineeringConcepts() {
           <div className="glass rounded-2xl p-8 border border-neon-green/30">
             <h2 className="text-3xl font-bold text-white mb-8 flex items-center">
               <ClockIcon className="h-8 w-8 mr-3 text-neon-green" />
-              Context Engineering 工作流程
+              上下文工程工作流程
             </h2>
             
             <div className="space-y-6">
@@ -264,7 +264,7 @@ export default function ContextEngineeringConcepts() {
 {`// 静态提示词
 "请帮我写一段Python代码"
 
-// Context Engineering 动态合成
+// 上下文工程动态合成
 basePrompt + 
 userContext.language + 
 userContext.style + 
@@ -355,7 +355,7 @@ adaptationRules
                 <h3 className="text-xl font-semibold text-white mb-4">价值主张</h3>
                 <div className="p-6 bg-gradient-to-br from-neon-yellow/10 to-neon-green/10 rounded-xl border border-neon-yellow/20">
                   <blockquote className="text-lg text-gray-300 italic leading-relaxed mb-4">
-                    "Context Engineering不是为了让AI更聪明，
+                    "上下文工程不是为了让AI更聪明，
                     <br />
                     而是为了让AI更懂你。"
                   </blockquote>
@@ -379,7 +379,7 @@ adaptationRules
         >
           <div className="glass rounded-2xl p-8 border border-neon-pink/30 text-center">
             <h2 className="text-3xl font-bold text-white mb-6">
-              准备好体验Context Engineering了吗？
+              准备好体验上下文工程了吗？
             </h2>
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-4xl mx-auto">

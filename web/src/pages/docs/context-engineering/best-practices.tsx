@@ -1,7 +1,7 @@
 /**
- * Context Engineering 最佳实践
+ * 上下文工程最佳实践
  * 
- * 专家经验分享和高级使用技巧，帮助用户获得最佳的Context Engineering体验
+ * 专家经验分享和高级使用技巧，帮助用户获得最佳的上下文工程体验
  */
 
 import React, { useState } from 'react';
@@ -279,13 +279,13 @@ export default function ContextEngineeringBestPractices() {
 
   return (
     <DocLayout
-      title="Context Engineering 最佳实践"
-      description="专家总结的实用经验和技巧，帮助您避免常见陷阱，最大化Context Engineering的价值。"
+      title="上下文工程最佳实践"
+      description="专家总结的实用经验和技巧，帮助您避免常见陷阱，最大化上下文工程的价值。"
       backLink="/docs"
       backText="返回文档首页"
       breadcrumbs={[
         { name: '文档', href: '/docs' },
-        { name: 'Context Engineering', href: '/docs/context-engineering' },
+        { name: '上下文工程', href: '/docs/context-engineering' },
         { name: '最佳实践', href: '/docs/context-engineering/best-practices' },
       ]}
     >
@@ -539,7 +539,7 @@ export default function ContextEngineeringBestPractices() {
       >
         <div className="glass rounded-2xl p-8 border border-neon-cyan/30 text-center">
           <h2 className="text-3xl font-bold text-white mb-6">
-            准备成为Context Engineering专家？
+            准备成为上下文工程专家？
           </h2>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-4xl mx-auto">

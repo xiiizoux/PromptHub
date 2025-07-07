@@ -1,5 +1,5 @@
 /**
- * Context Engineering 用户指南
+ * 上下文工程用户指南
  * 
  * 详细的功能使用教程，覆盖所有核心功能的使用方法和最佳实践
  */
@@ -228,12 +228,12 @@ const GUIDE_SECTIONS: GuideSection[] = [
     id: 'advanced-features',
     title: '高级功能',
     icon: RocketLaunchIcon,
-    description: '探索Context Engineering的专业级功能',
+    description: '探索上下文工程的专业级功能',
     subsections: [
       {
         id: 'advanced-tools',
         title: '高级工具集',
-        content: '专业用户可以使用高级Context Engineering工具，包括复杂规则构建、批量优化、API集成等功能。',
+        content: '专业用户可以使用高级上下文工程工具，包括复杂规则构建、批量优化、API集成等功能。',
         tips: [
           '建议有一定使用经验后再尝试高级功能',
           '高级工具需要更多的配置和维护',
@@ -243,7 +243,7 @@ const GUIDE_SECTIONS: GuideSection[] = [
       {
         id: 'api-integration',
         title: 'API集成',
-        content: '通过API将Context Engineering功能集成到您的工作流程或应用中，实现自动化的个性化AI体验。',
+        content: '通过API将上下文工程功能集成到您的工作流程或应用中，实现自动化的个性化AI体验。',
         examples: [
           'Webhook：当个性化效果达到阈值时自动通知',
           'REST API：程序化访问个人上下文数据',
@@ -253,7 +253,7 @@ const GUIDE_SECTIONS: GuideSection[] = [
       {
         id: 'export-import',
         title: '数据导出导入',
-        content: '您可以导出个人的Context Engineering数据用于备份或迁移，也可以导入预配置的规则集。',
+        content: '您可以导出个人的上下文工程数据用于备份或迁移，也可以导入预配置的规则集。',
         warnings: [
           '导入规则时注意与现有规则的兼容性',
           '个人数据导出包含敏感信息，请妥善保管',
@@ -271,13 +271,13 @@ export default function ContextEngineeringUserGuide() {
 
   return (
     <DocLayout
-      title="Context Engineering 用户指南"
-      description="详细的功能使用教程，帮助您充分利用Context Engineering的所有功能，成为AI个性化的专家。"
+      title="上下文工程用户指南"
+      description="详细的功能使用教程，帮助您充分利用上下文工程的所有功能，成为AI个性化的专家。"
       backLink="/docs"
       backText="返回文档首页"
       breadcrumbs={[
         { name: '文档', href: '/docs' },
-        { name: 'Context Engineering', href: '/docs/context-engineering' },
+        { name: '上下文工程', href: '/docs/context-engineering' },
         { name: '用户指南', href: '/docs/context-engineering/user-guide' },
       ]}
     >
