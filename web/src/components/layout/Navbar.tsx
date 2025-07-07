@@ -18,6 +18,7 @@ import {
   PhotoIcon,
   FilmIcon,
   ArchiveBoxIcon,
+  AdjustmentsHorizontalIcon,
 } from '@heroicons/react/24/outline';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'react-hot-toast';
@@ -272,7 +273,11 @@ const Navbar: React.FC = () => {
                   >
                     <Link href="/profile" className="flex items-center space-x-3 px-4 py-3 text-gray-300 hover:text-neon-cyan hover:bg-neon-cyan/10 transition-all">
                       <UserIcon className="h-5 w-5" />
-                      <span>个人资料</span>
+                      <span>账户管理</span>
+                    </Link>
+                    <Link href="/context-engineering" className="flex items-center space-x-3 px-4 py-3 text-gray-300 hover:text-neon-cyan hover:bg-neon-cyan/10 transition-all">
+                      <AdjustmentsHorizontalIcon className="h-5 w-5" />
+                      <span>上下文工程</span>
                     </Link>
                     <Link href="/prompts/archived" className="flex items-center space-x-3 px-4 py-3 text-gray-300 hover:text-neon-cyan hover:bg-neon-cyan/10 transition-all">
                       <ArchiveBoxIcon className="h-5 w-5" />
@@ -365,7 +370,15 @@ const Navbar: React.FC = () => {
                       onClick={() => setMobileMenuOpen(false)}
                     >
                       <UserIcon className="h-5 w-5" />
-                      <span>个人资料</span>
+                      <span>账户管理</span>
+                    </Link>
+                    <Link
+                      href="/context-engineering"
+                      className="flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-400 hover:text-neon-cyan hover:bg-neon-cyan/5 transition-all"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      <AdjustmentsHorizontalIcon className="h-5 w-5" />
+                      <span>上下文工程</span>
                     </Link>
                     <Link
                       href="/prompts/archived"

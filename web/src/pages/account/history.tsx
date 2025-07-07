@@ -227,11 +227,11 @@ export default function HistoryPage() {
           animate={{ opacity: 1, x: 0 }}
         >
           <Link 
-            href="/profile#context-engineering"
+            href="/context-engineering"
             className="inline-flex items-center text-gray-400 hover:text-neon-cyan transition-colors duration-200 group"
           >
             <ArrowLeftIcon className="h-5 w-5 mr-2 group-hover:-translate-x-1 transition-transform duration-200" />
-            返回 Context Engineering
+            返回上下文工程
           </Link>
         </motion.div>
 

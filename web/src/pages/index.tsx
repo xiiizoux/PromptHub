@@ -72,7 +72,7 @@ export default function Home({ featuredPrompts }: HomeProps) {
     },
     {
       icon: CogIcon,
-      title: 'Context Engineering',
+      title: '上下文工程',
       description: '深度上下文工程技术，构建智能化的多轮对话体验和复杂任务执行链',
       color: 'from-neon-green to-neon-cyan',
       glowColor: 'neon-green',
