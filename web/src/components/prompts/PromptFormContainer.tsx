@@ -271,7 +271,7 @@ export default function PromptFormContainer({
       hasChanges = 
         watchedData.name !== (initialData?.name || '') ||
         watchedData.description !== (initialData?.description || '') ||
-        watchedData.content !== (initialData?.content || '') ||
+        watchedData.content !== (getContentValue(initialData?.content) || '') ||
         watchedData.category !== (initialData?.category || '') ||
         watchedData.version !== (initialData?.version || 1.0) ||
         !arraysEqual(watchedData.tags || [], initialData?.tags || []) ||
@@ -740,14 +740,24 @@ export default function PromptFormContainer({
                   </div>
                   
                   <div className="relative">
-                    <textarea
-                      id="content"
-                      {...register('content', { required: '请输入提示词内容' })}
-                      rows={12}
-                      placeholder="在这里编写您的提示词内容。您可以使用 {{变量名}} 来定义动态变量..."
-                      className="input-primary w-full font-mono text-sm resize-none"
-                      onChange={detectVariables}
-                      disabled={isSubmitting}
+                    <Controller
+                      name="content"
+                      control={control}
+                      rules={{ required: '请输入提示词内容' }}
+                      render={({ field }) => (
+                        <textarea
+                          id="content"
+                          {...field}
+                          onChange={(e) => {
+                            field.onChange(e); // 确保 react-hook-form 能监听到变化
+                            detectVariables(e); // 然后执行自定义逻辑
+                          }}
+                          rows={12}
+                          placeholder="在这里编写您的提示词内容。您可以使用 {{变量名}} 来定义动态变量..."
+                          className="input-primary w-full font-mono text-sm resize-none"
+                          disabled={isSubmitting}
+                        />
+                      )}
                     />
                     
                     <div className="absolute top-3 right-3 text-xs text-gray-500">
