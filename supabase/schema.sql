@@ -1,7 +1,7 @@
 -- =============================================
 -- PromptHub Database Schema (Complete)
--- Generated: 2025-07-05
--- Updated to match actual Supabase database structure with all 47 tables
+-- Generated: 2025-07-10
+-- Updated to match actual Supabase database structure
 -- =============================================
 
 -- Enable necessary extensions
@@ -15,492 +15,413 @@ CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 -- Category type enum (matches actual database)
 CREATE TYPE category_type AS ENUM ('chat', 'image', 'video');
 
--- Prompt category enum (matches actual database)
-CREATE TYPE prompt_category AS ENUM ('chat', 'image', 'video');
+-- Prompt category enum (matches actual database with all Chinese categories)
+CREATE TYPE prompt_category AS ENUM (
+    '全部', '学术', '职业', '文案', '设计', '教育', '情感', '娱乐', '游戏',
+    '通用', '生活', '商业', '办公', '编程', '翻译', '绘图', '视频', '播客',
+    '音乐', '健康', '科技', '金融投资'
+);
 
 -- =============================================
 -- Core Tables (in dependency order)
 -- =============================================
 
--- Users table
+-- Users table (matches actual database structure)
 CREATE TABLE users (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    username VARCHAR(50) UNIQUE NOT NULL,
-    email VARCHAR(255) UNIQUE NOT NULL,
-    password_hash VARCHAR(255) NOT NULL,
-    display_name VARCHAR(100),
-    avatar_url TEXT,
-    bio TEXT,
-    is_active BOOLEAN DEFAULT true,
-    is_verified BOOLEAN DEFAULT false,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    last_login_at TIMESTAMP WITH TIME ZONE,
-    preferences JSONB DEFAULT '{}'::jsonb,
-    role VARCHAR(20) DEFAULT 'user' CHECK (role IN ('user', 'admin', 'moderator'))
+    id UUID PRIMARY KEY NOT NULL,
+    email VARCHAR,
+    display_name VARCHAR,
+    role VARCHAR DEFAULT 'user'::character varying,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+    username VARCHAR
 );
 
--- Categories table (with JSONB optimization_template)
+-- Categories table (matches actual database structure)
 CREATE TABLE categories (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    name VARCHAR(100) NOT NULL,
-    name_en VARCHAR(100) NOT NULL,
-    icon VARCHAR(50),
+    name TEXT NOT NULL,
+    name_en TEXT,
+    icon TEXT,
     description TEXT,
     sort_order INTEGER DEFAULT 0,
     is_active BOOLEAN DEFAULT true,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    type category_type NOT NULL DEFAULT 'chat',
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+    type category_type DEFAULT 'chat'::category_type,
     optimization_template JSONB
 );
 
--- API Keys table
+-- API Keys table (matches actual database structure)
 CREATE TABLE api_keys (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    key_hash VARCHAR(255) NOT NULL UNIQUE,
-    name VARCHAR(100) NOT NULL,
-    permissions JSONB DEFAULT '[]'::jsonb,
-    is_active BOOLEAN DEFAULT true,
+    user_id UUID REFERENCES users(id),
+    name TEXT NOT NULL,
+    key_hash TEXT NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
     expires_at TIMESTAMP WITH TIME ZONE,
-    last_used_at TIMESTAMP WITH TIME ZONE,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    last_used_at TIMESTAMP WITH TIME ZONE
 );
 
--- Prompts table (with Context Engineering fields and correct field order)
+-- Prompts table (matches actual database structure with correct field order)
 CREATE TABLE prompts (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    name VARCHAR(255) NOT NULL,
+    name TEXT NOT NULL,
     description TEXT,
-    content JSONB,
-    category VARCHAR(50),
+    category TEXT NOT NULL DEFAULT '通用对话'::text,
     tags TEXT[],
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    version INTEGER DEFAULT 1,
-    is_public BOOLEAN DEFAULT true,
-    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+    is_public BOOLEAN DEFAULT false,
+    user_id UUID REFERENCES users(id),
     allow_collaboration BOOLEAN DEFAULT false,
-    edit_permission VARCHAR(20) DEFAULT 'owner' CHECK (edit_permission IN ('owner', 'collaborators', 'public')),
+    edit_permission VARCHAR DEFAULT 'owner_only'::character varying,
     created_by UUID REFERENCES users(id),
     last_modified_by UUID REFERENCES users(id),
     category_id UUID REFERENCES categories(id),
     view_count INTEGER DEFAULT 0,
-    input_variables JSONB DEFAULT '[]'::jsonb,
+    input_variables TEXT[],
     compatible_models TEXT[],
-    template_format VARCHAR(50) DEFAULT 'text',
+    template_format TEXT DEFAULT 'text'::text,
     preview_asset_url TEXT,
     parameters JSONB DEFAULT '{}'::jsonb,
-    category_type category_type,
-    migration_status VARCHAR(50) DEFAULT 'pending',
+    category_type VARCHAR,
+    content JSONB,
+    context_config JSONB DEFAULT '{"personalization": {"user_level_adaptation": true, "context_aware_examples": true, "dynamic_tool_selection": true}, "adaptation_rules": {"style_adaptation": true, "content_filtering": true, "expertise_adjustment": true}, "memory_management": {"short_term_window": 5, "long_term_retention": ["user_preferences", "project_context"]}}'::jsonb,
+    usage_stats JSONB DEFAULT '{"total_uses": 0, "last_updated": null, "success_rate": 0.0, "user_ratings": [], "avg_response_time": 0}'::jsonb,
+    dependencies JSONB DEFAULT '{"data_sources": [], "required_tools": [], "api_dependencies": [], "prerequisite_prompts": []}'::jsonb,
+    effectiveness_score NUMERIC DEFAULT 0.0,
     context_engineering_enabled BOOLEAN DEFAULT false,
-    context_variables JSONB DEFAULT '{}'::jsonb,
-    adaptation_rules JSONB DEFAULT '[]'::jsonb,
-    effectiveness_score DECIMAL(3,2) DEFAULT 0.00 CHECK (effectiveness_score >= 0 AND effectiveness_score <= 5)
+    context_complexity_level VARCHAR DEFAULT 'basic'::character varying,
+    version_config JSONB DEFAULT '{"created_at": null, "last_modified": null, "template_version": "1.0", "experiment_version": null, "context_config_version": "1.0", "behavior_strategy_version": "1.0"}'::jsonb,
+    version NUMERIC NOT NULL DEFAULT 1.0
 );
 
--- Comments table
+-- Comments table (matches actual database structure)
 CREATE TABLE comments (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    prompt_id UUID NOT NULL REFERENCES prompts(id) ON DELETE CASCADE,
-    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    parent_id UUID REFERENCES comments(id) ON DELETE CASCADE,
+    prompt_id UUID NOT NULL REFERENCES prompts(id),
+    user_id UUID NOT NULL REFERENCES users(id),
     content TEXT NOT NULL,
-    is_edited BOOLEAN DEFAULT false,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    parent_id UUID REFERENCES comments(id),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
 );
 
--- Favorites table
-CREATE TABLE favorites (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    prompt_id UUID NOT NULL REFERENCES prompts(id) ON DELETE CASCADE,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE(user_id, prompt_id)
-);
-
--- Likes table
-CREATE TABLE likes (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    prompt_id UUID NOT NULL REFERENCES prompts(id) ON DELETE CASCADE,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE(user_id, prompt_id)
-);
-
--- Notifications table
+-- Notifications table (matches actual database structure)
 CREATE TABLE notifications (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    type VARCHAR(50) NOT NULL,
-    title VARCHAR(255) NOT NULL,
-    message TEXT,
-    data JSONB DEFAULT '{}'::jsonb,
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES users(id),
+    type TEXT NOT NULL,
+    title TEXT,
+    content TEXT NOT NULL,
+    resource_id UUID,
+    trigger_user_id UUID REFERENCES users(id),
     is_read BOOLEAN DEFAULT false,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT now()
 );
 
--- Prompt version history table
-CREATE TABLE prompt_version_history (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    prompt_id UUID NOT NULL REFERENCES prompts(id) ON DELETE CASCADE,
-    version_number INTEGER NOT NULL,
-    content JSONB NOT NULL,
-    description TEXT,
-    created_by UUID REFERENCES users(id),
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    changes_summary TEXT,
-    is_current BOOLEAN DEFAULT false,
-    UNIQUE(prompt_id, version_number)
-);
-
--- Public prompt analytics table
-CREATE TABLE public_prompt_analytics (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    prompt_id UUID NOT NULL REFERENCES prompts(id) ON DELETE CASCADE,
-    date DATE NOT NULL,
-    views INTEGER DEFAULT 0,
-    likes INTEGER DEFAULT 0,
-    favorites INTEGER DEFAULT 0,
-    comments INTEGER DEFAULT 0,
-    shares INTEGER DEFAULT 0,
-    UNIQUE(prompt_id, date)
-);
-
--- Reports table
-CREATE TABLE reports (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    reporter_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    reported_prompt_id UUID REFERENCES prompts(id) ON DELETE CASCADE,
-    reported_user_id UUID REFERENCES users(id) ON DELETE CASCADE,
-    reported_comment_id UUID REFERENCES comments(id) ON DELETE CASCADE,
-    reason VARCHAR(100) NOT NULL,
-    description TEXT,
-    status VARCHAR(20) DEFAULT 'pending' CHECK (status IN ('pending', 'reviewed', 'resolved', 'dismissed')),
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    resolved_at TIMESTAMP WITH TIME ZONE,
-    resolved_by UUID REFERENCES users(id)
-);
-
--- Social interactions table
+-- Social interactions table (matches actual database structure)
 CREATE TABLE social_interactions (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    target_user_id UUID REFERENCES users(id) ON DELETE CASCADE,
-    prompt_id UUID REFERENCES prompts(id) ON DELETE CASCADE,
-    interaction_type VARCHAR(50) NOT NULL,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    prompt_id UUID NOT NULL REFERENCES prompts(id),
+    user_id UUID NOT NULL REFERENCES users(id),
+    type TEXT NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT now()
 );
 
--- Tags table
-CREATE TABLE tags (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    name VARCHAR(50) UNIQUE NOT NULL,
-    description TEXT,
-    usage_count INTEGER DEFAULT 0,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-);
-
--- User activity logs table
-CREATE TABLE user_activity_logs (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    activity_type VARCHAR(50) NOT NULL,
-    target_id UUID,
-    target_type VARCHAR(50),
-    metadata JSONB DEFAULT '{}'::jsonb,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-);
-
--- User follows table
+-- User follows table (matches actual database structure)
 CREATE TABLE user_follows (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    follower_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    following_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE(follower_id, following_id),
-    CHECK (follower_id != following_id)
+    follower_id UUID NOT NULL REFERENCES users(id),
+    following_id UUID NOT NULL REFERENCES users(id),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT now()
 );
 
--- User preferences table
-CREATE TABLE user_preferences (
+-- Prompt versions table (matches actual database structure)
+CREATE TABLE prompt_versions (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    preference_key VARCHAR(100) NOT NULL,
-    preference_value JSONB NOT NULL,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE(user_id, preference_key)
+    prompt_id UUID REFERENCES prompts(id),
+    version NUMERIC NOT NULL,
+    description TEXT,
+    tags TEXT[],
+    category TEXT,
+    category_id UUID REFERENCES categories(id),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+    user_id UUID REFERENCES users(id),
+    preview_asset_url TEXT,
+    parameters JSONB DEFAULT '{}'::jsonb,
+    content TEXT
 );
 
--- User sessions table
-CREATE TABLE user_sessions (
+-- Prompt audit logs table (matches actual database structure)
+CREATE TABLE prompt_audit_logs (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    session_token VARCHAR(255) UNIQUE NOT NULL,
+    prompt_id UUID REFERENCES prompts(id),
+    user_id UUID REFERENCES users(id),
+    action VARCHAR NOT NULL,
+    old_values JSONB DEFAULT '{}'::jsonb,
+    new_values JSONB DEFAULT '{}'::jsonb,
     ip_address INET,
     user_agent TEXT,
-    expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    last_activity_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT now()
+);
+
+-- Topics table (matches actual database structure)
+CREATE TABLE topics (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    title TEXT NOT NULL,
+    description TEXT,
+    creator_id UUID NOT NULL REFERENCES users(id),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
+);
+
+-- Topic posts table (matches actual database structure)
+CREATE TABLE topic_posts (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    topic_id UUID NOT NULL REFERENCES topics(id),
+    user_id UUID NOT NULL REFERENCES users(id),
+    title TEXT NOT NULL,
+    content TEXT NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
 );
 
 -- =============================================
 -- Context Engineering Tables
 -- =============================================
 
--- User Context Profiles
+-- User context profiles table (matches actual database structure)
 CREATE TABLE user_context_profiles (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    profile_name VARCHAR(100) NOT NULL,
-    context_data JSONB NOT NULL DEFAULT '{}'::jsonb,
-    preferences JSONB DEFAULT '{}'::jsonb,
-    is_active BOOLEAN DEFAULT true,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE(user_id, profile_name)
+    user_id UUID REFERENCES users(id),
+    privacy_level VARCHAR DEFAULT 'private'::character varying,
+    data_retention_days INTEGER DEFAULT 365,
+    allow_anonymous_analytics BOOLEAN DEFAULT false,
+    expertise_level VARCHAR DEFAULT 'intermediate'::character varying,
+    skill_domains JSONB DEFAULT '[]'::jsonb,
+    learning_goals JSONB DEFAULT '[]'::jsonb,
+    preferences JSONB DEFAULT '{"detail_level": "medium", "example_preference": "practical", "communication_style": "balanced", "language_preference": "auto", "context_memory_enabled": true}'::jsonb,
+    interaction_patterns JSONB DEFAULT '{"usage_frequency": {}, "success_patterns": {}, "common_modifications": [], "preferred_prompt_types": []}'::jsonb,
+    learning_progress JSONB DEFAULT '{"knowledge_gaps": [], "learning_velocity": 0.0, "skill_improvements": {}, "completed_tutorials": []}'::jsonb,
+    context_memory JSONB DEFAULT '{"recurring_tasks": [], "project_contexts": {}, "personal_templates": {}, "conversation_themes": []}'::jsonb,
+    data_export_requested_at TIMESTAMP WITH TIME ZONE,
+    data_deletion_scheduled_at TIMESTAMP WITH TIME ZONE,
+    profile_completeness NUMERIC DEFAULT 0.0,
+    last_interaction_at TIMESTAMP WITH TIME ZONE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
 );
 
--- Context Sessions
+-- Context sessions table (matches actual database structure)
 CREATE TABLE context_sessions (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    profile_id UUID REFERENCES user_context_profiles(id) ON DELETE SET NULL,
-    session_data JSONB NOT NULL DEFAULT '{}'::jsonb,
-    status VARCHAR(20) DEFAULT 'active' CHECK (status IN ('active', 'paused', 'completed', 'expired')),
-    started_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    last_activity_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    expires_at TIMESTAMP WITH TIME ZONE
+    session_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID REFERENCES users(id),
+    is_private BOOLEAN DEFAULT true,
+    anonymize_after_days INTEGER DEFAULT 30,
+    session_type VARCHAR DEFAULT 'general'::character varying,
+    session_goal TEXT,
+    conversation_history JSONB DEFAULT '[]'::jsonb,
+    conversation_summary JSONB DEFAULT '{}'::jsonb,
+    context_state JSONB DEFAULT '{"user_intent": "unknown", "active_tools": [], "current_task": null, "conversation_flow": "linear", "context_complexity": "basic"}'::jsonb,
+    used_public_prompts JSONB DEFAULT '[]'::jsonb,
+    session_metadata JSONB DEFAULT '{"device_type": "unknown", "session_quality": 0.0, "interaction_mode": "text"}'::jsonb,
+    total_exchanges INTEGER DEFAULT 0,
+    avg_response_time INTEGER DEFAULT 0,
+    user_satisfaction_score NUMERIC,
+    started_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+    last_activity_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+    ended_at TIMESTAMP WITH TIME ZONE,
+    status VARCHAR DEFAULT 'active'::character varying
 );
 
--- User Interactions
-CREATE TABLE user_interactions (
+-- Context cache table (matches actual database structure)
+CREATE TABLE context_cache (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    session_id UUID REFERENCES context_sessions(id) ON DELETE CASCADE,
-    prompt_id UUID REFERENCES prompts(id) ON DELETE SET NULL,
-    interaction_type VARCHAR(50) NOT NULL,
-    interaction_data JSONB NOT NULL DEFAULT '{}'::jsonb,
-    context_snapshot JSONB DEFAULT '{}'::jsonb,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    cache_key VARCHAR NOT NULL,
+    prompt_id UUID REFERENCES prompts(id),
+    user_context_hash VARCHAR,
+    cached_content JSONB NOT NULL,
+    cache_metadata JSONB DEFAULT '{"cache_strategy": "lru", "compression_used": false, "generation_time_ms": 0}'::jsonb,
+    hit_count INTEGER DEFAULT 0,
+    last_accessed_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+    expires_at TIMESTAMP WITH TIME ZONE,
+    is_valid BOOLEAN DEFAULT true,
+    invalidation_reason TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
 );
 
--- Context Experiments
+-- Context experiments table (matches actual database structure)
 CREATE TABLE context_experiments (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    experiment_name VARCHAR(200) NOT NULL,
-    experiment_type VARCHAR(50) NOT NULL,
-    configuration JSONB NOT NULL DEFAULT '{}'::jsonb,
-    status VARCHAR(20) DEFAULT 'draft' CHECK (status IN ('draft', 'active', 'paused', 'completed', 'cancelled')),
+    experiment_name VARCHAR NOT NULL,
+    experiment_type VARCHAR NOT NULL,
+    experiment_config JSONB DEFAULT '{"variants": [], "duration_days": 7, "min_sample_size": 100, "success_metrics": [], "traffic_allocation": {}}'::jsonb,
+    target_prompts JSONB DEFAULT '[]'::jsonb,
+    experiment_conditions JSONB DEFAULT '{"user_segments": [], "context_filters": {}, "time_constraints": {}}'::jsonb,
+    experiment_results JSONB DEFAULT '{"winner_variant": null, "confidence_level": 0.95, "variants_performance": {}, "statistical_significance": false}'::jsonb,
+    status VARCHAR DEFAULT 'draft'::character varying,
     start_date TIMESTAMP WITH TIME ZONE,
     end_date TIMESTAMP WITH TIME ZONE,
     created_by UUID REFERENCES users(id),
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
 );
 
--- Experiment Participations
+-- Experiment participations table (matches actual database structure)
 CREATE TABLE experiment_participations (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    experiment_id UUID NOT NULL REFERENCES context_experiments(id) ON DELETE CASCADE,
-    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    variant_assigned VARCHAR(100),
-    participation_data JSONB DEFAULT '{}'::jsonb,
-    completion_rate DECIMAL(5,2) DEFAULT 0.00 CHECK (completion_rate >= 0 AND completion_rate <= 100),
-    joined_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    completed_at TIMESTAMP WITH TIME ZONE,
-    UNIQUE(experiment_id, user_id)
+    experiment_id UUID REFERENCES context_experiments(id),
+    user_id UUID REFERENCES users(id),
+    session_id UUID REFERENCES context_sessions(session_id),
+    assigned_variant VARCHAR NOT NULL,
+    assignment_timestamp TIMESTAMP WITH TIME ZONE DEFAULT now(),
+    interactions_count INTEGER DEFAULT 0,
+    success_events INTEGER DEFAULT 0,
+    conversion_events INTEGER DEFAULT 0,
+    avg_response_time INTEGER DEFAULT 0,
+    user_satisfaction NUMERIC,
+    completion_rate NUMERIC,
+    user_agent TEXT,
+    device_info JSONB,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
 );
 
--- Performance Metrics
+-- Performance metrics table (matches actual database structure)
 CREATE TABLE performance_metrics (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    prompt_id UUID REFERENCES prompts(id) ON DELETE CASCADE,
-    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
-    session_id UUID REFERENCES context_sessions(id) ON DELETE CASCADE,
-    metric_type VARCHAR(50) NOT NULL,
-    metric_value DECIMAL(10,4) NOT NULL,
-    metadata JSONB DEFAULT '{}'::jsonb,
-    measured_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    metric_type VARCHAR NOT NULL,
+    prompt_id UUID REFERENCES prompts(id),
+    user_id UUID REFERENCES users(id),
+    session_id UUID REFERENCES context_sessions(session_id),
+    metric_value NUMERIC NOT NULL,
+    metric_unit VARCHAR DEFAULT 'ms'::character varying,
+    context_data JSONB DEFAULT '{}'::jsonb,
+    aggregation_level VARCHAR DEFAULT 'individual'::character varying,
+    aggregation_period TIMESTAMP WITH TIME ZONE,
+    measured_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT now()
 );
 
--- Prompt Relationships
-CREATE TABLE prompt_relationships (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    source_prompt_id UUID NOT NULL REFERENCES prompts(id) ON DELETE CASCADE,
-    target_prompt_id UUID NOT NULL REFERENCES prompts(id) ON DELETE CASCADE,
-    relationship_type VARCHAR(50) NOT NULL,
-    relationship_config JSONB DEFAULT '{}'::jsonb,
-    effectiveness_score DECIMAL(3,2) DEFAULT 0.00 CHECK (effectiveness_score >= 0 AND effectiveness_score <= 5),
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE(source_prompt_id, target_prompt_id, relationship_type)
-);
-
--- Context Adaptations
-CREATE TABLE context_adaptations (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    prompt_id UUID NOT NULL REFERENCES prompts(id) ON DELETE CASCADE,
-    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    adaptation_data JSONB NOT NULL DEFAULT '{}'::jsonb,
-    effectiveness_rating DECIMAL(3,2) CHECK (effectiveness_rating >= 0 AND effectiveness_rating <= 5),
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-);
-
--- =============================================
--- Legacy Tables (maintained for compatibility)
--- =============================================
-
--- Prompt versions table
-CREATE TABLE prompt_versions (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    prompt_id UUID NOT NULL REFERENCES prompts(id) ON DELETE CASCADE,
-    version_number INTEGER NOT NULL,
-    content TEXT NOT NULL,
-    description TEXT,
-    created_by UUID REFERENCES users(id),
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    changes_summary TEXT,
-    is_current BOOLEAN DEFAULT false,
-    UNIQUE(prompt_id, version_number)
-);
-
--- Collaborations table
-CREATE TABLE collaborations (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    prompt_id UUID NOT NULL REFERENCES prompts(id) ON DELETE CASCADE,
-    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    role VARCHAR(20) DEFAULT 'editor' CHECK (role IN ('viewer', 'editor', 'admin')),
-    invited_by UUID REFERENCES users(id),
-    invited_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    accepted_at TIMESTAMP WITH TIME ZONE,
-    status VARCHAR(20) DEFAULT 'pending' CHECK (status IN ('pending', 'accepted', 'declined', 'revoked')),
-    UNIQUE(prompt_id, user_id)
-);
-
--- User prompt usage logs table
+-- User prompt usage logs table (matches actual database structure)
 CREATE TABLE user_prompt_usage_logs (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    public_prompt_id UUID REFERENCES prompts(id) ON DELETE SET NULL,
-    private_prompt_id UUID REFERENCES prompts(id) ON DELETE CASCADE,
-    used_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    usage_context JSONB DEFAULT '{}'::jsonb,
-    user_feedback DECIMAL(3,2) CHECK (user_feedback >= 0 AND user_feedback <= 5),
-    feedback_text TEXT,
-    session_id VARCHAR(255)
+    user_id UUID REFERENCES users(id),
+    session_id UUID REFERENCES context_sessions(session_id),
+    public_prompt_id UUID REFERENCES prompts(id),
+    user_context_snapshot JSONB NOT NULL,
+    personalized_content TEXT,
+    user_feedback INTEGER,
+    private_notes TEXT,
+    improvement_suggestions TEXT,
+    response_time INTEGER DEFAULT 0,
+    success BOOLEAN DEFAULT true,
+    error_details JSONB,
+    allow_anonymous_analytics BOOLEAN DEFAULT false,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT now()
+);
+
+-- Public prompt analytics table (matches actual database structure)
+CREATE TABLE public_prompt_analytics (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    prompt_id UUID REFERENCES prompts(id),
+    anonymous_usage_stats JSONB DEFAULT '{"usage_count": 0, "success_rate": 0.0, "avg_response_time": 0, "common_modifications": [], "user_satisfaction_avg": 0.0, "complexity_distribution": {}}'::jsonb,
+    aggregation_period VARCHAR DEFAULT 'daily'::character varying,
+    period_start TIMESTAMP WITH TIME ZONE,
+    period_end TIMESTAMP WITH TIME ZONE,
+    sample_size INTEGER DEFAULT 0,
+    confidence_level NUMERIC DEFAULT 0.95,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
 );
 
 -- =============================================
--- Indexes for Performance
+-- System Management and Compliance Tables
 -- =============================================
 
--- Users table indexes
-CREATE INDEX idx_users_username ON users(username);
-CREATE INDEX idx_users_email ON users(email);
-CREATE INDEX idx_users_created_at ON users(created_at);
-CREATE INDEX idx_users_role ON users(role);
+-- System health metrics table (matches actual database structure)
+CREATE TABLE system_health_metrics (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    metric_category VARCHAR NOT NULL,
+    metric_name VARCHAR NOT NULL,
+    metric_value NUMERIC NOT NULL,
+    metric_threshold NUMERIC,
+    status VARCHAR DEFAULT 'normal'::character varying,
+    alert_triggered BOOLEAN DEFAULT false,
+    details JSONB DEFAULT '{}'::jsonb,
+    measured_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT now()
+);
 
--- Categories table indexes
-CREATE INDEX idx_categories_type ON categories(type);
-CREATE INDEX idx_categories_sort_order ON categories(sort_order);
-CREATE INDEX idx_categories_is_active ON categories(is_active);
-CREATE INDEX idx_categories_name_en ON categories(name_en);
-CREATE INDEX idx_categories_optimization_template ON categories USING GIN(optimization_template);
+-- Query optimization stats table (matches actual database structure)
+CREATE TABLE query_optimization_stats (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    query_type VARCHAR NOT NULL,
+    query_hash VARCHAR NOT NULL,
+    execution_time_ms INTEGER NOT NULL,
+    rows_examined INTEGER DEFAULT 0,
+    rows_returned INTEGER DEFAULT 0,
+    execution_plan JSONB,
+    index_usage JSONB DEFAULT '{}'::jsonb,
+    optimization_suggestions JSONB DEFAULT '[]'::jsonb,
+    execution_count INTEGER DEFAULT 1,
+    last_executed_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT now()
+);
 
--- API Keys table indexes
-CREATE INDEX idx_api_keys_user_id ON api_keys(user_id);
-CREATE INDEX idx_api_keys_key_hash ON api_keys(key_hash);
-CREATE INDEX idx_api_keys_is_active ON api_keys(is_active);
+-- GDPR compliance logs table (matches actual database structure)
+CREATE TABLE gdpr_compliance_logs (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    request_type VARCHAR NOT NULL,
+    user_id UUID REFERENCES users(id),
+    affected_tables JSONB NOT NULL DEFAULT '[]'::jsonb,
+    request_details JSONB DEFAULT '{}'::jsonb,
+    legal_basis VARCHAR,
+    status VARCHAR DEFAULT 'pending'::character varying,
+    processing_results JSONB DEFAULT '{}'::jsonb,
+    evidence_data JSONB DEFAULT '{}'::jsonb,
+    requested_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+    processed_at TIMESTAMP WITH TIME ZONE,
+    completed_at TIMESTAMP WITH TIME ZONE,
+    retention_until TIMESTAMP WITH TIME ZONE,
+    compliance_officer_id UUID REFERENCES users(id),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
+);
 
--- Prompts table indexes
-CREATE INDEX idx_prompts_user_id ON prompts(user_id);
-CREATE INDEX idx_prompts_category_id ON prompts(category_id);
-CREATE INDEX idx_prompts_is_public ON prompts(is_public);
-CREATE INDEX idx_prompts_created_at ON prompts(created_at);
-CREATE INDEX idx_prompts_category_type ON prompts(category_type);
-CREATE INDEX idx_prompts_context_engineering_enabled ON prompts(context_engineering_enabled);
-CREATE INDEX idx_prompts_effectiveness_score ON prompts(effectiveness_score);
-CREATE INDEX idx_prompts_tags ON prompts USING GIN(tags);
-CREATE INDEX idx_prompts_input_variables ON prompts USING GIN(input_variables);
-CREATE INDEX idx_prompts_parameters ON prompts USING GIN(parameters);
-CREATE INDEX idx_prompts_content ON prompts USING GIN(content);
-CREATE INDEX idx_prompts_context_variables ON prompts USING GIN(context_variables);
-CREATE INDEX idx_prompts_adaptation_rules ON prompts USING GIN(adaptation_rules);
+-- Data retention policies table (matches actual database structure)
+CREATE TABLE data_retention_policies (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    policy_name VARCHAR NOT NULL,
+    table_name VARCHAR NOT NULL,
+    retention_config JSONB NOT NULL DEFAULT '{"cleanup_strategy": "delete", "anonymization_rules": {}, "archive_before_delete": false, "retention_period_days": 365}'::jsonb,
+    is_active BOOLEAN DEFAULT true,
+    last_executed_at TIMESTAMP WITH TIME ZONE,
+    next_execution_at TIMESTAMP WITH TIME ZONE,
+    created_by UUID REFERENCES users(id),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
+);
 
--- Context Engineering table indexes
-CREATE INDEX idx_user_context_profiles_user_id ON user_context_profiles(user_id);
-CREATE INDEX idx_user_context_profiles_is_active ON user_context_profiles(is_active);
-CREATE INDEX idx_user_context_profiles_context_data ON user_context_profiles USING GIN(context_data);
-
-CREATE INDEX idx_context_sessions_user_id ON context_sessions(user_id);
-CREATE INDEX idx_context_sessions_profile_id ON context_sessions(profile_id);
-CREATE INDEX idx_context_sessions_status ON context_sessions(status);
-CREATE INDEX idx_context_sessions_started_at ON context_sessions(started_at);
-CREATE INDEX idx_context_sessions_session_data ON context_sessions USING GIN(session_data);
-
-CREATE INDEX idx_user_interactions_user_id ON user_interactions(user_id);
-CREATE INDEX idx_user_interactions_session_id ON user_interactions(session_id);
-CREATE INDEX idx_user_interactions_prompt_id ON user_interactions(prompt_id);
-CREATE INDEX idx_user_interactions_interaction_type ON user_interactions(interaction_type);
-CREATE INDEX idx_user_interactions_created_at ON user_interactions(created_at);
-CREATE INDEX idx_user_interactions_interaction_data ON user_interactions USING GIN(interaction_data);
-
-CREATE INDEX idx_context_experiments_status ON context_experiments(status);
-CREATE INDEX idx_context_experiments_created_by ON context_experiments(created_by);
-CREATE INDEX idx_context_experiments_start_date ON context_experiments(start_date);
-CREATE INDEX idx_context_experiments_configuration ON context_experiments USING GIN(configuration);
-
-CREATE INDEX idx_experiment_participations_experiment_id ON experiment_participations(experiment_id);
-CREATE INDEX idx_experiment_participations_user_id ON experiment_participations(user_id);
-CREATE INDEX idx_experiment_participations_completion_rate ON experiment_participations(completion_rate);
-CREATE INDEX idx_experiment_participations_participation_data ON experiment_participations USING GIN(participation_data);
-
-CREATE INDEX idx_performance_metrics_prompt_id ON performance_metrics(prompt_id);
-CREATE INDEX idx_performance_metrics_user_id ON performance_metrics(user_id);
-CREATE INDEX idx_performance_metrics_session_id ON performance_metrics(session_id);
-CREATE INDEX idx_performance_metrics_metric_type ON performance_metrics(metric_type);
-CREATE INDEX idx_performance_metrics_measured_at ON performance_metrics(measured_at);
-CREATE INDEX idx_performance_metrics_metadata ON performance_metrics USING GIN(metadata);
-
-CREATE INDEX idx_prompt_relationships_source_prompt_id ON prompt_relationships(source_prompt_id);
-CREATE INDEX idx_prompt_relationships_target_prompt_id ON prompt_relationships(target_prompt_id);
-CREATE INDEX idx_prompt_relationships_relationship_type ON prompt_relationships(relationship_type);
-CREATE INDEX idx_prompt_relationships_effectiveness_score ON prompt_relationships(effectiveness_score);
-CREATE INDEX idx_prompt_relationships_relationship_config ON prompt_relationships USING GIN(relationship_config);
-
-CREATE INDEX idx_context_adaptations_prompt_id ON context_adaptations(prompt_id);
-CREATE INDEX idx_context_adaptations_user_id ON context_adaptations(user_id);
-CREATE INDEX idx_context_adaptations_effectiveness_rating ON context_adaptations(effectiveness_rating);
-CREATE INDEX idx_context_adaptations_adaptation_data ON context_adaptations USING GIN(adaptation_data);
-
--- Legacy table indexes
-CREATE INDEX idx_prompt_versions_prompt_id ON prompt_versions(prompt_id);
-CREATE INDEX idx_prompt_versions_version_number ON prompt_versions(version_number);
-CREATE INDEX idx_prompt_versions_is_current ON prompt_versions(is_current);
-CREATE INDEX idx_prompt_versions_created_by ON prompt_versions(created_by);
-
-CREATE INDEX idx_collaborations_prompt_id ON collaborations(prompt_id);
-CREATE INDEX idx_collaborations_user_id ON collaborations(user_id);
-CREATE INDEX idx_collaborations_status ON collaborations(status);
-CREATE INDEX idx_collaborations_invited_by ON collaborations(invited_by);
-
-CREATE INDEX idx_user_prompt_usage_logs_user_id ON user_prompt_usage_logs(user_id);
-CREATE INDEX idx_user_prompt_usage_logs_public_prompt_id ON user_prompt_usage_logs(public_prompt_id);
-CREATE INDEX idx_user_prompt_usage_logs_private_prompt_id ON user_prompt_usage_logs(private_prompt_id);
-CREATE INDEX idx_user_prompt_usage_logs_used_at ON user_prompt_usage_logs(used_at);
-CREATE INDEX idx_user_prompt_usage_logs_usage_context ON user_prompt_usage_logs USING GIN(usage_context);
+-- Version management config table (matches actual database structure)
+CREATE TABLE version_management_config (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    prompt_id UUID REFERENCES prompts(id),
+    versioning_strategy JSONB DEFAULT '{"auto_versioning": true, "rollback_policy": "performance_based", "version_retention_days": 90, "max_versions_per_dimension": 10}'::jsonb,
+    deployment_config JSONB DEFAULT '{"deployment_type": "gradual", "rollback_threshold": {"error_rate": 0.05, "user_satisfaction_drop": 0.1, "performance_degradation": 0.2}, "traffic_split_strategy": "user_based"}'::jsonb,
+    monitoring_config JSONB DEFAULT '{"alert_thresholds": {}, "metrics_to_track": ["response_time", "success_rate", "user_feedback"], "monitoring_window_hours": 24}'::jsonb,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
+);
 
 -- =============================================
--- Views for Analytics and Reporting
+-- Views (matches actual database views)
 -- =============================================
 
--- Category Statistics View
+-- Category statistics view
 CREATE VIEW category_stats AS
 SELECT
     c.id,
@@ -519,7 +440,7 @@ WHERE c.is_active = true
 GROUP BY c.id, c.name, c.name_en, c.type, c.icon, c.description, c.sort_order
 ORDER BY c.sort_order;
 
--- Category Type Statistics View
+-- Category type statistics view
 CREATE VIEW category_type_stats AS
 SELECT
     type,
@@ -537,7 +458,39 @@ ORDER BY
         ELSE 4
     END;
 
--- Context Engineering Dashboard View
+-- Public prompt statistics view
+CREATE VIEW public_prompt_stats AS
+SELECT
+    p.id,
+    p.name,
+    p.category_type,
+    p.is_public,
+    p.view_count,
+    p.created_at,
+    COUNT(uul.id) AS usage_count,
+    AVG(uul.user_feedback) AS avg_feedback
+FROM prompts p
+LEFT JOIN user_prompt_usage_logs uul ON p.id = uul.public_prompt_id
+WHERE p.is_public = true
+GROUP BY p.id, p.name, p.category_type, p.is_public, p.view_count, p.created_at;
+
+-- Storage statistics view
+CREATE VIEW storage_stats AS
+SELECT
+    'prompts' AS table_name,
+    COUNT(*) AS total_count,
+    COUNT(CASE WHEN is_public = true THEN 1 END) AS public_count,
+    COUNT(CASE WHEN is_public = false THEN 1 END) AS private_count
+FROM prompts
+UNION ALL
+SELECT
+    'categories' AS table_name,
+    COUNT(*) AS total_count,
+    COUNT(CASE WHEN is_active = true THEN 1 END) AS public_count,
+    COUNT(CASE WHEN is_active = false THEN 1 END) AS private_count
+FROM categories;
+
+-- Context engineering dashboard view
 CREATE VIEW context_engineering_dashboard AS
 SELECT
     'prompts' AS component,
@@ -561,7 +514,7 @@ SELECT
     ) AS metrics
 FROM user_context_profiles;
 
--- Context Engineering Health Check View
+-- Context engineering health view
 CREATE VIEW context_engineering_health AS
 SELECT
     'database_health' AS check_category,
@@ -584,7 +537,7 @@ SELECT
         )
     ) AS health_metrics;
 
--- Experiment Analytics View
+-- Experiment analytics view
 CREATE VIEW experiment_analytics AS
 SELECT
     ce.id,
@@ -600,71 +553,7 @@ LEFT JOIN experiment_participations ep ON ce.id = ep.experiment_id
 WHERE ce.status IN ('active', 'completed')
 GROUP BY ce.id, ce.experiment_name, ce.experiment_type, ce.status, ce.start_date, ce.end_date;
 
--- Prompt Dependency Graph View
-CREATE VIEW prompt_dependency_graph AS
-SELECT
-    pr.source_prompt_id,
-    p1.name AS source_prompt_name,
-    pr.target_prompt_id,
-    p2.name AS target_prompt_name,
-    pr.relationship_type,
-    pr.effectiveness_score,
-    COALESCE((pr.relationship_config->>'strength')::numeric, 0.5) AS strength,
-    pr.created_at
-FROM prompt_relationships pr
-JOIN prompts p1 ON pr.source_prompt_id = p1.id
-JOIN prompts p2 ON pr.target_prompt_id = p2.id
-WHERE p1.is_public = true AND p2.is_public = true;
-
--- Prompt Performance Analysis View
-CREATE VIEW prompt_performance_analysis AS
-SELECT
-    p.id,
-    p.name,
-    p.context_engineering_enabled,
-    COALESCE(AVG(pm.metric_value), 0) AS avg_response_time,
-    COALESCE(COUNT(pm.id), 0) AS usage_count,
-    COALESCE(AVG(CASE WHEN pm.metric_type = 'user_satisfaction' THEN pm.metric_value END), 0) AS avg_satisfaction,
-    MAX(pm.measured_at) AS last_used
-FROM prompts p
-LEFT JOIN performance_metrics pm ON p.id = pm.prompt_id
-WHERE p.is_public = true
-AND (pm.measured_at >= NOW() - INTERVAL '7 days' OR pm.measured_at IS NULL)
-GROUP BY p.id, p.name, p.context_engineering_enabled;
-
--- Public Prompt Statistics View
-CREATE VIEW public_prompt_stats AS
-SELECT
-    p.id,
-    p.name,
-    p.category_type,
-    p.is_public,
-    p.view_count,
-    p.created_at,
-    COALESCE(COUNT(uul.id), 0) AS usage_count,
-    COALESCE(AVG(uul.user_feedback), 0) AS avg_feedback
-FROM prompts p
-LEFT JOIN user_prompt_usage_logs uul ON p.id = uul.public_prompt_id
-WHERE p.is_public = true
-GROUP BY p.id, p.name, p.category_type, p.is_public, p.view_count, p.created_at;
-
--- Storage Statistics View
-CREATE VIEW storage_stats AS
-SELECT
-    'prompts' AS table_name,
-    COUNT(*) AS total_count,
-    COUNT(CASE WHEN is_public = true THEN 1 END) AS public_count,
-    COUNT(CASE WHEN is_public = false THEN 1 END) AS private_count
-FROM prompts
-UNION ALL
-SELECT
-    'categories' AS table_name,
-    COUNT(*) AS total_count,
-    COUNT(CASE WHEN is_active = true THEN 1 END) AS public_count,
-    COUNT(CASE WHEN is_active = false THEN 1 END) AS private_count
-FROM categories;
-
--- System Performance Dashboard View
+-- System performance dashboard view
 CREATE VIEW system_performance_dashboard AS
 SELECT
     'response_time' AS metric_category,
@@ -676,64 +565,128 @@ SELECT
 FROM performance_metrics
 WHERE metric_type = 'response_time'
 AND measured_at >= NOW() - INTERVAL '24 hours'
-GROUP BY DATE_TRUNC('hour', COALESCE(measured_at, NOW()))
-UNION ALL
-SELECT
-    'cache_hit_rate' AS metric_category,
-    COALESCE(AVG(metric_value), 0) AS avg_value,
-    COALESCE(MIN(metric_value), 0) AS min_value,
-    COALESCE(MAX(metric_value), 0) AS max_value,
-    COUNT(*) AS sample_count,
-    DATE_TRUNC('hour', COALESCE(measured_at, NOW())) AS time_bucket
-FROM performance_metrics
-WHERE metric_type = 'cache_hit_rate'
-AND measured_at >= NOW() - INTERVAL '24 hours'
 GROUP BY DATE_TRUNC('hour', COALESCE(measured_at, NOW()));
+
+-- =============================================
+-- Indexes for Performance
+-- =============================================
+
+-- Core table indexes
+CREATE INDEX idx_users_email ON users(email);
+CREATE INDEX idx_users_username ON users(username);
+CREATE INDEX idx_users_role ON users(role);
+
+CREATE INDEX idx_categories_type ON categories(type);
+CREATE INDEX idx_categories_sort_order ON categories(sort_order);
+CREATE INDEX idx_categories_is_active ON categories(is_active);
+CREATE INDEX idx_categories_optimization_template ON categories USING GIN(optimization_template);
+
+CREATE INDEX idx_api_keys_user_id ON api_keys(user_id);
+CREATE INDEX idx_api_keys_key_hash ON api_keys(key_hash);
+
+CREATE INDEX idx_prompts_user_id ON prompts(user_id);
+CREATE INDEX idx_prompts_category_id ON prompts(category_id);
+CREATE INDEX idx_prompts_is_public ON prompts(is_public);
+CREATE INDEX idx_prompts_created_at ON prompts(created_at);
+CREATE INDEX idx_prompts_category_type ON prompts(category_type);
+CREATE INDEX idx_prompts_context_engineering_enabled ON prompts(context_engineering_enabled);
+CREATE INDEX idx_prompts_tags ON prompts USING GIN(tags);
+CREATE INDEX idx_prompts_parameters ON prompts USING GIN(parameters);
+CREATE INDEX idx_prompts_content ON prompts USING GIN(content);
+CREATE INDEX idx_prompts_context_config ON prompts USING GIN(context_config);
+
+-- Context Engineering indexes
+CREATE INDEX idx_user_context_profiles_user_id ON user_context_profiles(user_id);
+CREATE INDEX idx_user_context_profiles_preferences ON user_context_profiles USING GIN(preferences);
+
+CREATE INDEX idx_context_sessions_user_id ON context_sessions(user_id);
+CREATE INDEX idx_context_sessions_status ON context_sessions(status);
+CREATE INDEX idx_context_sessions_started_at ON context_sessions(started_at);
+
+-- Context Engineering and analytics indexes
+CREATE INDEX idx_context_experiments_status ON context_experiments(status);
+CREATE INDEX idx_context_experiments_created_by ON context_experiments(created_by);
+CREATE INDEX idx_context_experiments_experiment_config ON context_experiments USING GIN(experiment_config);
+
+CREATE INDEX idx_experiment_participations_experiment_id ON experiment_participations(experiment_id);
+CREATE INDEX idx_experiment_participations_user_id ON experiment_participations(user_id);
+CREATE INDEX idx_experiment_participations_session_id ON experiment_participations(session_id);
+
+CREATE INDEX idx_performance_metrics_prompt_id ON performance_metrics(prompt_id);
+CREATE INDEX idx_performance_metrics_user_id ON performance_metrics(user_id);
+CREATE INDEX idx_performance_metrics_session_id ON performance_metrics(session_id);
+CREATE INDEX idx_performance_metrics_metric_type ON performance_metrics(metric_type);
+CREATE INDEX idx_performance_metrics_measured_at ON performance_metrics(measured_at);
+CREATE INDEX idx_performance_metrics_context_data ON performance_metrics USING GIN(context_data);
+
+CREATE INDEX idx_user_prompt_usage_logs_user_id ON user_prompt_usage_logs(user_id);
+CREATE INDEX idx_user_prompt_usage_logs_session_id ON user_prompt_usage_logs(session_id);
+CREATE INDEX idx_user_prompt_usage_logs_public_prompt_id ON user_prompt_usage_logs(public_prompt_id);
+CREATE INDEX idx_user_prompt_usage_logs_user_context_snapshot ON user_prompt_usage_logs USING GIN(user_context_snapshot);
+
+CREATE INDEX idx_public_prompt_analytics_prompt_id ON public_prompt_analytics(prompt_id);
+CREATE INDEX idx_public_prompt_analytics_period_start ON public_prompt_analytics(period_start);
+CREATE INDEX idx_public_prompt_analytics_anonymous_usage_stats ON public_prompt_analytics USING GIN(anonymous_usage_stats);
+
+-- Version management indexes
+CREATE INDEX idx_prompt_versions_prompt_id ON prompt_versions(prompt_id);
+CREATE INDEX idx_prompt_versions_version ON prompt_versions(version);
+CREATE INDEX idx_prompt_versions_user_id ON prompt_versions(user_id);
+
+CREATE INDEX idx_prompt_audit_logs_prompt_id ON prompt_audit_logs(prompt_id);
+CREATE INDEX idx_prompt_audit_logs_user_id ON prompt_audit_logs(user_id);
+CREATE INDEX idx_prompt_audit_logs_action ON prompt_audit_logs(action);
+
+-- System management indexes
+CREATE INDEX idx_system_health_metrics_metric_category ON system_health_metrics(metric_category);
+CREATE INDEX idx_system_health_metrics_measured_at ON system_health_metrics(measured_at);
+
+CREATE INDEX idx_query_optimization_stats_query_type ON query_optimization_stats(query_type);
+CREATE INDEX idx_query_optimization_stats_execution_time_ms ON query_optimization_stats(execution_time_ms);
 
 -- =============================================
 -- Row Level Security (RLS) Policies
 -- =============================================
 
--- Enable RLS on all tables
+-- Enable RLS on core tables
 ALTER TABLE users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE categories ENABLE ROW LEVEL SECURITY;
 ALTER TABLE api_keys ENABLE ROW LEVEL SECURITY;
 ALTER TABLE prompts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE comments ENABLE ROW LEVEL SECURITY;
-ALTER TABLE favorites ENABLE ROW LEVEL SECURITY;
-ALTER TABLE likes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE notifications ENABLE ROW LEVEL SECURITY;
-ALTER TABLE prompt_versions ENABLE ROW LEVEL SECURITY;
-ALTER TABLE prompt_version_history ENABLE ROW LEVEL SECURITY;
-ALTER TABLE collaborations ENABLE ROW LEVEL SECURITY;
-ALTER TABLE user_prompt_usage_logs ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public_prompt_analytics ENABLE ROW LEVEL SECURITY;
-ALTER TABLE reports ENABLE ROW LEVEL SECURITY;
 ALTER TABLE social_interactions ENABLE ROW LEVEL SECURITY;
-ALTER TABLE tags ENABLE ROW LEVEL SECURITY;
-ALTER TABLE user_activity_logs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE user_follows ENABLE ROW LEVEL SECURITY;
-ALTER TABLE user_preferences ENABLE ROW LEVEL SECURITY;
-ALTER TABLE user_sessions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE prompt_versions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE prompt_audit_logs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE topics ENABLE ROW LEVEL SECURITY;
+ALTER TABLE topic_posts ENABLE ROW LEVEL SECURITY;
+
+-- Enable RLS on Context Engineering tables
 ALTER TABLE user_context_profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE context_sessions ENABLE ROW LEVEL SECURITY;
-ALTER TABLE user_interactions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE context_cache ENABLE ROW LEVEL SECURITY;
 ALTER TABLE context_experiments ENABLE ROW LEVEL SECURITY;
 ALTER TABLE experiment_participations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE performance_metrics ENABLE ROW LEVEL SECURITY;
-ALTER TABLE prompt_relationships ENABLE ROW LEVEL SECURITY;
-ALTER TABLE context_adaptations ENABLE ROW LEVEL SECURITY;
+ALTER TABLE user_prompt_usage_logs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public_prompt_analytics ENABLE ROW LEVEL SECURITY;
+
+-- Enable RLS on system management tables
+ALTER TABLE system_health_metrics ENABLE ROW LEVEL SECURITY;
+ALTER TABLE query_optimization_stats ENABLE ROW LEVEL SECURITY;
+ALTER TABLE gdpr_compliance_logs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE data_retention_policies ENABLE ROW LEVEL SECURITY;
+ALTER TABLE version_management_config ENABLE ROW LEVEL SECURITY;
+
+-- Basic RLS policies for core functionality
 
 -- Users table policies
 CREATE POLICY "Users can view their own profile" ON users FOR SELECT USING (auth.uid() = id);
 CREATE POLICY "Users can update their own profile" ON users FOR UPDATE USING (auth.uid() = id);
-CREATE POLICY "Public user profiles are viewable" ON users FOR SELECT USING (is_active = true);
 
 -- Categories table policies
 CREATE POLICY "Categories are viewable by everyone" ON categories FOR SELECT USING (is_active = true);
-CREATE POLICY "Only admins can modify categories" ON categories FOR ALL USING (
-    EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND role = 'admin')
-);
 
 -- API Keys table policies
 CREATE POLICY "Users can view their own API keys" ON api_keys FOR SELECT USING (user_id = auth.uid());
@@ -743,9 +696,6 @@ CREATE POLICY "Users can manage their own API keys" ON api_keys FOR ALL USING (u
 CREATE POLICY "Public prompts are viewable by everyone" ON prompts FOR SELECT USING (is_public = true);
 CREATE POLICY "Users can view their own prompts" ON prompts FOR SELECT USING (user_id = auth.uid());
 CREATE POLICY "Users can manage their own prompts" ON prompts FOR ALL USING (user_id = auth.uid());
-CREATE POLICY "Collaborators can view shared prompts" ON prompts FOR SELECT USING (
-    EXISTS (SELECT 1 FROM collaborations WHERE prompt_id = prompts.id AND user_id = auth.uid() AND status = 'accepted')
-);
 
 -- Comments table policies
 CREATE POLICY "Comments on public prompts are viewable" ON comments FOR SELECT USING (
@@ -753,44 +703,29 @@ CREATE POLICY "Comments on public prompts are viewable" ON comments FOR SELECT U
 );
 CREATE POLICY "Users can manage their own comments" ON comments FOR ALL USING (user_id = auth.uid());
 
--- Favorites table policies
-CREATE POLICY "Users can manage their own favorites" ON favorites FOR ALL USING (user_id = auth.uid());
-
--- Likes table policies
-CREATE POLICY "Users can manage their own likes" ON likes FOR ALL USING (user_id = auth.uid());
-
 -- Notifications table policies
 CREATE POLICY "Users can view their own notifications" ON notifications FOR SELECT USING (user_id = auth.uid());
 CREATE POLICY "Users can update their own notifications" ON notifications FOR UPDATE USING (user_id = auth.uid());
 
--- User activity logs policies
-CREATE POLICY "Users can view their own activity" ON user_activity_logs FOR SELECT USING (user_id = auth.uid());
+-- Social interactions policies
+CREATE POLICY "Users can manage their own social interactions" ON social_interactions FOR ALL USING (user_id = auth.uid());
 
 -- User follows policies
 CREATE POLICY "Users can manage their own follows" ON user_follows FOR ALL USING (follower_id = auth.uid());
 CREATE POLICY "Follow relationships are viewable" ON user_follows FOR SELECT USING (true);
 
--- User preferences policies
-CREATE POLICY "Users can manage their own preferences" ON user_preferences FOR ALL USING (user_id = auth.uid());
-
--- User sessions policies
-CREATE POLICY "Users can view their own sessions" ON user_sessions FOR SELECT USING (user_id = auth.uid());
-CREATE POLICY "Users can manage their own sessions" ON user_sessions FOR ALL USING (user_id = auth.uid());
-
 -- Context Engineering policies
 CREATE POLICY "Users can manage their own context profiles" ON user_context_profiles FOR ALL USING (user_id = auth.uid());
 CREATE POLICY "Users can manage their own context sessions" ON context_sessions FOR ALL USING (user_id = auth.uid());
-CREATE POLICY "Users can view their own interactions" ON user_interactions FOR SELECT USING (user_id = auth.uid());
-CREATE POLICY "Users can manage their own context adaptations" ON context_adaptations FOR ALL USING (user_id = auth.uid());
+CREATE POLICY "Users can view their own usage logs" ON user_prompt_usage_logs FOR SELECT USING (user_id = auth.uid());
 
 -- Performance metrics policies (admin only)
 CREATE POLICY "Only admins can view performance metrics" ON performance_metrics FOR SELECT USING (
     EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND role = 'admin')
 );
 
--- Reports policies
-CREATE POLICY "Users can create reports" ON reports FOR INSERT WITH CHECK (reporter_id = auth.uid());
-CREATE POLICY "Users can view their own reports" ON reports FOR SELECT USING (reporter_id = auth.uid());
-CREATE POLICY "Admins can manage all reports" ON reports FOR ALL USING (
-    EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND role = 'admin')
-);
+-- =============================================
+-- Schema Complete
+-- =============================================
+-- This schema file now matches the actual Supabase database structure
+-- with all tables, fields, types, and relationships correctly defined.
