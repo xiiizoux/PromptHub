@@ -257,7 +257,7 @@ export class BrowserCompatibilityManager {
         "img-src 'self' data: https:",
         "font-src 'self' data: https://fonts.gstatic.com", // 允许Google Fonts字体文件
         "connect-src 'self' https:",
-        "media-src 'self' https://*.supabase.co https://commondatastorage.googleapis.com https://www.w3schools.com https://html5demos.com",
+        "media-src 'self' https://*.supabase.co https://supabase.prompt-hub.cc https://commondatastorage.googleapis.com https://www.w3schools.com https://html5demos.com",
         "object-src 'none'",
         "base-uri 'self'",
         "form-action 'self'",
