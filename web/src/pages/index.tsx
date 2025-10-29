@@ -27,9 +27,11 @@ interface HomeProps {
   featuredPrompts: PromptInfo[];
 }
 
-export default function Home({ featuredPrompts }: HomeProps) {
+export default function Home({ featuredPrompts: initialPrompts }: HomeProps) {
   const [ref, inView] = useInView({ threshold: 0.1 });
   const [typedText, setTypedText] = useState('');
+  const [featuredPrompts, setFeaturedPrompts] = useState<PromptInfo[]>(initialPrompts);
+  const [loading, setLoading] = useState(initialPrompts.length === 0);
   const fullText = '释放AI的无限潜力';
 
   // 打字机效果
@@ -47,6 +49,26 @@ export default function Home({ featuredPrompts }: HomeProps) {
       return () => clearInterval(timer);
     }
   }, [inView]);
+
+  // 客户端获取精选提示词（如果服务端没有获取到）
+  useEffect(() => {
+    if (featuredPrompts.length === 0) {
+      const fetchPrompts = async () => {
+        try {
+          const { getPrompts } = await import('@/lib/api');
+          const response = await getPrompts({ pageSize: 6, sortBy: 'popular' });
+          if (response && response.data && Array.isArray(response.data)) {
+            setFeaturedPrompts(response.data.slice(0, 6));
+          }
+        } catch (error) {
+          console.error('Failed to fetch featured prompts:', error);
+        } finally {
+          setLoading(false);
+        }
+      };
+      fetchPrompts();
+    }
+  }, [featuredPrompts.length]);
 
   const features = [
     {
@@ -329,32 +351,36 @@ export default function Home({ featuredPrompts }: HomeProps) {
       </section>
 
       {/* 热门提示词 */}
-      {featuredPrompts.length > 0 && (
-        <section className="py-20 relative">
-          <div className="container-custom">
-            <motion.div 
-              className="flex justify-between items-center mb-12"
-              initial={{ opacity: 0 }}
-              whileInView={{ opacity: 1 }}
-              viewport={{ once: true }}
+      <section className="py-20 relative">
+        <div className="container-custom">
+          <motion.div 
+            className="flex justify-between items-center mb-12"
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+          >
+            <div>
+              <h2 className="text-5xl font-bold gradient-text">热门提示词</h2>
+              <p className="text-gray-400 mt-2">发现社区最受欢迎的AI提示词</p>
+            </div>
+            <Link 
+              href="/prompts" 
+              className="group flex items-center text-neon-cyan hover:text-neon-cyan-dark transition-colors"
             >
-              <div>
-                <h2 className="text-5xl font-bold gradient-text">热门提示词</h2>
-                <p className="text-gray-400 mt-2">发现社区最受欢迎的AI提示词</p>
-              </div>
-              <Link 
-                href="/prompts" 
-                className="group flex items-center text-neon-cyan hover:text-neon-cyan-dark transition-colors"
-              >
-                <span className="mr-2">查看全部</span>
-                <ArrowRightIcon className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
-              </Link>
-            </motion.div>
-            
+              <span className="mr-2">查看全部</span>
+              <ArrowRightIcon className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
+            </Link>
+          </motion.div>
+          
+          {loading ? (
+            <div className="flex justify-center items-center py-20">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-neon-cyan"></div>
+            </div>
+          ) : featuredPrompts.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {featuredPrompts.slice(0, 6).map((prompt, index) => (
                 <motion.div
-                  key={prompt.name}
+                  key={prompt.id || prompt.name}
                   initial={{ opacity: 0, scale: 0.9 }}
                   whileInView={{ opacity: 1, scale: 1 }}
                   viewport={{ once: true }}
@@ -364,9 +390,19 @@ export default function Home({ featuredPrompts }: HomeProps) {
                 </motion.div>
               ))}
             </div>
-          </div>
-        </section>
-      )}
+          ) : (
+            <div className="flex flex-col items-center justify-center py-20 text-center">
+              <div className="text-gray-400 text-lg mb-4">暂无提示词数据</div>
+              <Link 
+                href="/prompts" 
+                className="text-neon-cyan hover:text-neon-cyan-dark transition-colors"
+              >
+                前往提示词广场
+              </Link>
+            </div>
+          )}
+        </div>
+      </section>
 
       {/* CTA Section */}
       <section className="py-20 relative overflow-hidden">
@@ -413,10 +449,41 @@ export default function Home({ featuredPrompts }: HomeProps) {
 
 // 获取服务端初始数据
 export async function getStaticProps() {
-  return {
-    props: {
-      featuredPrompts: [],
-    },
-    revalidate: 600,
-  };
+  try {
+    // 使用 fetch API 从后端获取提示词数据
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:9011';
+    const response = await fetch(`${baseUrl}/api/prompts?pageSize=6&sortBy=popular`, {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      console.error('Failed to fetch featured prompts:', response.statusText);
+      return {
+        props: {
+          featuredPrompts: [],
+        },
+        revalidate: 600,
+      };
+    }
+
+    const data = await response.json();
+    const featuredPrompts = data?.data?.data || [];
+
+    return {
+      props: {
+        featuredPrompts: featuredPrompts.slice(0, 6), // 只取前6个
+      },
+      revalidate: 600, // 10分钟重新生成
+    };
+  } catch (error) {
+    console.error('Error fetching featured prompts:', error);
+    return {
+      props: {
+        featuredPrompts: [],
+      },
+      revalidate: 600,
+    };
+  }
 }
