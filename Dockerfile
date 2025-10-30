@@ -6,7 +6,7 @@
 # ============================================
 # Stage 1: 依赖安装阶段
 # ============================================
-FROM node:18-alpine AS dependencies
+FROM node:20-alpine AS dependencies
 
 # 安装系统依赖
 RUN apk update && apk add --no-cache \
@@ -45,7 +45,7 @@ RUN cd supabase && npm ci || echo "Supabase 依赖安装跳过"
 # ============================================
 # Stage 2: Web 构建阶段
 # ============================================
-FROM node:18-alpine AS web-builder
+FROM node:20-alpine AS web-builder
 
 WORKDIR /app
 
@@ -86,7 +86,7 @@ RUN cd web && npm prune --production
 # ============================================
 # Stage 3: 生产运行阶段
 # ============================================
-FROM node:18-alpine AS production
+FROM node:20-alpine AS production
 
 # 安装运行时系统依赖（仅必需的）
 RUN apk update && apk add --no-cache \
