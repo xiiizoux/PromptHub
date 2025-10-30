@@ -12,12 +12,13 @@ const nextConfig = {
   },
   // 使用默认输出模式，解决prerender-manifest.json问题
   // output: 'standalone',
-  // 启用SWC压缩
-  swcMinify: true,
+  // Next.js 15 已默认启用 SWC 压缩，无需配置
   // 禁用图片优化以减少内存使用
   images: {
     unoptimized: true,
   },
+  // 设置工作区根目录以消除警告
+  outputFileTracingRoot: require('path').join(__dirname, '..'),
   // 配置webpack来处理TypeScript文件
   webpack: (config, { buildId, dev, isServer, defaultLoaders, webpack }) => {
     // 配置模块解析规则
