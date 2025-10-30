@@ -29,7 +29,7 @@
   "license": "MIT",
   "description": "一个用于管理和分享AI提示词的现代化平台",
   "dependencies": {
-    "@headlessui/react": "^1.7.15",
+    "@headlessui/react": "^2.2.9",
     "@heroicons/react": "^2.2.0",
     "@react-spring/parallax": "^9.7.3",
     "@react-three/drei": "^9.88.11",

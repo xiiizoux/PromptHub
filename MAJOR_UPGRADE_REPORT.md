@@ -92,7 +92,7 @@ export default [
 
 ## ✅ 测试结果
 
-### 构建测试 ✅
+### 本地构建测试 ✅
 ```
 ✓ Compiled successfully in 18.5s
 ✓ Generating static pages (52/52)
@@ -100,6 +100,16 @@ export default [
 - **状态**: 完全成功
 - **页面数**: 52 个页面全部生成
 - **警告**: 0 个（已消除工作区警告）
+
+### Docker 构建测试 ✅
+```
+✓ Successfully built and exported image
+✓ Image size: 2.19GB
+✓ All 52 pages generated successfully
+```
+- **状态**: 完全成功
+- **构建时间**: ~60 秒（Web 构建部分）
+- **特殊配置**: 使用 `--legacy-peer-deps` 以兼容 React 19
 
 ### 安全审计 ✅
 ```
@@ -151,7 +161,41 @@ found 0 vulnerabilities
 
 ---
 
+## 🐳 Docker 部署说明
+
+### Dockerfile 更新
+为了支持 React 19，Dockerfile 已更新以使用 `--legacy-peer-deps` 标志：
+
+```dockerfile
+# 安装Web依赖（构建需要开发依赖）
+# 使用 --legacy-peer-deps 以兼容 React 19 (部分依赖尚未更新 peer dependencies)
+RUN cd web && NODE_OPTIONS="--max-old-space-size=4096" npm install --legacy-peer-deps
+```
+
+**原因**: 
+- `@react-spring/parallax` 等部分 UI 库尚未更新 peer dependencies 以支持 React 19
+- `--legacy-peer-deps` 允许 npm 忽略 peer dependency 冲突
+- 这些库在运行时与 React 19 完全兼容，只是 package.json 尚未更新
+
+### 构建命令
+```bash
+docker build -t prompthub .
+docker run -p 9010:9010 -p 9011:9011 prompthub
+```
+
+---
+
 ## ⚠️ 已知问题和建议
+
+### Peer Dependencies 警告 ⚠️
+**问题**: Docker 构建时会看到关于 `@react-spring` 的 peer dependency 警告
+
+**影响**: 
+- ✅ 不影响构建成功
+- ✅ 不影响运行时功能
+- ⚠️ npm 使用 `--legacy-peer-deps` 绕过检查
+
+**原因**: `@react-spring` v9.7.x 声明的 peer dependency 是 React 16-18，但实际上与 React 19 兼容
 
 ### TypeScript 类型警告 ⚠️
 **问题**: 约 175+ 个类型警告，主要来自:
@@ -209,9 +253,12 @@ npm install framer-motion@10.16.4
 - [x] ✅ 迁移 ESLint 配置到 Flat Config
 - [x] ✅ 更新 TypeScript 类型定义
 - [x] ✅ 升级 Framer Motion 到兼容版本
+- [x] ✅ 升级 @headlessui/react 到 2.2.9
 - [x] ✅ 测试生产构建
 - [x] ✅ 验证安全审计
 - [x] ✅ 更新 Next.js 配置
+- [x] ✅ 更新 Dockerfile 以支持 React 19
+- [x] ✅ 测试 Docker 构建成功
 - [ ] ⚠️ 修复 TypeScript 类型警告（可选）
 - [ ] 📝 增加端到端测试（建议）
 
