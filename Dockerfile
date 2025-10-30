@@ -31,12 +31,13 @@ COPY supabase/package*.json ./supabase/
 # 设置内存限制
 ENV NODE_OPTIONS="--max-old-space-size=4096"
 
-# 安装 MCP 依赖
-RUN cd mcp && npm ci --only=production
+# 安装 MCP 依赖（需要 devDependencies，因为使用 tsx 运行 TypeScript 源码）
+# MCP 使用标准 npm ci，不需要 --legacy-peer-deps
+RUN cd mcp && npm ci
 
 # 安装 Web 依赖（需要 devDependencies 用于构建）
-# 使用 --legacy-peer-deps 以兼容 React 19 (部分依赖尚未更新 peer dependencies)
-RUN cd web && npm ci --legacy-peer-deps
+# React 19 已被所有依赖兼容，使用 npm install 代替 npm ci 以处理依赖升级
+RUN cd web && rm -f package-lock.json && npm install
 
 # 安装 Supabase 依赖
 RUN cd supabase && npm ci || echo "Supabase 依赖安装跳过"
@@ -80,7 +81,7 @@ RUN cd web && npm run build
 # 因此不清理 MCP 的 devDependencies（需要保留 tsx 和 typescript）
 
 # 清理 Web 的开发依赖，只保留生产依赖
-RUN cd web && npm prune --production --legacy-peer-deps
+RUN cd web && npm prune --production
 
 # ============================================
 # Stage 3: 生产运行阶段
