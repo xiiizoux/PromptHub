@@ -56,9 +56,11 @@ ARG SUPABASE_URL
 
 # 复制依赖
 COPY --from=dependencies /app/web/node_modules ./web/node_modules
+COPY --from=dependencies /app/mcp/node_modules ./mcp/node_modules
 
-# 复制 Web 源代码
+# 复制源代码
 COPY web ./web
+COPY mcp ./mcp
 
 # 设置构建环境变量
 ENV NODE_ENV=production
@@ -74,7 +76,10 @@ ENV SUPABASE_URL=${SUPABASE_URL}
 # 构建 Next.js 应用
 RUN cd web && npm run build
 
-# 清理开发依赖，只保留生产依赖
+# MCP 将在运行时使用 tsx 直接运行 TypeScript 源码（不需要构建）
+# 因此不清理 MCP 的 devDependencies（需要保留 tsx 和 typescript）
+
+# 清理 Web 的开发依赖，只保留生产依赖
 RUN cd web && npm prune --production --legacy-peer-deps
 
 # ============================================
@@ -97,9 +102,9 @@ WORKDIR /app
 RUN addgroup -g 1001 -S nodejs && \
     adduser -S nodejs -u 1001
 
-# 复制 MCP 依赖和代码
-COPY --from=dependencies --chown=nodejs:nodejs /app/mcp/node_modules ./mcp/node_modules
-COPY --chown=nodejs:nodejs mcp ./mcp
+# 复制 MCP 构建产物和生产依赖
+COPY --from=web-builder --chown=nodejs:nodejs /app/mcp/node_modules ./mcp/node_modules
+COPY --from=web-builder --chown=nodejs:nodejs /app/mcp ./mcp
 
 # 复制 Web 构建产物和生产依赖
 COPY --from=web-builder --chown=nodejs:nodejs /app/web/.next ./web/.next

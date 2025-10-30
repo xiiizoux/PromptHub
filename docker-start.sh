@@ -194,26 +194,35 @@ echo "启动MCP服务..."
 # 检查编译后的文件是否存在
 if [ -f "/app/mcp/dist/src/index.js" ]; then
   echo "使用编译后的文件启动MCP服务"
-  cd /app/mcp && node dist/src/index.js > /app/logs/mcp.log 2>&1 &
+  cd /app/mcp
+  nohup node dist/src/index.js > /app/logs/mcp.log 2>&1 &
+  MCP_PID=$!
 else
   echo "编译文件不存在，使用tsx直接运行源码"
-  cd /app/mcp && npx tsx src/index.ts > /app/logs/mcp.log 2>&1 &
+  cd /app/mcp
+  nohup npx tsx src/index.ts > /app/logs/mcp.log 2>&1 &
+  MCP_PID=$!
 fi
 
-MCP_PID=$!
-echo "MCP_PID=$MCP_PID" > /app/logs/mcp.pid
+echo "MCP进程ID: $MCP_PID"
+echo "$MCP_PID" > /app/logs/mcp.pid || echo "无法写入MCP PID文件"
 
 # 等待MCP服务启动
 echo "等待MCP服务启动..."
-for i in {1..30}; do
+WAIT_COUNT=0
+MAX_WAIT=30
+while [ $WAIT_COUNT -lt $MAX_WAIT ]; do
   if curl -s http://localhost:$MCP_PORT/api/health > /dev/null 2>&1; then
-    echo "✅ MCP服务启动成功"
+    echo "✅ MCP服务启动成功 (端口 $MCP_PORT)"
     break
   fi
-  if [ $i -eq 30 ]; then
+  WAIT_COUNT=$((WAIT_COUNT + 1))
+  if [ $WAIT_COUNT -eq $MAX_WAIT ]; then
     echo "❌ MCP服务启动超时"
     echo "显示MCP日志:"
-    tail -n 20 /app/logs/mcp.log
+    tail -n 50 /app/logs/mcp.log 2>/dev/null || echo "无法读取日志文件"
+    echo "检查进程状态:"
+    ps aux | grep -E "(node|tsx)" || echo "没有找到相关进程"
     exit 1
   fi
   sleep 2
@@ -233,21 +242,28 @@ fi
 
 # 启动Next.js Web服务
 echo "启动Next.js Web服务..."
-NODE_ENV=production PORT=$WEB_PORT npx next start > /app/logs/web.log 2>&1 &
+cd /app/web
+nohup npx next start -p $WEB_PORT > /app/logs/web.log 2>&1 &
 WEB_PID=$!
-echo "WEB_PID=$WEB_PID" > /app/logs/web.pid
+echo "Web进程ID: $WEB_PID"
+echo "$WEB_PID" > /app/logs/web.pid || echo "无法写入Web PID文件"
 
 # 等待Web服务启动
 echo "等待Web服务启动..."
-for i in {1..30}; do
+WAIT_COUNT=0
+MAX_WAIT=30
+while [ $WAIT_COUNT -lt $MAX_WAIT ]; do
   if curl -s http://localhost:$WEB_PORT > /dev/null 2>&1; then
-    echo "✅ Web服务启动成功"
+    echo "✅ Web服务启动成功 (端口 $WEB_PORT)"
     break
   fi
-  if [ $i -eq 30 ]; then
+  WAIT_COUNT=$((WAIT_COUNT + 1))
+  if [ $WAIT_COUNT -eq $MAX_WAIT ]; then
     echo "❌ Web服务启动超时"
     echo "显示Web日志:"
-    tail -n 20 /app/logs/web.log
+    tail -n 50 /app/logs/web.log 2>/dev/null || echo "无法读取日志文件"
+    echo "检查进程状态:"
+    ps aux | grep -E "(node|next)" || echo "没有找到相关进程"
     exit 1
   fi
   sleep 2
