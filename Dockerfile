@@ -55,6 +55,30 @@ ARG NEXT_PUBLIC_SUPABASE_ANON_KEY
 ARG SUPABASE_SERVICE_ROLE_KEY
 ARG SUPABASE_URL
 
+# 验证必需的构建参数（如果为空则立即失败并给出明确错误信息）
+# 这是关键步骤：确保 docker-compose.yml 的 build.args 正确传递了变量
+RUN if [ -z "$NEXT_PUBLIC_SUPABASE_URL" ]; then \
+      echo "❌ 错误: NEXT_PUBLIC_SUPABASE_URL 未设置或为空"; \
+      echo "   可能原因："; \
+      echo "   1. .env 文件中缺少 NEXT_PUBLIC_SUPABASE_URL 变量"; \
+      echo "   2. docker-compose.yml 的 build.args 配置错误"; \
+      echo "   3. Docker Compose 未能正确读取 .env 文件"; \
+      echo "   请检查 .env 文件和 docker-compose.yml 的配置"; \
+      exit 1; \
+    fi && \
+    if [ -z "$NEXT_PUBLIC_SUPABASE_ANON_KEY" ]; then \
+      echo "❌ 错误: NEXT_PUBLIC_SUPABASE_ANON_KEY 未设置或为空"; \
+      echo "   可能原因："; \
+      echo "   1. .env 文件中缺少 NEXT_PUBLIC_SUPABASE_ANON_KEY 变量"; \
+      echo "   2. docker-compose.yml 的 build.args 配置错误"; \
+      echo "   3. Docker Compose 未能正确读取 .env 文件"; \
+      echo "   请检查 .env 文件和 docker-compose.yml 的配置"; \
+      exit 1; \
+    fi && \
+    echo "✓ 构建参数验证通过" && \
+    echo "  NEXT_PUBLIC_SUPABASE_URL 已设置 (长度: $(echo -n "$NEXT_PUBLIC_SUPABASE_URL" | wc -c))" && \
+    echo "  NEXT_PUBLIC_SUPABASE_ANON_KEY 已设置 (长度: $(echo -n "$NEXT_PUBLIC_SUPABASE_ANON_KEY" | wc -c))"
+
 # 复制依赖
 COPY --from=dependencies /app/web/node_modules ./web/node_modules
 COPY --from=dependencies /app/mcp/node_modules ./mcp/node_modules

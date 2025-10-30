@@ -79,7 +79,51 @@ diagnose_deployment() {
 rebuild_deployment() {
     echo "🔨 重建PromptHub Docker镜像..."
     
+    # 检查 .env 文件
+    if [ ! -f ".env" ]; then
+        echo "❌ 错误: 未找到 .env 文件"
+        echo "请确保在项目根目录下有 .env 文件"
+        return 1
+    fi
+    
+    echo "✓ 找到 .env 文件"
+    
+    # 加载 .env 文件
+    echo "加载环境变量..."
+    set -a
+    source .env
+    set +a
+    
+    # 验证必需的环境变量
+    echo "验证必需的环境变量..."
+    REQUIRED_VARS=(
+        "NEXT_PUBLIC_SUPABASE_URL"
+        "NEXT_PUBLIC_SUPABASE_ANON_KEY"
+        "SUPABASE_SERVICE_ROLE_KEY"
+        "SUPABASE_URL"
+    )
+    
+    MISSING_VARS=()
+    for var in "${REQUIRED_VARS[@]}"; do
+        if [ -z "${!var}" ]; then
+            MISSING_VARS+=("$var")
+            echo "  ❌ $var: 未设置"
+        else
+            value="${!var}"
+            masked="${value:0:20}..."
+            echo "  ✓ $var: $masked"
+        fi
+    done
+    
+    if [ ${#MISSING_VARS[@]} -ne 0 ]; then
+        echo ""
+        echo "❌ 错误: 以下必需的环境变量未设置:"
+        printf '  - %s\n' "${MISSING_VARS[@]}"
+        return 1
+    fi
+    
     # 停止现有容器
+    echo ""
     echo "停止现有容器..."
     docker-compose down
     
@@ -91,18 +135,21 @@ rebuild_deployment() {
     echo "清理Docker构建缓存..."
     docker builder prune -f
     
-    # 检查关键修复文件
-    echo "检查修复文件..."
-    if [ ! -f "web/src/lib/dom-utils.ts" ]; then
-        echo "❌ 警告: dom-utils.ts 文件不存在"
-    else
-        echo "✅ 修复文件存在"
-    fi
+    # 重新构建镜像（显式传递构建参数）
+    echo ""
+    echo "=================================================="
+    echo "开始构建 Docker 镜像（传递环境变量）..."
+    echo "=================================================="
     
-    # 重新构建镜像
-    echo "重新构建Docker镜像..."
-    if docker-compose build --no-cache; then
+    if docker-compose build --no-cache \
+        --build-arg NEXT_PUBLIC_SUPABASE_URL="$NEXT_PUBLIC_SUPABASE_URL" \
+        --build-arg NEXT_PUBLIC_SUPABASE_ANON_KEY="$NEXT_PUBLIC_SUPABASE_ANON_KEY" \
+        --build-arg SUPABASE_SERVICE_ROLE_KEY="$SUPABASE_SERVICE_ROLE_KEY" \
+        --build-arg SUPABASE_URL="$SUPABASE_URL"; then
+        
+        echo ""
         echo "✅ 构建成功"
+        
         # 启动服务
         echo "启动服务..."
         docker-compose up -d
@@ -116,11 +163,17 @@ rebuild_deployment() {
         docker-compose ps
         
         echo ""
+        echo "=================================================="
         echo "🎉 重建完成！"
+        echo "=================================================="
         echo "前端访问: http://localhost:9011"
         echo "后端API: http://localhost:9010"
+        echo ""
+        echo "查看日志: docker-compose logs -f"
     else
+        echo ""
         echo "❌ 构建失败"
+        echo "请检查上面的错误信息"
         return 1
     fi
 }
