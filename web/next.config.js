@@ -31,8 +31,15 @@ const nextConfig = {
     return config;
   },
   env: {
-    // 加载根目录的.env文件
+    // 优先从环境变量读取（Docker构建时），其次从.env文件读取（本地开发时）
     ...(() => {
+      // 如果是Docker构建环境，环境变量已经通过ARG/ENV传入，直接使用
+      if (process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+        console.log('✓ 使用Docker环境变量');
+        return {};
+      }
+      
+      // 本地开发环境，从根目录.env文件加载
       try {
         const path = require('path');
         const fs = require('fs');
@@ -41,17 +48,20 @@ const nextConfig = {
           const envVars = require('dotenv').config({ path: envPath }).parsed || {};
           // 过滤掉Next.js不允许的变量
           const { NODE_ENV, ...filteredVars } = envVars;
+          console.log('✓ 从根目录.env文件加载环境变量');
           return filteredVars;
         }
       } catch (e) {
-        console.warn('无法加载根目录.env文件:', e.message);
+        console.warn('⚠ 无法加载根目录.env文件:', e.message);
       }
       return {};
     })(),
-    // Docker部署环境变量
+    // 显式声明环境变量（从process.env读取，支持Docker ARG/ENV传递）
     API_KEY: process.env.API_KEY || '',
     NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL || '',
     NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '',
+    SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY || '',
+    SUPABASE_URL: process.env.SUPABASE_URL || '',
   },
   // 跳过静态导出中的预渲染错误
   trailingSlash: false,
