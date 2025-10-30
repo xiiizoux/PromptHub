@@ -43,6 +43,7 @@ product_ssh_key
 
 # Claude Code相关文件和文件夹
 .claude/
+CLAUDE.md
 
 # 日志文件
 logs/
@@ -141,3 +142,5 @@ coverage/
 .now
 .vercel/
 .now/
+
+CLAUDE.md
