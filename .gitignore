@@ -32,6 +32,8 @@ mcp/build/
 .env.test.local
 .env.production.local
 docker-compose.yml
+supabaseconnect.txt
+supabase_ssh_key
 
 # cursor相关文件和文件夹
 .cursorignore
