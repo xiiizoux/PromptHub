@@ -97,7 +97,32 @@
     "login_required_access": "请先登录才能访问此功能",
     "verifying_identity": "正在验证身份...",
     "login_success": "登录成功",
-    "logout_success": "已成功退出登录"
+    "logout_success": "已成功退出登录",
+    "login": {
+      "title": "欢迎回来",
+      "subtitle": "登录您的 Prompt Hub 账户",
+      "back_to_hub": "返回 Prompt Hub",
+      "email_label": "邮箱地址",
+      "email_placeholder": "输入您的邮箱地址",
+      "email_required": "请输入电子邮件",
+      "email_invalid": "请输入有效的电子邮件地址",
+      "password_label": "密码",
+      "password_placeholder": "输入您的密码",
+      "password_required": "请输入密码",
+      "password_min_length": "密码必须至少包含6个字符",
+      "remember_me": "记住我",
+      "forgot_password": "忘记密码?",
+      "login_button": "登录",
+      "logging_in": "正在登录...",
+      "or": "或者",
+      "login_with_google": "使用 Google 登录",
+      "no_account": "还没有账户?",
+      "register_now": "立即注册",
+      "login_issue": "登录遇到问题？",
+      "clear_auth_issue": "解决登录卡死问题",
+      "login_failed": "登录失败，请检查您的凭据",
+      "google_login_failed": "Google登录失败，请稍后再试"
+    }
   },
   "bookmarks": {
     "added": "已添加到收藏",
@@ -415,6 +440,114 @@
         "a2": "您可以通过修改 .env.local 文件中的 API_URL 变量来连接到远程服务器。确保同时设置正确的 API_KEY 以进行身份验证。",
         "q3": "Prompt Hub 是否支持多用户协作？",
         "a3": "是的，Prompt Hub 支持用户注册和身份验证，允许多个用户协作管理提示词库。每个提示词都会记录创建者和编辑者信息，便于团队协作和版本管理。"
+      }
+    }
+  },
+  "pages": {
+    "chat": {
+      "title": "对话提示词",
+      "subtitle": "探索最优秀的对话AI提示词，让你的对话更智能、更有深度、更富创造力",
+      "found_count": "共找到 {count} 个对话提示词",
+      "loading": "正在加载对话提示词...",
+      "load_failed": "加载失败",
+      "no_prompts": "暂无对话提示词",
+      "no_results": "没有找到符合条件的对话提示词，请尝试调整筛选条件",
+      "no_prompts_yet": "还没有对话提示词，成为第一个创建者吧！",
+      "create_prompt": "创建对话提示词",
+      "reload": "重新加载",
+      "previous_page": "上一页",
+      "next_page": "下一页"
+    },
+    "image": {
+      "title": "图像提示词",
+      "subtitle": "发现最精美的图像生成提示词，释放AI图像创作的无限可能",
+      "found_count": "共找到 {count} 个图像提示词",
+      "loading": "正在加载图像提示词...",
+      "load_failed": "加载失败",
+      "no_prompts": "暂无图像提示词",
+      "no_results": "没有找到符合条件的图像提示词，请尝试调整筛选条件",
+      "no_prompts_yet": "还没有图像提示词，创建第一个视觉奇迹吧！",
+      "create_prompt": "创建图像提示词",
+      "reload": "重新加载",
+      "previous_page": "上一页",
+      "next_page": "下一页"
+    },
+    "video": {
+      "title": "视频提示词",
+      "subtitle": "探索精彩的视频生成提示词，让AI为你创造动态视觉体验",
+      "found_count": "共找到 {count} 个视频提示词",
+      "loading": "正在加载视频提示词...",
+      "load_failed": "加载失败",
+      "no_prompts": "暂无视频提示词",
+      "no_results": "没有找到符合条件的视频提示词，请尝试调整筛选条件",
+      "no_prompts_yet": "还没有视频提示词，创建第一个动态作品吧！",
+      "create_prompt": "创建视频提示词",
+      "reload": "重新加载",
+      "previous_page": "上一页",
+      "next_page": "下一页"
+    },
+    "optimizer": {
+      "title": "AI优化器",
+      "subtitle": "利用先进的AI技术优化您的提示词，提升准确性、清晰度和效果。让每个提示词都发挥最大潜能。",
+      "features": {
+        "smart_optimization": {
+          "title": "智能优化",
+          "description": "AI分析您的提示词结构和内容，提供专业的优化建议和改进版本",
+          "stats": "准确率95%"
+        },
+        "iterative_improvement": {
+          "title": "迭代改进",
+          "description": "根据您的具体需求，对已优化的提示词进行精细调整和进一步改进",
+          "stats": "效率提升80%"
+        },
+        "quality_analysis": {
+          "title": "质量分析",
+          "description": "多维度评估提示词质量，包括清晰性、具体性、完整性等关键指标",
+          "stats": "多维度评分"
+        }
+      },
+      "stats": {
+        "success_rate": "优化成功率",
+        "processing_speed": "处理速度",
+        "optimization_types": "优化类型"
+      },
+      "actions": {
+        "fill_to_create": "填充到创建提示词",
+        "analyze_and_fill": "智能分析并填充"
+      },
+      "usage_guide": {
+        "title": "使用指南",
+        "subtitle": "掌握这些技巧，让AI优化效果更加出色",
+        "optimization_tips": {
+          "title": "优化技巧",
+          "tips": [
+            "提供充足的上下文信息",
+            "明确指定期望的输出格式",
+            "使用具体而非抽象的描述",
+            "包含相关示例或约束条件"
+          ]
+        },
+        "configuration": {
+          "title": "配置说明",
+          "items": [
+            "需要配置OpenAI API密钥",
+            "支持多种优化类型选择",
+            "可添加特殊要求或约束",
+            "优化结果可直接保存使用"
+          ]
+        }
+      },
+      "errors": {
+        "login_required": "请先登录",
+        "no_optimized_result": "没有可保存的优化结果"
+      },
+      "analysis": {
+        "confirm_title": "智能分析确认",
+        "confirm_message": "即将跳转到创建提示词页面并自动填充以下内容：\n\n📝 提示词内容：{content}\n\n🤖 智能分析：将自动分析分类、标签、变量、兼容模型等\n\n📋 建议名称：AI自动生成\n\n📄 建议描述：AI自动生成\n\n🏷️ 智能标签：AI自动提取\n\n⚙️ 智能变量：AI自动识别\n\n确认继续吗？您可以在创建页面修改这些信息。",
+        "analyzing": "正在进行AI分析...",
+        "analysis_complete": "AI分析完成！",
+        "analysis_failed": "AI分析失败",
+        "redirecting": "正在跳转到创建提示词页面..."
       }
     }
   }

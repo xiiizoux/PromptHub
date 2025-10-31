@@ -5,8 +5,10 @@ import { getPrompts, getCategories, getTags } from '@/lib/api';
 import { PromptInfo, PromptFilters as PromptFiltersType } from '@/types';
 import PromptCard from '@/components/prompts/PromptCard';
 import SidebarFilters from '@/components/layout/SidebarFilters';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 export default function ChatPromptsPage() {
+  const { t } = useLanguage();
   // 状态管理
   const [prompts, setPrompts] = useState<PromptInfo[]>([]);
   const [loading, setLoading] = useState(true);
@@ -136,7 +138,7 @@ export default function ChatPromptsPage() {
             setPrompts([]);
             setTotalPages(1);
             setTotalCount(0);
-            setError('获取对话提示词数据格式错误，请刷新页面重试');
+            setError(t('pages.chat.load_failed'));
             setLoading(false);
             return;
           }
@@ -149,7 +151,7 @@ export default function ChatPromptsPage() {
           console.error(`获取对话提示词失败 (尝试 ${retryCount}/${maxRetries + 1}):`, err);
 
           if (retryCount > maxRetries) {
-            setError('无法加载对话提示词，请检查网络连接后重试');
+            setError(t('pages.chat.load_failed'));
             setPrompts([]);
             setTotalPages(1);
             setTotalCount(0);
@@ -220,7 +222,7 @@ export default function ChatPromptsPage() {
           disabled={currentPage <= 1}
           className="px-3 py-2 text-sm rounded-lg glass border border-neon-cyan/20 text-neon-cyan hover:border-neon-cyan/40 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
         >
-          上一页
+          {t('pages.chat.previous_page')}
         </button>
 
         {startPage > 1 && (
@@ -266,7 +268,7 @@ export default function ChatPromptsPage() {
           disabled={currentPage >= totalPages}
           className="px-3 py-2 text-sm rounded-lg glass border border-neon-cyan/20 text-neon-cyan hover:border-neon-cyan/40 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
         >
-          下一页
+          {t('pages.chat.next_page')}
         </button>
       </motion.div>
     );
@@ -306,15 +308,15 @@ export default function ChatPromptsPage() {
                   <ChatBubbleLeftRightIcon className="unified-page-title-icon" />
                 </div>
                 <h1 className="unified-page-title">
-                  对话提示词
+                  {t('pages.chat.title')}
                 </h1>
               </div>
               <p className="unified-page-subtitle">
-                探索最优秀的对话AI提示词，让你的对话更智能、更有深度、更富创造力
+                {t('pages.chat.subtitle')}
               </p>
               {totalCount > 0 && (
                 <p className="text-sm text-neon-cyan mt-4">
-                  共找到 {totalCount} 个对话提示词
+                  {t('pages.chat.found_count', { count: totalCount })}
                 </p>
               )}
             </motion.div>
@@ -330,7 +332,7 @@ export default function ChatPromptsPage() {
               className="flex flex-col items-center justify-center py-20"
             >
               <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-neon-cyan mb-4"></div>
-              <p className="text-gray-400">正在加载对话提示词...</p>
+              <p className="text-gray-400">{t('pages.chat.loading')}</p>
             </motion.div>
           ) : error ? (
             <motion.div
@@ -341,13 +343,13 @@ export default function ChatPromptsPage() {
               className="text-center py-20"
             >
               <div className="text-neon-red text-6xl mb-4">⚠️</div>
-              <h2 className="text-2xl font-bold text-white mb-2">加载失败</h2>
+              <h2 className="text-2xl font-bold text-white mb-2">{t('pages.chat.load_failed')}</h2>
               <p className="text-gray-400 mb-6">{error}</p>
               <button
                 onClick={() => window.location.reload()}
                 className="btn-primary"
               >
-                重新加载
+                {t('pages.chat.reload')}
               </button>
             </motion.div>
           ) : prompts.length === 0 ? (
@@ -359,18 +361,18 @@ export default function ChatPromptsPage() {
               className="text-center py-20"
             >
               <div className="text-gray-400 text-6xl mb-4">💬</div>
-              <h2 className="text-2xl font-bold text-white mb-2">暂无对话提示词</h2>
+              <h2 className="text-2xl font-bold text-white mb-2">{t('pages.chat.no_prompts')}</h2>
               <p className="text-gray-400 mb-6">
                 {filters.search || filters.category || filters.tags?.length ? 
-                  '没有找到符合条件的对话提示词，请尝试调整筛选条件' : 
-                  '还没有对话提示词，成为第一个创建者吧！'
+                  t('pages.chat.no_results') : 
+                  t('pages.chat.no_prompts_yet')
                 }
               </p>
               <button
                 onClick={() => window.location.href = '/create'}
                 className="btn-primary"
               >
-                创建对话提示词
+                {t('pages.chat.create_prompt')}
               </button>
             </motion.div>
           ) : (

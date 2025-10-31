@@ -449,17 +449,11 @@ export default function Home({ featuredPrompts: initialPrompts }: HomeProps) {
 
 // 获取服务端初始数据
 export async function getStaticProps() {
+  // 构建时如果没有后端服务，直接返回空数组，避免构建失败
+  // 客户端会在运行时尝试获取数据
   try {
-    // 使用 fetch API 从后端获取提示词数据
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:9011';
-    const response = await fetch(`${baseUrl}/api/prompts?pageSize=6&sortBy=popular`, {
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-
-    if (!response.ok) {
-      console.error('Failed to fetch featured prompts:', response.statusText);
+    // 检查是否在构建环境中
+    if (!process.env.NEXT_PUBLIC_API_URL) {
       return {
         props: {
           featuredPrompts: [],
@@ -468,17 +462,60 @@ export async function getStaticProps() {
       };
     }
 
-    const data = await response.json();
-    const featuredPrompts = data?.data?.data || [];
+    // 使用 fetch API 从后端获取提示词数据
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:9011';
+    
+    // 添加超时和错误处理
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000); // 5秒超时
+    
+    try {
+      const response = await fetch(`${baseUrl}/api/prompts?pageSize=6&sortBy=popular`, {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        signal: controller.signal,
+      });
 
-    return {
-      props: {
-        featuredPrompts: featuredPrompts.slice(0, 6), // 只取前6个
-      },
-      revalidate: 600, // 10分钟重新生成
-    };
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        console.error('Failed to fetch featured prompts:', response.statusText);
+        return {
+          props: {
+            featuredPrompts: [],
+          },
+          revalidate: 600,
+        };
+      }
+
+      const data = await response.json();
+      const featuredPrompts = data?.data?.data || [];
+
+      return {
+        props: {
+          featuredPrompts: Array.isArray(featuredPrompts) ? featuredPrompts.slice(0, 6) : [],
+        },
+        revalidate: 600, // 10分钟重新生成
+      };
+    } catch (fetchError: any) {
+      clearTimeout(timeoutId);
+      // 忽略网络错误，构建时可能没有后端服务
+      if (fetchError.name === 'AbortError' || fetchError.code === 'ECONNREFUSED') {
+        console.warn('Backend not available during build, using empty array');
+      } else {
+        console.error('Error fetching featured prompts:', fetchError);
+      }
+      return {
+        props: {
+          featuredPrompts: [],
+        },
+        revalidate: 600,
+      };
+    }
   } catch (error) {
-    console.error('Error fetching featured prompts:', error);
+    // 确保任何错误都不会导致构建失败
+    console.error('Error in getStaticProps:', error);
     return {
       props: {
         featuredPrompts: [],

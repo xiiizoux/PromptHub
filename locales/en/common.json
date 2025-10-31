@@ -97,7 +97,32 @@
     "login_required_access": "Please login first to access this feature",
     "verifying_identity": "Verifying identity...",
     "login_success": "Login successful",
-    "logout_success": "Successfully logged out"
+    "logout_success": "Successfully logged out",
+    "login": {
+      "title": "Welcome Back",
+      "subtitle": "Login to your Prompt Hub account",
+      "back_to_hub": "Back to Prompt Hub",
+      "email_label": "Email Address",
+      "email_placeholder": "Enter your email address",
+      "email_required": "Email is required",
+      "email_invalid": "Please enter a valid email address",
+      "password_label": "Password",
+      "password_placeholder": "Enter your password",
+      "password_required": "Password is required",
+      "password_min_length": "Password must be at least 6 characters",
+      "remember_me": "Remember me",
+      "forgot_password": "Forgot password?",
+      "login_button": "Login",
+      "logging_in": "Logging in...",
+      "or": "Or",
+      "login_with_google": "Login with Google",
+      "no_account": "Don't have an account?",
+      "register_now": "Register now",
+      "login_issue": "Having login issues?",
+      "clear_auth_issue": "Resolve login stuck issue",
+      "login_failed": "Login failed, please check your credentials",
+      "google_login_failed": "Google login failed, please try again later"
+    }
   },
   "bookmarks": {
     "added": "Added to favorites",
@@ -415,6 +440,114 @@
         "a2": "You can connect to a remote server by modifying the API_URL variable in the .env.local file. Make sure to also set the correct API_KEY for authentication.",
         "q3": "Does Prompt Hub support multi-user collaboration?",
         "a3": "Yes, Prompt Hub supports user registration and authentication, allowing multiple users to collaboratively manage the prompt library. Each prompt records creator and editor information, facilitating team collaboration and version management."
+      }
+    }
+  },
+  "pages": {
+    "chat": {
+      "title": "Chat Prompts",
+      "subtitle": "Explore the best conversational AI prompts to make your conversations smarter, deeper, and more creative",
+      "found_count": "Found {count} chat prompts",
+      "loading": "Loading chat prompts...",
+      "load_failed": "Load failed",
+      "no_prompts": "No chat prompts",
+      "no_results": "No chat prompts found matching your criteria, please try adjusting your filters",
+      "no_prompts_yet": "No chat prompts yet, be the first creator!",
+      "create_prompt": "Create Chat Prompt",
+      "reload": "Reload",
+      "previous_page": "Previous",
+      "next_page": "Next"
+    },
+    "image": {
+      "title": "Image Prompts",
+      "subtitle": "Discover the finest image generation prompts and unlock the infinite possibilities of AI image creation",
+      "found_count": "Found {count} image prompts",
+      "loading": "Loading image prompts...",
+      "load_failed": "Load failed",
+      "no_prompts": "No image prompts",
+      "no_results": "No image prompts found matching your criteria, please try adjusting your filters",
+      "no_prompts_yet": "No image prompts yet, create your first visual masterpiece!",
+      "create_prompt": "Create Image Prompt",
+      "reload": "Reload",
+      "previous_page": "Previous",
+      "next_page": "Next"
+    },
+    "video": {
+      "title": "Video Prompts",
+      "subtitle": "Explore exciting video generation prompts and let AI create dynamic visual experiences for you",
+      "found_count": "Found {count} video prompts",
+      "loading": "Loading video prompts...",
+      "load_failed": "Load failed",
+      "no_prompts": "No video prompts",
+      "no_results": "No video prompts found matching your criteria, please try adjusting your filters",
+      "no_prompts_yet": "No video prompts yet, create your first dynamic work!",
+      "create_prompt": "Create Video Prompt",
+      "reload": "Reload",
+      "previous_page": "Previous",
+      "next_page": "Next"
+    },
+    "optimizer": {
+      "title": "AI Optimizer",
+      "subtitle": "Use advanced AI technology to optimize your prompts, improving accuracy, clarity, and effectiveness. Let every prompt reach its full potential.",
+      "features": {
+        "smart_optimization": {
+          "title": "Smart Optimization",
+          "description": "AI analyzes your prompt structure and content, providing professional optimization suggestions and improved versions",
+          "stats": "95% Accuracy"
+        },
+        "iterative_improvement": {
+          "title": "Iterative Improvement",
+          "description": "Fine-tune and further improve optimized prompts according to your specific needs",
+          "stats": "80% Efficiency Boost"
+        },
+        "quality_analysis": {
+          "title": "Quality Analysis",
+          "description": "Multi-dimensional evaluation of prompt quality, including clarity, specificity, completeness and other key metrics",
+          "stats": "Multi-dimensional Scoring"
+        }
+      },
+      "stats": {
+        "success_rate": "Optimization Success Rate",
+        "processing_speed": "Processing Speed",
+        "optimization_types": "Optimization Types"
+      },
+      "actions": {
+        "fill_to_create": "Fill to Create Prompt",
+        "analyze_and_fill": "Analyze and Fill"
+      },
+      "usage_guide": {
+        "title": "Usage Guide",
+        "subtitle": "Master these techniques to make AI optimization even more effective",
+        "optimization_tips": {
+          "title": "Optimization Tips",
+          "tips": [
+            "Provide sufficient context information",
+            "Clearly specify the desired output format",
+            "Use specific rather than abstract descriptions",
+            "Include relevant examples or constraints"
+          ]
+        },
+        "configuration": {
+          "title": "Configuration",
+          "items": [
+            "OpenAI API key configuration required",
+            "Support for multiple optimization types",
+            "Can add special requirements or constraints",
+            "Optimization results can be saved directly"
+          ]
+        }
+      },
+      "errors": {
+        "login_required": "Please login first",
+        "no_optimized_result": "No optimized results to save"
+      },
+      "analysis": {
+        "confirm_title": "AI Analysis Confirmation",
+        "confirm_message": "About to redirect to create prompt page and auto-fill the following content:\n\n📝 Prompt Content: {content}\n\n🤖 AI Analysis: Will automatically analyze category, tags, variables, compatible models, etc.\n\n📋 Suggested Name: AI auto-generated\n\n📄 Suggested Description: AI auto-generated\n\n🏷️ Smart Tags: AI auto-extracted\n\n⚙️ Smart Variables: AI auto-identified\n\nConfirm to continue? You can modify this information on the create page.",
+        "analyzing": "Performing AI analysis...",
+        "analysis_complete": "AI analysis complete!",
+        "analysis_failed": "AI analysis failed",
+        "redirecting": "Redirecting to create prompt page..."
       }
     }
   }

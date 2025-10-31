@@ -4,6 +4,7 @@ import { useRouter } from 'next/router';
 import { useForm } from 'react-hook-form';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { getRedirectUrl, buildUrlWithRedirect } from '@/lib/redirect';
 import { EyeIcon, EyeSlashIcon, LockClosedIcon, EnvelopeIcon, ArrowRightIcon, SparklesIcon } from '@heroicons/react/24/outline';
 
@@ -22,6 +23,7 @@ export default function LoginPage() {
   const [redirecting, setRedirecting] = useState(false);
   const router = useRouter();
   const { login, loginWithGoogle, isAuthenticated, isLoading: authLoading } = useAuth();
+  const { t } = useLanguage();
   
   const { register, handleSubmit, formState: { errors } } = useForm<LoginFormData>({
     defaultValues: {
@@ -94,7 +96,7 @@ export default function LoginPage() {
     } catch (err: any) {
       console.error('登录失败:', err);
       // 错误消息会由AuthContext设置，这里只需要显示
-      setError(err.message || '登录失败，请检查您的凭据');
+      setError(err.message || t('auth.login.login_failed'));
     } finally {
       setIsLoading(false);
     }
@@ -109,7 +111,7 @@ export default function LoginPage() {
       // Google OAuth会重定向到callback页面，无需手动处理
     } catch (err: any) {
       console.error('Google登录失败:', err);
-      setError(err.message || 'Google登录失败，请稍后再试');
+      setError(err.message || t('auth.login.google_login_failed'));
     } finally {
       setIsGoogleLoading(false);
     }
@@ -142,7 +144,7 @@ export default function LoginPage() {
               className="flex items-center"
             >
               <SparklesIcon className="h-5 w-5 mr-2 group-hover:shadow-neon-sm transition-all duration-300" />
-              <span className="font-medium">返回 Prompt Hub</span>
+              <span className="font-medium">{t('auth.login.back_to_hub')}</span>
             </motion.div>
           </Link>
         </motion.div>
@@ -171,8 +173,8 @@ export default function LoginPage() {
                 <SparklesIcon className="w-8 h-8 text-neon-cyan" />
               </div>
             </motion.div>
-            <h1 className="text-3xl font-bold gradient-text mb-2">欢迎回来</h1>
-            <p className="text-gray-400">登录您的 Prompt Hub 账户</p>
+            <h1 className="text-3xl font-bold gradient-text mb-2">{t('auth.login.title')}</h1>
+            <p className="text-gray-400">{t('auth.login.subtitle')}</p>
           </motion.div>
 
           {/* 错误提示 */}
@@ -215,7 +217,7 @@ export default function LoginPage() {
               transition={{ duration: 0.6, delay: 1 }}
             >
               <label htmlFor="email" className="block text-sm font-medium text-neon-cyan mb-2">
-                邮箱地址
+                {t('auth.login.email_label')}
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
@@ -231,12 +233,12 @@ export default function LoginPage() {
                       ? 'border-red-500 focus:border-red-400 focus:ring-1 focus:ring-red-400' 
                       : 'border-dark-border focus:border-neon-cyan focus:ring-1 focus:ring-neon-cyan focus:shadow-neon-sm'
                   }`}
-                  placeholder="输入您的邮箱地址"
+                  placeholder={t('auth.login.email_placeholder')}
                   {...register('email', { 
-                    required: '请输入电子邮件',
+                    required: t('auth.login.email_required'),
                     pattern: {
                       value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                      message: '请输入有效的电子邮件地址',
+                      message: t('auth.login.email_invalid'),
                     },
                   })}
                 />
@@ -259,7 +261,7 @@ export default function LoginPage() {
               transition={{ duration: 0.6, delay: 1.1 }}
             >
               <label htmlFor="password" className="block text-sm font-medium text-neon-purple mb-2">
-                密码
+                {t('auth.login.password_label')}
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
@@ -275,12 +277,12 @@ export default function LoginPage() {
                       ? 'border-red-500 focus:border-red-400 focus:ring-1 focus:ring-red-400' 
                       : 'border-dark-border focus:border-neon-purple focus:ring-1 focus:ring-neon-purple focus:shadow-neon-sm'
                   }`}
-                  placeholder="输入您的密码"
+                  placeholder={t('auth.login.password_placeholder')}
                   {...register('password', { 
-                    required: '请输入密码',
+                    required: t('auth.login.password_required'),
                     minLength: {
                       value: 6,
-                      message: '密码必须至少包含6个字符',
+                      message: t('auth.login.password_min_length'),
                     },
                   })}
                 />
@@ -322,7 +324,7 @@ export default function LoginPage() {
                   {...register('remember')}
                 />
                 <label htmlFor="remember" className="ml-2 block text-sm text-gray-300">
-                  记住我
+                  {t('auth.login.remember_me')}
                 </label>
               </div>
 
@@ -330,7 +332,7 @@ export default function LoginPage() {
                 href="/auth/forgot-password" 
                 className="text-sm text-neon-pink hover:text-white transition-colors duration-300"
               >
-                忘记密码?
+                {t('auth.login.forgot_password')}
               </Link>
             </motion.div>
 
@@ -355,11 +357,11 @@ export default function LoginPage() {
                   {isLoading ? (
                     <>
                       <div className="w-5 h-5 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>
-                      <span>正在登录...</span>
+                      <span>{t('auth.login.logging_in')}</span>
                     </>
                   ) : (
                     <>
-                      <span>登录</span>
+                      <span>{t('auth.login.login_button')}</span>
                       <ArrowRightIcon className="w-5 h-5" />
                     </>
                   )}
@@ -378,7 +380,7 @@ export default function LoginPage() {
                 <div className="w-full border-t border-dark-border"></div>
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-4 bg-dark-bg-primary text-gray-400">或者</span>
+                <span className="px-4 bg-dark-bg-primary text-gray-400">{t('auth.login.or')}</span>
               </div>
             </motion.div>
 
@@ -410,7 +412,7 @@ export default function LoginPage() {
                     <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
                   </svg>
                 )}
-                <span>使用 Google 登录</span>
+                <span>{t('auth.login.login_with_google')}</span>
               </motion.button>
             </motion.div>
           </motion.form>
@@ -423,18 +425,18 @@ export default function LoginPage() {
             className="p-8 pt-0 text-center space-y-4"
           >
             <p className="text-gray-400">
-              还没有账户?{' '}
+              {t('auth.login.no_account')}{' '}
               <Link 
                 href={buildUrlWithRedirect('/auth/register', redirectUrl)}
                 className="text-neon-cyan hover:text-neon-purple transition-colors duration-300 font-medium"
               >
-                立即注册
+                {t('auth.login.register_now')}
               </Link>
             </p>
             
             {/* 添加故障排查链接 */}
             <div className="border-t border-dark-border pt-4">
-              <p className="text-gray-500 text-sm mb-2">登录遇到问题？</p>
+              <p className="text-gray-500 text-sm mb-2">{t('auth.login.login_issue')}</p>
               <Link 
                 href="/auth/clear-auth"
                 className="inline-flex items-center text-orange-400 hover:text-orange-300 transition-colors duration-300 text-sm"
@@ -442,7 +444,7 @@ export default function LoginPage() {
                 <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 15.5c-.77.833.192 2.5 1.732 2.5z" />
                 </svg>
-                解决登录卡死问题
+                {t('auth.login.clear_auth_issue')}
               </Link>
             </div>
           </motion.div>

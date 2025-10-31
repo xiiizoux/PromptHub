@@ -21,7 +21,7 @@ export const languages: Record<Language, { code: Language; name: string; nativeN
 interface LanguageContextType {
   language: Language;
   setLanguage: (lang: Language) => void;
-  t: (key: string, fallback?: string) => string;
+  t: (key: string, options?: { fallback?: string; returnObjects?: boolean; [key: string]: any } | string) => any;
   isZh: boolean;
   isEn: boolean;
 }
@@ -87,7 +87,8 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   // 翻译函数
   const t = useCallback(
-    (key: string, fallback?: string): string => {
+    (key: string, options?: { fallback?: string; returnObjects?: boolean; [key: string]: any }): any => {
+      const opts = typeof options === 'string' ? { fallback: options } : (options || {});
       const keys = key.split('.');
       let value: any = translations;
 
@@ -95,11 +96,33 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         if (value && typeof value === 'object') {
           value = value[k];
         } else {
-          return fallback || key;
+          return opts.fallback || key;
         }
       }
 
-      return typeof value === 'string' ? value : fallback || key;
+      // 如果请求返回对象（用于数组等）
+      if (opts.returnObjects) {
+        // 如果值存在且是对象/数组，返回它；否则返回空数组（避免.map()错误）
+        if (value !== undefined && typeof value === 'object') {
+          return value;
+        }
+        // 如果没有找到翻译，返回空数组而不是字符串，避免.map()错误
+        return [];
+      }
+
+      // 处理字符串插值
+      if (typeof value === 'string') {
+        let result = value;
+        // 替换占位符 {key}
+        Object.keys(opts).forEach(key => {
+          if (key !== 'fallback' && key !== 'returnObjects') {
+            result = result.replace(new RegExp(`\\{${key}\\}`, 'g'), String(opts[key]));
+          }
+        });
+        return result;
+      }
+
+      return opts.fallback || key;
     },
     [translations],
   );

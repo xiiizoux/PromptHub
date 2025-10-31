@@ -18,6 +18,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { useRouter } from 'next/router';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 import PromptOptimizerComponent from '@/components/PromptOptimizerComponent';
 import { createPrompt } from '@/lib/api';
 import toast from 'react-hot-toast';
@@ -29,6 +30,7 @@ const ThreeScene = dynamic(() => import('@/components/ui/ThreeScene'), { ssr: fa
 const OptimizerPage: React.FC = () => {
   const router = useRouter();
   const { user } = useAuth();
+  const { t } = useLanguage();
   const [optimizedPrompt, setOptimizedPrompt] = useState('');
   // 移除不再需要的保存状态
   // const [isSaving, setIsSaving] = useState(false);
@@ -55,38 +57,25 @@ const OptimizerPage: React.FC = () => {
     
     // 跳转到创建提示词页面
     router.push(`/create?${params.toString()}`);
-    toast.success('正在跳转到创建提示词页面...');
+    toast.success(t('pages.optimizer.analysis.redirecting'));
   };
 
   // 添加智能分析后填充到创建提示词页面的功能
   const handleSaveWithAnalysis = async () => {
     if (!user) {
-      toast.error('请先登录');
+      toast.error(t('pages.optimizer.errors.login_required'));
       return;
     }
 
     if (!optimizedPrompt.trim()) {
-      toast.error('没有可保存的优化结果');
+      toast.error(t('pages.optimizer.errors.no_optimized_result'));
       return;
     }
 
     // 显示即将填充的内容预览
+    const contentPreview = optimizedPrompt.substring(0, 100) + (optimizedPrompt.length > 100 ? '...' : '');
     const confirmed = window.confirm(
-      `即将跳转到创建提示词页面并自动填充以下内容：
-
-📝 提示词内容：${optimizedPrompt.substring(0, 100)}${optimizedPrompt.length > 100 ? '...' : ''}
-
-🤖 智能分析：将自动分析分类、标签、变量、兼容模型等
-
-📋 建议名称：AI自动生成
-
-📄 建议描述：AI自动生成
-
-🏷️ 智能标签：AI自动提取
-
-⚙️ 智能变量：AI自动识别
-
-确认继续吗？您可以在创建页面修改这些信息。`,
+      t('pages.optimizer.analysis.confirm_message', { content: contentPreview })
     );
 
     if (!confirmed) {
@@ -94,7 +83,7 @@ const OptimizerPage: React.FC = () => {
     }
 
     try {
-      toast.loading('正在进行AI分析...', { id: 'ai-analysis' });
+      toast.loading(t('pages.optimizer.analysis.analyzing'), { id: 'ai-analysis' });
       
       // 调用AI分析API
       const response = await fetch('/api/ai/analyze', {
@@ -117,7 +106,7 @@ const OptimizerPage: React.FC = () => {
 
       if (response.ok && result.success) {
         const analysisResult = result.data;
-        toast.success('AI分析完成！', { id: 'ai-analysis' });
+        toast.success(t('pages.optimizer.analysis.analysis_complete'), { id: 'ai-analysis' });
         
         // 构建URL参数，包含AI分析结果
         const suggestedName = analysisResult.suggestedTitle || `优化提示词_${new Date().toLocaleString('zh-CN', {
@@ -138,13 +127,13 @@ const OptimizerPage: React.FC = () => {
         
         // 跳转到创建提示词页面
         router.push(`/create?${params.toString()}`);
-        toast.success('正在跳转到创建提示词页面...');
+        toast.success(t('pages.optimizer.analysis.redirecting'));
       } else {
         throw new Error(result.error || 'AI分析失败');
       }
     } catch (error: any) {
       console.error('AI分析失败:', error);
-      toast.error(`AI分析失败: ${error.message}`, { id: 'ai-analysis' });
+      toast.error(`${t('pages.optimizer.analysis.analysis_failed')}: ${error.message}`, { id: 'ai-analysis' });
       // 作为后备，使用普通的填充方式
       handleSaveAsNewPrompt();
     }
@@ -153,31 +142,31 @@ const OptimizerPage: React.FC = () => {
   const features = [
     {
       icon: SparklesIcon,
-      title: '智能优化',
-      description: 'AI分析您的提示词结构和内容，提供专业的优化建议和改进版本',
+      title: t('pages.optimizer.features.smart_optimization.title'),
+      description: t('pages.optimizer.features.smart_optimization.description'),
       color: 'from-neon-cyan to-neon-cyan-dark',
-      stats: '准确率95%',
+      stats: t('pages.optimizer.features.smart_optimization.stats'),
     },
     {
       icon: CpuChipIcon,
-      title: '迭代改进',
-      description: '根据您的具体需求，对已优化的提示词进行精细调整和进一步改进',
+      title: t('pages.optimizer.features.iterative_improvement.title'),
+      description: t('pages.optimizer.features.iterative_improvement.description'),
       color: 'from-neon-purple to-neon-pink',
-      stats: '效率提升80%',
+      stats: t('pages.optimizer.features.iterative_improvement.stats'),
     },
     {
       icon: ChartBarIcon,
-      title: '质量分析',
-      description: '多维度评估提示词质量，包括清晰性、具体性、完整性等关键指标',
+      title: t('pages.optimizer.features.quality_analysis.title'),
+      description: t('pages.optimizer.features.quality_analysis.description'),
       color: 'from-neon-yellow to-neon-green',
-      stats: '多维度评分',
+      stats: t('pages.optimizer.features.quality_analysis.stats'),
     },
   ];
 
   const stats = [
-    { label: '优化成功率', value: '98%', icon: RocketLaunchIcon },
-    { label: '处理速度', value: '<3s', icon: BoltIcon },
-    { label: '优化类型', value: '4种', icon: CircleStackIcon },
+    { label: t('pages.optimizer.stats.success_rate'), value: '98%', icon: RocketLaunchIcon },
+    { label: t('pages.optimizer.stats.processing_speed'), value: '<3s', icon: BoltIcon },
+    { label: t('pages.optimizer.stats.optimization_types'), value: '4种', icon: CircleStackIcon },
   ];
 
   return (
@@ -231,7 +220,7 @@ const OptimizerPage: React.FC = () => {
                 >
                   <>
                     <DocumentPlusIcon className="h-4 w-4" />
-                    <span>填充到创建提示词</span>
+                    <span>{t('pages.optimizer.actions.fill_to_create')}</span>
                   </>
                 </motion.button>
                 
@@ -245,7 +234,7 @@ const OptimizerPage: React.FC = () => {
                 >
                   <>
                     <BeakerIcon className="h-4 w-4" />
-                    <span>智能分析并填充</span>
+                    <span>{t('pages.optimizer.actions.analyze_and_fill')}</span>
                   </>
                 </motion.button>
               </div>
@@ -262,7 +251,7 @@ const OptimizerPage: React.FC = () => {
                 <SparklesIcon className="unified-page-title-icon" />
               </div>
               <h1 className="unified-page-title">
-                AI优化器
+                {t('pages.optimizer.title')}
               </h1>
             </motion.div>
 
@@ -273,8 +262,7 @@ const OptimizerPage: React.FC = () => {
               animate={{ opacity: 1 }}
               transition={{ delay: 0.3 }}
             >
-              利用先进的AI技术优化您的提示词，提升准确性、清晰度和效果。
-              让每个提示词都发挥最大潜能。
+              {t('pages.optimizer.subtitle')}
             </motion.p>
           </motion.div>
 
@@ -336,24 +324,22 @@ const OptimizerPage: React.FC = () => {
             <div className="text-center mb-8">
               <h3 className="text-2xl font-bold gradient-text mb-4 flex items-center justify-center">
                 <LightBulbIcon className="h-6 w-6 text-neon-yellow mr-3" />
-                使用指南
+                {t('pages.optimizer.usage_guide.title')}
               </h3>
-              <p className="text-gray-400">掌握这些技巧，让AI优化效果更加出色</p>
+              <p className="text-gray-400">{t('pages.optimizer.usage_guide.subtitle')}</p>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <div className="space-y-4">
                 <h4 className="font-semibold text-white flex items-center mb-4">
                   <SparklesIcon className="h-5 w-5 text-neon-cyan mr-2" />
-                  优化技巧
+                  {t('pages.optimizer.usage_guide.optimization_tips.title')}
                 </h4>
                 <div className="space-y-3">
-                  {[
-                    '提供充足的上下文信息',
-                    '明确指定期望的输出格式',
-                    '使用具体而非抽象的描述',
-                    '包含相关示例或约束条件',
-                  ].map((tip, index) => (
+                  {(() => {
+                    const tips = t('pages.optimizer.usage_guide.optimization_tips.tips', { returnObjects: true });
+                    return Array.isArray(tips) ? tips : [];
+                  })().map((tip: string, index: number) => (
                     <motion.div
                       key={index}
                       className="flex items-center text-gray-400 hover:text-gray-300 transition-colors"
@@ -371,15 +357,13 @@ const OptimizerPage: React.FC = () => {
               <div className="space-y-4">
                 <h4 className="font-semibold text-white flex items-center mb-4">
                   <CommandLineIcon className="h-5 w-5 text-neon-green mr-2" />
-                  配置说明
+                  {t('pages.optimizer.usage_guide.configuration.title')}
                 </h4>
                 <div className="space-y-3">
-                  {[
-                    '需要配置OpenAI API密钥',
-                    '支持多种优化类型选择',
-                    '可添加特殊要求或约束',
-                    '优化结果可直接保存使用',
-                  ].map((config, index) => (
+                  {(() => {
+                    const items = t('pages.optimizer.usage_guide.configuration.items', { returnObjects: true });
+                    return Array.isArray(items) ? items : [];
+                  })().map((config: string, index: number) => (
                     <motion.div
                       key={index}
                       className="flex items-center text-gray-400 hover:text-gray-300 transition-colors"

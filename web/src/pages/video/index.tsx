@@ -5,8 +5,10 @@ import { getPrompts, getCategories, getTags } from '@/lib/api';
 import { PromptInfo, PromptFilters as PromptFiltersType } from '@/types';
 import VideoPromptCard from '@/components/prompts/VideoPromptCard';
 import SidebarFilters from '@/components/layout/SidebarFilters';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 export default function VideoPromptsPage() {
+  const { t } = useLanguage();
   // 状态管理
   const [prompts, setPrompts] = useState<PromptInfo[]>([]);
   const [loading, setLoading] = useState(true);
@@ -136,7 +138,7 @@ export default function VideoPromptsPage() {
             setPrompts([]);
             setTotalPages(1);
             setTotalCount(0);
-            setError('获取视频提示词数据格式错误，请刷新页面重试');
+            setError(t('pages.video.load_failed'));
             setLoading(false);
             return;
           }
@@ -149,7 +151,7 @@ export default function VideoPromptsPage() {
           console.error(`获取视频提示词失败 (尝试 ${retryCount}/${maxRetries + 1}):`, err);
 
           if (retryCount > maxRetries) {
-            setError('无法加载视频提示词，请检查网络连接后重试');
+            setError(t('pages.video.load_failed'));
             setPrompts([]);
             setTotalPages(1);
             setTotalCount(0);
@@ -220,7 +222,7 @@ export default function VideoPromptsPage() {
           disabled={currentPage <= 1}
           className="px-3 py-2 text-sm rounded-lg glass border border-sky-200/20 text-sky-200 hover:border-sky-300/40 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
         >
-          上一页
+          {t('pages.video.previous_page')}
         </button>
 
         {startPage > 1 && (
@@ -266,7 +268,7 @@ export default function VideoPromptsPage() {
           disabled={currentPage >= totalPages}
           className="px-3 py-2 text-sm rounded-lg glass border border-sky-200/20 text-sky-200 hover:border-sky-300/40 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
         >
-          下一页
+          {t('pages.video.next_page')}
         </button>
       </motion.div>
     );
@@ -305,16 +307,16 @@ export default function VideoPromptsPage() {
             <div className="inline-flex p-2 rounded-xl bg-gradient-to-br from-sky-200 to-blue-300 mr-2">
               <FilmIcon className="unified-page-title-icon" />
             </div>
-            <h1 className="unified-page-title">
-              视频提示词
+                <h1 className="unified-page-title">
+              {t('pages.video.title')}
             </h1>
           </div>
           <p className="unified-page-subtitle">
-            探索精彩的视频生成提示词，让AI为你创造动态视觉体验
+            {t('pages.video.subtitle')}
           </p>
           {totalCount > 0 && (
             <p className="text-sm text-sky-200 mt-4">
-              共找到 {totalCount} 个视频提示词
+              {t('pages.video.found_count', { count: totalCount })}
             </p>
           )}
         </motion.div>
@@ -332,7 +334,7 @@ export default function VideoPromptsPage() {
               className="flex flex-col items-center justify-center py-20"
             >
               <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-red-400 mb-4"></div>
-              <p className="text-gray-400">正在加载视频提示词...</p>
+              <p className="text-gray-400">{t('pages.video.loading')}</p>
             </motion.div>
           ) : error ? (
             <motion.div
@@ -343,13 +345,13 @@ export default function VideoPromptsPage() {
               className="text-center py-20"
             >
               <div className="text-red-400 text-6xl mb-4">🎬</div>
-              <h2 className="text-2xl font-bold text-white mb-2">加载失败</h2>
+              <h2 className="text-2xl font-bold text-white mb-2">{t('pages.video.load_failed')}</h2>
               <p className="text-gray-400 mb-6">{error}</p>
               <button
                 onClick={() => window.location.reload()}
                 className="px-6 py-3 bg-gradient-to-r from-red-500 to-orange-500 text-white rounded-lg font-medium hover:from-red-600 hover:to-orange-600 transition-all"
               >
-                重新加载
+                {t('pages.video.reload')}
               </button>
             </motion.div>
           ) : prompts.length === 0 ? (
@@ -361,18 +363,18 @@ export default function VideoPromptsPage() {
               className="text-center py-20"
             >
               <div className="text-gray-400 text-6xl mb-4">🎥</div>
-              <h2 className="text-2xl font-bold text-white mb-2">暂无视频提示词</h2>
+              <h2 className="text-2xl font-bold text-white mb-2">{t('pages.video.no_prompts')}</h2>
               <p className="text-gray-400 mb-6">
                 {filters.search || filters.category || filters.tags?.length ? 
-                  '没有找到符合条件的视频提示词，请尝试调整筛选条件' : 
-                  '还没有视频提示词，创建第一个动态作品吧！'
+                  t('pages.video.no_results') : 
+                  t('pages.video.no_prompts_yet')
                 }
               </p>
               <button
                 onClick={() => window.location.href = '/create'}
                 className="px-6 py-3 bg-gradient-to-r from-red-500 to-orange-500 text-white rounded-lg font-medium hover:from-red-600 hover:to-orange-600 transition-all"
               >
-                创建视频提示词
+                {t('pages.video.create_prompt')}
               </button>
             </motion.div>
           ) : (
