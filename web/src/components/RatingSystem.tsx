@@ -11,8 +11,9 @@ import {
   Rating, 
 } from '@/lib/api';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { formatDistanceToNow } from 'date-fns';
-import { zhCN } from 'date-fns/locale';
+import { zhCN, enUS } from 'date-fns/locale';
 import toast from 'react-hot-toast';
 
 interface RatingSystemProps {
@@ -25,6 +26,7 @@ export const RatingSystem: React.FC<RatingSystemProps> = ({
   className = '', 
 }) => {
   const { user } = useAuth();
+  const { t, language } = useLanguage();
   const [userRating, setUserRating] = useState<Rating | null>(null);
   const [ratings, setRatings] = useState<Rating[]>([]);
   const [averageRating, setAverageRating] = useState(0);
@@ -36,6 +38,9 @@ export const RatingSystem: React.FC<RatingSystemProps> = ({
   const [newComment, setNewComment] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+
+  // 根据语言选择 date-fns locale
+  const dateLocale = language === 'zh' ? zhCN : enUS;
 
   useEffect(() => {
     if (promptId) {
@@ -60,7 +65,7 @@ export const RatingSystem: React.FC<RatingSystemProps> = ({
       setAverageRating(response.averageRating);
       setRatingDistribution(response.ratingDistribution);
     } catch (error: unknown) {
-      console.error('获取评分失败:', error);
+      console.error(t('rating.get_ratings_failed'), error);
     } finally {
       setIsLoading(false);
     }
@@ -75,18 +80,18 @@ export const RatingSystem: React.FC<RatingSystemProps> = ({
         setNewComment(rating.comment || '');
       }
     } catch (error) {
-      console.error('获取用户评分失败:', error);
+      console.error(t('rating.get_user_rating_failed'), error);
     }
   };
 
   const handleSubmitRating = async () => {
     if (!user) {
-      toast.error('请先登录');
+      toast.error(t('auth.login_required'));
       return;
     }
 
     if (newRating < 1 || newRating > 5) {
-      toast.error('请选择评分');
+      toast.error(t('rating.select_rating'));
       return;
     }
 
@@ -101,14 +106,14 @@ export const RatingSystem: React.FC<RatingSystemProps> = ({
           rating: newRating,
           comment: newComment,
         });
-        toast.success('评分已更新');
+        toast.success(t('rating.rating_updated'));
       } else {
         console.log('提交新评分...');
         await submitRating(promptId, {
           rating: newRating,
           comment: newComment,
         });
-        toast.success('评分已提交');
+        toast.success(t('rating.rating_submitted'));
       }
 
       setShowRatingForm(false);
@@ -123,21 +128,21 @@ export const RatingSystem: React.FC<RatingSystemProps> = ({
         if (responseError.response) {
           console.error('错误响应:', responseError.response.status, responseError.response.data);
           if (responseError.response.status === 401) {
-            toast.error('认证失败，请重新登录');
+            toast.error(t('errors.auth_failed'));
           } else if (responseError.response.status === 400) {
-            toast.error(responseError.response.data?.error || '请求参数错误');
+            toast.error(responseError.response.data?.error || t('errors.request_failed'));
           } else {
             const errorMessage = responseError.response.data?.error || 
                                (error instanceof Error ? error.message : undefined) || 
-                               '评分提交失败';
+                               t('rating.rating_failed');
             toast.error(errorMessage);
           }
         } else {
-          const errorMessage = error instanceof Error ? error.message : '评分提交失败';
+          const errorMessage = error instanceof Error ? error.message : t('rating.rating_failed');
           toast.error(errorMessage);
         }
       } else {
-        const errorMessage = error instanceof Error ? error.message : '评分提交失败';
+        const errorMessage = error instanceof Error ? error.message : t('rating.rating_failed');
         toast.error(errorMessage);
       }
     } finally {
@@ -151,14 +156,14 @@ export const RatingSystem: React.FC<RatingSystemProps> = ({
     try {
       setIsLoading(true);
       await deleteRating(promptId);
-      toast.success('评分已删除');
+      toast.success(t('rating.rating_deleted'));
       setUserRating(null);
       setNewRating(0);
       setNewComment('');
       setShowRatingForm(false);
       await fetchRatings();
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : '删除评分失败';
+      const errorMessage = error instanceof Error ? error.message : t('rating.delete_rating_failed');
       toast.error(errorMessage);
     } finally {
       setIsLoading(false);
@@ -204,7 +209,7 @@ export const RatingSystem: React.FC<RatingSystemProps> = ({
           
           return (
             <div key={star} className="flex items-center gap-3">
-              <span className="text-sm text-gray-400 w-8">{star}星</span>
+              <span className="text-sm text-gray-400 w-8">{star}{t('rating.star')}</span>
               <div className="flex-1 bg-gray-800 rounded-full h-2 overflow-hidden">
                 <motion.div
                   className="h-full bg-yellow-400 rounded-full"
@@ -227,16 +232,16 @@ export const RatingSystem: React.FC<RatingSystemProps> = ({
       <div className="glass rounded-xl border border-neon-cyan/20 p-6">
         <div className="flex items-start justify-between mb-4">
           <div>
-            <h3 className="text-xl font-semibold text-white mb-2">用户评分</h3>
+            <h3 className="text-xl font-semibold text-white mb-2">{t('rating.user_ratings')}</h3>
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-2">
                 {renderStars(Math.round(averageRating))}
                 <span className="text-lg font-semibold text-white">
-                  {averageRating > 0 ? averageRating.toFixed(1) : '暂无评分'}
+                  {averageRating > 0 ? averageRating.toFixed(1) : t('rating.no_rating')}
                 </span>
               </div>
               <span className="text-gray-400">
-                ({totalRatings} 个评分)
+                ({totalRatings} {t('rating.ratings_count')})
               </span>
             </div>
           </div>
@@ -246,7 +251,7 @@ export const RatingSystem: React.FC<RatingSystemProps> = ({
               onClick={() => setShowRatingForm(!showRatingForm)}
               className="btn-secondary"
             >
-              {userRating ? '修改评分' : '添加评分'}
+              {userRating ? t('rating.modify_rating') : t('rating.add_rating')}
             </button>
           )}
         </div>
@@ -255,7 +260,7 @@ export const RatingSystem: React.FC<RatingSystemProps> = ({
         {totalRatings > 0 && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div>
-              <h4 className="text-sm font-medium text-gray-400 mb-3">评分分布</h4>
+              <h4 className="text-sm font-medium text-gray-400 mb-3">{t('rating.rating_distribution')}</h4>
               {renderRatingDistribution()}
             </div>
           </div>
@@ -272,25 +277,25 @@ export const RatingSystem: React.FC<RatingSystemProps> = ({
             className="glass rounded-xl border border-neon-purple/20 p-6"
           >
             <h4 className="text-lg font-semibold text-white mb-4">
-              {userRating ? '修改评分' : '添加评分'}
+              {userRating ? t('rating.modify_rating') : t('rating.add_rating')}
             </h4>
             
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">
-                  评分
+                  {t('rating.rating')}
                 </label>
                 {renderStars(newRating, true, setNewRating)}
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">
-                  评论 (可选)
+                  {t('rating.comment_optional')}
                 </label>
                 <textarea
                   value={newComment}
                   onChange={(e) => setNewComment(e.target.value)}
-                  placeholder="分享您对这个提示词的看法..."
+                  placeholder={t('rating.share_your_thoughts')}
                   rows={3}
                   className="input-primary w-full"
                 />
@@ -302,14 +307,14 @@ export const RatingSystem: React.FC<RatingSystemProps> = ({
                   disabled={isLoading || newRating === 0}
                   className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {isLoading ? '提交中...' : (userRating ? '更新评分' : '提交评分')}
+                  {isLoading ? t('buttons.submitting') : (userRating ? t('rating.update_rating') : t('rating.submit_rating'))}
                 </button>
                 
                 <button
                   onClick={() => setShowRatingForm(false)}
                   className="btn-secondary"
                 >
-                  取消
+                  {t('buttons.cancel')}
                 </button>
 
                 {userRating && (
@@ -318,7 +323,7 @@ export const RatingSystem: React.FC<RatingSystemProps> = ({
                     disabled={isLoading}
                     className="text-red-400 hover:text-red-300 text-sm"
                   >
-                    删除评分
+                    {t('rating.delete_rating')}
                   </button>
                 )}
               </div>
@@ -330,7 +335,7 @@ export const RatingSystem: React.FC<RatingSystemProps> = ({
       {/* 评分列表 */}
       {ratings.length > 0 && (
         <div className="glass rounded-xl border border-neon-cyan/20 p-6">
-          <h4 className="text-lg font-semibold text-white mb-4">用户评价</h4>
+          <h4 className="text-lg font-semibold text-white mb-4">{t('rating.user_reviews')}</h4>
           
           <div className="space-y-4">
             {ratings.map((rating) => (
@@ -349,13 +354,13 @@ export const RatingSystem: React.FC<RatingSystemProps> = ({
                       <div className="flex items-center gap-2">
                         {renderStars(rating.rating)}
                         <span className="text-sm text-gray-400">
-                          {rating.user?.display_name || rating.user?.email || '匿名用户'}
+                          {rating.user?.display_name || rating.user?.email || t('rating.anonymous_user')}
                         </span>
                       </div>
                       <span className="text-xs text-gray-500">
                         {formatDistanceToNow(new Date(rating.created_at), { 
                           addSuffix: true, 
-                          locale: zhCN, 
+                          locale: dateLocale, 
                         })}
                       </span>
                     </div>
@@ -380,7 +385,7 @@ export const RatingSystem: React.FC<RatingSystemProps> = ({
                   disabled={currentPage === 1}
                   className="px-3 py-1 rounded bg-gray-800 text-gray-300 hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  上一页
+                  {t('rating.previous_page')}
                 </button>
                 
                 <span className="px-3 py-1 text-gray-400">
@@ -392,7 +397,7 @@ export const RatingSystem: React.FC<RatingSystemProps> = ({
                   disabled={currentPage === totalPages}
                   className="px-3 py-1 rounded bg-gray-800 text-gray-300 hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  下一页
+                  {t('rating.next_page')}
                 </button>
               </div>
             </div>

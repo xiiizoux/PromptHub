@@ -1,6 +1,7 @@
 import React from 'react';
 import { StarIcon } from '@heroicons/react/24/outline';
 import { StarIcon as StarSolidIcon } from '@heroicons/react/24/solid';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface RatingDisplayProps {
   rating: number;
@@ -15,6 +16,7 @@ export const RatingDisplay: React.FC<RatingDisplayProps> = ({
   size = 'sm',
   className = '',
 }) => {
+  const { t } = useLanguage();
   const sizeClasses = {
     sm: 'h-3 w-3',
     md: 'h-4 w-4',
@@ -49,7 +51,7 @@ export const RatingDisplay: React.FC<RatingDisplayProps> = ({
     return (
       <div className={`flex items-center gap-2 text-gray-500 ${textSizeClasses[size]} ${className}`}>
         {renderStars()}
-        <span>暂无评分</span>
+        <span>{t('rating.no_rating')}</span>
       </div>
     );
   }

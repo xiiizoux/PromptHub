@@ -2,8 +2,10 @@ import React from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { BookOpenIcon, CodeBracketIcon, BeakerIcon, LightBulbIcon, DocumentTextIcon, CubeIcon, RocketLaunchIcon, CpuChipIcon } from '@heroicons/react/24/outline';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 const DocsPage: React.FC = () => {
+  const { t } = useLanguage();
   const cardVariants = {
     hidden: { opacity: 0, y: 30 },
     visible: { opacity: 1, y: 0 },
@@ -44,7 +46,7 @@ const DocsPage: React.FC = () => {
                 <DocumentTextIcon className="unified-page-title-icon" />
               </div>
               <h1 className="unified-page-title">
-                开发文档
+                {t('docs.title')}
               </h1>
             </motion.div>
             <motion.p
@@ -53,7 +55,7 @@ const DocsPage: React.FC = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.4 }}
             >
-              深入了解 Prompt Hub 的强大功能，掌握AI提示词创作的艺术
+              {t('docs.subtitle')}
             </motion.p>
           </motion.div>
 
@@ -74,16 +76,16 @@ const DocsPage: React.FC = () => {
                       <BookOpenIcon className="h-6 w-6 text-neon-cyan" />
                     </div>
                   </div>
-                  <h2 className="ml-4 text-2xl font-bold text-white group-hover:text-neon-cyan transition-colors duration-300">入门指南</h2>
+                  <h2 className="ml-4 text-2xl font-bold text-white group-hover:text-neon-cyan transition-colors duration-300">{t('docs.getting_started.title')}</h2>
                 </div>
                 <p className="text-gray-400 mb-8 leading-relaxed">
-                  了解 Prompt Hub 的基本概念和功能，快速开始使用平台创造AI魔法。
+                  {t('docs.getting_started.description')}
                 </p>
                 <div className="space-y-3">
                   {[
-                    { href: '/docs/getting-started', text: '基础概念和术语' },
-                    { href: '/docs/getting-started/first-prompt', text: '创建您的第一个提示词' },
-                    { href: '/docs/getting-started/template-variables', text: '使用模板变量' },
+                    { href: '/docs/getting-started', text: t('docs.getting_started.links.concepts') },
+                    { href: '/docs/getting-started/first-prompt', text: t('docs.getting_started.links.first_prompt') },
+                    { href: '/docs/getting-started/template-variables', text: t('docs.getting_started.links.template_variables') },
                   ].map((link, index) => (
                     <motion.div
                       key={link.href}
@@ -117,17 +119,17 @@ const DocsPage: React.FC = () => {
                       <CpuChipIcon className="h-6 w-6 text-neon-cyan" />
                     </div>
                   </div>
-                  <h2 className="ml-4 text-2xl font-bold text-white group-hover:text-neon-cyan transition-colors duration-300">上下文工程</h2>
+                  <h2 className="ml-4 text-2xl font-bold text-white group-hover:text-neon-cyan transition-colors duration-300">{t('docs.context_engineering.title')}</h2>
                 </div>
                 <p className="text-gray-400 mb-8 leading-relaxed">
-                  下一代AI交互范式，让人工智能真正理解并适应您的需求，构建个性化的AI助手。
+                  {t('docs.context_engineering.description')}
                 </p>
                 <div className="space-y-3">
                   {[
-                    { href: '/docs/context-engineering/concepts', text: '核心概念与原理' },
-                    { href: '/docs/context-engineering/getting-started', text: '5分钟快速入门' },
-                    { href: '/docs/context-engineering/user-guide', text: '详细功能指南' },
-                    { href: '/docs/context-engineering/best-practices', text: '最佳实践与技巧' },
+                    { href: '/docs/context-engineering/concepts', text: t('docs.context_engineering.links.concepts') },
+                    { href: '/docs/context-engineering/getting-started', text: t('docs.context_engineering.links.getting_started') },
+                    { href: '/docs/context-engineering/user-guide', text: t('docs.context_engineering.links.user_guide') },
+                    { href: '/docs/context-engineering/best-practices', text: t('docs.context_engineering.links.best_practices') },
                   ].map((link, index) => (
                     <motion.div
                       key={link.href}
@@ -161,17 +163,17 @@ const DocsPage: React.FC = () => {
                       <CodeBracketIcon className="h-6 w-6 text-neon-purple" />
                     </div>
                   </div>
-                  <h2 className="ml-4 text-2xl font-bold text-white group-hover:text-neon-purple transition-colors duration-300">API参考</h2>
+                  <h2 className="ml-4 text-2xl font-bold text-white group-hover:text-neon-purple transition-colors duration-300">{t('docs.api.title')}</h2>
                 </div>
                 <p className="text-gray-400 mb-8 leading-relaxed">
-                  完整的API文档，帮助您将提示词集成到自己的应用程序中。
+                  {t('docs.api.description')}
                 </p>
                 <div className="space-y-3">
                   {[
-                    { href: '/docs/api-integration', text: 'API集成指南' },
-                    { href: '/docs/api/authentication', text: '认证与授权' },
-                    { href: '/docs/api/prompts', text: '提示词API' },
-                    { href: '/docs/api/performance', text: '性能分析API' },
+                    { href: '/docs/api-integration', text: t('docs.api.links.integration') },
+                    { href: '/docs/api/authentication', text: t('docs.api.links.authentication') },
+                    { href: '/docs/api/prompts', text: t('docs.api.links.prompts') },
+                    { href: '/docs/api/performance', text: t('docs.api.links.performance') },
                   ].map((link, index) => (
                     <motion.div
                       key={link.href}
@@ -205,18 +207,18 @@ const DocsPage: React.FC = () => {
                       <LightBulbIcon className="h-6 w-6 text-neon-pink" />
                     </div>
                   </div>
-                  <h2 className="ml-4 text-2xl font-bold text-white group-hover:text-neon-pink transition-colors duration-300">提示词最佳实践</h2>
+                  <h2 className="ml-4 text-2xl font-bold text-white group-hover:text-neon-pink transition-colors duration-300">{t('docs.best_practices.title')}</h2>
                 </div>
                 <p className="text-gray-400 mb-8 leading-relaxed">
-                  学习如何设计高效、可靠的提示词，提高AI模型输出的质量和一致性。
+                  {t('docs.best_practices.description')}
                 </p>
                 <div className="space-y-3">
                   {[
-                    { href: '/docs/best-practices/structure', text: '提示词结构指南' },
-                    { href: '/docs/best-practices/examples', text: '添加有效示例' },
-                    { href: '/docs/best-practices/optimization', text: '提示词优化技巧' },
-                    { href: '/docs/templates', text: '提示词模板库' },
-                    { href: '/docs/examples-library', text: '实际应用示例' },
+                    { href: '/docs/best-practices/structure', text: t('docs.best_practices.links.structure') },
+                    { href: '/docs/best-practices/examples', text: t('docs.best_practices.links.examples') },
+                    { href: '/docs/best-practices/optimization', text: t('docs.best_practices.links.optimization') },
+                    { href: '/docs/templates', text: t('docs.best_practices.links.templates') },
+                    { href: '/docs/examples-library', text: t('docs.best_practices.links.examples_library') },
                   ].map((link, index) => (
                     <motion.div
                       key={link.href}
@@ -250,18 +252,18 @@ const DocsPage: React.FC = () => {
                       <BeakerIcon className="h-6 w-6 text-neon-cyan" />
                     </div>
                   </div>
-                  <h2 className="ml-4 text-2xl font-bold text-white group-hover:text-neon-cyan transition-colors duration-300">高级功能</h2>
+                  <h2 className="ml-4 text-2xl font-bold text-white group-hover:text-neon-cyan transition-colors duration-300">{t('docs.advanced.title')}</h2>
                 </div>
                 <p className="text-gray-400 mb-8 leading-relaxed">
-                  深入了解 Prompt Hub 的高级功能，充分发挥平台的潜力。
+                  {t('docs.advanced.description')}
                 </p>
                 <div className="space-y-3">
                   {[
-                    { href: '/docs/basic-features', text: '基础功能详解' },
-                    { href: '/docs/mcp-integration', text: 'MCP集成指南' },
-                    { href: '/docs/advanced/versioning', text: '提示词版本控制' },
-                    { href: '/docs/advanced/performance-tracking', text: '性能追踪与分析' },
-                    { href: '/docs/advanced/integration', text: '与其他系统集成' },
+                    { href: '/docs/basic-features', text: t('docs.advanced.links.basic_features') },
+                    { href: '/docs/mcp-integration', text: t('docs.advanced.links.mcp_integration') },
+                    { href: '/docs/advanced/versioning', text: t('docs.advanced.links.versioning') },
+                    { href: '/docs/advanced/performance-tracking', text: t('docs.advanced.links.performance_tracking') },
+                    { href: '/docs/advanced/integration', text: t('docs.advanced.links.integration') },
                   ].map((link, index) => (
                     <motion.div
                       key={link.href}
@@ -295,30 +297,29 @@ const DocsPage: React.FC = () => {
                     <CubeIcon className="h-6 w-6 text-neon-purple" />
                   </div>
                 </div>
-                <h2 className="ml-4 text-2xl font-bold text-white">与 MCP Prompt Server 集成</h2>
+                <h2 className="ml-4 text-2xl font-bold text-white">{t('docs.mcp_integration.title')}</h2>
               </div>
               
               <p className="text-gray-400 mb-8 leading-relaxed">
-                Prompt Hub 前端与 MCP Prompt Server 后端无缝集成，提供完整的提示词管理解决方案。
-                MCP Prompt Server 支持两种部署模式：本地部署（使用文件存储）和远程部署（使用 Supabase 存储）。
+                {t('docs.mcp_integration.description')}
               </p>
               
               <div className="bg-dark-bg-secondary/50 rounded-xl p-6 mb-8 border border-dark-border/50">
                 <div className="flex items-center mb-4">
                   <DocumentTextIcon className="h-5 w-5 text-neon-cyan mr-2" />
-                  <h3 className="text-lg font-medium text-white">配置说明</h3>
+                  <h3 className="text-lg font-medium text-white">{t('docs.mcp_integration.config_title')}</h3>
                 </div>
                 <div className="space-y-3">
                   <div className="flex flex-col sm:flex-row sm:items-center">
-                    <span className="font-medium text-neon-cyan mr-3 min-w-24">API端点：</span>
+                    <span className="font-medium text-neon-cyan mr-3 min-w-24">{t('docs.mcp_integration.api_endpoint')}:</span>
                     <code className="bg-dark-bg-primary px-3 py-1 rounded-lg text-neon-purple font-mono text-sm">http://localhost:9010</code>
                   </div>
                   <div className="flex flex-col sm:flex-row sm:items-center">
-                    <span className="font-medium text-neon-cyan mr-3 min-w-24">API密钥：</span>
+                    <span className="font-medium text-neon-cyan mr-3 min-w-24">{t('docs.mcp_integration.api_key')}:</span>
                     <code className="bg-dark-bg-primary px-3 py-1 rounded-lg text-neon-purple font-mono text-sm">API_KEY</code>
                   </div>
                   <div className="flex flex-col sm:flex-row sm:items-center">
-                    <span className="font-medium text-neon-cyan mr-3 min-w-24">配置文件：</span>
+                    <span className="font-medium text-neon-cyan mr-3 min-w-24">{t('docs.mcp_integration.config_file')}:</span>
                     <code className="bg-dark-bg-primary px-3 py-1 rounded-lg text-neon-purple font-mono text-sm">.env.local</code>
                   </div>
                 </div>
@@ -329,7 +330,7 @@ const DocsPage: React.FC = () => {
                 className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-neon-cyan to-neon-purple text-white rounded-xl font-medium shadow-neon hover:shadow-neon-lg transition-all duration-300 group"
               >
                 <RocketLaunchIcon className="h-5 w-5 mr-2 group-hover:rotate-12 transition-transform duration-300" />
-                查看详细集成指南
+                {t('docs.mcp_integration.view_guide')}
               </Link>
             </div>
           </motion.div>
@@ -342,21 +343,21 @@ const DocsPage: React.FC = () => {
             className="bg-dark-card/50 backdrop-blur-md rounded-2xl border border-dark-border shadow-2xl overflow-hidden"
           >
             <div className="p-8">
-              <h2 className="text-2xl font-bold text-white mb-8 text-center">常见问题</h2>
+              <h2 className="text-2xl font-bold text-white mb-8 text-center">{t('docs.faq.title')}</h2>
               
               <div className="space-y-8">
                 {[
                   {
-                    question: 'Prompt Hub 与 MCP Prompt Server 是什么关系？',
-                    answer: 'Prompt Hub 是 MCP Prompt Server 的现代化前端界面，专为提高用户体验和提供更丰富的可视化功能而设计。MCP Prompt Server 负责提示词的存储、检索和性能追踪的核心功能，而 Prompt Hub 则提供了直观的用户界面来使用这些功能。',
+                    question: t('docs.faq.items.q1'),
+                    answer: t('docs.faq.items.a1'),
                   },
                   {
-                    question: '如何将 Prompt Hub 连接到远程 MCP Prompt Server？',
-                    answer: '您可以通过修改 .env.local 文件中的 API_URL 变量来连接到远程服务器。确保同时设置正确的 API_KEY 以进行身份验证。',
+                    question: t('docs.faq.items.q2'),
+                    answer: t('docs.faq.items.a2'),
                   },
                   {
-                    question: 'Prompt Hub 是否支持多用户协作？',
-                    answer: '是的，Prompt Hub 支持用户注册和身份验证，允许多个用户协作管理提示词库。每个提示词都会记录创建者和编辑者信息，便于团队协作和版本管理。',
+                    question: t('docs.faq.items.q3'),
+                    answer: t('docs.faq.items.a3'),
                   },
                 ].map((faq, index) => (
                   <motion.div

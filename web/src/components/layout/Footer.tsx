@@ -1,6 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
+import { useLanguage } from '@/contexts/LanguageContext';
 import {
   SparklesIcon,
   DocumentTextIcon,
@@ -18,6 +19,7 @@ import {
 
 const Footer: React.FC = () => {
   const currentYear = new Date().getFullYear();
+  const { t } = useLanguage();
 
   // GitHub图标组件
   const GitHubIcon = ({ className }: { className?: string }) => (
@@ -27,21 +29,21 @@ const Footer: React.FC = () => {
   );
 
   const footerLinks = {
-    产品: [
-      { name: '浏览提示词', href: '/prompts', icon: RectangleStackIcon },
-      { name: '创建提示词', href: '/prompts/create', icon: PlusCircleIcon },
-      { name: 'AI优化器', href: '/optimizer', icon: SparklesIcon },
+    product: [
+      { key: 'browse_prompts', href: '/prompts', icon: RectangleStackIcon },
+      { key: 'create_prompt', href: '/prompts/create', icon: PlusCircleIcon },
+      { key: 'ai_optimizer', href: '/optimizer', icon: SparklesIcon },
     ],
-    资源: [
-      { name: '文档', href: '/docs', icon: DocumentTextIcon },
-      { name: 'API参考', href: '/docs/api', icon: CubeIcon },
-      { name: '提示词模板', href: '/docs/templates', icon: BeakerIcon },
-      { name: '应用示例', href: '/docs/examples-library', icon: AcademicCapIcon },
+    resources: [
+      { key: 'docs', href: '/docs', icon: DocumentTextIcon },
+      { key: 'api_reference', href: '/docs/api', icon: CubeIcon },
+      { key: 'prompt_templates', href: '/docs/templates', icon: BeakerIcon },
+      { key: 'examples', href: '/docs/examples-library', icon: AcademicCapIcon },
     ],
-    关于: [
-      { name: '关于我们', href: '/about', icon: InformationCircleIcon },
-      { name: 'GitHub', href: 'https://github.com/xiiizoux/PromptHub', icon: GitHubIcon },
-      { name: '联系我们', href: '/contact', icon: EnvelopeIcon },
+    about: [
+      { key: 'about_us', href: '/about', icon: InformationCircleIcon },
+      { key: 'github', href: 'https://github.com/xiiizoux/PromptHub', icon: GitHubIcon },
+      { key: 'contact', href: '/contact', icon: EnvelopeIcon },
     ],
   };
 
@@ -83,8 +85,7 @@ const Footer: React.FC = () => {
               </div>
             </Link>
             <p className="text-gray-400 text-sm max-w-md mb-6">
-              探索AI的无限可能。我们为您提供最先进的提示词管理平台，
-              让AI创作变得更加简单、高效和有趣。
+              {t('footer.description')}
             </p>
             
             {/* 社交链接 */}
@@ -130,14 +131,14 @@ const Footer: React.FC = () => {
               transition={{ duration: 0.5, delay: categoryIndex * 0.1 }}
             >
               <h3 className="text-sm font-semibold text-neon-cyan uppercase tracking-wider mb-4">
-                {category}
+                {t(`footer.categories.${category}`)}
               </h3>
               <ul className="space-y-3">
                 {links.map((link, index) => {
                   const Icon = link.icon;
                   return (
                     <motion.li 
-                      key={link.name}
+                      key={link.key}
                       initial={{ opacity: 0, x: -10 }}
                       whileInView={{ opacity: 1, x: 0 }}
                       viewport={{ once: true }}
@@ -148,7 +149,7 @@ const Footer: React.FC = () => {
                         className="group flex items-center space-x-2 text-gray-400 hover:text-neon-cyan transition-colors"
                       >
                         <Icon className="h-4 w-4 group-hover:animate-pulse" />
-                        <span className="text-sm">{link.name}</span>
+                        <span className="text-sm">{t(`footer.links.${link.key}`)}</span>
                       </Link>
                     </motion.li>
                   );
@@ -169,14 +170,14 @@ const Footer: React.FC = () => {
           <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
             <div className="flex flex-col md:flex-row items-center space-y-2 md:space-y-0 md:space-x-6">
               <p className="text-sm text-gray-500">
-                © {currentYear} Prompt Hub. 保留所有权利。
+                {t('footer.copyright').replace('{year}', currentYear.toString())}
               </p>
               <div className="flex space-x-6">
                 <Link href="/terms" className="text-sm text-gray-500 hover:text-neon-cyan transition-colors">
-                  服务条款
+                  {t('footer.terms')}
                 </Link>
                 <Link href="/privacy" className="text-sm text-gray-500 hover:text-neon-cyan transition-colors">
-                  隐私政策
+                  {t('footer.privacy')}
                 </Link>
               </div>
             </div>
@@ -184,7 +185,7 @@ const Footer: React.FC = () => {
             {/* 主题切换提示 */}
             <div className="flex items-center space-x-2">
               <div className="w-2 h-2 rounded-full bg-neon-green animate-pulse" />
-              <span className="text-xs text-gray-500">系统在线</span>
+              <span className="text-xs text-gray-500">{t('footer.system_online')}</span>
             </div>
           </div>
         </motion.div>

@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { PromptFilters as PromptFiltersType } from '@/types';
 import { FunnelIcon, MagnifyingGlassIcon, XMarkIcon, AdjustmentsHorizontalIcon, ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/outline';
 import { getTagsWithStats } from '@/lib/api';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface PromptFiltersProps {
   filters: {
@@ -25,6 +26,7 @@ const PromptFilters: React.FC<PromptFiltersProps> = ({
   tags,
   hideTypeFilter = false,
 }) => {
+  const { t } = useLanguage();
   const [showMobileFilters, setShowMobileFilters] = useState(false);
   const [showAllTags, setShowAllTags] = useState(false);
   const [tagSearchQuery, setTagSearchQuery] = useState('');
@@ -214,10 +216,10 @@ const PromptFilters: React.FC<PromptFiltersProps> = ({
           id="prompt-search-input"
           name="promptSearch"
           autoComplete="search"
-          aria-label="搜索提示词"
+          aria-label={t('filters.search_prompts')}
           whileFocus={{ scale: 1.02 }}
           className="w-full pl-12 pr-4 py-4 bg-dark-bg-secondary/50 border border-dark-border rounded-xl text-white placeholder-gray-500 focus:border-neon-cyan focus:ring-1 focus:ring-neon-cyan focus:shadow-neon-sm transition-all duration-300 backdrop-blur-sm text-lg"
-          placeholder="搜索提示词..."
+          placeholder={t('filters.search_prompts')}
           value={filters.search || ''}
           onChange={handleSearchChange}
         />
@@ -238,7 +240,7 @@ const PromptFilters: React.FC<PromptFiltersProps> = ({
           className="flex items-center px-4 py-2 bg-white/5 border border-dark-border rounded-lg text-neon-cyan hover:border-neon-cyan transition-all duration-300 backdrop-blur-sm"
         >
           <AdjustmentsHorizontalIcon className="w-4 h-4 mr-2" />
-          过滤选项
+          {t('filters.filter_options')}
         </motion.button>
         
         {(filters.category || (filters.tags && filters.tags.length > 0)) && (
@@ -249,7 +251,7 @@ const PromptFilters: React.FC<PromptFiltersProps> = ({
             whileTap={{ scale: 0.95 }}
             className="px-4 py-2 text-neon-pink hover:text-white transition-colors duration-300"
           >
-            清除所有
+            {t('filters.clear_all')}
           </motion.button>
         )}
       </motion.div>
@@ -274,7 +276,7 @@ const PromptFilters: React.FC<PromptFiltersProps> = ({
           >
             <h3 className="text-lg font-medium text-neon-cyan mb-4 flex items-center">
               <div className="w-2 h-2 bg-neon-cyan rounded-full mr-3 shadow-neon-sm"></div>
-              类别
+              {t('filters.category')}
             </h3>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
               {categories.map((category, index) => {
@@ -313,7 +315,7 @@ const PromptFilters: React.FC<PromptFiltersProps> = ({
                 <div className="flex items-center">
                   <h3 className="text-lg font-medium text-neon-purple flex items-center">
                     <div className="w-2 h-2 bg-neon-purple rounded-full mr-3 shadow-neon-sm"></div>
-                    标签
+                    {t('filters.tags')}
                   </h3>
                 </div>
 
@@ -321,14 +323,14 @@ const PromptFilters: React.FC<PromptFiltersProps> = ({
                 <div className="hidden sm:flex items-center gap-3">
                   <h4 className="text-lg font-medium text-neon-pink flex items-center">
                     <div className="w-2 h-2 bg-neon-pink rounded-full mr-3 shadow-neon-sm"></div>
-                    排序方式:
+                    {t('filters.sort_by')}:
                   </h4>
                   <div className="flex bg-dark-bg-secondary/50 border border-dark-border rounded-lg p-1">
                     {[
-                      { value: 'latest', label: '最新' },
-                      { value: 'updated', label: '更新' },
-                      { value: 'oldest', label: '最早' },
-                      { value: 'name', label: '名称' },
+                      { value: 'latest', label: t('filters.latest') },
+                      { value: 'updated', label: t('filters.updated') },
+                      { value: 'oldest', label: t('filters.oldest') },
+                      { value: 'name', label: t('filters.name') },
                     ].map((option) => (
                       <motion.button
                         key={option.value}
@@ -364,8 +366,8 @@ const PromptFilters: React.FC<PromptFiltersProps> = ({
                   id="tag-search-input"
                   name="tagSearch"
                   autoComplete="search"
-                  aria-label="搜索标签"
-                  placeholder="搜索标签..."
+                  aria-label={t('filters.search_tags')}
+                  placeholder={t('filters.search_tags')}
                   value={tagSearchQuery}
                   onChange={handleTagSearchChange}
                   className="w-full pl-10 pr-3 py-2 text-sm bg-dark-bg-secondary/50 border border-dark-border rounded-lg text-white placeholder-gray-500 focus:border-neon-purple focus:ring-1 focus:ring-neon-purple transition-all duration-300"
@@ -453,7 +455,7 @@ const PromptFilters: React.FC<PromptFiltersProps> = ({
                         className="inline-flex items-center px-3 py-2 border border-dashed border-neon-purple/50 rounded-lg text-neon-purple hover:border-neon-purple hover:bg-neon-purple/10 transition-all duration-200 text-xs font-medium"
                       >
                         <ChevronDownIcon className="w-3 h-3 mr-1" />
-                        +{hiddenTagsCount} 更多
+                        +{hiddenTagsCount} {t('prompts.more')}
                       </motion.button>
                     )}
 
@@ -477,7 +479,7 @@ const PromptFilters: React.FC<PromptFiltersProps> = ({
                         className="inline-flex items-center px-3 py-2 bg-neon-purple/20 border border-neon-purple rounded-lg text-neon-purple hover:bg-neon-purple/30 transition-all duration-200 text-xs font-medium"
                       >
                         <ChevronUpIcon className="w-3 h-3 mr-1" />
-                        收起
+                        {t('prompts.collapse')}
                       </motion.button>
                     )}
                   </AnimatePresence>
@@ -493,12 +495,12 @@ const PromptFilters: React.FC<PromptFiltersProps> = ({
                   >
                     <div className="flex flex-col items-center gap-2">
                       <MagnifyingGlassIcon className="w-8 h-8 text-gray-600" />
-                      <span>没有找到匹配 "{tagSearchQuery}" 的标签</span>
+                      <span>{t('filters.no_matching_tags').replace('{query}', tagSearchQuery)}</span>
                       <button
                         onClick={() => setTagSearchQuery('')}
                         className="text-neon-purple hover:text-white transition-colors text-xs"
                       >
-                        清除搜索
+                        {t('filters.clear_search')}
                       </button>
                     </div>
                   </motion.div>
@@ -516,14 +518,14 @@ const PromptFilters: React.FC<PromptFiltersProps> = ({
           >
             <h3 className="text-lg font-medium text-neon-pink mb-4 flex items-center">
               <div className="w-2 h-2 bg-neon-pink rounded-full mr-3 shadow-neon-sm"></div>
-              排序方式
+              {t('filters.sort_by')}
             </h3>
             <div className="grid grid-cols-2 gap-2">
               {[
-                { value: 'latest', label: '最新创建' },
-                { value: 'updated', label: '最近更新' },
-                { value: 'oldest', label: '最早创建' },
-                { value: 'name', label: '名称排序' },
+                { value: 'latest', label: t('filters.latest_created') },
+                { value: 'updated', label: t('filters.recently_updated') },
+                { value: 'oldest', label: t('filters.oldest_created') },
+                { value: 'name', label: t('filters.sort_by_name') },
               ].map((option) => (
                 <motion.button
                   key={option.value}
@@ -560,7 +562,7 @@ const PromptFilters: React.FC<PromptFiltersProps> = ({
                   whileTap={{ scale: 0.95 }}
                   className="px-6 py-2 bg-gradient-to-r from-red-500/20 to-pink-500/20 border border-red-500/30 rounded-xl text-red-300 hover:text-white hover:border-red-400 transition-all duration-300 backdrop-blur-sm"
                 >
-                  清除所有过滤器
+                  {t('filters.clear_all_filters')}
                 </motion.button>
               </motion.div>
             )}

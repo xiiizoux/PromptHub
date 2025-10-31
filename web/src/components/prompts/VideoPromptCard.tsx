@@ -6,6 +6,7 @@ import { PromptInfo } from '@/types';
 import { formatVersionDisplay } from '@/lib/version-utils';
 import { useIntersectionObserver } from '@/hooks/useIntersectionObserver';
 import { useOptimizedCategoryDisplay } from '@/contexts/CategoryContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 import {
   DocumentTextIcon,
   FilmIcon,
@@ -29,18 +30,8 @@ interface VideoPromptCardProps {
 
 // 使用统一的分类配置系统
 
-// 格式化日期函数
-const formatDate = (dateString?: string) => {
-  if (!dateString) {return '未知日期';}
-  const date = new Date(dateString);
-  return date.toLocaleDateString('zh-CN', { 
-    year: 'numeric', 
-    month: 'short', 
-    day: 'numeric', 
-  });
-};
-
 const VideoPromptCard: React.FC<VideoPromptCardProps> = React.memo(({ prompt }) => {
+  const { t, language } = useLanguage();
   const [videoLoaded, setVideoLoaded] = useState(false);
   const [videoError, setVideoError] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -58,6 +49,18 @@ const VideoPromptCard: React.FC<VideoPromptCardProps> = React.memo(({ prompt }) 
 
   // 使用优化的分类显示Hook，无延迟加载
   const categoryInfo = useOptimizedCategoryDisplay(prompt?.category || '故事叙述', 'video');
+
+  // 格式化日期函数 - 根据语言选择 locale
+  const formatDate = (dateString?: string) => {
+    if (!dateString) {return t('common.unknown_date');}
+    const date = new Date(dateString);
+    const locale = language === 'zh' ? 'zh-CN' : 'en-US';
+    return date.toLocaleDateString(locale, { 
+      year: 'numeric', 
+      month: 'short', 
+      day: 'numeric', 
+    });
+  };
 
   // 懒加载：只有当卡片进入可视区域时才加载视频
   const { elementRef, isVisible } = useIntersectionObserver({
@@ -314,7 +317,7 @@ const VideoPromptCard: React.FC<VideoPromptCardProps> = React.memo(({ prompt }) 
                   <>
                     <Image
                       src={getThumbnailUrl() || ''}
-                      alt="视频缩略图"
+                      alt={t('prompts.video_thumbnail')}
                       fill
                       className={clsx(
                         'object-cover transition-all duration-500',
@@ -374,7 +377,7 @@ const VideoPromptCard: React.FC<VideoPromptCardProps> = React.memo(({ prompt }) 
               <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-800/60 to-gray-700/60">
                 <div className="text-center">
                   <FilmIcon className="h-12 w-12 text-gray-500 mx-auto mb-2" />
-                  <p className="text-sm text-gray-500">视频预览</p>
+                  <p className="text-sm text-gray-500">{t('prompts.video_preview')}</p>
                 </div>
               </div>
             )}
@@ -383,7 +386,7 @@ const VideoPromptCard: React.FC<VideoPromptCardProps> = React.memo(({ prompt }) 
               <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-900/80 backdrop-blur-sm">
                 <div className="text-center">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sky-400 mb-2"></div>
-                  <p className="text-xs text-gray-400">加载缩略图...</p>
+                  <p className="text-xs text-gray-400">{t('prompts.loading_thumbnail')}</p>
                 </div>
               </div>
             )}
@@ -394,12 +397,12 @@ const VideoPromptCard: React.FC<VideoPromptCardProps> = React.memo(({ prompt }) 
                 {loadingTimeout ? (
                   <div className="text-center">
                     <div className="text-red-400 mb-2">⚠️</div>
-                    <p className="text-xs text-red-400">加载超时</p>
+                    <p className="text-xs text-red-400">{t('prompts.loading_timeout')}</p>
                   </div>
                 ) : (
                   <div className="text-center">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-400 mb-2"></div>
-                    <p className="text-xs text-gray-400">加载中...</p>
+                    <p className="text-xs text-gray-400">{t('prompts.loading')}</p>
                   </div>
                 )}
               </div>
@@ -410,7 +413,7 @@ const VideoPromptCard: React.FC<VideoPromptCardProps> = React.memo(({ prompt }) 
               <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-900/80 backdrop-blur-sm">
                 <div className="text-center">
                   <div className="text-red-400 text-2xl mb-2">🎬</div>
-                  <p className="text-xs text-red-400 mb-2">视频加载失败</p>
+                  <p className="text-xs text-red-400 mb-2">{t('prompts.video_load_failed')}</p>
                   <button 
                     onClick={(e) => {
                       e.preventDefault();
@@ -430,7 +433,7 @@ const VideoPromptCard: React.FC<VideoPromptCardProps> = React.memo(({ prompt }) 
                     }}
                     className="text-xs text-gray-400 hover:text-red-400 underline"
                   >
-                    重试
+                    {t('prompts.retry')}
                   </button>
                 </div>
               </div>
@@ -441,14 +444,14 @@ const VideoPromptCard: React.FC<VideoPromptCardProps> = React.memo(({ prompt }) 
               {/* 视频类型标识 */}
               <div className="flex items-center space-x-1 px-3 py-1.5 rounded-full bg-sky-200/20 backdrop-blur-md border border-sky-200/30">
                 <FilmIcon className="h-3 w-3 text-sky-200" />
-                <span className="text-xs text-sky-200 font-medium">视频</span>
+                <span className="text-xs text-sky-200 font-medium">{t('prompts.video')}</span>
               </div>
               
               {/* 热门标签 */}
               {(prompt.usageCount || 0) > 100 && (
                 <div className="flex items-center space-x-1 px-3 py-1.5 rounded-full bg-orange-500/20 backdrop-blur-md border border-orange-500/30">
                   <FireIcon className="h-3 w-3 text-orange-400" />
-                  <span className="text-xs text-orange-400 font-medium">热门</span>
+                  <span className="text-xs text-orange-400 font-medium">{t('prompts.trending')}</span>
                 </div>
               )}
             </div>
@@ -508,7 +511,7 @@ const VideoPromptCard: React.FC<VideoPromptCardProps> = React.memo(({ prompt }) 
             {/* 描述 */}
             <div className="text-sm text-gray-400 mb-4 h-[4.5rem] flex items-start">
               <p className="line-clamp-3 leading-6">
-                {prompt.description || '暂无描述'}
+                {prompt.description || t('prompts.no_description')}
               </p>
             </div>
 
@@ -531,7 +534,7 @@ const VideoPromptCard: React.FC<VideoPromptCardProps> = React.memo(({ prompt }) 
                   )}
                 </>
               ) : (
-                <span className="text-xs text-gray-500">暂无标签</span>
+                <span className="text-xs text-gray-500">{t('prompts.no_tags')}</span>
               )}
             </div>
             
@@ -551,7 +554,7 @@ const VideoPromptCard: React.FC<VideoPromptCardProps> = React.memo(({ prompt }) 
                       <span className="text-xs text-gray-400">{rating.value.toFixed(1)}</span>
                     </div>
                   ) : (
-                    <span className="text-xs text-gray-500">暂无评分</span>
+                    <span className="text-xs text-gray-500">{t('rating.no_rating')}</span>
                   )}
                 </div>
                 <div className="flex items-center space-x-1 text-gray-500">
@@ -565,7 +568,7 @@ const VideoPromptCard: React.FC<VideoPromptCardProps> = React.memo(({ prompt }) 
                 <div className="flex items-center space-x-3">
                   <div className="flex items-center space-x-1">
                     <UserIcon className="h-3 w-3" />
-                    <span>{prompt.author || '匿名'}</span>
+                    <span>{prompt.author || t('prompts.anonymous')}</span>
                   </div>
                   <div className="flex items-center space-x-1">
                     <DocumentTextIcon className="h-3 w-3" />

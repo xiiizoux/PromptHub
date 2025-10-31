@@ -5,6 +5,7 @@ import { HeartIcon as HeartSolidIcon, BookmarkIcon as BookmarkSolidIcon } from '
 import { toggleBookmark, toggleLike } from '@/lib/api';
 import { useAuth } from '@/contexts/AuthContext';
 import { useInteractions } from '@/contexts/InteractionsContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 import toast from 'react-hot-toast';
 
 interface BookmarkButtonProps {
@@ -24,6 +25,7 @@ export const BookmarkButton: React.FC<BookmarkButtonProps> = React.memo(({
 }) => {
   const { user } = useAuth();
   const { interactions, loadInteractions, updateInteraction } = useInteractions();
+  const { t } = useLanguage();
   const [isLoading, setIsLoading] = useState(false);
   const [mounted, setMounted] = useState(false);
 
@@ -46,7 +48,7 @@ export const BookmarkButton: React.FC<BookmarkButtonProps> = React.memo(({
 
   const handleToggle = useCallback(async () => {
     if (!user) {
-      toast.error('请先登录');
+      toast.error(t('auth.login_required'));
       return;
     }
 
@@ -62,7 +64,7 @@ export const BookmarkButton: React.FC<BookmarkButtonProps> = React.memo(({
           userBookmarked: result.bookmarked,
           bookmarks: result.bookmarked ? count + 1 : Math.max(0, count - 1),
         });
-        toast.success(result.bookmarked ? '已添加到收藏' : '已取消收藏');
+        toast.success(result.bookmarked ? t('bookmarks.added') : t('bookmarks.removed'));
       } else {
         const result = await toggleLike(promptId);
         // 更新context中的数据
@@ -70,16 +72,16 @@ export const BookmarkButton: React.FC<BookmarkButtonProps> = React.memo(({
           userLiked: result.liked,
           likes: result.liked ? count + 1 : Math.max(0, count - 1),
         });
-        toast.success(result.liked ? '已点赞' : '已取消点赞');
+        toast.success(result.liked ? t('likes.liked') : t('likes.unliked'));
       }
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : '操作失败';
-      console.error('操作失败:', error);
+      const errorMessage = error instanceof Error ? error.message : t('errors.operation_failed');
+      console.error('Operation failed:', error);
       toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }
-  }, [user, isLoading, variant, promptId, updateInteraction, count]);
+  }, [user, isLoading, variant, promptId, updateInteraction, count, t]);
 
   if (!mounted) {
     return null; // 避免水合错误

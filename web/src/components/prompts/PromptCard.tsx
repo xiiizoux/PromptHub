@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { PromptInfo } from '@/types';
 import { formatVersionDisplay } from '@/lib/version-utils';
 import { useOptimizedCategoryDisplay } from '@/contexts/CategoryContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 import {
   DocumentTextIcon,
   ClockIcon,
@@ -18,20 +19,22 @@ interface PromptCardProps {
 
 // 使用统一的分类配置系统
 
-// 格式化日期函数 - 移到组件外部
-const formatDate = (dateString?: string) => {
-  if (!dateString) {return '未知日期';}
-  const date = new Date(dateString);
-  return date.toLocaleDateString('zh-CN', { 
-    year: 'numeric', 
-    month: 'short', 
-    day: 'numeric', 
-  });
-};
-
 const PromptCard: React.FC<PromptCardProps> = React.memo(({ prompt }) => {
+  const { t, language } = useLanguage();
   // 使用优化的分类显示Hook，无延迟加载
   const categoryInfo = useOptimizedCategoryDisplay(prompt?.category || '', 'chat');
+
+  // 格式化日期函数 - 根据语言选择 locale
+  const formatDate = (dateString?: string) => {
+    if (!dateString) {return t('common.unknown_date');}
+    const date = new Date(dateString);
+    const locale = language === 'zh' ? 'zh-CN' : 'en-US';
+    return date.toLocaleDateString(locale, { 
+      year: 'numeric', 
+      month: 'short', 
+      day: 'numeric', 
+    });
+  };
 
   const rating = useMemo(() => {
     // 优先使用 average_rating，如果没有则使用 rating 字段
@@ -68,7 +71,7 @@ const PromptCard: React.FC<PromptCardProps> = React.memo(({ prompt }) => {
             {(prompt.usageCount || 0) > 100 && (
               <div className="flex items-center space-x-1 px-2 py-1 rounded-full bg-neon-red/20 border border-neon-red/30 w-fit">
                 <FireIcon className="h-3 w-3 text-neon-red" />
-                <span className="text-xs text-neon-red">热门</span>
+                <span className="text-xs text-neon-red">{t('prompts.trending')}</span>
               </div>
             )}
           </div>
@@ -96,7 +99,7 @@ const PromptCard: React.FC<PromptCardProps> = React.memo(({ prompt }) => {
           {/* 描述 */}
           <div className="text-sm text-gray-400 mb-4 h-[4.5rem] flex items-start">
             <p className="line-clamp-3 leading-6">
-              {prompt.description || '暂无描述'}
+              {prompt.description || t('prompts.no_description')}
             </p>
           </div>
           
@@ -119,7 +122,7 @@ const PromptCard: React.FC<PromptCardProps> = React.memo(({ prompt }) => {
                 )}
               </>
             ) : (
-              <span className="text-xs text-gray-500">暂无标签</span>
+              <span className="text-xs text-gray-500">{t('prompts.no_tags')}</span>
             )}
           </div>
           
@@ -139,7 +142,7 @@ const PromptCard: React.FC<PromptCardProps> = React.memo(({ prompt }) => {
                     <span className="text-xs text-gray-400">{rating.value.toFixed(1)}</span>
                   </div>
                 ) : (
-                  <span className="text-xs text-gray-500">暂无评分</span>
+                  <span className="text-xs text-gray-500">{t('rating.no_rating')}</span>
                 )}
               </div>
               <div className="flex items-center space-x-1 text-gray-500">
@@ -153,7 +156,7 @@ const PromptCard: React.FC<PromptCardProps> = React.memo(({ prompt }) => {
               <div className="flex items-center space-x-3">
                 <div className="flex items-center space-x-1">
                   <UserIcon className="h-3 w-3" />
-                  <span>{prompt.author || '匿名'}</span>
+                  <span>{prompt.author || t('prompts.anonymous')}</span>
                 </div>
                 <div className="flex items-center space-x-1">
                   <DocumentTextIcon className="h-3 w-3" />

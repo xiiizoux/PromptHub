@@ -21,18 +21,19 @@ import {
   AdjustmentsHorizontalIcon,
 } from '@heroicons/react/24/outline';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { toast } from 'react-hot-toast';
 import clsx from 'clsx';
 import LanguageSwitch from '@/components/LanguageSwitch';
 
-const navigation = [
-  { name: '首页', href: '/', icon: HomeIcon },
-  { name: '对话提示词', href: '/chat', icon: ChatBubbleLeftRightIcon },
-  { name: '图像提示词', href: '/image', icon: PhotoIcon },
-  { name: '视频提示词', href: '/video', icon: FilmIcon },
-  { name: '创建提示词', href: '/create', icon: PlusCircleIcon },
-  { name: 'AI优化器', href: '/optimizer', icon: SparklesIcon },
-  { name: '文档', href: '/docs', icon: DocumentTextIcon },
+const navigationItems = [
+  { key: 'home', href: '/', icon: HomeIcon },
+  { key: 'chat', href: '/chat', icon: ChatBubbleLeftRightIcon },
+  { key: 'image', href: '/image', icon: PhotoIcon },
+  { key: 'video', href: '/video', icon: FilmIcon },
+  { key: 'create', href: '/create', icon: PlusCircleIcon },
+  { key: 'optimizer', href: '/optimizer', icon: SparklesIcon },
+  { key: 'docs', href: '/docs', icon: DocumentTextIcon },
 ];
 
 const Navbar: React.FC = () => {
@@ -42,6 +43,13 @@ const Navbar: React.FC = () => {
   const [scrolled, setScrolled] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const { user, signOut } = useAuth();
+  const { t } = useLanguage();
+
+  // 根据当前语言生成导航项
+  const navigation = navigationItems.map(item => ({
+    ...item,
+    name: t(`nav.${item.key}`),
+  }));
 
   useEffect(() => {
     setMounted(true);
@@ -101,22 +109,22 @@ const Navbar: React.FC = () => {
       setUserMenuOpen(false);
 
       // 显示加载提示
-      const loadingToast = toast.loading('正在退出登录...');
+      const loadingToast = toast.loading(t('user.logging_out_message'));
 
       await signOut();
 
       // 关闭加载提示并显示成功消息
       toast.dismiss(loadingToast);
-      toast.success('已成功退出登录');
+      toast.success(t('user.logout_success'));
 
       // 跳转到首页
       if (typeof window !== 'undefined') {
         window.location.href = '/';
       }
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : '登出失败';
-      console.error('登出失败:', error);
-      toast.error('退出登录失败，请重试');
+      const errorMessage = error instanceof Error ? error.message : t('user.logout_failed');
+      console.error('Logout failed:', error);
+      toast.error(t('user.logout_failed'));
     } finally {
       setIsLoggingOut(false);
     }
@@ -169,7 +177,7 @@ const Navbar: React.FC = () => {
             className="glass p-2 rounded-lg text-neon-cyan"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           >
-            <span className="sr-only">打开主菜单</span>
+            <span className="sr-only">{t('nav.open_menu')}</span>
             <AnimatePresence mode="wait">
               {mobileMenuOpen ? (
                 <motion.div
@@ -277,15 +285,15 @@ const Navbar: React.FC = () => {
                   >
                     <Link href="/profile" className="flex items-center space-x-3 px-4 py-3 text-gray-300 hover:text-neon-cyan hover:bg-neon-cyan/10 transition-all">
                       <UserIcon className="h-5 w-5" />
-                      <span>账户管理</span>
+                      <span>{t('user.account_management')}</span>
                     </Link>
                     <Link href="/context-engineering" className="flex items-center space-x-3 px-4 py-3 text-gray-300 hover:text-neon-cyan hover:bg-neon-cyan/10 transition-all">
                       <AdjustmentsHorizontalIcon className="h-5 w-5" />
-                      <span>上下文工程</span>
+                      <span>{t('user.context_engineering')}</span>
                     </Link>
                     <Link href="/prompts/archived" className="flex items-center space-x-3 px-4 py-3 text-gray-300 hover:text-neon-cyan hover:bg-neon-cyan/10 transition-all">
                       <ArchiveBoxIcon className="h-5 w-5" />
-                      <span>我的归档</span>
+                      <span>{t('user.archived')}</span>
                     </Link>
                     <div className="border-t border-neon-cyan/10 my-1" />
                     <button
@@ -297,7 +305,7 @@ const Navbar: React.FC = () => {
                       )}
                     >
                       <ArrowRightOnRectangleIcon className="h-5 w-5" />
-                      <span>{isLoggingOut ? '退出中...' : '退出登录'}</span>
+                      <span>{isLoggingOut ? t('user.logging_out') : t('user.logout')}</span>
                     </button>
                   </motion.div>
                 )}
@@ -314,7 +322,7 @@ const Navbar: React.FC = () => {
                   href="/auth/register" 
                   className="btn-secondary text-sm"
                 >
-                  注册
+                  {t('user.register')}
                 </Link>
               </motion.div>
               <motion.div
@@ -326,7 +334,7 @@ const Navbar: React.FC = () => {
                   href="/auth/login" 
                   className="btn-primary text-sm"
                 >
-                  登录
+                  {t('user.login')}
                 </Link>
               </motion.div>
             </>
@@ -379,7 +387,7 @@ const Navbar: React.FC = () => {
                       onClick={() => setMobileMenuOpen(false)}
                     >
                       <UserIcon className="h-5 w-5" />
-                      <span>账户管理</span>
+                      <span>{t('user.account_management')}</span>
                     </Link>
                     <Link
                       href="/context-engineering"
@@ -387,7 +395,7 @@ const Navbar: React.FC = () => {
                       onClick={() => setMobileMenuOpen(false)}
                     >
                       <AdjustmentsHorizontalIcon className="h-5 w-5" />
-                      <span>上下文工程</span>
+                      <span>{t('user.context_engineering')}</span>
                     </Link>
                     <Link
                       href="/prompts/archived"
@@ -395,7 +403,7 @@ const Navbar: React.FC = () => {
                       onClick={() => setMobileMenuOpen(false)}
                     >
                       <ArchiveBoxIcon className="h-5 w-5" />
-                      <span>我的归档</span>
+                      <span>{t('user.archived')}</span>
                     </Link>
                     <button
                       onClick={() => {
@@ -409,7 +417,7 @@ const Navbar: React.FC = () => {
                       )}
                     >
                       <ArrowRightOnRectangleIcon className="h-5 w-5" />
-                      <span>{isLoggingOut ? '退出中...' : '退出登录'}</span>
+                      <span>{isLoggingOut ? t('user.logging_out') : t('user.logout')}</span>
                     </button>
                   </>
                 ) : (
@@ -419,14 +427,14 @@ const Navbar: React.FC = () => {
                       className="block btn-secondary text-center"
                       onClick={() => setMobileMenuOpen(false)}
                     >
-                      注册
+                      {t('user.register')}
                     </Link>
                     <Link
                       href="/auth/login"
                       className="block btn-primary text-center"
                       onClick={() => setMobileMenuOpen(false)}
                     >
-                      登录
+                      {t('user.login')}
                     </Link>
                   </div>
                 )}

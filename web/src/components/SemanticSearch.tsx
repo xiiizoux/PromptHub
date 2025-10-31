@@ -11,6 +11,7 @@ import {
 import { useDebounce } from '@/hooks/useDebounce';
 import { performSemanticSearch, getSearchSuggestions, saveSearchQuery } from '@/lib/api';
 import { PromptDetails } from '@/types';
+import { useLanguage } from '@/contexts/LanguageContext';
 import toast from 'react-hot-toast';
 
 interface SemanticSearchProps {
@@ -31,11 +32,13 @@ interface SearchSuggestion {
 export const SemanticSearch: React.FC<SemanticSearchProps> = ({
   onResults,
   onSearchStateChange,
-  placeholder = '描述您想要的提示词，例如：帮我写邮件的AI助手...',
+  placeholder,
   showSuggestions = true,
   showHistory = true,
   className = '',
 }) => {
+  const { t } = useLanguage();
+  const defaultPlaceholder = placeholder || t('search.placeholder');
   const [query, setQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
   const [suggestions, setSuggestions] = useState<SearchSuggestion[]>([]);
@@ -61,7 +64,7 @@ export const SemanticSearch: React.FC<SemanticSearchProps> = ({
       const suggestions = await getSearchSuggestions(searchTerm);
       setSuggestions(suggestions);
     } catch (error) {
-      console.error('获取搜索建议失败:', error);
+      console.error('Failed to fetch search suggestions:', error);
     }
   }, []);
 
@@ -93,13 +96,13 @@ export const SemanticSearch: React.FC<SemanticSearchProps> = ({
 
       setShowSuggestionDropdown(false);
     } catch (error: unknown) {
-      console.error('搜索失败:', error);
-      toast.error('搜索失败: ' + (error instanceof Error ? error.message : '未知错误'));
+      console.error('Search failed:', error);
+      toast.error(t('search.search_failed') + ': ' + (error instanceof Error ? error.message : t('errors.unknown_error')));
     } finally {
       setIsSearching(false);
       onSearchStateChange?.(false);
     }
-  }, [semanticMode, onResults, onSearchStateChange]);
+  }, [semanticMode, onResults, onSearchStateChange, t]);
 
   // 加载搜索历史
   useEffect(() => {
@@ -108,7 +111,7 @@ export const SemanticSearch: React.FC<SemanticSearchProps> = ({
       try {
         setSearchHistory(JSON.parse(savedHistory));
       } catch (error) {
-        console.error('加载搜索历史失败:', error);
+        console.error('Failed to load search history:', error);
       }
     }
   }, []);
@@ -200,7 +203,7 @@ export const SemanticSearch: React.FC<SemanticSearchProps> = ({
             }`}
           >
             <SparklesIcon className="h-4 w-4 inline mr-1" />
-            语义搜索
+            {t('search.semantic_mode')}
           </button>
           <button
             onClick={() => setSemanticMode(false)}
@@ -211,12 +214,12 @@ export const SemanticSearch: React.FC<SemanticSearchProps> = ({
             }`}
           >
             <MagnifyingGlassIcon className="h-4 w-4 inline mr-1" />
-            关键词搜索
+            {t('search.keyword_mode')}
           </button>
         </div>
         
         <div className="text-xs text-gray-500">
-          {semanticMode ? '使用自然语言描述您的需求' : '使用关键词精确匹配'}
+          {semanticMode ? t('search.semantic_hint') : t('search.keyword_hint')}
         </div>
       </div>
 
@@ -243,9 +246,9 @@ export const SemanticSearch: React.FC<SemanticSearchProps> = ({
             }}
             onFocus={() => setShowSuggestionDropdown(true)}
             onKeyDown={handleKeyDown}
-            placeholder={placeholder}
+            placeholder={defaultPlaceholder}
             autoComplete="off"
-            aria-label="搜索提示词"
+            aria-label={t('search.search_prompts')}
             className={`w-full pl-12 pr-12 py-4 rounded-xl glass border transition-all duration-300 ${
               semanticMode
                 ? 'border-neon-cyan/30 focus:border-neon-cyan/60'
@@ -278,7 +281,7 @@ export const SemanticSearch: React.FC<SemanticSearchProps> = ({
               {suggestions.length > 0 && (
                 <div className="p-2">
                   <div className="text-xs text-gray-400 px-3 py-2 border-b border-gray-700/50">
-                    智能建议
+                    {t('search.smart_suggestions')}
                   </div>
                   {suggestions.map((suggestion, index) => (
                     <motion.button
@@ -307,7 +310,7 @@ export const SemanticSearch: React.FC<SemanticSearchProps> = ({
               {showHistory && searchHistory.length > 0 && (
                 <div className="p-2 border-t border-gray-700/50">
                   <div className="text-xs text-gray-400 px-3 py-2">
-                    最近搜索
+                    {t('search.recent_searches')}
                   </div>
                   {searchHistory.slice(0, 5).map((historyItem, index) => (
                     <motion.button
@@ -337,19 +340,19 @@ export const SemanticSearch: React.FC<SemanticSearchProps> = ({
           <div className="flex items-start gap-3">
             <SparklesIcon className="h-5 w-5 text-neon-cyan mt-0.5" />
             <div>
-              <h4 className="text-sm font-medium text-neon-cyan mb-1">语义搜索提示</h4>
+              <h4 className="text-sm font-medium text-neon-cyan mb-1">{t('search.semantic_search_hint_title')}</h4>
               <p className="text-xs text-gray-400">
-                尝试用自然语言描述您的需求，例如：
+                {t('search.semantic_search_hint_description')}
               </p>
               <div className="mt-2 space-y-1">
                 <div className="text-xs text-gray-500">
-                  • "帮我写专业邮件的AI助手"
+                  • {t('search.example_1')}
                 </div>
                 <div className="text-xs text-gray-500">
-                  • "分析文档内容并总结要点"
+                  • {t('search.example_2')}
                 </div>
                 <div className="text-xs text-gray-500">
-                  • "创意写作和故事创作工具"
+                  • {t('search.example_3')}
                 </div>
               </div>
             </div>

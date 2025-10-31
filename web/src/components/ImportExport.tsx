@@ -13,6 +13,7 @@ import {
 import { exportPrompts, importPrompts } from '@/lib/api';
 import { ImportData } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 import toast from 'react-hot-toast';
 
 interface ImportExportProps {
@@ -27,6 +28,7 @@ export const ImportExport: React.FC<ImportExportProps> = ({
   className = '',
 }) => {
   const { user } = useAuth();
+  const { t } = useLanguage();
   const [showExportModal, setShowExportModal] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
   const [exportFormat, setExportFormat] = useState<'json' | 'csv' | 'txt'>('json');
@@ -49,12 +51,12 @@ export const ImportExport: React.FC<ImportExportProps> = ({
 
   const handleExport = async () => {
     if (!user) {
-      toast.error('请先登录');
+      toast.error(t('errors.login_required'));
       return;
     }
 
     if (selectedPrompts.length === 0) {
-      toast.error('请先选择要导出的提示词');
+      toast.error(t('import_export.no_selection'));
       return;
     }
 
@@ -72,10 +74,10 @@ export const ImportExport: React.FC<ImportExportProps> = ({
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
 
-      toast.success(`已导出 ${selectedPrompts.length} 个提示词`);
+      toast.success(t('import_export.export_success').replace('{count}', selectedPrompts.length.toString()));
       setShowExportModal(false);
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : '导出失败';
+      const errorMessage = error instanceof Error ? error.message : t('import_export.export_failed');
       toast.error(errorMessage);
     } finally {
       setIsExporting(false);
@@ -97,12 +99,12 @@ export const ImportExport: React.FC<ImportExportProps> = ({
 
   const handleImport = async () => {
     if (!user) {
-      toast.error('请先登录');
+      toast.error(t('errors.login_required'));
       return;
     }
 
     if (!importData.trim()) {
-      toast.error('请提供导入数据');
+      toast.error(t('import_export.no_import_data'));
       return;
     }
 
@@ -117,9 +119,9 @@ export const ImportExport: React.FC<ImportExportProps> = ({
         // 如果不是JSON，创建一个简单的ImportData对象
         parsedData = {
           prompts: [{
-            name: '导入的文本',
+            name: t('import_export.imported_text'),
             content: importData,
-            description: '从文本导入的提示词',
+            description: t('import_export.imported_description'),
           }],
           version: '1.0',
         };
@@ -129,15 +131,15 @@ export const ImportExport: React.FC<ImportExportProps> = ({
       setImportResult(result);
       
       if (result.imported_count > 0) {
-        toast.success(`成功导入 ${result.imported_count} 个提示词`);
+        toast.success(t('import_export.import_success').replace('{count}', result.imported_count.toString()));
         onImportComplete?.();
       }
       
       if (result.errors && result.errors.length > 0) {
-        console.warn('导入警告:', result.errors);
+        console.warn('Import warnings:', result.errors);
       }
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : '导入失败';
+      const errorMessage = error instanceof Error ? error.message : t('import_export.import_failed');
       toast.error(errorMessage);
       setImportResult({ 
         success: false, 
@@ -161,9 +163,9 @@ export const ImportExport: React.FC<ImportExportProps> = ({
   };
 
   const formatOptions = [
-    { value: 'json', label: 'JSON', icon: CodeBracketIcon, description: '标准JSON格式，包含完整元数据' },
-    { value: 'csv', label: 'CSV', icon: TableCellsIcon, description: '表格格式，便于在Excel中查看' },
-    { value: 'txt', label: 'TXT', icon: DocumentTextIcon, description: '纯文本格式，易于阅读' },
+    { value: 'json', label: 'JSON', icon: CodeBracketIcon, descriptionKey: 'import_export.format_json' },
+    { value: 'csv', label: 'CSV', icon: TableCellsIcon, descriptionKey: 'import_export.format_csv' },
+    { value: 'txt', label: 'TXT', icon: DocumentTextIcon, descriptionKey: 'import_export.format_txt' },
   ];
 
   return (
@@ -175,7 +177,7 @@ export const ImportExport: React.FC<ImportExportProps> = ({
         className="btn-secondary flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
       >
         <ArrowDownTrayIcon className="h-4 w-4" />
-        导出 ({selectedPrompts.length})
+        {t('import_export.export')} ({selectedPrompts.length})
       </button>
 
       {/* 导入按钮 */}
@@ -184,7 +186,7 @@ export const ImportExport: React.FC<ImportExportProps> = ({
         className="btn-primary flex items-center gap-2"
       >
         <ArrowUpTrayIcon className="h-4 w-4" />
-        导入
+        {t('import_export.import')}
       </button>
 
       {/* 导出模态框 */}
@@ -205,7 +207,7 @@ export const ImportExport: React.FC<ImportExportProps> = ({
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-xl font-semibold text-white">导出提示词</h3>
+                <h3 className="text-xl font-semibold text-white">{t('import_export.export_title')}</h3>
                 <button
                   onClick={() => setShowExportModal(false)}
                   className="text-gray-400 hover:text-white"
@@ -217,7 +219,7 @@ export const ImportExport: React.FC<ImportExportProps> = ({
               <div className="space-y-4">
                 <div>
                   <p className="text-gray-300 mb-3">
-                    选择导出格式：
+                    {t('import_export.select_format')}
                   </p>
                   <div className="space-y-2">
                     {formatOptions.map((option) => {
@@ -241,7 +243,7 @@ export const ImportExport: React.FC<ImportExportProps> = ({
                           <IconComponent className="h-5 w-5 text-neon-cyan mt-0.5" />
                           <div>
                             <div className="text-white font-medium">{option.label}</div>
-                            <div className="text-gray-400 text-sm">{option.description}</div>
+                            <div className="text-gray-400 text-sm">{t(option.descriptionKey)}</div>
                           </div>
                         </label>
                       );
@@ -255,13 +257,13 @@ export const ImportExport: React.FC<ImportExportProps> = ({
                     disabled={isExporting}
                     className="btn-primary flex-1 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    {isExporting ? '导出中...' : '开始导出'}
+                    {isExporting ? t('import_export.exporting') : t('import_export.start_export')}
                   </button>
                   <button
                     onClick={() => setShowExportModal(false)}
                     className="btn-secondary"
                   >
-                    取消
+                    {t('buttons.cancel')}
                   </button>
                 </div>
               </div>
@@ -288,7 +290,7 @@ export const ImportExport: React.FC<ImportExportProps> = ({
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-xl font-semibold text-white">导入提示词</h3>
+                <h3 className="text-xl font-semibold text-white">{t('import_export.import_title')}</h3>
                 <button
                   onClick={() => setShowImportModal(false)}
                   className="text-gray-400 hover:text-white"
@@ -302,7 +304,7 @@ export const ImportExport: React.FC<ImportExportProps> = ({
                   {/* 文件上传 */}
                   <div>
                     <label className="block text-sm font-medium text-gray-300 mb-2">
-                      选择文件
+                      {t('import_export.select_file')}
                     </label>
                     <input
                       ref={fileInputRef}
@@ -314,17 +316,17 @@ export const ImportExport: React.FC<ImportExportProps> = ({
                   </div>
 
                   {/* 或者直接粘贴 */}
-                  <div className="text-center text-gray-400">或者</div>
+                  <div className="text-center text-gray-400">{t('import_export.or')}</div>
 
                   {/* 文本输入 */}
                   <div>
                     <label className="block text-sm font-medium text-gray-300 mb-2">
-                      粘贴JSON数据
+                      {t('import_export.paste_json')}
                     </label>
                     <textarea
                       value={importData}
                       onChange={(e) => setImportData(e.target.value)}
-                      placeholder='粘贴JSON格式的提示词数据...'
+                      placeholder={t('import_export.paste_placeholder')}
                       rows={8}
                       className="input-primary w-full font-mono text-sm"
                     />
@@ -333,7 +335,7 @@ export const ImportExport: React.FC<ImportExportProps> = ({
                   {/* 导入选项 */}
                   <div>
                     <label className="block text-sm font-medium text-gray-300 mb-2">
-                      导入选项
+                      {t('import_export.import_options')}
                     </label>
                     <div className="space-y-2">
                       <label className="flex items-center gap-2">
@@ -346,7 +348,7 @@ export const ImportExport: React.FC<ImportExportProps> = ({
                           }))}
                           className="rounded border-gray-600 bg-gray-800 text-neon-purple focus:ring-neon-purple"
                         />
-                        <span className="text-gray-300">跳过重复名称的提示词</span>
+                        <span className="text-gray-300">{t('import_export.skip_duplicates')}</span>
                       </label>
                       <label className="flex items-center gap-2">
                         <input
@@ -358,7 +360,7 @@ export const ImportExport: React.FC<ImportExportProps> = ({
                           }))}
                           className="rounded border-gray-600 bg-gray-800 text-neon-purple focus:ring-neon-purple"
                         />
-                        <span className="text-gray-300">允许重复名称（将自动重命名）</span>
+                        <span className="text-gray-300">{t('import_export.allow_duplicates')}</span>
                       </label>
                     </div>
                   </div>
@@ -369,19 +371,19 @@ export const ImportExport: React.FC<ImportExportProps> = ({
                       disabled={isImporting || !importData.trim()}
                       className="btn-primary flex-1 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      {isImporting ? '导入中...' : '开始导入'}
+                      {isImporting ? t('import_export.importing') : t('import_export.start_import')}
                     </button>
                     <button
                       onClick={resetImport}
                       className="btn-secondary"
                     >
-                      重置
+                      {t('buttons.reset')}
                     </button>
                     <button
                       onClick={() => setShowImportModal(false)}
                       className="btn-secondary"
                     >
-                      取消
+                      {t('buttons.cancel')}
                     </button>
                   </div>
                 </div>
@@ -395,20 +397,21 @@ export const ImportExport: React.FC<ImportExportProps> = ({
                       <ExclamationTriangleIcon className="h-6 w-6 text-red-400" />
                     )}
                     <h4 className="text-lg font-medium text-white">
-                      {importResult.success ? '导入完成' : '导入失败'}
+                      {importResult.success ? t('import_export.import_complete') : t('import_export.import_failed')}
                     </h4>
                   </div>
 
                   {importResult.success && (
                     <div className="space-y-2">
                       <p className="text-gray-300">
-                        成功导入 <span className="text-green-400 font-medium">{importResult.imported_count}</span> 个提示词
-                        （共 {importResult.total_count} 个）
+                        {t('import_export.import_success_detail')
+                          .replace('{imported}', importResult.imported_count.toString())
+                          .replace('{total}', importResult.total_count.toString())}
                       </p>
                       
                       {importResult.errors && importResult.errors.length > 0 && (
                         <div className="mt-3">
-                          <p className="text-yellow-400 text-sm mb-2">警告信息：</p>
+                          <p className="text-yellow-400 text-sm mb-2">{t('import_export.warnings')}</p>
                           <div className="bg-yellow-900/20 border border-yellow-400/20 rounded-lg p-3">
                             <ul className="text-sm text-yellow-300 space-y-1">
                               {importResult.errors.map((error: string, index: number) => (
@@ -423,7 +426,7 @@ export const ImportExport: React.FC<ImportExportProps> = ({
 
                   {!importResult.success && (
                     <div className="bg-red-900/20 border border-red-400/20 rounded-lg p-3">
-                      <p className="text-red-300">{importResult.errors?.[0] || '导入失败'}</p>
+                      <p className="text-red-300">{importResult.errors?.[0] || t('import_export.import_failed')}</p>
                     </div>
                   )}
 
@@ -435,13 +438,13 @@ export const ImportExport: React.FC<ImportExportProps> = ({
                       }}
                       className="btn-primary"
                     >
-                      继续导入
+                      {t('import_export.continue_import')}
                     </button>
                     <button
                       onClick={() => setShowImportModal(false)}
                       className="btn-secondary"
                     >
-                      关闭
+                      {t('buttons.close')}
                     </button>
                   </div>
                 </div>

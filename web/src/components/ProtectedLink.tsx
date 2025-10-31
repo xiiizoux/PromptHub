@@ -2,6 +2,7 @@ import React, { ReactNode } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/router';
+import { useLanguage } from '@/contexts/LanguageContext';
 import toast from 'react-hot-toast';
 
 interface ProtectedLinkProps {
@@ -27,6 +28,7 @@ export const ProtectedLink: React.FC<ProtectedLinkProps> = ({
 }) => {
   const { isAuthenticated, isLoading } = useAuth();
   const router = useRouter();
+  const { t } = useLanguage();
 
   const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
     // 如果不需要登录保护，直接允许跳转
@@ -39,7 +41,7 @@ export const ProtectedLink: React.FC<ProtectedLinkProps> = ({
     if (isLoading) {
       e.preventDefault();
       if (showLoginToast) {
-        toast.loading('正在验证身份...', { duration: 1000 });
+        toast.loading(t('messages.verifying_identity'), { duration: 1000 });
       }
       return;
     }
@@ -49,7 +51,7 @@ export const ProtectedLink: React.FC<ProtectedLinkProps> = ({
       e.preventDefault();
       
       if (showLoginToast) {
-        toast.error('请先登录才能访问此功能', {
+        toast.error(t('auth.login_required_access'), {
           duration: 3000,
           position: 'top-center',
         });
@@ -95,6 +97,7 @@ export const ProtectedButton: React.FC<ProtectedButtonProps> = ({
 }) => {
   const { isAuthenticated, isLoading } = useAuth();
   const router = useRouter();
+  const { t } = useLanguage();
 
   const handleClick = () => {
     // 如果按钮被禁用，不处理点击
@@ -109,7 +112,7 @@ export const ProtectedButton: React.FC<ProtectedButtonProps> = ({
     // 如果正在加载认证状态，显示加载提示
     if (isLoading) {
       if (showLoginToast) {
-        toast.loading('正在验证身份...', { duration: 1000 });
+        toast.loading(t('messages.verifying_identity'), { duration: 1000 });
       }
       return;
     }
@@ -117,7 +120,7 @@ export const ProtectedButton: React.FC<ProtectedButtonProps> = ({
     // 如果未登录，提示登录
     if (!isAuthenticated) {
       if (showLoginToast) {
-        toast.error('请先登录才能使用此功能', {
+        toast.error(t('auth.login_required_action'), {
           duration: 3000,
           position: 'top-center',
         });

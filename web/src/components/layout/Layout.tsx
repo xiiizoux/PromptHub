@@ -5,6 +5,7 @@ import Navbar from './Navbar';
 import Footer from './Footer';
 import Navigation from '@/components/Navigation';
 import { useGlobalKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 // 动态导入粒子背景组件，避免SSR问题
 const ParticlesBackground = dynamic(
@@ -20,16 +21,20 @@ interface LayoutProps {
 
 const Layout: React.FC<LayoutProps> = ({ 
   children, 
-  title = 'Prompt Hub - AI提示词管理平台',
-  description = '一个用于管理和分享AI提示词的现代化平台，帮助您充分发挥AI模型的潜力。',
+  title,
+  description,
 }) => {
+  const { t } = useLanguage();
   // 启用全局键盘快捷键
   useGlobalKeyboardShortcuts();
+  
+  const defaultTitle = title || t('layout.default_title');
+  const defaultDescription = description || t('layout.default_description');
   return (
     <>
       <Head>
-        <title>{title}</title>
-        <meta name="description" content={description} />
+        <title>{defaultTitle}</title>
+        <meta name="description" content={defaultDescription} />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon.ico" />
       </Head>

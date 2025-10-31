@@ -51,7 +51,7 @@ const LanguageSwitch: React.FC = () => {
           'border border-transparent',
           isOpen && 'border-neon-cyan/30 text-neon-cyan',
         )}
-        aria-label="切换语言"
+        aria-label={language === 'zh' ? '切换语言' : 'Switch language'}
         aria-expanded={isOpen}
       >
         <GlobeAltIcon className="h-5 w-5" />

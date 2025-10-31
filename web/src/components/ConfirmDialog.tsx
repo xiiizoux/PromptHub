@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ExclamationTriangleIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface ConfirmDialogProps {
   open: boolean;
@@ -15,14 +16,15 @@ interface ConfirmDialogProps {
 
 export default function ConfirmDialog({
   open,
-  title = '确认操作',
+  title,
   message,
-  confirmText = '确认',
-  cancelText = '取消',
+  confirmText,
+  cancelText,
   confirmVariant = 'danger',
   onConfirm,
   onCancel,
 }: ConfirmDialogProps) {
+  const { t } = useLanguage();
   return (
     <AnimatePresence>
       {open && (
@@ -59,7 +61,7 @@ export default function ConfirmDialog({
                   <ExclamationTriangleIcon className="h-6 w-6 text-yellow-500" />
                 </div>
                 <h3 className="text-lg font-semibold text-white">
-                  {title}
+                  {title || t('dialogs.confirm_action')}
                 </h3>
               </div>
 
@@ -78,7 +80,7 @@ export default function ConfirmDialog({
                   onClick={onCancel}
                   className="px-4 py-2 text-gray-300 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors"
                 >
-                  {cancelText}
+                  {cancelText || t('buttons.cancel')}
                 </motion.button>
                 <motion.button
                   whileHover={{ scale: 1.02 }}
@@ -90,7 +92,7 @@ export default function ConfirmDialog({
                       : 'bg-neon-cyan hover:bg-neon-cyan-dark text-dark-bg-primary'
                   }`}
                 >
-                  {confirmText}
+                  {confirmText || t('buttons.confirm')}
                 </motion.button>
               </div>
             </motion.div>
@@ -115,19 +117,20 @@ export function UnsavedChangesDialog({
   onCancel: () => void;
   context?: 'page' | 'form' | 'editor';
 }) {
+  const { t } = useLanguage();
   const contextMessages = {
-    page: '您有未保存的更改，确定要离开此页面吗？',
-    form: '表单内容尚未保存，确定要离开吗？',
-    editor: '编辑器内容尚未保存，确定要离开吗？',
+    page: t('dialogs.unsaved_changes_page'),
+    form: t('dialogs.unsaved_changes_form'),
+    editor: t('dialogs.unsaved_changes_editor'),
   };
 
   return (
     <ConfirmDialog
       open={open}
-      title="未保存的更改"
+      title={t('dialogs.unsaved_changes')}
       message={contextMessages[context]}
-      confirmText="离开"
-      cancelText="留在此页"
+      confirmText={t('dialogs.leave')}
+      cancelText={t('dialogs.stay')}
       confirmVariant="danger"
       onConfirm={onConfirm}
       onCancel={onCancel}

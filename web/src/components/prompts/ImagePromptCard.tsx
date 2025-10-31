@@ -5,6 +5,7 @@ import { PromptInfo } from '@/types';
 import { formatVersionDisplay } from '@/lib/version-utils';
 import { useIntersectionObserver } from '@/hooks/useIntersectionObserver';
 import { useOptimizedCategoryDisplay } from '@/contexts/CategoryContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 import {
   StarIcon,
   DocumentTextIcon,
@@ -30,18 +31,8 @@ interface ImagePromptCardProps {
 
 // 使用统一的分类配置系统
 
-// 格式化日期函数
-const formatDate = (dateString?: string) => {
-  if (!dateString) {return '未知日期';}
-  const date = new Date(dateString);
-  return date.toLocaleDateString('zh-CN', { 
-    year: 'numeric', 
-    month: 'short', 
-    day: 'numeric', 
-  });
-};
-
 const ImagePromptCard: React.FC<ImagePromptCardProps> = React.memo(({ prompt }) => {
+  const { t, language } = useLanguage();
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageError, setImageError] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
@@ -49,6 +40,18 @@ const ImagePromptCard: React.FC<ImagePromptCardProps> = React.memo(({ prompt }) 
 
   // 使用优化的分类显示Hook，无延迟加载
   const categoryInfo = useOptimizedCategoryDisplay(prompt?.category || '真实摄影', 'image');
+
+  // 格式化日期函数 - 根据语言选择 locale
+  const formatDate = (dateString?: string) => {
+    if (!dateString) {return t('common.unknown_date');}
+    const date = new Date(dateString);
+    const locale = language === 'zh' ? 'zh-CN' : 'en-US';
+    return date.toLocaleDateString(locale, { 
+      year: 'numeric', 
+      month: 'short', 
+      day: 'numeric', 
+    });
+  };
 
   // 懒加载：只有当卡片进入可视区域时才加载图像
   const { elementRef, isVisible } = useIntersectionObserver({
@@ -161,7 +164,7 @@ const ImagePromptCard: React.FC<ImagePromptCardProps> = React.memo(({ prompt }) 
                 {getCurrentImageUrl() ? (
                   <img 
                     src={getCurrentImageUrl()!}
-                    alt={prompt.name || '图像提示词'}
+                    alt={prompt.name || t('prompts.image')}
                     className={clsx(
                       'w-full h-full object-cover transition-all duration-500',
                       imageLoaded ? 'opacity-100' : 'opacity-0',
@@ -185,7 +188,7 @@ const ImagePromptCard: React.FC<ImagePromptCardProps> = React.memo(({ prompt }) 
                   <div className="absolute inset-0 flex flex-col items-center justify-center">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-pink-400 mb-2"></div>
                     <p className="text-xs text-gray-400">
-                      {getThumbnailUrl() && !showFullImage ? '加载预览...' : '加载图像...'}
+                      {getThumbnailUrl() && !showFullImage ? t('prompts.loading_thumbnail') : t('prompts.loading_image')}
                     </p>
                   </div>
                 )}
@@ -194,7 +197,7 @@ const ImagePromptCard: React.FC<ImagePromptCardProps> = React.memo(({ prompt }) 
                 {imageError && (
                   <div className="absolute inset-0 flex flex-col items-center justify-center">
                     <PhotoIcon className="h-12 w-12 text-gray-500 mb-2" />
-                    <p className="text-xs text-gray-500">图像加载失败</p>
+                    <p className="text-xs text-gray-500">{t('prompts.image_load_failed')}</p>
                   </div>
                 )}
               </>
@@ -203,7 +206,7 @@ const ImagePromptCard: React.FC<ImagePromptCardProps> = React.memo(({ prompt }) 
               <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-800/60 to-gray-700/60">
                 <div className="text-center">
                   <PhotoIcon className="h-12 w-12 text-gray-500 mx-auto mb-2" />
-                  <p className="text-sm text-gray-500">图像预览</p>
+                  <p className="text-sm text-gray-500">{t('prompts.image_preview')}</p>
                 </div>
               </div>
             )}
@@ -213,14 +216,14 @@ const ImagePromptCard: React.FC<ImagePromptCardProps> = React.memo(({ prompt }) 
               {/* 图像类型标识 */}
               <div className="flex items-center space-x-1 px-3 py-1.5 rounded-full bg-pink-500/20 backdrop-blur-md border border-pink-500/30">
                 <PhotoIcon className="h-3 w-3 text-pink-400" />
-                <span className="text-xs text-pink-400 font-medium">图像</span>
+                <span className="text-xs text-pink-400 font-medium">{t('prompts.image')}</span>
               </div>
               
               {/* 热门标签 */}
               {(prompt.usageCount || 0) > 100 && (
                 <div className="flex items-center space-x-1 px-3 py-1.5 rounded-full bg-orange-500/20 backdrop-blur-md border border-orange-500/30">
                   <FireIcon className="h-3 w-3 text-orange-400" />
-                  <span className="text-xs text-orange-400 font-medium">热门</span>
+                  <span className="text-xs text-orange-400 font-medium">{t('prompts.trending')}</span>
                 </div>
               )}
             </div>
@@ -237,7 +240,7 @@ const ImagePromptCard: React.FC<ImagePromptCardProps> = React.memo(({ prompt }) 
                 >
                   <div className="flex items-center space-x-2 px-4 py-2 rounded-full bg-black/40 backdrop-blur-md border border-pink-500/30">
                     <EyeIcon className="h-4 w-4 text-white" />
-                    <span className="text-sm text-white font-medium">查看详情</span>
+                    <span className="text-sm text-white font-medium">{t('prompts.view_details')}</span>
                   </div>
                 </motion.div>
               )}
@@ -272,7 +275,7 @@ const ImagePromptCard: React.FC<ImagePromptCardProps> = React.memo(({ prompt }) 
             {/* 描述 */}
             <div className="text-sm text-gray-400 mb-4 h-[4.5rem] flex items-start">
               <p className="line-clamp-3 leading-6">
-                {prompt.description || '暂无描述'}
+                {prompt.description || t('prompts.no_description')}
               </p>
             </div>
 
@@ -295,7 +298,7 @@ const ImagePromptCard: React.FC<ImagePromptCardProps> = React.memo(({ prompt }) 
                   )}
                 </>
               ) : (
-                <span className="text-xs text-gray-500">暂无标签</span>
+                <span className="text-xs text-gray-500">{t('prompts.no_tags')}</span>
               )}
             </div>
             
@@ -315,7 +318,7 @@ const ImagePromptCard: React.FC<ImagePromptCardProps> = React.memo(({ prompt }) 
                       <span className="text-xs text-gray-400">{rating.value.toFixed(1)}</span>
                     </div>
                   ) : (
-                    <span className="text-xs text-gray-500">暂无评分</span>
+                    <span className="text-xs text-gray-500">{t('rating.no_rating')}</span>
                   )}
                 </div>
                 <div className="flex items-center space-x-1 text-gray-500">
@@ -329,7 +332,7 @@ const ImagePromptCard: React.FC<ImagePromptCardProps> = React.memo(({ prompt }) 
                 <div className="flex items-center space-x-3">
                   <div className="flex items-center space-x-1">
                     <UserIcon className="h-3 w-3" />
-                    <span>{prompt.author || '匿名'}</span>
+                    <span>{prompt.author || t('prompts.anonymous')}</span>
                   </div>
                   <div className="flex items-center space-x-1">
                     <DocumentTextIcon className="h-3 w-3" />
