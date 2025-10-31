@@ -23,6 +23,7 @@ import {
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'react-hot-toast';
 import clsx from 'clsx';
+import LanguageSwitch from '@/components/LanguageSwitch';
 
 const navigation = [
   { name: '首页', href: '/', icon: HomeIcon },
@@ -231,6 +232,9 @@ const Navbar: React.FC = () => {
         
         {/* 用户菜单 */}
         <div className="hidden lg:flex lg:flex-1 lg:justify-end items-center space-x-4">
+          {/* 语言切换按钮 */}
+          <LanguageSwitch />
+          
           {user ? (
             <div className="relative">
               <motion.button
@@ -362,6 +366,11 @@ const Navbar: React.FC = () => {
               })}
               
               <div className="border-t border-neon-cyan/10 pt-4 mt-4">
+                {/* 移动端语言切换 */}
+                <div className="px-4 pb-3">
+                  <LanguageSwitch />
+                </div>
+                
                 {user ? (
                   <>
                     <Link

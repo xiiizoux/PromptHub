@@ -4,6 +4,7 @@ import Layout from '@/components/layout/Layout';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { CategoryProvider } from '@/contexts/CategoryContext';
 import { InteractionsProvider } from '@/contexts/InteractionsContext';
+import { LanguageProvider } from '@/contexts/LanguageContext';
 import AuthRefresher from '@/components/AuthRefresher';
 import Head from 'next/head';
 import { useEffect } from 'react';
@@ -40,48 +41,50 @@ export default function App({ Component, pageProps }: AppProps) {
   }, []);
 
   return (
-    <AuthProvider>
-      <CategoryProvider>
-        <InteractionsProvider>
-          <Head>
-            <meta name="viewport" content="width=device-width, initial-scale=1" />
-          </Head>
-          {/* 智能认证刷新组件，自动维持会话有效性 */}
-          <AuthRefresher />
-          <Layout>
-            <Component {...pageProps} />
-          </Layout>
-          {/* Toast通知组件 */}
-        <Toaster 
-        position="bottom-center"
-        reverseOrder={false}
-        gutter={8}
-        containerClassName=""
-        containerStyle={{}}
-        toastOptions={{
-          duration: 4000,
-          style: {
-            background: 'rgba(26, 26, 36, 0.95)',
-            color: '#fff',
-            border: '1px solid rgba(0, 255, 255, 0.2)',
-            borderRadius: '12px',
-            backdropFilter: 'blur(10px)',
-            fontSize: '14px',
-          },
-          success: {
+    <LanguageProvider>
+      <AuthProvider>
+        <CategoryProvider>
+          <InteractionsProvider>
+            <Head>
+              <meta name="viewport" content="width=device-width, initial-scale=1" />
+            </Head>
+            {/* 智能认证刷新组件，自动维持会话有效性 */}
+            <AuthRefresher />
+            <Layout>
+              <Component {...pageProps} />
+            </Layout>
+            {/* Toast通知组件 */}
+          <Toaster 
+          position="bottom-center"
+          reverseOrder={false}
+          gutter={8}
+          containerClassName=""
+          containerStyle={{}}
+          toastOptions={{
+            duration: 4000,
             style: {
-              border: '1px solid rgba(16, 185, 129, 0.3)',
+              background: 'rgba(26, 26, 36, 0.95)',
+              color: '#fff',
+              border: '1px solid rgba(0, 255, 255, 0.2)',
+              borderRadius: '12px',
+              backdropFilter: 'blur(10px)',
+              fontSize: '14px',
             },
-          },
-          error: {
-            style: {
-              border: '1px solid rgba(239, 68, 68, 0.3)',
+            success: {
+              style: {
+                border: '1px solid rgba(16, 185, 129, 0.3)',
+              },
             },
-          },
-        }}
-        />
-        </InteractionsProvider>
-      </CategoryProvider>
-    </AuthProvider>
+            error: {
+              style: {
+                border: '1px solid rgba(239, 68, 68, 0.3)',
+              },
+            },
+          }}
+          />
+          </InteractionsProvider>
+        </CategoryProvider>
+      </AuthProvider>
+    </LanguageProvider>
   );
 }
