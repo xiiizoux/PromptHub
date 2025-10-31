@@ -1,14 +1,14 @@
 # ============================================
-# 生产级多阶段构建 Dockerfile
-# 支持 React 19 + Next.js 15
+# Production-grade Multi-stage Dockerfile
+# Supports React 19 + Next.js 15
 # ============================================
 
 # ============================================
-# Stage 1: 依赖安装阶段
+# Stage 1: Dependency Installation
 # ============================================
 FROM node:20-alpine AS dependencies
 
-# 安装系统依赖
+# Install system dependencies
 RUN apk update && apk add --no-cache \
     build-base \
     cairo-dev \
@@ -23,96 +23,105 @@ RUN apk update && apk add --no-cache \
 
 WORKDIR /app
 
-# 复制 package.json 文件
+# Copy package.json files
 COPY mcp/package*.json ./mcp/
 COPY web/package*.json ./web/
 COPY supabase/package*.json ./supabase/
 
-# 设置内存限制
+# Set memory limit
 ENV NODE_OPTIONS="--max-old-space-size=4096"
 
-# 安装 MCP 依赖（需要 devDependencies，因为使用 tsx 运行 TypeScript 源码）
-# MCP 使用标准 npm ci，不需要 --legacy-peer-deps
+# Install MCP dependencies (need devDependencies for TypeScript compilation)
+# MCP uses standard npm ci, no --legacy-peer-deps needed
 RUN cd mcp && npm ci
 
-# 安装 Web 依赖（需要 devDependencies 用于构建）
-# React 19 已被所有依赖兼容，使用 npm install 代替 npm ci 以处理依赖升级
+# Install Web dependencies (need devDependencies for build)
+# React 19 is compatible with all dependencies, use npm install instead of npm ci to handle dependency updates
 RUN cd web && rm -f package-lock.json && npm install
 
-# 安装 Supabase 依赖
-RUN cd supabase && npm ci || echo "Supabase 依赖安装跳过"
+# Install Supabase dependencies
+RUN cd supabase && npm ci || echo "Supabase dependency installation skipped"
 
 # ============================================
-# Stage 2: Web 构建阶段
+# Stage 2: Web Build Stage
 # ============================================
 FROM node:20-alpine AS web-builder
 
 WORKDIR /app
 
-# 定义构建参数（必须在构建时通过 --build-arg 传入）
+# Define build arguments (must be passed via --build-arg during build)
 ARG NEXT_PUBLIC_SUPABASE_URL
 ARG NEXT_PUBLIC_SUPABASE_ANON_KEY
 ARG SUPABASE_SERVICE_ROLE_KEY
 ARG SUPABASE_URL
 
-# 验证必需的构建参数（如果为空则立即失败并给出明确错误信息）
-# 这是关键步骤：确保 docker-compose.yml 的 build.args 正确传递了变量
+# Validate required build arguments (fail immediately if empty with clear error message)
+# This is a critical step: ensure docker-compose.yml's build.args correctly passes variables
 RUN if [ -z "$NEXT_PUBLIC_SUPABASE_URL" ]; then \
-      echo "❌ 错误: NEXT_PUBLIC_SUPABASE_URL 未设置或为空"; \
-      echo "   可能原因："; \
-      echo "   1. .env 文件中缺少 NEXT_PUBLIC_SUPABASE_URL 变量"; \
-      echo "   2. docker-compose.yml 的 build.args 配置错误"; \
-      echo "   3. Docker Compose 未能正确读取 .env 文件"; \
-      echo "   请检查 .env 文件和 docker-compose.yml 的配置"; \
+      echo "❌ Error: NEXT_PUBLIC_SUPABASE_URL is not set or empty"; \
+      echo "   Possible causes:"; \
+      echo "   1. NEXT_PUBLIC_SUPABASE_URL variable missing in .env file"; \
+      echo "   2. docker-compose.yml's build.args configuration error"; \
+      echo "   3. Docker Compose failed to read .env file correctly"; \
+      echo "   Please check .env file and docker-compose.yml configuration"; \
       exit 1; \
     fi && \
     if [ -z "$NEXT_PUBLIC_SUPABASE_ANON_KEY" ]; then \
-      echo "❌ 错误: NEXT_PUBLIC_SUPABASE_ANON_KEY 未设置或为空"; \
-      echo "   可能原因："; \
-      echo "   1. .env 文件中缺少 NEXT_PUBLIC_SUPABASE_ANON_KEY 变量"; \
-      echo "   2. docker-compose.yml 的 build.args 配置错误"; \
-      echo "   3. Docker Compose 未能正确读取 .env 文件"; \
-      echo "   请检查 .env 文件和 docker-compose.yml 的配置"; \
+      echo "❌ Error: NEXT_PUBLIC_SUPABASE_ANON_KEY is not set or empty"; \
+      echo "   Possible causes:"; \
+      echo "   1. NEXT_PUBLIC_SUPABASE_ANON_KEY variable missing in .env file"; \
+      echo "   2. docker-compose.yml's build.args configuration error"; \
+      echo "   3. Docker Compose failed to read .env file correctly"; \
+      echo "   Please check .env file and docker-compose.yml configuration"; \
       exit 1; \
     fi && \
-    echo "✓ 构建参数验证通过" && \
-    echo "  NEXT_PUBLIC_SUPABASE_URL 已设置 (长度: $(echo -n "$NEXT_PUBLIC_SUPABASE_URL" | wc -c))" && \
-    echo "  NEXT_PUBLIC_SUPABASE_ANON_KEY 已设置 (长度: $(echo -n "$NEXT_PUBLIC_SUPABASE_ANON_KEY" | wc -c))"
+    echo "✓ Build argument validation passed" && \
+    echo "  NEXT_PUBLIC_SUPABASE_URL is set (length: $(echo -n "$NEXT_PUBLIC_SUPABASE_URL" | wc -c))" && \
+    echo "  NEXT_PUBLIC_SUPABASE_ANON_KEY is set (length: $(echo -n "$NEXT_PUBLIC_SUPABASE_ANON_KEY" | wc -c))"
 
-# 复制依赖
+# Copy dependencies
 COPY --from=dependencies /app/web/node_modules ./web/node_modules
 COPY --from=dependencies /app/mcp/node_modules ./mcp/node_modules
 
-# 复制源代码
+# Copy source code
 COPY web ./web
 COPY mcp ./mcp
 
-# 设置构建环境变量
+# Set build environment variables
 ENV NODE_ENV=production
 ENV NODE_OPTIONS="--max-old-space-size=4096"
 ENV NEXT_TELEMETRY_DISABLED=1
 
-# 将构建参数转换为环境变量供 Next.js 构建使用
+# Convert build arguments to environment variables for Next.js build
 ENV NEXT_PUBLIC_SUPABASE_URL=${NEXT_PUBLIC_SUPABASE_URL}
 ENV NEXT_PUBLIC_SUPABASE_ANON_KEY=${NEXT_PUBLIC_SUPABASE_ANON_KEY}
 ENV SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
 ENV SUPABASE_URL=${SUPABASE_URL}
 
-# 构建 Next.js 应用
+# Build Next.js application
 RUN cd web && npm run build
 
-# MCP 将在运行时使用 tsx 直接运行 TypeScript 源码（不需要构建）
-# 因此不清理 MCP 的 devDependencies（需要保留 tsx 和 typescript）
+# Build MCP application (compile TypeScript to JavaScript)
+RUN cd mcp && npm run build
 
-# 清理 Web 的开发依赖，只保留生产依赖
+# Verify MCP build artifacts exist
+RUN if [ ! -f "/app/mcp/dist/src/index.js" ]; then \
+      echo "❌ Error: MCP compilation failed, dist/src/index.js does not exist"; \
+      echo "   Please check MCP's TypeScript compilation configuration"; \
+      exit 1; \
+    fi && \
+    echo "✓ MCP compilation successful, build artifacts generated"
+
+# Clean up Web and MCP dev dependencies, keep only production dependencies
 RUN cd web && npm prune --production
+RUN cd mcp && npm prune --production
 
 # ============================================
-# Stage 3: 生产运行阶段
+# Stage 3: Production Runtime Stage
 # ============================================
 FROM node:20-alpine AS production
 
-# 安装运行时系统依赖（仅必需的）
+# Install runtime system dependencies (only essential ones)
 RUN apk update && apk add --no-cache \
     cairo \
     jpeg \
@@ -123,55 +132,55 @@ RUN apk update && apk add --no-cache \
 
 WORKDIR /app
 
-# 创建非 root 用户
+# Create non-root user
 RUN addgroup -g 1001 -S nodejs && \
     adduser -S nodejs -u 1001
 
-# 复制 MCP 构建产物和生产依赖
+# Copy MCP build artifacts and production dependencies
 COPY --from=web-builder --chown=nodejs:nodejs /app/mcp/node_modules ./mcp/node_modules
 COPY --from=web-builder --chown=nodejs:nodejs /app/mcp ./mcp
 
-# 复制 Web 构建产物和生产依赖
+# Copy Web build artifacts and production dependencies
 COPY --from=web-builder --chown=nodejs:nodejs /app/web/.next ./web/.next
 COPY --from=web-builder --chown=nodejs:nodejs /app/web/node_modules ./web/node_modules
 COPY --from=web-builder --chown=nodejs:nodejs /app/web/public ./web/public
 COPY --chown=nodejs:nodejs web/package*.json ./web/
 COPY --chown=nodejs:nodejs web/next.config.js ./web/
 
-# 复制 Supabase 依赖和代码
+# Copy Supabase dependencies and code
 COPY --from=dependencies --chown=nodejs:nodejs /app/supabase/node_modules ./supabase/node_modules
 COPY --chown=nodejs:nodejs supabase ./supabase
 
-# 复制其他必要文件
+# Copy other necessary files
 COPY --chown=nodejs:nodejs docker-start.sh ./
 COPY --chown=nodejs:nodejs .env* ./
 
-# 创建必要的目录
+# Create necessary directories
 RUN mkdir -p /app/logs /app/mcp/data && \
     chown -R nodejs:nodejs /app/logs /app/mcp/data
 
-# 设置权限
+# Set permissions
 RUN chmod +x /app/docker-start.sh
 
-# 设置生产环境变量
+# Set production environment variables
 ENV NODE_ENV=production \
     PORT=9010 \
     FRONTEND_PORT=9011 \
     TRANSPORT_TYPE=sse \
     NEXT_TELEMETRY_DISABLED=1
 
-# 暴露端口
+# Expose ports
 EXPOSE 9010 9011
 
-# 切换到非 root 用户
+# Switch to non-root user
 USER nodejs
 
-# 使用 tini 作为初始化进程（优雅处理信号）
+# Use tini as init process (graceful signal handling)
 ENTRYPOINT ["/sbin/tini", "--"]
 
-# 健康检查
+# Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
     CMD curl -f http://localhost:${FRONTEND_PORT}/ || exit 1
 
-# 启动命令
+# Startup command
 CMD ["/bin/sh", "/app/docker-start.sh"]

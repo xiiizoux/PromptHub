@@ -1,6 +1,6 @@
 /**
- * 提示词优化System角色模板常量
- * 所有分类共享的固定System模板
+ * Prompt optimization System role template constants
+ * Fixed System template shared by all categories
  */
 
 export const OPTIMIZATION_SYSTEM_TEMPLATE = `# Role: System
@@ -51,20 +51,20 @@ export const OPTIMIZATION_SYSTEM_TEMPLATE = `# Role: System
 - 不要与用户进行交互或询问更多信息`;
 
 /**
- * 获取优化System模板
+ * Get optimization System template
  */
 export function getOptimizationSystemTemplate(): string {
   return OPTIMIZATION_SYSTEM_TEMPLATE;
 }
 
 /**
- * System模板版本信息
+ * System template version information
  */
 export const SYSTEM_TEMPLATE_VERSION = '2.0.0';
 export const SYSTEM_TEMPLATE_LAST_UPDATED = '2025-01-04';
 
 /**
- * 验证System模板是否有效
+ * Validate if System template is valid
  */
 export function validateSystemTemplate(template?: string): boolean {
   const templateToCheck = template || OPTIMIZATION_SYSTEM_TEMPLATE;

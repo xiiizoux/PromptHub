@@ -1,14 +1,14 @@
 /**
- * Web服务专用的Supabase适配器
+ * Web service specific Supabase adapter
  * 
- * 这个文件为Next.js Web服务提供Supabase适配器功能，
- * 避免了跨目录导入导致的模块解析问题
+ * This file provides Supabase adapter functionality for Next.js Web service,
+ * avoiding module resolution issues caused by cross-directory imports
  */
 
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import * as crypto from 'crypto';
 
-// 基础类型定义
+// Basic type definitions
 export interface User {
   id: string;
   email: string;
@@ -29,25 +29,25 @@ export interface Prompt {
   name: string;
   description: string;
   category: string;
-  category_id?: string; // 分类ID字段
-  category_type?: 'chat' | 'image' | 'video'; // 添加category_type字段
+  category_id?: string; // Category ID field
+  category_type?: 'chat' | 'image' | 'video'; // Add category_type field
   tags: string[];
-  content: string | PromptContentJsonb;  // 内容字段，支持JSONB格式
+  content: string | PromptContentJsonb;  // Content field, supports JSONB format
   is_public: boolean;
   user_id: string;
-  version?: number; // 版本号，支持小数格式如1.0, 1.1, 2.0
+  version?: number; // Version number, supports decimal format like 1.0, 1.1, 2.0
   created_at: string;
   updated_at?: string;
   compatible_models?: string[];
   average_rating?: number;
   rating_count?: number;
-  rating?: number; // 为了兼容前端组件
+  rating?: number; // For frontend component compatibility
 
-  // 协作和权限字段
+  // Collaboration and permission fields
   allow_collaboration?: boolean;
   edit_permission?: 'owner_only' | 'collaborators' | 'public';
 
-  // 媒体相关字段
+  // Media related fields
   preview_asset_url?: string;
   parameters?: { media_files?: Array<{ url: string; [key: string]: unknown }> } & Record<string, unknown>;
 
@@ -84,7 +84,7 @@ export interface ApiKey {
   expires_at?: string;
 }
 
-// 分类类型定义
+// Category type definitions
 export type CategoryType = 'chat' | 'image' | 'video';
 
 export interface Category {
@@ -101,7 +101,7 @@ export interface Category {
   optimization_template?: OptimizationTemplateJsonb | string;
 }
 
-// JSONB 相关类型（复制自 MCP 服务）
+// JSONB related types (copied from MCP service)
 export interface PromptContentJsonb {
   type: 'context_engineering' | 'legacy_text' | 'simple_text';
   static_content?: string;
@@ -187,7 +187,7 @@ export class SupabaseAdapter {
     return 'supabase';
   }
 
-  // 基本提示词管理
+  // Basic prompt management
   async getCategories(): Promise<string[]> {
     console.log('=== SupabaseAdapter: 开始获取categories ===');
 
@@ -433,8 +433,8 @@ export class SupabaseAdapter {
           ...promptWithoutUsers,
           average_rating: ratingInfo.average,
           rating_count: ratingInfo.count,
-          rating: ratingInfo.average, // 为了兼容前端组件，同时提供rating字段
-          author: authorName, // 添加作者信息
+          rating: ratingInfo.average, // For frontend component compatibility, also provide rating field
+          author: authorName, // Add author information
         };
       });
 
@@ -514,7 +514,7 @@ export class SupabaseAdapter {
     }
   }
 
-  // 用户认证
+  // User authentication
   async signUp(email: string, password: string, displayName?: string): Promise<AuthResponse> {
     try {
       const { data: authData, error: authError } = await this.supabase.auth.signUp({
@@ -749,7 +749,7 @@ export class SupabaseAdapter {
         .from('users')
         .select('*')
         .eq('id', data.user.id)
-        .maybeSingle(); // 使用 maybeSingle() 而不是 single()
+        .maybeSingle(); // Use maybeSingle() instead of single()
 
       if (userError) {
         console.warn('获取用户额外信息时发生错误:', userError);
@@ -869,7 +869,7 @@ export class SupabaseAdapter {
       return {
         id: data.id,
         name: data.name,
-        key: apiKey, // 返回真实的API密钥（仅在创建时）
+        key: apiKey, // Return real API key (only when creating)
         user_id: userId,
         created_at: data.created_at,
         expires_at: data.expires_at,

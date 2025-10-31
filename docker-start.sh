@@ -1,144 +1,172 @@
 #!/bin/bash
-# docker-start.sh - PromptHub多功能管理脚本
-# 用法: 
-#   ./docker-start.sh            - 启动服务(默认)
-#   ./docker-start.sh start      - 启动服务
-#   ./docker-start.sh rebuild    - 重建并启动
-#   ./docker-start.sh diagnose   - 诊断问题
-#   ./docker-start.sh stop       - 停止服务
+# docker-start.sh - PromptHub Multi-Purpose Management Script
+# Usage:
+#   ./docker-start.sh            - Start services (default)
+#   ./docker-start.sh start      - Start services
+#   ./docker-start.sh rebuild    - Rebuild and start
+#   ./docker-start.sh diagnose   - Diagnose issues
+#   ./docker-start.sh stop       - Stop services
 
-# 全局变量
+# Global variables
 MCP_PORT=9010
 WEB_PORT=9011
 COMMAND=${1:-start}
 
-# 函数定义
+# Function definitions
 show_help() {
-    echo "PromptHub Docker 管理脚本"
-    echo "用法: $0 [命令]"
+    echo "PromptHub Docker Management Script"
+    echo "Usage: $0 [command]"
     echo ""
-    echo "命令:"
-    echo "  start      启动服务 (默认)"
-    echo "  rebuild    重建镜像并启动"
-    echo "  diagnose   诊断部署问题"
-    echo "  stop       停止服务"
-    echo "  help       显示此帮助"
+    echo "Commands:"
+    echo "  start      Start services (default)"
+    echo "  rebuild    Rebuild images and start"
+    echo "  diagnose   Diagnose deployment issues"
+    echo "  stop       Stop services"
+    echo "  help       Show this help"
     echo ""
-    echo "示例:"
-    echo "  $0           # 启动服务"
-    echo "  $0 rebuild   # 重建并启动"
-    echo "  $0 diagnose  # 诊断问题"
+    echo "Examples:"
+    echo "  $0           # Start services"
+    echo "  $0 rebuild   # Rebuild and start"
+    echo "  $0 diagnose  # Diagnose issues"
 }
 
 diagnose_deployment() {
-    echo "🔍 PromptHub Docker 部署诊断..."
+    echo "🔍 PromptHub Docker Deployment Diagnosis..."
     echo "=================================="
     
-    echo "1. 检查Docker容器状态:"
+    echo "1. Check Docker container status:"
     if command -v docker-compose &> /dev/null; then
         docker-compose ps
     else
-        echo "docker-compose 未安装"
+        echo "docker-compose is not installed"
         return 1
     fi
     
     echo ""
-    echo "2. 检查端口占用:"
-    netstat -tulpn | grep -E "(9010|9011)" || echo "没有发现9010/9011端口服务"
+    echo "2. Check port occupancy:"
+    netstat -tulpn | grep -E "(9010|9011)" || echo "No services found on ports 9010/9011"
     
     echo ""
-    echo "3. 检查最近的日志:"
-    echo "--- 容器日志 (最近30行) ---"
-    docker-compose logs --tail=30 prompthub || echo "无法获取日志"
+    echo "3. Check recent logs:"
+    echo "--- Container logs (last 30 lines) ---"
+    docker-compose logs --tail=30 prompthub || echo "Unable to get logs"
     
     echo ""
-    echo "4. 检查容器内部文件:"
-    echo "--- 检查MCP编译文件 ---"
-    docker-compose exec prompthub ls -la /app/mcp/dist/src/ 2>/dev/null || echo "无法访问MCP编译文件"
+    echo "4. Check container internal files:"
+    echo "--- Check MCP compiled files ---"
+    docker-compose exec prompthub ls -la /app/mcp/dist/src/ 2>/dev/null || echo "Unable to access MCP compiled files"
     
-    echo "--- 检查Web构建文件 ---"
-    docker-compose exec prompthub ls -la /app/web/.next/ 2>/dev/null || echo "无法访问Web构建文件"
+    echo "--- Check Web build files ---"
+    docker-compose exec prompthub ls -la /app/web/.next/ 2>/dev/null || echo "Unable to access Web build files"
     
     echo ""
-    echo "5. 测试服务连接:"
-    echo -n "MCP服务 (9010): "
-    curl -s -o /dev/null -w "%{http_code}\n" http://localhost:9010 2>/dev/null || echo "无法连接"
-    echo -n "Web服务 (9011): "
-    curl -s -o /dev/null -w "%{http_code}\n" http://localhost:9011 2>/dev/null || echo "无法连接"
+    echo "5. Test service connections:"
+    echo -n "MCP service (9010): "
+    curl -s -o /dev/null -w "%{http_code}\n" http://localhost:9010 2>/dev/null || echo "Unable to connect"
+    echo -n "Web service (9011): "
+    curl -s -o /dev/null -w "%{http_code}\n" http://localhost:9011 2>/dev/null || echo "Unable to connect"
     
     echo ""
     echo "=================================="
-    echo "诊断完成！"
+    echo "Diagnosis completed!"
     echo ""
-    echo "常见问题解决:"
-    echo "  - 如果服务未启动: $0 start"
-    echo "  - 如果有编译问题: $0 rebuild"
-    echo "  - 查看实时日志: docker-compose logs -f"
+    echo "Common issue resolution:"
+    echo "  - If services are not started: $0 start"
+    echo "  - If there are compilation issues: $0 rebuild"
+    echo "  - View real-time logs: docker-compose logs -f"
 }
 
 rebuild_deployment() {
-    echo "🔨 重建PromptHub Docker镜像..."
+    echo "🔨 Rebuilding PromptHub Docker images..."
     
-    # 检查 .env 文件
+    # Check for .env file
     if [ ! -f ".env" ]; then
-        echo "❌ 错误: 未找到 .env 文件"
-        echo "请确保在项目根目录下有 .env 文件"
+        echo "❌ Error: .env file not found"
+        echo "Please ensure .env file exists in the project root directory"
         return 1
     fi
     
-    echo "✓ 找到 .env 文件"
+    echo "✓ Found .env file"
     
-    # 加载 .env 文件
-    echo "加载环境变量..."
+    # Load .env file
+    echo "Loading environment variables..."
     set -a
     source .env
     set +a
     
-    # 验证必需的环境变量
-    echo "验证必需的环境变量..."
-    REQUIRED_VARS=(
-        "NEXT_PUBLIC_SUPABASE_URL"
-        "NEXT_PUBLIC_SUPABASE_ANON_KEY"
-        "SUPABASE_SERVICE_ROLE_KEY"
-        "SUPABASE_URL"
-    )
+    # Validate required environment variables
+    echo "Validating required environment variables..."
     
-    MISSING_VARS=()
-    for var in "${REQUIRED_VARS[@]}"; do
-        if [ -z "${!var}" ]; then
-            MISSING_VARS+=("$var")
-            echo "  ❌ $var: 未设置"
-        else
-            value="${!var}"
-            masked="${value:0:20}..."
-            echo "  ✓ $var: $masked"
-        fi
-    done
+    MISSING_VARS=""
+    MISSING_COUNT=0
     
-    if [ ${#MISSING_VARS[@]} -ne 0 ]; then
+    # Check NEXT_PUBLIC_SUPABASE_URL
+    if [ -z "${NEXT_PUBLIC_SUPABASE_URL}" ]; then
+        MISSING_VARS="$MISSING_VARS NEXT_PUBLIC_SUPABASE_URL"
+        MISSING_COUNT=$((MISSING_COUNT + 1))
+        echo "  ❌ NEXT_PUBLIC_SUPABASE_URL: Not set"
+    else
+        value="${NEXT_PUBLIC_SUPABASE_URL}"
+        masked="$(echo "$value" | cut -c1-20)..."
+        echo "  ✓ NEXT_PUBLIC_SUPABASE_URL: $masked"
+    fi
+    
+    # Check NEXT_PUBLIC_SUPABASE_ANON_KEY
+    if [ -z "${NEXT_PUBLIC_SUPABASE_ANON_KEY}" ]; then
+        MISSING_VARS="$MISSING_VARS NEXT_PUBLIC_SUPABASE_ANON_KEY"
+        MISSING_COUNT=$((MISSING_COUNT + 1))
+        echo "  ❌ NEXT_PUBLIC_SUPABASE_ANON_KEY: Not set"
+    else
+        value="${NEXT_PUBLIC_SUPABASE_ANON_KEY}"
+        masked="$(echo "$value" | cut -c1-20)..."
+        echo "  ✓ NEXT_PUBLIC_SUPABASE_ANON_KEY: $masked"
+    fi
+    
+    # Check SUPABASE_SERVICE_ROLE_KEY
+    if [ -z "${SUPABASE_SERVICE_ROLE_KEY}" ]; then
+        MISSING_VARS="$MISSING_VARS SUPABASE_SERVICE_ROLE_KEY"
+        MISSING_COUNT=$((MISSING_COUNT + 1))
+        echo "  ❌ SUPABASE_SERVICE_ROLE_KEY: Not set"
+    else
+        value="${SUPABASE_SERVICE_ROLE_KEY}"
+        masked="$(echo "$value" | cut -c1-20)..."
+        echo "  ✓ SUPABASE_SERVICE_ROLE_KEY: $masked"
+    fi
+    
+    # Check SUPABASE_URL
+    if [ -z "${SUPABASE_URL}" ]; then
+        MISSING_VARS="$MISSING_VARS SUPABASE_URL"
+        MISSING_COUNT=$((MISSING_COUNT + 1))
+        echo "  ❌ SUPABASE_URL: Not set"
+    else
+        value="${SUPABASE_URL}"
+        masked="$(echo "$value" | cut -c1-20)..."
+        echo "  ✓ SUPABASE_URL: $masked"
+    fi
+    
+    if [ $MISSING_COUNT -ne 0 ]; then
         echo ""
-        echo "❌ 错误: 以下必需的环境变量未设置:"
-        printf '  - %s\n' "${MISSING_VARS[@]}"
+        echo "❌ Error: The following required environment variables are not set:$MISSING_VARS"
         return 1
     fi
     
-    # 停止现有容器
+    # Stop existing containers
     echo ""
-    echo "停止现有容器..."
+    echo "Stopping existing containers..."
     docker-compose down
     
-    # 删除现有镜像（强制重建）
-    echo "删除现有镜像..."
-    docker rmi $(docker images "prompthub*" -q) 2>/dev/null || echo "没有找到现有镜像"
+    # Remove existing images (force rebuild)
+    echo "Removing existing images..."
+    docker rmi $(docker images "prompthub*" -q) 2>/dev/null || echo "No existing images found"
     
-    # 清理Docker构建缓存
-    echo "清理Docker构建缓存..."
+    # Clean Docker build cache
+    echo "Cleaning Docker build cache..."
     docker builder prune -f
     
-    # 重新构建镜像（显式传递构建参数）
+    # Rebuild images (explicitly pass build arguments)
     echo ""
     echo "=================================================="
-    echo "开始构建 Docker 镜像（传递环境变量）..."
+    echo "Starting Docker image build (passing environment variables)..."
     echo "=================================================="
     
     if docker-compose build --no-cache \
@@ -148,210 +176,210 @@ rebuild_deployment() {
         --build-arg SUPABASE_URL="$SUPABASE_URL"; then
         
         echo ""
-        echo "✅ 构建成功"
+        echo "✅ Build successful"
         
-        # 启动服务
-        echo "启动服务..."
+        # Start services
+        echo "Starting services..."
         docker-compose up -d
         
-        # 等待服务启动
-        echo "等待服务启动..."
+        # Wait for services to start
+        echo "Waiting for services to start..."
         sleep 10
         
-        # 显示状态
-        echo "服务状态:"
+        # Show status
+        echo "Service status:"
         docker-compose ps
         
         echo ""
         echo "=================================================="
-        echo "🎉 重建完成！"
+        echo "🎉 Rebuild completed!"
         echo "=================================================="
-        echo "前端访问: http://localhost:9011"
-        echo "后端API: http://localhost:9010"
+        echo "Frontend: http://localhost:9011"
+        echo "Backend API: http://localhost:9010"
         echo ""
-        echo "查看日志: docker-compose logs -f"
+        echo "View logs: docker-compose logs -f"
     else
         echo ""
-        echo "❌ 构建失败"
-        echo "请检查上面的错误信息"
+        echo "❌ Build failed"
+        echo "Please check the error messages above"
         return 1
     fi
 }
 
 stop_deployment() {
-    echo "停止PromptHub服务..."
+    echo "Stopping PromptHub services..."
     docker-compose down
-    echo "✅ 服务已停止"
+    echo "✅ Services stopped"
 }
 
 start_deployment() {
-    echo "启动PromptHub服务..."
+    echo "Starting PromptHub services..."
 
-# 加载用户的.env文件如果存在
+# Load user's .env file if it exists
 if [ -f /app/.env ]; then
-  echo "找到用户提供的.env文件，将进行加载"
+  echo "Found user-provided .env file, loading it"
   set -a
   . /app/.env
   set +a
 fi
 
-# 设置基本环境变量
+# Set basic environment variables
 export MCP_PORT=${MCP_PORT}
 export WEB_PORT=${WEB_PORT}
 export NODE_ENV=production
 
-# 为UI库设置足够的内存
+# Set sufficient memory for UI libraries
 export NODE_OPTIONS="--max-old-space-size=4096"
 
-# 确保关键环境变量存在，即使用户没有提供
-# 设置存储类型，默认使用supabase
+# Ensure critical environment variables exist, even if user hasn't provided them
+# Set storage type, default to supabase
 export STORAGE_TYPE=${STORAGE_TYPE:-supabase}
-# 注意: FORCE_LOCAL_STORAGE已经被移除，不再支持
+# Note: FORCE_LOCAL_STORAGE has been removed, no longer supported
 
-# 设置虚拟Supabase参数，避免连接错误
-# 只有当用户没有提供这些参数时才会使用这些虚拟值
+# Set virtual Supabase parameters to avoid connection errors
+# These virtual values will only be used if user hasn't provided these parameters
 export SUPABASE_URL=${SUPABASE_URL:-http://localhost:54321}
 export SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY:-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24ifQ.625_WdcF3KHqz5amU0x2X5WWHP-OEs_4qj0ssLNHzTs}
 export SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY:-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSJ9.vI9obAHOGyVVKa3pD--kJlyxp-Z2zV9UUMAhKpNLAcU}
 
-# 复制到Web服务的环境变量
+# Copy environment variables to Web service
 export NEXT_PUBLIC_SUPABASE_URL=${SUPABASE_URL}
 export NEXT_PUBLIC_SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}
 
-echo "环境变量设置完成"
+echo "Environment variables setup completed"
 
-# 创建数据目录
+# Create data directory
 mkdir -p /app/mcp/data
 
-# ====== 启动MCP服务 ======
-echo "正在启动MCP服务 (端口: $MCP_PORT)..."
+# ====== Start MCP Service ======
+echo "Starting MCP service (port: $MCP_PORT)..."
 
 cd /app/mcp
 
-# 确保所有上下文环境变量都设置好
-echo "初始化MCP服务环境变量..."
+# Ensure all context environment variables are set
+echo "Initializing MCP service environment variables..."
 export NODE_ENV=production
-# 使用之前设置的STORAGE_TYPE环境变量
-# 🔧 修复: 完全移除系统级API密钥设置，依赖数据库验证
-# MCP服务器现在将通过Supabase验证所有用户API密钥
-echo "ℹ️  MCP服务器将通过Supabase数据库验证用户API密钥"
-echo "📡 Supabase配置: ${SUPABASE_URL}"
+# Use STORAGE_TYPE environment variable set earlier
+# 🔧 Fix: Completely remove system-level API key settings, rely on database validation
+# MCP server will now validate all user API keys through Supabase
+echo "ℹ️  MCP server will validate user API keys through Supabase database"
+echo "📡 Supabase configuration: ${SUPABASE_URL}"
 
-# 确保不设置任何系统级API密钥，强制使用数据库验证
+# Ensure no system-level API keys are set, force database validation
 unset API_KEY
 unset SERVER_KEY
 
-# 启动MCP服务
-echo "启动MCP服务..."
+# Start MCP service
+echo "Starting MCP service..."
 
-# 检查编译后的文件是否存在
-if [ -f "/app/mcp/dist/src/index.js" ]; then
-  echo "使用编译后的文件启动MCP服务"
-  cd /app/mcp
-  nohup node dist/src/index.js > /app/logs/mcp.log 2>&1 &
-  MCP_PID=$!
-else
-  echo "编译文件不存在，使用tsx直接运行源码"
-  cd /app/mcp
-  nohup npx tsx src/index.ts > /app/logs/mcp.log 2>&1 &
-  MCP_PID=$!
+# Check if compiled files exist (compiled startup mode)
+if [ ! -f "/app/mcp/dist/src/index.js" ]; then
+  echo "❌ Error: MCP compiled file does not exist (dist/src/index.js)"
+  echo "   Please ensure MCP service was compiled correctly during Docker build"
+  echo "   Check MCP compilation step in Dockerfile"
+  exit 1
 fi
 
-echo "MCP进程ID: $MCP_PID"
-echo "$MCP_PID" > /app/logs/mcp.pid || echo "无法写入MCP PID文件"
+echo "Starting MCP service using compiled files"
+cd /app/mcp
+nohup node dist/src/index.js > /app/logs/mcp.log 2>&1 &
+MCP_PID=$!
 
-# 等待MCP服务启动
-echo "等待MCP服务启动..."
+echo "MCP process ID: $MCP_PID"
+echo "$MCP_PID" > /app/logs/mcp.pid || echo "Unable to write MCP PID file"
+
+# Wait for MCP service to start
+echo "Waiting for MCP service to start..."
 WAIT_COUNT=0
 MAX_WAIT=30
 while [ $WAIT_COUNT -lt $MAX_WAIT ]; do
   if curl -s http://localhost:$MCP_PORT/api/health > /dev/null 2>&1; then
-    echo "✅ MCP服务启动成功 (端口 $MCP_PORT)"
+    echo "✅ MCP service started successfully (port $MCP_PORT)"
     break
   fi
   WAIT_COUNT=$((WAIT_COUNT + 1))
   if [ $WAIT_COUNT -eq $MAX_WAIT ]; then
-    echo "❌ MCP服务启动超时"
-    echo "显示MCP日志:"
-    tail -n 50 /app/logs/mcp.log 2>/dev/null || echo "无法读取日志文件"
-    echo "检查进程状态:"
-    ps aux | grep -E "(node|tsx)" || echo "没有找到相关进程"
+    echo "❌ MCP service startup timeout"
+    echo "Showing MCP logs:"
+    tail -n 50 /app/logs/mcp.log 2>/dev/null || echo "Unable to read log file"
+    echo "Checking process status:"
+    ps aux | grep -E "(node|tsx)" || echo "No related processes found"
     exit 1
   fi
   sleep 2
 done
 
-# ====== 启动Web服务 ======
-echo "正在启动Web服务 (端口: $WEB_PORT)..."
+# ====== Start Web Service ======
+echo "Starting Web service (port: $WEB_PORT)..."
 
 cd /app/web
 
-# 检查构建文件是否存在
+# Check if build files exist
 if [ ! -d "/app/web/.next" ]; then
-  echo "❌ Web应用构建文件不存在"
-  echo "请确保在构建Docker镜像时Web应用已正确构建"
+  echo "❌ Web application build files do not exist"
+  echo "Please ensure Web application was built correctly during Docker image build"
   exit 1
 fi
 
-# 启动Next.js Web服务
-echo "启动Next.js Web服务..."
+# Start Next.js Web service
+echo "Starting Next.js Web service..."
 cd /app/web
 nohup npx next start -p $WEB_PORT > /app/logs/web.log 2>&1 &
 WEB_PID=$!
-echo "Web进程ID: $WEB_PID"
-echo "$WEB_PID" > /app/logs/web.pid || echo "无法写入Web PID文件"
+echo "Web process ID: $WEB_PID"
+echo "$WEB_PID" > /app/logs/web.pid || echo "Unable to write Web PID file"
 
-# 等待Web服务启动
-echo "等待Web服务启动..."
+# Wait for Web service to start
+echo "Waiting for Web service to start..."
 WAIT_COUNT=0
 MAX_WAIT=30
 while [ $WAIT_COUNT -lt $MAX_WAIT ]; do
   if curl -s http://localhost:$WEB_PORT > /dev/null 2>&1; then
-    echo "✅ Web服务启动成功 (端口 $WEB_PORT)"
+    echo "✅ Web service started successfully (port $WEB_PORT)"
     break
   fi
   WAIT_COUNT=$((WAIT_COUNT + 1))
   if [ $WAIT_COUNT -eq $MAX_WAIT ]; then
-    echo "❌ Web服务启动超时"
-    echo "显示Web日志:"
-    tail -n 50 /app/logs/web.log 2>/dev/null || echo "无法读取日志文件"
-    echo "检查进程状态:"
-    ps aux | grep -E "(node|next)" || echo "没有找到相关进程"
+    echo "❌ Web service startup timeout"
+    echo "Showing Web logs:"
+    tail -n 50 /app/logs/web.log 2>/dev/null || echo "Unable to read log file"
+    echo "Checking process status:"
+    ps aux | grep -E "(node|next)" || echo "No related processes found"
     exit 1
   fi
   sleep 2
 done
 
-# 显示成功信息
+# Show success message
 echo "===================================="
-echo "所有服务启动成功!"
-echo "MCP服务: http://localhost:$MCP_PORT"
-echo "Web服务: http://localhost:$WEB_PORT"
+echo "All services started successfully!"
+echo "MCP service: http://localhost:$MCP_PORT"
+echo "Web service: http://localhost:$WEB_PORT"
 echo "===================================="
 
-    # 保持容器运行
-    echo "服务已成功启动，监控日志..."
+    # Keep container running
+    echo "Services started successfully, monitoring logs..."
     tail -f /app/logs/mcp.log /app/logs/web.log
 
-    echo "一个或多个服务已停止，退出容器..."
+    echo "One or more services stopped, exiting container..."
     exit 1
 }
 
-# 检测运行环境
+# Detect runtime environment
 if [ -f /.dockerenv ]; then
-    # 在Docker容器内部运行 - 直接启动服务
+    # Running inside Docker container - start services directly
     start_deployment
 else
-    # 在Docker外部运行 - 执行用户命令
+    # Running outside Docker - execute user command
     case "$COMMAND" in
         "start")
-            echo "在Docker外部启动服务..."
+            echo "Starting services from outside Docker..."
             docker-compose up -d
-            echo "✅ 服务已启动"
-            echo "前端访问: http://localhost:9011"
-            echo "后端API: http://localhost:9010"
+            echo "✅ Services started"
+            echo "Frontend: http://localhost:9011"
+            echo "Backend API: http://localhost:9010"
             echo ""
-            echo "查看日志: docker-compose logs -f"
+            echo "View logs: docker-compose logs -f"
             ;;
         "rebuild")
             rebuild_deployment
@@ -366,8 +394,8 @@ else
             show_help
             ;;
         *)
-            echo "未知命令: $COMMAND"
-            echo "使用 '$0 help' 查看可用命令"
+            echo "Unknown command: $COMMAND"
+            echo "Use '$0 help' to view available commands"
             exit 1
             ;;
     esac

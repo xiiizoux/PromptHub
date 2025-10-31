@@ -81,7 +81,7 @@ export class BrowserCompatibilityManager {
    */
   detectBrowser(): BrowserInfo {
     if (typeof window === 'undefined') {
-      // 服务端环境
+      // Server-side environment
       return this.getServerSideBrowserInfo();
     }
 
@@ -92,7 +92,7 @@ export class BrowserCompatibilityManager {
     const tempBrowser: BrowserInfo = {
       ...browserInfo,
       features,
-      supported: false, // 临时值，稍后会被正确设置
+      supported: false, // Temporary value, will be set correctly later
     };
     
     this.currentBrowser = {
@@ -111,7 +111,7 @@ export class BrowserCompatibilityManager {
     if (!info) {return false;}
 
     const minVersion = this.config.minVersions[info.name.toLowerCase() as keyof typeof this.config.minVersions];
-    if (!minVersion) {return true;} // 未知浏览器默认支持
+    if (!minVersion) {return true;} // Unknown browsers default to supported
 
     return parseFloat(info.version) >= minVersion;
   }
@@ -129,7 +129,7 @@ export class BrowserCompatibilityManager {
 
     if (!features) {return this.config.polyfills;}
 
-    // 根据缺失的功能添加polyfills
+    // Add polyfills based on missing features
     if (!features.fetch) {
       polyfills.push('whatwg-fetch');
     }
@@ -541,5 +541,5 @@ export class BrowserCompatibilityManager {
   }
 }
 
-// 全局浏览器兼容性管理器实例
+// Global browser compatibility manager instance
 export const browserCompatibility = new BrowserCompatibilityManager();

@@ -1,9 +1,9 @@
 /**
- * 硬编码System模板 + 数据库User模板使用示例
- * 展示新方案的工作原理和优势
+ * Hardcoded System template + Database User template usage example
+ * Demonstrates how the new solution works and its advantages
  */
 
-// 1. 硬编码的System模板（在实际代码中从constants导入）
+// 1. Hardcoded System template (imported from constants in actual code)
 const OPTIMIZATION_SYSTEM_TEMPLATE = `# Role: System
 
 ## Profile
@@ -51,7 +51,7 @@ const OPTIMIZATION_SYSTEM_TEMPLATE = `# Role: System
 - 不要添加解释、示例或使用说明
 - 不要与用户进行交互或询问更多信息`;
 
-// 2. 模拟从数据库获取的User模板（不同分类）
+// 2. Simulate User templates fetched from database (different categories)
 const userTemplates = {
   '营销文案': `你是营销文案专家。请将用户的提示词优化为专业的营销文案创作指导，重点关注：
 
@@ -90,24 +90,24 @@ const userTemplates = {
 {requirements}`
 };
 
-// 3. 模拟优化处理函数
+// 3. Simulate optimization processing function
 function optimizePrompt(originalPrompt, category, requirements = '') {
-  console.log('🚀 开始优化提示词...\n');
+  console.log('🚀 Starting prompt optimization...\n');
   
-  // 获取System模板（硬编码，无需数据库查询）
+  // Get System template (hardcoded, no database query needed)
   const systemTemplate = OPTIMIZATION_SYSTEM_TEMPLATE;
-  console.log('✅ System模板已加载（硬编码，0ms）');
+  console.log('✅ System template loaded (hardcoded, 0ms)');
   
-  // 获取User模板（从数据库模拟获取）
-  const userTemplate = userTemplates[category] || '请优化以下提示词：{prompt}\n\n{requirements}';
-  console.log('✅ User模板已获取（数据库查询，~50ms）');
+  // Get User template (simulated from database)
+  const userTemplate = userTemplates[category] || 'Please optimize the following prompt: {prompt}\n\n{requirements}';
+  console.log('✅ User template fetched (database query, ~50ms)');
   
-  // 构建最终的User提示词
+  // Build final User prompt
   const finalUserPrompt = userTemplate
     .replace('{prompt}', originalPrompt)
     .replace('{requirements}', requirements);
   
-  // 构建OpenAI API消息结构
+  // Build OpenAI API message structure
   const messages = [
     {
       role: 'system',
@@ -119,10 +119,10 @@ function optimizePrompt(originalPrompt, category, requirements = '') {
     }
   ];
   
-  console.log('\n📋 优化请求结构:');
-  console.log(`System角色长度: ${systemTemplate.length} 字符`);
-  console.log(`User角色长度: ${finalUserPrompt.length} 字符`);
-  console.log(`总消息数: ${messages.length} 条`);
+  console.log('\n📋 Optimization request structure:');
+  console.log(`System role length: ${systemTemplate.length} characters`);
+  console.log(`User role length: ${finalUserPrompt.length} characters`);
+  console.log(`Total messages: ${messages.length}`);
   
   return {
     messages,
@@ -133,41 +133,41 @@ function optimizePrompt(originalPrompt, category, requirements = '') {
   };
 }
 
-// 4. 使用示例
-console.log('🎯 硬编码System模板 + 数据库User模板优化示例\n');
+// 4. Usage examples
+console.log('🎯 Hardcoded System template + Database User template optimization example\n');
 
-// 示例1：营销文案优化
+// Example 1: Marketing copy optimization
 const example1 = optimizePrompt(
-  '帮我写一个产品介绍',
+  'Help me write a product introduction',
   '营销文案',
-  '产品是智能手表，目标用户是年轻人'
+  'Product is a smartwatch, target users are young people'
 );
 
-console.log('\n📝 营销文案优化结果预览:');
-console.log('System角色: 提供统一的优化框架...');
-console.log('User角色: 营销文案专业指导 + 具体产品信息');
+console.log('\n📝 Marketing copy optimization result preview:');
+console.log('System role: Provides unified optimization framework...');
+console.log('User role: Marketing copy professional guidance + specific product information');
 
-// 示例2：技术文档优化  
+// Example 2: Technical documentation optimization  
 const example2 = optimizePrompt(
-  '写个API文档',
+  'Write API documentation',
   '技术文档',
-  'RESTful API，包含用户认证功能'
+  'RESTful API, includes user authentication functionality'
 );
 
-console.log('\n📝 技术文档优化结果预览:');
-console.log('System角色: 提供统一的优化框架...');
-console.log('User角色: 技术文档专业指导 + 具体API需求');
+console.log('\n📝 Technical documentation optimization result preview:');
+console.log('System role: Provides unified optimization framework...');
+console.log('User role: Technical documentation professional guidance + specific API requirements');
 
-// 5. 性能对比分析
-console.log('\n⚡ 性能优势分析:');
-console.log('传统方案: 需要查询System+User模板 (~100ms)');
-console.log('新方案: 只需查询User模板 (~50ms)');
-console.log('性能提升: 50% 响应时间减少');
-console.log('额外优势: 减少数据库负载，提高并发能力');
+// 5. Performance comparison analysis
+console.log('\n⚡ Performance advantages:');
+console.log('Traditional solution: Need to query System+User templates (~100ms)');
+console.log('New solution: Only need to query User template (~50ms)');
+console.log('Performance improvement: 50% response time reduction');
+console.log('Additional advantages: Reduced database load, improved concurrency');
 
-console.log('\n🔧 维护优势分析:');
-console.log('System模板: 代码版本控制，统一更新');
-console.log('User模板: 数据库灵活配置，分类独立');
-console.log('部署简化: System模板更新无需数据库操作');
+console.log('\n🔧 Maintenance advantages:');
+console.log('System template: Code version control, unified updates');
+console.log('User template: Database flexible configuration, category-independent');
+console.log('Deployment simplification: System template updates require no database operations');
 
-console.log('\n🎉 优化方案实施完成！');
+console.log('\n🎉 Optimization solution implementation completed!');
