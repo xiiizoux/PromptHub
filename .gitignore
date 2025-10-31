@@ -31,7 +31,6 @@ mcp/build/
 .env.development.local
 .env.test.local
 .env.production.local
-docker-compose.yml
 productconnect.txt
 product_ssh_key
 
