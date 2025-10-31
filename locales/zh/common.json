@@ -1,0 +1,12 @@
+{
+  "errors": {
+    "template_empty": "模板不能为空",
+    "content_empty": "内容不能为空",
+    "conversion_failed": "转换失败"
+  },
+  "messages": {
+    "template_loaded": "模板已加载",
+    "template_fetched": "模板已获取"
+  }
+}
+

@@ -295,8 +295,9 @@ unified_store({
     let template: OptimizationTemplate;
 
     if (templateResult) {
-      // 从数据库模板中提取System+User结构
-      const systemUserTemplate = extractSystemUserTemplate(templateResult.template);
+      // 从数据库模板中提取System+User结构（支持多语言）
+      const language = (params.language === 'en' || params.language === 'zh') ? params.language : 'zh';
+      const systemUserTemplate = extractSystemUserTemplate(templateResult.template, language);
       template = {
         system: systemUserTemplate.system,
         user: systemUserTemplate.user

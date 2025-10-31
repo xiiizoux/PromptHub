@@ -86,6 +86,11 @@ COPY --from=dependencies /app/mcp/node_modules ./mcp/node_modules
 # Copy source code
 COPY web ./web
 COPY mcp ./mcp
+# Copy shared constants and locales for multi-language support
+COPY shared ./shared
+COPY locales ./locales
+# Copy locales to mcp directory for build (MCP needs them in its rootDir)
+RUN cp -r locales mcp/locales && cp -r shared mcp/shared
 
 # Set build environment variables
 ENV NODE_ENV=production

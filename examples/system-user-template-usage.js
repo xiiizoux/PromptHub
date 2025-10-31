@@ -1,10 +1,11 @@
 /**
- * Hardcoded System template + Database User template usage example
- * Demonstrates how the new solution works and its advantages
+ * Multi-language System template + Database User template usage example
+ * Demonstrates how the new i18n solution works and its advantages
  */
 
-// 1. Hardcoded System template (imported from constants in actual code)
-const OPTIMIZATION_SYSTEM_TEMPLATE = `# Role: System
+// 1. Import localized templates (simulating what happens in the actual code)
+// In actual code, these would be imported from locales/zh/system-templates.ts and locales/en/system-templates.ts
+const OPTIMIZATION_SYSTEM_TEMPLATE_ZH = `# Role: System
 
 ## Profile
 - Author: PromptHub
@@ -51,8 +52,60 @@ const OPTIMIZATION_SYSTEM_TEMPLATE = `# Role: System
 - 不要添加解释、示例或使用说明
 - 不要与用户进行交互或询问更多信息`;
 
-// 2. Simulate User templates fetched from database (different categories)
-const userTemplates = {
+const OPTIMIZATION_SYSTEM_TEMPLATE_EN = `# Role: System
+
+## Profile
+- Author: PromptHub
+- Version: 2.0.0
+- Language: English
+- Description: Specialized in transforming vague, non-specific user prompts into precise, concrete, and targeted descriptions
+
+## Background
+- User prompts are often too broad and lack specific details
+- Vague prompts make it difficult to get accurate answers
+- Specific, precise descriptions can guide the AI to provide more targeted help
+
+## Task Understanding
+Your task is to convert vague user prompts into precise, specific descriptions. You are not executing the task in the prompt, but improving the prompt's precision and focus.
+
+## Skills
+1. Precision Enhancement
+   - Detail Mining: Identify abstract concepts and general statements that need to be specified
+   - Parameter Clarification: Add specific parameters and standards to ambiguous requirements
+   - Scope Definition: Clearly define the specific scope and boundaries of the task
+   - Goal Focusing: Refine broad goals into specific, actionable tasks
+
+2. Description Augmentation
+   - Quantifiable Standards: Provide measurable criteria for abstract requirements
+   - Example Supplementation: Add concrete examples to illustrate expectations
+   - Constraint Specification: Clearly state specific limitations and requirements
+   - Execution Guidance: Provide specific operational steps and methods
+
+## Rules
+1. Maintain Core Intent: Do not deviate from the user's original goal during the specification process
+2. Increase Specificity: Make the prompt more targeted and actionable
+3. Avoid Over-specification: Maintain appropriate flexibility while being specific
+4. Highlight Key Points: Ensure that key requirements are expressed precisely
+
+## Workflow
+1. Analyze abstract concepts and general statements in the original prompt
+2. Identify key elements and parameters that need to be specified
+3. Add specific definitions and requirements for each abstract concept
+4. Reorganize the expression to ensure the description is precise and targeted
+
+## Output Requirements
+- Directly output the refined user prompt text, ensuring it is specific and targeted
+- The output is the optimized prompt itself, not the execution of the task corresponding to the prompt
+- Do not add explanations, examples, or usage instructions
+- Do not interact with the user or ask for more information`;
+
+const systemTemplates = {
+  zh: OPTIMIZATION_SYSTEM_TEMPLATE_ZH,
+  en: OPTIMIZATION_SYSTEM_TEMPLATE_EN,
+};
+
+// 2. Simulate multi-language User templates from database
+const userTemplatesDB = {
   '营销文案': `你是营销文案专家。请将用户的提示词优化为专业的营销文案创作指导，重点关注：
 
 1. 目标受众定位：明确目标用户群体、年龄段、消费习惯
@@ -62,6 +115,18 @@ const userTemplates = {
 5. 文案结构优化：标题吸引、内容层次、节奏把控
 
 请优化以下营销文案提示词：{prompt}
+
+{requirements}`,
+
+  'marketing_copy': `You are a marketing copy expert. Please optimize the user's prompt into professional marketing copywriting guidance, focusing on:
+
+1. Target Audience Positioning: Define the target user group, age range, and consumption habits
+2. Product Selling Point Refinement: Highlight core features, differentiation advantages, and user value
+3. Emotional Triggers: Identify user pain points, needs scenarios, and emotional resonance
+4. Call to Action Design: Clarify conversion goals and guide user behavior
+5. Copy Structure Optimization: Attractive headlines, content hierarchy, and rhythm control
+
+Please optimize the following marketing copy prompt: {prompt}
 
 {requirements}`,
 
@@ -77,6 +142,18 @@ const userTemplates = {
 
 {requirements}`,
 
+  'technical_docs': `You are a technical documentation expert. Please optimize the user's prompt into professional technical documentation writing guidance, focusing on:
+
+1. Technical Accuracy: Ensure the accuracy of technical concepts, terminology, and processes
+2. Structural Clarity: Reasonable chapter division, hierarchical structure, and navigation design
+3. User-Friendliness: Consider the comprehension needs of readers with different technical levels
+4. Practicality-Oriented: Provide specific operational steps, code examples, and best practices
+5. Ease of Maintenance: Facilitate subsequent updates, version management, and collaborative editing
+
+Please optimize the following technical documentation prompt: {prompt}
+
+{requirements}`,
+
   '创意设计': `你是创意设计专家。请将用户的提示词优化为专业的设计创作指导，重点关注：
 
 1. 设计目标明确：品牌调性、视觉风格、传达信息
@@ -87,20 +164,32 @@ const userTemplates = {
 
 请优化以下创意设计提示词：{prompt}
 
+{requirements}`,
+
+  'creative_design': `You are a creative design expert. Please optimize the user's prompt into professional design creation guidance, focusing on:
+
+1. Clear Design Goals: Brand tone, visual style, and message to convey
+2. User Experience Consideration: Target users, usage scenarios, and interaction needs
+3. Visual Element Planning: Color schemes, font choices, and layout composition
+4. Technical Implementation Constraints: Output formats, size specifications, and platform adaptation
+5. Balance between Innovation and Practicality: Coordination of creative expression and functional requirements
+
+Please optimize the following creative design prompt: {prompt}
+
 {requirements}`
 };
 
-// 3. Simulate optimization processing function
-function optimizePrompt(originalPrompt, category, requirements = '') {
-  console.log('🚀 Starting prompt optimization...\n');
+// 3. Simulate optimization processing function with multi-language support
+function optimizePrompt(originalPrompt, categoryKey, lang = 'zh', requirements = '') {
+  console.log(`🚀 Starting prompt optimization for [${categoryKey}] in [${lang}]...\n`);
   
-  // Get System template (hardcoded, no database query needed)
-  const systemTemplate = OPTIMIZATION_SYSTEM_TEMPLATE;
-  console.log('✅ System template loaded (hardcoded, 0ms)');
+  // Get System template based on language
+  const systemTemplate = systemTemplates[lang];
+  console.log(`✅ System template for [${lang}] loaded (from centralized source)`);
   
   // Get User template (simulated from database)
-  const userTemplate = userTemplates[category] || 'Please optimize the following prompt: {prompt}\n\n{requirements}';
-  console.log('✅ User template fetched (database query, ~50ms)');
+  const userTemplate = userTemplatesDB[categoryKey] || 'Please optimize the following prompt: {prompt}\n\n{requirements}';
+  console.log(`✅ User template for [${categoryKey}] fetched`);
   
   // Build final User prompt
   const finalUserPrompt = userTemplate
@@ -128,37 +217,52 @@ function optimizePrompt(originalPrompt, category, requirements = '') {
     messages,
     systemTemplate,
     userTemplate: finalUserPrompt,
-    category,
+    category: categoryKey,
+    lang,
     originalPrompt
   };
 }
 
 // 4. Usage examples
-console.log('🎯 Hardcoded System template + Database User template optimization example\n');
+console.log('🎯 Multi-language prompt optimization example\n');
 
-// Example 1: Marketing copy optimization
+// Example 1: Marketing copy optimization in Chinese
 const example1 = optimizePrompt(
   'Help me write a product introduction',
   '营销文案',
+  'zh',
   'Product is a smartwatch, target users are young people'
 );
 
-console.log('\n📝 Marketing copy optimization result preview:');
-console.log('System role: Provides unified optimization framework...');
-console.log('User role: Marketing copy professional guidance + specific product information');
+console.log('\n📝 Chinese marketing copy optimization result preview:');
+console.log('System role: Provides unified Chinese optimization framework.');
+console.log('User role: Provides professional guidance for marketing copy in Chinese.');
 
-// Example 2: Technical documentation optimization  
+// Example 2: Technical documentation optimization in English
 const example2 = optimizePrompt(
   'Write API documentation',
-  '技术文档',
+  'technical_docs',
+  'en',
   'RESTful API, includes user authentication functionality'
 );
 
-console.log('\n📝 Technical documentation optimization result preview:');
-console.log('System role: Provides unified optimization framework...');
-console.log('User role: Technical documentation professional guidance + specific API requirements');
+console.log('\n📝 English technical documentation optimization result preview:');
+console.log('System role: Provides unified English optimization framework.');
+console.log('User role: Provides professional guidance for technical docs in English.');
 
-// 5. Performance comparison analysis
+// Example 3: Marketing copy in English
+const example3 = optimizePrompt(
+  'Create a product launch campaign',
+  'marketing_copy',
+  'en',
+  'New smartphone product, target market is tech enthusiasts'
+);
+
+console.log('\n📝 English marketing copy optimization result preview:');
+console.log('System role: Provides unified English optimization framework.');
+console.log('User role: Provides professional guidance for marketing copy in English.');
+
+// 5. Performance and maintenance advantages
 console.log('\n⚡ Performance advantages:');
 console.log('Traditional solution: Need to query System+User templates (~100ms)');
 console.log('New solution: Only need to query User template (~50ms)');
@@ -166,8 +270,12 @@ console.log('Performance improvement: 50% response time reduction');
 console.log('Additional advantages: Reduced database load, improved concurrency');
 
 console.log('\n🔧 Maintenance advantages:');
-console.log('System template: Code version control, unified updates');
-console.log('User template: Database flexible configuration, category-independent');
-console.log('Deployment simplification: System template updates require no database operations');
+console.log('System templates are now centralized and version-controlled in the codebase.');
+console.log('Adding a new language (e.g., French) only requires adding `fr/system-templates.ts` and relevant user templates.');
 
-console.log('\n🎉 Optimization solution implementation completed!');
+console.log('\n🌍 Multi-language advantages:');
+console.log('System templates: Centralized in locales/ directory, easy to add new languages');
+console.log('User templates: Can be stored per language in database (future enhancement)');
+console.log('Language switching: Simple parameter change, no database migration needed');
+
+console.log('\n🎉 Multi-language refactoring plan is ready!');

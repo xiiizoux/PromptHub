@@ -1,0 +1,12 @@
+{
+  "errors": {
+    "template_empty": "Template cannot be empty",
+    "content_empty": "Content cannot be empty",
+    "conversion_failed": "Conversion failed"
+  },
+  "messages": {
+    "template_loaded": "Template loaded",
+    "template_fetched": "Template fetched"
+  }
+}
+

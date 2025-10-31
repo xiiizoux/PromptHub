@@ -9,7 +9,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    const { prompt, requirements = '', context = '', manualCategory } = req.body;
+    const { prompt, requirements = '', context = '', manualCategory, lang = 'zh' } = req.body;
 
     if (!prompt || typeof prompt !== 'string') {
       return res.status(400).json({
@@ -59,8 +59,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       templateResult = await promptCategoryMatcher.getOptimizationTemplate(prompt);
     }
 
-    // 提取System+User模板结构
-    const systemUserTemplate = extractSystemUserTemplate(templateResult.template);
+    // 提取System+User模板结构（支持多语言）
+    // 从请求中获取语言参数，默认为中文
+    const language = (lang === 'en' || lang === 'zh') ? lang : 'zh';
+    const systemUserTemplate = extractSystemUserTemplate(templateResult.template, language);
     const requirementsText = requirements ? `\n\n特殊要求：${requirements}` : '';
     const contextText = context ? `\n\n使用场景：${context}` : '';
 

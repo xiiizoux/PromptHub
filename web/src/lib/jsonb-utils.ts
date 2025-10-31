@@ -3,7 +3,7 @@
  * 与 mcp/src/utils/jsonb-utils.ts 和 supabase/lib/jsonb-utils.ts 保持同步
  */
 
-import { getOptimizationSystemTemplate } from '@/constants/system-templates';
+import { getOptimizationSystemTemplate, type Language } from '@/constants/system-templates';
 
 // 共享类型定义
 export interface PromptContentJsonb {
@@ -119,10 +119,12 @@ export function extractContentFromJsonb(content: PromptContentJsonb | string): s
 /**
  * 从JSONB优化模板中提取System和User角色模板
  * System角色使用硬编码模板，User角色从数据库提取
+ * @param template The template data from database
+ * @param lang The desired language ('en', 'zh', etc.). Defaults to 'zh'.
  */
-export function extractSystemUserTemplate(template: any): SystemUserTemplate {
-  // System角色始终使用硬编码模板
-  const systemTemplate = getOptimizationSystemTemplate();
+export function extractSystemUserTemplate(template: any, lang: Language = 'zh'): SystemUserTemplate {
+  // System角色始终使用硬编码模板，根据语言获取对应模板
+  const systemTemplate = getOptimizationSystemTemplate(lang);
 
   if (!template) {
     return {
@@ -191,8 +193,8 @@ export function extractTemplateFromJsonb(template: OptimizationTemplateJsonb | s
   }
 
   if (!isJsonbTemplate(template)) {
-    // 尝试提取System+User结构
-    const systemUser = extractSystemUserTemplate(template);
+    // 尝试提取System+User结构（默认使用中文）
+    const systemUser = extractSystemUserTemplate(template, 'zh');
     if (systemUser.system) {
       return `${systemUser.system}\n\n${systemUser.user}`;
     }
