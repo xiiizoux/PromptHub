@@ -80,9 +80,3 @@ services:
     # 允许容器访问宿主网络服务（在 Debian/Linux 上常用）
     extra_hosts:
       - "host.docker.internal:host-gateway"
-    networks:
-      - prompthub-network
-
-networks:
-  prompthub-network:
-    driver: bridge
