@@ -21,6 +21,7 @@ import { useForm, Controller } from 'react-hook-form';
 import { toast } from 'react-hot-toast';
 
 import { useAuth } from '@/contexts/AuthContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 import SmartWritingAssistant from '@/components/SmartWritingAssistant';
 import PromptTypeSelector, { PromptType } from '@/components/prompts/edit/PromptTypeSelector';
 import CategorySelector from '@/components/prompts/edit/CategorySelector';
@@ -75,6 +76,7 @@ export default function PromptFormContainer({
   onUnsavedChanges,
 }: PromptFormContainerProps) {
   const { user } = useAuth();
+  const { t } = useLanguage();
   const _router = useRouter();
 
   // 根据类型获取默认参数模板
@@ -332,12 +334,7 @@ export default function PromptFormContainer({
 
   // 获取类型标签
   const getTypeLabel = (type: PromptType) => {
-    const typeLabels = {
-      chat: '对话',
-      image: '图像',
-      video: '视频',
-    };
-    return typeLabels[type];
+    return t(`promptForm.types.${type}`, { fallback: type });
   };
 
 
@@ -361,7 +358,7 @@ export default function PromptFormContainer({
       // 不自动设置第一个分类，避免混淆用户
       
       if (newType === 'image' || newType === 'video') {
-        toast.success(`切换到${getTypeLabel(newType)}生成模式`);
+        toast.success(t('promptForm.status.switchType', { type: getTypeLabel(newType), fallback: `切换到${getTypeLabel(newType)}生成模式` }));
       }
     }
   };
@@ -370,7 +367,7 @@ export default function PromptFormContainer({
   // 文件上传处理 - 支持多文件
   const handleFilesUpload = async (files: File[]) => {
     if (uploadedFiles.length + files.length > 4) {
-      toast.error('最多只能上传4个文件');
+      toast.error(t('promptForm.fileUpload.maxFiles', { fallback: '最多只能上传4个文件' }));
       return;
     }
 
@@ -383,7 +380,7 @@ export default function PromptFormContainer({
       const { data: { session } } = await supabase.auth.getSession();
 
       if (!session?.access_token) {
-        throw new Error('用户未登录，请先登录后再上传文件');
+        throw new Error(t('promptForm.fileUpload.authRequired', { fallback: '用户未登录，请先登录后再上传文件' }));
       }
 
       const uploadPromises = files.map(async (file) => {
@@ -399,12 +396,12 @@ export default function PromptFormContainer({
         });
 
         if (!response.ok) {
-          throw new Error(`文件 ${file.name} 上传失败`);
+          throw new Error(t('promptForm.fileUpload.fileUploadError', { fileName: file.name, fallback: `文件 ${file.name} 上传失败` }));
         }
 
         const result = await response.json();
         if (!result.success) {
-          throw new Error(result.error || `文件 ${file.name} 上传失败`);
+          throw new Error(result.error || t('promptForm.fileUpload.fileUploadError', { fileName: file.name, fallback: `文件 ${file.name} 上传失败` }));
         }
 
         return result.data.url;
@@ -429,10 +426,10 @@ export default function PromptFormContainer({
         setValue('preview_asset_url', uploadedUrls[0]);
       }
       
-      toast.success(`成功上传${files.length}个文件`);
-    } catch (error) {
-      console.error('文件上传错误:', error);
-      toast.error(error instanceof Error ? error.message : '文件上传失败');
+      toast.success(t('promptForm.fileUpload.uploadSuccess', { count: files.length, fallback: `成功上传${files.length}个文件` }));
+      } catch (error) {
+        console.error('文件上传错误:', error);
+        toast.error(error instanceof Error ? error.message : t('promptForm.fileUpload.uploadFailed', { fallback: '文件上传失败' }));
     } finally {
       setIsUploading(false);
       setUploadProgress(0);
@@ -531,23 +528,26 @@ export default function PromptFormContainer({
     const data = normalizeFormData(rawData);
     // 基础输入验证
     if (!data.name || typeof data.name !== 'string' || data.name.trim().length === 0) {
-      toast.error('提示词名称不能为空');
+      toast.error(t('promptForm.name.required', { fallback: '请输入提示词名称' }));
       return;
     }
     
     if (!data.content || typeof data.content !== 'string' || data.content.trim().length === 0) {
-      toast.error('提示词内容不能为空');
+      toast.error(t('promptForm.contentRequired', { fallback: '请输入提示词内容' }));
       return;
     }
     
     if (data.name.trim().length > 100) {
-      toast.error('提示词名称不能超过100个字符');
+      toast.error(t('promptForm.name.maxLength', { fallback: '提示词名称不能超过100个字符' }));
       return;
     }
 
     // 检查图片和视频类型是否上传了文件
     if ((currentType === 'image' || currentType === 'video') && uploadedFiles.length === 0) {
-      toast.error(`${getTypeLabel(currentType)}类型的提示词至少需要上传一个文件`);
+      const typeLabel = currentType === 'image' 
+        ? t('promptForm.types.image', { fallback: '图像' })
+        : t('promptForm.types.video', { fallback: '视频' });
+      toast.error(t('promptForm.fileUpload.fileRequired', { type: typeLabel, fallback: `${typeLabel}类型的提示词至少需要上传一个文件` }));
       return;
     }
 
@@ -653,7 +653,7 @@ export default function PromptFormContainer({
             >
               <div className="flex items-center gap-3">
                 <SparklesIcon className="h-6 w-6 text-neon-purple" />
-                <span className="text-white font-semibold">智能写作助手</span>
+                <span className="text-white font-semibold">{t('promptForm.smartWritingAssistant', { fallback: '智能写作助手' })}</span>
               </div>
               <ChevronLeftIcon 
                 className={`h-5 w-5 text-gray-400 transition-transform ${
@@ -730,12 +730,12 @@ export default function PromptFormContainer({
                   <div className="flex items-center justify-between mb-3">
                     <label htmlFor="content" className="flex items-center text-lg font-semibold text-gray-200">
                       <DocumentTextIcon className="h-6 w-6 text-neon-cyan mr-3" />
-                      提示词内容 *
-                      <span className="ml-2 text-sm font-normal text-gray-400">核心内容区域</span>
+                      {t('promptForm.contentLabel', { fallback: '提示词内容 *' })}
+                      <span className="ml-2 text-sm font-normal text-gray-400">{t('promptForm.contentHint', { fallback: '核心内容区域' })}</span>
                     </label>
 
                     <div className="text-sm text-gray-400">
-                      💡 使用右侧智能助手进行分析和优化
+                      {t('promptForm.aiAssistantHint', { fallback: '💡 使用右侧智能助手进行分析和优化' })}
                     </div>
                   </div>
                   
@@ -743,7 +743,7 @@ export default function PromptFormContainer({
                     <Controller
                       name="content"
                       control={control}
-                      rules={{ required: '请输入提示词内容' }}
+                      rules={{ required: t('promptForm.contentRequired', { fallback: '请输入提示词内容' }) }}
                       render={({ field }) => (
                         <textarea
                           id="content"
@@ -753,7 +753,7 @@ export default function PromptFormContainer({
                             detectVariables(e); // 然后执行自定义逻辑
                           }}
                           rows={12}
-                          placeholder="在这里编写您的提示词内容。您可以使用 {{变量名}} 来定义动态变量..."
+                          placeholder={t('promptForm.contentPlaceholder', { fallback: '在这里编写您的提示词内容。您可以使用 {{变量名}} 来定义动态变量...' })}
                           className="input-primary w-full font-mono text-sm resize-none"
                           disabled={isSubmitting}
                         />
@@ -761,7 +761,7 @@ export default function PromptFormContainer({
                     />
                     
                     <div className="absolute top-3 right-3 text-xs text-gray-500">
-                      使用 {'{{变量名}}'} 定义变量
+                      {t('promptForm.variableHint', { fallback: '使用 {{变量名}} 定义变量' })}
                     </div>
                   </div>
                   
@@ -782,7 +782,10 @@ export default function PromptFormContainer({
                     >
                       <label className="flex items-center text-base font-medium text-gray-200">
                         <PhotoIcon className="h-4 w-4 text-neon-purple mr-2" />
-                        {getTypeLabel(currentType) === '图像' ? '示例图片' : '示例视频'} ({uploadedFiles.length}/4)*
+                        {currentType === 'image' 
+                          ? t('promptForm.fileUpload.imageLabel', { fallback: '示例图片' })
+                          : t('promptForm.fileUpload.videoLabel', { fallback: '示例视频' })
+                        } {t('promptForm.fileUpload.count', { count: uploadedFiles.length, fallback: `(${uploadedFiles.length}/4)*` })}
                       </label>
 
                       {/* 媒体版本管理警告说明 - 增强版 */}
@@ -790,11 +793,18 @@ export default function PromptFormContainer({
                         <div className="flex items-start space-x-2">
                           <div className="text-yellow-400 text-lg">⚠️</div>
                           <div className="text-sm">
-                            <p className="text-yellow-400 font-medium mb-1">重要提示：媒体文件不支持版本管理</p>
+                            <p className="text-yellow-400 font-medium mb-1">{t('promptForm.fileUpload.mediaWarning.title', { fallback: '重要提示：媒体文件不支持版本管理' })}</p>
                             <p className="text-yellow-300/80">
-                              • 媒体文件不会保存到版本历史中<br/>
-                              • 版本回滚时将保持媒体内容的当前状态<br/>
-                              • 请谨慎删改媒体文件，删除后无法通过版本回滚恢复
+                              {t('promptForm.fileUpload.mediaWarning.items', { returnObjects: true, fallback: [
+                                '媒体文件不会保存到版本历史中',
+                                '版本回滚时将保持媒体内容的当前状态',
+                                '请谨慎删改媒体文件，删除后无法通过版本回滚恢复'
+                              ] }).map((item: string, idx: number) => (
+                                <React.Fragment key={idx}>
+                                  • {item}
+                                  {idx < 2 && <br/>}
+                                </React.Fragment>
+                              ))}
                             </p>
                           </div>
                         </div>
@@ -819,7 +829,7 @@ export default function PromptFormContainer({
                         {isUploading ? (
                           <div className="space-y-4">
                             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-neon-cyan mx-auto"></div>
-                            <p className="text-gray-400">正在上传文件...</p>
+                            <p className="text-gray-400">{t('promptForm.fileUpload.uploading', { fallback: '正在上传文件...' })}</p>
                             <div className="w-full bg-gray-700 rounded-full h-2">
                               <div
                                 className="bg-neon-cyan h-2 rounded-full transition-all duration-300"
@@ -838,7 +848,7 @@ export default function PromptFormContainer({
                                     {currentType === 'image' ? (
                                       <Image
                                         src={url}
-                                        alt={`预览 ${index + 1}`}
+                                        alt={t('promptForm.fileUpload.previewAlt', { index: index + 1, fallback: `预览 ${index + 1}` })}
                                         fill
                                         className="object-cover"
                                       />
@@ -863,7 +873,7 @@ export default function PromptFormContainer({
                                     type="button"
                                     onClick={() => removeFile(index)}
                                     className="absolute top-2 right-2 p-2 bg-red-500/80 hover:bg-red-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                                    title="删除文件"
+                                    title={t('promptForm.fileUpload.deleteFile', { fallback: '删除文件' })}
                                     disabled={isSubmitting}
                                   >
                                     <XMarkIcon className="h-4 w-4 text-white" />
@@ -881,7 +891,7 @@ export default function PromptFormContainer({
                                   className="px-4 py-2 bg-neon-cyan/20 border border-neon-cyan/30 rounded-lg text-neon-cyan hover:bg-neon-cyan/30 transition-colors"
                                   disabled={isSubmitting}
                                 >
-                                  添加更多文件
+                                  {t('promptForm.fileUpload.addMore', { fallback: '添加更多文件' })}
                                 </button>
                               </div>
                             )}
@@ -893,13 +903,13 @@ export default function PromptFormContainer({
                             </div>
                             <div>
                               <p className="text-gray-300 mb-2">
-                                拖拽文件到此处或点击上传{getTypeLabel(currentType)}
+                                {t('promptForm.fileUpload.uploadHint', { type: getTypeLabel(currentType), fallback: `拖拽文件到此处或点击上传${getTypeLabel(currentType)}` })}
                               </p>
                               <p className="text-sm text-gray-500">
-                                支持 {currentType === 'image' ? 'JPG, PNG, WebP, GIF' : 'MP4, WebM, MOV, AVI'} 格式
+                                {t(`promptForm.fileUpload.formats.${currentType}`, { fallback: currentType === 'image' ? '支持 JPG, PNG, WebP, GIF 格式' : '支持 MP4, WebM, MOV, AVI 格式' })}
                               </p>
                               <p className="text-sm text-gray-500">
-                                单个文件最大 {currentType === 'image' ? '10MB' : '100MB'}，最多上传 4 个文件
+                                {t(`promptForm.fileUpload.limits.${currentType}`, { fallback: currentType === 'image' ? '单个文件最大 10MB，最多上传 4 个文件' : '单个文件最大 100MB，最多上传 4 个文件' })}
                               </p>
                             </div>
                             <button
@@ -908,7 +918,7 @@ export default function PromptFormContainer({
                               className="px-6 py-3 bg-gradient-to-r from-neon-cyan to-neon-blue text-white rounded-lg font-medium hover:from-neon-cyan-dark hover:to-neon-blue-dark transition-all"
                               disabled={isSubmitting}
                             >
-                              选择{getTypeLabel(currentType)}文件
+                              {t('promptForm.fileUpload.selectFiles', { type: getTypeLabel(currentType), fallback: `选择${getTypeLabel(currentType)}文件` })}
                             </button>
                           </div>
                         )}
@@ -979,13 +989,13 @@ export default function PromptFormContainer({
                   <div className="space-y-2">
                     <label htmlFor="prompt-name" className="flex items-center text-sm font-medium text-gray-300 mb-3">
                       <SparklesIcon className="h-5 w-5 text-neon-cyan mr-2" />
-                      提示词名称 *
+                      {t('promptForm.name.label', { fallback: '提示词名称 *' })}
                     </label>
                     <input
                       id="prompt-name"
-                      {...register('name', { required: '请输入提示词名称' })}
+                      {...register('name', { required: t('promptForm.name.required', { fallback: '请输入提示词名称' }) })}
                       type="text"
-                      placeholder="为您的提示词起个响亮的名字"
+                      placeholder={t('promptForm.name.placeholder', { fallback: '为您的提示词起个响亮的名字' })}
                       className="input-primary w-full"
                       disabled={isSubmitting}
                     />
@@ -998,7 +1008,7 @@ export default function PromptFormContainer({
                   <div className="space-y-2">
                     <label htmlFor="author" className="flex items-center text-sm font-medium text-gray-300 mb-3">
                       <UserIcon className="h-5 w-5 text-neon-purple mr-2" />
-                      作者
+                      {t('promptForm.author.label', { fallback: '作者' })}
                     </label>
                     <input
                       id="author"
@@ -1007,10 +1017,10 @@ export default function PromptFormContainer({
                       className="input-primary w-full bg-gray-800 text-gray-400 cursor-not-allowed"
                       disabled={true}
                       readOnly
-                      title={mode === 'create' ? '创建提示词时，作者自动设置为当前登录用户' : '创作者不可更改'}
+                      title={mode === 'create' ? t('promptForm.author.createHint', { fallback: '创建提示词时，作者自动设置为当前登录用户' }) : t('promptForm.author.editHint', { fallback: '创作者不可更改' })}
                     />
                     <p className="text-xs text-gray-500">
-                      {mode === 'create' ? '创建提示词时，作者自动设置为当前登录用户' : '创作者不可更改'}
+                      {mode === 'create' ? t('promptForm.author.createHint', { fallback: '创建提示词时，作者自动设置为当前登录用户' }) : t('promptForm.author.editHint', { fallback: '创作者不可更改' })}
                     </p>
                   </div>
                 </motion.div>
@@ -1027,7 +1037,7 @@ export default function PromptFormContainer({
                     <Controller
                       name="category"
                       control={control}
-                      rules={{ required: '请选择分类' }}
+                      rules={{ required: t('promptForm.category.required', { fallback: '请选择分类' }) }}
                       render={({ field }) => (
                         <CategorySelector
                           promptType={currentType}
@@ -1049,7 +1059,7 @@ export default function PromptFormContainer({
                   <div className="space-y-2">
                     <label htmlFor="version" className="flex items-center text-sm font-medium text-gray-300 mb-3">
                       <CogIcon className="h-5 w-5 text-neon-purple mr-2" />
-                      版本
+                      {t('promptForm.version.label', { fallback: '版本' })}
                     </label>
                     <input
                       id="version"
@@ -1070,13 +1080,13 @@ export default function PromptFormContainer({
                 >
                   <label htmlFor="description" className="flex items-center text-sm font-medium text-gray-300 mb-3">
                     <DocumentTextIcon className="h-5 w-5 text-neon-cyan mr-2" />
-                    描述 *
+                    {t('promptForm.description.label', { fallback: '描述 *' })}
                   </label>
                   <textarea
                     id="description"
-                    {...register('description', { required: '请输入描述' })}
+                    {...register('description', { required: t('promptForm.description.required', { fallback: '请输入描述' }) })}
                     rows={3}
-                    placeholder="简要描述您的提示词的用途和特点..."
+                    placeholder={t('promptForm.description.placeholder', { fallback: '简要描述您的提示词的用途和特点...' })}
                     className="input-primary w-full resize-none"
                     disabled={isSubmitting}
                   />
@@ -1094,7 +1104,7 @@ export default function PromptFormContainer({
                 >
                   <label className="flex items-center text-sm font-medium text-gray-300">
                     <TagIcon className="h-5 w-5 text-neon-purple mr-2" />
-                    输入变量
+                    {t('promptForm.variables.label', { fallback: '输入变量' })}
                   </label>
                   
                   <div className="flex gap-2">
@@ -1102,7 +1112,7 @@ export default function PromptFormContainer({
                       type="text"
                       value={variableInput}
                       onChange={(e) => setVariableInput(e.target.value)}
-                      placeholder="添加新变量..."
+                      placeholder={t('promptForm.variables.addPlaceholder', { fallback: '添加新变量...' })}
                       className="input-primary flex-1"
                       onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addVariable())}
                       disabled={isSubmitting}
@@ -1160,7 +1170,7 @@ export default function PromptFormContainer({
                 >
                   <label className="flex items-center text-sm font-medium text-gray-300">
                     <TagIcon className="h-5 w-5 text-neon-pink mr-2" />
-                    标签
+                    {t('promptForm.tags.label', { fallback: '标签' })}
                   </label>
                   
                   <div className="flex gap-2">
@@ -1168,7 +1178,7 @@ export default function PromptFormContainer({
                       type="text"
                       value={tagInput}
                       onChange={(e) => setTagInput(e.target.value)}
-                      placeholder="添加新标签..."
+                      placeholder={t('promptForm.tags.addPlaceholder', { fallback: '添加新标签...' })}
                       className="input-primary flex-1"
                       onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addTag())}
                       disabled={isSubmitting}
@@ -1226,18 +1236,18 @@ export default function PromptFormContainer({
                 >
                   <label className="flex items-center text-sm font-medium text-gray-300">
                     <CpuChipIcon className="h-5 w-5 text-neon-cyan mr-2" />
-                    兼容模型
+                    {t('promptForm.models.label', { fallback: '兼容模型' })}
                   </label>
                   
                   <ModelSelector
                     selectedModels={watch('compatible_models') || []}
                     onChange={handleModelChange}
                     categoryType={currentType}
-                    placeholder="选择或添加兼容的AI模型..."
+                    placeholder={t('promptForm.models.selectPlaceholder', { fallback: t('promptForm.models.placeholder', { fallback: '选择或添加兼容的AI模型...' }) })}
                   />
                   
                   <p className="text-xs text-gray-500">
-                    选择此提示词兼容的AI模型类型，支持文本、图像、音频、视频等多种模型
+                    {t('promptForm.models.description', { fallback: t('promptForm.models.hint', { fallback: '选择此提示词兼容的AI模型类型，支持文本、图像、音频、视频等多种模型' }) })}
                   </p>
                 </motion.div>
 
@@ -1250,7 +1260,7 @@ export default function PromptFormContainer({
                 >
                   <label className="flex items-center text-sm font-medium text-gray-300">
                     <InformationCircleIcon className="h-5 w-5 text-neon-purple mr-2" />
-                    访问权限
+                    {t('promptForm.permissions.label', { fallback: '访问权限' })}
                   </label>
                   
                   {/* 权限选择器 */}

@@ -1168,5 +1168,312 @@
       "rules": "Applicable Rules",
       "insights": "Learning Insights"
     }
+  },
+  "home": {
+    "hero": {
+      "badge": "The Future of AI Prompt Management Has Arrived",
+      "title": "Prompt Hub",
+      "subtitle": "Unlock the Infinite Potential of AI",
+      "description": "Explore the next-generation AI prompt management platform. Create, optimize, and share your prompts, making AI creation simpler and more efficient than ever before.",
+      "explore": "Start Exploring",
+      "create": "Create Prompt",
+      "scroll": "Scroll Down"
+    },
+    "stats": {
+      "activeUsers": "Active Users",
+      "promptsCount": "Prompts",
+      "efficiency": "Average Efficiency Gain"
+    },
+    "features": {
+      "title": "Powerful Features",
+      "subtitle": "We provide you with the most advanced toolset to make AI prompt management simple and powerful",
+      "smartManagement": {
+        "title": "Smart Prompt Management",
+        "description": "Use version control and intelligent categorization to keep your prompts in optimal condition"
+      },
+      "templateSystem": {
+        "title": "Innovative Template System",
+        "description": "Dynamic variables and templates allow your prompts to adapt to various scenarios"
+      },
+      "optimization": {
+        "title": "Intelligent Analysis & Optimization",
+        "description": "AI-driven prompt analysis and optimization that automatically improves your prompt effectiveness and quality"
+      },
+      "contextEngineering": {
+        "title": "Context Engineering",
+        "description": "Advanced context engineering techniques to build intelligent multi-turn conversations and complex task execution chains"
+      },
+      "mcpIntegration": {
+        "title": "MCP Protocol Integration",
+        "description": "Based on Model Context Protocol, enabling seamless connections and intelligent collaboration of AI tools"
+      },
+      "learnMore": "Learn More"
+    },
+    "featuredPrompts": {
+      "title": "Featured Prompts",
+      "subtitle": "Discover the most popular AI prompts in the community",
+      "viewAll": "View All",
+      "noPrompts": "No prompts available",
+      "goToPlaza": "Go to Prompts Plaza"
+    },
+    "cta": {
+      "title": "Ready to Revolutionize Your AI Workflow?",
+      "description": "Join thousands of creators using Prompt Hub to enhance your AI creation efficiency",
+      "startFree": "Start Free Now"
+    }
+  },
+  "createPrompt": {
+    "title": "Create Prompt",
+    "subtitle": "Unlock the infinite potential of AI and build your exclusive intelligent prompts",
+    "submitButton": "Create Prompt",
+    "loadingUserInfo": "Loading user information...",
+    "unsavedWarning": "Your prompt content has not been saved. Are you sure you want to leave this page?",
+    "permissionMessage": "You are the creator of this prompt",
+    "errors": {
+      "categoriesFailed": "Failed to fetch categories",
+      "authError": "User authentication status abnormal, please login again",
+      "createFailed": "Failed to create prompt, please try again later",
+      "networkError": "Network connection issue, please check network status and retry",
+      "timeout": "Request timeout, network may be slow, please try again later",
+      "authExpired": "Login status expired, please login again",
+      "permissionDenied": "Insufficient permissions, please contact administrator",
+      "serverError": "Server temporarily unavailable, please try again later",
+      "invalidParams": "Please check if input content is correct"
+    },
+    "success": {
+      "created": "Prompt created successfully! Redirecting...",
+      "redirecting": "Redirecting to new prompt page..."
+    },
+    "retry": "Retry?"
+  },
+  "editPrompt": {
+    "title": "Edit Prompt",
+    "traditionalMode": {
+      "title": "Edit Prompt - Traditional Mode",
+      "subtitle": "Edit your prompt using a simple form"
+    },
+    "contextEngineeringMode": {
+      "title": "Context Engineering Mode - Smart Editing",
+      "subtitle": "Traditional Mode - Simple Editing"
+    },
+    "submitButton": "Update Prompt",
+    "unsavedWarning": "Your prompt modifications have not been saved. Are you sure you want to leave this page?",
+    "backToDetails": "Back to Prompt Details",
+    "editMode": "Edit Mode:",
+    "traditionalEdit": "Traditional Edit",
+    "contextEngineering": "Context Engineering",
+    "errors": {
+      "noPermission": "You do not have permission to edit this prompt",
+      "updateFailed": "Update failed",
+      "categoriesFailed": "Failed to fetch categories"
+    },
+    "success": {
+      "updated": "Prompt updated successfully!"
+    },
+    "permissionDenied": {
+      "title": "Access Denied",
+      "instructions": {
+        "title": "Edit Permission Instructions:",
+        "owner": "You can edit prompts you created",
+        "admin": "Administrators can edit all prompts",
+        "contributor": "Contributors can edit public prompts",
+        "others": "Other users cannot edit prompts created by others"
+      },
+      "actions": {
+        "viewDetails": "View Prompt Details",
+        "browseOthers": "Browse Other Prompts"
+      },
+      "autoRedirect": "Will automatically redirect to prompt details page in 3 seconds..."
+    }
+  },
+  "promptForm": {
+    "title": "Prompt Content",
+    "contentLabel": "Prompt Content *",
+    "contentHint": "Core content area",
+    "aiAssistantHint": "💡 Use the smart assistant on the right for analysis and optimization",
+    "contentPlaceholder": "Write your prompt content here. You can use {{variable_name}} to define dynamic variables...",
+    "variableHint": "Use {{variable_name}} to define variables",
+    "contentRequired": "Please enter prompt content",
+    "smartWritingAssistant": "Smart Writing Assistant",
+    "name": {
+      "label": "Prompt Name *",
+      "placeholder": "Give your prompt a catchy name",
+      "required": "Please enter prompt name",
+      "maxLength": "Prompt name cannot exceed 100 characters"
+    },
+    "author": {
+      "label": "Author",
+      "createHint": "When creating a prompt, the author is automatically set to the current logged-in user",
+      "editHint": "Creator cannot be changed"
+    },
+    "category": {
+      "label": "Category",
+      "required": "Please select a category"
+    },
+    "version": {
+      "label": "Version"
+    },
+    "description": {
+      "label": "Description *",
+      "placeholder": "Briefly describe your prompt's purpose and features...",
+      "required": "Please enter a description"
+    },
+    "variables": {
+      "label": "Input Variables",
+      "addPlaceholder": "Add new variable..."
+    },
+    "tags": {
+      "label": "Tags",
+      "addPlaceholder": "Add new tag..."
+    },
+    "models": {
+      "label": "Compatible Models",
+      "placeholder": "Select or add compatible AI models...",
+      "hint": "Select the AI model types compatible with this prompt, supporting text, image, audio, video, and other model types"
+    },
+    "permissions": {
+      "label": "Access Permissions"
+    },
+    "collaborators": {
+      "label": "Collaborator Settings",
+      "hint": "Enter collaborator usernames separated by commas. These users will receive edit permissions.",
+      "placeholder": "Example: user1, user2, user3"
+    },
+    "fileUpload": {
+      "imageLabel": "Example Images",
+      "videoLabel": "Example Videos",
+      "count": "({count}/4)*",
+      "mediaWarning": {
+        "title": "Important Notice: Media files do not support version management",
+        "items": [
+          "Media files will not be saved to version history",
+          "Media content will remain in current state when reverting versions",
+          "Please be careful when deleting media files, deleted files cannot be restored through version revert"
+        ]
+      },
+      "uploading": "Uploading files...",
+      "addMore": "Add more files",
+      "uploadHint": "Drag and drop files here or click to upload {type}",
+      "formats": {
+        "image": "Supports JPG, PNG, WebP, GIF formats",
+        "video": "Supports MP4, WebM, MOV, AVI formats"
+      },
+      "limits": {
+        "image": "Max 10MB per file, up to 4 files",
+        "video": "Max 100MB per file, up to 4 files"
+      },
+      "selectFiles": "Select {type} files",
+      "maxFiles": "Maximum 4 files allowed",
+      "uploadSuccess": "Successfully uploaded {count} files",
+      "uploadFailed": "File upload failed",
+      "authRequired": "User not logged in, please login before uploading files",
+      "fileRequired": "Prompt of type {type} requires at least one file upload"
+    },
+    "parameters": {
+      "title": "Generation Parameters",
+      "imageType": "Image Type",
+      "videoType": "Video Type"
+    },
+    "types": {
+      "chat": "Chat",
+      "image": "Image",
+      "video": "Video"
+    },
+    "status": {
+      "unsavedChanges": "⚠ Unsaved changes",
+      "saveSuccess": "✓ Prompt successfully updated!",
+      "creating": "Creating...",
+      "updating": "Updating...",
+      "switchType": "Switch to {type} generation mode"
+    },
+    "buttons": {
+      "cancel": "Cancel",
+      "submit": "Submit"
+    }
+  },
+  "contextualEditor": {
+    "title": "Edit Prompt",
+    "enableCE": "Enable Context Engineering",
+    "enabled": "Enabled",
+    "cancel": "Cancel",
+    "saving": "Saving...",
+    "save": "Save Prompt",
+    "unsavedChanges": "You have unsaved changes",
+    "tabs": {
+      "static": "Static Content",
+      "dynamic": "Dynamic Context",
+      "variables": "Variables",
+      "settings": "Settings",
+      "preview": "Preview"
+    },
+    "staticContent": {
+      "title": "Static Content",
+      "charCount": "Character count: {count}",
+      "variablesCount": "Variables: {count}",
+      "placeholder": "Enter your prompt content...\n\nUse {{variable_name}} to define replaceable variables\nExample: Please help me {{task}}, style requirement {{style}}.",
+      "detectedVariables": "Detected variables:",
+      "required": "Static content cannot be empty"
+    },
+    "dynamicContext": {
+      "requireCE": "Context Engineering required",
+      "hint": "Please enable Context Engineering mode first to use advanced features",
+      "title": "Dynamic Context Configuration",
+      "rules": {
+        "title": "Adaptation Rules",
+        "add": "Add Rule",
+        "condition": "Condition",
+        "conditionPlaceholder": "Example: user.style === 'formal'",
+        "action": "Action",
+        "actionPlaceholder": "Example: append('Please use formal language')",
+        "remove": "Remove Rule",
+        "empty": "No adaptation rules yet, click button above to add",
+        "required": "Recommended to add at least one adaptation rule when Context Engineering is enabled"
+      },
+      "examples": {
+        "title": "Example Pool",
+        "add": "Add Example",
+        "descriptionPlaceholder": "Example description",
+        "input": "Input",
+        "output": "Output",
+        "remove": "Remove Example",
+        "empty": "No examples yet, click button above to add"
+      }
+    },
+    "variables": {
+      "title": "Input Variable Management",
+      "remove": "Remove",
+      "hint": "Use {{variable_name}} in static content to define variables",
+      "addPlaceholder": "Manually add variable name",
+      "add": "Add"
+    },
+    "settings": {
+      "title": "Prompt Settings",
+      "basic": {
+        "title": "Basic Settings",
+        "public": "Public Access",
+        "version": "Version Number"
+      },
+      "tags": {
+        "title": "Tags",
+        "placeholder": "Enter tag and press Enter to add"
+      }
+    },
+    "preview": {
+      "title": "Live Preview",
+      "content": {
+        "title": "Content Preview",
+        "empty": "No content yet"
+      },
+      "variables": {
+        "title": "Variable List"
+      },
+      "ce": {
+        "title": "Context Engineering Configuration",
+        "rules": "Adaptation Rules",
+        "rulesCount": "{count} rules",
+        "examples": "Example Pool",
+        "examplesCount": "{count} examples"
+      }
+    }
   }
 }

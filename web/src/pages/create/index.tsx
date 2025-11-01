@@ -3,6 +3,7 @@ import { useRouter } from 'next/router';
 import { toast } from 'react-hot-toast';
 
 import { useAuth, withAuth } from '@/contexts/AuthContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { createPrompt, getCategories, getTags } from '@/lib/api';
 import PromptFormContainer, { PromptFormData } from '@/components/prompts/PromptFormContainer';
 import { useBeforeUnload } from '@/hooks/useBeforeUnload';
@@ -11,6 +12,7 @@ import { UnsavedChangesDialog } from '@/components/ConfirmDialog';
 function CreatePromptPage() {
   const router = useRouter();
   const { user, isLoading } = useAuth();
+  const { t } = useLanguage();
   
   // 数据加载状态
   const [categoriesLoading, setCategoriesLoading] = useState(false);
@@ -28,7 +30,7 @@ function CreatePromptPage() {
   // 浏览器离开页面警告 - 使用自定义对话框
   const { showConfirmDialog, onConfirmLeave, onCancelLeave, forceNavigate } = useBeforeUnload(
     hasUnsavedChanges, 
-    '您的提示词内容尚未保存，确定要离开此页面吗？',
+    t('createPrompt.unsavedWarning', { fallback: '您的提示词内容尚未保存，确定要离开此页面吗？' }),
     true, // 使用自定义对话框
   );
   
@@ -36,7 +38,7 @@ function CreatePromptPage() {
   const permissionCheck = user ? {
     canEdit: true,
     reason: 'owner' as const,
-    message: '您是此提示词的创建者',
+    message: t('createPrompt.permissionMessage', { fallback: '您是此提示词的创建者' }),
   } : null;
 
   // 用户状态监听和检查
@@ -88,7 +90,7 @@ function CreatePromptPage() {
         setCategoriesByType(categoriesByTypeData);
 
       } catch (err) {
-        toast.error('获取分类列表失败');
+        toast.error(t('createPrompt.errors.categoriesFailed', { fallback: '获取分类列表失败' }));
         console.error('获取分类失败:', err);
         // 错误时设置空数组
         setCategoriesByType({ chat: [], image: [], video: [] });
@@ -105,7 +107,7 @@ function CreatePromptPage() {
   const handleSubmit = async (data: PromptFormData) => {
     // 认证状态检查
     if (!user || !userReady) {
-      toast.error('用户认证状态异常，请重新登录');
+      toast.error(t('createPrompt.errors.authError', { fallback: '用户认证状态异常，请重新登录' }));
       const currentUrl = window.location.pathname + window.location.search;
       router.replace(`/auth/login?returnUrl=${encodeURIComponent(currentUrl)}`);
       return;
@@ -120,7 +122,7 @@ function CreatePromptPage() {
         ...data,
         version: Number(data.version) || 1.0,
         // 创建提示词时，作者始终是当前登录用户
-        author: user.display_name || user.username || user.email?.split('@')[0] || '未知用户',
+        author: user.display_name || user.username || user.email?.split('@')[0] || t('createPrompt.defaultAuthor', { fallback: '未知用户' }),
         input_variables: data.input_variables.filter(Boolean), // 过滤空值
         tags: data.tags.filter(Boolean), // 过滤空值
         compatible_models: data.compatible_models.filter(Boolean), // 过滤空值
@@ -132,7 +134,7 @@ function CreatePromptPage() {
       const createPromptWithTimeout = () => {
         return new Promise<any>((resolve, reject) => {
           const timeoutId = setTimeout(() => {
-            reject(new Error('创建提示词总体超时(2分钟)，请检查网络连接并重试'));
+            reject(new Error(t('createPrompt.errors.timeoutExceeded', { fallback: '创建提示词总体超时(2分钟)，请检查网络连接并重试' })));
           }, 120000); // 2分钟总超时时间
           
           createPrompt(promptData as any)
@@ -155,7 +157,7 @@ function CreatePromptPage() {
       setHasUnsavedChanges(false);
       
       // 显示成功提示
-      toast.success('提示词创建成功！正在跳转...', {
+      toast.success(t('createPrompt.success.created', { fallback: '提示词创建成功！正在跳转...' }), {
         duration: 3000,
         position: 'top-center',
       });
@@ -167,16 +169,16 @@ function CreatePromptPage() {
       console.error('错误详情:', error);
       
       // 提供用户友好的错误提示
-      let errorMessage = '创建提示词失败，请稍后重试';
+      let errorMessage = t('createPrompt.errors.createFailed', { fallback: '创建提示词失败，请稍后重试' });
       let canRetry = true;
       
       if (error instanceof Error && error.message) {
         if (error.message.includes('网络') || error.message.includes('Network')) {
-          errorMessage = '网络连接问题，请检查网络状态并重试';
+          errorMessage = t('createPrompt.errors.networkError', { fallback: '网络连接问题，请检查网络状态并重试' });
         } else if (error.message.includes('超时') || error.message.includes('timeout')) {
-          errorMessage = '请求超时，可能是网络较慢，请稍后重试';
+          errorMessage = t('createPrompt.errors.timeout', { fallback: '请求超时，可能是网络较慢，请稍后重试' });
         } else if (error.message.includes('认证') || error.message.includes('登录') || error.message.includes('token')) {
-          errorMessage = '登录状态已过期，请重新登录';
+          errorMessage = t('createPrompt.errors.authExpired', { fallback: '登录状态已过期，请重新登录' });
           canRetry = false; // 认证问题不建议重试
 
           // 认证失效时自动重定向到登录页面
@@ -185,12 +187,12 @@ function CreatePromptPage() {
             router.replace(`/auth/login?returnUrl=${encodeURIComponent(currentUrl)}`);
           }, 2000);
         } else if (error.message.includes('权限')) {
-          errorMessage = '权限不足，请联系管理员';
+          errorMessage = t('createPrompt.errors.permissionDenied', { fallback: '权限不足，请联系管理员' });
           canRetry = false;
         } else if (error.message.includes('服务器')) {
-          errorMessage = '服务器暂时不可用，请稍后重试';
+          errorMessage = t('createPrompt.errors.serverError', { fallback: '服务器暂时不可用，请稍后重试' });
         } else if (error.message.includes('参数错误')) {
-          errorMessage = '请检查输入内容是否正确';
+          errorMessage = t('createPrompt.errors.invalidParams', { fallback: '请检查输入内容是否正确' });
           canRetry = false;
         } else {
           errorMessage = error.message;
@@ -205,7 +207,7 @@ function CreatePromptPage() {
       
       // 根据错误类型决定是否显示重试选项
       if (canRetry && typeof window !== 'undefined' && window.confirm) {
-        const retry = window.confirm(`${errorMessage}\n\n是否重试？`);
+        const retry = window.confirm(`${errorMessage}\n\n${t('createPrompt.retry', { fallback: '是否重试？' })}`);
         if (retry) {
           // 给用户一点时间，然后重试
           setTimeout(() => {
@@ -237,7 +239,7 @@ function CreatePromptPage() {
       <div className="min-h-screen bg-dark-bg-primary flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-neon-cyan mx-auto mb-4"></div>
-          <p className="text-gray-400">正在加载用户信息...</p>
+          <p className="text-gray-400">{t('createPrompt.loadingUserInfo', { fallback: '正在加载用户信息...' })}</p>
         </div>
       </div>
     );
@@ -249,9 +251,9 @@ function CreatePromptPage() {
         mode="create"
         onSubmit={handleSubmit}
         categoriesByType={categoriesByType}
-        pageTitle="创建提示词"
-        pageSubtitle="释放AI的无限潜能，打造专属的智能提示词"
-        submitButtonText="创建提示词"
+        pageTitle={t('createPrompt.title', { fallback: '创建提示词' })}
+        pageSubtitle={t('createPrompt.subtitle', { fallback: '释放AI的无限潜能，打造专属的智能提示词' })}
+        submitButtonText={t('createPrompt.submitButton', { fallback: '创建提示词' })}
         permissionCheck={permissionCheck}
         hasUnsavedChanges={hasUnsavedChanges}
         saveSuccess={saveSuccess}

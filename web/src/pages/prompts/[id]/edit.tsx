@@ -6,10 +6,12 @@ import { toast } from 'react-hot-toast';
 import { ChevronLeftIcon, ShieldExclamationIcon, SparklesIcon } from '@heroicons/react/24/outline';
 
 import { useAuth, withAuth } from '@/contexts/AuthContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { updatePrompt, getCategories } from '@/lib/api';
 import { databaseService } from '@/lib/database-service';
 import { PromptDetails, PermissionCheck } from '@/types';
-import PromptFormContainer, { PromptFormData } from '@/components/prompts/PromptFormContainer';
+import PromptFormContainer from '@/components/prompts/PromptFormContainer';
+import { PromptFormData } from '@/types/form';
 import ContextualPromptEditor from '@/components/prompts/ContextualPromptEditor';
 import { useBeforeUnload } from '@/hooks/useBeforeUnload';
 import { UnsavedChangesDialog } from '@/components/ConfirmDialog';
@@ -34,6 +36,7 @@ interface EditPromptPageProps {
 function EditPromptPage({ prompt }: EditPromptPageProps) {
   const router = useRouter();
   const { user, getToken } = useAuth();
+  const { t } = useLanguage();
 
   // 格式化当前版本号 - 一位小数方案，确保格式一致
   const currentVersionFormatted = typeof prompt.version === 'number' 
@@ -80,7 +83,7 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
     input_variables: Array.isArray(prompt.input_variables) ? prompt.input_variables : [],
     compatible_models: Array.isArray(prompt.compatible_models) ? prompt.compatible_models : [],
     version: currentVersionFormatted,
-    author: prompt.author || user?.display_name || user?.username || '未知用户',
+    author: prompt.author || user?.display_name || user?.username || t('editPrompt.defaultAuthor', { fallback: '未知用户' }),
     template_format: prompt.template_format || 'text',
     is_public: prompt.is_public !== undefined ? Boolean(prompt.is_public) : false,
     allow_collaboration: prompt.allow_collaboration !== undefined ? Boolean(prompt.allow_collaboration) : false,
@@ -99,7 +102,7 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
     hasPreviewAssetUrl: !!safePromptData.preview_asset_url,
     hasParameters: !!safePromptData.parameters,
     parametersKeys: safePromptData.parameters ? Object.keys(safePromptData.parameters) : [],
-    mediaFilesCount: safePromptData.parameters?.media_files?.length || 0,
+    mediaFilesCount: (safePromptData.parameters && typeof safePromptData.parameters === 'object' && 'media_files' in safePromptData.parameters && Array.isArray(safePromptData.parameters.media_files)) ? safePromptData.parameters.media_files.length : 0,
   });
 
   // 状态管理
@@ -117,7 +120,7 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
   // 浏览器离开页面警告 - 使用自定义对话框
   const { showConfirmDialog, onConfirmLeave, onCancelLeave, forceNavigate } = useBeforeUnload(
     hasUnsavedChanges, 
-    '您对提示词的修改尚未保存，确定要离开此页面吗？',
+    t('editPrompt.unsavedWarning', { fallback: '您对提示词的修改尚未保存，确定要离开此页面吗？' }),
     true, // 使用自定义对话框
   );
 
@@ -181,7 +184,7 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
   const handleSubmit = async (data: PromptFormData) => {
     // 再次检查权限
     if (!permissionCheck?.canEdit) {
-      toast.error('您没有编辑此提示词的权限');
+      toast.error(t('editPrompt.errors.noPermission', { fallback: '您没有编辑此提示词的权限' }));
       return;
     }
 
@@ -216,7 +219,7 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
       setHasUnsavedChanges(false);
       
       // 显示成功提示
-      toast.success('提示词更新成功！', {
+      toast.success(t('editPrompt.success.updated', { fallback: '提示词更新成功！' }), {
         duration: 2000,
         position: 'top-center',
       });
@@ -225,7 +228,8 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
       forceNavigate(`/prompts/${prompt.id}`);
     } catch (error: unknown) {
       console.error('更新提示词失败:', error);
-      toast.error(`❌ 更新失败: ${error instanceof Error ? error.message : '未知错误'}`);
+      const errorMessage = error instanceof Error ? error.message : t('editPrompt.errors.unknownError', { fallback: '未知错误' });
+      toast.error(t('editPrompt.errors.updateFailedMessage', { message: errorMessage, fallback: `❌ 更新失败: ${errorMessage}` }));
       throw error; // 重新抛出错误让组件处理isSubmitting状态
     }
   };
@@ -239,23 +243,23 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
           <div className="mb-6">
             <Link href={`/prompts/${prompt.id}`} className="inline-flex items-center text-sm font-medium text-neon-cyan hover:text-white transition-colors">
               <ChevronLeftIcon className="h-5 w-5 mr-1" />
-              返回提示词详情
+              {t('editPrompt.backToDetails', { fallback: '返回提示词详情' })}
             </Link>
           </div>
 
           <div className="glass rounded-xl p-8 text-center border border-red-400/30 bg-red-500/10">
             <ShieldExclamationIcon className="mx-auto h-16 w-16 text-red-400 mb-4" />
-            <h1 className="text-2xl font-bold text-white mb-2">访问被拒绝</h1>
+            <h1 className="text-2xl font-bold text-white mb-2">{t('editPrompt.permissionDenied.title', { fallback: '访问被拒绝' })}</h1>
             <p className="text-gray-300 mb-6">{permissionCheck.message}</p>
             
             <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4 mb-6">
               <div className="text-sm text-yellow-300">
-                <p className="font-medium mb-2">编辑权限说明：</p>
+                <p className="font-medium mb-2">{t('editPrompt.permissionDenied.instructions.title', { fallback: '编辑权限说明：' })}</p>
                 <ul className="list-disc list-inside space-y-1 text-left">
-                  <li>您可以编辑自己创建的提示词</li>
-                  <li>管理员可以编辑所有提示词</li>
-                  <li>贡献者可以编辑公开的提示词</li>
-                  <li>其他用户无法编辑他人的提示词</li>
+                  <li>{t('editPrompt.permissionDenied.instructions.owner', { fallback: '您可以编辑自己创建的提示词' })}</li>
+                  <li>{t('editPrompt.permissionDenied.instructions.admin', { fallback: '管理员可以编辑所有提示词' })}</li>
+                  <li>{t('editPrompt.permissionDenied.instructions.contributor', { fallback: '贡献者可以编辑公开的提示词' })}</li>
+                  <li>{t('editPrompt.permissionDenied.instructions.others', { fallback: '其他用户无法编辑他人的提示词' })}</li>
                 </ul>
               </div>
             </div>
@@ -265,18 +269,18 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
                 href={`/prompts/${prompt.id}`}
                 className="px-6 py-3 bg-neon-cyan text-black rounded-lg hover:bg-cyan-400 transition-colors font-medium"
               >
-                查看提示词详情
+                {t('editPrompt.permissionDenied.actions.viewDetails', { fallback: '查看提示词详情' })}
               </Link>
               <Link
                 href="/prompts"
                 className="px-6 py-3 border border-gray-600 text-gray-300 rounded-lg hover:bg-gray-700 transition-colors"
               >
-                浏览其他提示词
+                {t('editPrompt.permissionDenied.actions.browseOthers', { fallback: '浏览其他提示词' })}
               </Link>
             </div>
             
             <p className="text-sm text-gray-500 mt-4">
-              3秒后将自动跳转到提示词详情页面...
+              {t('editPrompt.permissionDenied.autoRedirect', { fallback: '3秒后将自动跳转到提示词详情页面...' })}
             </p>
           </div>
         </div>
@@ -287,7 +291,7 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
   // Context Engineering模式的保存处理
   const handleContextEngineeringSave = async (updatedPrompt: Partial<PromptDetails>) => {
     if (!permissionCheck?.canEdit) {
-      toast.error('您没有编辑此提示词的权限');
+      toast.error(t('editPrompt.errors.noPermission', { fallback: '您没有编辑此提示词的权限' }));
       return;
     }
 
@@ -296,7 +300,7 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
       setSaveSuccess(true);
       setHasUnsavedChanges(false);
       
-      toast.success('提示词更新成功！', {
+      toast.success(t('editPrompt.success.updated', { fallback: '提示词更新成功！' }), {
         duration: 2000,
         position: 'top-center',
       });
@@ -304,7 +308,8 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
       forceNavigate(`/prompts/${prompt.id}`);
     } catch (error) {
       console.error('更新提示词失败:', error);
-      toast.error(`❌ 更新失败: ${error instanceof Error ? error.message : '未知错误'}`);
+      const errorMessage = error instanceof Error ? error.message : t('editPrompt.errors.unknownError', { fallback: '未知错误' });
+      toast.error(t('editPrompt.errors.updateFailedMessage', { message: errorMessage, fallback: `❌ 更新失败: ${errorMessage}` }));
       throw error;
     }
   };
@@ -317,12 +322,12 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
           {/* 返回按钮 */}
           <Link href={`/prompts/${prompt.id}`} className="inline-flex items-center text-sm font-medium text-neon-cyan hover:text-white transition-colors">
             <ChevronLeftIcon className="h-5 w-5 mr-1" />
-            返回提示词详情
+            {t('editPrompt.backToDetails', { fallback: '返回提示词详情' })}
           </Link>
 
           {/* 编辑模式切换 */}
           <div className="flex items-center space-x-4">
-            <span className="text-sm text-gray-300">编辑模式:</span>
+            <span className="text-sm text-gray-300">{t('editPrompt.editMode', { fallback: '编辑模式:' })}</span>
             <div className="flex bg-dark-bg-secondary rounded-lg p-1 border border-neon-cyan/30">
               <button
                 onClick={() => setEditMode('traditional')}
@@ -332,7 +337,7 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
                     : 'text-gray-400 hover:text-white'
                 }`}
               >
-                传统编辑
+                {t('editPrompt.traditionalEdit', { fallback: '传统编辑' })}
               </button>
               <button
                 onClick={() => setEditMode('context_engineering')}
@@ -343,7 +348,7 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
                 }`}
               >
                 <SparklesIcon className="h-4 w-4 mr-1" />
-                Context Engineering
+                {t('editPrompt.contextEngineering', { fallback: 'Context Engineering' })}
               </button>
             </div>
           </div>
@@ -357,9 +362,9 @@ function EditPromptPage({ prompt }: EditPromptPageProps) {
             onSubmit={handleSubmit}
             onCancel={() => router.push(`/prompts/${prompt.id}`)}
             categoriesByType={categoriesByType}
-            pageTitle="编辑提示词 - 传统模式"
-            pageSubtitle="使用简单的表单编辑您的提示词"
-            submitButtonText="更新提示词"
+            pageTitle={t('editPrompt.traditionalMode.title', { fallback: '编辑提示词 - 传统模式' })}
+            pageSubtitle={t('editPrompt.traditionalMode.subtitle', { fallback: '使用简单的表单编辑您的提示词' })}
+            submitButtonText={t('editPrompt.submitButton', { fallback: '更新提示词' })}
             permissionCheck={permissionCheck}
             hasUnsavedChanges={hasUnsavedChanges}
             saveSuccess={saveSuccess}

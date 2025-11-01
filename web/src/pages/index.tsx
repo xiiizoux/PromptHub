@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import Link from 'next/link';
 import { ProtectedLink } from '@/components/ProtectedLink';
 import { motion } from 'framer-motion';
@@ -19,6 +19,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { PromptInfo } from '@/types';
 import PromptCard from '@/components/prompts/PromptCard';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 // 动态导入3D组件，避免SSR问题
 const ThreeScene = dynamic(() => import('@/components/ui/ThreeScene'), { ssr: false });
@@ -28,15 +29,18 @@ interface HomeProps {
 }
 
 export default function Home({ featuredPrompts: initialPrompts }: HomeProps) {
+  const { t } = useLanguage();
   const [ref, inView] = useInView({ threshold: 0.1 });
   const [typedText, setTypedText] = useState('');
   const [featuredPrompts, setFeaturedPrompts] = useState<PromptInfo[]>(initialPrompts);
   const [loading, setLoading] = useState(initialPrompts.length === 0);
-  const fullText = '释放AI的无限潜力';
+  
+  // 使用 useMemo 确保在客户端渲染时使用翻译
+  const fullText = useMemo(() => t('home.hero.subtitle', { fallback: '释放AI的无限潜力' }), [t]);
 
   // 打字机效果
   useEffect(() => {
-    if (inView) {
+    if (inView && fullText) {
       let i = 0;
       const timer = setInterval(() => {
         if (i < fullText.length) {
@@ -48,7 +52,7 @@ export default function Home({ featuredPrompts: initialPrompts }: HomeProps) {
       }, 100);
       return () => clearInterval(timer);
     }
-  }, [inView]);
+  }, [inView, fullText]);
 
   // 客户端获取精选提示词（如果服务端没有获取到）
   useEffect(() => {
@@ -70,49 +74,50 @@ export default function Home({ featuredPrompts: initialPrompts }: HomeProps) {
     }
   }, [featuredPrompts.length]);
 
-  const features = [
+  // 使用 useMemo 确保在客户端渲染时使用翻译
+  const features = useMemo(() => [
     {
       icon: CodeBracketIcon,
-      title: '智能提示词管理',
-      description: '使用版本控制和智能分类，让您的提示词保持最佳状态',
+      title: t('home.features.smartManagement.title', { fallback: '智能提示词管理' }),
+      description: t('home.features.smartManagement.description', { fallback: '使用版本控制和智能分类，让您的提示词保持最佳状态' }),
       color: 'from-neon-cyan to-neon-cyan-dark',
       glowColor: 'neon-cyan',
     },
     {
       icon: LightBulbIcon,
-      title: '创新模板系统',
-      description: '动态变量和模板让您的提示词适应各种场景',
+      title: t('home.features.templateSystem.title', { fallback: '创新模板系统' }),
+      description: t('home.features.templateSystem.description', { fallback: '动态变量和模板让您的提示词适应各种场景' }),
       color: 'from-neon-pink to-neon-yellow',
       glowColor: 'neon-pink',
     },
     {
       icon: SparklesIcon,
-      title: '智能分析优化',
-      description: 'AI驱动的提示词分析与优化，自动提升您的提示词效果和质量',
+      title: t('home.features.optimization.title', { fallback: '智能分析优化' }),
+      description: t('home.features.optimization.description', { fallback: 'AI驱动的提示词分析与优化，自动提升您的提示词效果和质量' }),
       color: 'from-neon-purple to-neon-pink',
       glowColor: 'neon-purple',
     },
     {
       icon: CogIcon,
-      title: '上下文工程',
-      description: '深度上下文工程技术，构建智能化的多轮对话体验和复杂任务执行链',
+      title: t('home.features.contextEngineering.title', { fallback: '上下文工程' }),
+      description: t('home.features.contextEngineering.description', { fallback: '深度上下文工程技术，构建智能化的多轮对话体验和复杂任务执行链' }),
       color: 'from-neon-green to-neon-cyan',
       glowColor: 'neon-green',
     },
     {
       icon: PuzzlePieceIcon,
-      title: 'MCP协议集成',
-      description: '基于Model Context Protocol，实现AI工具的无缝连接和智能协作',
+      title: t('home.features.mcpIntegration.title', { fallback: 'MCP协议集成' }),
+      description: t('home.features.mcpIntegration.description', { fallback: '基于Model Context Protocol，实现AI工具的无缝连接和智能协作' }),
       color: 'from-neon-yellow to-neon-orange',
       glowColor: 'neon-yellow',
     },
-  ];
+  ], [t]);
 
-  const stats = [
-    { label: '活跃用户', value: '10K+', icon: RocketLaunchIcon },
-    { label: '提示词数量', value: '50K+', icon: CircleStackIcon },
-    { label: '平均提升效率', value: '85%', icon: BoltIcon },
-  ];
+  const stats = useMemo(() => [
+    { label: t('home.stats.activeUsers', { fallback: '活跃用户' }), value: '10K+', icon: RocketLaunchIcon },
+    { label: t('home.stats.promptsCount', { fallback: '提示词数量' }), value: '50K+', icon: CircleStackIcon },
+    { label: t('home.stats.efficiency', { fallback: '平均提升效率' }), value: '85%', icon: BoltIcon },
+  ], [t]);
 
   return (
     <>
@@ -141,12 +146,12 @@ export default function Home({ featuredPrompts: initialPrompts }: HomeProps) {
             className="inline-flex items-center px-4 py-2 rounded-full glass border border-neon-cyan/30 mb-6"
           >
             <SparklesIcon className="h-4 w-4 text-neon-cyan mr-2" />
-            <span className="text-sm text-neon-cyan">AI提示词管理的未来已到来</span>
+            <span className="text-sm text-neon-cyan">{t('home.hero.badge', { fallback: 'AI提示词管理的未来已到来' })}</span>
           </motion.div>
           
           <h1 className="text-3xl md:text-4xl font-bold mb-4">
             <span className="block gradient-text animate-text-shimmer bg-[length:200%_auto]">
-              Prompt Hub
+              {t('home.hero.title', { fallback: 'Prompt Hub' })}
             </span>
             <span className="block text-lg md:text-2xl mt-2 text-gray-300 font-light">
               {typedText}
@@ -160,8 +165,7 @@ export default function Home({ featuredPrompts: initialPrompts }: HomeProps) {
             animate={{ opacity: 1 }}
             transition={{ delay: 0.5 }}
           >
-            探索下一代AI提示词管理平台。创建、优化、分享您的提示词，
-            让AI创作变得前所未有的简单和高效。
+            {t('home.hero.description', { fallback: '探索下一代AI提示词管理平台。创建、优化、分享您的提示词，让AI创作变得前所未有的简单和高效。' })}
           </motion.p>
           
           <motion.div 
@@ -171,12 +175,12 @@ export default function Home({ featuredPrompts: initialPrompts }: HomeProps) {
             transition={{ delay: 0.7 }}
           >
             <Link href="/prompts" className="btn-primary group">
-              <span>开始探索</span>
+              <span>{t('home.hero.explore', { fallback: '开始探索' })}</span>
               <ArrowRightIcon className="h-5 w-5 ml-2 group-hover:translate-x-1 transition-transform" />
             </Link>
             <ProtectedLink href="/create" className="btn-secondary">
               <CommandLineIcon className="h-5 w-5 mr-2" />
-              <span>创建提示词</span>
+              <span>{t('home.hero.create', { fallback: '创建提示词' })}</span>
             </ProtectedLink>
           </motion.div>
           
@@ -213,7 +217,7 @@ export default function Home({ featuredPrompts: initialPrompts }: HomeProps) {
           animate={{ y: [0, 10, 0] }}
           transition={{ repeat: Infinity, duration: 2 }}
         >
-          <div className="text-gray-500 text-sm">向下滚动</div>
+          <div className="text-gray-500 text-sm">{t('home.hero.scroll', { fallback: '向下滚动' })}</div>
           <svg className="w-6 h-6 mx-auto mt-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
           </svg>
@@ -230,10 +234,10 @@ export default function Home({ featuredPrompts: initialPrompts }: HomeProps) {
             viewport={{ once: true }}
           >
             <h2 className="text-5xl font-bold mb-4">
-              <span className="gradient-text">强大功能</span>
+              <span className="gradient-text">{t('home.features.title', { fallback: '强大功能' })}</span>
             </h2>
             <p className="text-xl text-gray-400 max-w-3xl mx-auto">
-              我们为您提供最先进的工具集，让AI提示词管理变得简单而强大
+              {t('home.features.subtitle', { fallback: '我们为您提供最先进的工具集，让AI提示词管理变得简单而强大' })}
             </p>
           </motion.div>
           
@@ -278,7 +282,7 @@ export default function Home({ featuredPrompts: initialPrompts }: HomeProps) {
                         className="flex items-center text-neon-cyan opacity-0 group-hover:opacity-100 transition-opacity duration-300 cursor-pointer"
                         whileHover={{ x: 5 }}
                       >
-                        <span className="text-sm font-medium">了解更多</span>
+                        <span className="text-sm font-medium">{t('home.features.learnMore', { fallback: '了解更多' })}</span>
                         <ArrowRightIcon className="h-4 w-4 ml-2" />
                       </motion.div>
                     </div>
@@ -338,7 +342,7 @@ export default function Home({ featuredPrompts: initialPrompts }: HomeProps) {
                         className="flex items-center text-neon-cyan opacity-0 group-hover:opacity-100 transition-opacity duration-300 cursor-pointer"
                         whileHover={{ x: 5 }}
                       >
-                        <span className="text-sm font-medium">了解更多</span>
+                        <span className="text-sm font-medium">{t('home.features.learnMore', { fallback: '了解更多' })}</span>
                         <ArrowRightIcon className="h-4 w-4 ml-2" />
                       </motion.div>
                     </div>
@@ -360,14 +364,14 @@ export default function Home({ featuredPrompts: initialPrompts }: HomeProps) {
             viewport={{ once: true }}
           >
             <div>
-              <h2 className="text-5xl font-bold gradient-text">热门提示词</h2>
-              <p className="text-gray-400 mt-2">发现社区最受欢迎的AI提示词</p>
+              <h2 className="text-5xl font-bold gradient-text">{t('home.featuredPrompts.title', { fallback: '热门提示词' })}</h2>
+              <p className="text-gray-400 mt-2">{t('home.featuredPrompts.subtitle', { fallback: '发现社区最受欢迎的AI提示词' })}</p>
             </div>
             <Link 
               href="/prompts" 
               className="group flex items-center text-neon-cyan hover:text-neon-cyan-dark transition-colors"
             >
-              <span className="mr-2">查看全部</span>
+              <span className="mr-2">{t('home.featuredPrompts.viewAll', { fallback: '查看全部' })}</span>
               <ArrowRightIcon className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
             </Link>
           </motion.div>
@@ -392,12 +396,12 @@ export default function Home({ featuredPrompts: initialPrompts }: HomeProps) {
             </div>
           ) : (
             <div className="flex flex-col items-center justify-center py-20 text-center">
-              <div className="text-gray-400 text-lg mb-4">暂无提示词数据</div>
+              <div className="text-gray-400 text-lg mb-4">{t('home.featuredPrompts.noPrompts', { fallback: '暂无提示词数据' })}</div>
               <Link 
                 href="/prompts" 
                 className="text-neon-cyan hover:text-neon-cyan-dark transition-colors"
               >
-                前往提示词广场
+                {t('home.featuredPrompts.goToPlaza', { fallback: '前往提示词广场' })}
               </Link>
             </div>
           )}
@@ -426,10 +430,10 @@ export default function Home({ featuredPrompts: initialPrompts }: HomeProps) {
           >
             <CubeTransparentIcon className="h-16 w-16 text-neon-cyan mx-auto mb-6" />
             <h2 className="text-5xl font-bold mb-6">
-              <span className="gradient-text">准备好革新您的AI工作流了吗？</span>
+              <span className="gradient-text">{t('home.cta.title', { fallback: '准备好革新您的AI工作流了吗？' })}</span>
             </h2>
             <p className="text-xl text-gray-400 mb-8 max-w-2xl mx-auto">
-              加入数千名创作者的行列，使用Prompt Hub提升您的AI创作效率
+              {t('home.cta.description', { fallback: '加入数千名创作者的行列，使用Prompt Hub提升您的AI创作效率' })}
             </p>
             <motion.div
               whileHover={{ scale: 1.05 }}
@@ -437,7 +441,7 @@ export default function Home({ featuredPrompts: initialPrompts }: HomeProps) {
             >
               <Link href="/auth/register" className="btn-primary text-lg px-8 py-4">
                 <RocketLaunchIcon className="h-6 w-6 mr-2" />
-                立即开始免费使用
+                {t('home.cta.startFree', { fallback: '立即开始免费使用' })}
               </Link>
             </motion.div>
           </motion.div>
