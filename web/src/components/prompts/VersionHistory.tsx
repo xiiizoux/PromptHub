@@ -13,6 +13,7 @@ import { PromptVersion } from '@/types';
 import { formatVersionDisplay } from '@/lib/version-utils';
 import VersionComparison from './VersionComparison';
 import { supabase } from '@/lib/supabase';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface VersionHistoryProps {
   isOpen?: boolean;
@@ -33,6 +34,7 @@ const VersionHistory: React.FC<VersionHistoryProps> = ({
   inline = false,
   className = '',
 }) => {
+  const { t } = useLanguage();
   const [versions, setVersions] = useState<PromptVersion[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -59,7 +61,7 @@ const VersionHistory: React.FC<VersionHistoryProps> = ({
       // 获取认证 token
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
       if (sessionError || !session?.access_token) {
-        throw new Error('未认证，请先登录');
+        throw new Error(t('versionHistory.errors.notAuthenticated'));
       }
 
       const response = await fetch(`/api/prompts/${promptId}/versions`, {
@@ -75,7 +77,7 @@ const VersionHistory: React.FC<VersionHistoryProps> = ({
       console.log('版本历史API响应数据:', data);
 
       if (!response.ok) {
-        throw new Error(data.error || '获取版本历史失败');
+        throw new Error(data.error || t('versionHistory.errors.fetchFailed'));
       }
 
       const versions = data.data || [];
@@ -83,7 +85,7 @@ const VersionHistory: React.FC<VersionHistoryProps> = ({
       setVersions(versions);
     } catch (err) {
       console.error('获取版本历史失败:', err);
-      setError(err instanceof Error ? err.message : '获取版本历史失败');
+      setError(err instanceof Error ? err.message : t('versionHistory.errors.fetchFailed'));
     } finally {
       setLoading(false);
     }
@@ -98,7 +100,7 @@ const VersionHistory: React.FC<VersionHistoryProps> = ({
       // 获取认证 token
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
       if (sessionError || !session?.access_token) {
-        throw new Error('未认证，请先登录');
+        throw new Error(t('versionHistory.errors.notAuthenticated'));
       }
 
       const response = await fetch(`/api/prompts/${promptId}/revert`, {
@@ -113,14 +115,14 @@ const VersionHistory: React.FC<VersionHistoryProps> = ({
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || '版本回滚失败');
+        throw new Error(data.error || t('versionHistory.errors.revertFailed'));
       }
 
       onVersionRevert(versionId);
       onClose && onClose();
     } catch (err) {
       console.error('版本回滚失败:', err);
-      setError(err instanceof Error ? err.message : '版本回滚失败');
+      setError(err instanceof Error ? err.message : t('versionHistory.errors.revertFailed'));
     } finally {
       setReverting(null);
     }
@@ -163,7 +165,8 @@ const VersionHistory: React.FC<VersionHistoryProps> = ({
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleString('zh-CN', {
+    const locale = t('versionHistory.title') === 'Version History' ? 'en-US' : 'zh-CN';
+    return date.toLocaleString(locale, {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
@@ -179,7 +182,7 @@ const VersionHistory: React.FC<VersionHistoryProps> = ({
       <div className="flex items-center justify-between mb-6">
         <h3 className="text-xl font-semibold text-white flex items-center">
           <ClockIcon className="h-6 w-6 mr-2 text-neon-cyan" />
-          版本历史
+          {t('versionHistory.title')}
         </h3>
         <div className="flex items-center space-x-3">
           {!compareMode ? (
@@ -188,7 +191,7 @@ const VersionHistory: React.FC<VersionHistoryProps> = ({
               className="px-3 py-2 rounded-lg bg-neon-cyan/10 text-neon-cyan hover:bg-neon-cyan/20 transition-colors flex items-center space-x-2"
             >
               <ArrowsRightLeftIcon className="h-4 w-4" />
-              <span>对比模式</span>
+              <span>{t('versionHistory.compareMode')}</span>
             </button>
           ) : (
             <div className="flex items-center space-x-2">
@@ -197,13 +200,13 @@ const VersionHistory: React.FC<VersionHistoryProps> = ({
                 disabled={selectedForComparison.length !== 2}
                 className="px-3 py-2 rounded-lg bg-neon-green/10 text-neon-green hover:bg-neon-green/20 transition-colors disabled:opacity-50"
               >
-                对比 ({selectedForComparison.length}/2)
+                {t('versionHistory.compare', { count: selectedForComparison.length })}
               </button>
               <button
                 onClick={exitCompareMode}
                 className="px-3 py-2 rounded-lg bg-neon-red/10 text-neon-red hover:bg-neon-red/20 transition-colors"
               >
-                取消
+                {t('versionHistory.cancel')}
               </button>
             </div>
           )}
@@ -223,8 +226,8 @@ const VersionHistory: React.FC<VersionHistoryProps> = ({
         <div className="flex items-start space-x-2">
           <span className="text-yellow-400 mt-0.5">⚠️</span>
           <div className="text-sm">
-            <p className="font-medium mb-1">媒体文件说明</p>
-            <p>版本历史仅管理文本内容、标签、参数等，不包括图片和视频文件。回滚版本时，媒体文件将保持当前状态不变。</p>
+            <p className="font-medium mb-1">{t('versionHistory.mediaFilesNoticeTitle')}</p>
+            <p>{t('versionHistory.mediaFilesNoticeDesc')}</p>
           </div>
         </div>
       </div>
@@ -238,7 +241,7 @@ const VersionHistory: React.FC<VersionHistoryProps> = ({
       {compareMode && (
         <div className="mb-4 p-4 rounded-lg bg-neon-cyan/10 border border-neon-cyan/30 text-neon-cyan">
           <p className="text-sm">
-            对比模式：点击选择两个版本进行对比。已选择 {selectedForComparison.length}/2 个版本。
+            {t('versionHistory.compareModeHint', { count: selectedForComparison.length })}
           </p>
         </div>
       )}
@@ -246,12 +249,12 @@ const VersionHistory: React.FC<VersionHistoryProps> = ({
       {loading ? (
         <div className="flex items-center justify-center py-12">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-neon-cyan"></div>
-          <span className="ml-3 text-gray-300">加载中...</span>
+          <span className="ml-3 text-gray-300">{t('versionHistory.loading')}</span>
         </div>
       ) : versions.length === 0 ? (
         <div className="text-center py-12 text-gray-400">
           <ClockIcon className="h-12 w-12 mx-auto mb-4 opacity-50" />
-          <p>暂无版本历史</p>
+          <p>{t('versionHistory.noHistory')}</p>
         </div>
       ) : (
         <div className="space-y-4 max-h-96 overflow-y-auto">
@@ -283,7 +286,7 @@ const VersionHistory: React.FC<VersionHistoryProps> = ({
                       </span>
                       {isCurrentVersion && (
                         <span className="px-2 py-1 rounded text-xs bg-neon-green/20 text-neon-green">
-                          当前版本
+                          {t('versionHistory.currentVersion')}
                         </span>
                       )}
                       <span className="text-sm text-gray-400">
@@ -298,9 +301,9 @@ const VersionHistory: React.FC<VersionHistoryProps> = ({
                     )}
 
                     <div className="flex items-center space-x-2 text-xs text-gray-400">
-                      <span>内容长度: {version.content.length} 字符</span>
+                      <span>{t('versionHistory.contentLength', { length: version.content.length })}</span>
                       {version.tags && version.tags.length > 0 && (
-                        <span>• 标签: {version.tags.length} 个</span>
+                        <span>• {t('versionHistory.tagsCount', { count: version.tags.length })}</span>
                       )}
                     </div>
                   </div>
@@ -318,7 +321,7 @@ const VersionHistory: React.FC<VersionHistoryProps> = ({
                         className="px-3 py-1 rounded bg-neon-cyan/10 text-neon-cyan hover:bg-neon-cyan/20 transition-colors text-sm flex items-center space-x-1"
                       >
                         <EyeIcon className="h-4 w-4" />
-                        <span>查看</span>
+                        <span>{t('versionHistory.view')}</span>
                       </button>
 
                       {!isCurrentVersion && onVersionRevert && (
@@ -331,7 +334,7 @@ const VersionHistory: React.FC<VersionHistoryProps> = ({
                           className="px-3 py-1 rounded bg-neon-green/10 text-neon-green hover:bg-neon-green/20 transition-colors text-sm flex items-center space-x-1 disabled:opacity-50"
                         >
                           <ArrowUturnLeftIcon className="h-4 w-4" />
-                          <span>{reverting === version.id ? '回滚中...' : '回滚'}</span>
+                          <span>{reverting === version.id ? t('versionHistory.reverting') : t('versionHistory.revert')}</span>
                         </button>
                       )}
                     </div>
@@ -428,7 +431,7 @@ const VersionHistory: React.FC<VersionHistoryProps> = ({
                   <Dialog.Panel>
                     <div className="flex items-center justify-between mb-4">
                       <Dialog.Title className="text-lg font-semibold text-white">
-                        版本内容 - v{selectedVersion ? formatVersionDisplay(selectedVersion.version) : ''}
+                        {t('versionHistory.versionContent', { version: selectedVersion ? formatVersionDisplay(selectedVersion.version) : '' })}
                       </Dialog.Title>
                       <button
                         onClick={() => setShowContent(false)}
@@ -442,13 +445,13 @@ const VersionHistory: React.FC<VersionHistoryProps> = ({
                       <div className="space-y-4">
                         {selectedVersion.description && (
                           <div>
-                            <h4 className="text-sm font-medium text-gray-400 mb-2">描述</h4>
+                            <h4 className="text-sm font-medium text-gray-400 mb-2">{t('versionHistory.description')}</h4>
                             <p className="text-gray-300">{selectedVersion.description}</p>
                           </div>
                         )}
                         
                         <div>
-                          <h4 className="text-sm font-medium text-gray-400 mb-2">内容</h4>
+                          <h4 className="text-sm font-medium text-gray-400 mb-2">{t('versionHistory.content')}</h4>
                           <div className="bg-dark-bg-secondary rounded-lg p-4 border border-neon-cyan/10">
                             <pre className="text-gray-300 font-mono text-sm whitespace-pre-wrap overflow-auto max-h-96">
                               {selectedVersion.content}
@@ -458,7 +461,7 @@ const VersionHistory: React.FC<VersionHistoryProps> = ({
 
                         {selectedVersion.tags && selectedVersion.tags.length > 0 && (
                           <div>
-                            <h4 className="text-sm font-medium text-gray-400 mb-2">标签</h4>
+                            <h4 className="text-sm font-medium text-gray-400 mb-2">{t('versionHistory.tags')}</h4>
                             <div className="flex flex-wrap gap-2">
                               {selectedVersion.tags.map((tag, index) => (
                                 <span 

@@ -3,47 +3,50 @@ import Link from 'next/link';
 import { ChevronLeftIcon, ShieldCheckIcon, ServerIcon, CogIcon, DocumentTextIcon } from '@heroicons/react/24/outline';
 import DocLayout from '@/components/DocLayout';
 import { DocSection, DocGrid, DocCard, DocCodeBlock, DocList, DocHighlight } from '@/components/DocContent';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 const ApiDocsPage: React.FC = () => {
+  const { t } = useLanguage();
+  
   return (
     <DocLayout
-      title="API参考"
-      description="完整的API文档，帮助您将提示词集成到自己的应用程序中"
+      title={t('docs.api.title') || "API参考"}
+      description={t('docs.api.description') || "完整的API文档，帮助您将提示词集成到自己的应用程序中"}
       breadcrumbs={[
-        { name: '文档', href: '/docs' },
-        { name: 'API参考', href: '/docs/api' },
+        { name: t('docs.breadcrumbs.docs'), href: '/docs' },
+        { name: t('docs.api.title'), href: '/docs/api' },
       ]}
     >
 
-      <DocSection title="认证" delay={0.1}>
+      <DocSection title={t('docs.api.auth.title') || "认证"} delay={0.1}>
         <div className="space-y-8">
           <DocHighlight>
-            所有API请求都需要进行身份验证。MCP Prompt Server支持以下认证方式：
+            {t('docs.api.auth.description') || "所有API请求都需要进行身份验证。MCP Prompt Server支持以下认证方式："}
           </DocHighlight>
           
           <DocCard 
-            title="API密钥认证"
-            description="您可以通过以下任一方式提供API密钥"
+            title={t('docs.api.auth.apiKeyTitle') || "API密钥认证"}
+            description={t('docs.api.auth.apiKeyDesc') || "您可以通过以下任一方式提供API密钥"}
             icon={<ShieldCheckIcon className="h-6 w-6" />}
             color="cyan"
           >
             <div className="mt-4 space-y-4">
               <div>
-                <h4 className="text-sm font-medium text-dark-text-primary mb-2">1. 请求头</h4>
+                <h4 className="text-sm font-medium text-dark-text-primary mb-2">1. {t('docs.api.auth.header') || "请求头"}</h4>
                 <DocCodeBlock 
                   code="x-api-key: your-api-key" 
                   language="text"
                 />
               </div>
               <div>
-                <h4 className="text-sm font-medium text-dark-text-primary mb-2">2. Bearer令牌</h4>
+                <h4 className="text-sm font-medium text-dark-text-primary mb-2">2. {t('docs.api.auth.bearer') || "Bearer令牌"}</h4>
                 <DocCodeBlock 
                   code="Authorization: Bearer your-api-key" 
                   language="text"
                 />
               </div>
               <div>
-                <h4 className="text-sm font-medium text-dark-text-primary mb-2">3. 查询参数</h4>
+                <h4 className="text-sm font-medium text-dark-text-primary mb-2">3. {t('docs.api.auth.queryParam') || "查询参数"}</h4>
                 <DocCodeBlock 
                   code="https://your-server.com/api/prompts?api_key=your-api-key" 
                   language="text"
@@ -54,7 +57,7 @@ const ApiDocsPage: React.FC = () => {
         </div>
       </DocSection>
 
-      <DocSection title="提示词API" delay={0.2}>
+      <DocSection title={t('docs.api.prompts.title') || "提示词API"} delay={0.2}>
         <div className="space-y-8">
           
           <div className="space-y-8">
@@ -64,17 +67,17 @@ const ApiDocsPage: React.FC = () => {
                 <span className="px-3 py-1 text-xs font-medium bg-green-500/20 text-green-400 rounded-full border border-green-500/30">GET</span>
                 <h3 className="ml-3 text-lg font-medium text-white">/prompts</h3>
               </div>
-              <p className="text-dark-text-secondary mb-6">获取提示词列表</p>
+              <p className="text-dark-text-secondary mb-6">{t('docs.api.prompts.getList') || "获取提示词列表"}</p>
               
               <div className="space-y-6">
                 <div>
-                  <h4 className="text-md font-medium text-white mb-4">查询参数</h4>
+                  <h4 className="text-md font-medium text-white mb-4">{t('docs.api.prompts.queryParams') || "查询参数"}</h4>
                   <div className="overflow-hidden rounded-xl border border-dark-border">
                     <div className="bg-dark-bg-secondary/50 p-4">
                       <div className="grid grid-cols-3 gap-4 font-medium text-dark-text-primary text-sm">
-                        <div>参数名</div>
-                        <div>类型</div>
-                        <div>描述</div>
+                        <div>{t('docs.api.prompts.paramName') || "参数名"}</div>
+                        <div>{t('docs.api.prompts.type') || "类型"}</div>
+                        <div>{t('docs.api.prompts.description') || "描述"}</div>
                       </div>
                     </div>
                     <div className="divide-y divide-dark-border">
@@ -99,7 +102,7 @@ const ApiDocsPage: React.FC = () => {
                 </div>
                 
                 <div>
-                  <h4 className="text-md font-medium text-white mb-4">响应示例</h4>
+                  <h4 className="text-md font-medium text-white mb-4">{t('docs.api.prompts.responseExample') || "响应示例"}</h4>
                   <DocCodeBlock 
                     code={`{
   "data": [
@@ -131,11 +134,11 @@ const ApiDocsPage: React.FC = () => {
                 <span className="px-3 py-1 text-xs font-medium bg-green-500/20 text-green-400 rounded-full border border-green-500/30">GET</span>
                 <h3 className="ml-3 text-lg font-medium text-white">/prompts/{'{name}'}</h3>
               </div>
-              <p className="text-dark-text-secondary mb-6">获取提示词详情</p>
+              <p className="text-dark-text-secondary mb-6">{t('docs.api.prompts.getDetail') || "获取提示词详情"}</p>
               
               <div className="space-y-6">
                 <div>
-                  <h4 className="text-md font-medium text-white mb-4">路径参数</h4>
+                  <h4 className="text-md font-medium text-white mb-4">{t('docs.api.prompts.pathParams') || "路径参数"}</h4>
                   <div className="glass rounded-xl border border-dark-border p-4">
                     <div className="grid grid-cols-3 gap-4 text-sm">
                       <div className="font-mono text-neon-cyan">name</div>
@@ -176,11 +179,11 @@ const ApiDocsPage: React.FC = () => {
                 <span className="px-3 py-1 text-xs font-medium bg-blue-500/20 text-blue-400 rounded-full border border-blue-500/30">POST</span>
                 <h3 className="ml-3 text-lg font-medium text-white">/prompts</h3>
               </div>
-              <p className="text-dark-text-secondary mb-6">创建新提示词</p>
+              <p className="text-dark-text-secondary mb-6">{t('docs.api.prompts.create') || "创建新提示词"}</p>
               
               <div className="space-y-6">
                 <div>
-                  <h4 className="text-md font-medium text-white mb-4">请求体</h4>
+                  <h4 className="text-md font-medium text-white mb-4">{t('docs.api.prompts.requestBody') || "请求体"}</h4>
                   <DocCodeBlock 
                     code={`{
   "name": "code-reviewer",
@@ -225,12 +228,12 @@ const ApiDocsPage: React.FC = () => {
         </div>
       </DocSection>
 
-      <DocSection title="性能分析API" delay={0.3}>
+      <DocSection title={t('docs.api.performance.title') || "性能分析API"} delay={0.3}>
         <div className="space-y-8">
           <DocGrid cols={1}>
             <DocCard 
-              title="追踪提示词使用"
-              description="记录提示词使用情况，用于性能分析"
+              title={t('docs.api.performance.trackUsage') || "追踪提示词使用"}
+              description={t('docs.api.performance.trackUsageDesc') || "记录提示词使用情况，用于性能分析"}
               icon={<ServerIcon className="h-6 w-6" />}
               color="blue"
             >
@@ -256,18 +259,18 @@ const ApiDocsPage: React.FC = () => {
         </div>
       </DocSection>
 
-      <DocSection title="错误处理" delay={0.4}>
+      <DocSection title={t('docs.api.errors.title') || "错误处理"} delay={0.4}>
         <div className="space-y-8">
           <DocHighlight>
-            API请求可能会返回以下错误代码：
+            {t('docs.api.errors.description') || "API请求可能会返回以下错误代码："}
           </DocHighlight>
 
           <div className="overflow-hidden rounded-xl border border-dark-border">
             <div className="bg-dark-bg-secondary/50 p-4">
               <div className="grid grid-cols-3 gap-4 font-medium text-dark-text-primary text-sm">
-                <div>状态码</div>
-                <div>说明</div>
-                <div>示例</div>
+                <div>{t('docs.api.errors.statusCode') || "状态码"}</div>
+                <div>{t('docs.api.errors.explanation') || "说明"}</div>
+                <div>{t('docs.api.errors.example') || "示例"}</div>
               </div>
             </div>
             <div className="divide-y divide-dark-border">
@@ -290,7 +293,7 @@ const ApiDocsPage: React.FC = () => {
           </div>
 
           <div>
-            <h3 className="text-lg font-medium text-white mb-4">错误响应格式</h3>
+            <h3 className="text-lg font-medium text-white mb-4">{t('docs.api.errors.errorFormat') || "错误响应格式"}</h3>
             <DocCodeBlock 
               code={`{
   "success": false,
@@ -310,7 +313,7 @@ const ApiDocsPage: React.FC = () => {
       <div className="mt-16">
         <h3 className="text-xl font-semibold text-white mb-6 flex items-center">
           <DocumentTextIcon className="h-6 w-6 text-neon-cyan mr-3" />
-          详细参考
+          {t('docs.api.reference.title') || "详细参考"}
         </h3>
         <DocGrid cols={2}>
           <Link 
@@ -319,9 +322,9 @@ const ApiDocsPage: React.FC = () => {
           >
             <div className="flex items-center gap-3 mb-3">
               <ShieldCheckIcon className="h-6 w-6 text-neon-cyan group-hover:scale-110 transition-transform duration-300" />
-              <h4 className="font-semibold text-white">认证与授权</h4>
+              <h4 className="font-semibold text-white">{t('docs.api.reference.auth') || "认证与授权"}</h4>
             </div>
-            <p className="text-dark-text-secondary text-sm">详细的API认证和授权机制说明</p>
+            <p className="text-dark-text-secondary text-sm">{t('docs.api.reference.authDesc') || "详细的API认证和授权机制说明"}</p>
           </Link>
           
           <Link 
@@ -330,9 +333,9 @@ const ApiDocsPage: React.FC = () => {
           >
             <div className="flex items-center gap-3 mb-3">
               <CogIcon className="h-6 w-6 text-neon-purple group-hover:scale-110 transition-transform duration-300" />
-              <h4 className="font-semibold text-white">提示词API</h4>
+              <h4 className="font-semibold text-white">{t('docs.api.reference.prompts') || "提示词API"}</h4>
             </div>
-            <p className="text-dark-text-secondary text-sm">完整的提示词管理API参考</p>
+            <p className="text-dark-text-secondary text-sm">{t('docs.api.reference.promptsDesc') || "完整的提示词管理API参考"}</p>
           </Link>
         </DocGrid>
       </div>

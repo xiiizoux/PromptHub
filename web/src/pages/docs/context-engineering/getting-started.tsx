@@ -8,6 +8,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import DocLayout from '@/components/DocLayout';
+import { useLanguage } from '@/contexts/LanguageContext';
 import {
   RocketLaunchIcon,
   PlayIcon,
@@ -36,76 +37,77 @@ interface QuickStartStep {
   nextStep?: string;
 }
 
-const QUICK_START_STEPS: QuickStartStep[] = [
-  {
-    id: 'step1',
-    title: '创建或选择一个提示词',
-    description: '从浏览PromptHub的公开提示词开始，或创建您的第一个提示词',
-    timeEstimate: '1分钟',
-    action: '前往提示词库，选择一个感兴趣的提示词',
-    tips: [
-      '建议先从热门的"代码助手"或"写作助手"提示词开始',
-      '选择与您工作相关的领域提示词，体验更佳',
-      '新用户建议从简单的通用提示词开始练习',
-    ],
-    nextStep: 'step2',
-  },
-  {
-    id: 'step2',
-    title: '查看"我的上下文"',
-    description: '在提示词详情页中，找到"我的上下文"模块，了解个性化功能',
-    timeEstimate: '2分钟',
-    action: '滚动到提示词详情页下方，查看个性化信息面板',
-    tips: [
-      '第一次使用会看到"开始个性化之旅"的提示',
-      '登录后才能看到完整的个性化功能',
-      '每个提示词都有独立的个性化上下文',
-    ],
-    nextStep: 'step3',
-  },
-  {
-    id: 'step3',
-    title: '进行首次交互',
-    description: '使用提示词进行第一次AI对话，体验上下文工程的学习过程',
-    timeEstimate: '1分钟',
-    action: '点击"立即体验"按钮，与AI进行第一次对话',
-    tips: [
-      '可以询问任何与提示词相关的问题',
-      '系统会记录您的偏好和反馈',
-      '不必担心说错，每次交互都是学习机会',
-    ],
-    nextStep: 'step4',
-  },
-  {
-    id: 'step4',
-    title: '设置个人偏好',
-    description: '访问账户设置，配置您的基本偏好，让AI更好地了解您',
-    timeEstimate: '1分钟',
-    action: '进入账户设置 → 个性化偏好，设置基本信息',
-    tips: [
-      '语言风格、专业程度、回答长度等都很重要',
-      '偏好设置会影响所有提示词的表现',
-      '可以随时修改，不用一次性设置完美',
-    ],
-    nextStep: 'step5',
-  },
-  {
-    id: 'step5',
-    title: '查看学习效果',
-    description: '回到提示词页面，查看AI如何根据您的使用调整回应方式',
-    timeEstimate: '无限制',
-    action: '继续使用提示词，观察AI回应的变化',
-    tips: [
-      '多次使用后，回应会越来越符合您的偏好',
-      '在"我的上下文"中可以看到学习进度',
-      '给予反馈能加速个性化效果',
-    ],
-  },
-];
-
 export default function ContextEngineeringGettingStarted() {
+  const { t } = useLanguage();
   const [currentStep, setCurrentStep] = useState<string>('step1');
   const [completedSteps, setCompletedSteps] = useState<Set<string>>(new Set());
+  
+  const QUICK_START_STEPS: QuickStartStep[] = [
+    {
+      id: 'step1',
+      title: t('docs.context_engineering.getting_started.steps.step1.title') || '创建或选择一个提示词',
+      description: t('docs.context_engineering.getting_started.steps.step1.description') || '从浏览PromptHub的公开提示词开始，或创建您的第一个提示词',
+      timeEstimate: t('docs.context_engineering.getting_started.steps.step1.timeEstimate') || '1分钟',
+      action: t('docs.context_engineering.getting_started.steps.step1.action') || '前往提示词库，选择一个感兴趣的提示词',
+      tips: (t('docs.context_engineering.getting_started.steps.step1.tips') as string[]) || [
+        '建议先从热门的"代码助手"或"写作助手"提示词开始',
+        '选择与您工作相关的领域提示词，体验更佳',
+        '新用户建议从简单的通用提示词开始练习',
+      ],
+      nextStep: 'step2',
+    },
+    {
+      id: 'step2',
+      title: t('docs.context_engineering.getting_started.steps.step2.title') || '查看"我的上下文"',
+      description: t('docs.context_engineering.getting_started.steps.step2.description') || '在提示词详情页中，找到"我的上下文"模块，了解个性化功能',
+      timeEstimate: t('docs.context_engineering.getting_started.steps.step2.timeEstimate') || '2分钟',
+      action: t('docs.context_engineering.getting_started.steps.step2.action') || '滚动到提示词详情页下方，查看个性化信息面板',
+      tips: (t('docs.context_engineering.getting_started.steps.step2.tips') as string[]) || [
+        '第一次使用会看到"开始个性化之旅"的提示',
+        '登录后才能看到完整的个性化功能',
+        '每个提示词都有独立的个性化上下文',
+      ],
+      nextStep: 'step3',
+    },
+    {
+      id: 'step3',
+      title: t('docs.context_engineering.getting_started.steps.step3.title') || '进行首次交互',
+      description: t('docs.context_engineering.getting_started.steps.step3.description') || '使用提示词进行第一次AI对话，体验上下文工程的学习过程',
+      timeEstimate: t('docs.context_engineering.getting_started.steps.step3.timeEstimate') || '1分钟',
+      action: t('docs.context_engineering.getting_started.steps.step3.action') || '点击"立即体验"按钮，与AI进行第一次对话',
+      tips: (t('docs.context_engineering.getting_started.steps.step3.tips') as string[]) || [
+        '可以询问任何与提示词相关的问题',
+        '系统会记录您的偏好和反馈',
+        '不必担心说错，每次交互都是学习机会',
+      ],
+      nextStep: 'step4',
+    },
+    {
+      id: 'step4',
+      title: t('docs.context_engineering.getting_started.steps.step4.title') || '设置个人偏好',
+      description: t('docs.context_engineering.getting_started.steps.step4.description') || '访问账户设置，配置您的基本偏好，让AI更好地了解您',
+      timeEstimate: t('docs.context_engineering.getting_started.steps.step4.timeEstimate') || '1分钟',
+      action: t('docs.context_engineering.getting_started.steps.step4.action') || '进入账户设置 → 个性化偏好，设置基本信息',
+      tips: (t('docs.context_engineering.getting_started.steps.step4.tips') as string[]) || [
+        '语言风格、专业程度、回答长度等都很重要',
+        '偏好设置会影响所有提示词的表现',
+        '可以随时修改，不用一次性设置完美',
+      ],
+      nextStep: 'step5',
+    },
+    {
+      id: 'step5',
+      title: t('docs.context_engineering.getting_started.steps.step5.title') || '查看学习效果',
+      description: t('docs.context_engineering.getting_started.steps.step5.description') || '回到提示词页面，查看AI如何根据您的使用调整回应方式',
+      timeEstimate: t('docs.context_engineering.getting_started.steps.step5.timeEstimate') || '无限制',
+      action: t('docs.context_engineering.getting_started.steps.step5.action') || '继续使用提示词，观察AI回应的变化',
+      tips: (t('docs.context_engineering.getting_started.steps.step5.tips') as string[]) || [
+        '多次使用后，回应会越来越符合您的偏好',
+        '在"我的上下文"中可以看到学习进度',
+        '给予反馈能加速个性化效果',
+      ],
+    },
+  ];
   
   const markStepComplete = (stepId: string) => {
     setCompletedSteps(prev => new Set([...prev, stepId]));
@@ -119,12 +121,12 @@ export default function ContextEngineeringGettingStarted() {
 
   return (
     <DocLayout
-      title="上下文工程快速入门"
-      description="5分钟快速体验上下文工程的强大功能，从零开始构建您的个性化AI助手。"
+      title={t('docs.context_engineering.getting_started.title') || "上下文工程快速入门"}
+      description={t('docs.context_engineering.getting_started.description') || "5分钟快速体验上下文工程的强大功能，从零开始构建您的个性化AI助手。"}
       breadcrumbs={[
-        { name: '文档', href: '/docs' },
-        { name: '上下文工程', href: '/docs/context-engineering' },
-        { name: '快速入门', href: '/docs/context-engineering/getting-started' },
+        { name: t('docs.context_engineering.getting_started.breadcrumbs.docs') || '文档', href: '/docs' },
+        { name: t('docs.context_engineering.getting_started.breadcrumbs.context_engineering') || '上下文工程', href: '/docs/context-engineering' },
+        { name: t('docs.context_engineering.getting_started.breadcrumbs.getting_started') || '快速入门', href: '/docs/context-engineering/getting-started' },
       ]}
     >
 
@@ -138,32 +140,32 @@ export default function ContextEngineeringGettingStarted() {
           <div className="glass rounded-2xl p-8 border border-neon-green/30">
             <h2 className="text-3xl font-bold text-white mb-6 flex items-center">
               <SparklesIcon className="h-8 w-8 mr-3 text-neon-green" />
-              您将在5分钟内学会
+              {t('docs.context_engineering.getting_started.overview.title') || "您将在5分钟内学会"}
             </h2>
             
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               <OverviewCard
                 icon={UserIcon}
-                title="建立个人档案"
-                description="让AI了解您的偏好和工作方式"
+                title={t('docs.context_engineering.getting_started.overview.profile.title') || "建立个人档案"}
+                description={t('docs.context_engineering.getting_started.overview.profile.description') || "让AI了解您的偏好和工作方式"}
                 color="neon-blue"
               />
               <OverviewCard
                 icon={CogIcon}
-                title="体验智能适应"
-                description="看AI如何根据您的使用自动调整"
+                title={t('docs.context_engineering.getting_started.overview.adaptation.title') || "体验智能适应"}
+                description={t('docs.context_engineering.getting_started.overview.adaptation.description') || "看AI如何根据您的使用自动调整"}
                 color="neon-purple"
               />
               <OverviewCard
                 icon={ChartBarIcon}
-                title="监控学习进度"
-                description="实时查看个性化效果和使用统计"
+                title={t('docs.context_engineering.getting_started.overview.monitoring.title') || "监控学习进度"}
+                description={t('docs.context_engineering.getting_started.overview.monitoring.description') || "实时查看个性化效果和使用统计"}
                 color="neon-yellow"
               />
               <OverviewCard
                 icon={LightBulbIcon}
-                title="获得智能建议"
-                description="收到个性化的改进建议和技巧"
+                title={t('docs.context_engineering.getting_started.overview.suggestions.title') || "获得智能建议"}
+                description={t('docs.context_engineering.getting_started.overview.suggestions.description') || "收到个性化的改进建议和技巧"}
                 color="neon-pink"
               />
             </div>
@@ -183,7 +185,7 @@ export default function ContextEngineeringGettingStarted() {
               <div className="glass rounded-2xl p-6 border border-neon-cyan/30 sticky top-8">
                 <h3 className="text-lg font-bold text-white mb-4 flex items-center">
                   <ClockIcon className="h-5 w-5 mr-2 text-neon-cyan" />
-                  进度跟踪
+                  {t('docs.context_engineering.getting_started.steps.progress') || "进度跟踪"}
                 </h3>
                 <div className="space-y-3">
                   {QUICK_START_STEPS.map((step, index) => (
@@ -200,7 +202,7 @@ export default function ContextEngineeringGettingStarted() {
                 
                 <div className="mt-6 pt-4 border-t border-gray-600/50">
                   <div className="text-sm text-gray-400">
-                    进度: {completedSteps.size} / {QUICK_START_STEPS.length}
+                    {t('docs.context_engineering.getting_started.steps.progressText')?.replace('{current}', String(completedSteps.size))?.replace('{total}', String(QUICK_START_STEPS.length)) || `进度: ${completedSteps.size} / ${QUICK_START_STEPS.length}`}
                   </div>
                   <div className="w-full bg-gray-700 rounded-full h-2 mt-2">
                     <div 
@@ -236,25 +238,25 @@ export default function ContextEngineeringGettingStarted() {
           <div className="glass rounded-2xl p-8 border border-neon-yellow/30">
             <h2 className="text-3xl font-bold text-white mb-8 flex items-center">
               <InformationCircleIcon className="h-8 w-8 mr-3 text-neon-yellow" />
-              快速入门FAQ
+              {t('docs.context_engineering.getting_started.faq.title') || "快速入门FAQ"}
             </h2>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <FAQItem
-                question="需要技术背景才能使用吗？"
-                answer="完全不需要！上下文工程设计为对所有用户友好，界面直观，无需任何编程知识。"
+                question={t('docs.context_engineering.getting_started.faq.q1.question') || "需要技术背景才能使用吗？"}
+                answer={t('docs.context_engineering.getting_started.faq.q1.answer') || "完全不需要！上下文工程设计为对所有用户友好，界面直观，无需任何编程知识。"}
               />
               <FAQItem
-                question="个性化需要多长时间生效？"
-                answer="基础个性化立即生效，深度学习通常需要3-5次交互。系统会持续优化，使用越多效果越好。"
+                question={t('docs.context_engineering.getting_started.faq.q2.question') || "个性化需要多长时间生效？"}
+                answer={t('docs.context_engineering.getting_started.faq.q2.answer') || "基础个性化立即生效，深度学习通常需要3-5次交互。系统会持续优化，使用越多效果越好。"}
               />
               <FAQItem
-                question="我的数据安全吗？"
-                answer="绝对安全。您的个人数据完全归您所有，可随时查看、修改或删除。我们采用严格的隐私保护措施。"
+                question={t('docs.context_engineering.getting_started.faq.q3.question') || "我的数据安全吗？"}
+                answer={t('docs.context_engineering.getting_started.faq.q3.answer') || "绝对安全。您的个人数据完全归您所有，可随时查看、修改或删除。我们采用严格的隐私保护措施。"}
               />
               <FAQItem
-                question="可以同时使用多个提示词吗？"
-                answer="当然可以！每个提示词都有独立的个性化上下文，您可以在不同场景中使用不同的提示词。"
+                question={t('docs.context_engineering.getting_started.faq.q4.question') || "可以同时使用多个提示词吗？"}
+                answer={t('docs.context_engineering.getting_started.faq.q4.answer') || "当然可以！每个提示词都有独立的个性化上下文，您可以在不同场景中使用不同的提示词。"}
               />
             </div>
           </div>
@@ -268,10 +270,10 @@ export default function ContextEngineeringGettingStarted() {
         >
           <div className="glass rounded-2xl p-8 border border-neon-purple/30 text-center">
             <h2 className="text-3xl font-bold text-white mb-6">
-              🎉 恭喜！您已掌握基础操作
+              {t('docs.context_engineering.getting_started.next.title') || "🎉 恭喜！您已掌握基础操作"}
             </h2>
             <p className="text-gray-300 mb-8 max-w-2xl mx-auto">
-              现在您已经了解了上下文工程的基本使用方法。继续探索高级功能，发现更多可能性。
+              {t('docs.context_engineering.getting_started.next.description') || "现在您已经了解了上下文工程的基本使用方法。继续探索高级功能，发现更多可能性。"}
             </p>
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-4xl mx-auto">
@@ -281,8 +283,8 @@ export default function ContextEngineeringGettingStarted() {
                   whileHover={{ scale: 1.02 }}
                 >
                   <BookOpenIcon className="h-8 w-8 text-neon-blue mx-auto mb-3" />
-                  <h3 className="text-lg font-semibold text-white mb-2">详细用户指南</h3>
-                  <p className="text-gray-400 text-sm">深入了解所有功能和使用技巧</p>
+                  <h3 className="text-lg font-semibold text-white mb-2">{t('docs.context_engineering.getting_started.next.userGuide.title') || "详细用户指南"}</h3>
+                  <p className="text-gray-400 text-sm">{t('docs.context_engineering.getting_started.next.userGuide.description') || "深入了解所有功能和使用技巧"}</p>
                 </motion.div>
               </Link>
               
@@ -292,8 +294,8 @@ export default function ContextEngineeringGettingStarted() {
                   whileHover={{ scale: 1.02 }}
                 >
                   <LightBulbIcon className="h-8 w-8 text-neon-purple mx-auto mb-3" />
-                  <h3 className="text-lg font-semibold text-white mb-2">最佳实践</h3>
-                  <p className="text-gray-400 text-sm">专家经验和高级使用技巧</p>
+                  <h3 className="text-lg font-semibold text-white mb-2">{t('docs.context_engineering.getting_started.next.bestPractices.title') || "最佳实践"}</h3>
+                  <p className="text-gray-400 text-sm">{t('docs.context_engineering.getting_started.next.bestPractices.description') || "专家经验和高级使用技巧"}</p>
                 </motion.div>
               </Link>
               
@@ -303,8 +305,8 @@ export default function ContextEngineeringGettingStarted() {
                   whileHover={{ scale: 1.02 }}
                 >
                   <AcademicCapIcon className="h-8 w-8 text-neon-green mx-auto mb-3" />
-                  <h3 className="text-lg font-semibold text-white mb-2">高级工具</h3>
-                  <p className="text-gray-400 text-sm">探索专业级上下文工程功能</p>
+                  <h3 className="text-lg font-semibold text-white mb-2">{t('docs.context_engineering.getting_started.next.advancedTools.title') || "高级工具"}</h3>
+                  <p className="text-gray-400 text-sm">{t('docs.context_engineering.getting_started.next.advancedTools.description') || "探索专业级上下文工程功能"}</p>
                 </motion.div>
               </Link>
             </div>
@@ -390,7 +392,7 @@ function StepDetail({ step, stepNumber, isCompleted, onMarkComplete }: {
         </div>
         <div>
           <h3 className="text-2xl font-bold text-white">{step.title}</h3>
-          <div className="text-sm text-neon-cyan">预计用时: {step.timeEstimate}</div>
+          <div className="text-sm text-neon-cyan">{t('docs.context_engineering.getting_started.steps.expectedTime')?.replace('{time}', step.timeEstimate) || `预计用时: ${step.timeEstimate}`}</div>
         </div>
       </div>
       
@@ -401,7 +403,7 @@ function StepDetail({ step, stepNumber, isCompleted, onMarkComplete }: {
       <div className="bg-neon-cyan/10 border border-neon-cyan/30 rounded-xl p-4 mb-6">
         <h4 className="text-white font-semibold mb-2 flex items-center">
           <PlayIcon className="h-5 w-5 mr-2 text-neon-cyan" />
-          操作步骤
+          {t('docs.context_engineering.getting_started.steps.operation') || "操作步骤"}
         </h4>
         <p className="text-gray-300">{step.action}</p>
       </div>
@@ -410,7 +412,7 @@ function StepDetail({ step, stepNumber, isCompleted, onMarkComplete }: {
         <div className="bg-neon-yellow/10 border border-neon-yellow/30 rounded-xl p-4 mb-6">
           <h4 className="text-white font-semibold mb-3 flex items-center">
             <LightBulbIcon className="h-5 w-5 mr-2 text-neon-yellow" />
-            实用技巧
+            {t('docs.context_engineering.getting_started.steps.tips') || "实用技巧"}
           </h4>
           <ul className="space-y-2">
             {step.tips.map((tip, index) => (
@@ -425,14 +427,14 @@ function StepDetail({ step, stepNumber, isCompleted, onMarkComplete }: {
       
       <div className="flex justify-between items-center">
         <div className="text-sm text-gray-500">
-          {isCompleted ? '✅ 已完成' : '进行中...'}
+          {isCompleted ? (t('docs.context_engineering.getting_started.steps.completed') || '✅ 已完成') : (t('docs.context_engineering.getting_started.steps.inProgress') || '进行中...')}
         </div>
         {!isCompleted && (
           <button
             onClick={onMarkComplete}
             className="px-6 py-3 bg-neon-cyan text-black rounded-lg hover:bg-cyan-400 transition-colors font-medium flex items-center"
           >
-            标记为完成
+            {t('docs.context_engineering.getting_started.steps.markComplete') || "标记为完成"}
             <ChevronRightIcon className="h-4 w-4 ml-2" />
           </button>
         )}

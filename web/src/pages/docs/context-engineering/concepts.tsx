@@ -8,6 +8,7 @@ import React from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import DocLayout from '@/components/DocLayout';
+import { useLanguage } from '@/contexts/LanguageContext';
 import {
   AcademicCapIcon,
   CpuChipIcon,
@@ -28,14 +29,16 @@ import {
 } from '@heroicons/react/24/outline';
 
 export default function ContextEngineeringConcepts() {
+  const { t } = useLanguage();
+  
   return (
     <DocLayout
-      title="上下文工程核心概念"
-      description="深入理解上下文工程的理论基础、技术架构和设计原理，掌握下一代AI交互范式的核心要素。"
+      title={t('docs.context_engineering.concepts.title') || "上下文工程核心概念"}
+      description={t('docs.context_engineering.concepts.description') || "深入理解上下文工程的理论基础、技术架构和设计原理，掌握下一代AI交互范式的核心要素。"}
       breadcrumbs={[
-        { name: '文档', href: '/docs' },
-        { name: '上下文工程', href: '/docs/context-engineering' },
-        { name: '核心概念', href: '/docs/context-engineering/concepts' },
+        { name: t('docs.breadcrumbs.docs'), href: '/docs' },
+        { name: t('docs.breadcrumbs.context_engineering'), href: '/docs/context-engineering' },
+        { name: t('docs.breadcrumbs.concepts'), href: '/docs/context-engineering/concepts' },
       ]}
     >
 

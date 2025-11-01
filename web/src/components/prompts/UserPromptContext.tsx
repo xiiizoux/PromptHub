@@ -30,6 +30,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { getContextAccessLevel, getPermissionDescription } from '@/lib/context-permissions';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface UserPromptContextProps {
   promptId: string;
@@ -70,12 +71,7 @@ const fetcher = (url: string) => fetch(url).then((res) => {
   return res.json();
 });
 
-const TABS = [
-  { id: 'overview', name: '个性化概览', icon: SparklesIcon },
-  { id: 'interactions', name: '交互历史', icon: ClockIcon },
-  { id: 'rules', name: '适用规则', icon: CogIcon },
-  { id: 'insights', name: '学习洞察', icon: LightBulbIcon },
-];
+// TABS will be defined using translations in the component
 
 // 简化/专业模式
 type ViewMode = 'simple' | 'professional';
@@ -88,6 +84,14 @@ export default function UserPromptContext({
   isCollaborator = false, 
 }: UserPromptContextProps) {
   const { user } = useAuth();
+  const { t } = useLanguage();
+  
+  const TABS = [
+    { id: 'overview', name: t('userPromptContext.tabs.overview'), icon: SparklesIcon },
+    { id: 'interactions', name: t('userPromptContext.tabs.interactions'), icon: ClockIcon },
+    { id: 'rules', name: t('userPromptContext.tabs.rules'), icon: CogIcon },
+    { id: 'insights', name: t('userPromptContext.tabs.insights'), icon: LightBulbIcon },
+  ];
   
   // 计算权限级别
   const accessLevel = user ? getContextAccessLevel(
@@ -125,16 +129,16 @@ export default function UserPromptContext({
       >
         <div className="text-center">
           <UserIcon className="h-12 w-12 text-neon-blue mx-auto mb-4" />
-          <h3 className="text-xl font-bold text-white mb-2">解锁个性化体验</h3>
+          <h3 className="text-xl font-bold text-white mb-2">{t('userPromptContext.unlockPersonalization')}</h3>
           <p className="text-gray-300 mb-4">
-            登录后即可查看此提示词如何为您量身定制，包括个人偏好、使用历史和智能优化建议。
+            {t('userPromptContext.unlockPersonalizationDesc')}
           </p>
           <div className="flex gap-3 justify-center">
             <button className="px-4 py-2 bg-neon-blue text-white rounded-lg hover:bg-neon-blue/80 transition-colors">
-              立即登录
+              {t('userPromptContext.loginNow')}
             </button>
             <button className="px-4 py-2 border border-neon-blue/50 text-neon-blue rounded-lg hover:bg-neon-blue/10 transition-colors">
-              注册账号
+              {t('userPromptContext.registerAccount')}
             </button>
           </div>
         </div>
@@ -180,7 +184,7 @@ export default function UserPromptContext({
       >
         <div className="flex items-center text-red-400">
           <XCircleIcon className="h-5 w-5 mr-2" />
-          <span>加载个性化信息时出错，请稍后重试</span>
+          <span>{t('userPromptContext.errorLoading')}</span>
         </div>
       </motion.div>
     );
@@ -196,12 +200,12 @@ export default function UserPromptContext({
       >
         <div className="text-center">
           <RocketLaunchIcon className="h-12 w-12 text-neon-purple mx-auto mb-4" />
-          <h3 className="text-xl font-bold text-white mb-2">开始您的个性化之旅</h3>
+          <h3 className="text-xl font-bold text-white mb-2">{t('userPromptContext.startJourney')}</h3>
           <p className="text-gray-300 mb-4">
-            这是您第一次使用此提示词。开始使用后，我们将为您建立专属的个性化档案。
+            {t('userPromptContext.startJourneyDesc')}
           </p>
           <button className="px-4 py-2 bg-neon-purple text-white rounded-lg hover:bg-neon-purple/80 transition-colors">
-            立即体验
+            {t('userPromptContext.experienceNow')}
           </button>
         </div>
       </motion.div>
@@ -244,19 +248,19 @@ export default function UserPromptContext({
             </div>
             <div>
               <h3 className="text-2xl font-bold text-white gradient-text flex items-center">
-                🚀 我的上下文
+                🚀 {t('userPromptContext.myContext')}
                 {accessLevel?.ownership === 'owned' ? 
-                  <span className="ml-3 px-2 py-1 bg-neon-green/20 text-neon-green text-xs rounded">拥有者</span> :
-                  <span className="ml-3 px-2 py-1 bg-neon-blue/20 text-neon-blue text-xs rounded">个人数据</span>
+                  <span className="ml-3 px-2 py-1 bg-neon-green/20 text-neon-green text-xs rounded">{t('userPromptContext.owner')}</span> :
+                  <span className="ml-3 px-2 py-1 bg-neon-blue/20 text-neon-blue text-xs rounded">{t('userPromptContext.personalData')}</span>
                 }
               </h3>
-              <p className="text-gray-300 text-sm">此提示词如何为您量身定制</p>
+              <p className="text-gray-300 text-sm">{t('userPromptContext.customizedForYou')}</p>
             </div>
           </div>
           
           {/* 视图模式切换 */}
           <div className="flex items-center space-x-2">
-            <span className="text-sm text-gray-400">视图模式:</span>
+            <span className="text-sm text-gray-400">{t('userPromptContext.viewMode')}:</span>
             <div className="flex bg-dark-bg-secondary rounded-lg p-1">
               <button
                 onClick={() => setViewMode('simple')}
@@ -266,7 +270,7 @@ export default function UserPromptContext({
                     : 'text-gray-400 hover:text-white'
                 }`}
               >
-                简洁
+                {t('userPromptContext.simple')}
               </button>
               <button
                 onClick={() => setViewMode('professional')}
@@ -276,7 +280,7 @@ export default function UserPromptContext({
                     : 'text-gray-400 hover:text-white'
                 }`}
               >
-                专业
+                {t('userPromptContext.professional')}
               </button>
             </div>
           </div>
@@ -286,25 +290,25 @@ export default function UserPromptContext({
         <div className="grid grid-cols-4 gap-4 mt-6">
           <StatCard
             icon={EyeIcon}
-            label="总使用次数"
+            label={t('userPromptContext.totalUsage')}
             value={contextData.contextStats.totalInteractions}
             color="neon-blue"
           />
           <StatCard
             icon={ArrowTrendingUpIcon}
-            label="成功率"
+            label={t('userPromptContext.successRate')}
             value={`${contextData.contextStats.successRate}%`}
             color="neon-green"
           />
           <StatCard
             icon={StarIcon}
-            label="满意度"
+            label={t('userPromptContext.satisfaction')}
             value={`${contextData.contextStats.avgSatisfaction}/5`}
             color="neon-yellow"
           />
           <StatCard
             icon={HeartIcon}
-            label="个性化天数"
+            label={t('userPromptContext.personalizedDays')}
             value={calculateDaysPersonalized(contextData.contextStats.personalizedSince)}
             color="neon-pink"
           />

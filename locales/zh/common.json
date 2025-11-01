@@ -371,6 +371,12 @@
   "docs": {
     "title": "开发文档",
     "subtitle": "深入了解 Prompt Hub 的强大功能，掌握AI提示词创作的艺术",
+    "backToHome": "返回文档首页",
+    "breadcrumbs": {
+      "docs": "文档",
+      "context_engineering": "上下文工程",
+      "concepts": "核心概念"
+    },
     "getting_started": {
       "title": "入门指南",
       "description": "了解 Prompt Hub 的基本概念和功能，快速开始使用平台创造AI魔法。",
@@ -388,6 +394,420 @@
         "getting_started": "5分钟快速入门",
         "user_guide": "详细功能指南",
         "best_practices": "最佳实践与技巧"
+      },
+      "concepts": {
+        "title": "上下文工程核心概念",
+        "description": "深入理解上下文工程的理论基础、技术架构和设计原理，掌握下一代AI交互范式的核心要素。"
+      },
+      "index": {
+        "learnMore": "深入了解",
+        "quickStart": "快速开始",
+        "whatIsTitle": "什么是上下文工程？",
+        "coreConcept": "核心概念",
+        "coreConceptDesc": "上下文工程是一种革命性的AI交互方法论，它通过构建智能化的上下文适应系统，让AI能够根据用户的个人偏好、使用习惯、历史交互和当前情境，动态调整其回应方式和内容。",
+        "coreConceptDesc2": "与传统的静态提示词不同，上下文工程创建了一个学习型、适应型的AI交互环境，使每次对话都更加精准、个性化和高效。",
+        "keyFeatures": "关键特征",
+        "keyFeature1": "个性化适应 - AI学习您的偏好和风格",
+        "keyFeature2": "动态调整 - 根据情境实时优化回应",
+        "keyFeature3": "持续学习 - 从每次交互中不断改进",
+        "keyFeature4": "智能预测 - 预测用户需求和意图",
+        "exampleTitle": "一个简单的例子",
+        "exampleDesc": "想象您有一个\"代码评审助手\"。传统提示词每次都给出相同格式的建议。而通过上下文工程，它会记住您是Python开发者、偏好简洁注释、关注性能优化，并在后续评审中自动采用您喜欢的代码风格和关注点，就像一个真正了解您的同事。",
+        "vsTraditionalTitle": "上下文工程 vs 传统Prompt",
+        "vsTraditional": {
+          "feature": "特性",
+          "traditional": "传统Prompt",
+          "contextEngineering": "上下文工程",
+          "interaction": "交互方式",
+          "interactionTraditional": "静态、一次性指令",
+          "interactionCE": "动态、自适应对话",
+          "personalization": "个性化程度",
+          "personalizationTraditional": "无个性化，千篇一律",
+          "personalizationCE": "深度个性化，因人而异",
+          "learning": "学习能力",
+          "learningTraditional": "不具备学习能力",
+          "learningCE": "持续学习和改进",
+          "contextAwareness": "上下文感知",
+          "contextAwarenessTraditional": "仅当前对话上下文",
+          "contextAwarenessCE": "历史记忆 + 环境感知",
+          "optimization": "效果优化",
+          "optimizationTraditional": "手动调试和修改",
+          "optimizationCE": "自动A/B测试和优化",
+          "complexity": "复杂度管理",
+          "complexityTraditional": "随需求增长而复杂化",
+          "complexityCE": "智能简化，渐进披露",
+          "application": "应用场景",
+          "applicationTraditional": "简单、标准化任务",
+          "applicationCE": "复杂、长期、个性化任务"
+        },
+        "implementationTitle": "PromptHub中的上下文工程实现",
+        "implementation": {
+          "concepts": "核心概念",
+          "conceptsDesc": "深入了解上下文工程的理论基础和技术架构",
+          "gettingStarted": "快速入门",
+          "gettingStartedDesc": "5分钟快速上手上下文工程功能",
+          "userGuide": "用户指南",
+          "userGuideDesc": "详细的功能使用教程和操作指南",
+          "bestPractices": "最佳实践",
+          "bestPracticesDesc": "专家经验分享和实战技巧",
+          "advancedTools": "高级工具",
+          "advancedToolsDesc": "访问高级上下文工程工具中心",
+          "analytics": "提示词分析",
+          "analyticsDesc": "个人提示词深度分析和优化建议",
+          "learnMore": "了解更多"
+        },
+        "journeyTitle": "开始您的上下文工程之旅",
+        "journey": {
+          "concepts": "基础概念",
+          "conceptsDesc": "了解核心概念和原理",
+          "gettingStarted": "快速入门",
+          "gettingStartedDesc": "5分钟上手指南",
+          "features": "功能指南",
+          "featuresDesc": "详细功能使用教程",
+          "practices": "最佳实践",
+          "practicesDesc": "专家经验和技巧"
+        }
+      },
+      "getting_started": {
+        "title": "上下文工程快速入门",
+        "description": "5分钟快速体验上下文工程的强大功能，从零开始构建您的个性化AI助手。",
+        "breadcrumbs": {
+          "docs": "文档",
+          "context_engineering": "上下文工程",
+          "getting_started": "快速入门"
+        },
+        "overview": {
+          "title": "您将在5分钟内学会",
+          "profile": {
+            "title": "建立个人档案",
+            "description": "让AI了解您的偏好和工作方式"
+          },
+          "adaptation": {
+            "title": "体验智能适应",
+            "description": "看AI如何根据您的使用自动调整"
+          },
+          "monitoring": {
+            "title": "监控学习进度",
+            "description": "实时查看个性化效果和使用统计"
+          },
+          "suggestions": {
+            "title": "获得智能建议",
+            "description": "收到个性化的改进建议和技巧"
+          }
+        },
+        "steps": {
+          "progress": "进度跟踪",
+          "progressText": "进度: {current} / {total}",
+          "step1": {
+            "title": "创建或选择一个提示词",
+            "description": "从浏览PromptHub的公开提示词开始，或创建您的第一个提示词",
+            "timeEstimate": "1分钟",
+            "action": "前往提示词库，选择一个感兴趣的提示词",
+            "tips": [
+              "建议先从热门的\"代码助手\"或\"写作助手\"提示词开始",
+              "选择与您工作相关的领域提示词，体验更佳",
+              "新用户建议从简单的通用提示词开始练习"
+            ]
+          },
+          "step2": {
+            "title": "查看\"我的上下文\"",
+            "description": "在提示词详情页中，找到\"我的上下文\"模块，了解个性化功能",
+            "timeEstimate": "2分钟",
+            "action": "滚动到提示词详情页下方，查看个性化信息面板",
+            "tips": [
+              "第一次使用会看到\"开始个性化之旅\"的提示",
+              "登录后才能看到完整的个性化功能",
+              "每个提示词都有独立的个性化上下文"
+            ]
+          },
+          "step3": {
+            "title": "进行首次交互",
+            "description": "使用提示词进行第一次AI对话，体验上下文工程的学习过程",
+            "timeEstimate": "1分钟",
+            "action": "点击\"立即体验\"按钮，与AI进行第一次对话",
+            "tips": [
+              "可以询问任何与提示词相关的问题",
+              "系统会记录您的偏好和反馈",
+              "不必担心说错，每次交互都是学习机会"
+            ]
+          },
+          "step4": {
+            "title": "设置个人偏好",
+            "description": "访问账户设置，配置您的基本偏好，让AI更好地了解您",
+            "timeEstimate": "1分钟",
+            "action": "进入账户设置 → 个性化偏好，设置基本信息",
+            "tips": [
+              "语言风格、专业程度、回答长度等都很重要",
+              "偏好设置会影响所有提示词的表现",
+              "可以随时修改，不用一次性设置完美"
+            ]
+          },
+          "step5": {
+            "title": "查看学习效果",
+            "description": "回到提示词页面，查看AI如何根据您的使用调整回应方式",
+            "timeEstimate": "无限制",
+            "action": "继续使用提示词，观察AI回应的变化",
+            "tips": [
+              "多次使用后，回应会越来越符合您的偏好",
+              "在\"我的上下文\"中可以看到学习进度",
+              "给予反馈能加速个性化效果"
+            ]
+          },
+          "operation": "操作步骤",
+          "tips": "实用技巧",
+          "completed": "✅ 已完成",
+          "inProgress": "进行中...",
+          "markComplete": "标记为完成",
+          "expectedTime": "预计用时: {time}"
+        },
+        "faq": {
+          "title": "快速入门FAQ",
+          "q1": {
+            "question": "需要技术背景才能使用吗？",
+            "answer": "完全不需要！上下文工程设计为对所有用户友好，界面直观，无需任何编程知识。"
+          },
+          "q2": {
+            "question": "个性化需要多长时间生效？",
+            "answer": "基础个性化立即生效，深度学习通常需要3-5次交互。系统会持续优化，使用越多效果越好。"
+          },
+          "q3": {
+            "question": "我的数据安全吗？",
+            "answer": "绝对安全。您的个人数据完全归您所有，可随时查看、修改或删除。我们采用严格的隐私保护措施。"
+          },
+          "q4": {
+            "question": "可以同时使用多个提示词吗？",
+            "answer": "当然可以！每个提示词都有独立的个性化上下文，您可以在不同场景中使用不同的提示词。"
+          }
+        },
+        "next": {
+          "title": "🎉 恭喜！您已掌握基础操作",
+          "description": "现在您已经了解了上下文工程的基本使用方法。继续探索高级功能，发现更多可能性。",
+          "userGuide": {
+            "title": "详细用户指南",
+            "description": "深入了解所有功能和使用技巧"
+          },
+          "bestPractices": {
+            "title": "最佳实践",
+            "description": "专家经验和高级使用技巧"
+          },
+          "advancedTools": {
+            "title": "高级工具",
+            "description": "探索专业级上下文工程功能"
+          }
+        }
+      },
+      "user_guide": {
+        "title": "上下文工程用户指南",
+        "description": "详细的功能使用教程，帮助您充分利用上下文工程的所有功能，成为AI个性化的专家。",
+        "backText": "返回文档首页",
+        "breadcrumbs": {
+          "docs": "文档",
+          "context_engineering": "上下文工程",
+          "user_guide": "用户指南"
+        },
+        "nav": {
+          "title": "功能指南"
+        },
+        "continue": {
+          "title": "继续深入学习"
+        },
+        "sections": {
+          "personal_context": {
+            "title": "个人上下文管理",
+            "description": "了解如何查看和管理您的个性化AI数据",
+            "viewing": {
+              "title": "查看我的上下文",
+              "content": "在任何提示词详情页的下方，您都可以找到\"我的上下文\"模块。这里展示了AI对您的了解程度和个性化程度。",
+              "tips": [
+                "首次使用时会显示\"开始个性化之旅\"的引导",
+                "每个提示词都有独立的上下文数据",
+                "上下文数据完全归您个人所有"
+              ],
+              "examples": [
+                "总使用次数：显示您使用这个提示词的频率",
+                "成功率：基于您的反馈计算的满意度",
+                "个性化天数：从首次使用到现在的时间"
+              ]
+            },
+            "history": {
+              "title": "交互历史追踪",
+              "content": "系统会记录您与AI的每次交互，包括输入、输出、反馈和应用的个性化规则。这些数据帮助AI更好地理解您的需求。",
+              "tips": [
+                "可以切换简洁/专业视图模式",
+                "专业模式显示更多技术细节",
+                "历史记录支持搜索和筛选"
+              ],
+              "warnings": [
+                "历史记录仅保存最近100条交互",
+                "删除历史记录会影响个性化效果"
+              ]
+            },
+            "insights": {
+              "title": "学习洞察分析",
+              "content": "AI会分析您的使用模式，提供个性化的改进建议和使用技巧。这些洞察帮助您更好地利用AI助手。",
+              "examples": [
+                "使用模式：您偏好的交互时间和频率",
+                "偏好风格：AI总结出的您喜欢的回答风格",
+                "改进建议：基于使用数据的个性化建议"
+              ]
+            }
+          },
+          "adaptation_rules": {
+            "title": "智能适应规则",
+            "description": "学习如何创建和管理让AI自动适应您需求的规则",
+            "understanding": {
+              "title": "理解适应规则",
+              "content": "适应规则是让AI根据不同情境自动调整行为的智能系统。规则可以基于时间、设备、使用场景等条件触发。",
+              "tips": [
+                "从简单规则开始，逐步增加复杂度",
+                "规则有优先级，避免冲突",
+                "定期检查规则效果并调整"
+              ],
+              "examples": [
+                "时间规则：工作时间回答更正式，休闲时间更轻松",
+                "设备规则：手机上回答更简洁，电脑上更详细",
+                "场景规则：编程问题更技术化，写作问题更创意化"
+              ]
+            },
+            "creating": {
+              "title": "创建个人规则",
+              "content": "您可以为自己使用的任何提示词创建个人适应规则。这些规则只影响您的使用体验，不会影响其他用户。",
+              "tips": [
+                "使用可视化规则构建器，无需编程知识",
+                "规则可以随时启用/禁用",
+                "支持A/B测试验证规则效果"
+              ],
+              "warnings": [
+                "过多复杂规则可能导致行为不一致",
+                "规则冲突时系统会选择优先级最高的"
+              ]
+            },
+            "management": {
+              "title": "规则管理与优化",
+              "content": "通过规则管理界面，您可以查看所有规则的表现，启用或禁用特定规则，并根据效果数据进行优化。",
+              "examples": [
+                "规则列表：查看所有激活和禁用的规则",
+                "效果统计：每个规则的触发次数和满意度",
+                "规则冲突检测：自动识别可能的规则冲突"
+              ]
+            }
+          },
+          "analytics": {
+            "title": "使用分析洞察",
+            "description": "深入了解您的AI使用模式和优化机会",
+            "personal": {
+              "title": "个人使用分析",
+              "content": "个人分析页面提供您在PromptHub上的完整使用画像，包括偏好分析、使用趋势、效果评估等多个维度。",
+              "tips": [
+                "定期查看分析报告，了解使用习惯",
+                "关注满意度趋势，发现问题及时调整",
+                "利用使用模式优化工作流程"
+              ],
+              "examples": [
+                "使用频率：每日、每周、每月的使用统计",
+                "提示词偏好：最常用的提示词类型和领域",
+                "效果趋势：个性化效果随时间的改善"
+              ]
+            },
+            "prompt_specific": {
+              "title": "提示词专项分析",
+              "content": "针对特定提示词的深度使用分析，帮助您了解在不同场景下的AI使用效果。",
+              "examples": [
+                "交互模式：在该提示词上的典型使用模式",
+                "效果评分：基于反馈的客观效果评估",
+                "改进空间：个性化还可以优化的方向"
+              ]
+            },
+            "comparative": {
+              "title": "对比分析",
+              "content": "通过对比不同时期、不同提示词、不同规则的效果，发现最适合您的AI使用方式。",
+              "warnings": [
+                "对比分析需要足够的使用数据支撑",
+                "短期波动不代表长期趋势"
+              ]
+            }
+          },
+          "experiments": {
+            "title": "A/B测试与实验",
+            "description": "科学地测试和优化您的AI交互策略",
+            "design": {
+              "title": "个人实验设计",
+              "content": "您可以为自己的AI使用创建A/B测试，比较不同规则、不同偏好设置的效果，找到最优配置。",
+              "tips": [
+                "每次只测试一个变量，确保结果可靠",
+                "设置合理的测试周期，通常1-2周",
+                "收集足够的样本量再做决策"
+              ],
+              "examples": [
+                "规则测试：比较有无特定规则的效果",
+                "风格测试：比较不同回答风格的满意度",
+                "长度测试：比较简洁vs详细回答的偏好"
+              ]
+            },
+            "analysis": {
+              "title": "实验结果分析",
+              "content": "系统提供详细的实验结果分析，包括统计显著性检验、置信区间、效果大小等专业指标。",
+              "warnings": [
+                "避免过度解读小样本结果",
+                "考虑外部因素对实验的影响"
+              ]
+            },
+            "optimization": {
+              "title": "基于实验的优化",
+              "content": "根据实验结果，系统会提供个性化的优化建议，帮助您调整规则和偏好设置。",
+              "tips": [
+                "渐进式优化，避免大幅度改变",
+                "定期重新评估，适应需求变化",
+                "记录优化历程，便于回溯"
+              ]
+            }
+          },
+          "advanced": {
+            "title": "高级功能",
+            "description": "探索上下文工程的专业级功能",
+            "tools": {
+              "title": "高级工具集",
+              "content": "专业用户可以使用高级上下文工程工具，包括复杂规则构建、批量优化、API集成等功能。",
+              "tips": [
+                "建议有一定使用经验后再尝试高级功能",
+                "高级工具需要更多的配置和维护",
+                "充分利用预设模板快速开始"
+              ]
+            },
+            "api": {
+              "title": "API集成",
+              "content": "通过API将上下文工程功能集成到您的工作流程或应用中，实现自动化的个性化AI体验。",
+              "examples": [
+                "Webhook：当个性化效果达到阈值时自动通知",
+                "REST API：程序化访问个人上下文数据",
+                "GraphQL：灵活查询个性化分析数据"
+              ]
+            },
+            "export": {
+              "title": "数据导出导入",
+              "content": "您可以导出个人的上下文工程数据用于备份或迁移，也可以导入预配置的规则集。",
+              "warnings": [
+                "导入规则时注意与现有规则的兼容性",
+                "个人数据导出包含敏感信息，请妥善保管"
+              ]
+            }
+          }
+        },
+        "labels": {
+          "tips": "实用技巧",
+          "warnings": "注意事项",
+          "examples": "实际示例",
+          "expand": "展开",
+          "collapse": "收起",
+          "next": {
+            "best_practices": "最佳实践",
+            "best_practices_desc": "专家经验和使用技巧",
+            "advanced_tools": "高级工具",
+            "advanced_tools_desc": "专业级功能和API",
+            "concepts": "核心概念",
+            "concepts_desc": "理论基础和设计原理"
+          }
+        }
       }
     },
     "api": {
@@ -398,6 +818,48 @@
         "authentication": "认证与授权",
         "prompts": "提示词API",
         "performance": "性能分析API"
+      },
+      "auth": {
+        "title": "认证",
+        "description": "所有API请求都需要进行身份验证。MCP Prompt Server支持以下认证方式：",
+        "apiKeyTitle": "API密钥认证",
+        "apiKeyDesc": "您可以通过以下任一方式提供API密钥",
+        "header": "请求头",
+        "bearer": "Bearer令牌",
+        "queryParam": "查询参数"
+      },
+      "prompts": {
+        "title": "提示词API",
+        "getList": "获取提示词列表",
+        "getDetail": "获取提示词详情",
+        "create": "创建新提示词",
+        "queryParams": "查询参数",
+        "pathParams": "路径参数",
+        "requestBody": "请求体",
+        "responseExample": "响应示例",
+        "paramName": "参数名",
+        "type": "类型",
+        "description": "描述"
+      },
+      "performance": {
+        "title": "性能分析API",
+        "trackUsage": "追踪提示词使用",
+        "trackUsageDesc": "记录提示词使用情况，用于性能分析"
+      },
+      "errors": {
+        "title": "错误处理",
+        "description": "API请求可能会返回以下错误代码：",
+        "statusCode": "状态码",
+        "explanation": "说明",
+        "example": "示例",
+        "errorFormat": "错误响应格式"
+      },
+      "reference": {
+        "title": "详细参考",
+        "auth": "认证与授权",
+        "authDesc": "详细的API认证和授权机制说明",
+        "prompts": "提示词API",
+        "promptsDesc": "完整的提示词管理API参考"
       }
     },
     "best_practices": {
@@ -549,6 +1011,162 @@
         "analysis_failed": "AI分析失败",
         "redirecting": "正在跳转到创建提示词页面..."
       }
+    }
+  },
+  "promptDetails": {
+    "loading": "加载中...",
+    "error": "出错了",
+    "errorOccurred": "出错了",
+    "notFound": "提示词不存在",
+    "notFoundDescription": "您访问的提示词可能已被删除或不存在",
+    "back": "返回",
+    "browseOtherPrompts": "浏览其他提示词",
+    "createdAt": "创建于 {date}",
+    "updatedAt": "更新于 {date}",
+    "version": "版本",
+    "usageCount": "使用 {count} 次",
+    "popular": "热门",
+    "backToList": "返回{type}提示词列表",
+    "chat": "对话",
+    "image": "图像",
+    "video": "视频",
+    "promptContent": "提示词内容",
+    "copyContent": "复制内容",
+    "copied": "已复制！",
+    "copySuccess": "复制成功！",
+    "selectVersion": "选择版本",
+    "noInputVariables": "此提示词没有输入变量",
+    "inputVariablePlaceholder": "输入 {variable} 的值",
+    "variableSettings": "变量设置",
+    "promptInfo": "提示词信息",
+    "typeInfo": "类型信息",
+    "typeGeneration": "{type}生成",
+    "inputVariables": "输入变量",
+    "generationParameters": "生成参数",
+    "noParameters": "此提示词未设置参数",
+    "compatibleModels": "兼容模型",
+    "noCompatibleModels": "🔧 未设置兼容模型",
+    "noCompatibleModelsDesc": "作者尚未指定此提示词的兼容AI模型",
+    "usageExamples": "使用示例",
+    "input": "输入",
+    "output": "输出",
+    "tags": "标签",
+    "noTags": "此提示词未设置标签",
+    "mediaDisplay": "媒体展示",
+    "imageDisplay": "图像展示",
+    "videoDisplay": "视频展示",
+    "noMediaFiles": "暂无{type}文件",
+    "viewVersionHistory": "查看版本历史",
+    "editPrompt": "编辑提示词",
+    "deletePrompt": "删除提示词",
+    "deleting": "删除中...",
+    "errors": {
+      "notFound": "提示词不存在或您无权访问",
+      "noPermission": "您无权访问此提示词",
+      "fetchFailed": "获取提示词详情失败",
+      "invalidData": "提示词数据格式错误",
+      "networkError": "网络错误，请稍后重试",
+      "loginRequired": "请先登录",
+      "tokenError": "无法获取认证令牌，请重新登录",
+      "deleteFailed": "操作失败",
+      "copyFailed": "复制到剪贴板失败"
+    },
+    "delete": {
+      "archiveConfirm": "⚠️ 检测到关联数据保护\n\n提示词\"{name}\"有 {count} 个用户正在使用：\n• 系统将自动归档此提示词（不会删除）\n• 提示词从您的列表中移除，但保持完整功能\n• 其他用户的个性化配置将得到保护\n• 您可以随时从\"我的归档\"中恢复\n\n原因：{reason}\n\n确定要归档此提示词吗？",
+      "deleteConfirm": "🗑️ 安全删除确认\n\n提示词\"{name}\"可以安全删除：\n• 没有其他用户在使用此提示词\n• 所有相关数据将被永久删除\n• 此操作不可恢复\n\n确定要删除此提示词吗？",
+      "archiveSuccess": "📚 智能归档成功！",
+      "archiveSuccessDesc": "归档详情",
+      "protectedUsers": "✓ 已保护 {count} 个用户的个性化配置",
+      "archiveInstructions1": "• 您可以在\"我的归档\"中找到此提示词",
+      "archiveInstructions2": "• 点击\"恢复\"即可重新激活",
+      "archiveInstructions3": "• 其他用户可以继续正常使用",
+      "deleteSuccess": "🗑️ 删除成功！",
+      "deleteSuccessDesc": "所有相关数据已永久删除",
+      "operationFailed": "操作失败",
+      "operationFailedDesc": "请检查您的权限或网络连接",
+      "cannotOperate": "无法操作此提示词：{reason}",
+      "policyCheckFailed": "策略检查失败: {message}"
+    },
+    "versionRevert": {
+      "success": "版本回滚成功",
+      "fetchFailed": "获取提示词数据失败",
+      "revertFailed": "版本回滚失败: {error}",
+      "refreshFailed": "刷新数据失败: {error}"
+    },
+    "parameterNames": {
+      "style": "风格样式",
+      "aspect_ratio": "宽高比",
+      "resolution": "分辨率",
+      "quality": "生成质量",
+      "guidance_scale": "引导强度",
+      "num_inference_steps": "推理步数",
+      "seed": "随机种子",
+      "negative_prompt": "负面提示词",
+      "duration": "视频时长",
+      "fps": "帧率",
+      "motion_strength": "运动强度",
+      "camera_movement": "摄像机运动"
+    },
+    "modelTypes": {
+      "custom": "自定义模型",
+      "customDesc": "用户添加的自定义模型"
+    },
+    "browser": {
+      "videoNotSupported": "您的浏览器不支持视频播放"
+    }
+  },
+  "versionHistory": {
+    "title": "版本历史",
+    "compareMode": "对比模式",
+    "compare": "对比 ({count}/2)",
+    "cancel": "取消",
+    "mediaFilesNotice": "媒体文件说明",
+    "mediaFilesNoticeTitle": "媒体文件说明",
+    "mediaFilesNoticeDesc": "版本历史仅管理文本内容、标签、参数等，不包括图片和视频文件。回滚版本时，媒体文件将保持当前状态不变。",
+    "compareModeHint": "对比模式：点击选择两个版本进行对比。已选择 {count}/2 个版本。",
+    "loading": "加载中...",
+    "noHistory": "暂无版本历史",
+    "currentVersion": "当前版本",
+    "contentLength": "内容长度: {length} 字符",
+    "tagsCount": "标签: {count} 个",
+    "view": "查看",
+    "revert": "回滚",
+    "reverting": "回滚中...",
+    "versionContent": "版本内容 - v{version}",
+    "description": "描述",
+    "content": "内容",
+    "tags": "标签",
+    "errors": {
+      "notAuthenticated": "未认证，请先登录",
+      "fetchFailed": "获取版本历史失败",
+      "revertFailed": "版本回滚失败"
+    }
+  },
+  "userPromptContext": {
+    "unlockPersonalization": "解锁个性化体验",
+    "unlockPersonalizationDesc": "登录后即可查看此提示词如何为您量身定制，包括个人偏好、使用历史和智能优化建议。",
+    "loginNow": "立即登录",
+    "registerAccount": "注册账号",
+    "errorLoading": "加载个性化信息时出错，请稍后重试",
+    "startJourney": "开始您的个性化之旅",
+    "startJourneyDesc": "这是您第一次使用此提示词。开始使用后，我们将为您建立专属的个性化档案。",
+    "experienceNow": "立即体验",
+    "myContext": "我的上下文",
+    "owner": "拥有者",
+    "personalData": "个人数据",
+    "customizedForYou": "此提示词如何为您量身定制",
+    "viewMode": "视图模式",
+    "simple": "简洁",
+    "professional": "专业",
+    "totalUsage": "总使用次数",
+    "successRate": "成功率",
+    "satisfaction": "满意度",
+    "personalizedDays": "个性化天数",
+    "tabs": {
+      "overview": "个性化概览",
+      "interactions": "交互历史",
+      "rules": "适用规则",
+      "insights": "学习洞察"
     }
   }
 }

@@ -371,6 +371,12 @@
   "docs": {
     "title": "Developer Documentation",
     "subtitle": "Discover the powerful features of Prompt Hub and master the art of AI prompt creation",
+    "backToHome": "Back to Documentation Home",
+    "breadcrumbs": {
+      "docs": "Docs",
+      "context_engineering": "Context Engineering",
+      "concepts": "Core Concepts"
+    },
     "getting_started": {
       "title": "Getting Started",
       "description": "Learn the basic concepts and features of Prompt Hub, and quickly start using the platform to create AI magic.",
@@ -388,6 +394,420 @@
         "getting_started": "5-Minute Quick Start",
         "user_guide": "Detailed Feature Guide",
         "best_practices": "Best Practices and Tips"
+      },
+      "concepts": {
+        "title": "Context Engineering Core Concepts",
+        "description": "Deeply understand the theoretical foundations, technical architecture and design principles of context engineering, and master the core elements of the next generation AI interaction paradigm."
+      },
+      "index": {
+        "learnMore": "Learn More",
+        "quickStart": "Quick Start",
+        "whatIsTitle": "What is Context Engineering?",
+        "coreConcept": "Core Concept",
+        "coreConceptDesc": "Context Engineering is a revolutionary AI interaction methodology that builds an intelligent context adaptation system, enabling AI to dynamically adjust its response style and content based on user preferences, usage habits, historical interactions, and current situations.",
+        "coreConceptDesc2": "Unlike traditional static prompts, Context Engineering creates a learning and adaptive AI interaction environment, making every conversation more precise, personalized, and efficient.",
+        "keyFeatures": "Key Features",
+        "keyFeature1": "Personalized Adaptation - AI learns your preferences and style",
+        "keyFeature2": "Dynamic Adjustment - Real-time response optimization based on context",
+        "keyFeature3": "Continuous Learning - Continuous improvement from each interaction",
+        "keyFeature4": "Intelligent Prediction - Predicts user needs and intentions",
+        "exampleTitle": "A Simple Example",
+        "exampleDesc": "Imagine you have a \"code review assistant\". Traditional prompts give the same format of suggestions every time. With Context Engineering, it remembers that you're a Python developer, prefer concise comments, focus on performance optimization, and automatically adopts your preferred code style and focus in subsequent reviews, just like a colleague who truly understands you.",
+        "vsTraditionalTitle": "Context Engineering vs Traditional Prompt",
+        "vsTraditional": {
+          "feature": "Feature",
+          "traditional": "Traditional Prompt",
+          "contextEngineering": "Context Engineering",
+          "interaction": "Interaction Method",
+          "interactionTraditional": "Static, one-time instructions",
+          "interactionCE": "Dynamic, adaptive conversations",
+          "personalization": "Personalization Level",
+          "personalizationTraditional": "No personalization, one-size-fits-all",
+          "personalizationCE": "Deep personalization, tailored to individuals",
+          "learning": "Learning Capability",
+          "learningTraditional": "No learning capability",
+          "learningCE": "Continuous learning and improvement",
+          "contextAwareness": "Context Awareness",
+          "contextAwarenessTraditional": "Only current conversation context",
+          "contextAwarenessCE": "Historical memory + environmental awareness",
+          "optimization": "Effect Optimization",
+          "optimizationTraditional": "Manual debugging and modification",
+          "optimizationCE": "Automatic A/B testing and optimization",
+          "complexity": "Complexity Management",
+          "complexityTraditional": "Complexity grows with requirements",
+          "complexityCE": "Intelligent simplification, progressive disclosure",
+          "application": "Application Scenarios",
+          "applicationTraditional": "Simple, standardized tasks",
+          "applicationCE": "Complex, long-term, personalized tasks"
+        },
+        "implementationTitle": "Context Engineering Implementation in PromptHub",
+        "implementation": {
+          "concepts": "Core Concepts",
+          "conceptsDesc": "Deeply understand the theoretical foundations and technical architecture of context engineering",
+          "gettingStarted": "Quick Start",
+          "gettingStartedDesc": "5-minute quick start guide to context engineering",
+          "userGuide": "User Guide",
+          "userGuideDesc": "Detailed feature usage tutorials and operation guides",
+          "bestPractices": "Best Practices",
+          "bestPracticesDesc": "Expert experience sharing and practical tips",
+          "advancedTools": "Advanced Tools",
+          "advancedToolsDesc": "Access advanced context engineering tool center",
+          "analytics": "Prompt Analytics",
+          "analyticsDesc": "Deep analysis and optimization suggestions for personal prompts",
+          "learnMore": "Learn More"
+        },
+        "journeyTitle": "Start Your Context Engineering Journey",
+        "journey": {
+          "concepts": "Basic Concepts",
+          "conceptsDesc": "Understand core concepts and principles",
+          "gettingStarted": "Quick Start",
+          "gettingStartedDesc": "5-minute getting started guide",
+          "features": "Feature Guide",
+          "featuresDesc": "Detailed feature usage tutorials",
+          "practices": "Best Practices",
+          "practicesDesc": "Expert experience and tips"
+        }
+      },
+      "getting_started": {
+        "title": "Context Engineering Quick Start",
+        "description": "Experience the power of context engineering in 5 minutes, build your personalized AI assistant from scratch.",
+        "breadcrumbs": {
+          "docs": "Docs",
+          "context_engineering": "Context Engineering",
+          "getting_started": "Quick Start"
+        },
+        "overview": {
+          "title": "You'll learn in 5 minutes",
+          "profile": {
+            "title": "Build Personal Profile",
+            "description": "Let AI understand your preferences and working style"
+          },
+          "adaptation": {
+            "title": "Experience Smart Adaptation",
+            "description": "See how AI automatically adjusts based on your usage"
+          },
+          "monitoring": {
+            "title": "Monitor Learning Progress",
+            "description": "View personalization effects and usage statistics in real-time"
+          },
+          "suggestions": {
+            "title": "Get Smart Suggestions",
+            "description": "Receive personalized improvement suggestions and tips"
+          }
+        },
+        "steps": {
+          "progress": "Progress Tracking",
+          "progressText": "Progress: {current} / {total}",
+          "step1": {
+            "title": "Create or Select a Prompt",
+            "description": "Start by browsing PromptHub's public prompts, or create your first prompt",
+            "timeEstimate": "1 minute",
+            "action": "Go to the prompt library and select a prompt of interest",
+            "tips": [
+              "Start with popular \"Code Assistant\" or \"Writing Assistant\" prompts",
+              "Choose prompts related to your work area for better experience",
+              "New users are recommended to start with simple general prompts"
+            ]
+          },
+          "step2": {
+            "title": "View \"My Context\"",
+            "description": "In the prompt detail page, find the \"My Context\" module to understand personalization features",
+            "timeEstimate": "2 minutes",
+            "action": "Scroll to the bottom of the prompt detail page to view the personalization panel",
+            "tips": [
+              "First-time users will see a \"Start Your Personalization Journey\" prompt",
+              "Full personalization features are only available after logging in",
+              "Each prompt has its own independent personalization context"
+            ]
+          },
+          "step3": {
+            "title": "Have Your First Interaction",
+            "description": "Use the prompt for your first AI conversation and experience the learning process of context engineering",
+            "timeEstimate": "1 minute",
+            "action": "Click the \"Try Now\" button to have your first conversation with AI",
+            "tips": [
+              "You can ask any question related to the prompt",
+              "The system will record your preferences and feedback",
+              "Don't worry about mistakes, every interaction is a learning opportunity"
+            ]
+          },
+          "step4": {
+            "title": "Set Personal Preferences",
+            "description": "Access account settings to configure your basic preferences and help AI understand you better",
+            "timeEstimate": "1 minute",
+            "action": "Go to Account Settings → Personalization Preferences to set basic information",
+            "tips": [
+              "Language style, professionalism level, answer length, etc. are all important",
+              "Preference settings will affect the performance of all prompts",
+              "You can modify them anytime, no need to set them perfectly at once"
+            ]
+          },
+          "step5": {
+            "title": "View Learning Effects",
+            "description": "Return to the prompt page to see how AI adjusts its responses based on your usage",
+            "timeEstimate": "Unlimited",
+            "action": "Continue using the prompt and observe changes in AI responses",
+            "tips": [
+              "After multiple uses, responses will become more aligned with your preferences",
+              "You can see learning progress in \"My Context\"",
+              "Providing feedback can accelerate personalization effects"
+            ]
+          },
+          "operation": "Operation Steps",
+          "tips": "Practical Tips",
+          "completed": "✅ Completed",
+          "inProgress": "In Progress...",
+          "markComplete": "Mark as Complete",
+          "expectedTime": "Estimated Time: {time}"
+        },
+        "faq": {
+          "title": "Quick Start FAQ",
+          "q1": {
+            "question": "Do I need a technical background to use it?",
+            "answer": "Absolutely not! Context Engineering is designed to be user-friendly for everyone, with an intuitive interface that requires no programming knowledge."
+          },
+          "q2": {
+            "question": "How long does personalization take to take effect?",
+            "answer": "Basic personalization takes effect immediately, while deep learning usually requires 3-5 interactions. The system continues to optimize, the more you use it, the better the results."
+          },
+          "q3": {
+            "question": "Is my data safe?",
+            "answer": "Absolutely safe. Your personal data belongs entirely to you, and you can view, modify, or delete it at any time. We adopt strict privacy protection measures."
+          },
+          "q4": {
+            "question": "Can I use multiple prompts at the same time?",
+            "answer": "Of course! Each prompt has its own independent personalization context, and you can use different prompts in different scenarios."
+          }
+        },
+        "next": {
+          "title": "🎉 Congratulations! You've mastered the basics",
+          "description": "You now understand the basic usage of context engineering. Continue exploring advanced features to discover more possibilities.",
+          "userGuide": {
+            "title": "Detailed User Guide",
+            "description": "Learn more about all features and usage tips"
+          },
+          "bestPractices": {
+            "title": "Best Practices",
+            "description": "Expert experience and advanced usage tips"
+          },
+          "advancedTools": {
+            "title": "Advanced Tools",
+            "description": "Explore professional-level context engineering features"
+          }
+        }
+      },
+      "user_guide": {
+        "title": "Context Engineering User Guide",
+        "description": "Detailed feature usage tutorials to help you make the most of all context engineering features and become an AI personalization expert.",
+        "backText": "Back to Docs Home",
+        "breadcrumbs": {
+          "docs": "Docs",
+          "context_engineering": "Context Engineering",
+          "user_guide": "User Guide"
+        },
+        "nav": {
+          "title": "Feature Guide"
+        },
+        "continue": {
+          "title": "Continue Learning"
+        },
+        "sections": {
+          "personal_context": {
+            "title": "Personal Context Management",
+            "description": "Learn how to view and manage your personalized AI data",
+            "viewing": {
+              "title": "Viewing My Context",
+              "content": "At the bottom of any prompt detail page, you can find the \"My Context\" module. This shows how well AI understands you and the level of personalization.",
+              "tips": [
+                "First-time users will see a \"Start Your Personalization Journey\" guide",
+                "Each prompt has its own independent context data",
+                "Context data is entirely yours"
+              ],
+              "examples": [
+                "Total Usage: Shows how often you use this prompt",
+                "Success Rate: Satisfaction calculated based on your feedback",
+                "Personalization Days: Time from first use to now"
+              ]
+            },
+            "history": {
+              "title": "Interaction History Tracking",
+              "content": "The system records every interaction with AI, including input, output, feedback, and applied personalization rules. This data helps AI better understand your needs.",
+              "tips": [
+                "Switch between concise/professional view modes",
+                "Professional mode shows more technical details",
+                "History supports search and filtering"
+              ],
+              "warnings": [
+                "History only saves the most recent 100 interactions",
+                "Deleting history will affect personalization effectiveness"
+              ]
+            },
+            "insights": {
+              "title": "Learning Insights Analysis",
+              "content": "AI analyzes your usage patterns to provide personalized improvement suggestions and usage tips. These insights help you better utilize the AI assistant.",
+              "examples": [
+                "Usage Patterns: Your preferred interaction times and frequency",
+                "Preference Style: Answer styles AI has identified you like",
+                "Improvement Suggestions: Personalized suggestions based on usage data"
+              ]
+            }
+          },
+          "adaptation_rules": {
+            "title": "Smart Adaptation Rules",
+            "description": "Learn how to create and manage rules that automatically adapt AI to your needs",
+            "understanding": {
+              "title": "Understanding Adaptation Rules",
+              "content": "Adaptation rules are intelligent systems that allow AI to automatically adjust behavior based on different situations. Rules can be triggered based on time, device, usage scenarios, and other conditions.",
+              "tips": [
+                "Start with simple rules and gradually increase complexity",
+                "Rules have priorities to avoid conflicts",
+                "Regularly check rule effectiveness and adjust"
+              ],
+              "examples": [
+                "Time Rules: More formal during work hours, more relaxed during leisure time",
+                "Device Rules: More concise on mobile, more detailed on desktop",
+                "Scenario Rules: More technical for programming questions, more creative for writing questions"
+              ]
+            },
+            "creating": {
+              "title": "Creating Personal Rules",
+              "content": "You can create personal adaptation rules for any prompt you use. These rules only affect your experience, not other users.",
+              "tips": [
+                "Use visual rule builder, no programming knowledge needed",
+                "Rules can be enabled/disabled at any time",
+                "Supports A/B testing to verify rule effectiveness"
+              ],
+              "warnings": [
+                "Too many complex rules may cause inconsistent behavior",
+                "System chooses highest priority rule when conflicts occur"
+              ]
+            },
+            "management": {
+              "title": "Rule Management and Optimization",
+              "content": "Through the rule management interface, you can view all rule performance, enable or disable specific rules, and optimize based on effectiveness data.",
+              "examples": [
+                "Rule List: View all activated and disabled rules",
+                "Effect Statistics: Trigger count and satisfaction for each rule",
+                "Rule Conflict Detection: Automatically identify possible rule conflicts"
+              ]
+            }
+          },
+          "analytics": {
+            "title": "Usage Analytics Insights",
+            "description": "Deep dive into your AI usage patterns and optimization opportunities",
+            "personal": {
+              "title": "Personal Usage Analytics",
+              "content": "Personal analytics page provides your complete usage profile on PromptHub, including preference analysis, usage trends, effectiveness evaluation, and more.",
+              "tips": [
+                "Regularly review analytics reports to understand usage habits",
+                "Monitor satisfaction trends and adjust when issues are found",
+                "Use usage patterns to optimize workflows"
+              ],
+              "examples": [
+                "Usage Frequency: Daily, weekly, monthly usage statistics",
+                "Prompt Preferences: Most commonly used prompt types and domains",
+                "Effectiveness Trends: Personalization effectiveness improvement over time"
+              ]
+            },
+            "prompt_specific": {
+              "title": "Prompt-Specific Analytics",
+              "content": "In-depth usage analysis for specific prompts to help you understand AI usage effectiveness in different scenarios.",
+              "examples": [
+                "Interaction Patterns: Typical usage patterns on this prompt",
+                "Effectiveness Score: Objective effectiveness evaluation based on feedback",
+                "Improvement Space: Directions where personalization can still be optimized"
+              ]
+            },
+            "comparative": {
+              "title": "Comparative Analysis",
+              "content": "Compare effectiveness across different time periods, different prompts, and different rules to discover the AI usage method best suited for you.",
+              "warnings": [
+                "Comparative analysis requires sufficient usage data support",
+                "Short-term fluctuations do not represent long-term trends"
+              ]
+            }
+          },
+          "experiments": {
+            "title": "A/B Testing and Experiments",
+            "description": "Scientifically test and optimize your AI interaction strategies",
+            "design": {
+              "title": "Personal Experiment Design",
+              "content": "You can create A/B tests for your AI usage, comparing the effectiveness of different rules and different preference settings to find the optimal configuration.",
+              "tips": [
+                "Test only one variable at a time to ensure reliable results",
+                "Set reasonable test periods, usually 1-2 weeks",
+                "Collect sufficient sample size before making decisions"
+              ],
+              "examples": [
+                "Rule Testing: Compare effectiveness with and without specific rules",
+                "Style Testing: Compare satisfaction with different answer styles",
+                "Length Testing: Compare preference for concise vs detailed answers"
+              ]
+            },
+            "analysis": {
+              "title": "Experiment Result Analysis",
+              "content": "The system provides detailed experiment result analysis, including statistical significance tests, confidence intervals, effect sizes, and other professional metrics.",
+              "warnings": [
+                "Avoid overinterpreting small sample results",
+                "Consider external factors' impact on experiments"
+              ]
+            },
+            "optimization": {
+              "title": "Experiment-Based Optimization",
+              "content": "Based on experiment results, the system provides personalized optimization suggestions to help you adjust rules and preference settings.",
+              "tips": [
+                "Gradual optimization, avoid drastic changes",
+                "Regularly reassess to adapt to changing needs",
+                "Record optimization history for easy review"
+              ]
+            }
+          },
+          "advanced": {
+            "title": "Advanced Features",
+            "description": "Explore professional-level context engineering features",
+            "tools": {
+              "title": "Advanced Tool Set",
+              "content": "Professional users can use advanced context engineering tools, including complex rule building, batch optimization, API integration, and more.",
+              "tips": [
+                "Recommended to try advanced features after some usage experience",
+                "Advanced tools require more configuration and maintenance",
+                "Make full use of preset templates to get started quickly"
+              ]
+            },
+            "api": {
+              "title": "API Integration",
+              "content": "Integrate context engineering features into your workflows or applications through APIs to achieve automated personalized AI experiences.",
+              "examples": [
+                "Webhook: Automatically notify when personalization effectiveness reaches threshold",
+                "REST API: Programmatic access to personal context data",
+                "GraphQL: Flexible querying of personalization analytics data"
+              ]
+            },
+            "export": {
+              "title": "Data Export/Import",
+              "content": "You can export personal context engineering data for backup or migration, or import pre-configured rule sets.",
+              "warnings": [
+                "Pay attention to compatibility with existing rules when importing",
+                "Personal data export contains sensitive information, please keep it safe"
+              ]
+            }
+          }
+        },
+        "labels": {
+          "tips": "Practical Tips",
+          "warnings": "Warnings",
+          "examples": "Examples",
+          "expand": "Expand",
+          "collapse": "Collapse",
+          "next": {
+            "best_practices": "Best Practices",
+            "best_practices_desc": "Expert experience and usage tips",
+            "advanced_tools": "Advanced Tools",
+            "advanced_tools_desc": "Professional features and API",
+            "concepts": "Core Concepts",
+            "concepts_desc": "Theoretical foundation and design principles"
+          }
+        }
       }
     },
     "api": {
@@ -398,6 +818,48 @@
         "authentication": "Authentication and Authorization",
         "prompts": "Prompts API",
         "performance": "Performance Analysis API"
+      },
+      "auth": {
+        "title": "Authentication",
+        "description": "All API requests require authentication. MCP Prompt Server supports the following authentication methods:",
+        "apiKeyTitle": "API Key Authentication",
+        "apiKeyDesc": "You can provide your API key in any of the following ways",
+        "header": "Request Header",
+        "bearer": "Bearer Token",
+        "queryParam": "Query Parameter"
+      },
+      "prompts": {
+        "title": "Prompts API",
+        "getList": "Get Prompt List",
+        "getDetail": "Get Prompt Details",
+        "create": "Create New Prompt",
+        "queryParams": "Query Parameters",
+        "pathParams": "Path Parameters",
+        "requestBody": "Request Body",
+        "responseExample": "Response Example",
+        "paramName": "Parameter Name",
+        "type": "Type",
+        "description": "Description"
+      },
+      "performance": {
+        "title": "Performance Analysis API",
+        "trackUsage": "Track Prompt Usage",
+        "trackUsageDesc": "Record prompt usage for performance analysis"
+      },
+      "errors": {
+        "title": "Error Handling",
+        "description": "API requests may return the following error codes:",
+        "statusCode": "Status Code",
+        "explanation": "Explanation",
+        "example": "Example",
+        "errorFormat": "Error Response Format"
+      },
+      "reference": {
+        "title": "Detailed Reference",
+        "auth": "Authentication and Authorization",
+        "authDesc": "Detailed API authentication and authorization mechanism documentation",
+        "prompts": "Prompts API",
+        "promptsDesc": "Complete prompt management API reference"
       }
     },
     "best_practices": {
@@ -549,6 +1011,162 @@
         "analysis_failed": "AI analysis failed",
         "redirecting": "Redirecting to create prompt page..."
       }
+    }
+  },
+  "promptDetails": {
+    "loading": "Loading...",
+    "error": "Error",
+    "errorOccurred": "An error occurred",
+    "notFound": "Prompt not found",
+    "notFoundDescription": "The prompt you are accessing may have been deleted or does not exist",
+    "back": "Back",
+    "browseOtherPrompts": "Browse other prompts",
+    "createdAt": "Created at {date}",
+    "updatedAt": "Updated at {date}",
+    "version": "Version",
+    "usageCount": "Used {count} times",
+    "popular": "Popular",
+    "backToList": "Back to {type} prompts list",
+    "chat": "Chat",
+    "image": "Image",
+    "video": "Video",
+    "promptContent": "Prompt Content",
+    "copyContent": "Copy Content",
+    "copied": "Copied!",
+    "copySuccess": "Copy successful!",
+    "selectVersion": "Select Version",
+    "noInputVariables": "This prompt has no input variables",
+    "inputVariablePlaceholder": "Enter the value for {variable}",
+    "variableSettings": "Variable Settings",
+    "promptInfo": "Prompt Information",
+    "typeInfo": "Type Information",
+    "typeGeneration": "{type} Generation",
+    "inputVariables": "Input Variables",
+    "generationParameters": "Generation Parameters",
+    "noParameters": "This prompt has no parameters set",
+    "compatibleModels": "Compatible Models",
+    "noCompatibleModels": "No compatible models set",
+    "noCompatibleModelsDesc": "The author has not specified compatible AI models for this prompt",
+    "usageExamples": "Usage Examples",
+    "input": "Input",
+    "output": "Output",
+    "tags": "Tags",
+    "noTags": "This prompt has no tags set",
+    "mediaDisplay": "Media Display",
+    "imageDisplay": "Image Display",
+    "videoDisplay": "Video Display",
+    "noMediaFiles": "No {type} files",
+    "viewVersionHistory": "View Version History",
+    "editPrompt": "Edit Prompt",
+    "deletePrompt": "Delete Prompt",
+    "deleting": "Deleting...",
+    "errors": {
+      "notFound": "Prompt does not exist or you do not have permission to access",
+      "noPermission": "You do not have permission to access this prompt",
+      "fetchFailed": "Failed to fetch prompt details",
+      "invalidData": "Invalid prompt data format",
+      "networkError": "Network error, please try again later",
+      "loginRequired": "Please login first",
+      "tokenError": "Unable to get authentication token, please login again",
+      "deleteFailed": "Failed to delete",
+      "copyFailed": "Failed to copy to clipboard"
+    },
+    "delete": {
+      "archiveConfirm": "⚠️ Associated Data Protection Detected\n\nPrompt \"{name}\" is being used by {count} users:\n• The system will automatically archive this prompt (not delete)\n• The prompt will be removed from your list but remain fully functional\n• Other users' personalized configurations will be protected\n• You can restore it from \"My Archived\" at any time\n\nReason: {reason}\n\nAre you sure you want to archive this prompt?",
+      "deleteConfirm": "🗑️ Safe Delete Confirmation\n\nPrompt \"{name}\" can be safely deleted:\n• No other users are using this prompt\n• All related data will be permanently deleted\n• This action cannot be undone\n\nAre you sure you want to delete this prompt?",
+      "archiveSuccess": "📚 Smart Archive Successful!",
+      "archiveSuccessDesc": "Archive details",
+      "protectedUsers": "✓ Protected {count} users' personalized configurations",
+      "archiveInstructions1": "• You can find this prompt in \"My Archived\"",
+      "archiveInstructions2": "• Click \"Restore\" to reactivate",
+      "archiveInstructions3": "• Other users can continue to use normally",
+      "deleteSuccess": "🗑️ Delete Successful!",
+      "deleteSuccessDesc": "All related data has been permanently deleted",
+      "operationFailed": "Operation failed",
+      "operationFailedDesc": "Please check your permissions or network connection",
+      "cannotOperate": "Cannot operate on this prompt: {reason}",
+      "policyCheckFailed": "Policy check failed: {message}"
+    },
+    "versionRevert": {
+      "success": "Version revert successful",
+      "fetchFailed": "Failed to fetch prompt data",
+      "revertFailed": "Failed to revert version: {error}",
+      "refreshFailed": "Failed to refresh data: {error}"
+    },
+    "parameterNames": {
+      "style": "Style",
+      "aspect_ratio": "Aspect Ratio",
+      "resolution": "Resolution",
+      "quality": "Generation Quality",
+      "guidance_scale": "Guidance Scale",
+      "num_inference_steps": "Inference Steps",
+      "seed": "Random Seed",
+      "negative_prompt": "Negative Prompt",
+      "duration": "Video Duration",
+      "fps": "Frame Rate",
+      "motion_strength": "Motion Strength",
+      "camera_movement": "Camera Movement"
+    },
+    "modelTypes": {
+      "custom": "Custom Model",
+      "customDesc": "User-added custom model"
+    },
+    "browser": {
+      "videoNotSupported": "Your browser does not support video playback"
+    }
+  },
+  "versionHistory": {
+    "title": "Version History",
+    "compareMode": "Compare Mode",
+    "compare": "Compare ({count}/2)",
+    "cancel": "Cancel",
+    "mediaFilesNotice": "Media Files Notice",
+    "mediaFilesNoticeTitle": "Media Files Notice",
+    "mediaFilesNoticeDesc": "Version history only manages text content, tags, parameters, etc., and does not include image and video files. When reverting to a version, media files will remain unchanged from the current state.",
+    "compareModeHint": "Compare Mode: Click to select two versions for comparison. {count}/2 versions selected.",
+    "loading": "Loading...",
+    "noHistory": "No version history",
+    "currentVersion": "Current Version",
+    "contentLength": "Content Length: {length} characters",
+    "tagsCount": "Tags: {count}",
+    "view": "View",
+    "revert": "Revert",
+    "reverting": "Reverting...",
+    "versionContent": "Version Content - v{version}",
+    "description": "Description",
+    "content": "Content",
+    "tags": "Tags",
+    "errors": {
+      "notAuthenticated": "Not authenticated, please login first",
+      "fetchFailed": "Failed to fetch version history",
+      "revertFailed": "Failed to revert version"
+    }
+  },
+  "userPromptContext": {
+    "unlockPersonalization": "Unlock Personalized Experience",
+    "unlockPersonalizationDesc": "After logging in, you can see how this prompt is customized for you, including personal preferences, usage history, and smart optimization suggestions.",
+    "loginNow": "Login Now",
+    "registerAccount": "Register Account",
+    "errorLoading": "Error loading personalized information, please try again later",
+    "startJourney": "Start Your Personalization Journey",
+    "startJourneyDesc": "This is your first time using this prompt. After you start using it, we will create a personalized profile for you.",
+    "experienceNow": "Experience Now",
+    "myContext": "My Context",
+    "owner": "Owner",
+    "personalData": "Personal Data",
+    "customizedForYou": "How this prompt is customized for you",
+    "viewMode": "View Mode",
+    "simple": "Simple",
+    "professional": "Professional",
+    "totalUsage": "Total Usage",
+    "successRate": "Success Rate",
+    "satisfaction": "Satisfaction",
+    "personalizedDays": "Personalized Days",
+    "tabs": {
+      "overview": "Personalization Overview",
+      "interactions": "Interaction History",
+      "rules": "Applicable Rules",
+      "insights": "Learning Insights"
     }
   }
 }

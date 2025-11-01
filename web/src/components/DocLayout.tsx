@@ -2,6 +2,7 @@ import React from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { ChevronLeftIcon } from '@heroicons/react/24/outline';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface DocLayoutProps {
   title: string;
@@ -17,9 +18,11 @@ const DocLayout: React.FC<DocLayoutProps> = ({
   description,
   children,
   backLink = '/docs',
-  backText = '返回文档首页',
+  backText,
   breadcrumbs,
 }) => {
+  const { t } = useLanguage();
+  const defaultBackText = backText || t('docs.backToHome');
   const pageVariants = {
     hidden: { opacity: 0, y: 20 },
     visible: { opacity: 1, y: 0 },
@@ -59,7 +62,7 @@ const DocLayout: React.FC<DocLayoutProps> = ({
                 className="inline-flex items-center text-sm font-medium text-neon-cyan hover:text-neon-purple transition-colors duration-300 group"
               >
                 <ChevronLeftIcon className="h-4 w-4 mr-2 group-hover:-translate-x-1 transition-transform duration-300" />
-                {backText}
+                {defaultBackText}
               </Link>
             </div>
 

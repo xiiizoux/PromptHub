@@ -4,7 +4,7 @@
  * 详细的功能使用教程，覆盖所有核心功能的使用方法和最佳实践
  */
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -29,6 +29,7 @@ import {
   CheckCircleIcon,
 } from '@heroicons/react/24/outline';
 import DocLayout from '@/components/DocLayout';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface GuideSection {
   id: string;
@@ -45,240 +46,167 @@ interface GuideSection {
   }[];
 }
 
-const GUIDE_SECTIONS: GuideSection[] = [
-  {
-    id: 'personal-context',
-    title: '个人上下文管理',
-    icon: UserIcon,
-    description: '了解如何查看和管理您的个性化AI数据',
-    subsections: [
-      {
-        id: 'viewing-context',
-        title: '查看我的上下文',
-        content: '在任何提示词详情页的下方，您都可以找到"我的上下文"模块。这里展示了AI对您的了解程度和个性化程度。',
-        tips: [
-          '首次使用时会显示"开始个性化之旅"的引导',
-          '每个提示词都有独立的上下文数据',
-          '上下文数据完全归您个人所有',
-        ],
-        examples: [
-          '总使用次数：显示您使用这个提示词的频率',
-          '成功率：基于您的反馈计算的满意度',
-          '个性化天数：从首次使用到现在的时间',
-        ],
-      },
-      {
-        id: 'interaction-history',
-        title: '交互历史追踪',
-        content: '系统会记录您与AI的每次交互，包括输入、输出、反馈和应用的个性化规则。这些数据帮助AI更好地理解您的需求。',
-        tips: [
-          '可以切换简洁/专业视图模式',
-          '专业模式显示更多技术细节',
-          '历史记录支持搜索和筛选',
-        ],
-        warnings: [
-          '历史记录仅保存最近100条交互',
-          '删除历史记录会影响个性化效果',
-        ],
-      },
-      {
-        id: 'learning-insights',
-        title: '学习洞察分析',
-        content: 'AI会分析您的使用模式，提供个性化的改进建议和使用技巧。这些洞察帮助您更好地利用AI助手。',
-        examples: [
-          '使用模式：您偏好的交互时间和频率',
-          '偏好风格：AI总结出的您喜欢的回答风格',
-          '改进建议：基于使用数据的个性化建议',
-        ],
-      },
-    ],
-  },
-  {
-    id: 'adaptation-rules',
-    title: '智能适应规则',
-    icon: CogIcon,
-    description: '学习如何创建和管理让AI自动适应您需求的规则',
-    subsections: [
-      {
-        id: 'understanding-rules',
-        title: '理解适应规则',
-        content: '适应规则是让AI根据不同情境自动调整行为的智能系统。规则可以基于时间、设备、使用场景等条件触发。',
-        tips: [
-          '从简单规则开始，逐步增加复杂度',
-          '规则有优先级，避免冲突',
-          '定期检查规则效果并调整',
-        ],
-        examples: [
-          '时间规则：工作时间回答更正式，休闲时间更轻松',
-          '设备规则：手机上回答更简洁，电脑上更详细',
-          '场景规则：编程问题更技术化，写作问题更创意化',
-        ],
-      },
-      {
-        id: 'creating-rules',
-        title: '创建个人规则',
-        content: '您可以为自己使用的任何提示词创建个人适应规则。这些规则只影响您的使用体验，不会影响其他用户。',
-        tips: [
-          '使用可视化规则构建器，无需编程知识',
-          '规则可以随时启用/禁用',
-          '支持A/B测试验证规则效果',
-        ],
-        warnings: [
-          '过多复杂规则可能导致行为不一致',
-          '规则冲突时系统会选择优先级最高的',
-        ],
-      },
-      {
-        id: 'rule-management',
-        title: '规则管理与优化',
-        content: '通过规则管理界面，您可以查看所有规则的表现，启用或禁用特定规则，并根据效果数据进行优化。',
-        examples: [
-          '规则列表：查看所有激活和禁用的规则',
-          '效果统计：每个规则的触发次数和满意度',
-          '规则冲突检测：自动识别可能的规则冲突',
-        ],
-      },
-    ],
-  },
-  {
-    id: 'analytics',
-    title: '使用分析洞察',
-    icon: ChartBarIcon,
-    description: '深入了解您的AI使用模式和优化机会',
-    subsections: [
-      {
-        id: 'personal-analytics',
-        title: '个人使用分析',
-        content: '个人分析页面提供您在PromptHub上的完整使用画像，包括偏好分析、使用趋势、效果评估等多个维度。',
-        tips: [
-          '定期查看分析报告，了解使用习惯',
-          '关注满意度趋势，发现问题及时调整',
-          '利用使用模式优化工作流程',
-        ],
-        examples: [
-          '使用频率：每日、每周、每月的使用统计',
-          '提示词偏好：最常用的提示词类型和领域',
-          '效果趋势：个性化效果随时间的改善',
-        ],
-      },
-      {
-        id: 'prompt-specific',
-        title: '提示词专项分析',
-        content: '针对特定提示词的深度使用分析，帮助您了解在不同场景下的AI使用效果。',
-        examples: [
-          '交互模式：在该提示词上的典型使用模式',
-          '效果评分：基于反馈的客观效果评估',
-          '改进空间：个性化还可以优化的方向',
-        ],
-      },
-      {
-        id: 'comparative-analysis',
-        title: '对比分析',
-        content: '通过对比不同时期、不同提示词、不同规则的效果，发现最适合您的AI使用方式。',
-        warnings: [
-          '对比分析需要足够的使用数据支撑',
-          '短期波动不代表长期趋势',
-        ],
-      },
-    ],
-  },
-  {
-    id: 'experiments',
-    title: 'A/B测试与实验',
-    icon: BeakerIcon,
-    description: '科学地测试和优化您的AI交互策略',
-    subsections: [
-      {
-        id: 'personal-experiments',
-        title: '个人实验设计',
-        content: '您可以为自己的AI使用创建A/B测试，比较不同规则、不同偏好设置的效果，找到最优配置。',
-        tips: [
-          '每次只测试一个变量，确保结果可靠',
-          '设置合理的测试周期，通常1-2周',
-          '收集足够的样本量再做决策',
-        ],
-        examples: [
-          '规则测试：比较有无特定规则的效果',
-          '风格测试：比较不同回答风格的满意度',
-          '长度测试：比较简洁vs详细回答的偏好',
-        ],
-      },
-      {
-        id: 'experiment-analysis',
-        title: '实验结果分析',
-        content: '系统提供详细的实验结果分析，包括统计显著性检验、置信区间、效果大小等专业指标。',
-        warnings: [
-          '避免过度解读小样本结果',
-          '考虑外部因素对实验的影响',
-        ],
-      },
-      {
-        id: 'optimization',
-        title: '基于实验的优化',
-        content: '根据实验结果，系统会提供个性化的优化建议，帮助您调整规则和偏好设置。',
-        tips: [
-          '渐进式优化，避免大幅度改变',
-          '定期重新评估，适应需求变化',
-          '记录优化历程，便于回溯',
-        ],
-      },
-    ],
-  },
-  {
-    id: 'advanced-features',
-    title: '高级功能',
-    icon: RocketLaunchIcon,
-    description: '探索上下文工程的专业级功能',
-    subsections: [
-      {
-        id: 'advanced-tools',
-        title: '高级工具集',
-        content: '专业用户可以使用高级上下文工程工具，包括复杂规则构建、批量优化、API集成等功能。',
-        tips: [
-          '建议有一定使用经验后再尝试高级功能',
-          '高级工具需要更多的配置和维护',
-          '充分利用预设模板快速开始',
-        ],
-      },
-      {
-        id: 'api-integration',
-        title: 'API集成',
-        content: '通过API将上下文工程功能集成到您的工作流程或应用中，实现自动化的个性化AI体验。',
-        examples: [
-          'Webhook：当个性化效果达到阈值时自动通知',
-          'REST API：程序化访问个人上下文数据',
-          'GraphQL：灵活查询个性化分析数据',
-        ],
-      },
-      {
-        id: 'export-import',
-        title: '数据导出导入',
-        content: '您可以导出个人的上下文工程数据用于备份或迁移，也可以导入预配置的规则集。',
-        warnings: [
-          '导入规则时注意与现有规则的兼容性',
-          '个人数据导出包含敏感信息，请妥善保管',
-        ],
-      },
-    ],
-  },
-];
+function useGuideSections(): GuideSection[] {
+  const { t } = useLanguage();
+  
+  return useMemo(() => [
+    {
+      id: 'personal-context',
+      title: t('docs.context_engineering.user_guide.sections.personal_context.title'),
+      icon: UserIcon,
+      description: t('docs.context_engineering.user_guide.sections.personal_context.description'),
+      subsections: [
+        {
+          id: 'viewing-context',
+          title: t('docs.context_engineering.user_guide.sections.personal_context.viewing.title'),
+          content: t('docs.context_engineering.user_guide.sections.personal_context.viewing.content'),
+          tips: t('docs.context_engineering.user_guide.sections.personal_context.viewing.tips', { returnObjects: true }) as string[],
+          examples: t('docs.context_engineering.user_guide.sections.personal_context.viewing.examples', { returnObjects: true }) as string[],
+        },
+        {
+          id: 'interaction-history',
+          title: t('docs.context_engineering.user_guide.sections.personal_context.history.title'),
+          content: t('docs.context_engineering.user_guide.sections.personal_context.history.content'),
+          tips: t('docs.context_engineering.user_guide.sections.personal_context.history.tips', { returnObjects: true }) as string[],
+          warnings: t('docs.context_engineering.user_guide.sections.personal_context.history.warnings', { returnObjects: true }) as string[],
+        },
+        {
+          id: 'learning-insights',
+          title: t('docs.context_engineering.user_guide.sections.personal_context.insights.title'),
+          content: t('docs.context_engineering.user_guide.sections.personal_context.insights.content'),
+          examples: t('docs.context_engineering.user_guide.sections.personal_context.insights.examples', { returnObjects: true }) as string[],
+        },
+      ],
+    },
+    {
+      id: 'adaptation-rules',
+      title: t('docs.context_engineering.user_guide.sections.adaptation_rules.title'),
+      icon: CogIcon,
+      description: t('docs.context_engineering.user_guide.sections.adaptation_rules.description'),
+      subsections: [
+        {
+          id: 'understanding-rules',
+          title: t('docs.context_engineering.user_guide.sections.adaptation_rules.understanding.title'),
+          content: t('docs.context_engineering.user_guide.sections.adaptation_rules.understanding.content'),
+          tips: t('docs.context_engineering.user_guide.sections.adaptation_rules.understanding.tips', { returnObjects: true }) as string[],
+          examples: t('docs.context_engineering.user_guide.sections.adaptation_rules.understanding.examples', { returnObjects: true }) as string[],
+        },
+        {
+          id: 'creating-rules',
+          title: t('docs.context_engineering.user_guide.sections.adaptation_rules.creating.title'),
+          content: t('docs.context_engineering.user_guide.sections.adaptation_rules.creating.content'),
+          tips: t('docs.context_engineering.user_guide.sections.adaptation_rules.creating.tips', { returnObjects: true }) as string[],
+          warnings: t('docs.context_engineering.user_guide.sections.adaptation_rules.creating.warnings', { returnObjects: true }) as string[],
+        },
+        {
+          id: 'rule-management',
+          title: t('docs.context_engineering.user_guide.sections.adaptation_rules.management.title'),
+          content: t('docs.context_engineering.user_guide.sections.adaptation_rules.management.content'),
+          examples: t('docs.context_engineering.user_guide.sections.adaptation_rules.management.examples', { returnObjects: true }) as string[],
+        },
+      ],
+    },
+    {
+      id: 'analytics',
+      title: t('docs.context_engineering.user_guide.sections.analytics.title'),
+      icon: ChartBarIcon,
+      description: t('docs.context_engineering.user_guide.sections.analytics.description'),
+      subsections: [
+        {
+          id: 'personal-analytics',
+          title: t('docs.context_engineering.user_guide.sections.analytics.personal.title'),
+          content: t('docs.context_engineering.user_guide.sections.analytics.personal.content'),
+          tips: t('docs.context_engineering.user_guide.sections.analytics.personal.tips', { returnObjects: true }) as string[],
+          examples: t('docs.context_engineering.user_guide.sections.analytics.personal.examples', { returnObjects: true }) as string[],
+        },
+        {
+          id: 'prompt-specific',
+          title: t('docs.context_engineering.user_guide.sections.analytics.prompt_specific.title'),
+          content: t('docs.context_engineering.user_guide.sections.analytics.prompt_specific.content'),
+          examples: t('docs.context_engineering.user_guide.sections.analytics.prompt_specific.examples', { returnObjects: true }) as string[],
+        },
+        {
+          id: 'comparative-analysis',
+          title: t('docs.context_engineering.user_guide.sections.analytics.comparative.title'),
+          content: t('docs.context_engineering.user_guide.sections.analytics.comparative.content'),
+          warnings: t('docs.context_engineering.user_guide.sections.analytics.comparative.warnings', { returnObjects: true }) as string[],
+        },
+      ],
+    },
+    {
+      id: 'experiments',
+      title: t('docs.context_engineering.user_guide.sections.experiments.title'),
+      icon: BeakerIcon,
+      description: t('docs.context_engineering.user_guide.sections.experiments.description'),
+      subsections: [
+        {
+          id: 'personal-experiments',
+          title: t('docs.context_engineering.user_guide.sections.experiments.design.title'),
+          content: t('docs.context_engineering.user_guide.sections.experiments.design.content'),
+          tips: t('docs.context_engineering.user_guide.sections.experiments.design.tips', { returnObjects: true }) as string[],
+          examples: t('docs.context_engineering.user_guide.sections.experiments.design.examples', { returnObjects: true }) as string[],
+        },
+        {
+          id: 'experiment-analysis',
+          title: t('docs.context_engineering.user_guide.sections.experiments.analysis.title'),
+          content: t('docs.context_engineering.user_guide.sections.experiments.analysis.content'),
+          warnings: t('docs.context_engineering.user_guide.sections.experiments.analysis.warnings', { returnObjects: true }) as string[],
+        },
+        {
+          id: 'optimization',
+          title: t('docs.context_engineering.user_guide.sections.experiments.optimization.title'),
+          content: t('docs.context_engineering.user_guide.sections.experiments.optimization.content'),
+          tips: t('docs.context_engineering.user_guide.sections.experiments.optimization.tips', { returnObjects: true }) as string[],
+        },
+      ],
+    },
+    {
+      id: 'advanced-features',
+      title: t('docs.context_engineering.user_guide.sections.advanced.title'),
+      icon: RocketLaunchIcon,
+      description: t('docs.context_engineering.user_guide.sections.advanced.description'),
+      subsections: [
+        {
+          id: 'advanced-tools',
+          title: t('docs.context_engineering.user_guide.sections.advanced.tools.title'),
+          content: t('docs.context_engineering.user_guide.sections.advanced.tools.content'),
+          tips: t('docs.context_engineering.user_guide.sections.advanced.tools.tips', { returnObjects: true }) as string[],
+        },
+        {
+          id: 'api-integration',
+          title: t('docs.context_engineering.user_guide.sections.advanced.api.title'),
+          content: t('docs.context_engineering.user_guide.sections.advanced.api.content'),
+          examples: t('docs.context_engineering.user_guide.sections.advanced.api.examples', { returnObjects: true }) as string[],
+        },
+        {
+          id: 'export-import',
+          title: t('docs.context_engineering.user_guide.sections.advanced.export.title'),
+          content: t('docs.context_engineering.user_guide.sections.advanced.export.content'),
+          warnings: t('docs.context_engineering.user_guide.sections.advanced.export.warnings', { returnObjects: true }) as string[],
+        },
+      ],
+    },
+  ], [t]);
+}
 
 export default function ContextEngineeringUserGuide() {
+  const { t } = useLanguage();
   const [activeSection, setActiveSection] = useState<string>('personal-context');
   const [expandedSubsection, setExpandedSubsection] = useState<string | null>(null);
   
-  const currentSection = GUIDE_SECTIONS.find(s => s.id === activeSection);
+  const guideSections = useGuideSections();
+  const currentSection = guideSections.find(s => s.id === activeSection);
 
   return (
     <DocLayout
-      title="上下文工程用户指南"
-      description="详细的功能使用教程，帮助您充分利用上下文工程的所有功能，成为AI个性化的专家。"
+      title={t('docs.context_engineering.user_guide.title')}
+      description={t('docs.context_engineering.user_guide.description')}
       backLink="/docs"
-      backText="返回文档首页"
+      backText={t('docs.context_engineering.user_guide.backText')}
       breadcrumbs={[
-        { name: '文档', href: '/docs' },
-        { name: '上下文工程', href: '/docs/context-engineering' },
-        { name: '用户指南', href: '/docs/context-engineering/user-guide' },
+        { name: t('docs.context_engineering.user_guide.breadcrumbs.docs'), href: '/docs' },
+        { name: t('docs.context_engineering.user_guide.breadcrumbs.context_engineering'), href: '/docs/context-engineering' },
+        { name: t('docs.context_engineering.user_guide.breadcrumbs.user_guide'), href: '/docs/context-engineering/user-guide' },
       ]}
     >
 
@@ -286,9 +214,9 @@ export default function ContextEngineeringUserGuide() {
         {/* 侧边导航 */}
         <div className="lg:col-span-1">
             <div className="glass rounded-2xl p-6 border border-neon-blue/30 sticky top-8">
-              <h3 className="text-lg font-bold text-white mb-4">功能指南</h3>
+              <h3 className="text-lg font-bold text-white mb-4">{t('docs.context_engineering.user_guide.nav.title')}</h3>
               <nav className="space-y-2">
-                {GUIDE_SECTIONS.map((section) => {
+                {guideSections.map((section) => {
                   const Icon = section.icon;
                   return (
                     <button
@@ -361,7 +289,7 @@ export default function ContextEngineeringUserGuide() {
       >
         <div className="glass rounded-2xl p-8 border border-neon-purple/30 text-center">
           <h2 className="text-2xl font-bold text-white mb-6">
-            继续深入学习
+            {t('docs.context_engineering.user_guide.continue.title')}
           </h2>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-4xl mx-auto">
@@ -371,8 +299,8 @@ export default function ContextEngineeringUserGuide() {
                 whileHover={{ scale: 1.02 }}
               >
                 <LightBulbIcon className="h-8 w-8 text-neon-purple mx-auto mb-3" />
-                <h3 className="text-lg font-semibold text-white mb-2">最佳实践</h3>
-                <p className="text-gray-400 text-sm">专家经验和使用技巧</p>
+                <h3 className="text-lg font-semibold text-white mb-2">{t('docs.context_engineering.user_guide.labels.next.best_practices')}</h3>
+                <p className="text-gray-400 text-sm">{t('docs.context_engineering.user_guide.labels.next.best_practices_desc')}</p>
               </motion.div>
             </Link>
             
@@ -382,8 +310,8 @@ export default function ContextEngineeringUserGuide() {
                 whileHover={{ scale: 1.02 }}
               >
                 <RocketLaunchIcon className="h-8 w-8 text-neon-green mx-auto mb-3" />
-                <h3 className="text-lg font-semibold text-white mb-2">高级工具</h3>
-                <p className="text-gray-400 text-sm">专业级功能和API</p>
+                <h3 className="text-lg font-semibold text-white mb-2">{t('docs.context_engineering.user_guide.labels.next.advanced_tools')}</h3>
+                <p className="text-gray-400 text-sm">{t('docs.context_engineering.user_guide.labels.next.advanced_tools_desc')}</p>
               </motion.div>
             </Link>
             
@@ -393,8 +321,8 @@ export default function ContextEngineeringUserGuide() {
                 whileHover={{ scale: 1.02 }}
               >
                 <PuzzlePieceIcon className="h-8 w-8 text-neon-cyan mx-auto mb-3" />
-                <h3 className="text-lg font-semibold text-white mb-2">核心概念</h3>
-                <p className="text-gray-400 text-sm">理论基础和设计原理</p>
+                <h3 className="text-lg font-semibold text-white mb-2">{t('docs.context_engineering.user_guide.labels.next.concepts')}</h3>
+                <p className="text-gray-400 text-sm">{t('docs.context_engineering.user_guide.labels.next.concepts_desc')}</p>
               </motion.div>
             </Link>
           </div>
@@ -411,6 +339,8 @@ function SubsectionCard({ subsection, index, isExpanded, onToggle }: {
   isExpanded: boolean;
   onToggle: () => void;
 }) {
+  const { t } = useLanguage();
+  
   return (
     <motion.div
       className="glass rounded-xl border border-gray-600/30 overflow-hidden"
@@ -459,7 +389,7 @@ function SubsectionCard({ subsection, index, isExpanded, onToggle }: {
                 <div className="bg-neon-blue/10 border border-neon-blue/30 rounded-lg p-4">
                   <h4 className="text-white font-semibold mb-3 flex items-center">
                     <LightBulbIcon className="h-5 w-5 mr-2 text-neon-blue" />
-                    实用技巧
+                    {t('docs.context_engineering.user_guide.labels.tips')}
                   </h4>
                   <ul className="space-y-2">
                     {subsection.tips.map((tip: string, tipIndex: number) => (
@@ -477,7 +407,7 @@ function SubsectionCard({ subsection, index, isExpanded, onToggle }: {
                 <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4">
                   <h4 className="text-white font-semibold mb-3 flex items-center">
                     <ExclamationTriangleIcon className="h-5 w-5 mr-2 text-yellow-500" />
-                    注意事项
+                    {t('docs.context_engineering.user_guide.labels.warnings')}
                   </h4>
                   <ul className="space-y-2">
                     {subsection.warnings.map((warning: string, warningIndex: number) => (
@@ -495,7 +425,7 @@ function SubsectionCard({ subsection, index, isExpanded, onToggle }: {
                 <div className="bg-neon-green/10 border border-neon-green/30 rounded-lg p-4">
                   <h4 className="text-white font-semibold mb-3 flex items-center">
                     <CheckCircleIcon className="h-5 w-5 mr-2 text-neon-green" />
-                    实际示例
+                    {t('docs.context_engineering.user_guide.labels.examples')}
                   </h4>
                   <ul className="space-y-2">
                     {subsection.examples.map((example: string, exampleIndex: number) => (

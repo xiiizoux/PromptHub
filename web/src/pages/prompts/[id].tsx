@@ -50,25 +50,8 @@ import {
 } from '@heroicons/react/24/outline';
 import { StarIcon as SolidStarIcon } from '@heroicons/react/24/solid';
 import { useOptimizedCategoryDisplay } from '@/contexts/CategoryContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 import ShareButton from '@/components/ShareButton';
-
-// 参数名称中文映射
-const PARAMETER_NAMES: Record<string, string> = {
-  // 图像参数
-  'style': '风格样式',
-  'aspect_ratio': '宽高比',
-  'resolution': '分辨率',
-  'quality': '生成质量',
-  'guidance_scale': '引导强度',
-  'num_inference_steps': '推理步数',
-  'seed': '随机种子',
-  'negative_prompt': '负面提示词',
-  // 视频参数
-  'duration': '视频时长',
-  'fps': '帧率',
-  'motion_strength': '运动强度',
-  'camera_movement': '摄像机运动',
-};
 
 import { databaseService } from '@/lib/database-service';
 import { PromptDetails, PromptExample, PromptVersion } from '@/types';
@@ -88,6 +71,7 @@ export default function PromptDetailsPage() {
   const router = useRouter();
   const { id } = router.query;
   const { user, getToken } = useAuth();
+  const { t } = useLanguage();
 
   // 添加客户端数据获取状态
   const [prompt, setPrompt] = useState<PromptDetails | null>(null);
@@ -139,11 +123,11 @@ export default function PromptDetailsPage() {
 
         if (!response.ok) {
           if (response.status === 404) {
-            setError('提示词不存在或您无权访问');
+            setError(t('promptDetails.errors.notFound'));
           } else if (response.status === 403) {
-            setError('您无权访问此提示词');
+            setError(t('promptDetails.errors.noPermission'));
           } else {
-            setError('获取提示词详情失败');
+            setError(t('promptDetails.errors.fetchFailed'));
           }
           return;
         }
@@ -152,11 +136,11 @@ export default function PromptDetailsPage() {
         if (data.success && data.data && data.data.prompt) {
           setPrompt(data.data.prompt);
         } else {
-          setError('提示词数据格式错误');
+          setError(t('promptDetails.errors.invalidData'));
         }
       } catch (error) {
         console.error('获取提示词详情失败:', error);
-        setError('网络错误，请稍后重试');
+        setError(t('promptDetails.errors.networkError'));
       } finally {
         setLoading(false);
       }
@@ -235,7 +219,7 @@ export default function PromptDetailsPage() {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-neon-cyan mx-auto mb-4"></div>
-          <p className="text-gray-400">加载中...</p>
+          <p className="text-gray-400">{t('promptDetails.loading')}</p>
         </div>
       </div>
     );
@@ -247,13 +231,13 @@ export default function PromptDetailsPage() {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="text-red-400 text-6xl mb-4">⚠️</div>
-          <h1 className="text-2xl font-bold text-white mb-2">出错了</h1>
+          <h1 className="text-2xl font-bold text-white mb-2">{t('promptDetails.errorOccurred')}</h1>
           <p className="text-gray-400 mb-4">{error}</p>
           <button
             onClick={() => router.back()}
             className="px-4 py-2 bg-neon-cyan text-black rounded-lg hover:bg-cyan-400 transition-colors"
           >
-            返回
+            {t('promptDetails.back')}
           </button>
         </div>
       </div>
@@ -266,13 +250,13 @@ export default function PromptDetailsPage() {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="text-gray-400 text-6xl mb-4">📝</div>
-          <h1 className="text-2xl font-bold text-white mb-2">提示词不存在</h1>
-          <p className="text-gray-400 mb-4">您访问的提示词可能已被删除或不存在</p>
+          <h1 className="text-2xl font-bold text-white mb-2">{t('promptDetails.notFound')}</h1>
+          <p className="text-gray-400 mb-4">{t('promptDetails.notFoundDescription')}</p>
           <button
             onClick={() => router.push('/prompts')}
             className="px-4 py-2 bg-neon-cyan text-black rounded-lg hover:bg-cyan-400 transition-colors"
           >
-            浏览其他提示词
+            {t('promptDetails.browseOtherPrompts')}
           </button>
         </div>
       </div>
@@ -304,7 +288,7 @@ export default function PromptDetailsPage() {
 
 
     } catch (error) {
-      toast.error('复制到剪贴板失败');
+      toast.error(t('promptDetails.errors.copyFailed'));
       console.error('复制失败:', error);
     }
   };
@@ -411,26 +395,26 @@ export default function PromptDetailsPage() {
 
         if (data.success && data.data && data.data.prompt) {
           setPrompt(data.data.prompt);
-          toast.success('版本回滚成功');
+          toast.success(t('promptDetails.versionRevert.success'));
         } else {
           console.error('响应数据格式错误:', data);
-          toast.error('获取提示词数据失败');
+          toast.error(t('promptDetails.versionRevert.fetchFailed'));
         }
       } else {
         const errorData = await response.json().catch(() => ({}));
         console.error('获取提示词失败:', response.status, errorData);
-        toast.error('获取提示词失败: ' + (errorData.error || response.statusText));
+        toast.error(t('promptDetails.versionRevert.revertFailed', { error: errorData.error || response.statusText }));
       }
     } catch (error) {
       console.error('重新获取提示词失败:', error);
-      toast.error('刷新数据失败: ' + (error instanceof Error ? error.message : '未知错误'));
+      toast.error(t('promptDetails.versionRevert.refreshFailed', { error: error instanceof Error ? error.message : t('common.unknown_error') }));
     }
   };
 
   // 删除提示词 - 智能检测版本
   const handleDeletePrompt = async () => {
     if (!prompt || !user) {
-      toast.error('请先登录');
+      toast.error(t('promptDetails.errors.loginRequired'));
       return;
     }
 
@@ -438,7 +422,7 @@ export default function PromptDetailsPage() {
       // 获取认证令牌
       const token = await getToken();
       if (!token) {
-        toast.error('无法获取认证令牌，请重新登录');
+        toast.error(t('promptDetails.errors.tokenError'));
         return;
       }
 
@@ -454,7 +438,7 @@ export default function PromptDetailsPage() {
 
       if (!policyResponse.ok) {
         const error = await policyResponse.json();
-        toast.error('策略检查失败: ' + (error.message || '未知错误'));
+        toast.error(t('promptDetails.delete.policyCheckFailed', { message: error.message || t('common.unknown_error') }));
         return;
       }
 
@@ -463,28 +447,17 @@ export default function PromptDetailsPage() {
       // 🎯 根据策略显示不同的确认对话框
       let confirmMessage = '';
       if (policy.mustArchive) {
-        confirmMessage = `⚠️ 检测到关联数据保护
-
-提示词"${prompt.name}"有 ${policy.contextUsersCount} 个用户正在使用：
-• 系统将自动归档此提示词（不会删除）
-• 提示词从您的列表中移除，但保持完整功能
-• 其他用户的个性化配置将得到保护
-• 您可以随时从"我的归档"中恢复
-
-原因：${policy.reason}
-
-确定要归档此提示词吗？`;
+        confirmMessage = t('promptDetails.delete.archiveConfirm', {
+          name: prompt.name,
+          count: policy.contextUsersCount,
+          reason: policy.reason,
+        });
       } else if (policy.canDelete) {
-        confirmMessage = `🗑️ 安全删除确认
-
-提示词"${prompt.name}"可以安全删除：
-• 没有其他用户在使用此提示词
-• 所有相关数据将被永久删除
-• 此操作不可恢复
-
-确定要删除此提示词吗？`;
+        confirmMessage = t('promptDetails.delete.deleteConfirm', {
+          name: prompt.name,
+        });
       } else {
-        toast.error(`无法操作此提示词：${policy.reason}`);
+        toast.error(t('promptDetails.delete.cannotOperate', { reason: policy.reason }));
         return;
       }
 
@@ -511,19 +484,19 @@ export default function PromptDetailsPage() {
           // 显示归档成功信息
           toast.success(
             <div className="space-y-2">
-              <div className="font-semibold text-blue-800">📚 智能归档成功！</div>
+              <div className="font-semibold text-blue-800">{t('promptDetails.delete.archiveSuccess')}</div>
               <div className="text-sm text-blue-700">
                 {result.details}
               </div>
               {result.affectedUsers > 0 && (
                 <div className="text-sm text-green-700">
-                  ✓ 已保护 {result.affectedUsers} 个用户的个性化配置
+                  {t('promptDetails.delete.protectedUsers', { count: result.affectedUsers })}
                 </div>
               )}
               <div className="text-xs text-gray-600 mt-1 space-y-1">
-                <div>• 您可以在"我的归档"中找到此提示词</div>
-                <div>• 点击"恢复"即可重新激活</div>
-                <div>• 其他用户可以继续正常使用</div>
+                <div>• {t('promptDetails.delete.archiveInstructions1')}</div>
+                <div>• {t('promptDetails.delete.archiveInstructions2')}</div>
+                <div>• {t('promptDetails.delete.archiveInstructions3')}</div>
               </div>
             </div>,
             { 
@@ -535,19 +508,19 @@ export default function PromptDetailsPage() {
           // 显示删除成功信息
           toast.success(
             <div className="space-y-2">
-              <div className="font-semibold text-green-800">🗑️ 删除成功！</div>
+              <div className="font-semibold text-green-800">{t('promptDetails.delete.deleteSuccess')}</div>
               <div className="text-sm text-green-700">
                 {result.details}
               </div>
               <div className="text-xs text-gray-600 mt-1">
-                • 所有相关数据已永久删除
+                • {t('promptDetails.delete.deleteSuccessDesc')}
               </div>
             </div>,
             { duration: 5000 },
           );
         } else {
           // 默认成功消息
-          toast.success(result.message || '操作成功');
+          toast.success(result.message || t('common.success'));
         }
 
         // 根据提示词类型跳转到对应的页面
@@ -571,11 +544,11 @@ export default function PromptDetailsPage() {
         }, redirectDelay);
       } else {
         const error = await response.json();
-        throw new Error(error.message || '操作失败');
+        throw new Error(error.message || t('promptDetails.delete.operationFailed'));
       }
     } catch (error: any) {
       console.error('删除提示词失败:', error);
-      toast.error(`操作失败: ${error.message || '请检查您的权限或网络连接'}`);
+      toast.error(t('promptDetails.delete.operationFailedDesc'));
     } finally {
       setIsDeleting(false);
     }
@@ -583,9 +556,10 @@ export default function PromptDetailsPage() {
 
   // 格式化日期
   const formatDate = (dateString?: string) => {
-    if (!dateString) {return '未知日期';}
+    if (!dateString) {return t('common.unknown_date');}
     const date = new Date(dateString);
-    return date.toLocaleDateString('zh-CN', { 
+    const locale = t('promptDetails.chat') === 'Chat' ? 'en-US' : 'zh-CN';
+    return date.toLocaleDateString(locale, { 
       year: 'numeric', 
       month: 'long', 
       day: 'numeric', 
@@ -594,13 +568,17 @@ export default function PromptDetailsPage() {
 
   // 获取类型图标和样式
   const getTypeInfo = (categoryType?: string) => {
-    const typeMap: Record<string, { color: string; icon: any; name: string }> = {
-      'chat': { color: 'from-neon-blue to-neon-cyan', icon: ChatBubbleLeftRightIcon, name: '对话' },
-      'image': { color: 'from-neon-pink to-neon-purple', icon: PhotoIcon, name: '图像' },
-      'video': { color: 'from-neon-red to-neon-orange', icon: FilmIcon, name: '视频' },
+    const typeMap: Record<string, { color: string; icon: any; nameKey: string }> = {
+      'chat': { color: 'from-neon-blue to-neon-cyan', icon: ChatBubbleLeftRightIcon, nameKey: 'chat' },
+      'image': { color: 'from-neon-pink to-neon-purple', icon: PhotoIcon, nameKey: 'image' },
+      'video': { color: 'from-neon-red to-neon-orange', icon: FilmIcon, nameKey: 'video' },
     };
     
-    return typeMap[categoryType || 'chat'] || typeMap['chat'];
+    const info = typeMap[categoryType || 'chat'] || typeMap['chat'];
+    return {
+      ...info,
+      name: t(`promptDetails.${info.nameKey}`),
+    };
   };
 
   // 获取分类样式和图标 - 直接使用优化的分类信息
@@ -663,7 +641,7 @@ export default function PromptDetailsPage() {
       >
         <label htmlFor="version" className="block text-sm font-medium text-gray-300 mb-3">
           <BoltIcon className="h-4 w-4 inline mr-2" />
-          选择版本
+          {t('promptDetails.selectVersion')}
         </label>
         <select
           id="version"
@@ -687,7 +665,7 @@ export default function PromptDetailsPage() {
     if (!allVariables || allVariables.length === 0) {
       return (
         <div className="text-sm text-gray-400 text-center py-8">
-          此提示词没有输入变量
+          {t('promptDetails.noInputVariables')}
         </div>
       );
     }
@@ -703,7 +681,7 @@ export default function PromptDetailsPage() {
               type="text"
               value={variableValues[variable] || ''}
               onChange={(e) => updateVariableValue(variable, e.target.value)}
-              placeholder={`输入 ${variable} 的值`}
+              placeholder={t('promptDetails.inputVariablePlaceholder', { variable })}
               className="w-full px-3 py-2 rounded-lg bg-dark-bg-secondary/50 border border-neon-pink/30 text-white placeholder-gray-400 focus:border-neon-pink/50 focus:outline-none transition-colors font-mono text-sm"
             />
           </div>
@@ -732,8 +710,8 @@ export default function PromptDetailsPage() {
     return {
       name: modelId,
       color: 'text-gray-400',
-      type: '自定义模型',
-      description: '用户添加的自定义模型',
+      type: t('promptDetails.modelTypes.custom'),
+      description: t('promptDetails.modelTypes.customDesc'),
     };
   };
 
@@ -769,7 +747,11 @@ export default function PromptDetailsPage() {
             className="inline-flex items-center text-sm font-medium text-neon-cyan hover:text-white transition-colors group"
           >
             <ChevronLeftIcon className="h-5 w-5 mr-2 group-hover:-translate-x-1 transition-transform" />
-            返回{prompt.category_type === 'image' ? '图像' : prompt.category_type === 'video' ? '视频' : '对话'}提示词列表
+            {t('promptDetails.backToList', { 
+              type: prompt.category_type === 'image' ? t('promptDetails.image') : 
+                    prompt.category_type === 'video' ? t('promptDetails.video') : 
+                    t('promptDetails.chat')
+            })}
           </Link>
         </motion.div>
         
@@ -803,7 +785,7 @@ export default function PromptDetailsPage() {
                         {prompt.usageCount && prompt.usageCount > 100 && (
                           <div className="flex items-center space-x-1 px-2 py-1 rounded-full bg-neon-red/20 border border-neon-red/30">
                             <FireIcon className="h-3 w-3 text-neon-red" />
-                            <span className="text-xs text-neon-red">热门</span>
+                            <span className="text-xs text-neon-red">{t('promptDetails.popular')}</span>
                           </div>
                         )}
                       </div>
@@ -831,7 +813,7 @@ export default function PromptDetailsPage() {
                     className="p-3 glass rounded-xl border border-neon-purple/30 text-neon-purple hover:border-neon-purple/50 hover:text-white transition-colors"
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
-                    title="查看版本历史"
+                    title={t('promptDetails.viewVersionHistory')}
                   >
                     <ClockIcon className="h-5 w-5" />
                   </motion.button>
@@ -842,7 +824,7 @@ export default function PromptDetailsPage() {
                       <Link
                         href={`/prompts/${prompt.id}/edit`}
                         className="p-3 glass rounded-xl border border-neon-yellow/30 text-neon-yellow hover:border-neon-yellow/50 hover:text-white transition-colors"
-                        title="编辑提示词"
+                        title={t('promptDetails.editPrompt')}
                       >
                         <PencilSquareIcon className="h-5 w-5" />
                       </Link>
@@ -857,7 +839,7 @@ export default function PromptDetailsPage() {
                         }`}
                         whileHover={!isDeleting ? { scale: 1.05 } : {}}
                         whileTap={!isDeleting ? { scale: 0.95 } : {}}
-                        title={isDeleting ? '删除中...' : '删除提示词'}
+                        title={isDeleting ? t('promptDetails.deleting') : t('promptDetails.deletePrompt')}
                       >
                         <TrashIcon className="h-5 w-5" />
                       </motion.button>
@@ -869,12 +851,12 @@ export default function PromptDetailsPage() {
               <div className="flex flex-wrap items-center gap-6 text-sm text-gray-400">
                 <div className="flex items-center">
                   <ClockIcon className="h-4 w-4 mr-2" />
-                  创建于 {formatDate(prompt.created_at)}
+                  {t('promptDetails.createdAt', { date: formatDate(prompt.created_at) })}
                 </div>
                 {prompt.updated_at && prompt.updated_at !== prompt.created_at && (
                   <div className="flex items-center">
                     <ArrowPathIcon className="h-4 w-4 mr-2" />
-                    更新于 {formatDate(prompt.updated_at)}
+                    {t('promptDetails.updatedAt', { date: formatDate(prompt.updated_at) })}
                   </div>
                 )}
                 {prompt.author && (
@@ -886,7 +868,7 @@ export default function PromptDetailsPage() {
                 {prompt.version && (
                   <div className="flex items-center">
                     <BoltIcon className="h-4 w-4 mr-2" />
-                    版本 {formatVersionDisplay(prompt.version)}
+                    {t('promptDetails.version')} {formatVersionDisplay(prompt.version)}
                   </div>
                 )}
                 {prompt.rating !== undefined && (
@@ -898,7 +880,7 @@ export default function PromptDetailsPage() {
                 {prompt.usageCount && (
                   <div className="flex items-center">
                     <EyeIcon className="h-4 w-4 mr-2" />
-                    使用 {prompt.usageCount} 次
+                    {t('promptDetails.usageCount', { count: prompt.usageCount })}
                   </div>
                 )}
               </div>
@@ -916,7 +898,7 @@ export default function PromptDetailsPage() {
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-2xl font-bold text-white flex items-center">
                   <CodeBracketIcon className="h-6 w-6 mr-3 text-neon-cyan" />
-                  提示词内容
+                  {t('promptDetails.promptContent')}
                 </h2>
                 <motion.button
                   type="button"
@@ -930,7 +912,7 @@ export default function PromptDetailsPage() {
                   whileTap={{ scale: 0.95 }}
                 >
                   <ClipboardDocumentIcon className="h-5 w-5 mr-2" />
-                  {copied ? '已复制！' : '复制内容'}
+                  {copied ? t('promptDetails.copied') : t('promptDetails.copyContent')}
                 </motion.button>
               </div>
               
@@ -951,7 +933,7 @@ export default function PromptDetailsPage() {
                     transition={{ duration: 0.3 }}
                   >
                     <div className="bg-neon-green/20 px-4 py-2 rounded-lg text-neon-green font-semibold">
-                      复制成功！
+                      {t('promptDetails.copySuccess')}
                     </div>
                   </motion.div>
                 )}
@@ -974,7 +956,7 @@ export default function PromptDetailsPage() {
                     ) : (
                       <FilmIcon className="h-6 w-6 mr-3 text-neon-red" />
                     )}
-                    {prompt.category_type === 'image' ? '图像展示' : '视频展示'}
+                    {prompt.category_type === 'image' ? t('promptDetails.imageDisplay') : t('promptDetails.videoDisplay')}
                   </h2>
                 </div>
 
@@ -994,7 +976,7 @@ export default function PromptDetailsPage() {
                               {prompt.category_type === 'image' ? (
                                 <img
                                   src={file.url}
-                                  alt={file.name || `图像 ${index + 1}`}
+                                  alt={file.name || t('prompts.image', { fallback: `Image ${index + 1}` })}
                                   className="w-full h-auto max-h-96 object-contain rounded-lg cursor-pointer hover:scale-105 transition-transform duration-200"
                                   onError={(e) => {
                                     (e.target as HTMLImageElement).style.display = 'none';
@@ -1010,7 +992,7 @@ export default function PromptDetailsPage() {
                                     (e.target as HTMLVideoElement).style.display = 'none';
                                   }}
                                 >
-                                  您的浏览器不支持视频播放
+                                  {t('promptDetails.browser.videoNotSupported')}
                                 </video>
                               )}
                             </div>
@@ -1059,7 +1041,7 @@ export default function PromptDetailsPage() {
                             ) : (
                               <FilmIcon className="h-16 w-16 mx-auto mb-4 opacity-50" />
                             )}
-                            <p>暂无{prompt.category_type === 'image' ? '图像' : '视频'}文件</p>
+                            <p>{t('promptDetails.noMediaFiles', { type: prompt.category_type === 'image' ? t('promptDetails.image') : t('promptDetails.video') })}</p>
                           </div>
                         </div>
                       </div>
@@ -1106,15 +1088,15 @@ export default function PromptDetailsPage() {
               transition={{ duration: 0.4, delay: 0.2 }}
             >
               <h3 className="text-lg font-semibold text-white mb-6">
-                {prompt.category_type === 'chat' ? '变量设置' : '提示词信息'}
+                {prompt.category_type === 'chat' ? t('promptDetails.variableSettings') : t('promptDetails.promptInfo')}
               </h3>
               
               <div className="space-y-6">
                 {/* 类型信息 */}
                 <div>
-                  <h4 className="text-sm font-medium text-gray-300 mb-3 flex items-center">
+                    <h4 className="text-sm font-medium text-gray-300 mb-3 flex items-center">
                     <TypeIcon className="h-4 w-4 mr-2 text-neon-cyan" />
-                    类型信息
+                    {t('promptDetails.typeInfo')}
                   </h4>
                   <div className="p-3 rounded-lg glass border border-neon-cyan/30">
                     <div className="flex items-center space-x-2 mb-2">
@@ -1122,7 +1104,7 @@ export default function PromptDetailsPage() {
                         <TypeIcon className="h-4 w-4 text-dark-bg-primary" />
                       </div>
                       <div>
-                        <div className="text-sm font-medium text-white">{typeInfo.name}生成</div>
+                        <div className="text-sm font-medium text-white">{t('promptDetails.typeGeneration', { type: typeInfo.name })}</div>
                         <div className="text-xs text-gray-400">{categoryInfo.name}</div>
                       </div>
                     </div>
@@ -1131,9 +1113,9 @@ export default function PromptDetailsPage() {
 
                 {/* 输入变量 */}
                 <div className="pt-4 border-t border-neon-cyan/20">
-                  <h4 className="text-sm font-medium text-gray-300 mb-4 flex items-center">
+                    <h4 className="text-sm font-medium text-gray-300 mb-4 flex items-center">
                     <TagIcon className="h-4 w-4 mr-2 text-neon-pink" />
-                    输入变量
+                    {t('promptDetails.inputVariables')}
                   </h4>
                   {renderVariableInputs()}
                 </div>
@@ -1141,16 +1123,16 @@ export default function PromptDetailsPage() {
                 {/* 生成参数（仅图像和视频类型） */}
                 {(prompt.category_type === 'image' || prompt.category_type === 'video') && (
                   <div className="pt-4 border-t border-neon-cyan/20">
-                    <h4 className="text-sm font-medium text-gray-300 mb-3 flex items-center">
+                      <h4 className="text-sm font-medium text-gray-300 mb-3 flex items-center">
                       <CogIcon className="h-4 w-4 mr-2 text-neon-yellow" />
-                      生成参数
+                      {t('promptDetails.generationParameters')}
                     </h4>
                     {prompt.parameters && Object.keys(prompt.parameters).filter(key => key !== 'media_files').length > 0 ? (
                       <div className="space-y-3">
                         {Object.entries(prompt.parameters)
                           .filter(([key]) => key !== 'media_files') // 排除media_files字段，避免重复显示
                           .map(([key, value]) => {
-                            const displayName = PARAMETER_NAMES[key] || key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                            const displayName = t(`promptDetails.parameterNames.${key}`, { fallback: key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) });
                             
                             return (
                               <div key={key} className="p-3 rounded-lg glass border border-neon-yellow/30 group hover:border-neon-yellow/50 transition-colors">
@@ -1166,7 +1148,7 @@ export default function PromptDetailsPage() {
                       </div>
                     ) : (
                       <div className="text-sm text-gray-400 text-center py-8">
-                        此提示词未设置参数
+                        {t('promptDetails.noParameters')}
                       </div>
                     )}
                   </div>
@@ -1174,9 +1156,9 @@ export default function PromptDetailsPage() {
                 
                 {/* 兼容模型 */}
                 <div className="pt-4 border-t border-neon-cyan/20">
-                  <h4 className="text-sm font-medium text-gray-300 mb-3 flex items-center">
+                    <h4 className="text-sm font-medium text-gray-300 mb-3 flex items-center">
                     <BoltIcon className="h-4 w-4 mr-2 text-neon-yellow" />
-                    兼容模型
+                    {t('promptDetails.compatibleModels')}
                   </h4>
                   {prompt.compatible_models && prompt.compatible_models.length > 0 ? (
                     <div className="space-y-2">
@@ -1203,10 +1185,10 @@ export default function PromptDetailsPage() {
                   ) : (
                     <div className="p-3 rounded-lg bg-gray-800/30 border border-gray-600/30 text-center">
                       <div className="text-sm text-gray-400 mb-1">
-                        🔧 未设置兼容模型
+                        {t('promptDetails.noCompatibleModels')}
                       </div>
                       <div className="text-xs text-gray-500">
-                        作者尚未指定此提示词的兼容AI模型
+                        {t('promptDetails.noCompatibleModelsDesc')}
                       </div>
                     </div>
                   )}
@@ -1217,7 +1199,7 @@ export default function PromptDetailsPage() {
                   <div className="pt-4 border-t border-neon-cyan/20">
                     <h4 className="text-sm font-medium text-gray-300 mb-3 flex items-center">
                       <DocumentTextIcon className="h-4 w-4 mr-2 text-neon-purple" />
-                      使用示例
+                      {t('promptDetails.usageExamples')}
                     </h4>
                     <div className="space-y-3">
                       {prompt.examples.map((example, index) => (
@@ -1230,11 +1212,11 @@ export default function PromptDetailsPage() {
                               {example.description}
                             </div>
                           )}
-                          <div className="text-xs text-neon-purple font-medium mb-1">输入:</div>
+                          <div className="text-xs text-neon-purple font-medium mb-1">{t('promptDetails.input')}:</div>
                           <div className="text-xs text-gray-300 mb-2 font-mono">
                             {JSON.stringify(example.input, null, 2)}
                           </div>
-                          <div className="text-xs text-neon-green font-medium mb-1">输出:</div>
+                          <div className="text-xs text-neon-green font-medium mb-1">{t('promptDetails.output')}:</div>
                           <div className="text-xs text-gray-200 font-mono">
                             {example.output}
                           </div>
@@ -1246,9 +1228,9 @@ export default function PromptDetailsPage() {
 
                 {/* 标签 */}
                 <div className="pt-4 border-t border-neon-cyan/20">
-                  <h4 className="text-sm font-medium text-gray-300 mb-3 flex items-center">
+                    <h4 className="text-sm font-medium text-gray-300 mb-3 flex items-center">
                     <TagIcon className="h-4 w-4 mr-2 text-neon-cyan" />
-                    标签
+                    {t('promptDetails.tags')}
                   </h4>
                   {prompt.tags && prompt.tags.length > 0 ? (
                     <div className="flex flex-wrap gap-2">
@@ -1263,7 +1245,7 @@ export default function PromptDetailsPage() {
                     </div>
                   ) : (
                     <div className="text-sm text-gray-400 text-center py-8">
-                      此提示词未设置标签
+                      {t('promptDetails.noTags')}
                     </div>
                   )}
                 </div>
