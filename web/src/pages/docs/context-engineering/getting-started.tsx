@@ -4,7 +4,7 @@
  * 为新用户提供5分钟快速上手体验，让用户迅速理解并开始使用上下文工程功能
  */
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import DocLayout from '@/components/DocLayout';
@@ -42,18 +42,29 @@ export default function ContextEngineeringGettingStarted() {
   const [currentStep, setCurrentStep] = useState<string>('step1');
   const [completedSteps, setCompletedSteps] = useState<Set<string>>(new Set());
   
-  const QUICK_START_STEPS: QuickStartStep[] = [
+  // 辅助函数：安全地获取数组类型的翻译
+  const getTipsArray = useMemo(() => {
+    return (key: string, fallback: string[]): string[] => {
+      const result = t(key, { returnObjects: true });
+      if (Array.isArray(result)) {
+        return result;
+      }
+      return fallback;
+    };
+  }, [t]);
+  
+  const QUICK_START_STEPS: QuickStartStep[] = useMemo(() => [
     {
       id: 'step1',
       title: t('docs.context_engineering.getting_started.steps.step1.title') || '创建或选择一个提示词',
       description: t('docs.context_engineering.getting_started.steps.step1.description') || '从浏览PromptHub的公开提示词开始，或创建您的第一个提示词',
       timeEstimate: t('docs.context_engineering.getting_started.steps.step1.timeEstimate') || '1分钟',
       action: t('docs.context_engineering.getting_started.steps.step1.action') || '前往提示词库，选择一个感兴趣的提示词',
-      tips: (t('docs.context_engineering.getting_started.steps.step1.tips') as string[]) || [
+      tips: getTipsArray('docs.context_engineering.getting_started.steps.step1.tips', [
         '建议先从热门的"代码助手"或"写作助手"提示词开始',
         '选择与您工作相关的领域提示词，体验更佳',
         '新用户建议从简单的通用提示词开始练习',
-      ],
+      ]),
       nextStep: 'step2',
     },
     {
@@ -62,11 +73,11 @@ export default function ContextEngineeringGettingStarted() {
       description: t('docs.context_engineering.getting_started.steps.step2.description') || '在提示词详情页中，找到"我的上下文"模块，了解个性化功能',
       timeEstimate: t('docs.context_engineering.getting_started.steps.step2.timeEstimate') || '2分钟',
       action: t('docs.context_engineering.getting_started.steps.step2.action') || '滚动到提示词详情页下方，查看个性化信息面板',
-      tips: (t('docs.context_engineering.getting_started.steps.step2.tips') as string[]) || [
+      tips: getTipsArray('docs.context_engineering.getting_started.steps.step2.tips', [
         '第一次使用会看到"开始个性化之旅"的提示',
         '登录后才能看到完整的个性化功能',
         '每个提示词都有独立的个性化上下文',
-      ],
+      ]),
       nextStep: 'step3',
     },
     {
@@ -75,11 +86,11 @@ export default function ContextEngineeringGettingStarted() {
       description: t('docs.context_engineering.getting_started.steps.step3.description') || '使用提示词进行第一次AI对话，体验上下文工程的学习过程',
       timeEstimate: t('docs.context_engineering.getting_started.steps.step3.timeEstimate') || '1分钟',
       action: t('docs.context_engineering.getting_started.steps.step3.action') || '点击"立即体验"按钮，与AI进行第一次对话',
-      tips: (t('docs.context_engineering.getting_started.steps.step3.tips') as string[]) || [
+      tips: getTipsArray('docs.context_engineering.getting_started.steps.step3.tips', [
         '可以询问任何与提示词相关的问题',
         '系统会记录您的偏好和反馈',
         '不必担心说错，每次交互都是学习机会',
-      ],
+      ]),
       nextStep: 'step4',
     },
     {
@@ -88,11 +99,11 @@ export default function ContextEngineeringGettingStarted() {
       description: t('docs.context_engineering.getting_started.steps.step4.description') || '访问账户设置，配置您的基本偏好，让AI更好地了解您',
       timeEstimate: t('docs.context_engineering.getting_started.steps.step4.timeEstimate') || '1分钟',
       action: t('docs.context_engineering.getting_started.steps.step4.action') || '进入账户设置 → 个性化偏好，设置基本信息',
-      tips: (t('docs.context_engineering.getting_started.steps.step4.tips') as string[]) || [
+      tips: getTipsArray('docs.context_engineering.getting_started.steps.step4.tips', [
         '语言风格、专业程度、回答长度等都很重要',
         '偏好设置会影响所有提示词的表现',
         '可以随时修改，不用一次性设置完美',
-      ],
+      ]),
       nextStep: 'step5',
     },
     {
@@ -101,13 +112,13 @@ export default function ContextEngineeringGettingStarted() {
       description: t('docs.context_engineering.getting_started.steps.step5.description') || '回到提示词页面，查看AI如何根据您的使用调整回应方式',
       timeEstimate: t('docs.context_engineering.getting_started.steps.step5.timeEstimate') || '无限制',
       action: t('docs.context_engineering.getting_started.steps.step5.action') || '继续使用提示词，观察AI回应的变化',
-      tips: (t('docs.context_engineering.getting_started.steps.step5.tips') as string[]) || [
+      tips: getTipsArray('docs.context_engineering.getting_started.steps.step5.tips', [
         '多次使用后，回应会越来越符合您的偏好',
         '在"我的上下文"中可以看到学习进度',
         '给予反馈能加速个性化效果',
-      ],
+      ]),
     },
-  ];
+  ], [t, getTipsArray]);
   
   const markStepComplete = (stepId: string) => {
     setCompletedSteps(prev => new Set([...prev, stepId]));
@@ -379,6 +390,8 @@ function StepDetail({ step, stepNumber, isCompleted, onMarkComplete }: {
   isCompleted: boolean;
   onMarkComplete: () => void;
 }) {
+  const { t } = useLanguage();
+  
   return (
     <motion.div
       className="glass rounded-2xl p-8 border border-neon-cyan/30"
