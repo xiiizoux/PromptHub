@@ -1,8 +1,8 @@
 /**
  * Context Engineering 权限管理系统
  * 
- * 清晰定义用户对自有提示词vs他人公开提示词的不同权限级别
- * 确保数据归属和功能访问的合理性
+ * 上下文功能已完全私有化：只有提示词创建者可以访问和管理上下文功能
+ * 移除了协作者和公开用户的上下文访问权限，简化权限模型并提高数据安全性
  */
 
 export interface ContextPermission {
@@ -39,6 +39,9 @@ export interface ContextAccessLevel {
 
 /**
  * 核心权限计算函数
+ * 
+ * 上下文功能私有化：只有创建者可以访问上下文功能
+ * isCollaborator 和 promptIsPublic 参数仅用于非上下文权限的判断（如提示词查看、编辑等）
  */
 export function calculateContextPermissions(
   userId: string,
@@ -50,7 +53,7 @@ export function calculateContextPermissions(
   const isOwner = userId === promptOwnerId;
   
   if (isOwner) {
-    // 自有提示词：完全权限
+    // 自有提示词：完全权限（包括上下文功能）
     return {
       canView: true,
       canUse: true,
@@ -66,58 +69,32 @@ export function calculateContextPermissions(
     };
   }
   
-  if (isCollaborator) {
-    // 协作者：部分管理权限 + 完整个人上下文权限
-    return {
-      canView: true,
-      canUse: true,
-      canEditPrompt: true,
-      canEditRules: false, // 协作者不能修改CE规则
-      canManageVersions: true,
-      canViewAnalytics: false, // 不能查看完整分析
-      canExportData: false,
-      canCreateExperiments: false,
-      canViewMyContext: true,
-      canManageMyContext: true,
-      canApplyPersonalRules: true,
-    };
-  }
-  
-  if (promptIsPublic) {
-    // 他人公开提示词：使用权限 + 个人上下文权限
-    return {
-      canView: true,
-      canUse: true,
-      canEditPrompt: false,
-      canEditRules: false,
-      canManageVersions: false,
-      canViewAnalytics: false,
-      canExportData: false,
-      canCreateExperiments: false,
-      canViewMyContext: true, // 可以查看自己的使用上下文
-      canManageMyContext: true, // 可以管理自己的上下文数据
-      canApplyPersonalRules: true, // 可以应用个人规则
-    };
-  }
-  
-  // 私有提示词：无权限
-  return {
-    canView: false,
-    canUse: false,
-    canEditPrompt: false,
+  // 非创建者：上下文功能完全不可访问
+  // 其他权限（查看、使用提示词本身）仍根据 isCollaborator 和 promptIsPublic 判断
+  const basePermissions: ContextPermission = {
+    canView: promptIsPublic || isCollaborator,
+    canUse: promptIsPublic || isCollaborator,
+    canEditPrompt: isCollaborator,
     canEditRules: false,
-    canManageVersions: false,
+    canManageVersions: isCollaborator,
     canViewAnalytics: false,
     canExportData: false,
     canCreateExperiments: false,
+    // 上下文权限：完全私有化，仅创建者可访问，不受 isCollaborator 和 promptIsPublic 影响
     canViewMyContext: false,
     canManageMyContext: false,
     canApplyPersonalRules: false,
   };
+  
+  return basePermissions;
 }
 
 /**
  * 获取用户对特定提示词的访问级别
+ * 
+ * 上下文功能私有化：上下文相关功能仅对创建者开放
+ * ownership 字段仍保留完整定义以兼容其他功能（提示词本身的查看、编辑等），
+ * 但上下文权限计算已完全独立，不受 'shared' 和 'public' 影响
  */
 export function getContextAccessLevel(
   userId: string,
@@ -127,13 +104,16 @@ export function getContextAccessLevel(
   isCollaborator: boolean = false,
 ): ContextAccessLevel {
   
+  const isOwner = userId === promptOwnerId;
+  
+  // ownership 字段用于其他功能（提示词查看、编辑等），不影响上下文权限
   let ownership: PromptOwnership;
-  if (userId === promptOwnerId) {
+  if (isOwner) {
     ownership = 'owned';
   } else if (isCollaborator) {
-    ownership = 'shared';
+    ownership = 'shared'; // 用于提示词编辑权限，不影响上下文权限
   } else if (promptIsPublic) {
-    ownership = 'public';
+    ownership = 'public'; // 用于提示词查看权限，不影响上下文权限
   } else {
     ownership = 'private';
   }
@@ -195,7 +175,7 @@ export function getFeatureVisibility(accessLevel: ContextAccessLevel): {
     // 实验功能：仅限自有提示词
     showExperiments: permissions.canCreateExperiments,
     
-    // 我的上下文：对所有可用提示词开放
+    // 我的上下文：仅创建者可访问（已私有化）
     showMyContext: permissions.canViewMyContext,
   };
 }
@@ -215,13 +195,11 @@ export function getDataScope(accessLevel: ContextAccessLevel): {
     analyticsScope: ownership === 'owned' ? 'full' : 
                    permissions.canUse ? 'personal' : 'none',
     
-    // 规则管理范围  
-    rulesScope: ownership === 'owned' ? 'both' :
-               permissions.canApplyPersonalRules ? 'personal' : 'none',
+    // 规则管理范围（上下文已私有化，只有创建者可访问）
+    rulesScope: ownership === 'owned' ? 'both' : 'none',
     
-    // 实验范围
-    experimentsScope: ownership === 'owned' ? 'prompt' :
-                     permissions.canApplyPersonalRules ? 'personal' : 'none',
+    // 实验范围（上下文已私有化，只有创建者可访问）
+    experimentsScope: ownership === 'owned' ? 'prompt' : 'none',
   };
 }
 
@@ -237,36 +215,46 @@ export function requirePermission(
 
 /**
  * 权限描述生成器（用于UI提示）
+ * 
+ * 上下文功能私有化：只显示创建者权限，非创建者无法访问上下文功能
  */
 export function getPermissionDescription(accessLevel: ContextAccessLevel): {
   title: string;
   description: string;
   limitations: string[];
 } {
-  const { ownership } = accessLevel;
+  const { ownership, permissions } = accessLevel;
   
+  // 上下文功能：只有创建者可以访问
+  if (permissions.canViewMyContext) {
+    return {
+      title: '完全控制权限',
+      description: '这是您创建的提示词，您拥有完全的管理和分析权限，包括上下文功能',
+      limitations: [],
+    };
+  }
+  
+  // 非创建者：上下文功能完全不可访问
+  // 根据其他权限显示不同的描述（提示词编辑、查看等）
   switch (ownership) {
-    case 'owned':
-      return {
-        title: '完全控制权限',
-        description: '这是您创建的提示词，您拥有完全的管理和分析权限',
-        limitations: [],
-      };
-      
     case 'shared':
       return {
         title: '协作编辑权限', 
         description: '您被授权协作编辑此提示词，可进行内容修改',
-        limitations: ['无法修改Context Engineering规则', '无法查看完整使用分析'],
+        limitations: [
+          '无法访问上下文功能（仅创建者可访问）',
+          '无法修改Context Engineering规则',
+          '无法查看完整使用分析',
+        ],
       };
       
     case 'public':
       return {
         title: '个人使用权限',
-        description: '您可以使用此公开提示词，并管理自己的个人上下文',
+        description: '您可以使用此公开提示词，但无法访问上下文功能',
         limitations: [
+          '无法访问上下文功能（仅创建者可访问）',
           '无法修改提示词内容或规则', 
-          '只能查看自己的使用数据',
           '无法创建提示词级别的实验',
         ],
       };

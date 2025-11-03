@@ -28,7 +28,7 @@ import {
   ShieldCheckIcon,
   InformationCircleIcon,
 } from '@heroicons/react/24/outline';
-import { getContextAccessLevel, getPermissionDescription } from '@/lib/context-permissions';
+import { getContextAccessLevel } from '@/lib/context-permissions';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 
@@ -37,7 +37,7 @@ interface UserPromptContextProps {
   isLoggedIn: boolean;
   promptOwnerId: string;
   promptIsPublic: boolean;
-  isCollaborator?: boolean;
+  isCollaborator?: boolean; // 保留参数以兼容现有调用，但不影响上下文权限
 }
 
 interface UserContextData {
@@ -93,7 +93,7 @@ export default function UserPromptContext({
     { id: 'insights', name: t('userPromptContext.tabs.insights'), icon: LightBulbIcon },
   ];
   
-  // 计算权限级别
+  // 计算权限级别（上下文功能已私有化：只有创建者可以访问）
   const accessLevel = user ? getContextAccessLevel(
     user.id,
     promptId,
@@ -102,8 +102,7 @@ export default function UserPromptContext({
     isCollaborator,
   ) : null;
   
-  const permissionDesc = accessLevel ? getPermissionDescription(accessLevel) : null;
-  
+  // 上下文功能已私有化，只有创建者可以访问，无需权限描述
   const { data, error, isLoading } = useSWR(
     isLoggedIn && accessLevel?.permissions.canViewMyContext ? `/api/prompts/${promptId}/my-context` : null, 
     fetcher,
@@ -223,23 +222,7 @@ export default function UserPromptContext({
     >
       {/* 头部 */}
       <div className="bg-gradient-to-r from-neon-cyan/20 to-neon-blue/20 p-6 border-b border-neon-cyan/20">
-        {/* 权限说明 */}
-        {permissionDesc && accessLevel?.ownership !== 'owned' && (
-          <div className="mb-4 p-3 bg-gray-800/50 rounded-lg border border-gray-600/50">
-            <div className="flex items-start">
-              <ShieldCheckIcon className="h-5 w-5 text-neon-blue mr-2 mt-0.5 flex-shrink-0" />
-              <div>
-                <div className="text-sm font-medium text-neon-blue">{permissionDesc.title}</div>
-                <div className="text-xs text-gray-400 mt-1">{permissionDesc.description}</div>
-                {permissionDesc.limitations.length > 0 && (
-                  <div className="text-xs text-gray-500 mt-2">
-                    💡 {permissionDesc.limitations.join('、')}
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
+        {/* 上下文功能已私有化，只有创建者可以看到此组件，无需显示权限说明 */}
         
         <div className="flex justify-between items-center">
           <div className="flex items-center">
@@ -249,10 +232,8 @@ export default function UserPromptContext({
             <div>
               <h3 className="text-2xl font-bold text-white gradient-text flex items-center">
                 🚀 {t('userPromptContext.myContext')}
-                {accessLevel?.ownership === 'owned' ? 
-                  <span className="ml-3 px-2 py-1 bg-neon-green/20 text-neon-green text-xs rounded">{t('userPromptContext.owner')}</span> :
-                  <span className="ml-3 px-2 py-1 bg-neon-blue/20 text-neon-blue text-xs rounded">{t('userPromptContext.personalData')}</span>
-                }
+                {/* 上下文功能已私有化，只有创建者可以看到此组件 */}
+                <span className="ml-3 px-2 py-1 bg-neon-green/20 text-neon-green text-xs rounded">{t('userPromptContext.owner')}</span>
               </h3>
               <p className="text-gray-300 text-sm">{t('userPromptContext.customizedForYou')}</p>
             </div>

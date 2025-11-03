@@ -1,6 +1,8 @@
 /**
  * 用户上下文API端点 - Context Engineering核心功能
- * 为登录用户提供个性化的上下文信息
+ * 
+ * 上下文功能已完全私有化：只有提示词创建者可以访问此端点
+ * 移除了协作者和公开用户的上下文访问权限
  */
 
 import { NextApiRequest, NextApiResponse } from 'next';
@@ -69,6 +71,25 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     if (!prompt) {
       return res.status(404).json({ error: 'Prompt not found' });
+    }
+
+    // 上下文功能私有化：严格的创建者检查
+    // 检查提示词的创建者 ID（支持多种可能的字段名）
+    const promptOwnerId = prompt.created_by || prompt.user_id || (prompt as any).author_id;
+    
+    if (!promptOwnerId) {
+      console.error('无法确定提示词的创建者ID', { promptId, prompt });
+      return res.status(500).json({ 
+        error: 'Internal Server Error',
+        message: '无法验证提示词所有权',
+      });
+    }
+    
+    if (promptOwnerId !== userId) {
+      return res.status(403).json({ 
+        error: 'Forbidden',
+        message: '上下文功能仅对提示词创建者开放，您无权访问此功能',
+      });
     }
 
     // 构建智能化的学习洞察
