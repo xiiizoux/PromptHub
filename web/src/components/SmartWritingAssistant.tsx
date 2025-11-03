@@ -13,6 +13,7 @@ import {
 import { AIAnalyzeButton, AIAnalysisResultDisplay } from './AIAnalyzeButton';
 import { PromptOptimizer } from './PromptOptimizer';
 import { AIAnalysisResult } from '@/lib/ai-analyzer';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface SmartWritingAssistantProps {
   content: string;
@@ -43,6 +44,7 @@ const SmartWritingAssistant: React.FC<SmartWritingAssistantProps> = ({
   category,
   tags,
 }) => {
+  const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState<'guide' | 'analysis' | 'templates' | 'optimizer'>('guide');
   
 
@@ -59,51 +61,51 @@ const SmartWritingAssistant: React.FC<SmartWritingAssistantProps> = ({
     const steps: WritingStep[] = [
       {
         id: 'role',
-        title: '1. 定义AI角色',
-        description: '明确告诉AI它应该扮演什么角色',
+        title: t('smartWritingAssistant.steps.role.title', { fallback: '1. 定义AI角色' }),
+        description: t('smartWritingAssistant.steps.role.description', { fallback: '明确告诉AI它应该扮演什么角色' }),
         completed: checkRoleDefinition(content),
         suggestions: [
-          '你是一位专业的[领域]专家',
-          '作为经验丰富的[职业]',
-          '假设你是[具体角色]',
+          t('smartWritingAssistant.steps.role.suggestions.0', { fallback: '你是一位专业的[领域]专家' }),
+          t('smartWritingAssistant.steps.role.suggestions.1', { fallback: '作为经验丰富的[职业]' }),
+          t('smartWritingAssistant.steps.role.suggestions.2', { fallback: '假设你是[具体角色]' }),
         ],
       },
       {
         id: 'context',
-        title: '2. 提供背景信息',
-        description: '给AI足够的上下文来理解任务',
+        title: t('smartWritingAssistant.steps.context.title', { fallback: '2. 提供背景信息' }),
+        description: t('smartWritingAssistant.steps.context.description', { fallback: '给AI足够的上下文来理解任务' }),
         completed: checkContext(content),
         suggestions: [
-          '背景：[描述情况]',
-          '目标：[说明目的]',
-          '约束：[限制条件]',
+          t('smartWritingAssistant.steps.context.suggestions.0', { fallback: '背景：[描述情况]' }),
+          t('smartWritingAssistant.steps.context.suggestions.1', { fallback: '目标：[说明目的]' }),
+          t('smartWritingAssistant.steps.context.suggestions.2', { fallback: '约束：[限制条件]' }),
         ],
       },
       {
         id: 'task',
-        title: '3. 明确具体任务',
-        description: '用清晰的动词描述需要完成的任务',
+        title: t('smartWritingAssistant.steps.task.title', { fallback: '3. 明确具体任务' }),
+        description: t('smartWritingAssistant.steps.task.description', { fallback: '用清晰的动词描述需要完成的任务' }),
         completed: checkTaskDescription(content),
         suggestions: [
-          '请帮我分析...',
-          '请为我生成...',
-          '请协助我创建...',
+          t('smartWritingAssistant.steps.task.suggestions.0', { fallback: '请帮我分析...' }),
+          t('smartWritingAssistant.steps.task.suggestions.1', { fallback: '请为我生成...' }),
+          t('smartWritingAssistant.steps.task.suggestions.2', { fallback: '请协助我创建...' }),
         ],
       },
       {
         id: 'format',
-        title: '4. 指定输出格式',
-        description: '告诉AI你希望得到什么样的回答',
+        title: t('smartWritingAssistant.steps.format.title', { fallback: '4. 指定输出格式' }),
+        description: t('smartWritingAssistant.steps.format.description', { fallback: '告诉AI你希望得到什么样的回答' }),
         completed: checkOutputFormat(content),
         suggestions: [
-          '请按以下格式输出：',
-          '回答应包含：1. ... 2. ... 3. ...',
-          '以[格式]形式提供结果',
+          t('smartWritingAssistant.steps.format.suggestions.0', { fallback: '请按以下格式输出：' }),
+          t('smartWritingAssistant.steps.format.suggestions.1', { fallback: '回答应包含：1. ... 2. ... 3. ...' }),
+          t('smartWritingAssistant.steps.format.suggestions.2', { fallback: '以[格式]形式提供结果' }),
         ],
       },
     ];
     setWritingSteps(steps);
-  }, [content]);
+  }, [content, t]);
 
   // 实时质量评估
   useEffect(() => {
@@ -151,19 +153,19 @@ const SmartWritingAssistant: React.FC<SmartWritingAssistantProps> = ({
     const suggestions: string[] = [];
 
     if (!checkRoleDefinition(text)) {
-      suggestions.push('💡 建议添加AI角色定义，如"你是一位..."');
+      suggestions.push(t('smartWritingAssistant.suggestions.role', { fallback: '💡 建议添加AI角色定义，如"你是一位..."' }));
     }
     if (!checkTaskDescription(text)) {
-      suggestions.push('🎯 任务描述可以更具体，使用"请帮我..."等明确指令');
+      suggestions.push(t('smartWritingAssistant.suggestions.task', { fallback: '🎯 任务描述可以更具体，使用"请帮我..."等明确指令' }));
     }
     if (!checkOutputFormat(text)) {
-      suggestions.push('📋 指定输出格式会大大提升回答质量');
+      suggestions.push(t('smartWritingAssistant.suggestions.format', { fallback: '📋 指定输出格式会大大提升回答质量' }));
     }
     if (text.length < 50) {
-      suggestions.push('📝 提示词略短，可以添加更多细节和要求');
+      suggestions.push(t('smartWritingAssistant.suggestions.short', { fallback: '📝 提示词略短，可以添加更多细节和要求' }));
     }
     if (text.length > 1000) {
-      suggestions.push('✂️ 提示词较长，考虑精简核心要求');
+      suggestions.push(t('smartWritingAssistant.suggestions.long', { fallback: '✂️ 提示词较长，考虑精简核心要求' }));
     }
 
     return suggestions;
@@ -209,10 +211,10 @@ const SmartWritingAssistant: React.FC<SmartWritingAssistantProps> = ({
   };
 
   const tabs = [
-    { id: 'guide', label: '写作指南', icon: LightBulbIcon },
-    { id: 'analysis', label: '智能分析', icon: BeakerIcon },
-    { id: 'templates', label: '快速模板', icon: ClipboardDocumentIcon },
-    { id: 'optimizer', label: '智能优化', icon: SparklesIcon },
+    { id: 'guide', label: t('smartWritingAssistant.tabs.guide', { fallback: '写作指南' }), icon: LightBulbIcon },
+    { id: 'analysis', label: t('smartWritingAssistant.tabs.analysis', { fallback: '智能分析' }), icon: BeakerIcon },
+    { id: 'templates', label: t('smartWritingAssistant.tabs.templates', { fallback: '快速模板' }), icon: ClipboardDocumentIcon },
+    { id: 'optimizer', label: t('smartWritingAssistant.tabs.optimizer', { fallback: '智能优化' }), icon: SparklesIcon },
   ];
 
   return (
@@ -228,11 +230,11 @@ const SmartWritingAssistant: React.FC<SmartWritingAssistantProps> = ({
             <div className="flex items-center gap-2">
               <div className={`w-3 h-3 rounded-full ${getQualityColor(qualityScore)}`} />
               <span className="text-sm font-medium text-white">
-                写作质量: {qualityScore}分
+                {t('smartWritingAssistant.quality.score', { score: qualityScore, fallback: `写作质量: ${qualityScore}分` })}
               </span>
             </div>
             <div className="text-xs text-gray-400">
-              {getQualityText(qualityScore)}
+              {getQualityText(qualityScore, t)}
             </div>
           </div>
           
@@ -280,7 +282,7 @@ const SmartWritingAssistant: React.FC<SmartWritingAssistantProps> = ({
             exit={{ opacity: 0, x: 20 }}
             className="space-y-4"
           >
-            <h3 className="text-base font-semibold text-white mb-4">📝 写作步骤指导</h3>
+            <h3 className="text-base font-semibold text-white mb-4">{t('smartWritingAssistant.guide.title', { fallback: '📝 写作步骤指导' })}</h3>
             {writingSteps.map((step, index) => (
               <motion.div
                 key={step.id}
@@ -309,7 +311,7 @@ const SmartWritingAssistant: React.FC<SmartWritingAssistantProps> = ({
                     
                     {!step.completed && (
                       <div className="space-y-2">
-                        <p className="text-xs text-gray-500">建议表达：</p>
+                        <p className="text-xs text-gray-500">{t('smartWritingAssistant.guide.suggestionsLabel', { fallback: '建议表达：' })}</p>
                         {step.suggestions.map((suggestion, idx) => (
                           <button
                             key={idx}
@@ -340,7 +342,7 @@ const SmartWritingAssistant: React.FC<SmartWritingAssistantProps> = ({
             className="space-y-6"
           >
             <div className="flex items-center justify-between">
-              <h3 className="text-base font-semibold text-white">🔍 智能分析</h3>
+              <h3 className="text-base font-semibold text-white">{t('smartWritingAssistant.analysis.title', { fallback: '🔍 智能分析' })}</h3>
               <AIAnalyzeButton
                 content={content}
                 onAnalysisComplete={handleAIAnalysisComplete}
@@ -350,32 +352,32 @@ const SmartWritingAssistant: React.FC<SmartWritingAssistantProps> = ({
             </div>
             
             <div className="bg-dark-bg-secondary/30 rounded-lg p-4 space-y-4">
-              <h4 className="text-sm font-medium text-white">实时分析结果</h4>
+              <h4 className="text-sm font-medium text-white">{t('smartWritingAssistant.analysis.realtime.title', { fallback: '实时分析结果' })}</h4>
               {realTimeAnalysis ? (
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <div className={`flex items-center gap-2 ${realTimeAnalysis.hasRole ? 'text-green-400' : 'text-gray-400'}`}>
                       <CheckCircleIcon className="h-4 w-4" />
-                      <span className="text-sm">角色定义</span>
+                      <span className="text-sm">{t('smartWritingAssistant.analysis.realtime.role', { fallback: '角色定义' })}</span>
                     </div>
                     <div className={`flex items-center gap-2 ${realTimeAnalysis.hasTask ? 'text-green-400' : 'text-gray-400'}`}>
                       <CheckCircleIcon className="h-4 w-4" />
-                      <span className="text-sm">任务描述</span>
+                      <span className="text-sm">{t('smartWritingAssistant.analysis.realtime.task', { fallback: '任务描述' })}</span>
                     </div>
                   </div>
                   <div className="space-y-2">
                     <div className={`flex items-center gap-2 ${realTimeAnalysis.hasFormat ? 'text-green-400' : 'text-gray-400'}`}>
                       <CheckCircleIcon className="h-4 w-4" />
-                      <span className="text-sm">输出格式</span>
+                      <span className="text-sm">{t('smartWritingAssistant.analysis.realtime.format', { fallback: '输出格式' })}</span>
                     </div>
                     <div className={`flex items-center gap-2 ${realTimeAnalysis.hasContext ? 'text-green-400' : 'text-gray-400'}`}>
                       <CheckCircleIcon className="h-4 w-4" />
-                      <span className="text-sm">背景信息</span>
+                      <span className="text-sm">{t('smartWritingAssistant.analysis.realtime.context', { fallback: '背景信息' })}</span>
                     </div>
                   </div>
                 </div>
               ) : (
-                <p className="text-gray-400 text-sm">开始输入内容以获得实时分析...</p>
+                <p className="text-gray-400 text-sm">{t('smartWritingAssistant.analysis.realtime.empty', { fallback: '开始输入内容以获得实时分析...' })}</p>
               )}
             </div>
             
@@ -389,12 +391,12 @@ const SmartWritingAssistant: React.FC<SmartWritingAssistantProps> = ({
                   className="space-y-4"
                 >
                   <div className="flex items-center justify-between">
-                    <h4 className="text-sm font-medium text-white">🤖 AI分析结果</h4>
+                    <h4 className="text-sm font-medium text-white">{t('smartWritingAssistant.analysis.aiResults.title', { fallback: '🤖 AI分析结果' })}</h4>
                     <button
                       type="button"
                       onClick={() => setShowAiAnalysisResult(false)}
                       className="text-gray-400 hover:text-gray-600 transition-colors"
-                      title="关闭AI分析结果"
+                      title={t('smartWritingAssistant.analysis.aiResults.close', { fallback: '关闭AI分析结果' })}
                     >
                       <XMarkIcon className="h-4 w-4" />
                     </button>
@@ -418,7 +420,7 @@ const SmartWritingAssistant: React.FC<SmartWritingAssistantProps> = ({
             exit={{ opacity: 0, x: 20 }}
             className="space-y-6"
           >
-            <h3 className="text-base font-semibold text-white mb-4">📋 快速模板</h3>
+            <h3 className="text-base font-semibold text-white mb-4">{t('smartWritingAssistant.templates.title', { fallback: '📋 快速模板' })}</h3>
             <QuickTemplates onApplyTemplate={applyTemplate} category={category} />
           </motion.div>
         )}
@@ -431,7 +433,7 @@ const SmartWritingAssistant: React.FC<SmartWritingAssistantProps> = ({
             exit={{ opacity: 0, x: 20 }}
             className="space-y-6"
           >
-            <h3 className="text-base font-semibold text-white mb-4">✨ 智能优化</h3>
+            <h3 className="text-base font-semibold text-white mb-4">{t('smartWritingAssistant.optimizer.title', { fallback: '✨ 智能优化' })}</h3>
             {content ? (
               <PromptOptimizer
                 initialPrompt={content}
@@ -439,7 +441,7 @@ const SmartWritingAssistant: React.FC<SmartWritingAssistantProps> = ({
                 className="bg-dark-bg-secondary/30 rounded-lg p-4"
               />
             ) : (
-              <p className="text-gray-400 text-sm">请先输入提示词内容...</p>
+              <p className="text-gray-400 text-sm">{t('smartWritingAssistant.optimizer.empty', { fallback: '请先输入提示词内容...' })}</p>
             )}
           </motion.div>
         )}
@@ -453,6 +455,7 @@ const QuickTemplates: React.FC<{
   onApplyTemplate: (template: string) => void;
   category?: string;
 }> = ({ onApplyTemplate, category }) => {
+  const { t } = useLanguage();
   const [templates, setTemplates] = useState<any[]>([]);
   const [allTemplates, setAllTemplates] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -682,11 +685,11 @@ const QuickTemplates: React.FC<{
           id="writing-assistant-search"
           name="writingAssistantSearch"
           type="search"
-          placeholder="搜索模板..."
+          placeholder={t('smartWritingAssistant.templates.search.placeholder', { fallback: '搜索模板...' })}
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           autoComplete="off"
-          aria-label="搜索写作模板"
+          aria-label={t('smartWritingAssistant.templates.search.ariaLabel', { fallback: '搜索写作模板' })}
           className="w-full pl-10 pr-10 py-2 bg-dark-bg-secondary/50 border border-gray-600/30 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-neon-cyan/50 focus:border-neon-cyan/50 transition-all text-sm"
         />
         {searchQuery && (
@@ -710,9 +713,9 @@ const QuickTemplates: React.FC<{
       <div className="flex items-center justify-between">
         <div className="text-white text-sm">
           {searchQuery ? (
-            <span>搜索结果 ({templates.length}个)</span>
+            <span>{t('smartWritingAssistant.templates.search.results', { count: templates.length, fallback: `搜索结果 (${templates.length}个)` })}</span>
           ) : (
-            <span>快速模板 ({templates.length}个)</span>
+            <span>{t('smartWritingAssistant.templates.count', { count: templates.length, fallback: `快速模板 (${templates.length}个)` })}</span>
           )}
         </div>
         {searchQuery && (
@@ -720,7 +723,7 @@ const QuickTemplates: React.FC<{
             onClick={clearSearch}
             className="text-xs text-neon-cyan hover:text-neon-cyan/80 transition-colors"
           >
-            清除搜索
+            {t('smartWritingAssistant.templates.search.clear', { fallback: '清除搜索' })}
           </button>
         )}
       </div>
@@ -729,14 +732,14 @@ const QuickTemplates: React.FC<{
       {templates.length === 0 && !loading ? (
         <div className="text-center py-8">
           <div className="text-gray-400 mb-2">
-            {searchQuery ? '未找到匹配的模板' : '暂无可用模板'}
+            {searchQuery ? t('smartWritingAssistant.templates.empty.noResults', { fallback: '未找到匹配的模板' }) : t('smartWritingAssistant.templates.empty.noTemplates', { fallback: '暂无可用模板' })}
           </div>
           {searchQuery && (
             <button
               onClick={clearSearch}
               className="text-sm text-neon-cyan hover:text-neon-cyan/80 transition-colors"
             >
-              查看所有模板
+              {t('smartWritingAssistant.templates.empty.viewAll', { fallback: '查看所有模板' })}
             </button>
           )}
         </div>
@@ -800,7 +803,7 @@ const QuickTemplates: React.FC<{
                   )}
                   
                   <div className="flex items-center text-xs text-neon-cyan group-hover:text-neon-cyan/80 transition-colors ml-3">
-                    <span className="mr-1">应用</span>
+                    <span className="mr-1">{t('smartWritingAssistant.templates.apply', { fallback: '应用' })}</span>
                     <svg className="w-3 h-3 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                     </svg>
@@ -861,10 +864,10 @@ const getQualityColor = (score: number): string => {
   return 'bg-red-400';
 };
 
-const getQualityText = (score: number): string => {
-  if (score >= 80) {return '优秀';}
-  if (score >= 60) {return '良好';}
-  return '需要改进';
+const getQualityText = (score: number, t: (key: string, options?: any) => string): string => {
+  if (score >= 80) {return t('smartWritingAssistant.quality.excellent', { fallback: '优秀' });}
+  if (score >= 60) {return t('smartWritingAssistant.quality.good', { fallback: '良好' });}
+  return t('smartWritingAssistant.quality.needsImprovement', { fallback: '需要改进' });
 };
 
 export default SmartWritingAssistant; 

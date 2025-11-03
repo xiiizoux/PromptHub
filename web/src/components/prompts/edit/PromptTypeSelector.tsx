@@ -1,5 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 export type PromptType = 'chat' | 'image' | 'video';
 
@@ -9,30 +10,6 @@ interface PromptTypeSelectorProps {
   disabled?: boolean;
   className?: string;
 }
-
-const typeOptions = [
-  {
-    value: 'chat' as const,
-    label: '对话提示词',
-    icon: '💬',
-    description: '适用于文本对话、问答、写作助手等场景。支持变量替换和上下文管理。',
-    color: 'neon-cyan',
-  },
-  {
-    value: 'image' as const,
-    label: '图像提示词',
-    icon: '🖼️',
-    description: '适用于AI图像生成场景。可以设置风格、尺寸、质量等参数，并上传示例图片。',
-    color: 'neon-purple',
-  },
-  {
-    value: 'video' as const,
-    label: '视频提示词',
-    icon: '🎬',
-    description: '适用于AI视频生成场景。可以设置时长、帧率、运动强度等参数，并上传示例视频。',
-    color: 'neon-pink',
-  },
-];
 
 // 获取激活状态的样式
 const getActiveStyles = (color: string) => {
@@ -68,6 +45,32 @@ export default function PromptTypeSelector({
   disabled = false,
   className = '',
 }: PromptTypeSelectorProps) {
+  const { t } = useLanguage();
+  
+  const typeOptions = [
+    {
+      value: 'chat' as const,
+      label: t('promptTypeSelector.chat.label', { fallback: '对话提示词' }),
+      icon: '💬',
+      description: t('promptTypeSelector.chat.description', { fallback: '适用于文本对话、问答、写作助手等场景。支持变量替换和上下文管理。' }),
+      color: 'neon-cyan',
+    },
+    {
+      value: 'image' as const,
+      label: t('promptTypeSelector.image.label', { fallback: '图像提示词' }),
+      icon: '🖼️',
+      description: t('promptTypeSelector.image.description', { fallback: '适用于AI图像生成场景。可以设置风格、尺寸、质量等参数，并上传示例图片。' }),
+      color: 'neon-purple',
+    },
+    {
+      value: 'video' as const,
+      label: t('promptTypeSelector.video.label', { fallback: '视频提示词' }),
+      icon: '🎬',
+      description: t('promptTypeSelector.video.description', { fallback: '适用于AI视频生成场景。可以设置时长、帧率、运动强度等参数，并上传示例视频。' }),
+      color: 'neon-pink',
+    },
+  ];
+
   return (
     <div className={`${className}`}>
       {/* 扁平化的标签式切换按钮 - 居中显示 */}
