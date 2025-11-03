@@ -1010,6 +1010,89 @@
         "analysis_complete": "AI analysis complete!",
         "analysis_failed": "AI analysis failed",
         "redirecting": "Redirecting to create prompt page..."
+      },
+      "component": {
+        "tabs": {
+          "optimize": "Smart Optimization",
+          "iterate": "Iterative Improvement",
+          "analyze": "Quality Analysis"
+        },
+        "originalPrompt": {
+          "title": "Original Prompt",
+          "placeholder": "Enter the prompt you want to optimize here..."
+        },
+        "optimize": {
+          "title": "Smart Optimization",
+          "promptType": "Prompt Type",
+          "chat": "💬 Chat",
+          "image": "🎨 Image",
+          "video": "🎬 Video",
+          "optimizationType": "Optimization Type",
+          "loadingCategories": "Loading categories...",
+          "loadingCategoriesFailed": "Failed to load categories",
+          "selectCategoryOrAI": "Select category or AI smart match",
+          "selected": "Selected: {name}",
+          "autoMatch": "Will automatically match the most suitable category if not selected",
+          "requirements": "Special Requirements (Optional)",
+          "requirementsPlaceholder": "e.g., more concise, include examples, etc.",
+          "startOptimize": "Start Optimization",
+          "optimizing": "Optimizing...",
+          "optimizeError": "Please enter the prompt to optimize",
+          "optimizeSuccess": "Prompt optimization complete!",
+          "categoryMatched": "AI smart matched to \"{name}\" category optimization complete! Confidence: {confidence}%",
+          "manualCategoryMatched": "Used manually selected \"{name}\" category optimization complete!",
+          "optimizeFailed": "Optimization failed: {error}"
+        },
+        "iterate": {
+          "title": "Iterative Improvement",
+          "iterationType": "Iteration Type",
+          "refine": "Fine Tune",
+          "expand": "Expand Content",
+          "simplify": "Simplify Expression",
+          "requirements": "Iteration Requirements *",
+          "requirementsPlaceholder": "Describe specific improvement needs...",
+          "startIterate": "Start Iteration",
+          "iterating": "Iterating...",
+          "iterateError": "Please optimize the prompt first",
+          "requirementsError": "Please enter iteration requirements",
+          "iterateSuccess": "Iteration optimization complete!",
+          "iterateFailed": "Iteration failed: {error}",
+          "apiError": "Iteration failed: Please check API configuration"
+        },
+        "analyze": {
+          "title": "Quality Analysis",
+          "startAnalyze": "Start Quality Analysis",
+          "analyzing": "Analyzing...",
+          "analyzeError": "Please enter the prompt to analyze",
+          "analyzeSuccess": "Quality analysis complete!",
+          "analyzeFailed": "Analysis failed: {error}",
+          "apiError": "Analysis failed: Please check API configuration",
+          "clickToAnalyze": "Click the button above to start analyzing prompt quality",
+          "enterPromptFirst": "Please enter the prompt to analyze above first",
+          "analysisHint": "Analysis will evaluate your prompt from dimensions such as clarity, specificity, completeness, etc.",
+          "clarity": "Clarity",
+          "specificity": "Specificity",
+          "completeness": "Completeness",
+          "overall": "Overall Score",
+          "suggestions": "Improvement Suggestions"
+        },
+        "result": {
+          "title": "Optimization Result",
+          "copy": "Copy Optimization Result",
+          "apply": "Apply Optimization Result",
+          "analyzeOptimized": "Intelligent analysis of optimized prompt",
+          "createPrompt": "Create Prompt",
+          "fillToCreate": "Fill to Create Prompt Page",
+          "improvements": "Main Improvements",
+          "aiAnalysisResult": "AI Analysis Result",
+          "close": "Close AI Analysis Result",
+          "defaultDescription": "Prompt generated through AI optimization, processed with intelligent analysis and structured optimization",
+          "redirectingWithAnalysis": "Redirecting to create prompt page and applying analysis results..."
+        },
+        "fillPrompt": {
+          "error": "Please enter or optimize prompt content first",
+          "redirecting": "Redirecting to create prompt page..."
+        }
       }
     }
   },

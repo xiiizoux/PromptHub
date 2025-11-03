@@ -1010,6 +1010,87 @@
         "analysis_complete": "AI分析完成！",
         "analysis_failed": "AI分析失败",
         "redirecting": "正在跳转到创建提示词页面..."
+      },
+      "component": {
+        "tabs": {
+          "optimize": "智能优化",
+          "iterate": "迭代改进",
+          "analyze": "质量分析"
+        },
+        "originalPrompt": "原始提示词",
+        "originalPlaceholder": "在这里输入您想要优化的提示词...",
+        "optimize": {
+          "title": "智能优化",
+          "promptType": "提示词类型",
+          "chat": "💬 对话",
+          "image": "🎨 图像",
+          "video": "🎬 视频",
+          "optimizationType": "优化类型",
+          "loadingCategories": "加载分类中...",
+          "loadingCategoriesFailed": "加载分类失败",
+          "selectCategoryOrAI": "选择分类或AI智能匹配分类",
+          "selected": "已选择: {name}",
+          "autoMatch": "未选择时将自动智能匹配最适合的分类",
+          "requirements": "特殊要求 (可选)",
+          "requirementsPlaceholder": "例如：更加简洁、包含示例等",
+          "startOptimize": "开始优化",
+          "optimizing": "正在优化...",
+          "optimizeError": "请输入要优化的提示词",
+          "optimizeSuccess": "提示词优化完成！",
+          "categoryMatched": "AI智能匹配到 \"{name}\" 分类优化完成！置信度: {confidence}%",
+          "manualCategoryMatched": "使用手动选择的 \"{name}\" 分类优化完成！",
+          "optimizeFailed": "优化失败: {error}"
+        },
+        "iterate": {
+          "title": "迭代改进",
+          "iterationType": "迭代类型",
+          "refine": "精细调整",
+          "expand": "扩展内容",
+          "simplify": "简化表达",
+          "requirements": "迭代要求 *",
+          "requirementsPlaceholder": "描述具体的改进需求...",
+          "startIterate": "开始迭代",
+          "iterating": "正在迭代...",
+          "iterateError": "请先优化提示词",
+          "requirementsError": "请输入迭代要求",
+          "iterateSuccess": "迭代优化完成！",
+          "iterateFailed": "迭代失败: {error}",
+          "apiError": "迭代失败：请检查API配置"
+        },
+        "analyze": {
+          "title": "质量分析",
+          "startAnalyze": "开始质量分析",
+          "analyzing": "正在分析...",
+          "analyzeError": "请输入要分析的提示词",
+          "analyzeSuccess": "质量分析完成！",
+          "analyzeFailed": "分析失败: {error}",
+          "apiError": "分析失败：请检查API配置",
+          "clickToAnalyze": "点击上方按钮开始分析提示词质量",
+          "enterPromptFirst": "请先在上方输入要分析的提示词",
+          "analysisHint": "分析将从清晰性、具体性、完整性等维度评估您的提示词",
+          "clarity": "清晰性",
+          "specificity": "具体性",
+          "completeness": "完整性",
+          "overall": "综合评分",
+          "suggestions": "改进建议"
+        },
+        "result": {
+          "title": "优化结果",
+          "copy": "复制优化结果",
+          "apply": "应用优化结果",
+          "analyzeOptimized": "对优化后的提示词进行智能分析",
+          "createPrompt": "创建提示词",
+          "fillToCreate": "填充到创建提示词页面",
+          "improvements": "主要改进",
+          "aiAnalysisResult": "智能分析结果",
+          "close": "关闭智能分析结果",
+          "defaultDescription": "通过AI优化生成的提示词，经过智能分析和结构化优化处理",
+          "redirectingWithAnalysis": "正在跳转到创建提示词页面并应用分析结果..."
+        },
+        "fillPrompt": {
+          "error": "请先输入或优化提示词内容",
+          "redirecting": "正在跳转到创建提示词页面..."
+        }
       }
     }
   },
@@ -1382,7 +1463,13 @@
     "parameters": {
       "title": "生成参数设置",
       "imageType": "图像类型",
-      "videoType": "视频类型"
+      "videoType": "视频类型",
+      "subtitle": "({type}类型)"
+    },
+    "collaborators": {
+      "title": "协作者设置",
+      "hint": "输入协作者的用户名，用逗号分隔。这些用户将获得编辑权限。",
+      "placeholder": "例如：user1, user2, user3"
     },
     "types": {
       "chat": "对话",
@@ -1394,7 +1481,8 @@
       "saveSuccess": "✓ 提示词已成功更新！",
       "creating": "创建中...",
       "updating": "更新中...",
-      "switchType": "切换到{type}生成模式"
+      "switchType": "切换到{type}生成模式",
+      "permissionInfo": "{message}"
     },
     "buttons": {
       "cancel": "取消",

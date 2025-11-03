@@ -5,6 +5,8 @@
 
 import { getCategories } from '@/lib/api';
 import { logger } from '@/lib/error-handler';
+import { Language } from '@/contexts/LanguageContext';
+import { getLocalizedCategoryName } from '@/utils/categoryLocalization';
 
 // 分类类型
 export type CategoryType = 'chat' | 'image' | 'video';
@@ -139,14 +141,26 @@ class CategoryService {
 
   /**
    * 获取分类的显示信息 - 只使用数据库icon字段
+   * @param categoryName 分类名称
+   * @param categoryData 完整的分类数据对象
+   * @param language 当前语言，用于本地化显示名称
    */
-  getCategoryDisplayInfo(categoryName: string, categoryData?: CategoryInfo): CategoryDisplayInfo {
+  getCategoryDisplayInfo(
+    categoryName: string, 
+    categoryData?: CategoryInfo,
+    language: Language = 'zh'
+  ): CategoryDisplayInfo {
     // 只使用数据库中的icon字段，如果没有就返回null
     const iconName = categoryData?.icon || null;
     const categoryType = categoryData?.type || 'chat';
 
+    // 使用本地化函数获取对应的分类名称
+    const localizedName = categoryData
+      ? getLocalizedCategoryName(categoryData, language, categoryName)
+      : categoryName;
+
     return {
-      name: categoryData?.name || categoryName,
+      name: localizedName,
       color: this.getColorByType(categoryType),
       gradient: this.getGradientByType(categoryType),
       iconName,

@@ -8,6 +8,7 @@ import { CategoryInfo, CategoryType, CategoryDisplayInfo } from '@/types/categor
 import { categoryService } from '@/services/categoryService';
 import { getIconComponent } from '@/utils/categoryIcons';
 import { logger } from '@/lib/error-handler';
+import { useLanguage } from './LanguageContext';
 
 // 分类上下文接口
 interface CategoryContextType {
@@ -81,6 +82,9 @@ const setCachedCategories = (categories: Record<CategoryType, CategoryInfo[]>) =
 
 // 分类提供者组件
 export const CategoryProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  // 获取当前语言
+  const { language } = useLanguage();
+  
   // 从缓存初始化状态
   const cachedData = getCachedCategories();
   
@@ -95,23 +99,28 @@ export const CategoryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [error, setError] = useState<string | null>(null);
   const [isInitialized, setIsInitialized] = useState(!!cachedData); // 有缓存时直接初始化
 
-  // 获取分类显示信息的简化方法
+  // 获取分类显示信息的简化方法（集成语言支持）
   const getCategoryDisplayInfo = useCallback((categoryName: string, type?: CategoryType): CategoryDisplayInfo => {
     // 查找对应的分类数据
     let categoryData: CategoryInfo | undefined;
     
     if (type) {
-      categoryData = categories[type]?.find(cat => cat.name === categoryName);
+      // 先按名称查找（可能传入的是中文或英文名称）
+      categoryData = categories[type]?.find(
+        cat => cat.name === categoryName || cat.name_en === categoryName
+      );
     } else {
       // 在所有类型中查找
       for (const categoryType of Object.keys(categories) as CategoryType[]) {
-        categoryData = categories[categoryType]?.find(cat => cat.name === categoryName);
+        categoryData = categories[categoryType]?.find(
+          cat => cat.name === categoryName || cat.name_en === categoryName
+        );
         if (categoryData) {break;}
       }
     }
 
-    // 获取显示信息（只使用数据库icon字段）
-    const displayInfo = categoryService.getCategoryDisplayInfo(categoryName, categoryData);
+    // 获取显示信息（传入当前语言）
+    const displayInfo = categoryService.getCategoryDisplayInfo(categoryName, categoryData, language);
     
     // 获取图标组件（如果没有图标就返回null）
     const iconComponent = displayInfo.iconName ? getIconComponent(displayInfo.iconName) : null;
@@ -120,7 +129,7 @@ export const CategoryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       ...displayInfo,
       iconComponent: iconComponent || undefined,
     };
-  }, [categories]);
+  }, [categories, language]);
 
   // 获取分类图标组件
   const getCategoryIcon = useCallback((categoryName: string, type?: CategoryType): React.ComponentType<React.SVGProps<SVGSVGElement>> | null => {
@@ -179,7 +188,7 @@ export const CategoryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
   }, [isInitialized, loadCategories]);
 
-  // 上下文值
+  // 上下文值（包含语言依赖）
   const contextValue = useMemo(() => ({
     categories,
     isLoading,
@@ -196,6 +205,7 @@ export const CategoryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     getCategoryDisplayInfo,
     getCategoryIcon,
     refreshCategories,
+    language, // 添加语言依赖，确保语言切换时更新
   ]);
 
   return (

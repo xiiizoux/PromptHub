@@ -939,10 +939,10 @@ export default function PromptFormContainer({
                       <div className="flex items-center mb-6">
                         <CogIcon className="h-6 w-6 text-neon-yellow mr-3" />
                         <h3 className="text-xl font-semibold text-white">
-                          生成参数设置
+                          {t('promptForm.parameters.title', { fallback: '生成参数设置' })}
                         </h3>
                         <span className="ml-2 text-sm text-gray-400">
-                          ({currentType === 'image' ? '图像' : '视频'}类型)
+                          {t('promptForm.parameters.subtitle', { type: getTypeLabel(currentType), fallback: `(${getTypeLabel(currentType)}类型)` })}
                         </span>
                       </div>
                       
@@ -1301,10 +1301,10 @@ export default function PromptFormContainer({
                   {watch('simple_permission') === 'team_edit' && (
                     <div className="p-4 border border-neon-cyan/20 rounded-xl bg-dark-bg-secondary">
                       <label className="block text-sm font-medium text-gray-300 mb-2">
-                        协作者设置
+                        {t('promptForm.collaborators.title', { fallback: '协作者设置' })}
                       </label>
                       <p className="text-xs text-gray-400 mb-3">
-                        输入协作者的用户名，用逗号分隔。这些用户将获得编辑权限。
+                        {t('promptForm.collaborators.hint', { fallback: '输入协作者的用户名，用逗号分隔。这些用户将获得编辑权限。' })}
                       </p>
                       <Controller
                         name="collaborators"
@@ -1312,7 +1312,7 @@ export default function PromptFormContainer({
                         render={({ field }) => (
                           <input
                             type="text"
-                            placeholder="例如：user1, user2, user3"
+                            placeholder={t('promptForm.collaborators.placeholder', { fallback: '例如：user1, user2, user3' })}
                             className="input-primary w-full"
                             value={Array.isArray(field.value) ? field.value.join(', ') : ''}
                             onChange={(e) => {
@@ -1349,7 +1349,7 @@ export default function PromptFormContainer({
                     {/* 未保存更改提示 */}
                     {hasUnsavedChanges && (
                       <p className="text-xs text-yellow-400">
-                        <span className="text-yellow-400">⚠</span> 有未保存的更改
+                        {t('promptForm.status.unsavedChanges', { fallback: '⚠ 有未保存的更改' })}
                       </p>
                     )}
 
@@ -1363,7 +1363,7 @@ export default function PromptFormContainer({
                     {/* 保存成功提示 */}
                     {saveSuccess && (
                       <p className="text-xs text-green-400">
-                        <span className="text-green-400">✓</span> 提示词已成功更新！
+                        {t('promptForm.status.saveSuccess', { fallback: '✓ 提示词已成功更新！' })}
                       </p>
                     )}
                   </div>
@@ -1379,7 +1379,7 @@ export default function PromptFormContainer({
                         whileTap={{ scale: 0.95 }}
                         className="btn-secondary"
                       >
-                        取消
+                        {t('promptForm.buttons.cancel', { fallback: '取消' })}
                       </motion.button>
                     )}
                     
@@ -1393,7 +1393,7 @@ export default function PromptFormContainer({
                       {isSubmitting ? (
                         <>
                           <div className="w-5 h-5 border-2 border-neon-cyan/30 border-t-neon-cyan rounded-full animate-spin"></div>
-                          <span>{mode === 'create' ? '创建中...' : '更新中...'}</span>
+                          <span>{mode === 'create' ? t('promptForm.status.creating', { fallback: '创建中...' }) : t('promptForm.status.updating', { fallback: '更新中...' })}</span>
                         </>
                       ) : (
                         <>

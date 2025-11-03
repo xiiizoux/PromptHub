@@ -25,6 +25,8 @@ import { AIAnalyzeButton, AIAnalysisResultDisplay } from '@/components/AIAnalyze
 import { AIAnalysisResult } from '@/lib/ai-analyzer';
 import { categoryService, CategoryInfo } from '@/services/categoryService';
 import { getIconComponent } from '@/utils/categoryIcons';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { getLocalizedCategoryName } from '@/utils/categoryLocalization';
 import toast from 'react-hot-toast';
 
 interface PromptOptimizerProps {
@@ -39,6 +41,7 @@ export const PromptOptimizerComponent: React.FC<PromptOptimizerProps> = ({
   className = '',
 }) => {
   const router = useRouter();
+  const { t, language } = useLanguage();
   const [prompt, setPrompt] = useState(initialPrompt);
   const [optimizedPrompt, setOptimizedPrompt] = useState('');
   const [isOptimizing, setIsOptimizing] = useState(false);
@@ -73,7 +76,7 @@ export const PromptOptimizerComponent: React.FC<PromptOptimizerProps> = ({
         setSelectedCategory(null);
       } catch (error) {
         console.error('加载分类失败:', error);
-        toast.error('加载分类失败');
+        toast.error(t('pages.optimizer.component.optimize.loadingCategoriesFailed', { fallback: '加载分类失败' }));
       } finally {
         setIsLoadingCategories(false);
       }
@@ -117,7 +120,7 @@ export const PromptOptimizerComponent: React.FC<PromptOptimizerProps> = ({
 
   const handleOptimize = async () => {
     if (!prompt.trim()) {
-      toast.error('请输入要优化的提示词');
+      toast.error(t('pages.optimizer.component.optimize.optimizeError', { fallback: '请输入要优化的提示词' }));
       return;
     }
 
@@ -149,12 +152,12 @@ export const PromptOptimizerComponent: React.FC<PromptOptimizerProps> = ({
       });
 
       if (!response.ok) {
-        throw new Error(`优化失败: ${response.status}`);
+        throw new Error(`${t('pages.optimizer.component.optimize.optimizeFailed', { error: '未知错误', fallback: '优化失败' })}: ${response.status}`);
       }
 
       const data = await response.json();
       if (!data.success) {
-        throw new Error(data.error || '优化失败');
+        throw new Error(data.error || t('pages.optimizer.component.optimize.optimizeFailed', { error: '未知错误', fallback: '优化失败' }));
       }
 
       // 构建优化结果
@@ -172,16 +175,16 @@ export const PromptOptimizerComponent: React.FC<PromptOptimizerProps> = ({
       // 显示匹配的分类信息
       if (data.data.category) {
         if (selectedCategory) {
-          toast.success(`使用手动选择的 "${data.data.category.name}" 分类优化完成！`);
+          toast.success(t('pages.optimizer.component.optimize.manualCategoryMatched', { name: data.data.category.name, fallback: `使用手动选择的 "${data.data.category.name}" 分类优化完成！` }));
         } else {
-          toast.success(`AI智能匹配到 "${data.data.category.name}" 分类优化完成！置信度: ${Math.round(data.data.confidence * 100)}%`);
+          toast.success(t('pages.optimizer.component.optimize.categoryMatched', { name: data.data.category.name, confidence: Math.round(data.data.confidence * 100), fallback: `AI智能匹配到 "${data.data.category.name}" 分类优化完成！置信度: ${Math.round(data.data.confidence * 100)}%` }));
         }
       } else {
-        toast.success('提示词优化完成！');
+        toast.success(t('pages.optimizer.component.optimize.optimizeSuccess', { fallback: '提示词优化完成！' }));
       }
     } catch (error) {
       console.error('优化失败:', error);
-      toast.error(`优化失败: ${error instanceof Error ? error.message : '未知错误'}`);
+      toast.error(t('pages.optimizer.component.optimize.optimizeFailed', { error: error instanceof Error ? error.message : '未知错误', fallback: `优化失败: ${error instanceof Error ? error.message : '未知错误'}` }));
     } finally {
       setIsOptimizing(false);
     }
@@ -189,12 +192,12 @@ export const PromptOptimizerComponent: React.FC<PromptOptimizerProps> = ({
 
   const handleIterate = async () => {
     if (!prompt.trim() || !optimizedPrompt.trim()) {
-      toast.error('请先优化提示词');
+      toast.error(t('pages.optimizer.component.iterate.iterateError', { fallback: '请先优化提示词' }));
       return;
     }
 
     if (!iterationRequirements.trim()) {
-      toast.error('请输入迭代要求');
+      toast.error(t('pages.optimizer.component.iterate.requirementsError', { fallback: '请输入迭代要求' }));
       return;
     }
 
@@ -210,14 +213,14 @@ export const PromptOptimizerComponent: React.FC<PromptOptimizerProps> = ({
       if (iteratedPrompt) {
         setOptimizedPrompt(iteratedPrompt);
         onOptimizedPrompt?.(iteratedPrompt);
-        toast.success('迭代优化完成！');
+        toast.success(t('pages.optimizer.component.iterate.iterateSuccess', { fallback: '迭代优化完成！' }));
         setIterationRequirements('');
       } else {
-        toast.error('迭代失败：请检查API配置');
+        toast.error(t('pages.optimizer.component.iterate.apiError', { fallback: '迭代失败：请检查API配置' }));
       }
     } catch (error) {
       console.error('迭代失败:', error);
-      toast.error(`迭代失败: ${error instanceof Error ? error.message : '未知错误'}`);
+      toast.error(t('pages.optimizer.component.iterate.iterateFailed', { error: error instanceof Error ? error.message : '未知错误', fallback: `迭代失败: ${error instanceof Error ? error.message : '未知错误'}` }));
     } finally {
       setIsIterating(false);
     }
@@ -225,7 +228,7 @@ export const PromptOptimizerComponent: React.FC<PromptOptimizerProps> = ({
 
   const handleAnalyze = async () => {
     if (!prompt.trim()) {
-      toast.error('请输入要分析的提示词');
+      toast.error(t('pages.optimizer.component.analyze.analyzeError', { fallback: '请输入要分析的提示词' }));
       return;
     }
 
@@ -241,13 +244,13 @@ export const PromptOptimizerComponent: React.FC<PromptOptimizerProps> = ({
             score,
           });
         }
-        toast.success('质量分析完成！');
+        toast.success(t('pages.optimizer.component.analyze.analyzeSuccess', { fallback: '质量分析完成！' }));
       } else {
-        toast.error('分析失败：请检查API配置');
+        toast.error(t('pages.optimizer.component.analyze.apiError', { fallback: '分析失败：请检查API配置' }));
       }
     } catch (error) {
       console.error('分析失败:', error);
-      toast.error(`分析失败: ${error instanceof Error ? error.message : '未知错误'}`);
+      toast.error(t('pages.optimizer.component.analyze.analyzeFailed', { error: error instanceof Error ? error.message : '未知错误', fallback: `分析失败: ${error instanceof Error ? error.message : '未知错误'}` }));
     } finally {
       setIsAnalyzing(false);
     }
@@ -255,7 +258,7 @@ export const PromptOptimizerComponent: React.FC<PromptOptimizerProps> = ({
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text).then(() => {
-      toast.success('已复制到剪贴板');
+      toast.success(t('promptDetails.copySuccess', { fallback: '复制成功！' }));
     });
   };
 
@@ -265,7 +268,7 @@ export const PromptOptimizerComponent: React.FC<PromptOptimizerProps> = ({
     const contentToUse = optimizedPrompt || prompt;
     
     if (!contentToUse.trim()) {
-      toast.error('请先输入或优化提示词内容');
+      toast.error(t('pages.optimizer.component.fillPrompt.error', { fallback: '请先输入或优化提示词内容' }));
       return;
     }
     
@@ -276,7 +279,7 @@ export const PromptOptimizerComponent: React.FC<PromptOptimizerProps> = ({
     
     // 跳转到创建提示词页面
     router.push(`/create?${params.toString()}`);
-    toast.success('正在跳转到创建提示词页面...');
+    toast.success(t('pages.optimizer.component.fillPrompt.redirecting', { fallback: '正在跳转到创建提示词页面...' }));
   };
 
   // 处理AI分析完成
@@ -286,7 +289,7 @@ export const PromptOptimizerComponent: React.FC<PromptOptimizerProps> = ({
     if (result as AIAnalysisResult) {
       setAiAnalysisResult(result as AIAnalysisResult);
       setShowAiAnalysisResult(true);
-      toast.success('智能分析完成！');
+      toast.success(t('pages.optimizer.component.analyze.analyzeSuccess', { fallback: '质量分析完成！' }));
     }
   };
 
@@ -312,9 +315,9 @@ export const PromptOptimizerComponent: React.FC<PromptOptimizerProps> = ({
       {/* 导航标签 */}
       <div className="flex space-x-1 bg-gray-800/50 rounded-xl p-1">
         {[
-          { key: 'optimize', label: '智能优化', icon: SparklesIcon },
-          { key: 'iterate', label: '迭代改进', icon: ArrowPathIcon },
-          { key: 'analyze', label: '质量分析', icon: ChartBarIcon },
+          { key: 'optimize', label: t('pages.optimizer.component.tabs.optimize', { fallback: '智能优化' }), icon: SparklesIcon },
+          { key: 'iterate', label: t('pages.optimizer.component.tabs.iterate', { fallback: '迭代改进' }), icon: ArrowPathIcon },
+          { key: 'analyze', label: t('pages.optimizer.component.tabs.analyze', { fallback: '质量分析' }), icon: ChartBarIcon },
         ].map(tab => (
           <button
             key={tab.key}
@@ -336,7 +339,7 @@ export const PromptOptimizerComponent: React.FC<PromptOptimizerProps> = ({
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold text-white flex items-center">
             <LightBulbIcon className="h-5 w-5 text-neon-yellow mr-2" />
-            原始提示词
+            {t('pages.optimizer.component.originalPrompt.title', { fallback: '原始提示词' })}
           </h3>
           {result?.score && (
             <div className="flex items-center space-x-2">
@@ -359,12 +362,12 @@ export const PromptOptimizerComponent: React.FC<PromptOptimizerProps> = ({
           )}
         </div>
         
-        <textarea
-          value={prompt}
-          onChange={(e) => setPrompt(e.target.value)}
-          placeholder="在这里输入您想要优化的提示词..."
-          className="w-full h-32 bg-gray-800/50 border border-gray-600/50 rounded-xl px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:border-neon-cyan/50 focus:ring-2 focus:ring-neon-cyan/20 resize-none"
-        />
+          <textarea
+            value={prompt}
+            onChange={(e) => setPrompt(e.target.value)}
+            placeholder={t('pages.optimizer.component.originalPrompt.placeholder', { fallback: '在这里输入您想要优化的提示词...' })}
+            className="w-full h-32 bg-gray-800/50 border border-gray-600/50 rounded-xl px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:border-neon-cyan/50 focus:ring-2 focus:ring-neon-cyan/20 resize-none"
+          />
       </div>
 
       {/* 优化配置和操作区 */}
@@ -379,19 +382,19 @@ export const PromptOptimizerComponent: React.FC<PromptOptimizerProps> = ({
           >
             <h3 className="text-lg font-semibold text-white mb-4 flex items-center">
               <SparklesIcon className="h-5 w-5 text-neon-green mr-2" />
-              智能优化
+              {t('pages.optimizer.component.optimize.title', { fallback: '智能优化' })}
             </h3>
 
             {/* 类型切换 */}
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-300 mb-2">
-                提示词类型
+                {t('pages.optimizer.component.optimize.promptType', { fallback: '提示词类型' })}
               </label>
               <div className="flex space-x-2">
                 {[
-                  { value: 'chat', label: '💬 对话', icon: '💬' },
-                  { value: 'image', label: '🎨 图像', icon: '🎨' },
-                  { value: 'video', label: '🎬 视频', icon: '🎬' },
+                  { value: 'chat', label: t('pages.optimizer.component.optimize.chat', { fallback: '💬 对话' }), icon: '💬' },
+                  { value: 'image', label: t('pages.optimizer.component.optimize.image', { fallback: '🎨 图像' }), icon: '🎨' },
+                  { value: 'video', label: t('pages.optimizer.component.optimize.video', { fallback: '🎬 视频' }), icon: '🎬' },
                 ].map((type) => (
                   <button
                     key={type.value}
@@ -412,11 +415,11 @@ export const PromptOptimizerComponent: React.FC<PromptOptimizerProps> = ({
               {/* 优化类型选择 */}
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">
-                  优化类型
+                  {t('pages.optimizer.component.optimize.optimizationType', { fallback: '优化类型' })}
                 </label>
                 {isLoadingCategories ? (
                   <div className="w-full bg-gray-800/50 border border-gray-600/50 rounded-lg px-3 py-2 text-gray-400">
-                    加载分类中...
+                    {t('pages.optimizer.component.optimize.loadingCategories', { fallback: '加载分类中...' })}
                   </div>
                 ) : (
                   <div className="relative" ref={dropdownRef}>
@@ -441,7 +444,7 @@ export const PromptOptimizerComponent: React.FC<PromptOptimizerProps> = ({
                         ) : (
                           <>
                             <span>🧠</span>
-                            <span className="text-gray-400">选择分类或AI智能匹配分类</span>
+                            <span className="text-gray-400">{t('pages.optimizer.component.optimize.selectCategoryOrAI', { fallback: '选择分类或AI智能匹配分类' })}</span>
                           </>
                         )}
                       </div>
@@ -461,7 +464,7 @@ export const PromptOptimizerComponent: React.FC<PromptOptimizerProps> = ({
                           className="w-full px-3 py-2 text-left hover:bg-gray-700/50 flex items-center space-x-2 text-gray-400"
                         >
                           <span>🧠</span>
-                          <span>选择分类或AI智能匹配分类</span>
+                          <span>{t('pages.optimizer.component.optimize.selectCategoryOrAI', { fallback: '选择分类或AI智能匹配分类' })}</span>
                         </button>
                         {categories.map((category) => {
                           const IconComponent = getIconComponent(category.icon);
@@ -480,7 +483,7 @@ export const PromptOptimizerComponent: React.FC<PromptOptimizerProps> = ({
                               ) : (
                                 <span>📝</span>
                               )}
-                              <span>{category.name}</span>
+                              <span>{getLocalizedCategoryName(category, language)}</span>
                             </button>
                           );
                         })}
@@ -490,21 +493,21 @@ export const PromptOptimizerComponent: React.FC<PromptOptimizerProps> = ({
                 )}
                 <p className="text-xs text-gray-400 mt-1">
                   {selectedCategory
-                    ? `已选择: ${selectedCategory.name}`
-                    : '未选择时将自动智能匹配最适合的分类'
+                    ? t('pages.optimizer.component.optimize.selected', { name: selectedCategory.name, fallback: `已选择: ${selectedCategory.name}` })
+                    : t('pages.optimizer.component.optimize.autoMatch', { fallback: '未选择时将自动智能匹配最适合的分类' })
                   }
                 </p>
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">
-                  特殊要求 (可选)
+                  {t('pages.optimizer.component.optimize.requirements', { fallback: '特殊要求 (可选)' })}
                 </label>
                 <input
                   type="text"
                   value={requirements}
                   onChange={(e) => setRequirements(e.target.value)}
-                  placeholder="例如：更加简洁、包含示例等"
+                  placeholder={t('pages.optimizer.component.optimize.requirementsPlaceholder', { fallback: '例如：更加简洁、包含示例等' })}
                   className="w-full bg-gray-800/50 border border-gray-600/50 rounded-lg px-3 py-2 text-white placeholder-gray-400 focus:outline-none focus:border-neon-green/50"
                 />
               </div>
@@ -518,12 +521,12 @@ export const PromptOptimizerComponent: React.FC<PromptOptimizerProps> = ({
               {isOptimizing ? (
                 <>
                   <ArrowPathIcon className="h-5 w-5 animate-spin" />
-                  <span>正在优化...</span>
+                  <span>{t('pages.optimizer.component.optimize.optimizing', { fallback: '正在优化...' })}</span>
                 </>
               ) : (
                 <>
                   <SparklesIcon className="h-5 w-5" />
-                  <span>开始优化</span>
+                  <span>{t('pages.optimizer.component.optimize.startOptimize', { fallback: '开始优化' })}</span>
                 </>
               )}
             </button>
@@ -540,34 +543,34 @@ export const PromptOptimizerComponent: React.FC<PromptOptimizerProps> = ({
           >
             <h3 className="text-lg font-semibold text-white mb-4 flex items-center">
               <ArrowPathIcon className="h-5 w-5 text-neon-purple mr-2" />
-              迭代改进
+              {t('pages.optimizer.component.iterate.title', { fallback: '迭代改进' })}
             </h3>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">
-                  迭代类型
+                  {t('pages.optimizer.component.iterate.iterationType', { fallback: '迭代类型' })}
                 </label>
                 <select
                   value={iterationType}
                   onChange={(e) => setIterationType(e.target.value as IterationRequest['type'])}
                   className="w-full bg-gray-800/50 border border-gray-600/50 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-neon-purple/50"
                 >
-                  <option value="refine">精细调整</option>
-                  <option value="expand">扩展内容</option>
-                  <option value="simplify">简化表达</option>
+                  <option value="refine">{t('pages.optimizer.component.iterate.refine', { fallback: '精细调整' })}</option>
+                  <option value="expand">{t('pages.optimizer.component.iterate.expand', { fallback: '扩展内容' })}</option>
+                  <option value="simplify">{t('pages.optimizer.component.iterate.simplify', { fallback: '简化表达' })}</option>
                 </select>
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">
-                  迭代要求 *
+                  {t('pages.optimizer.component.iterate.requirements', { fallback: '迭代要求 *' })}
                 </label>
                 <input
                   type="text"
                   value={iterationRequirements}
                   onChange={(e) => setIterationRequirements(e.target.value)}
-                  placeholder="描述具体的改进需求..."
+                  placeholder={t('pages.optimizer.component.iterate.requirementsPlaceholder', { fallback: '描述具体的改进需求...' })}
                   className="w-full bg-gray-800/50 border border-gray-600/50 rounded-lg px-3 py-2 text-white placeholder-gray-400 focus:outline-none focus:border-neon-purple/50"
                 />
               </div>
@@ -581,12 +584,12 @@ export const PromptOptimizerComponent: React.FC<PromptOptimizerProps> = ({
               {isIterating ? (
                 <>
                   <ArrowPathIcon className="h-5 w-5 animate-spin" />
-                  <span>正在迭代...</span>
+                  <span>{t('pages.optimizer.component.iterate.iterating', { fallback: '正在迭代...' })}</span>
                 </>
               ) : (
                 <>
                   <ArrowPathIcon className="h-5 w-5" />
-                  <span>开始迭代</span>
+                  <span>{t('pages.optimizer.component.iterate.startIterate', { fallback: '开始迭代' })}</span>
                 </>
               )}
             </button>
@@ -603,7 +606,7 @@ export const PromptOptimizerComponent: React.FC<PromptOptimizerProps> = ({
           >
             <h3 className="text-lg font-semibold text-white mb-4 flex items-center">
               <ChartBarIcon className="h-5 w-5 text-neon-yellow mr-2" />
-              质量分析
+              {t('pages.optimizer.component.analyze.title', { fallback: '质量分析' })}
             </h3>
 
             {/* 分析按钮 */}
@@ -616,12 +619,12 @@ export const PromptOptimizerComponent: React.FC<PromptOptimizerProps> = ({
                 {isAnalyzing ? (
                   <>
                     <ChartBarIcon className="h-5 w-5 animate-spin" />
-                    <span>正在分析...</span>
+                    <span>{t('pages.optimizer.component.analyze.analyzing', { fallback: '正在分析...' })}</span>
                   </>
                 ) : (
                   <>
                     <ChartBarIcon className="h-5 w-5" />
-                    <span>开始质量分析</span>
+                    <span>{t('pages.optimizer.component.analyze.startAnalyze', { fallback: '开始质量分析' })}</span>
                   </>
                 )}
               </button>
@@ -631,22 +634,22 @@ export const PromptOptimizerComponent: React.FC<PromptOptimizerProps> = ({
             {(analysisScore || result?.score) && (
               <div className="space-y-4">
                 <ScoreBar 
-                  label="清晰性" 
+                  label={t('pages.optimizer.component.analyze.clarity', { fallback: '清晰性' })} 
                   value={(analysisScore || result?.score)?.clarity || 0} 
                   color="bg-gradient-to-r from-neon-green to-neon-cyan" 
                 />
                 <ScoreBar 
-                  label="具体性" 
+                  label={t('pages.optimizer.component.analyze.specificity', { fallback: '具体性' })} 
                   value={(analysisScore || result?.score)?.specificity || 0} 
                   color="bg-gradient-to-r from-neon-cyan to-neon-blue" 
                 />
                 <ScoreBar 
-                  label="完整性" 
+                  label={t('pages.optimizer.component.analyze.completeness', { fallback: '完整性' })} 
                   value={(analysisScore || result?.score)?.completeness || 0} 
                   color="bg-gradient-to-r from-neon-purple to-neon-pink" 
                 />
                 <ScoreBar 
-                  label="综合评分" 
+                  label={t('pages.optimizer.component.analyze.overall', { fallback: '综合评分' })} 
                   value={(analysisScore || result?.score)?.overall || 0} 
                   color="bg-gradient-to-r from-neon-yellow to-neon-orange" 
                 />
@@ -658,7 +661,7 @@ export const PromptOptimizerComponent: React.FC<PromptOptimizerProps> = ({
               <div className="mt-6">
                 <h4 className="font-medium text-white mb-3 flex items-center">
                   <InformationCircleIcon className="h-4 w-4 text-neon-yellow mr-2" />
-                  改进建议
+                  {t('pages.optimizer.component.analyze.suggestions', { fallback: '改进建议' })}
                 </h4>
                 <div className="space-y-2">
                   {result?.suggestions?.map((suggestion, index) => (
@@ -676,10 +679,13 @@ export const PromptOptimizerComponent: React.FC<PromptOptimizerProps> = ({
               <div className="text-center py-8">
                 <ChartBarIcon className="h-12 w-12 text-gray-600 mx-auto mb-4" />
                 <p className="text-gray-400 mb-2">
-                  {prompt.trim() ? '点击上方按钮开始分析提示词质量' : '请先在上方输入要分析的提示词'}
+                  {prompt.trim() 
+                    ? t('pages.optimizer.component.analyze.clickToAnalyze', { fallback: '点击上方按钮开始分析提示词质量' })
+                    : t('pages.optimizer.component.analyze.enterPromptFirst', { fallback: '请先在上方输入要分析的提示词' })
+                  }
                 </p>
                 <p className="text-sm text-gray-500">
-                  分析将从清晰性、具体性、完整性等维度评估您的提示词
+                  {t('pages.optimizer.component.analyze.analysisHint', { fallback: '分析将从清晰性、具体性、完整性等维度评估您的提示词' })}
                 </p>
               </div>
             )}
@@ -697,26 +703,26 @@ export const PromptOptimizerComponent: React.FC<PromptOptimizerProps> = ({
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-semibold text-white flex items-center">
               <CheckCircleIcon className="h-5 w-5 text-neon-green mr-2" />
-              优化结果
+              {t('pages.optimizer.component.result.title', { fallback: '优化结果' })}
             </h3>
             <div className="flex space-x-2">
               <button
                 onClick={() => copyToClipboard(optimizedPrompt)}
                 className="p-2 rounded-lg bg-gray-700/50 hover:bg-gray-600/50 text-gray-300 hover:text-white transition-colors"
-                title="复制优化结果"
+                title={t('pages.optimizer.component.result.copy', { fallback: '复制优化结果' })}
               >
                 <ClipboardDocumentIcon className="h-4 w-4" />
               </button>
               <button
                 onClick={() => setPrompt(optimizedPrompt)}
                 className="p-2 rounded-lg bg-neon-cyan/20 hover:bg-neon-cyan/30 text-neon-cyan transition-colors"
-                title="应用优化结果"
+                title={t('pages.optimizer.component.result.apply', { fallback: '应用优化结果' })}
               >
                 <AdjustmentsHorizontalIcon className="h-4 w-4" />
               </button>
               
               {/* 智能分析按钮 - 确保分析优化后的内容 */}
-              <div title="对优化后的提示词进行智能分析">
+              <div title={t('pages.optimizer.component.result.analyzeOptimized', { fallback: '对优化后的提示词进行智能分析' })}>
                 <AIAnalyzeButton
                   content={optimizedPrompt || prompt}
                   onAnalysisComplete={handleAIAnalysisComplete}
@@ -728,10 +734,10 @@ export const PromptOptimizerComponent: React.FC<PromptOptimizerProps> = ({
               <button
                 onClick={fillToCreatePrompt}
                 className="flex items-center space-x-2 px-4 py-2 rounded-lg bg-gradient-to-r from-neon-purple to-neon-pink hover:from-neon-purple/80 hover:to-neon-pink/80 text-white transition-all duration-200 shadow-lg hover:shadow-neon"
-                title="填充到创建提示词页面"
+                title={t('pages.optimizer.component.result.fillToCreate', { fallback: '填充到创建提示词页面' })}
               >
                 <DocumentPlusIcon className="h-4 w-4" />
-                <span className="text-sm font-medium">创建提示词</span>
+                <span className="text-sm font-medium">{t('pages.optimizer.component.result.createPrompt', { fallback: '创建提示词' })}</span>
               </button>
             </div>
           </div>
@@ -746,7 +752,7 @@ export const PromptOptimizerComponent: React.FC<PromptOptimizerProps> = ({
             <div className="mt-4">
               <h4 className="font-medium text-white mb-3 flex items-center">
                 <SparklesIcon className="h-4 w-4 text-neon-green mr-2" />
-                主要改进
+                {t('pages.optimizer.component.result.improvements', { fallback: '主要改进' })}
               </h4>
               <div className="space-y-2">
                 {result?.improvements?.map((improvement, index) => (
@@ -771,13 +777,13 @@ export const PromptOptimizerComponent: React.FC<PromptOptimizerProps> = ({
                 <div className="flex items-center justify-between">
                   <h4 className="font-medium text-white flex items-center">
                     <BeakerIcon className="h-4 w-4 text-neon-blue mr-2" />
-                    智能分析结果
+                    {t('pages.optimizer.component.result.aiAnalysisResult', { fallback: '智能分析结果' })}
                   </h4>
                   <button
                     type="button"
                     onClick={() => setShowAiAnalysisResult(false)}
                     className="text-gray-400 hover:text-gray-600 transition-colors"
-                    title="关闭智能分析结果"
+                    title={t('pages.optimizer.component.result.close', { fallback: '关闭智能分析结果' })}
                   >
                     ✕
                   </button>
@@ -800,7 +806,7 @@ export const PromptOptimizerComponent: React.FC<PromptOptimizerProps> = ({
                       minute: '2-digit',
                     })}`;
                     
-                    const suggestedDesc = aiAnalysisResult.description || '通过AI优化生成的提示词，经过智能分析和结构化优化处理';
+                    const suggestedDesc = aiAnalysisResult.description || t('pages.optimizer.component.result.defaultDescription', { fallback: '通过AI优化生成的提示词，经过智能分析和结构化优化处理' });
                     
                     // 构建URL参数，包含优化内容、AI分析结果和标识参数
                     const params = new URLSearchParams({
@@ -812,7 +818,7 @@ export const PromptOptimizerComponent: React.FC<PromptOptimizerProps> = ({
                     
                     // 跳转到创建提示词页面
                     router.push(`/create?${params.toString()}`);
-                    toast.success('正在跳转到创建提示词页面并应用分析结果...');
+                    toast.success(t('pages.optimizer.component.result.redirectingWithAnalysis', { fallback: '正在跳转到创建提示词页面并应用分析结果...' }));
                   }}
                 />
               </motion.div>

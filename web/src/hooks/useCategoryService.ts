@@ -14,6 +14,7 @@ import {
 } from '@/types/category';
 import { getIconComponent } from '@/utils/categoryIcons';
 import { logger } from '@/lib/error-handler';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 /**
  * 分类服务Hook配置
@@ -37,6 +38,9 @@ export function useCategoryService(options: UseCategoryServiceOptions = {}): Use
     onError,
     onSuccess,
   } = options;
+
+  // 获取当前语言
+  const { language } = useLanguage();
 
   // 状态管理
   const [categories, setCategories] = useState<CategoryInfo[]>([]);
@@ -74,18 +78,20 @@ export function useCategoryService(options: UseCategoryServiceOptions = {}): Use
     }
   }, [type, loading, onError, onSuccess]);
 
-  // 获取分类显示信息
+  // 获取分类显示信息（支持语言）
   const getCategoryDisplayInfo = useCallback((name: string): CategoryDisplayInfo => {
-    // 查找对应的分类数据
-    const categoryData = categories.find(cat => cat.name === name);
-    const displayInfo = categoryService.getCategoryDisplayInfo(name, categoryData);
+    // 查找对应的分类数据（支持按中文或英文名称查找）
+    const categoryData = categories.find(
+      cat => cat.name === name || cat.name_en === name
+    );
+    const displayInfo = categoryService.getCategoryDisplayInfo(name, categoryData, language);
 
     // 添加图标组件
     return {
       ...displayInfo,
       iconComponent: getIconComponent(displayInfo.iconName),
     };
-  }, [categories]);
+  }, [categories, language]);
 
   // 刷新分类数据
   const refreshCategories = useCallback(async () => {

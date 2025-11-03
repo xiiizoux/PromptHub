@@ -28,6 +28,7 @@ import {
   InformationCircleIcon,
 } from '@heroicons/react/24/outline';
 import { PromptDetails, PromptContentJsonb } from '@/types';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface ContextualPromptEditorProps {
   prompt: PromptDetails;
@@ -36,21 +37,24 @@ interface ContextualPromptEditorProps {
   isLoading?: boolean;
 }
 
-const TABS = [
-  { id: 'static', name: '静态内容', icon: DocumentTextIcon, description: '提示词的基础模板' },
-  { id: 'dynamic', name: '动态上下文', icon: SparklesIcon, description: '智能适应规则和示例' },
-  { id: 'variables', name: '变量', icon: TagIcon, description: '输入参数定义' },
-  { id: 'settings', name: '设置', icon: CogIcon, description: '元数据和配置' },
-  { id: 'preview', name: '预览', icon: EyeIcon, description: '实时效果预览' },
-];
-
 export default function ContextualPromptEditor({ 
   prompt, 
   onSave, 
   onCancel, 
   isLoading = false, 
 }: ContextualPromptEditorProps) {
+  const { t } = useLanguage();
   const [isCeEnabled, setIsCeEnabled] = useState(prompt.context_engineering_enabled || false);
+  
+  // 定义标签页配置
+  const TABS = [
+    { id: 'static', name: t('component.contextualEditor.tabs.static', { fallback: '静态内容' }), icon: DocumentTextIcon, description: t('component.contextualEditor.tabs.staticDesc', { fallback: '提示词的基础模板' }) },
+    { id: 'dynamic', name: t('component.contextualEditor.tabs.dynamic', { fallback: '动态上下文' }), icon: SparklesIcon, description: t('component.contextualEditor.tabs.dynamicDesc', { fallback: '智能适应规则和示例' }) },
+    { id: 'variables', name: t('component.contextualEditor.tabs.variables', { fallback: '变量' }), icon: TagIcon, description: t('component.contextualEditor.tabs.variablesDesc', { fallback: '输入参数定义' }) },
+    { id: 'settings', name: t('component.contextualEditor.tabs.settings', { fallback: '设置' }), icon: CogIcon, description: t('component.contextualEditor.tabs.settingsDesc', { fallback: '元数据和配置' }) },
+    { id: 'preview', name: t('component.contextualEditor.tabs.preview', { fallback: '预览' }), icon: EyeIcon, description: t('component.contextualEditor.tabs.previewDesc', { fallback: '实时效果预览' }) },
+  ];
+  
   const [activeTab, setActiveTab] = useState(TABS[0].id);
   const [content, setContent] = useState<PromptContentJsonb | string>(
     prompt.content_structure || prompt.content || '',
@@ -174,7 +178,7 @@ export default function ContextualPromptEditor({
       await onSave(updatedPrompt);
       setHasUnsavedChanges(false);
     } catch (error) {
-      console.error('保存失败:', error);
+      console.error(t('component.contextualEditor.errors.saveFailed', { fallback: '保存失败' }), error);
     }
   };
 
@@ -183,11 +187,11 @@ export default function ContextualPromptEditor({
     const errors: Record<string, string> = {};
     
     if (!staticContent.trim()) {
-      errors.staticContent = '静态内容不能为空';
+      errors.staticContent = t('component.contextualEditor.validation.staticContentEmpty', { fallback: '静态内容不能为空' });
     }
     
     if (isCeEnabled && adaptationRules.length === 0) {
-      errors.adaptationRules = '启用Context Engineering时建议至少添加一个适应规则';
+      errors.adaptationRules = t('component.contextualEditor.validation.adaptationRulesEmpty', { fallback: '启用Context Engineering时建议至少添加一个适应规则' });
     }
     
     return errors;
@@ -223,17 +227,17 @@ export default function ContextualPromptEditor({
           <div>
             <h2 className="text-2xl font-bold text-white gradient-text flex items-center">
               <PencilSquareIcon className="h-6 w-6 mr-3 text-neon-cyan" />
-              编辑提示词
+              {t('component.contextualEditor.title', { fallback: '编辑提示词' })}
             </h2>
             <p className="text-gray-400 text-sm mt-1">
-              {isCeEnabled ? 'Context Engineering模式 - 智能化编辑' : '传统模式 - 简单编辑'}
+              {isCeEnabled ? t('component.contextualEditor.mode.ceEnabled', { fallback: 'Context Engineering模式 - 智能化编辑' }) : t('component.contextualEditor.mode.traditional', { fallback: '传统模式 - 简单编辑' })}
             </p>
           </div>
 
           {/* Context Engineering切换开关 */}
           <div className="flex items-center space-x-4">
             <div className="flex items-center space-x-3">
-              <span className="text-sm text-gray-300">启用Context Engineering</span>
+              <span className="text-sm text-gray-300">{t('component.contextualEditor.enableCe', { fallback: '启用Context Engineering' })}</span>
               <label className="relative inline-flex items-center cursor-pointer">
                 <input
                   type="checkbox"
@@ -256,7 +260,7 @@ export default function ContextualPromptEditor({
                   className="flex items-center text-neon-cyan"
                 >
                   <SparklesIcon className="h-4 w-4 mr-1" />
-                  <span className="text-xs">已启用</span>
+                  <span className="text-xs">{t('component.contextualEditor.enabled', { fallback: '已启用' })}</span>
                 </motion.div>
               )}
             </div>
@@ -268,7 +272,7 @@ export default function ContextualPromptEditor({
                   onClick={onCancel}
                   className="px-4 py-2 border border-gray-600 text-gray-300 rounded-lg hover:bg-gray-700 transition-colors"
                 >
-                  取消
+                  {t('component.contextualEditor.buttons.cancel', { fallback: '取消' })}
                 </button>
               )}
               <button
@@ -283,12 +287,12 @@ export default function ContextualPromptEditor({
                 {isLoading ? (
                   <>
                     <ArrowPathIcon className="h-4 w-4 mr-2 animate-spin" />
-                    保存中...
+                    {t('component.contextualEditor.buttons.saving', { fallback: '保存中...' })}
                   </>
                 ) : (
                   <>
                     <CheckCircleIcon className="h-4 w-4 mr-2" />
-                    保存提示词
+                    {t('component.contextualEditor.buttons.save', { fallback: '保存提示词' })}
                   </>
                 )}
               </button>
@@ -304,7 +308,7 @@ export default function ContextualPromptEditor({
             className="mt-4 p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg flex items-center"
           >
             <ExclamationTriangleIcon className="h-4 w-4 text-yellow-500 mr-2" />
-            <span className="text-sm text-yellow-500">您有未保存的更改</span>
+            <span className="text-sm text-yellow-500">{t('component.contextualEditor.unsavedChanges', { fallback: '您有未保存的更改' })}</span>
           </motion.div>
         )}
       </motion.div>
@@ -320,7 +324,7 @@ export default function ContextualPromptEditor({
             transition={{ delay: 0.1 }}
           >
             <div className="p-4 bg-gradient-to-r from-neon-cyan/10 to-neon-blue/10 border-b border-neon-cyan/20">
-              <h3 className="font-semibold text-white">编辑选项</h3>
+              <h3 className="font-semibold text-white">{t('component.contextualEditor.editOptions', { fallback: '编辑选项' })}</h3>
             </div>
             <nav className="p-2">
               {TABS.map((tab) => {
@@ -410,12 +414,12 @@ export default function ContextualPromptEditor({
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold text-white flex items-center">
             <DocumentTextIcon className="h-5 w-5 mr-2 text-neon-green" />
-            静态内容
+            {t('component.contextualEditor.staticContent.title', { fallback: '静态内容' })}
           </h3>
           <div className="flex items-center space-x-2 text-sm text-gray-400">
-            <span>字符数: {staticContent.length}</span>
+            <span>{t('component.contextualEditor.staticContent.charCount', { fallback: '字符数' })}: {staticContent.length}</span>
             <span>•</span>
-            <span>变量: {extractVariables(staticContent).length}</span>
+            <span>{t('component.contextualEditor.staticContent.variables', { fallback: '变量' })}: {extractVariables(staticContent).length}</span>
           </div>
         </div>
         
@@ -426,7 +430,7 @@ export default function ContextualPromptEditor({
               setStaticContent(e.target.value);
               setHasUnsavedChanges(true);
             }}
-            placeholder="输入您的提示词内容...&#10;&#10;使用 {{变量名}} 来定义可替换的变量&#10;例如: 请帮我{{任务}}，风格要求{{风格}}。"
+            placeholder={t('component.contextualEditor.staticContent.placeholder', { fallback: '输入您的提示词内容...\n\n使用 {{变量名}} 来定义可替换的变量\n例如: 请帮我{{任务}}，风格要求{{风格}}。' })}
             className="w-full h-96 px-4 py-3 bg-dark-bg-secondary border border-gray-600 rounded-lg text-white placeholder-gray-500 font-mono text-sm leading-relaxed focus:border-neon-green focus:outline-none resize-none"
           />
           
@@ -440,7 +444,7 @@ export default function ContextualPromptEditor({
           {/* 实时变量检测 */}
           {staticContent && (
             <div className="p-3 bg-neon-green/10 border border-neon-green/30 rounded-lg">
-              <div className="text-sm font-medium text-neon-green mb-2">检测到的变量:</div>
+              <div className="text-sm font-medium text-neon-green mb-2">{t('component.contextualEditor.staticContent.detectedVariables', { fallback: '检测到的变量:' })}</div>
               <div className="flex flex-wrap gap-2">
                 {extractVariables(staticContent).map((variable, index) => (
                   <span
@@ -464,8 +468,8 @@ export default function ContextualPromptEditor({
       return (
         <div className="p-6 text-center">
           <BeakerIcon className="h-16 w-16 text-gray-500 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-gray-400 mb-2">需要启用Context Engineering</h3>
-          <p className="text-gray-500">请先启用Context Engineering模式以使用高级功能</p>
+          <h3 className="text-lg font-semibold text-gray-400 mb-2">{t('component.contextualEditor.dynamicContext.requireCe', { fallback: '需要启用Context Engineering' })}</h3>
+          <p className="text-gray-500">{t('component.contextualEditor.dynamicContext.enableCeFirst', { fallback: '请先启用Context Engineering模式以使用高级功能' })}</p>
         </div>
       );
     }
@@ -474,14 +478,14 @@ export default function ContextualPromptEditor({
       <div className="p-6">
         <h3 className="text-lg font-semibold text-white flex items-center mb-6">
           <SparklesIcon className="h-5 w-5 mr-2 text-neon-purple" />
-          动态上下文配置
+          {t('component.contextualEditor.dynamicContext.title', { fallback: '动态上下文配置' })}
         </h3>
         
         <div className="space-y-6">
           {/* 适应规则 */}
           <div>
             <div className="flex items-center justify-between mb-3">
-              <h4 className="font-medium text-white">适应规则</h4>
+              <h4 className="font-medium text-white">{t('component.contextualEditor.dynamicContext.adaptationRules', { fallback: '适应规则' })}</h4>
               <button
                 onClick={() => {
                   setAdaptationRules([...adaptationRules, { condition: '', action: '' }]);
@@ -489,7 +493,7 @@ export default function ContextualPromptEditor({
                 }}
                 className="px-3 py-1 bg-neon-purple/20 text-neon-purple rounded text-sm hover:bg-neon-purple/30 transition-colors"
               >
-                添加规则
+                {t('component.contextualEditor.dynamicContext.addRule', { fallback: '添加规则' })}
               </button>
             </div>
             
@@ -499,7 +503,7 @@ export default function ContextualPromptEditor({
                   <div key={index} className="p-4 bg-dark-bg-secondary/50 border border-gray-600 rounded-lg">
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-sm font-medium text-gray-300 mb-2">条件</label>
+                        <label className="block text-sm font-medium text-gray-300 mb-2">{t('component.contextualEditor.dynamicContext.condition', { fallback: '条件' })}</label>
                         <input
                           type="text"
                           value={rule.condition || ''}
@@ -509,12 +513,12 @@ export default function ContextualPromptEditor({
                             setAdaptationRules(newRules);
                             setHasUnsavedChanges(true);
                           }}
-                          placeholder="例如: user.style === 'formal'"
+                          placeholder={t('component.contextualEditor.dynamicContext.conditionPlaceholder', { fallback: '例如: user.style === \'formal\'' })}
                           className="w-full px-3 py-2 bg-dark-bg-primary border border-gray-600 rounded text-white text-sm"
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-300 mb-2">动作</label>
+                        <label className="block text-sm font-medium text-gray-300 mb-2">{t('component.contextualEditor.dynamicContext.action', { fallback: '动作' })}</label>
                         <input
                           type="text"
                           value={rule.action || ''}
@@ -524,7 +528,7 @@ export default function ContextualPromptEditor({
                             setAdaptationRules(newRules);
                             setHasUnsavedChanges(true);
                           }}
-                          placeholder="例如: append('请使用正式语言')"
+                          placeholder={t('component.contextualEditor.dynamicContext.actionPlaceholder', { fallback: '例如: append(\'请使用正式语言\')' })}
                           className="w-full px-3 py-2 bg-dark-bg-primary border border-gray-600 rounded text-white text-sm"
                         />
                       </div>
@@ -536,7 +540,7 @@ export default function ContextualPromptEditor({
                       }}
                       className="mt-2 text-red-400 text-sm hover:text-red-300"
                     >
-                      删除规则
+                      {t('component.contextualEditor.dynamicContext.deleteRule', { fallback: '删除规则' })}
                     </button>
                   </div>
                 ))}
@@ -544,7 +548,7 @@ export default function ContextualPromptEditor({
             ) : (
               <div className="p-6 border-2 border-dashed border-gray-600 rounded-lg text-center">
                 <WrenchScrewdriverIcon className="h-8 w-8 text-gray-500 mx-auto mb-2" />
-                <p className="text-gray-500 text-sm">暂无适应规则，点击上方按钮添加</p>
+                <p className="text-gray-500 text-sm">{t('component.contextualEditor.dynamicContext.noRules', { fallback: '暂无适应规则，点击上方按钮添加' })}</p>
               </div>
             )}
           </div>
@@ -552,7 +556,7 @@ export default function ContextualPromptEditor({
           {/* 示例池 */}
           <div>
             <div className="flex items-center justify-between mb-3">
-              <h4 className="font-medium text-white">示例池</h4>
+              <h4 className="font-medium text-white">{t('component.contextualEditor.dynamicContext.examplePool', { fallback: '示例池' })}</h4>
               <button
                 onClick={() => {
                   setExamples([...examples, { input: '', output: '', description: '' }]);
@@ -560,7 +564,7 @@ export default function ContextualPromptEditor({
                 }}
                 className="px-3 py-1 bg-neon-blue/20 text-neon-blue rounded text-sm hover:bg-neon-blue/30 transition-colors"
               >
-                添加示例
+                {t('component.contextualEditor.dynamicContext.addExample', { fallback: '添加示例' })}
               </button>
             </div>
             
@@ -577,12 +581,12 @@ export default function ContextualPromptEditor({
                         setExamples(newExamples);
                         setHasUnsavedChanges(true);
                       }}
-                      placeholder="示例描述"
+                      placeholder={t('component.contextualEditor.dynamicContext.exampleDescription', { fallback: '示例描述' })}
                       className="w-full px-3 py-2 bg-dark-bg-primary border border-gray-600 rounded text-white text-sm mb-3"
                     />
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-sm font-medium text-gray-300 mb-2">输入</label>
+                        <label className="block text-sm font-medium text-gray-300 mb-2">{t('component.contextualEditor.dynamicContext.input', { fallback: '输入' })}</label>
                         <textarea
                           value={example.input || ''}
                           onChange={(e) => {
@@ -595,7 +599,7 @@ export default function ContextualPromptEditor({
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-300 mb-2">输出</label>
+                        <label className="block text-sm font-medium text-gray-300 mb-2">{t('component.contextualEditor.dynamicContext.output', { fallback: '输出' })}</label>
                         <textarea
                           value={example.output || ''}
                           onChange={(e) => {
@@ -615,7 +619,7 @@ export default function ContextualPromptEditor({
                       }}
                       className="mt-2 text-red-400 text-sm hover:text-red-300"
                     >
-                      删除示例
+                      {t('component.contextualEditor.dynamicContext.deleteExample', { fallback: '删除示例' })}
                     </button>
                   </div>
                 ))}
@@ -623,7 +627,7 @@ export default function ContextualPromptEditor({
             ) : (
               <div className="p-6 border-2 border-dashed border-gray-600 rounded-lg text-center">
                 <AcademicCapIcon className="h-8 w-8 text-gray-500 mx-auto mb-2" />
-                <p className="text-gray-500 text-sm">暂无示例，点击上方按钮添加</p>
+                <p className="text-gray-500 text-sm">{t('component.contextualEditor.dynamicContext.noExamples', { fallback: '暂无示例，点击上方按钮添加' })}</p>
               </div>
             )}
           </div>
@@ -638,7 +642,7 @@ export default function ContextualPromptEditor({
       <div className="p-6">
         <h3 className="text-lg font-semibold text-white flex items-center mb-6">
           <TagIcon className="h-5 w-5 mr-2 text-neon-pink" />
-          输入变量管理
+          {t('component.contextualEditor.variables.title', { fallback: '输入变量管理' })}
         </h3>
         
         <div className="space-y-4">
@@ -657,7 +661,7 @@ export default function ContextualPromptEditor({
                     }}
                     className="text-red-400 text-sm hover:text-red-300"
                   >
-                    移除
+                    {t('component.contextualEditor.variables.remove', { fallback: '移除' })}
                   </button>
                 </div>
               ))}
@@ -665,7 +669,7 @@ export default function ContextualPromptEditor({
           ) : (
             <div className="p-6 border-2 border-dashed border-gray-600 rounded-lg text-center">
               <TagIcon className="h-8 w-8 text-gray-500 mx-auto mb-2" />
-              <p className="text-gray-500">在静态内容中使用 {'{{'} 变量名 {'}}'} 来定义变量</p>
+              <p className="text-gray-500">{t('component.contextualEditor.variables.defineInContent', { fallback: '在静态内容中使用 {{变量名}} 来定义变量' })}</p>
             </div>
           )}
           
@@ -673,7 +677,7 @@ export default function ContextualPromptEditor({
           <div className="flex gap-2">
             <input
               type="text"
-              placeholder="手动添加变量名"
+              placeholder={t('component.contextualEditor.variables.manualAddPlaceholder', { fallback: '手动添加变量名' })}
               className="flex-1 px-3 py-2 bg-dark-bg-secondary border border-gray-600 rounded text-white text-sm"
               onKeyPress={(e) => {
                 if (e.key === 'Enter') {
@@ -687,7 +691,7 @@ export default function ContextualPromptEditor({
               }}
             />
             <button className="px-4 py-2 bg-neon-pink/20 text-neon-pink rounded text-sm hover:bg-neon-pink/30 transition-colors">
-              添加
+              {t('component.contextualEditor.variables.add', { fallback: '添加' })}
             </button>
           </div>
         </div>
@@ -701,16 +705,16 @@ export default function ContextualPromptEditor({
       <div className="p-6">
         <h3 className="text-lg font-semibold text-white flex items-center mb-6">
           <CogIcon className="h-5 w-5 mr-2 text-neon-yellow" />
-          提示词设置
+          {t('component.contextualEditor.settings.title', { fallback: '提示词设置' })}
         </h3>
         
         <div className="space-y-6">
           {/* 基本设置 */}
           <div>
-            <h4 className="font-medium text-white mb-4">基本设置</h4>
+            <h4 className="font-medium text-white mb-4">{t('component.contextualEditor.settings.basic', { fallback: '基本设置' })}</h4>
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <label className="text-sm text-gray-300">公开访问</label>
+                <label className="text-sm text-gray-300">{t('component.contextualEditor.settings.publicAccess', { fallback: '公开访问' })}</label>
                 <label className="relative inline-flex items-center cursor-pointer">
                   <input
                     type="checkbox"
@@ -732,7 +736,7 @@ export default function ContextualPromptEditor({
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">版本号</label>
+                <label className="block text-sm font-medium text-gray-300 mb-2">{t('component.contextualEditor.settings.version', { fallback: '版本号' })}</label>
                 <input
                   type="text"
                   value={settings.version}
@@ -748,7 +752,7 @@ export default function ContextualPromptEditor({
 
           {/* 标签设置 */}
           <div>
-            <h4 className="font-medium text-white mb-4">标签</h4>
+            <h4 className="font-medium text-white mb-4">{t('component.contextualEditor.settings.tags', { fallback: '标签' })}</h4>
             <div className="flex flex-wrap gap-2 mb-3">
               {settings.tags.map((tag, index) => (
                 <span
@@ -773,7 +777,7 @@ export default function ContextualPromptEditor({
             </div>
             <input
               type="text"
-              placeholder="输入标签后按回车添加"
+              placeholder={t('component.contextualEditor.settings.tagPlaceholder', { fallback: '输入标签后按回车添加' })}
               className="w-full px-3 py-2 bg-dark-bg-secondary border border-gray-600 rounded text-white text-sm"
               onKeyPress={(e) => {
                 if (e.key === 'Enter') {
@@ -800,16 +804,16 @@ export default function ContextualPromptEditor({
       <div className="p-6">
         <h3 className="text-lg font-semibold text-white flex items-center mb-6">
           <EyeIcon className="h-5 w-5 mr-2 text-neon-blue" />
-          实时预览
+          {t('component.contextualEditor.preview.title', { fallback: '实时预览' })}
         </h3>
         
         <div className="space-y-6">
           {/* 内容预览 */}
           <div>
-            <h4 className="font-medium text-white mb-3">内容预览</h4>
+            <h4 className="font-medium text-white mb-3">{t('component.contextualEditor.preview.content', { fallback: '内容预览' })}</h4>
             <div className="p-4 bg-dark-bg-secondary/50 border border-gray-600 rounded-lg">
               <pre className="whitespace-pre-wrap text-gray-300 text-sm font-mono">
-                {previewContent || '暂无内容'}
+                {previewContent || t('component.contextualEditor.preview.noContent', { fallback: '暂无内容' })}
               </pre>
             </div>
           </div>
@@ -817,7 +821,7 @@ export default function ContextualPromptEditor({
           {/* 变量预览 */}
           {variables.length > 0 && (
             <div>
-              <h4 className="font-medium text-white mb-3">变量列表</h4>
+              <h4 className="font-medium text-white mb-3">{t('component.contextualEditor.preview.variables', { fallback: '变量列表' })}</h4>
               <div className="flex flex-wrap gap-2">
                 {variables.map((variable, index) => (
                   <span
@@ -834,15 +838,15 @@ export default function ContextualPromptEditor({
           {/* Context Engineering预览 */}
           {isCeEnabled && (
             <div>
-              <h4 className="font-medium text-white mb-3">Context Engineering配置</h4>
+              <h4 className="font-medium text-white mb-3">{t('component.contextualEditor.preview.ceConfig', { fallback: 'Context Engineering配置' })}</h4>
               <div className="space-y-3">
                 <div className="p-3 bg-neon-purple/10 border border-neon-purple/30 rounded-lg">
-                  <div className="text-sm font-medium text-neon-purple mb-1">适应规则</div>
-                  <div className="text-sm text-gray-300">{adaptationRules.length} 个规则</div>
+                  <div className="text-sm font-medium text-neon-purple mb-1">{t('component.contextualEditor.preview.adaptationRules', { fallback: '适应规则' })}</div>
+                  <div className="text-sm text-gray-300">{t('component.contextualEditor.preview.rulesCount', { fallback: '{count} 个规则', count: adaptationRules.length })}</div>
                 </div>
                 <div className="p-3 bg-neon-blue/10 border border-neon-blue/30 rounded-lg">
-                  <div className="text-sm font-medium text-neon-blue mb-1">示例池</div>
-                  <div className="text-sm text-gray-300">{examples.length} 个示例</div>
+                  <div className="text-sm font-medium text-neon-blue mb-1">{t('component.contextualEditor.preview.examplePool', { fallback: '示例池' })}</div>
+                  <div className="text-sm text-gray-300">{t('component.contextualEditor.preview.examplesCount', { fallback: '{count} 个示例', count: examples.length })}</div>
                 </div>
               </div>
             </div>

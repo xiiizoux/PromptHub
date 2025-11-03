@@ -140,7 +140,10 @@ export default function CategorySelector({
               return null;
             })()}
             <span className={value ? 'text-gray-200' : 'text-gray-400'}>
-              {value || '请选择分类...'}
+              {value ? (() => {
+                const categoryInfo = getCategoryDisplayInfo(value, promptType);
+                return categoryInfo.name;
+              })() : '请选择分类...'}
             </span>
           </div>
           <ChevronDownIcon 
@@ -185,7 +188,7 @@ export default function CategorySelector({
                               <IconComponent className="h-3.5 w-3.5 text-dark-bg-primary" />
                             </div>
                           )}
-                          <span>{category}</span>
+                          <span>{categoryInfo.name}</span>
                         </div>
                         {value === category && (
                           <CheckIcon className="h-4 w-4 text-neon-cyan" />
