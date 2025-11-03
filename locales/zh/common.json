@@ -1489,6 +1489,125 @@
       "submit": "提交"
     }
   },
+  "promptTypeSelector": {
+    "chat": {
+      "label": "对话提示词",
+      "description": "适用于文本对话、问答、写作助手等场景。支持变量替换和上下文管理。"
+    },
+    "image": {
+      "label": "图像提示词",
+      "description": "适用于AI图像生成场景。可以设置风格、尺寸、质量等参数，并上传示例图片。"
+    },
+    "video": {
+      "label": "视频提示词",
+      "description": "适用于AI视频生成场景。可以设置时长、帧率、运动强度等参数，并上传示例视频。"
+    }
+  },
+  "smartWritingAssistant": {
+    "tabs": {
+      "guide": "写作指南",
+      "analysis": "智能分析",
+      "templates": "快速模板",
+      "optimizer": "智能优化"
+    },
+    "guide": {
+      "title": "📝 写作步骤指导",
+      "suggestionsLabel": "建议表达："
+    },
+    "steps": {
+      "role": {
+        "title": "1. 定义AI角色",
+        "description": "明确告诉AI它应该扮演什么角色",
+        "suggestions": [
+          "你是一位专业的[领域]专家",
+          "作为经验丰富的[职业]",
+          "假设你是[具体角色]"
+        ]
+      },
+      "context": {
+        "title": "2. 提供背景信息",
+        "description": "给AI足够的上下文来理解任务",
+        "suggestions": [
+          "背景：[描述情况]",
+          "目标：[说明目的]",
+          "约束：[限制条件]"
+        ]
+      },
+      "task": {
+        "title": "3. 明确具体任务",
+        "description": "用清晰的动词描述需要完成的任务",
+        "suggestions": [
+          "请帮我分析...",
+          "请为我生成...",
+          "请协助我创建..."
+        ]
+      },
+      "format": {
+        "title": "4. 指定输出格式",
+        "description": "告诉AI你希望得到什么样的回答",
+        "suggestions": [
+          "请按以下格式输出：",
+          "回答应包含：1. ... 2. ... 3. ...",
+          "以[格式]形式提供结果"
+        ]
+      }
+    },
+    "suggestions": {
+      "role": "💡 建议添加AI角色定义，如\"你是一位...\"",
+      "task": "🎯 任务描述可以更具体，使用\"请帮我...\"等明确指令",
+      "format": "📋 指定输出格式会大大提升回答质量",
+      "short": "📝 提示词略短，可以添加更多细节和要求",
+      "long": "✂️ 提示词较长，考虑精简核心要求"
+    },
+    "analysis": {
+      "title": "🔍 智能分析",
+      "realtime": {
+        "title": "实时分析结果",
+        "role": "角色定义",
+        "task": "任务描述",
+        "format": "输出格式",
+        "context": "背景信息",
+        "analyzing": "分析中...",
+        "empty": "开始输入内容以获得实时分析..."
+      },
+      "aiResults": {
+        "title": "🤖 AI分析结果",
+        "close": "关闭AI分析结果",
+        "analyzing": "AI正在分析您的提示词...",
+        "analyzeButton": "运行AI分析",
+        "overall": "整体评价",
+        "strengths": "优点",
+        "improvements": "改进建议",
+        "summary": "分析总结"
+      }
+    },
+    "templates": {
+      "title": "📋 快速模板",
+      "count": "快速模板 ({count}个)",
+      "search": {
+        "placeholder": "搜索模板...",
+        "ariaLabel": "搜索写作模板",
+        "results": "搜索结果 ({count}个)",
+        "clear": "清除搜索"
+      },
+      "empty": {
+        "noResults": "未找到匹配的模板",
+        "noTemplates": "暂无可用模板",
+        "viewAll": "查看所有模板"
+      },
+      "apply": "应用"
+    },
+    "optimizer": {
+      "title": "✨ 智能优化",
+      "empty": "请先输入提示词内容..."
+    },
+    "quality": {
+      "score": "写作质量: {score}分",
+      "excellent": "优秀",
+      "good": "良好",
+      "needsImprovement": "需要改进"
+    }
+  },
   "contextualEditor": {
     "title": "编辑提示词",
     "enableCE": "启用Context Engineering",

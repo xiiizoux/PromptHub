@@ -1474,6 +1474,125 @@
       "submit": "Submit"
     }
   },
+  "promptTypeSelector": {
+    "chat": {
+      "label": "Chat Prompt",
+      "description": "Suitable for text conversations, Q&A, writing assistants, etc. Supports variable replacement and context management."
+    },
+    "image": {
+      "label": "Image Prompt",
+      "description": "Suitable for AI image generation scenarios. You can set style, size, quality parameters and upload example images."
+    },
+    "video": {
+      "label": "Video Prompt",
+      "description": "Suitable for AI video generation scenarios. You can set duration, frame rate, motion intensity parameters and upload example videos."
+    }
+  },
+  "smartWritingAssistant": {
+    "tabs": {
+      "guide": "Writing Guide",
+      "analysis": "Smart Analysis",
+      "templates": "Quick Templates",
+      "optimizer": "Smart Optimizer"
+    },
+    "guide": {
+      "title": "📝 Writing Steps Guide",
+      "suggestionsLabel": "Suggested expressions:"
+    },
+    "steps": {
+      "role": {
+        "title": "1. Define AI Role",
+        "description": "Clearly tell the AI what role it should play",
+        "suggestions": [
+          "You are a professional [field] expert",
+          "As an experienced [profession]",
+          "Assume you are a [specific role]"
+        ]
+      },
+      "context": {
+        "title": "2. Provide Context Information",
+        "description": "Give the AI enough context to understand the task",
+        "suggestions": [
+          "Background: [describe the situation]",
+          "Goal: [explain the purpose]",
+          "Constraints: [limitations]"
+        ]
+      },
+      "task": {
+        "title": "3. Clarify Specific Task",
+        "description": "Use clear verbs to describe the task that needs to be completed",
+        "suggestions": [
+          "Please help me analyze...",
+          "Please generate for me...",
+          "Please assist me in creating..."
+        ]
+      },
+      "format": {
+        "title": "4. Specify Output Format",
+        "description": "Tell the AI what kind of answer you expect",
+        "suggestions": [
+          "Please output in the following format:",
+          "Answer should include: 1. ... 2. ... 3. ...",
+          "Provide results in [format] format"
+        ]
+      }
+    },
+    "suggestions": {
+      "role": "💡 Suggest adding AI role definition, such as \"You are a...\"",
+      "task": "🎯 Task description can be more specific, use clear instructions like \"Please help me...\"",
+      "format": "📋 Specifying output format will greatly improve answer quality",
+      "short": "📝 Prompt is a bit short, you can add more details and requirements",
+      "long": "✂️ Prompt is quite long, consider refining core requirements"
+    },
+    "analysis": {
+      "title": "🔍 Smart Analysis",
+      "realtime": {
+        "title": "Real-time Analysis Results",
+        "role": "Role Definition",
+        "task": "Task Description",
+        "format": "Output Format",
+        "context": "Context Information",
+        "analyzing": "Analyzing...",
+        "empty": "Start typing to get real-time analysis..."
+      },
+      "aiResults": {
+        "title": "🤖 AI Analysis Results",
+        "close": "Close AI Analysis Results",
+        "analyzing": "AI is analyzing your prompt...",
+        "analyzeButton": "Run AI Analysis",
+        "overall": "Overall Evaluation",
+        "strengths": "Strengths",
+        "improvements": "Improvement Suggestions",
+        "summary": "Analysis Summary"
+      }
+    },
+    "templates": {
+      "title": "📋 Quick Templates",
+      "count": "Quick Templates ({count})",
+      "search": {
+        "placeholder": "Search templates...",
+        "ariaLabel": "Search writing templates",
+        "results": "Search Results ({count})",
+        "clear": "Clear Search"
+      },
+      "empty": {
+        "noResults": "No matching templates found",
+        "noTemplates": "No templates available",
+        "viewAll": "View All Templates"
+      },
+      "apply": "Apply"
+    },
+    "optimizer": {
+      "title": "✨ Smart Optimizer",
+      "empty": "Please enter prompt content first..."
+    },
+    "quality": {
+      "score": "Writing Quality: {score} points",
+      "excellent": "Excellent",
+      "good": "Good",
+      "needsImprovement": "Needs Improvement"
+    }
+  },
   "contextualEditor": {
     "title": "Edit Prompt",
     "enableCE": "Enable Context Engineering",
