@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { useAuth, withAuth } from '@/contexts/AuthContext';
+import { useCategoryContext } from '@/contexts/CategoryContext';
 import { getCategories, getTags } from '@/lib/api';
 
 const DirectCreatePage: React.FC = () => {
   const { user } = useAuth();
   const router = useRouter();
+  const { getCategoryDisplayInfo } = useCategoryContext();
   const [categories, setCategories] = useState<string[]>([]);
   const [tags, setTags] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -150,20 +152,24 @@ const DirectCreatePage: React.FC = () => {
             </label>
             <div className="flex flex-wrap gap-2 mb-2">
               {categories.length > 0 ? (
-                categories.map((cat) => (
-                  <button
-                    key={cat}
-                    type="button"
-                    onClick={() => setCategory(cat)}
-                    className={`px-3 py-1 rounded-full text-sm ${
-                      category === cat
-                        ? 'bg-primary-100 text-primary-800 border border-primary-300'
-                        : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
-                    }`}
-                  >
-                    {cat}
-                  </button>
-                ))
+                categories.map((cat) => {
+                  // 获取本地化的分类名称（默认使用 chat 类型）
+                  const categoryInfo = getCategoryDisplayInfo(cat, 'chat');
+                  return (
+                    <button
+                      key={cat}
+                      type="button"
+                      onClick={() => setCategory(cat)}
+                      className={`px-3 py-1 rounded-full text-sm ${
+                        category === cat
+                          ? 'bg-primary-100 text-primary-800 border border-primary-300'
+                          : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
+                      }`}
+                    >
+                      {categoryInfo.name}
+                    </button>
+                  );
+                })
               ) : (
                 <span className="text-gray-500">加载分类中...</span>
               )}

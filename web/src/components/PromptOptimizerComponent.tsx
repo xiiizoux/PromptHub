@@ -172,12 +172,19 @@ export const PromptOptimizerComponent: React.FC<PromptOptimizerProps> = ({
       setOptimizedPrompt(optimizationResult.optimizedPrompt);
       onOptimizedPrompt?.(optimizationResult.optimizedPrompt);
 
-      // 显示匹配的分类信息
+      // 显示匹配的分类信息（本地化）
       if (data.data.category) {
+        // 获取本地化的分类名称
+        const categoryName = getLocalizedCategoryName(
+          data.data.category as CategoryInfo,
+          language,
+          data.data.category.name || ''
+        );
+        
         if (selectedCategory) {
-          toast.success(t('pages.optimizer.component.optimize.manualCategoryMatched', { name: data.data.category.name, fallback: `使用手动选择的 "${data.data.category.name}" 分类优化完成！` }));
+          toast.success(t('pages.optimizer.component.optimize.manualCategoryMatched', { name: categoryName, fallback: `使用手动选择的 "${categoryName}" 分类优化完成！` }));
         } else {
-          toast.success(t('pages.optimizer.component.optimize.categoryMatched', { name: data.data.category.name, confidence: Math.round(data.data.confidence * 100), fallback: `AI智能匹配到 "${data.data.category.name}" 分类优化完成！置信度: ${Math.round(data.data.confidence * 100)}%` }));
+          toast.success(t('pages.optimizer.component.optimize.categoryMatched', { name: categoryName, confidence: Math.round(data.data.confidence * 100), fallback: `AI智能匹配到 "${categoryName}" 分类优化完成！置信度: ${Math.round(data.data.confidence * 100)}%` }));
         }
       } else {
         toast.success(t('pages.optimizer.component.optimize.optimizeSuccess', { fallback: '提示词优化完成！' }));

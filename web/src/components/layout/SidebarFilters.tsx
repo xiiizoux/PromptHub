@@ -13,6 +13,7 @@ import {
   ChevronRightIcon,
 } from '@heroicons/react/24/outline';
 import { getTagsWithStats } from '@/lib/api';
+import { useCategoryContext } from '@/contexts/CategoryContext';
 
 interface SidebarFiltersProps {
   filters: {
@@ -37,6 +38,7 @@ const SidebarFilters: React.FC<SidebarFiltersProps> = ({
   hideTypeFilter = false,
   children,
 }) => {
+  const { getCategoryDisplayInfo } = useCategoryContext();
   const [isOpen, setIsOpen] = useState(false);
   const [showAllTags, setShowAllTags] = useState(false);
   const [tagSearchQuery, setTagSearchQuery] = useState('');
@@ -273,19 +275,23 @@ const SidebarFilters: React.FC<SidebarFiltersProps> = ({
               类别
             </h3>
             <div className="grid grid-cols-2 gap-2">
-              {categories.map((category) => (
-                <button
-                  key={category}
-                  onClick={() => handleCategoryChange(category)}
-                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
-                    filters.category === category
-                      ? 'bg-neon-cyan/20 text-neon-cyan border border-neon-cyan/50'
-                      : 'bg-dark-bg-secondary/50 text-gray-400 border border-dark-border hover:text-neon-cyan hover:border-neon-cyan/50'
-                  }`}
-                >
-                  {category}
-                </button>
-              ))}
+              {categories.map((category) => {
+                // 获取本地化的分类名称
+                const categoryInfo = getCategoryDisplayInfo(category, filters.category_type);
+                return (
+                  <button
+                    key={category}
+                    onClick={() => handleCategoryChange(category)}
+                    className={`px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                      filters.category === category
+                        ? 'bg-neon-cyan/20 text-neon-cyan border border-neon-cyan/50'
+                        : 'bg-dark-bg-secondary/50 text-gray-400 border border-dark-border hover:text-neon-cyan hover:border-neon-cyan/50'
+                    }`}
+                  >
+                    {categoryInfo.name}
+                  </button>
+                );
+              })}
             </div>
           </div>
 

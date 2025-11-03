@@ -4,6 +4,7 @@ import { BookmarkIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 import { getUserBookmarks } from '@/lib/api';
 import { PromptDetails } from '@/types';
 import { useAuth, withAuth } from '@/contexts/AuthContext';
+import { useCategoryContext } from '@/contexts/CategoryContext';
 import Link from 'next/link';
 import { formatDistanceToNow } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
@@ -14,6 +15,7 @@ import { formatVersionDisplay } from '@/lib/version-utils';
 
 const BookmarksPage: React.FC = () => {
   const { user } = useAuth();
+  const { getCategoryDisplayInfo } = useCategoryContext();
   const [bookmarks, setBookmarks] = useState<PromptDetails[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -140,11 +142,16 @@ const BookmarksPage: React.FC = () => {
                 className="input-primary lg:w-48"
               >
                 <option value="all">所有分类</option>
-                {categories.map(category => (
-                  <option key={category} value={category}>
-                    {category}
-                  </option>
-                ))}
+                {categories.map(category => {
+                  // 获取本地化的分类名称（根据当前选中的类型）
+                  const categoryType = activeType !== 'all' ? activeType : 'chat';
+                  const categoryInfo = getCategoryDisplayInfo(category, categoryType);
+                  return (
+                    <option key={category} value={category}>
+                      {categoryInfo.name}
+                    </option>
+                  );
+                })}
               </select>
 
             </div>
