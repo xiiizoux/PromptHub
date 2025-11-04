@@ -1,15 +1,15 @@
 /**
- * Context Engineering 核心管理器
- * 实现动态上下文编排和状态管理
+ * Context Engineering core manager
+ * Implements dynamic context orchestration and state management
  */
 
-// import { ToolContext } from '../shared/base-tool.js'; // 暂未使用
+// import { ToolContext } from '../shared/base-tool.js'; // Not used yet
 import { storage } from '../shared/services.js';
 import logger from '../utils/logger.js';
 import { contextStateManager } from './state-manager.js';
 
 /**
- * 上下文状态接口
+ * Context state interface
  */
 export interface ContextState {
   sessionId: string;
@@ -22,7 +22,7 @@ export interface ContextState {
 }
 
 /**
- * 上下文快照
+ * Context snapshot
  */
 export interface ContextSnapshot {
   timestamp: number;
@@ -33,19 +33,19 @@ export interface ContextSnapshot {
 }
 
 /**
- * 适应规则
+ * Adaptation rule
  */
 export interface AdaptationRule {
   id: string;
   name: string;
-  condition: string; // JSON Logic格式的条件
+  condition: string; // Condition in JSON Logic format
   action: ContextAction;
   priority: number;
   isActive: boolean;
 }
 
 /**
- * 上下文动作
+ * Context action
  */
 export interface ContextAction {
   type: 'modify' | 'append' | 'replace' | 'filter';
@@ -56,7 +56,7 @@ export interface ContextAction {
 }
 
 /**
- * 个性化上下文
+ * Personalized context
  */
 export interface PersonalizedContext {
   preferences: Record<string, unknown>;
@@ -66,7 +66,7 @@ export interface PersonalizedContext {
 }
 
 /**
- * 使用模式
+ * Usage pattern
  */
 export interface UsagePattern {
   pattern: string;
@@ -77,7 +77,7 @@ export interface UsagePattern {
 }
 
 /**
- * 上下文记忆
+ * Contextual memory
  */
 export interface ContextualMemory {
   key: string;
@@ -89,7 +89,7 @@ export interface ContextualMemory {
 }
 
 /**
- * 实验配置
+ * Experiment configuration
  */
 export interface ExperimentConfig {
   experimentId: string;
@@ -100,7 +100,7 @@ export interface ExperimentConfig {
 }
 
 /**
- * 上下文请求
+ * Context request
  */
 export interface ContextRequest {
   promptId: string;
@@ -112,7 +112,7 @@ export interface ContextRequest {
 }
 
 /**
- * 上下文响应
+ * Context response
  */
 export interface ContextResponse {
   adaptedContent: string;
@@ -129,8 +129,8 @@ export interface ContextResponse {
 }
 
 /**
- * Context Engineering 核心管理器
- * 负责动态上下文编排、个性化适应和状态管理
+ * Context Engineering core manager
+ * Responsible for dynamic context orchestration, personalized adaptation and state management
  */
 export class ContextManager {
   private activeContexts = new Map<string, ContextState>();
@@ -145,63 +145,71 @@ export class ContextManager {
   }
 
   /**
-   * 处理上下文请求
-   * 这是Context Engineering的核心入口
+   * Process context request
+   * This is the core entry point for Context Engineering
    */
   async processContextRequest(request: ContextRequest): Promise<ContextResponse> {
     const startTime = performance.now();
     
     try {
-      // 1. 获取或创建上下文状态
+      // 1. Get or create context state
       const contextState = await this.getOrCreateContextState(request);
       
-      // 2. 加载提示词基础内容
+      // 2. Load prompt base content
       const prompt = await storage.getPrompt(request.promptId, request.userId);
       if (!prompt) {
-        throw new Error(`提示词不存在: ${request.promptId}`);
+        throw new Error(`Prompt does not exist: ${request.promptId}`);
       }
 
-      // 3. 动态上下文组装
+      // 🔒 Permission verification: Context functionality is only for prompt creators
+      const isOwner = prompt.user_id === request.userId || 
+                      prompt.created_by === request.userId;
+      
+      if (!isOwner) {
+        throw new Error('Context functionality is only for prompt creators. You are not the creator of this prompt and cannot use context functionality.');
+      }
+
+      // 3. Dynamic context assembly
       const dynamicContext = await this.assembleDynamicContext(
         contextState, 
         request, 
         prompt as unknown as Record<string, unknown>
       );
 
-      // 4. 应用适应规则
+      // 4. Apply adaptation rules
       const adaptedContent = await this.applyAdaptationRules(
         prompt.content,
         dynamicContext,
         contextState.adaptationRules
       );
 
-      // 5. 个性化处理
+      // 5. Personalization processing
       const personalizedContent = await this.applyPersonalization(
         adaptedContent,
         contextState.personalizedData,
         request
       );
 
-      // 6. 实验处理（如果有）
+      // 6. Experiment processing (if any)
       const finalContent = contextState.experimentConfig
         ? await this.applyExperimentVariant(personalizedContent, contextState.experimentConfig)
         : personalizedContent;
 
-      // 7. 更新上下文状态
+      // 7. Update context state
       await this.updateContextState(contextState, request, {
         content: finalContent,
         context: dynamicContext
       });
 
-      // 8. 记录性能指标
+      // 8. Record performance metrics
       const processingTime = performance.now() - startTime;
       await this.recordPerformanceMetrics(request, processingTime);
 
       const response: ContextResponse = {
         adaptedContent: finalContent,
         contextUsed: dynamicContext,
-        adaptationApplied: [], // TODO: 实际应用的规则
-        personalizations: [], // TODO: 实际个性化项
+        adaptationApplied: [], // TODO: Actually applied rules
+        personalizations: [], // TODO: Actual personalization items
         experimentVariant: contextState.experimentConfig?.variant,
         metadata: {
           processingTime,
@@ -210,7 +218,7 @@ export class ContextManager {
         }
       };
 
-      logger.info(`Context Engineering处理完成`, {
+      logger.info(`Context Engineering processing completed`, {
         userId: request.userId,
         promptId: request.promptId,
         processingTime,
@@ -220,7 +228,7 @@ export class ContextManager {
       return response;
 
     } catch (error) {
-      logger.error('Context Engineering处理失败', {
+      logger.error('Context Engineering processing failed', {
         error: error instanceof Error ? error.message : error,
         request
       });
@@ -229,7 +237,7 @@ export class ContextManager {
   }
 
   /**
-   * 获取或创建上下文状态
+   * Get or create context state
    */
   private async getOrCreateContextState(request: ContextRequest): Promise<ContextState> {
     const sessionId = request.sessionId || `session_${request.userId}_${Date.now()}`;
@@ -239,7 +247,7 @@ export class ContextManager {
       return this.activeContexts.get(stateKey)!;
     }
 
-    // 从数据库加载现有会话或创建新会话
+    // Load existing session from database or create new session
     const existingSession = request.sessionId 
       ? await this.loadContextSession(request.sessionId, request.userId)
       : null;
@@ -259,8 +267,8 @@ export class ContextManager {
   }
 
   /**
-   * 动态上下文组装
-   * 根据当前状态、历史和个人化数据组装上下文
+   * Dynamic context assembly
+   * Assemble context based on current state, history and personalized data
    */
   private async assembleDynamicContext(
     state: ContextState,
@@ -268,36 +276,36 @@ export class ContextManager {
     prompt: Record<string, unknown>
   ): Promise<Record<string, unknown>> {
     const context: Record<string, unknown> = {
-      // 基础上下文
+      // Base context
       currentInput: request.currentInput,
       sessionContext: state.currentContext,
       
-      // 历史上下文（智能选择相关历史）
+      // History context (intelligently select relevant history)
       relevantHistory: await this.selectRelevantHistory(
         state.contextHistory, 
         request.currentInput
       ),
       
-      // 个性化上下文
+      // Personalized context
       userPreferences: state.personalizedData.preferences,
       
-      // 使用模式上下文
+      // Usage pattern context
       usagePatterns: await this.selectRelevantPatterns(
         state.personalizedData.usagePatterns,
         request.currentInput
       ),
       
-      // 上下文记忆
+      // Contextual memory
       contextualMemory: await this.selectRelevantMemory(
         state.personalizedData.contextualMemory,
         request.currentInput
       ),
       
-      // 实时环境上下文
+      // Real-time environment context
       timestamp: new Date().toISOString(),
       timeOfDay: this.getTimeOfDay(),
       
-      // 任务上下文（从提示词content中提取）
+      // Task context (extracted from prompt content)
       taskContext: await this.extractTaskContext(prompt, request.currentInput)
     };
 
@@ -305,7 +313,7 @@ export class ContextManager {
   }
 
   /**
-   * 应用适应规则
+   * Apply adaptation rules
    */
   private async applyAdaptationRules(
     content: unknown,
@@ -314,7 +322,7 @@ export class ContextManager {
   ): Promise<string> {
     let adaptedContent = typeof content === 'string' ? content : JSON.stringify(content);
     
-    // 按优先级排序规则
+    // Sort rules by priority
     const sortedRules = rules
       .filter(rule => rule.isActive)
       .sort((a, b) => b.priority - a.priority);
@@ -329,7 +337,7 @@ export class ContextManager {
           );
         }
       } catch (error) {
-        logger.warn(`适应规则执行失败: ${rule.name}`, { error });
+        logger.warn(`Adaptation rule execution failed: ${rule.name}`, { error });
       }
     }
 
@@ -337,7 +345,7 @@ export class ContextManager {
   }
 
   /**
-   * 应用个性化处理
+   * Apply personalization processing
    */
   private async applyPersonalization(
     content: string,
@@ -346,13 +354,13 @@ export class ContextManager {
   ): Promise<string> {
     let personalizedContent = content;
 
-    // 应用用户偏好
+    // Apply user preferences
     personalizedContent = await this.applyUserPreferences(
       personalizedContent,
       personalizedData.preferences
     );
 
-    // 应用学习数据
+    // Apply learning data
     personalizedContent = await this.applyLearningData(
       personalizedContent,
       personalizedData.learningData,
@@ -363,26 +371,26 @@ export class ContextManager {
   }
 
   /**
-   * 应用实验变体
+   * Apply experiment variant
    */
   private async applyExperimentVariant(
     content: string,
     _experimentConfig: ExperimentConfig
   ): Promise<string> {
-    // 根据实验配置修改内容
-    // 这里可以实现A/B测试逻辑
-    return content; // TODO: 实现实验变体逻辑
+    // Modify content based on experiment configuration
+    // Can implement A/B testing logic here
+    return content; // TODO: Implement experiment variant logic
   }
 
   /**
-   * 更新上下文状态
+   * Update context state
    */
   private async updateContextState(
     state: ContextState,
     request: ContextRequest,
     result: { content: string; context: Record<string, unknown> }
   ): Promise<void> {
-    // 更新当前上下文
+    // Update current context
     state.currentContext = {
       ...state.currentContext,
       lastInput: request.currentInput,
@@ -390,7 +398,7 @@ export class ContextManager {
       lastInteraction: new Date()
     };
 
-    // 添加历史快照
+    // Add history snapshot
     state.contextHistory.push({
       timestamp: Date.now(),
       triggerEvent: 'user_interaction',
@@ -402,33 +410,33 @@ export class ContextManager {
       }
     });
 
-    // 限制历史记录数量
+    // Limit history record count
     if (state.contextHistory.length > 100) {
       state.contextHistory = state.contextHistory.slice(-50);
     }
 
-    // 异步保存到数据库
+    // Asynchronously save to database
     this.saveContextSession(state).catch(error => {
-      logger.error('保存上下文会话失败', { error, userId: state.userId });
+      logger.error('Failed to save context session', { error, userId: state.userId });
     });
   }
 
-  // ===== 辅助方法 =====
+  // ===== Helper Methods =====
 
   private async selectRelevantHistory(
     history: ContextSnapshot[],
     _currentInput: string
   ): Promise<ContextSnapshot[]> {
-    // 使用相似度算法选择相关历史
-    // TODO: 实现语义相似度计算
-    return history.slice(-5); // 简单实现：返回最近5条
+    // Use similarity algorithm to select relevant history
+    // TODO: Implement semantic similarity calculation
+    return history.slice(-5); // Simple implementation: return last 5
   }
 
   private async selectRelevantPatterns(
     patterns: UsagePattern[],
     _currentInput: string
   ): Promise<UsagePattern[]> {
-    // 选择相关的使用模式
+    // Select relevant usage patterns
     return patterns.filter(pattern => 
       pattern.effectiveness > 0.7 && 
       pattern.frequency > 3
@@ -439,7 +447,7 @@ export class ContextManager {
     memory: ContextualMemory[],
     _currentInput: string
   ): Promise<ContextualMemory[]> {
-    // 选择相关的上下文记忆
+    // Select relevant contextual memory
     return memory
       .filter(mem => mem.relevanceScore > 0.6)
       .sort((a, b) => b.relevanceScore - a.relevanceScore)
@@ -455,17 +463,17 @@ export class ContextManager {
   }
 
   private async extractTaskContext(_prompt: unknown, _input: string): Promise<Record<string, unknown>> {
-    // 从提示词和输入中提取任务上下文
+    // Extract task context from prompt and input
     return {
-      taskType: 'general', // TODO: 智能识别任务类型
-      complexity: 'medium', // TODO: 评估任务复杂度
-      domain: 'general' // TODO: 识别领域
+      taskType: 'general', // TODO: Intelligently identify task type
+      complexity: 'medium', // TODO: Assess task complexity
+      domain: 'general' // TODO: Identify domain
     };
   }
 
   private async evaluateCondition(_condition: string, _context: Record<string, unknown>): Promise<boolean> {
-    // TODO: 实现JSON Logic条件评估
-    return true; // 简单实现
+    // TODO: Implement JSON Logic condition evaluation
+    return true; // Simple implementation
   }
 
   private async applyContextAction(
@@ -473,15 +481,15 @@ export class ContextManager {
     _action: ContextAction,
     _context: Record<string, unknown>
   ): Promise<string> {
-    // TODO: 实现上下文动作应用
-    return content; // 简单实现
+    // TODO: Implement context action application
+    return content; // Simple implementation
   }
 
   private async applyUserPreferences(
     content: string,
     _preferences: Record<string, unknown>
   ): Promise<string> {
-    // TODO: 应用用户偏好
+    // TODO: Apply user preferences
     return content;
   }
 
@@ -490,17 +498,17 @@ export class ContextManager {
     _learningData: Record<string, unknown>,
     _input: string
   ): Promise<string> {
-    // TODO: 应用学习数据
+    // TODO: Apply learning data
     return content;
   }
 
-  // ===== 数据持久化方法 =====
+  // ===== Data Persistence Methods =====
 
   private async loadContextSession(sessionId: string, userId: string): Promise<ContextState | null> {
     try {
       return await contextStateManager.loadContextSession(userId, sessionId);
     } catch (error) {
-      logger.error('加载上下文会话失败', { error, sessionId, userId });
+      logger.error('Failed to load context session', { error, sessionId, userId });
       return null;
     }
   }
@@ -509,13 +517,13 @@ export class ContextManager {
     try {
       await contextStateManager.saveContextSession(state.userId, state.sessionId, state);
       
-      // 保存交互历史
+      // Save interaction history
       if (state.contextHistory.length > 0) {
         const latestInteraction = state.contextHistory[state.contextHistory.length - 1];
         await contextStateManager.saveInteraction(state.userId, state.sessionId, latestInteraction);
       }
     } catch (error) {
-      logger.error('保存上下文会话失败', { error, sessionId: state.sessionId, userId: state.userId });
+      logger.error('Failed to save context session', { error, sessionId: state.sessionId, userId: state.userId });
     }
   }
 
@@ -523,7 +531,7 @@ export class ContextManager {
     try {
       return await contextStateManager.loadAdaptationRules(userId);
     } catch (error) {
-      logger.error('加载适应规则失败', { error, userId });
+      logger.error('Failed to load adaptation rules', { error, userId });
       return [];
     }
   }
@@ -538,7 +546,7 @@ export class ContextManager {
         contextualMemory: []
       };
     } catch (error) {
-      logger.error('加载个性化数据失败', { error, userId });
+      logger.error('Failed to load personalized data', { error, userId });
       return {
         preferences: {},
         learningData: {},
@@ -552,7 +560,7 @@ export class ContextManager {
     try {
       return await contextStateManager.loadExperimentConfig(userId) || undefined;
     } catch (error) {
-      logger.error('加载实验配置失败', { error, userId });
+      logger.error('Failed to load experiment configuration', { error, userId });
       return undefined;
     }
   }
@@ -570,10 +578,10 @@ export class ContextManager {
         }
       );
     } catch (error) {
-      logger.error('记录性能指标失败', { error, userId: request.userId });
+      logger.error('Failed to record performance metrics', { error, userId: request.userId });
     }
   }
 }
 
-// 导出单例实例
+// Export singleton instance
 export const contextManager = ContextManager.getInstance();

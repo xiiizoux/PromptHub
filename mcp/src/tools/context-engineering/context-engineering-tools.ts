@@ -1,6 +1,6 @@
 /**
- * Context Engineering工具定义和处理器
- * 为MCP路由器提供工具定义和处理函数
+ * Context Engineering tool definitions and handlers
+ * Provides tool definitions and handler functions for MCP router
  */
 
 import { ToolDescription, MCPToolResponse } from '../../types.js';
@@ -12,7 +12,7 @@ import { toolExecutionManager } from '../../context-engineering/tool-execution-m
 import { handleToolSuccess, handleToolError } from '../../shared/error-handler.js';
 import logger from '../../utils/logger.js';
 
-// ===== Context Engineering 主工具定义 =====
+// ===== Context Engineering Main Tool Definition =====
 
 export const contextEngineeringToolDef: ToolDescription = {
   name: 'context_engineering',
@@ -21,38 +21,38 @@ export const contextEngineeringToolDef: ToolDescription = {
   parameters: {
     promptId: {
       type: 'string',
-      description: '提示词ID',
+      description: 'Prompt ID',
       required: true
     },
     input: {
       type: 'string',
-      description: '用户输入内容',
+      description: 'User input content',
       required: true
     },
     sessionId: {
       type: 'string',
-      description: '会话ID（可选，用于维持上下文状态）',
+      description: 'Session ID (optional, for maintaining context state)',
       required: false
     },
     pipeline: {
       type: 'string',
-      description: '处理流水线类型（default/fast/deep）',
+      description: 'Processing pipeline type (default/fast/deep)',
       required: false
     },
     requiredContext: {
       type: 'array',
-      description: '需要的上下文类型列表',
+      description: 'List of required context types',
       required: false
     },
     preferences: {
       type: 'object',
-      description: '用户偏好设置',
+      description: 'User preference settings',
       required: false
     }
   }
 };
 
-// ===== Context State 查询工具定义 =====
+// ===== Context State Query Tool Definition =====
 
 export const contextStateToolDef: ToolDescription = {
   name: 'context_state',
@@ -61,23 +61,23 @@ export const contextStateToolDef: ToolDescription = {
   parameters: {
     sessionId: {
       type: 'string',
-      description: '会话ID（可选）',
+      description: 'Session ID (optional)',
       required: false
     },
     includeHistory: {
       type: 'boolean',
-      description: '是否包含历史记录',
+      description: 'Whether to include history',
       required: false
     },
     historyLimit: {
       type: 'number',
-      description: '历史记录数量限制（默认10）',
+      description: 'History record limit (default 10)',
       required: false
     }
   }
 };
 
-// ===== Context Config 配置工具定义 =====
+// ===== Context Config Configuration Tool Definition =====
 
 export const contextConfigToolDef: ToolDescription = {
   name: 'context_config',
@@ -86,28 +86,28 @@ export const contextConfigToolDef: ToolDescription = {
   parameters: {
     action: {
       type: 'string',
-      description: '操作类型：get/set/update/delete',
+      description: 'Action type: get/set/update/delete',
       required: true
     },
     configType: {
       type: 'string',
-      description: '配置类型：preferences/adaptationRules/experiments',
+      description: 'Configuration type: preferences/adaptationRules/experiments',
       required: true
     },
     configData: {
       type: 'object',
-      description: '配置数据（set/update操作时需要）',
+      description: 'Configuration data (required for set/update operations)',
       required: false
     },
     configId: {
       type: 'string',
-      description: '配置ID（update/delete操作时需要）',
+      description: 'Configuration ID (required for update/delete operations)',
       required: false
     }
   }
 };
 
-// ===== Context Pipeline 流水线管理工具定义 =====
+// ===== Context Pipeline Pipeline Management Tool Definition =====
 
 export const contextPipelineToolDef: ToolDescription = {
   name: 'context_pipeline',
@@ -116,26 +116,26 @@ export const contextPipelineToolDef: ToolDescription = {
   parameters: {
     action: {
       type: 'string',
-      description: '操作类型：list/get/register/update/delete',
+      description: 'Action type: list/get/register/update/delete',
       required: true
     },
     pipelineName: {
       type: 'string',
-      description: '流水线名称',
+      description: 'Pipeline name',
       required: false
     },
     pipelineConfig: {
       type: 'object',
-      description: '流水线配置（register/update操作时需要）',
+      description: 'Pipeline configuration (required for register/update operations)',
       required: false
     }
   }
 };
 
-// ===== 工具处理器实现 =====
+// ===== Tool Handler Implementation =====
 
 /**
- * Context Engineering 主处理器
+ * Context Engineering main handler
  */
 export async function handleContextEngineering(params: unknown, context?: unknown): Promise<MCPToolResponse> {
   const typedParams = params as { promptId?: string; input?: string; sessionId?: string; pipeline?: string; requiredContext?: string[]; preferences?: Record<string, unknown> };
@@ -143,22 +143,43 @@ export async function handleContextEngineering(params: unknown, context?: unknow
   
   try {
 
-    logger.info('执行Context Engineering处理', { 
+    logger.info('Executing Context Engineering processing', { 
       promptId: typedParams.promptId,
       userId: typedContext?.userId,
       pipeline: typedParams.pipeline || 'default'
     });
 
-    // 验证必需参数
+    // Validate required parameters
     if (!typedParams.promptId || !typedParams.input) {
-      return handleToolError('context_engineering', new Error('缺少必需参数: promptId 和 input'));
+      return handleToolError('context_engineering', new Error('Missing required parameters: promptId and input'));
     }
 
     if (!typedContext?.userId) {
-      return handleToolError('context_engineering', new Error('需要用户身份验证'));
+      return handleToolError('context_engineering', new Error('User authentication required'));
     }
 
-    // 构建Context Engineering请求
+    // 🔒 Permission verification: Context functionality is only for prompt creators
+    const { storage } = await import('../../shared/services.js');
+    const prompt = await storage.getPrompt(typedParams.promptId, typedContext.userId);
+    
+    if (!prompt) {
+      return handleToolError('context_engineering', new Error(`Prompt does not exist: ${typedParams.promptId}`));
+    }
+
+    // Verify if user is the prompt creator
+    const isOwner = prompt.user_id === typedContext.userId || 
+                    prompt.created_by === typedContext.userId;
+    
+    if (!isOwner) {
+      logger.warn('Context Engineering access denied: User is not prompt creator', {
+        userId: typedContext.userId,
+        promptId: typedParams.promptId,
+        promptOwnerId: prompt.user_id || prompt.created_by
+      });
+      return handleToolError('context_engineering', new Error('Context functionality is only for prompt creators. You are not the creator of this prompt and cannot use context functionality.'));
+    }
+
+    // Build Context Engineering request
     const contextRequest: ContextRequest = {
       promptId: typedParams.promptId,
       userId: typedContext.userId,
@@ -168,22 +189,22 @@ export async function handleContextEngineering(params: unknown, context?: unknow
       preferences: typedParams.preferences
     };
 
-    // 选择处理流水线
+    // Select processing pipeline
     const pipeline = typedParams.pipeline || 'default';
     
-    // 记录执行开始时间
+    // Record execution start time
     const executionStartTime = Date.now();
 
-    // 执行Context Engineering编排
+    // Execute Context Engineering orchestration
     const orchestrationResult = await contextOrchestrator.orchestrateContext(
       contextRequest,
       pipeline
     );
 
-    // 计算执行时间
+    // Calculate execution time
     const executionTimeMs = Date.now() - executionStartTime;
 
-    // 记录工具执行上下文（异步，不阻塞响应）
+    // Record tool execution context (asynchronous, non-blocking)
     toolExecutionManager.recordExecution({
       toolName: 'context_engineering',
       userId: typedContext.userId,
@@ -217,21 +238,21 @@ export async function handleContextEngineering(params: unknown, context?: unknow
 
     const result = orchestrationResult.result;
 
-    // 构建响应数据
+    // Build response data
     const responseData = {
-      // 主要结果
+      // Main result
       adaptedContent: result.adaptedContent,
       
-      // 上下文信息
+      // Context information
       contextUsed: result.contextUsed,
       adaptationApplied: result.adaptationApplied,
       personalizations: result.personalizations,
       
-      // 实验信息
+      // Experiment information
       experimentVariant: result.experimentVariant,
       effectiveness: result.effectiveness,
       
-      // 元数据
+      // Metadata
       metadata: {
         ...result.metadata,
         pipeline,
@@ -240,22 +261,22 @@ export async function handleContextEngineering(params: unknown, context?: unknow
         warnings: orchestrationResult.errors?.map(e => e.error)
       },
       
-      // 会话信息
+      // Session information
       sessionId: contextRequest.sessionId,
       timestamp: new Date().toISOString()
     };
 
-    logger.info('Context Engineering处理完成', {
+    logger.info('Context Engineering processing completed', {
       userId: typedContext.userId,
       promptId: typedParams.promptId,
       processingTime: result.metadata.processingTime,
       pipeline
     });
 
-    return handleToolSuccess(responseData, `Context Engineering处理完成，使用${pipeline}流水线`);
+    return handleToolSuccess(responseData, `Context Engineering processing completed, using ${pipeline} pipeline`);
 
   } catch (error) {
-    logger.error('Context Engineering处理失败', {
+    logger.error('Context Engineering processing failed', {
       error: error instanceof Error ? error.message : error,
       params: typedParams
     });
@@ -265,30 +286,35 @@ export async function handleContextEngineering(params: unknown, context?: unknow
 }
 
 /**
- * Context State 查询处理器
+ * Context State query handler
  */
 export async function handleContextState(params: unknown, context?: unknown): Promise<MCPToolResponse> {
   const typedParams = params as { sessionId?: string; includeHistory?: boolean; historyLimit?: number };
   const typedContext = context as { userId?: string };
   
   try {
-    logger.info('查询Context Engineering状态', { 
+    logger.info('Querying Context Engineering state', { 
       userId: typedContext?.userId,
       sessionId: typedParams.sessionId
     });
 
     if (!typedContext?.userId) {
-      return handleToolError('context_state', new Error('需要用户身份验证'));
+      return handleToolError('context_state', new Error('User authentication required'));
     }
 
+    // 🔒 Permission verification: context_state needs to verify creator permissions when associated with specific prompts
+    // If sessionId is provided, need to verify if the prompt associated with that session belongs to current user
+    // Since context_state queries user-level context state, allow users to query their own context state for now
+    // If stricter verification is needed, can add promptId-based verification logic later
+    
     const userId = typedContext.userId;
     const sessionId = typedParams.sessionId || `session_${Date.now()}`;
     const limit = typedParams.historyLimit || 10;
 
-    // 获取多层上下文状态
+    // Get multi-level context state
     const multiLevelContext = await unifiedContextManager.getMultiLevelContext(sessionId, userId);
 
-    // 构建状态响应
+    // Build state response
     const state = {
       userId,
       sessionId,
@@ -327,7 +353,7 @@ export async function handleContextState(params: unknown, context?: unknown): Pr
       }
     };
 
-    // 如果请求历史记录，查询相关上下文
+    // If history is requested, query related context
     if (typedParams.includeHistory) {
       const historyContexts = await unifiedContextManager.queryContext('', {
         sessionId,
@@ -344,10 +370,10 @@ export async function handleContextState(params: unknown, context?: unknown): Pr
       }));
     }
 
-    return handleToolSuccess(state, '上下文状态查询成功');
+    return handleToolSuccess(state, 'Context state query successful');
 
   } catch (error) {
-    logger.error('Context Engineering状态查询失败', {
+    logger.error('Context Engineering state query failed', {
       error: error instanceof Error ? error.message : error,
       params: typedParams
     });
@@ -357,32 +383,36 @@ export async function handleContextState(params: unknown, context?: unknown): Pr
 }
 
 /**
- * Context Config 配置处理器
- * 使用 context_memories 表存储配置，memory_type 为 'preference'
+ * Context Config configuration handler
+ * Uses context_memories table to store configuration, memory_type is 'preference'
  */
 export async function handleContextConfig(params: unknown, context?: unknown): Promise<MCPToolResponse> {
   const typedParams = params as { action?: string; configType?: string; configData?: unknown; configId?: string };
   const typedContext = context as { userId?: string };
   
   try {
-    logger.info('管理Context Engineering配置', { 
+    logger.info('Managing Context Engineering configuration', { 
       action: typedParams.action,
       configType: typedParams.configType,
       userId: typedContext?.userId
     });
 
     if (!typedParams.action || !typedParams.configType) {
-      return handleToolError('context_config', new Error('缺少必需参数: action 和 configType'));
+      return handleToolError('context_config', new Error('Missing required parameters: action and configType'));
     }
 
     if (!typedContext?.userId) {
-      return handleToolError('context_config', new Error('需要用户身份验证'));
+      return handleToolError('context_config', new Error('User authentication required'));
     }
 
+    // 🔒 Permission verification: context_config manages user-level configuration
+    // Since configuration is user-level, only verify user identity here
+    // Configuration data itself is isolated by user_id, ensuring users can only access their own configuration
+    
     const { action, configType, configData, configId } = typedParams;
     const userId = typedContext.userId;
 
-    // 配置类型映射到记忆类型
+    // Map configuration type to memory type
     const configTitleMap: Record<string, string> = {
       preferences: 'user_preferences',
       adaptationRules: 'adaptation_rules',
@@ -394,7 +424,7 @@ export async function handleContextConfig(params: unknown, context?: unknown): P
 
     switch (action) {
       case 'get':
-        // 根据ID或标题获取配置
+        // Get configuration by ID or title
         let memory;
         if (configId) {
           memory = await contextMemoryManager.getMemoryById(configId, userId);
@@ -406,7 +436,7 @@ export async function handleContextConfig(params: unknown, context?: unknown): P
           return handleToolSuccess({
             configType,
             data: {}
-          }, `获取${configType}配置成功（未找到，返回空配置）`);
+          }, `Get ${configType} configuration successful (not found, returning empty configuration)`);
         }
 
         return handleToolSuccess({
@@ -416,34 +446,34 @@ export async function handleContextConfig(params: unknown, context?: unknown): P
           metadata: memory.metadata,
           importanceScore: memory.importanceScore,
           updatedAt: memory.updatedAt?.toISOString()
-        }, `获取${configType}配置成功`);
+        }, `Get ${configType} configuration successful`);
 
       case 'set':
       case 'update':
         if (!configData) {
-          return handleToolError('context_config', new Error('set/update操作需要提供configData'));
+          return handleToolError('context_config', new Error('set/update operations require configData'));
         }
 
-        // 尝试获取现有配置
+        // Try to get existing configuration
         const existingMemory = await contextMemoryManager.getMemoryByTitle(userId, title, memoryType);
         
         if (action === 'set' && existingMemory) {
-          // set操作需要先删除旧的
+          // set operation needs to delete old one first
           await contextMemoryManager.deleteMemory(existingMemory.id!, userId);
         }
 
-        // 创建或更新记忆
+        // Create or update memory
         const memoryToSave = {
           userId,
           memoryType,
           title,
           content: configData as Record<string, unknown>,
-          importanceScore: 0.8, // 配置重要性较高
+          importanceScore: 0.8, // Configuration has high importance
           relevanceTags: ['config', configType]
         };
 
         if (action === 'update' && existingMemory) {
-          // 更新现有记忆
+          // Update existing memory
           const updated = await contextMemoryManager.updateMemory(
             existingMemory.id!,
             userId,
@@ -454,7 +484,7 @@ export async function handleContextConfig(params: unknown, context?: unknown): P
           );
           
           if (!updated) {
-            return handleToolError('context_config', new Error('更新配置失败'));
+            return handleToolError('context_config', new Error('Update configuration failed'));
           }
 
           return handleToolSuccess({
@@ -462,9 +492,9 @@ export async function handleContextConfig(params: unknown, context?: unknown): P
             configId: updated.id,
             data: updated.content,
             updated: true
-          }, `更新${configType}配置成功`);
+          }, `Update ${configType} configuration successful`);
         } else {
-          // 创建新记忆
+          // Create new memory
           const saved = await contextMemoryManager.saveMemory(memoryToSave);
           
           return handleToolSuccess({
@@ -472,28 +502,28 @@ export async function handleContextConfig(params: unknown, context?: unknown): P
             configId: saved.id,
             data: saved.content,
             created: true
-          }, `${action === 'set' ? '设置' : '创建'}${configType}配置成功`);
+          }, `${action === 'set' ? 'Set' : 'Create'} ${configType} configuration successful`);
         }
 
       case 'delete':
         if (!configId) {
-          return handleToolError('context_config', new Error('delete操作需要提供configId'));
+          return handleToolError('context_config', new Error('delete operation requires configId'));
         }
         
         const deleted = await contextMemoryManager.deleteMemory(configId, userId);
         
         if (!deleted) {
-          return handleToolError('context_config', new Error('删除配置失败或配置不存在'));
+          return handleToolError('context_config', new Error('Delete configuration failed or configuration does not exist'));
         }
 
         return handleToolSuccess({
           configType,
           configId,
           deleted: true
-        }, `删除${configType}配置成功`);
+        }, `Delete ${configType} configuration successful`);
 
       case 'list':
-        // 列出所有配置
+        // List all configurations
         const memories = await contextMemoryManager.queryMemories({
           userId,
           memoryType: 'preference',
@@ -512,14 +542,14 @@ export async function handleContextConfig(params: unknown, context?: unknown): P
         return handleToolSuccess({
           configs,
           total: configs.length
-        }, `列出配置成功，共${configs.length}个`);
+        }, `List configurations successful, total ${configs.length}`);
 
       default:
-        return handleToolError('context_config', new Error(`不支持的操作类型: ${action}`));
+        return handleToolError('context_config', new Error(`Unsupported action type: ${action}`));
     }
 
   } catch (error) {
-    logger.error('Context Engineering配置管理失败', {
+    logger.error('Context Engineering configuration management failed', {
       error: error instanceof Error ? error.message : error,
       params: typedParams
     });
@@ -529,7 +559,7 @@ export async function handleContextConfig(params: unknown, context?: unknown): P
 }
 
 /**
- * Context Pipeline 流水线管理处理器
+ * Context Pipeline pipeline management handler
  */
 export async function handleContextPipeline(params: unknown, context?: unknown): Promise<MCPToolResponse> {
   const typedParams = params as { action?: string; pipelineName?: string; pipelineConfig?: unknown };
@@ -537,14 +567,14 @@ export async function handleContextPipeline(params: unknown, context?: unknown):
   
   try {
 
-    logger.info('管理Context Engineering流水线', { 
+    logger.info('Managing Context Engineering pipeline', { 
       action: typedParams.action,
       pipelineName: typedParams.pipelineName,
       userId: typedContext?.userId
     });
 
     if (!typedParams.action) {
-      return handleToolError('context_pipeline', new Error('缺少必需参数: action'));
+      return handleToolError('context_pipeline', new Error('Missing required parameter: action'));
     }
 
     const { action, pipelineName, pipelineConfig } = typedParams;
@@ -554,44 +584,44 @@ export async function handleContextPipeline(params: unknown, context?: unknown):
         const availablePipelines = [
           {
             name: 'default',
-            description: '标准Context Engineering流程',
+            description: 'Standard Context Engineering process',
             stages: ['input_analysis', 'context_enrichment', 'personalization_check', 'experiment_assignment'],
             totalTimeout: 15000
           },
           {
             name: 'fast',
-            description: '最小化处理，用于高频请求',
+            description: 'Minimal processing for high-frequency requests',
             stages: ['basic_context'],
             totalTimeout: 3000
           },
           {
             name: 'deep',
-            description: '全功能处理，用于重要请求',
+            description: 'Full-featured processing for important requests',
             stages: ['deep_analysis', 'advanced_context', 'ml_personalization', 'adaptive_optimization'],
             totalTimeout: 30000
           }
         ];
         
-        return handleToolSuccess({ pipelines: availablePipelines }, '获取流水线列表成功');
+        return handleToolSuccess({ pipelines: availablePipelines }, 'Get pipeline list successful');
 
       case 'get':
         if (!pipelineName) {
-          return handleToolError('context_pipeline', new Error('get操作需要提供pipelineName'));
+          return handleToolError('context_pipeline', new Error('get operation requires pipelineName'));
         }
         
         const pipelineConfigResult = contextOrchestrator.getPipelineConfig(pipelineName);
         if (!pipelineConfigResult) {
-          return handleToolError('context_pipeline', new Error(`未找到流水线: ${pipelineName}`));
+          return handleToolError('context_pipeline', new Error(`Pipeline not found: ${pipelineName}`));
         }
         
         return handleToolSuccess({ 
           name: pipelineName, 
           config: pipelineConfigResult 
-        }, `获取流水线配置成功: ${pipelineName}`);
+        }, `Get pipeline configuration successful: ${pipelineName}`);
 
       case 'register':
         if (!pipelineName || !pipelineConfig) {
-          return handleToolError('context_pipeline', new Error('register操作需要提供pipelineName和pipelineConfig'));
+          return handleToolError('context_pipeline', new Error('register operation requires pipelineName and pipelineConfig'));
         }
         
         contextOrchestrator.registerPipeline(pipelineName, pipelineConfig as PipelineConfig);
@@ -599,31 +629,31 @@ export async function handleContextPipeline(params: unknown, context?: unknown):
         return handleToolSuccess({ 
           name: pipelineName, 
           registered: true 
-        }, `注册流水线成功: ${pipelineName}`);
+        }, `Register pipeline successful: ${pipelineName}`);
 
       case 'update':
         if (!pipelineName || !pipelineConfig) {
-          return handleToolError('context_pipeline', new Error('update操作需要提供pipelineName和pipelineConfig'));
+          return handleToolError('context_pipeline', new Error('update operation requires pipelineName and pipelineConfig'));
         }
         
-        // 更新现有流水线
+        // Update existing pipeline
         contextOrchestrator.registerPipeline(pipelineName, pipelineConfig as PipelineConfig);
         
         return handleToolSuccess({ 
           name: pipelineName, 
           updated: true 
-        }, `更新流水线成功: ${pipelineName}`);
+        }, `Update pipeline successful: ${pipelineName}`);
 
       case 'delete':
-        // TODO: 实现删除流水线逻辑
-        return handleToolError('context_pipeline', new Error('删除流水线功能暂未实现'));
+        // TODO: Implement delete pipeline logic
+        return handleToolError('context_pipeline', new Error('Delete pipeline functionality not yet implemented'));
 
       default:
-        return handleToolError('context_pipeline', new Error(`不支持的操作类型: ${action}`));
+        return handleToolError('context_pipeline', new Error(`Unsupported action type: ${action}`));
     }
 
   } catch (error) {
-    logger.error('Context Engineering流水线管理失败', {
+    logger.error('Context Engineering pipeline management failed', {
       error: error instanceof Error ? error.message : error,
       params: typedParams
     });

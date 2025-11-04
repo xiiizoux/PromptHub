@@ -1,6 +1,6 @@
 /**
- * Context Engineering MCP工具
- * 为MCP客户端提供Context Engineering功能
+ * Context Engineering MCP tools
+ * Provides Context Engineering functionality for MCP clients
  */
 
 import { BaseMCPTool, ToolContext, ToolResult } from '../../shared/base-tool.js';
@@ -9,8 +9,8 @@ import { contextOrchestrator } from '../../context-engineering/context-orchestra
 import { ContextRequest } from '../../context-engineering/context-manager.js';
 
 /**
- * Context Engineering工具
- * 提供智能上下文处理和个性化内容生成
+ * Context Engineering tool
+ * Provides intelligent context processing and personalized content generation
  */
 export class ContextEngineeringTool extends BaseMCPTool {
   readonly name = 'context_engineering';
@@ -24,27 +24,27 @@ export class ContextEngineeringTool extends BaseMCPTool {
       parameters: {
         promptId: {
           type: 'string',
-          description: '提示词ID',
+          description: 'Prompt ID',
           required: true
         },
         input: {
           type: 'string',
-          description: '用户输入内容',
+          description: 'User input content',
           required: true
         },
         sessionId: {
           type: 'string',
-          description: '会话ID（可选，用于维持上下文状态）',
+          description: 'Session ID (optional, for maintaining context state)',
           required: false
         },
         pipeline: {
           type: 'string',
-          description: '处理流水线类型（default/fast/deep）',
+          description: 'Processing pipeline type (default/fast/deep)',
           required: false
         },
         requiredContext: {
           type: 'array',
-          description: '需要的上下文类型列表',
+          description: 'List of required context types',
           required: false,
           items: {
             type: 'string'
@@ -52,7 +52,7 @@ export class ContextEngineeringTool extends BaseMCPTool {
         },
         preferences: {
           type: 'object',
-          description: '用户偏好设置',
+          description: 'User preference settings',
           required: false
         }
       }
@@ -66,11 +66,33 @@ export class ContextEngineeringTool extends BaseMCPTool {
       if (!context.userId) {
         return {
           success: false,
-          message: '需要用户身份验证才能使用Context Engineering功能'
+          message: 'User authentication required to use Context Engineering functionality'
         };
       }
 
-      // 构建Context Engineering请求
+      // 🔒 Permission verification: Context functionality is only for prompt creators
+      const { storage } = await import('../../shared/services.js');
+      const prompt = await storage.getPrompt(params.promptId, context.userId);
+      
+      if (!prompt) {
+        return {
+          success: false,
+          message: `Prompt does not exist: ${params.promptId}`
+        };
+      }
+
+      // Verify if user is the prompt creator
+      const isOwner = prompt.user_id === context.userId || 
+                      prompt.created_by === context.userId;
+      
+      if (!isOwner) {
+        return {
+          success: false,
+          message: 'Context functionality is only for prompt creators. You are not the creator of this prompt and cannot use context functionality.'
+        };
+      }
+
+      // Build Context Engineering request
       const contextRequest: ContextRequest = {
         promptId: params.promptId,
         userId: context.userId,
@@ -80,16 +102,16 @@ export class ContextEngineeringTool extends BaseMCPTool {
         preferences: params.preferences
       };
 
-      // 选择处理流水线
+      // Select processing pipeline
       const pipeline = params.pipeline || 'default';
       
-      this.logExecution('开始Context Engineering处理', context, {
+      this.logExecution('Starting Context Engineering processing', context, {
         promptId: params.promptId,
         pipeline,
         inputLength: params.input.length
       });
 
-      // 执行Context Engineering编排
+      // Execute Context Engineering orchestration
       const orchestrationResult = await contextOrchestrator.orchestrateContext(
         contextRequest,
         pipeline
@@ -109,21 +131,21 @@ export class ContextEngineeringTool extends BaseMCPTool {
 
       const result = orchestrationResult.result;
 
-      // 构建响应数据
+      // Build response data
       const responseData = {
-        // 主要结果
+        // Main result
         adaptedContent: result.adaptedContent,
         
-        // 上下文信息
+        // Context information
         contextUsed: result.contextUsed,
         adaptationApplied: result.adaptationApplied,
         personalizations: result.personalizations,
         
-        // 实验信息
+        // Experiment information
         experimentVariant: result.experimentVariant,
         effectiveness: result.effectiveness,
         
-        // 元数据
+        // Metadata
         metadata: {
           ...result.metadata,
           pipeline,
@@ -132,12 +154,12 @@ export class ContextEngineeringTool extends BaseMCPTool {
           warnings: orchestrationResult.errors?.map(e => e.error)
         },
         
-        // 会话信息
+        // Session information
         sessionId: contextRequest.sessionId,
         timestamp: new Date().toISOString()
       };
 
-      this.logExecution('Context Engineering处理完成', context, {
+      this.logExecution('Context Engineering processing completed', context, {
         success: true,
         processingTime: result.metadata.processingTime,
         contextSources: result.metadata.contextSources?.length || 0,
@@ -147,31 +169,31 @@ export class ContextEngineeringTool extends BaseMCPTool {
       return {
         success: true,
         data: responseData,
-        message: `Context Engineering处理完成，使用${pipeline}流水线`,
+        message: `Context Engineering processing completed, using ${pipeline} pipeline`,
         metadata: {
           executionTime: orchestrationResult.totalTime,
           cacheHit: false,
           warnings: orchestrationResult.errors?.length > 0 ? 
-            [`部分阶段执行出现警告: ${orchestrationResult.errors.length}个`] : 
+            [`Some stages executed with warnings: ${orchestrationResult.errors.length}`] : 
             undefined
         }
       };
 
     } catch (error) {
-      this.logExecution('Context Engineering处理失败', context, {
+      this.logExecution('Context Engineering processing failed', context, {
         error: error instanceof Error ? error.message : error
       });
 
       return {
         success: false,
-        message: error instanceof Error ? error.message : 'Context Engineering处理出现未知错误'
+        message: error instanceof Error ? error.message : 'Unknown error occurred during Context Engineering processing'
       };
     }
   }
 }
 
 /**
- * Context Engineering 状态查询工具
+ * Context Engineering state query tool
  */
 export class ContextStateTool extends BaseMCPTool {
   readonly name = 'context_state';
@@ -185,17 +207,17 @@ export class ContextStateTool extends BaseMCPTool {
       parameters: {
         sessionId: {
           type: 'string',
-          description: '会话ID（可选）',
+          description: 'Session ID (optional)',
           required: false
         },
         includeHistory: {
           type: 'boolean',
-          description: '是否包含历史记录',
+          description: 'Whether to include history',
           required: false
         },
         historyLimit: {
           type: 'number',
-          description: '历史记录数量限制',
+          description: 'History record limit',
           required: false
         }
       }
@@ -207,12 +229,12 @@ export class ContextStateTool extends BaseMCPTool {
       if (!context.userId) {
         return {
           success: false,
-          message: '需要用户身份验证才能查询上下文状态'
+          message: 'User authentication required to query context state'
         };
       }
 
-      // TODO: 实现状态查询逻辑
-      // 这里需要从ContextManager中获取用户的上下文状态
+      // TODO: Implement state query logic
+      // Need to get user's context state from ContextManager
 
       const mockState = {
         userId: context.userId,
@@ -230,20 +252,20 @@ export class ContextStateTool extends BaseMCPTool {
       return {
         success: true,
         data: mockState,
-        message: '上下文状态查询成功'
+        message: 'Context state query successful'
       };
 
     } catch (error) {
       return {
         success: false,
-        message: error instanceof Error ? error.message : '状态查询失败'
+        message: error instanceof Error ? error.message : 'State query failed'
       };
     }
   }
 }
 
 /**
- * Context Engineering 配置工具
+ * Context Engineering configuration tool
  */
 export class ContextConfigTool extends BaseMCPTool {
   readonly name = 'context_config';
@@ -257,22 +279,22 @@ export class ContextConfigTool extends BaseMCPTool {
       parameters: {
         action: {
           type: 'string',
-          description: '操作类型：get/set/update/delete',
+          description: 'Action type: get/set/update/delete',
           required: true
         },
         configType: {
           type: 'string',
-          description: '配置类型：preferences/adaptationRules/experiments',
+          description: 'Configuration type: preferences/adaptationRules/experiments',
           required: true
         },
         configData: {
           type: 'object',
-          description: '配置数据（set/update操作时需要）',
+          description: 'Configuration data (required for set/update operations)',
           required: false
         },
         configId: {
           type: 'string',
-          description: '配置ID（update/delete操作时需要）',
+          description: 'Configuration ID (required for update/delete operations)',
           required: false
         }
       }
@@ -286,14 +308,14 @@ export class ContextConfigTool extends BaseMCPTool {
       if (!context.userId) {
         return {
           success: false,
-          message: '需要用户身份验证才能管理配置'
+          message: 'User authentication required to manage configuration'
         };
       }
 
       const { action, configType, configData, configId } = params;
 
-      // TODO: 实现配置管理逻辑
-      // 这里需要与数据库交互，管理用户的Context Engineering配置
+      // TODO: Implement configuration management logic
+      // Need to interact with database to manage user's Context Engineering configuration
 
       switch (action) {
         case 'get':
@@ -301,9 +323,9 @@ export class ContextConfigTool extends BaseMCPTool {
             success: true,
             data: {
               configType,
-              data: {} // TODO: 从数据库获取配置
+              data: {} // TODO: Get configuration from database
             },
-            message: `获取${configType}配置成功`
+            message: `Get ${configType} configuration successful`
           };
 
         case 'set':
@@ -311,11 +333,11 @@ export class ContextConfigTool extends BaseMCPTool {
           if (!configData) {
             return {
               success: false,
-              message: 'set/update操作需要提供configData'
+              message: 'set/update operations require configData'
             };
           }
           
-          // TODO: 保存配置到数据库
+          // TODO: Save configuration to database
           
           return {
             success: true,
@@ -324,18 +346,18 @@ export class ContextConfigTool extends BaseMCPTool {
               configId: configId || `${configType}_${Date.now()}`,
               data: configData
             },
-            message: `${action === 'set' ? '设置' : '更新'}${configType}配置成功`
+            message: `${action === 'set' ? 'Set' : 'Update'} ${configType} configuration successful`
           };
 
         case 'delete':
           if (!configId) {
             return {
               success: false,
-              message: 'delete操作需要提供configId'
+              message: 'delete operation requires configId'
             };
           }
           
-          // TODO: 从数据库删除配置
+          // TODO: Delete configuration from database
           
           return {
             success: true,
@@ -344,26 +366,26 @@ export class ContextConfigTool extends BaseMCPTool {
               configId,
               deleted: true
             },
-            message: `删除${configType}配置成功`
+            message: `Delete ${configType} configuration successful`
           };
 
         default:
           return {
             success: false,
-            message: `不支持的操作类型: ${action}`
+            message: `Unsupported action type: ${action}`
           };
       }
 
     } catch (error) {
       return {
         success: false,
-        message: error instanceof Error ? error.message : '配置管理失败'
+        message: error instanceof Error ? error.message : 'Configuration management failed'
       };
     }
   }
 }
 
-// 导出所有Context Engineering工具
+// Export all Context Engineering tools
 export const contextEngineeringTools = [
   new ContextEngineeringTool(),
   new ContextStateTool(),
