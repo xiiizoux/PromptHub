@@ -1,43 +1,44 @@
 services:
-  # PromptHub主应用 (Web + MCP)
+  # PromptHub main application (Web + MCP)
   prompthub:
-    # 显式声明环境变量文件，确保 Docker Compose 明确读取
+    # Explicitly declare environment variable file to ensure Docker Compose reads it correctly
     env_file:
       - .env
-    # 为 Debian 主机提供更一致的构建/运行行为
+    # Provide more consistent build/run behavior for Debian hosts
     platform: linux/amd64
     build:
       context: .
       dockerfile: Dockerfile
       args:
-        # 构建时需要的 Supabase 环境变量
-        # 注意：这些变量必须从 .env 文件中读取
-        # 如果变量未设置，Dockerfile 中的验证会给出明确错误信息
+        # Build-time Supabase environment variables
+        # Note: These variables must be read from .env file
+        # If variables are not set, Dockerfile validation will provide clear error messages
         NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL}
         NEXT_PUBLIC_SUPABASE_ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY}
         SUPABASE_SERVICE_ROLE_KEY: ${SUPABASE_SERVICE_ROLE_KEY}
         SUPABASE_URL: ${SUPABASE_URL}
     image: prompthub:latest
+    pull_policy: build
     container_name: prompthub
     ports:
-      - "9010:9010"  # MCP服务端口
-      - "9011:9011"  # Web服务端口
+      - "9010:9010"  # MCP service port
+      - "9011:9011"  # Web service port
     environment:
-      # 基本环境配置
+      # Basic environment configuration
       - NODE_ENV=production
       - PORT=9010
       - FRONTEND_PORT=9011
       - TRANSPORT_TYPE=sse
-      - NODE_OPTIONS=--max-old-space-size=4096  # 为UI库预留更多内存
+      - NODE_OPTIONS=--max-old-space-size=4096  # Reserve more memory for UI libraries
       
-      # 存储配置 - 默认使用supabase
-      # 可选值: supabase (已预留file, postgresql, mysql等类型支持)
+      # Storage configuration - default to supabase
+      # Optional values: supabase (file, postgresql, mysql support reserved)
       - STORAGE_TYPE=${STORAGE_TYPE:-supabase}
       
-      # 如果使用file存储时的路径配置
+      # Path configuration when using file storage
       - STORAGE_PATH=${STORAGE_PATH:-./data}
       
-      # Supabase配置
+      # Supabase configuration
       - SUPABASE_URL=${SUPABASE_URL:-}
       - SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY:-}
       - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY:-}
@@ -47,24 +48,24 @@ services:
       - JWT_SECRET=${JWT_SECRET:-}
       - JWT_EXPIRES_IN=${JWT_EXPIRES_IN:-}
       
-      # API密钥配置
+      # API key configuration
       - API_KEY=${API_KEY:-default-api-key-for-docker}
       - SERVER_KEY=${SERVER_KEY:-default-server-key-for-docker}
     volumes:
-      # 持久化数据存储
-      - ./data:/app/mcp/data  # 文件存储数据目录
-      - ./logs:/app/logs      # 日志目录
+      # Persistent data storage
+      - ./data:/app/mcp/data  # File storage data directory
+      - ./logs:/app/logs      # Log directory
       
-      # 配置文件挂载 (只读模式)
+      # Configuration file mount (read-only mode)
       - ./.env:/app/.env:ro
     restart: unless-stopped
-    # 改善日志管理，避免在 Debian 上日志无限增长
+    # Improve log management to avoid infinite log growth on Debian
     logging:
       driver: json-file
       options:
         max-size: "10m"
         max-file: "5"
-    # 内存限制配置 - 支持重型UI应用构建和运行
+    # Memory limit configuration - supports heavy UI application build and run
     deploy:
       resources:
         limits:
@@ -77,6 +78,6 @@ services:
       timeout: 20s
       retries: 3
       start_period: 40s
-    # 允许容器访问宿主网络服务（在 Debian/Linux 上常用）
+    # Allow container to access host network services (common on Debian/Linux)
     extra_hosts:
       - "host.docker.internal:host-gateway"
