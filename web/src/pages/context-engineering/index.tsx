@@ -4,7 +4,7 @@
  * 独立的Context Engineering功能页面，采用与账户管理相同的标签页形式
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   CpuChipIcon,
@@ -15,6 +15,9 @@ import {
   ChatBubbleLeftRightIcon,
   DocumentTextIcon,
   UserIcon,
+  CircleStackIcon,
+  BookOpenIcon,
+  ClockIcon,
 } from '@heroicons/react/24/outline';
 import { toast } from 'react-hot-toast';
 import { useAuth } from '@/contexts/AuthContext';
@@ -26,6 +29,10 @@ const TABS = [
   { id: 'personalization', name: '个性化设置', icon: AdjustmentsHorizontalIcon },
   { id: 'optimization', name: '提示词优化', icon: SparklesIcon },
   { id: 'context-analysis', name: '上下文分析', icon: CpuChipIcon },
+  { id: 'state', name: '上下文状态', icon: CircleStackIcon },
+  { id: 'config', name: '配置管理', icon: CogIcon },
+  { id: 'memories', name: '上下文记忆', icon: BookOpenIcon },
+  { id: 'executions', name: '执行历史', icon: ClockIcon },
   { id: 'conversation', name: '对话管理', icon: ChatBubbleLeftRightIcon },
   { id: 'templates', name: '模板库', icon: DocumentTextIcon },
 ];
@@ -165,6 +172,14 @@ export default function ContextEngineeringPage() {
         return <OptimizationTab />;
       case 'context-analysis':
         return <ContextAnalysisTab />;
+      case 'state':
+        return <ContextStateTab />;
+      case 'config':
+        return <ContextConfigTab />;
+      case 'memories':
+        return <ContextMemoriesTab />;
+      case 'executions':
+        return <ContextExecutionsTab />;
       case 'conversation':
         return <ConversationTab />;
       case 'templates':
@@ -434,6 +449,351 @@ export default function ContextEngineeringPage() {
             </div>
           </div>
         </div>
+      </div>
+    );
+  }
+
+  // 上下文状态选项卡
+  function ContextStateTab() {
+    const [stateData, setStateData] = useState<any>(null);
+    const [loading, setLoading] = useState(false);
+    const [sessionId, setSessionId] = useState('');
+
+    const loadState = useCallback(async () => {
+      try {
+        setLoading(true);
+        const response = await fetch(`/api/context/state?sessionId=${sessionId || ''}&includeHistory=true&historyLimit=10`);
+        const result = await response.json();
+        if (result.success) {
+          setStateData(result.data);
+          toast.success('上下文状态加载成功');
+        } else {
+          toast.error(result.error || '加载失败');
+        }
+      } catch (error: any) {
+        toast.error(error.message || '加载失败');
+      } finally {
+        setLoading(false);
+      }
+    }, [sessionId]);
+
+    useEffect(() => {
+      loadState();
+    }, [loadState]);
+
+    return (
+      <div className="p-8">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-2xl font-bold text-white">上下文状态</h2>
+          <div className="flex gap-2">
+            <input
+              type="text"
+              placeholder="会话ID (可选)"
+              value={sessionId}
+              onChange={(e) => setSessionId(e.target.value)}
+              className="px-3 py-2 bg-dark-bg-secondary border border-gray-600 rounded text-white text-sm"
+            />
+            <button
+              onClick={loadState}
+              disabled={loading}
+              className="px-4 py-2 bg-neon-cyan text-black rounded-lg hover:bg-cyan-400 transition-colors disabled:opacity-50"
+            >
+              {loading ? '加载中...' : '刷新'}
+            </button>
+          </div>
+        </div>
+
+        {loading ? (
+          <div className="text-center py-8">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-neon-cyan mx-auto"></div>
+          </div>
+        ) : stateData ? (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="glass rounded-lg p-6 border border-gray-600/30">
+              <h3 className="text-lg font-semibold text-white mb-4">当前状态</h3>
+              <pre className="text-sm text-gray-300 overflow-auto max-h-96 bg-dark-bg-secondary p-4 rounded">
+                {JSON.stringify(stateData, null, 2)}
+              </pre>
+            </div>
+            <div className="glass rounded-lg p-6 border border-gray-600/30">
+              <h3 className="text-lg font-semibold text-white mb-4">状态信息</h3>
+              <div className="space-y-3">
+                <div className="flex justify-between">
+                  <span className="text-gray-300">会话ID</span>
+                  <span className="text-white">{stateData.sessionId || 'N/A'}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-300">用户ID</span>
+                  <span className="text-white">{stateData.userId || 'N/A'}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-300">状态级别</span>
+                  <span className="text-white">{stateData.contextLevel || 'N/A'}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="text-center py-8 text-gray-400">
+            暂无上下文状态数据
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // 配置管理选项卡
+  function ContextConfigTab() {
+    const [configs, setConfigs] = useState<any[]>([]);
+    const [loading, setLoading] = useState(false);
+    const [configType, setConfigType] = useState('preferences');
+
+    const loadConfigs = useCallback(async () => {
+      try {
+        setLoading(true);
+        const response = await fetch(`/api/context/config?action=list&configType=${configType}`);
+        const result = await response.json();
+        if (result.success) {
+          setConfigs(Array.isArray(result.data) ? result.data : [result.data]);
+          toast.success('配置加载成功');
+        } else {
+          toast.error(result.error || '加载失败');
+        }
+      } catch (error: any) {
+        toast.error(error.message || '加载失败');
+      } finally {
+        setLoading(false);
+      }
+    }, [configType]);
+
+    useEffect(() => {
+      loadConfigs();
+    }, [loadConfigs]);
+
+    return (
+      <div className="p-8">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-2xl font-bold text-white">配置管理</h2>
+          <div className="flex gap-2">
+            <select
+              value={configType}
+              onChange={(e) => setConfigType(e.target.value)}
+              className="px-3 py-2 bg-dark-bg-secondary border border-gray-600 rounded text-white text-sm"
+            >
+              <option value="preferences">偏好设置</option>
+              <option value="adaptation_rules">适应规则</option>
+              <option value="experiment_config">实验配置</option>
+            </select>
+            <button
+              onClick={loadConfigs}
+              disabled={loading}
+              className="px-4 py-2 bg-neon-cyan text-black rounded-lg hover:bg-cyan-400 transition-colors disabled:opacity-50"
+            >
+              {loading ? '加载中...' : '刷新'}
+            </button>
+          </div>
+        </div>
+
+        {loading ? (
+          <div className="text-center py-8">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-neon-cyan mx-auto"></div>
+          </div>
+        ) : (
+          <div className="glass rounded-lg p-6 border border-gray-600/30">
+            <h3 className="text-lg font-semibold text-white mb-4">{configType === 'preferences' ? '偏好设置' : configType === 'adaptation_rules' ? '适应规则' : '实验配置'}</h3>
+            {configs.length > 0 ? (
+              <pre className="text-sm text-gray-300 overflow-auto max-h-96 bg-dark-bg-secondary p-4 rounded">
+                {JSON.stringify(configs, null, 2)}
+              </pre>
+            ) : (
+              <div className="text-center py-8 text-gray-400">暂无配置数据</div>
+            )}
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // 上下文记忆选项卡
+  function ContextMemoriesTab() {
+    const [memories, setMemories] = useState<any[]>([]);
+    const [loading, setLoading] = useState(false);
+    const [memoryType, setMemoryType] = useState('');
+
+    const loadMemories = useCallback(async () => {
+      try {
+        setLoading(true);
+        const params = new URLSearchParams();
+        if (memoryType) params.append('memoryType', memoryType);
+        params.append('limit', '50');
+        const response = await fetch(`/api/context/memories?${params.toString()}`);
+        const result = await response.json();
+        if (result.success) {
+          setMemories(result.data || []);
+          toast.success('记忆加载成功');
+        } else {
+          toast.error(result.error || '加载失败');
+        }
+      } catch (error: any) {
+        toast.error(error.message || '加载失败');
+      } finally {
+        setLoading(false);
+      }
+    }, [memoryType]);
+
+    useEffect(() => {
+      loadMemories();
+    }, [loadMemories]);
+
+    return (
+      <div className="p-8">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-2xl font-bold text-white">上下文记忆</h2>
+          <div className="flex gap-2">
+            <select
+              value={memoryType}
+              onChange={(e) => setMemoryType(e.target.value)}
+              className="px-3 py-2 bg-dark-bg-secondary border border-gray-600 rounded text-white text-sm"
+            >
+              <option value="">全部类型</option>
+              <option value="preference">偏好</option>
+              <option value="pattern">模式</option>
+              <option value="knowledge">知识</option>
+              <option value="interaction">交互</option>
+            </select>
+            <button
+              onClick={loadMemories}
+              disabled={loading}
+              className="px-4 py-2 bg-neon-cyan text-black rounded-lg hover:bg-cyan-400 transition-colors disabled:opacity-50"
+            >
+              {loading ? '加载中...' : '刷新'}
+            </button>
+          </div>
+        </div>
+
+        {loading ? (
+          <div className="text-center py-8">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-neon-cyan mx-auto"></div>
+          </div>
+        ) : memories.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {memories.map((memory) => (
+              <div key={memory.id} className="glass rounded-lg p-4 border border-gray-600/30 hover:border-neon-cyan/50 transition-colors">
+                <div className="flex justify-between items-start mb-2">
+                  <h3 className="font-semibold text-white">{memory.title || memory.memory_type}</h3>
+                  <span className="text-xs text-gray-500">{memory.memory_type}</span>
+                </div>
+                <p className="text-sm text-gray-300 mb-2 line-clamp-2">
+                  {typeof memory.content === 'object' ? JSON.stringify(memory.content) : memory.content}
+                </p>
+                <div className="flex items-center justify-between text-xs text-gray-500">
+                  <span>重要性: {memory.importance_score?.toFixed(2) || 'N/A'}</span>
+                  <span>{memory.updated_at ? new Date(memory.updated_at).toLocaleDateString() : ''}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-8 text-gray-400">暂无记忆数据</div>
+        )}
+      </div>
+    );
+  }
+
+  // 执行历史选项卡
+  function ContextExecutionsTab() {
+    const [executions, setExecutions] = useState<any[]>([]);
+    const [loading, setLoading] = useState(false);
+    const [toolName, setToolName] = useState('');
+
+    const loadExecutions = useCallback(async () => {
+      try {
+        setLoading(true);
+        const params = new URLSearchParams();
+        if (toolName) params.append('toolName', toolName);
+        params.append('limit', '50');
+        const response = await fetch(`/api/context/executions?${params.toString()}`);
+        const result = await response.json();
+        if (result.success) {
+          setExecutions(result.data || []);
+          toast.success('执行历史加载成功');
+        } else {
+          toast.error(result.error || '加载失败');
+        }
+      } catch (error: any) {
+        toast.error(error.message || '加载失败');
+      } finally {
+        setLoading(false);
+      }
+    }, [toolName]);
+
+    useEffect(() => {
+      loadExecutions();
+    }, [loadExecutions]);
+
+    return (
+      <div className="p-8">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-2xl font-bold text-white">执行历史</h2>
+          <div className="flex gap-2">
+            <input
+              type="text"
+              placeholder="工具名称 (可选)"
+              value={toolName}
+              onChange={(e) => setToolName(e.target.value)}
+              className="px-3 py-2 bg-dark-bg-secondary border border-gray-600 rounded text-white text-sm"
+            />
+            <button
+              onClick={loadExecutions}
+              disabled={loading}
+              className="px-4 py-2 bg-neon-cyan text-black rounded-lg hover:bg-cyan-400 transition-colors disabled:opacity-50"
+            >
+              {loading ? '加载中...' : '刷新'}
+            </button>
+          </div>
+        </div>
+
+        {loading ? (
+          <div className="text-center py-8">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-neon-cyan mx-auto"></div>
+          </div>
+        ) : executions.length > 0 ? (
+          <div className="space-y-4">
+            {executions.map((execution) => (
+              <div key={execution.id} className="glass rounded-lg p-4 border border-gray-600/30">
+                <div className="flex justify-between items-start mb-2">
+                  <div>
+                    <h3 className="font-semibold text-white">{execution.tool_name}</h3>
+                    <p className="text-sm text-gray-400">{execution.session_id || 'N/A'}</p>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-xs text-gray-500">
+                      {execution.created_at ? new Date(execution.created_at).toLocaleString() : ''}
+                    </span>
+                    {execution.execution_time_ms && (
+                      <div className="text-xs text-neon-green mt-1">{execution.execution_time_ms}ms</div>
+                    )}
+                  </div>
+                </div>
+                {execution.context_enhanced && (
+                  <span className="inline-block px-2 py-1 bg-neon-purple/20 text-neon-purple rounded text-xs mb-2">
+                    上下文增强
+                  </span>
+                )}
+                {execution.input_params && (
+                  <details className="mt-2">
+                    <summary className="text-sm text-gray-300 cursor-pointer">查看详情</summary>
+                    <pre className="text-xs text-gray-400 mt-2 bg-dark-bg-secondary p-2 rounded overflow-auto">
+                      {JSON.stringify(execution.input_params, null, 2)}
+                    </pre>
+                  </details>
+                )}
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-8 text-gray-400">暂无执行历史</div>
+        )}
       </div>
     );
   }

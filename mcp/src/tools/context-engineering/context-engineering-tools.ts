@@ -6,6 +6,9 @@
 import { ToolDescription, MCPToolResponse } from '../../types.js';
 import { contextOrchestrator, PipelineConfig } from '../../context-engineering/context-orchestrator.js';
 import { ContextRequest } from '../../context-engineering/context-manager.js';
+import { unifiedContextManager } from '../../context-engineering/unified-context-manager.js';
+import { contextMemoryManager } from '../../context-engineering/context-memory-manager.js';
+import { toolExecutionManager } from '../../context-engineering/tool-execution-manager.js';
 import { handleToolSuccess, handleToolError } from '../../shared/error-handler.js';
 import logger from '../../utils/logger.js';
 
@@ -168,11 +171,45 @@ export async function handleContextEngineering(params: unknown, context?: unknow
     // 选择处理流水线
     const pipeline = typedParams.pipeline || 'default';
     
+    // 记录执行开始时间
+    const executionStartTime = Date.now();
+
     // 执行Context Engineering编排
     const orchestrationResult = await contextOrchestrator.orchestrateContext(
       contextRequest,
       pipeline
     );
+
+    // 计算执行时间
+    const executionTimeMs = Date.now() - executionStartTime;
+
+    // 记录工具执行上下文（异步，不阻塞响应）
+    toolExecutionManager.recordExecution({
+      toolName: 'context_engineering',
+      userId: typedContext.userId,
+      sessionId: typedParams.sessionId,
+      inputParams: {
+        promptId: typedParams.promptId,
+        pipeline,
+        requiredContext: typedParams.requiredContext
+      },
+      contextSnapshot: {
+        userId: typedContext.userId,
+        sessionId: typedParams.sessionId,
+        pipeline
+      },
+      executionResult: orchestrationResult.success ? {
+        success: true,
+        stagesExecuted: orchestrationResult.stagesExecuted
+      } : {
+        success: false,
+        errors: orchestrationResult.errors
+      },
+      executionTimeMs,
+      contextEnhanced: true
+    }).catch(err => {
+      logger.warn('记录工具执行上下文失败', { error: err });
+    });
 
     if (!orchestrationResult.success || !orchestrationResult.result) {
       return handleToolError('context_engineering', new Error('Context Engineering处理失败'));
@@ -235,7 +272,6 @@ export async function handleContextState(params: unknown, context?: unknown): Pr
   const typedContext = context as { userId?: string };
   
   try {
-
     logger.info('查询Context Engineering状态', { 
       userId: typedContext?.userId,
       sessionId: typedParams.sessionId
@@ -245,73 +281,70 @@ export async function handleContextState(params: unknown, context?: unknown): Pr
       return handleToolError('context_state', new Error('需要用户身份验证'));
     }
 
-    // TODO: 实现状态查询逻辑
-    // 这里需要从ContextManager中获取用户的上下文状态
-    // 当前返回模拟数据
+    const userId = typedContext.userId;
+    const sessionId = typedParams.sessionId || `session_${Date.now()}`;
+    const limit = typedParams.historyLimit || 10;
 
-    const mockState = {
-      userId: typedContext.userId,
-      activeSessions: [
-        {
-          sessionId: typedParams.sessionId || 'mock_session_1',
-          status: 'active',
-          startedAt: new Date().toISOString(),
-          lastActivity: new Date().toISOString(),
-          interactions: 5
-        }
-      ],
-      personalizedData: {
-        preferences: {
-          responseStyle: 'concise',
-          complexity: 'medium',
-          language: 'zh-CN'
-        },
-        learningData: {
-          frequentTopics: ['technology', 'programming'],
-          preferredFormats: ['markdown', 'json']
-        },
-        usagePatterns: [
-          {
-            pattern: 'technical_questions',
-            frequency: 15,
-            effectiveness: 0.85,
-            lastUsed: new Date().toISOString()
-          }
-        ],
-        contextualMemory: [
-          {
-            key: 'preferred_programming_language',
-            value: 'TypeScript',
-            relevanceScore: 0.9,
-            lastAccessed: new Date().toISOString()
-          }
-        ]
+    // 获取多层上下文状态
+    const multiLevelContext = await unifiedContextManager.getMultiLevelContext(sessionId, userId);
+
+    // 构建状态响应
+    const state = {
+      userId,
+      sessionId,
+      contextLevels: {
+        session: multiLevelContext.session ? {
+          contextLevel: multiLevelContext.session.contextLevel,
+          dataKeys: Object.keys(multiLevelContext.session.contextData),
+          metadata: multiLevelContext.session.metadata,
+          updatedAt: multiLevelContext.session.updatedAt.toISOString(),
+          expiresAt: multiLevelContext.session.expiresAt?.toISOString()
+        } : null,
+        user: multiLevelContext.user ? {
+          contextLevel: multiLevelContext.user.contextLevel,
+          dataKeys: Object.keys(multiLevelContext.user.contextData),
+          metadata: multiLevelContext.user.metadata,
+          updatedAt: multiLevelContext.user.updatedAt.toISOString(),
+          expiresAt: multiLevelContext.user.expiresAt?.toISOString()
+        } : null,
+        global: multiLevelContext.global ? {
+          contextLevel: multiLevelContext.global.contextLevel,
+          dataKeys: Object.keys(multiLevelContext.global.contextData),
+          metadata: multiLevelContext.global.metadata,
+          updatedAt: multiLevelContext.global.updatedAt.toISOString(),
+          expiresAt: multiLevelContext.global.expiresAt?.toISOString()
+        } : null
       },
-      adaptationRules: [
-        {
-          id: 'rule_1',
-          name: '技术问题简化',
-          condition: 'contains(input, "技术")',
-          priority: 10,
-          isActive: true
-        }
-      ],
-      experiments: [
-        {
-          experimentId: 'exp_001',
-          variant: 'control',
-          status: 'active',
-          startDate: new Date().toISOString()
-        }
-      ],
+      mergedContext: {
+        dataKeys: Object.keys(multiLevelContext.merged),
+        data: multiLevelContext.merged
+      },
       statistics: {
-        totalInteractions: 25,
-        averageResponseTime: 1.2,
-        satisfactionScore: 4.3
+        sessionContextSize: multiLevelContext.session ? Object.keys(multiLevelContext.session.contextData).length : 0,
+        userContextSize: multiLevelContext.user ? Object.keys(multiLevelContext.user.contextData).length : 0,
+        globalContextSize: multiLevelContext.global ? Object.keys(multiLevelContext.global.contextData).length : 0,
+        mergedContextSize: Object.keys(multiLevelContext.merged).length
       }
     };
 
-    return handleToolSuccess(mockState, '上下文状态查询成功');
+    // 如果请求历史记录，查询相关上下文
+    if (typedParams.includeHistory) {
+      const historyContexts = await unifiedContextManager.queryContext('', {
+        sessionId,
+        userId,
+        limit
+      });
+      
+      state['history'] = historyContexts.map(ctx => ({
+        sessionId: ctx.sessionId,
+        contextLevel: ctx.contextLevel,
+        dataKeys: Object.keys(ctx.contextData),
+        updatedAt: ctx.updatedAt.toISOString(),
+        expiresAt: ctx.expiresAt?.toISOString()
+      }));
+    }
+
+    return handleToolSuccess(state, '上下文状态查询成功');
 
   } catch (error) {
     logger.error('Context Engineering状态查询失败', {
@@ -325,13 +358,13 @@ export async function handleContextState(params: unknown, context?: unknown): Pr
 
 /**
  * Context Config 配置处理器
+ * 使用 context_memories 表存储配置，memory_type 为 'preference'
  */
 export async function handleContextConfig(params: unknown, context?: unknown): Promise<MCPToolResponse> {
   const typedParams = params as { action?: string; configType?: string; configData?: unknown; configId?: string };
   const typedContext = context as { userId?: string };
   
   try {
-
     logger.info('管理Context Engineering配置', { 
       action: typedParams.action,
       configType: typedParams.configType,
@@ -347,49 +380,139 @@ export async function handleContextConfig(params: unknown, context?: unknown): P
     }
 
     const { action, configType, configData, configId } = typedParams;
+    const userId = typedContext.userId;
 
-    // TODO: 实现配置管理逻辑
-    // 这里需要与数据库交互，管理用户的Context Engineering配置
+    // 配置类型映射到记忆类型
+    const configTitleMap: Record<string, string> = {
+      preferences: 'user_preferences',
+      adaptationRules: 'adaptation_rules',
+      experiments: 'experiment_config'
+    };
+
+    const title = configTitleMap[configType] || configType;
+    const memoryType = 'preference' as const;
 
     switch (action) {
       case 'get':
-        const mockGetResult = {
+        // 根据ID或标题获取配置
+        let memory;
+        if (configId) {
+          memory = await contextMemoryManager.getMemoryById(configId, userId);
+        } else {
+          memory = await contextMemoryManager.getMemoryByTitle(userId, title, memoryType);
+        }
+
+        if (!memory) {
+          return handleToolSuccess({
+            configType,
+            data: {}
+          }, `获取${configType}配置成功（未找到，返回空配置）`);
+        }
+
+        return handleToolSuccess({
           configType,
-          data: {
-            preferences: { responseStyle: 'detailed' },
-            adaptationRules: [],
-            experiments: []
-          }[configType] || {}
-        };
-        return handleToolSuccess(mockGetResult, `获取${configType}配置成功`);
+          configId: memory.id,
+          data: memory.content,
+          metadata: memory.metadata,
+          importanceScore: memory.importanceScore,
+          updatedAt: memory.updatedAt?.toISOString()
+        }, `获取${configType}配置成功`);
 
       case 'set':
       case 'update':
         if (!configData) {
           return handleToolError('context_config', new Error('set/update操作需要提供configData'));
         }
+
+        // 尝试获取现有配置
+        const existingMemory = await contextMemoryManager.getMemoryByTitle(userId, title, memoryType);
         
-        const mockSetResult = {
-          configType,
-          configId: configId || `${configType}_${Date.now()}`,
-          data: configData,
-          updated: true
+        if (action === 'set' && existingMemory) {
+          // set操作需要先删除旧的
+          await contextMemoryManager.deleteMemory(existingMemory.id!, userId);
+        }
+
+        // 创建或更新记忆
+        const memoryToSave = {
+          userId,
+          memoryType,
+          title,
+          content: configData as Record<string, unknown>,
+          importanceScore: 0.8, // 配置重要性较高
+          relevanceTags: ['config', configType]
         };
-        
-        return handleToolSuccess(mockSetResult, `${action === 'set' ? '设置' : '更新'}${configType}配置成功`);
+
+        if (action === 'update' && existingMemory) {
+          // 更新现有记忆
+          const updated = await contextMemoryManager.updateMemory(
+            existingMemory.id!,
+            userId,
+            {
+              content: { ...existingMemory.content, ...(configData as Record<string, unknown>) },
+              metadata: { ...existingMemory.metadata, lastUpdated: new Date().toISOString() }
+            }
+          );
+          
+          if (!updated) {
+            return handleToolError('context_config', new Error('更新配置失败'));
+          }
+
+          return handleToolSuccess({
+            configType,
+            configId: updated.id,
+            data: updated.content,
+            updated: true
+          }, `更新${configType}配置成功`);
+        } else {
+          // 创建新记忆
+          const saved = await contextMemoryManager.saveMemory(memoryToSave);
+          
+          return handleToolSuccess({
+            configType,
+            configId: saved.id,
+            data: saved.content,
+            created: true
+          }, `${action === 'set' ? '设置' : '创建'}${configType}配置成功`);
+        }
 
       case 'delete':
         if (!configId) {
           return handleToolError('context_config', new Error('delete操作需要提供configId'));
         }
         
-        const mockDeleteResult = {
+        const deleted = await contextMemoryManager.deleteMemory(configId, userId);
+        
+        if (!deleted) {
+          return handleToolError('context_config', new Error('删除配置失败或配置不存在'));
+        }
+
+        return handleToolSuccess({
           configType,
           configId,
           deleted: true
-        };
-        
-        return handleToolSuccess(mockDeleteResult, `删除${configType}配置成功`);
+        }, `删除${configType}配置成功`);
+
+      case 'list':
+        // 列出所有配置
+        const memories = await contextMemoryManager.queryMemories({
+          userId,
+          memoryType: 'preference',
+          relevanceTags: ['config'],
+          limit: 100
+        });
+
+        const configs = memories.map(m => ({
+          configId: m.id,
+          configType: m.relevanceTags?.find(t => t !== 'config') || 'unknown',
+          title: m.title,
+          importanceScore: m.importanceScore,
+          updatedAt: m.updatedAt?.toISOString()
+        }));
+
+        return handleToolSuccess({
+          configs,
+          total: configs.length
+        }, `列出配置成功，共${configs.length}个`);
 
       default:
         return handleToolError('context_config', new Error(`不支持的操作类型: ${action}`));
