@@ -44,8 +44,8 @@ const VideoPromptCard: React.FC<VideoPromptCardProps> = React.memo(({ prompt }) 
   const [thumbnailError, setThumbnailError] = useState(false);
   const [showVideo, setShowVideo] = useState(false); // 控制是否显示视频（vs缩略图）
   const videoRef = useRef<HTMLVideoElement>(null);
-  const hoverTimeoutRef = useRef<NodeJS.Timeout>();
-  const loadingTimeoutRef = useRef<NodeJS.Timeout>();
+  const hoverTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
+  const loadingTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
 
   // 使用优化的分类显示Hook，无延迟加载
   const categoryInfo = useOptimizedCategoryDisplay(prompt?.category || '故事叙述', 'video');
@@ -148,18 +148,24 @@ const VideoPromptCard: React.FC<VideoPromptCardProps> = React.memo(({ prompt }) 
     if (!isVisible) {return;}
 
     const primaryUrl = getPrimaryVideoUrl();
-    setCurrentVideoUrl(primaryUrl || getFallbackVideoUrl());
-    setHasTriedFallback(!primaryUrl);
+    // Use queueMicrotask to avoid synchronous setState in effect
+    queueMicrotask(() => {
+      setCurrentVideoUrl(primaryUrl || getFallbackVideoUrl());
+      setHasTriedFallback(!primaryUrl);
+    });
 
     // 判断是否优先显示缩略图
     const shouldShowThumbnail = getThumbnailUrl() !== null;
 
     // 如果有缩略图，默认不显示视频
-    if (shouldShowThumbnail) {
-      setShowVideo(false);
-    } else {
-      setShowVideo(true);
-    }
+    // Use queueMicrotask to avoid synchronous setState in effect
+    queueMicrotask(() => {
+      if (shouldShowThumbnail) {
+        setShowVideo(false);
+      } else {
+        setShowVideo(true);
+      }
+    });
   }, [isVisible, getPrimaryVideoUrl, getFallbackVideoUrl, getThumbnailUrl]);
 
   // 组件卸载时清理定时器

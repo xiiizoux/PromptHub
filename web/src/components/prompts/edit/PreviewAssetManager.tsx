@@ -1,4 +1,5 @@
 import React, { useState, useRef } from 'react';
+import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   PhotoIcon, 
@@ -209,10 +210,12 @@ export default function PreviewAssetManager({
       {/* 预览内容 */}
       <div className="relative w-full h-32 sm:h-40 md:h-48 lg:h-56">
         {isImageType ? (
-          <img
+          <Image
             src={asset.url}
             alt={asset.name}
-            className="w-full h-full object-cover"
+            fill
+            className="object-cover"
+            unoptimized
           />
         ) : (
           <video

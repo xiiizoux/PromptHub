@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 
@@ -28,15 +28,19 @@ function AnimatedSphere() {
 function ParticleField() {
   const count = 1000;
   const particlesRef = useRef<THREE.Points>(null);
+  const [positions, setPositions] = useState<Float32Array | null>(null);
   
-  const positions = React.useMemo(() => {
+  // Generate random positions in useEffect to avoid calling impure function during render
+  useEffect(() => {
     const pos = new Float32Array(count * 3);
     for (let i = 0; i < count * 3; i += 3) {
       pos[i] = (Math.random() - 0.5) * 30;
       pos[i + 1] = (Math.random() - 0.5) * 30;
       pos[i + 2] = (Math.random() - 0.5) * 30;
     }
-    return pos;
+    queueMicrotask(() => {
+      setPositions(pos);
+    });
   }, [count]);
 
   useFrame((state) => {
@@ -45,6 +49,10 @@ function ParticleField() {
       particlesRef.current.rotation.x = state.clock.elapsedTime * 0.03;
     }
   });
+
+  if (!positions) {
+    return null;
+  }
 
   return (
     <points ref={particlesRef}>

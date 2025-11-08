@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, DependencyList } from 'react';
 
 /**
  * 防抖Hook - 延迟更新值直到指定时间内没有新的更改
@@ -34,12 +34,12 @@ export function useDebounce<T>(value: T, delay: number): T {
 export function useDebouncedCallback<T extends (...args: unknown[]) => unknown>(
   callback: T,
   delay: number,
-  deps: React.DependencyList = [],
+  deps: DependencyList = [],
 ): T {
   const [debouncedCallback, setDebouncedCallback] = useState<T | null>(null);
 
   useEffect(() => {
-    let timeout: NodeJS.Timeout;
+    let timeout: ReturnType<typeof setTimeout>;
 
     const debouncedFn = ((...args: Parameters<T>) => {
       clearTimeout(timeout);
@@ -48,7 +48,10 @@ export function useDebouncedCallback<T extends (...args: unknown[]) => unknown>(
       }, delay);
     }) as T;
 
-    setDebouncedCallback(() => debouncedFn);
+    // Use queueMicrotask to avoid synchronous setState in effect
+    queueMicrotask(() => {
+      setDebouncedCallback(() => debouncedFn);
+    });
 
     return () => {
       clearTimeout(timeout);

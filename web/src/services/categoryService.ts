@@ -3,6 +3,7 @@
  * 直接使用数据库icon字段，不使用智能生成逻辑
  */
 
+import React from 'react';
 import { getCategories } from '@/lib/api';
 import { logger } from '@/lib/error-handler';
 import { Language } from '@/contexts/LanguageContext';

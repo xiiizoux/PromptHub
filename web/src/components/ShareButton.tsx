@@ -4,7 +4,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   ShareIcon,
   LinkIcon,
-  ClipboardDocumentIcon,
   XMarkIcon,
 } from '@heroicons/react/24/outline';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -27,13 +26,13 @@ interface ShareOption {
 const ShareButton: React.FC<ShareButtonProps> = ({
   url,
   title,
-  description = '',
+  description: _description = '',
   className = '',
 }) => {
   const { t } = useLanguage();
   const [isOpen, setIsOpen] = useState(false);
   const [buttonPosition, setButtonPosition] = useState({ top: 0, left: 0 });
-  const [mounted, setMounted] = useState(false);
+  const [mounted] = useState(() => typeof window !== 'undefined');
   const dropdownRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
 
@@ -154,10 +153,8 @@ const ShareButton: React.FC<ShareButtonProps> = ({
     },
   ];
 
-  // 确保组件已挂载（用于Portal）
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  // Ensure component is mounted (for Portal)
+  // Using useState initialization function to avoid synchronous setState in effect
 
   // 计算按钮位置
   const updateButtonPosition = () => {

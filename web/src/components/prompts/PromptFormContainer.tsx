@@ -795,16 +795,20 @@ export default function PromptFormContainer({
                           <div className="text-sm">
                             <p className="text-yellow-400 font-medium mb-1">{t('promptForm.fileUpload.mediaWarning.title', { fallback: '重要提示：媒体文件不支持版本管理' })}</p>
                             <p className="text-yellow-300/80">
-                              {t('promptForm.fileUpload.mediaWarning.items', { returnObjects: true, fallback: [
-                                '媒体文件不会保存到版本历史中',
-                                '版本回滚时将保持媒体内容的当前状态',
-                                '请谨慎删改媒体文件，删除后无法通过版本回滚恢复'
-                              ] }).map((item: string, idx: number) => (
-                                <React.Fragment key={idx}>
-                                  • {item}
-                                  {idx < 2 && <br/>}
-                                </React.Fragment>
-                              ))}
+                              {(() => {
+                                const items = t('promptForm.fileUpload.mediaWarning.items', { returnObjects: true, fallback: [
+                                  '媒体文件不会保存到版本历史中',
+                                  '版本回滚时将保持媒体内容的当前状态',
+                                  '请谨慎删改媒体文件，删除后无法通过版本回滚恢复'
+                                ] });
+                                const itemsArray = Array.isArray(items) ? items : [items as string];
+                                return itemsArray.map((item: string, idx: number) => (
+                                  <React.Fragment key={idx}>
+                                    • {item}
+                                    {idx < itemsArray.length - 1 && <br/>}
+                                  </React.Fragment>
+                                ));
+                              })()}
                             </p>
                           </div>
                         </div>
@@ -1419,7 +1423,7 @@ export default function PromptFormContainer({
               className="hidden lg:block glass rounded-3xl border border-neon-purple/20 shadow-2xl p-6"
             >
               <SmartWritingAssistant
-                content={currentContent || getContentValue(watch('content_text')) || getContentValue(watch('content')) || ''}
+                content={currentContent || getContentValue(watch('content_text') as unknown) || getContentValue(watch('content') as unknown) || ''}
                 onContentChange={(newContent) => {
                   setValue('content_text', newContent);
                   setValue('content', newContent); // 保持向后兼容

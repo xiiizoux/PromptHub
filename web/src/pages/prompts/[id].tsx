@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { GetServerSideProps } from 'next';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useAuth } from '@/contexts/AuthContext';
 import { motion } from 'framer-motion';
 import {
@@ -974,15 +975,20 @@ export default function PromptDetailsPage() {
                           <div key={file.id || index} className="relative">
                             <div className="glass rounded-xl p-4 border border-gray-600 bg-black/20">
                               {prompt.category_type === 'image' ? (
-                                <img
-                                  src={file.url}
-                                  alt={file.name || t('prompts.image', { fallback: `Image ${index + 1}` })}
-                                  className="w-full h-auto max-h-96 object-contain rounded-lg cursor-pointer hover:scale-105 transition-transform duration-200"
-                                  onError={(e) => {
-                                    (e.target as HTMLImageElement).style.display = 'none';
-                                  }}
-                                  onClick={() => window.open(file.url, '_blank')}
-                                />
+                                <div className="relative w-full h-auto max-h-96">
+                                  <Image
+                                    src={file.url}
+                                    alt={file.name || t('prompts.image', { fallback: `Image ${index + 1}` })}
+                                    width={800}
+                                    height={600}
+                                    className="w-full h-auto max-h-96 object-contain rounded-lg cursor-pointer hover:scale-105 transition-transform duration-200"
+                                    onError={(e) => {
+                                      (e.target as HTMLImageElement).style.display = 'none';
+                                    }}
+                                    onClick={() => window.open(file.url, '_blank')}
+                                    unoptimized
+                                  />
+                                </div>
                               ) : (
                                 <video
                                   src={file.url}
@@ -1006,15 +1012,20 @@ export default function PromptDetailsPage() {
                       <div className="relative">
                         <div className="glass rounded-xl p-6 border border-gray-600 bg-black/20">
                           {prompt.category_type === 'image' ? (
-                            <img
-                              src={prompt.preview_asset_url}
-                              alt={prompt.name}
-                              className="w-full h-auto max-h-96 object-contain rounded-lg cursor-pointer hover:scale-105 transition-transform duration-200"
-                              onError={(e) => {
-                                (e.target as HTMLImageElement).style.display = 'none';
-                              }}
-                              onClick={() => window.open(prompt.preview_asset_url!, '_blank')}
-                            />
+                            <div className="relative w-full h-auto max-h-96">
+                              <Image
+                                src={prompt.preview_asset_url}
+                                alt={prompt.name}
+                                width={800}
+                                height={600}
+                                className="w-full h-auto max-h-96 object-contain rounded-lg cursor-pointer hover:scale-105 transition-transform duration-200"
+                                onError={(e) => {
+                                  (e.target as HTMLImageElement).style.display = 'none';
+                                }}
+                                onClick={() => window.open(prompt.preview_asset_url!, '_blank')}
+                                unoptimized
+                              />
+                            </div>
                           ) : (
                             <video
                               src={prompt.preview_asset_url}

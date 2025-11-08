@@ -461,7 +461,7 @@ const ProfilePage = () => {
   const abortControllerRef = useRef<AbortController | null>(null);
   
   // 防抖定时器
-  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // 防抖版本的获取用户提示词
   const debouncedFetchUserPrompts = (page: number = 1, type?: string, delay: number = 300) => {

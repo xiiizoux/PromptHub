@@ -16,7 +16,7 @@ export default function NotificationPreferences({ onSaved }: NotificationPrefere
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
-  const [successTimeout, setSuccessTimeout] = useState<NodeJS.Timeout | null>(null);
+  const [successTimeout, setSuccessTimeout] = useState<ReturnType<typeof setTimeout> | null>(null);
 
   // 加载用户通知偏好设置
   useEffect(() => {

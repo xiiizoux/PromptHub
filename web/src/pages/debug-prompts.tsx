@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { useAuth } from '@/contexts/AuthContext';
 
 export default function DebugPrompts() {
@@ -70,14 +71,15 @@ export default function DebugPrompts() {
             {prompt.preview_asset_url && (
               <div className="mt-4">
                 <strong>预览图片:</strong>
-                <div className="mt-2">
-                  <img 
+                <div className="mt-2 relative w-32 h-24">
+                  <Image 
                     src={prompt.preview_asset_url} 
                     alt="预览"
-                    className="w-32 h-24 object-cover rounded border"
+                    fill
+                    className="object-cover rounded border"
                     onError={(e) => {
                       console.error('图片加载失败:', prompt.preview_asset_url);
-                      e.currentTarget.style.display = 'none';
+                      (e.target as HTMLImageElement).style.display = 'none';
                     }}
                     onLoad={() => {
                       console.log('图片加载成功:', prompt.preview_asset_url);

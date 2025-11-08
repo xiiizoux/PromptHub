@@ -6,7 +6,7 @@ import { supabase, clearAuthState } from '@/lib/supabase';
  * 重新设计版本，更加谨慎和智能地处理认证状态
  */
 const AuthRefresher = () => {
-  const refreshIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const refreshIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const mountedRef = useRef(true);
   const failureCountRef = useRef(0);
   const [isInitialized, setIsInitialized] = useState(false);
@@ -142,7 +142,7 @@ const AuthRefresher = () => {
         setTimeout(async () => {
           if (mountedRef.current) {
             try {
-              const { data: { session }, error } = await supabase.auth.getSession();
+              const { data: { session: _session }, error } = await supabase.auth.getSession();
               if (error) {
                 console.warn('AuthRefresher: 页面可见性检查会话失败:', error);
               }

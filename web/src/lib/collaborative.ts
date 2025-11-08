@@ -330,16 +330,18 @@ export class OperationalTransform {
                operation.content + 
                content.slice(operation.position);
                
-      case 'delete':
+      case 'delete': {
         const deleteLength = operation.content.length;
         return content.slice(0, operation.position) + 
                content.slice(operation.position + deleteLength);
+      }
                
-      case 'replace':
+      case 'replace': {
         const replaceLength = operation.content.length;
         return content.slice(0, operation.position) + 
                operation.content + 
                content.slice(operation.position + replaceLength);
+      }
                
       default:
         return content;

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   SparklesIcon, 
@@ -19,7 +19,7 @@ import {
   RecommendationResult,
   RecommendationType, 
 } from '@/lib/api';
-import { PromptDetails } from '@/types';
+// import { PromptDetails } from '@/types';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
 
@@ -73,11 +73,7 @@ export const RecommendationEngine: React.FC<RecommendationEngineProps> = ({
     },
   ];
 
-  useEffect(() => {
-    fetchRecommendations();
-  }, [selectedType, currentPromptId, userId, refreshKey]);
-
-  const fetchRecommendations = async () => {
+  const fetchRecommendations = useCallback(async () => {
     try {
       setIsLoading(true);
       let results: RecommendationResult[] = [];
@@ -113,7 +109,11 @@ export const RecommendationEngine: React.FC<RecommendationEngineProps> = ({
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [selectedType, currentPromptId, userId, maxRecommendations, user]);
+
+  useEffect(() => {
+    fetchRecommendations();
+  }, [selectedType, currentPromptId, userId, refreshKey, fetchRecommendations]);
 
   const handleRefresh = () => {
     setRefreshKey(prev => prev + 1);

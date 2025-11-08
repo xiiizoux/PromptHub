@@ -1,5 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { useLanguage } from '@/contexts/LanguageContext';
 import {
@@ -72,10 +73,11 @@ const Footer: React.FC = () => {
               <div className="relative w-10 h-10">
                 <div className="absolute inset-0 bg-gradient-to-br from-neon-cyan to-neon-pink rounded-full blur-md animate-pulse-slow"></div>
                 <div className="relative rounded-full overflow-hidden w-full h-full glass border border-neon-cyan/30">
-                  <img 
+                  <Image 
                     src="/images/logo.png" 
                     alt="PromptHub Logo" 
-                    className="w-full h-full object-cover" 
+                    fill
+                    className="object-cover" 
                   />
                 </div>
               </div>

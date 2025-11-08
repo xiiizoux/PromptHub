@@ -611,7 +611,7 @@ export default function PersonalizationPage() {
             <InformationCircleIcon className="h-5 w-5 text-blue-400 mt-0.5 mr-3 flex-shrink-0" />
             <div className="text-sm text-blue-300">
               <p className="font-medium mb-1">什么是适应规则？</p>
-              <p>适应规则让您可以自定义AI如何根据特定条件调整回答。例如："如果我提到工作相关的问题，请使用专业语言"。</p>
+              <p>适应规则让您可以自定义AI如何根据特定条件调整回答。例如：&ldquo;如果我提到工作相关的问题，请使用专业语言&rdquo;。</p>
             </div>
           </div>
         </div>

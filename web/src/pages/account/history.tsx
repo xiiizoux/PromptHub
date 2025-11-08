@@ -103,6 +103,24 @@ const SATISFACTION_FILTERS = [
   { value: 'low', label: '不满意 (1分)' },
 ];
 
+// Format time utility function - moved outside component for reuse
+const formatTime = (dateString: string) => {
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffTime = now.getTime() - date.getTime();
+  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+  
+  if (diffDays === 0) {
+    return `今天 ${date.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })}`;
+  } else if (diffDays === 1) {
+    return `昨天 ${date.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })}`;
+  } else if (diffDays < 7) {
+    return `${diffDays}天前`;
+  } else {
+    return date.toLocaleDateString('zh-CN');
+  }
+};
+
 export default function HistoryPage() {
   const { user } = useAuth();
   const router = useRouter();

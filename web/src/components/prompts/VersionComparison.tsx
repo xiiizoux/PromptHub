@@ -1,6 +1,5 @@
-import React from 'react';
+import React, { Fragment } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
-import { Fragment } from 'react';
 import { XMarkIcon, ArrowsRightLeftIcon } from '@heroicons/react/24/outline';
 import { PromptVersion } from '@/types';
 import { formatVersionDisplay } from '@/lib/version-utils';
@@ -255,7 +254,7 @@ const VersionComparison: React.FC<VersionComparisonProps> = ({
                     )}
                     {version1.category !== version2.category && (
                       <div className="text-neon-orange">
-                        • 分类从 "{version1.category}" 更改为 "{version2.category}"
+                        • 分类从 &ldquo;{version1.category}&rdquo; 更改为 &ldquo;{version2.category}&rdquo;
                       </div>
                     )}
                     {tagsDiff.added.length > 0 && (

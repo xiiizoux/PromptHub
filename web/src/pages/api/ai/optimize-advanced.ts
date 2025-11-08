@@ -210,6 +210,6 @@ function extractListSection(content: string, sectionTitle: string): string[] {
   
   return section
     .split('\n')
-    .map(line => line.replace(/^[\s\-\*\d\.]*/, '').trim())
+    .map(line => line.replace(/^[\s\-*\d.]*/, '').trim())
     .filter(Boolean);
 }

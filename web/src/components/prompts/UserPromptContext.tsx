@@ -400,7 +400,7 @@ function OverviewTab({ data, viewMode }: { data: UserContextData; viewMode: View
         ) : (
           <div className="p-4 bg-gray-800/30 rounded-lg border border-dashed border-gray-600">
             <p className="text-gray-400 text-center">
-              🎯 尚未设置个人偏好。前往"账户设置"进行配置，获得更精准的个性化体验。
+              🎯 尚未设置个人偏好。前往&ldquo;账户设置&rdquo;进行配置，获得更精准的个性化体验。
             </p>
           </div>
         )}

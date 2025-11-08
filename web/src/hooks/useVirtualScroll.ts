@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef, useCallback } from 'react';
+import { useEffect, useState, useRef, useCallback, RefObject } from 'react';
 
 interface UseVirtualScrollOptions {
   itemHeight: number; // 每个项目的预估高度
@@ -8,7 +8,7 @@ interface UseVirtualScrollOptions {
 }
 
 interface VirtualScrollReturn {
-  containerRef: React.RefObject<HTMLDivElement>;
+  containerRef: RefObject<HTMLDivElement>;
   visibleItems: Array<{
     index: number;
     offsetTop: number;

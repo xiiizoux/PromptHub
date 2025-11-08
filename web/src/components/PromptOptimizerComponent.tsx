@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/router';
 import {
@@ -83,7 +83,7 @@ export const PromptOptimizerComponent: React.FC<PromptOptimizerProps> = ({
     };
 
     loadCategories();
-  }, [categoryType]);
+  }, [categoryType, t]);
 
   // 点击外部关闭下拉框
   useEffect(() => {
@@ -104,7 +104,37 @@ export const PromptOptimizerComponent: React.FC<PromptOptimizerProps> = ({
     if (initialPrompt !== prompt) {
       setPrompt(initialPrompt);
     }
-  }, [initialPrompt]);
+  }, [initialPrompt, prompt]);
+
+  const handleAnalyze = useCallback(async () => {
+    if (!prompt.trim()) {
+      toast.error(t('pages.optimizer.component.analyze.analyzeError', { fallback: '请输入要分析的提示词' }));
+      return;
+    }
+
+    setIsAnalyzing(true);
+    try {
+      const score = await analyzePrompt(prompt);
+      if (score) {
+        setAnalysisScore(score);
+        // 如果当前有结果，也更新结果中的评分
+        if (result) {
+          setResult({
+            ...result,
+            score,
+          });
+        }
+        toast.success(t('pages.optimizer.component.analyze.analyzeSuccess', { fallback: '质量分析完成！' }));
+      } else {
+        toast.error(t('pages.optimizer.component.analyze.apiError', { fallback: '分析失败：请检查API配置' }));
+      }
+    } catch (error) {
+      console.error('分析失败:', error);
+      toast.error(t('pages.optimizer.component.analyze.analyzeFailed', { error: error instanceof Error ? error.message : '未知错误', fallback: `分析失败: ${error instanceof Error ? error.message : '未知错误'}` }));
+    } finally {
+      setIsAnalyzing(false);
+    }
+  }, [prompt, result, t]);
 
   // 当提示词改变时，清空之前的分析结果
   useEffect(() => {
@@ -116,7 +146,7 @@ export const PromptOptimizerComponent: React.FC<PromptOptimizerProps> = ({
     } else {
       setAnalysisScore(null);
     }
-  }, [prompt, activeTab]);
+  }, [prompt, activeTab, handleAnalyze]);
 
   const handleOptimize = async () => {
     if (!prompt.trim()) {
@@ -178,7 +208,7 @@ export const PromptOptimizerComponent: React.FC<PromptOptimizerProps> = ({
         const categoryName = getLocalizedCategoryName(
           data.data.category as CategoryInfo,
           language,
-          data.data.category.name || ''
+          data.data.category.name || '',
         );
         
         if (selectedCategory) {
@@ -233,35 +263,6 @@ export const PromptOptimizerComponent: React.FC<PromptOptimizerProps> = ({
     }
   };
 
-  const handleAnalyze = async () => {
-    if (!prompt.trim()) {
-      toast.error(t('pages.optimizer.component.analyze.analyzeError', { fallback: '请输入要分析的提示词' }));
-      return;
-    }
-
-    setIsAnalyzing(true);
-    try {
-      const score = await analyzePrompt(prompt);
-      if (score) {
-        setAnalysisScore(score);
-        // 如果当前有结果，也更新结果中的评分
-        if (result) {
-          setResult({
-            ...result,
-            score,
-          });
-        }
-        toast.success(t('pages.optimizer.component.analyze.analyzeSuccess', { fallback: '质量分析完成！' }));
-      } else {
-        toast.error(t('pages.optimizer.component.analyze.apiError', { fallback: '分析失败：请检查API配置' }));
-      }
-    } catch (error) {
-      console.error('分析失败:', error);
-      toast.error(t('pages.optimizer.component.analyze.analyzeFailed', { error: error instanceof Error ? error.message : '未知错误', fallback: `分析失败: ${error instanceof Error ? error.message : '未知错误'}` }));
-    } finally {
-      setIsAnalyzing(false);
-    }
-  };
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text).then(() => {
@@ -291,8 +292,7 @@ export const PromptOptimizerComponent: React.FC<PromptOptimizerProps> = ({
 
   // 处理AI分析完成
   const handleAIAnalysisComplete = (result: Partial<AIAnalysisResult>) => {
-    console.log('优化器收到AI分析结果:', result);
-    
+    // AI analysis result received
     if (result as AIAnalysisResult) {
       setAiAnalysisResult(result as AIAnalysisResult);
       setShowAiAnalysisResult(true);
@@ -800,7 +800,7 @@ export const PromptOptimizerComponent: React.FC<PromptOptimizerProps> = ({
                   result={aiAnalysisResult}
                   onApplyResults={(data) => {
                     // 在优化器中，应用全部建议时跳转到创建提示词页面
-                    console.log('应用AI分析结果并跳转到创建提示词页面:', data);
+                    // Apply AI analysis results and navigate to create prompt page
                     
                     // 确保使用优化后的提示词内容
                     const contentToUse = optimizedPrompt || prompt;

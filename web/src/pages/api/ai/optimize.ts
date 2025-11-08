@@ -182,7 +182,7 @@ function extractImprovements(content: string): string[] {
   if (standardMatch) {
     const standardImprovements = standardMatch[1].trim()
       .split('\n')
-      .map(line => line.replace(/^[\s\-\*\d\.]*/, '').trim())
+      .map(line => line.replace(/^[\s\-*\d.]*/, '').trim())
       .filter(Boolean);
     improvements.push(...standardImprovements);
   }
@@ -209,7 +209,7 @@ function extractSuggestions(content: string): string[] {
   
   return match[1].trim()
     .split('\n')
-    .map(line => line.replace(/^[\s\-\*\d\.]*/, '').trim())
+    .map(line => line.replace(/^[\s\-*\d.]*/, '').trim())
     .filter(Boolean);
 }
  

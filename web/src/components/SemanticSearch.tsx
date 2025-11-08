@@ -138,7 +138,7 @@ export const SemanticSearch: React.FC<SemanticSearchProps> = ({
         e.preventDefault();
         setSelectedSuggestionIndex(prev => prev > 0 ? prev - 1 : -1);
         break;
-      case 'Enter':
+      case 'Enter': {
         e.preventDefault();
         if (selectedSuggestionIndex >= 0) {
           const selectedSuggestion = suggestions[selectedSuggestionIndex];
@@ -148,6 +148,7 @@ export const SemanticSearch: React.FC<SemanticSearchProps> = ({
           performSearch(query);
         }
         break;
+      }
       case 'Escape':
         setShowSuggestionDropdown(false);
         setSelectedSuggestionIndex(-1);

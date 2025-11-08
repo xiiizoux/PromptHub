@@ -65,7 +65,7 @@ const ExpandedTemplateLibrary: React.FC = () => {
   const [selectedSubcategory, setSelectedSubcategory] = useState<string>('all');
   const [selectedDifficulty, setSelectedDifficulty] = useState<string>('all');
   const [sortBy, setSortBy] = useState<'popular' | 'newest' | 'rating' | 'usage'>('popular');
-  const [viewMode] = useState<'grid' | 'list'>('grid');
+  const [_viewMode] = useState<'grid' | 'list'>('grid');
 
   // 生成模板数据
   const generateTemplates = (): Template[] => {

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   LightBulbIcon, 
@@ -42,7 +42,7 @@ const SmartWritingAssistant: React.FC<SmartWritingAssistantProps> = ({
   pendingAIAnalysis,
   className = '',
   category,
-  tags,
+  tags: _tags,
 }) => {
   const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState<'guide' | 'analysis' | 'templates' | 'optimizer'>('guide');
@@ -50,14 +50,21 @@ const SmartWritingAssistant: React.FC<SmartWritingAssistantProps> = ({
 
   const [writingSteps, setWritingSteps] = useState<WritingStep[]>([]);
   const [qualityScore, setQualityScore] = useState<number | null>(null);
-  const [realTimeAnalysis, setRealTimeAnalysis] = useState<any>(null);
+  const [realTimeAnalysis, setRealTimeAnalysis] = useState<{
+    hasRole: boolean;
+    hasTask: boolean;
+    hasFormat: boolean;
+    hasContext: boolean;
+    wordCount: number;
+    suggestions: string[];
+  } | null>(null);
   
   // AI分析结果状态管理
   const [aiAnalysisResult, setAiAnalysisResult] = useState<AIAnalysisResult | null>(null);
   const [showAiAnalysisResult, setShowAiAnalysisResult] = useState(false);
 
-  // 初始化写作指导步骤
-  useEffect(() => {
+  // 初始化写作指导步骤 - 使用 useMemo 避免同步 setState
+  const writingStepsMemo = useMemo(() => {
     const steps: WritingStep[] = [
       {
         id: 'role',
@@ -104,52 +111,17 @@ const SmartWritingAssistant: React.FC<SmartWritingAssistantProps> = ({
         ],
       },
     ];
-    setWritingSteps(steps);
+    return steps;
   }, [content, t]);
 
-  // 实时质量评估
   useEffect(() => {
-    const timer = setTimeout(() => {
-      if (content.length > 20) {
-        analyzeContentQuality(content);
-      }
-    }, 1000);
-    return () => clearTimeout(timer);
-  }, [content]);
+    queueMicrotask(() => {
+      setWritingSteps(writingStepsMemo);
+    });
+  }, [writingStepsMemo]);
 
-  // 处理从URL参数传递来的待应用AI分析结果
-  useEffect(() => {
-    if (pendingAIAnalysis) {
-      console.log('收到待应用的AI分析结果:', pendingAIAnalysis);
-      setAiAnalysisResult({
-        category: pendingAIAnalysis.category || '',
-        ...pendingAIAnalysis,
-      } as any);
-      setShowAiAnalysisResult(true);
-      setActiveTab('analysis'); // 自动切换到分析标签页
-    }
-  }, [pendingAIAnalysis]);
-
-  const analyzeContentQuality = async (text: string) => {
-    try {
-      const score = calculateBasicScore(text);
-      setQualityScore(score);
-      
-      const analysis = {
-        hasRole: checkRoleDefinition(text),
-        hasTask: checkTaskDescription(text),
-        hasFormat: checkOutputFormat(text),
-        hasContext: checkContext(text),
-        wordCount: text.length,
-        suggestions: generateRealTimeSuggestions(text),
-      };
-      setRealTimeAnalysis(analysis);
-    } catch (error) {
-      console.error('实时分析失败:', error);
-    }
-  };
-
-  const generateRealTimeSuggestions = (text: string): string[] => {
+  // Define generateRealTimeSuggestions first
+  const generateRealTimeSuggestions = useCallback((text: string): string[] => {
     const suggestions: string[] = [];
 
     if (!checkRoleDefinition(text)) {
@@ -169,7 +141,52 @@ const SmartWritingAssistant: React.FC<SmartWritingAssistantProps> = ({
     }
 
     return suggestions;
-  };
+  }, [t]);
+
+  // Define analyzeContentQuality before useEffect
+  const analyzeContentQuality = useCallback(async (text: string) => {
+    try {
+      const score = calculateBasicScore(text);
+      setQualityScore(score);
+      
+      const analysis = {
+        hasRole: checkRoleDefinition(text),
+        hasTask: checkTaskDescription(text),
+        hasFormat: checkOutputFormat(text),
+        hasContext: checkContext(text),
+        wordCount: text.length,
+        suggestions: generateRealTimeSuggestions(text),
+      };
+      setRealTimeAnalysis(analysis);
+    } catch (error) {
+      console.error('实时分析失败:', error);
+    }
+  }, [generateRealTimeSuggestions]);
+
+  // 实时质量评估
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (content.length > 20) {
+        analyzeContentQuality(content);
+      }
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, [content, analyzeContentQuality]);
+
+  // 处理从URL参数传递来的待应用AI分析结果
+  useEffect(() => {
+    if (pendingAIAnalysis) {
+      // Receive pending AI analysis result
+      queueMicrotask(() => {
+        setAiAnalysisResult({
+          category: pendingAIAnalysis.category || '',
+          ...pendingAIAnalysis,
+        } as any);
+        setShowAiAnalysisResult(true);
+        setActiveTab('analysis'); // 自动切换到分析标签页
+      });
+    }
+  }, [pendingAIAnalysis]);
 
   const applyTemplate = (template: string) => {
     onContentChange(template);
@@ -181,7 +198,7 @@ const SmartWritingAssistant: React.FC<SmartWritingAssistantProps> = ({
 
   // 处理AI分析完成
   const handleAIAnalysisComplete = (result: Partial<AIAnalysisResult>) => {
-    console.log('SmartWritingAssistant 收到AI分析结果:', result);
+    // Receive AI analysis result
     
     if (result as AIAnalysisResult) {
       setAiAnalysisResult(result as AIAnalysisResult);
@@ -199,7 +216,7 @@ const SmartWritingAssistant: React.FC<SmartWritingAssistantProps> = ({
 
   // 应用AI分析结果（传递给父组件处理）
   const handleApplyAIResults = (data: Partial<AIAnalysisResult>) => {
-    console.log('应用AI分析结果:', data);
+    // Apply AI analysis results
     
     // 使用专门的应用回调，而不是分析完成回调
     if (onApplyAnalysisResults) {

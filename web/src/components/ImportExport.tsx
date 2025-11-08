@@ -35,7 +35,7 @@ export const ImportExport: React.FC<ImportExportProps> = ({
   const [isExporting, setIsExporting] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
   const [importData, setImportData] = useState('');
-  const [importFile, setImportFile] = useState<File | null>(null);
+  const [_importFile, setImportFile] = useState<File | null>(null);
   const [importOptions, setImportOptions] = useState({
     allowDuplicates: false,
     skipDuplicates: true,

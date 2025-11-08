@@ -15,6 +15,37 @@ import {
 import { getTagsWithStats } from '@/lib/api';
 import { useCategoryContext } from '@/contexts/CategoryContext';
 
+// Toggle button component - defined outside to avoid creating during render
+interface ToggleButtonProps {
+  isOpen: boolean;
+  isMobile: boolean;
+  onToggle: () => void;
+}
+
+const ToggleButton: React.FC<ToggleButtonProps> = ({ isOpen, isMobile, onToggle }) => (
+  <motion.button
+    onClick={onToggle}
+    whileHover={{ scale: 1.05 }}
+    whileTap={{ scale: 0.95 }}
+    animate={{
+      left: isOpen && !isMobile ? '336px' : '16px', // 320px + 16px = 336px
+    }}
+    transition={{ duration: 0.3, ease: 'easeInOut' }}
+    className="fixed top-20 z-50 p-3 bg-dark-card/90 backdrop-blur-md border border-dark-border rounded-xl text-neon-cyan hover:text-white hover:border-neon-cyan transition-all duration-300 shadow-xl"
+    aria-label={isOpen ? '关闭过滤器' : '打开过滤器'}
+  >
+    {isMobile ? (
+      <Bars3Icon className="w-6 h-6" />
+    ) : isOpen ? (
+      <ChevronLeftIcon className="w-6 h-6" />
+    ) : (
+      <ChevronRightIcon className="w-6 h-6" />
+    )}
+  </motion.button>
+);
+
+ToggleButton.displayName = 'ToggleButton';
+
 interface SidebarFiltersProps {
   filters: {
     search?: string;
@@ -185,32 +216,9 @@ const SidebarFilters: React.FC<SidebarFiltersProps> = ({
     }
   }, [showAllTags]);
 
-  // 切换按钮
-  const ToggleButton = () => (
-    <motion.button
-      onClick={toggleSidebar}
-      whileHover={{ scale: 1.05 }}
-      whileTap={{ scale: 0.95 }}
-      animate={{
-        left: isOpen && !isMobile ? '336px' : '16px', // 320px + 16px = 336px
-      }}
-      transition={{ duration: 0.3, ease: 'easeInOut' }}
-      className="fixed top-20 z-50 p-3 bg-dark-card/90 backdrop-blur-md border border-dark-border rounded-xl text-neon-cyan hover:text-white hover:border-neon-cyan transition-all duration-300 shadow-xl"
-      aria-label={isOpen ? '关闭过滤器' : '打开过滤器'}
-    >
-      {isMobile ? (
-        <Bars3Icon className="w-6 h-6" />
-      ) : isOpen ? (
-        <ChevronLeftIcon className="w-6 h-6" />
-      ) : (
-        <ChevronRightIcon className="w-6 h-6" />
-      )}
-    </motion.button>
-  );
-
   return (
     <div className="flex">
-      <ToggleButton />
+      <ToggleButton isOpen={isOpen} isMobile={isMobile} onToggle={toggleSidebar} />
 
       {/* 移动端遮罩层 */}
       <AnimatePresence>

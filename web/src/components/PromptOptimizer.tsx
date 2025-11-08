@@ -60,7 +60,7 @@ export const PromptOptimizer: React.FC<PromptOptimizerProps> = ({
     if (initialPrompt !== prompt) {
       setPrompt(initialPrompt);
     }
-  }, [initialPrompt]);
+  }, [initialPrompt, prompt]);
 
   const handleAnalyze = useCallback(async () => {
     if (!prompt.trim()) {

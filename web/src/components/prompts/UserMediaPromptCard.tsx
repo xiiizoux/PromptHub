@@ -1,5 +1,6 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import { PromptInfo } from '@/types';
 import { formatVersionDisplay } from '@/lib/version-utils';
@@ -89,6 +90,40 @@ const UserMediaPromptCard: React.FC<UserMediaPromptCardProps> = React.memo(({ pr
     };
   }, [prompt?.tags]);
 
+  // 初始化视频URL - 只有在组件可见时才初始化
+  // Note: This must be before any early returns to follow React Hooks rules
+  useEffect(() => {
+    if (!isVisible || prompt?.category_type !== 'video') {
+      return;
+    }
+
+    const getPrimaryMediaUrl = () => {
+      if (prompt?.preview_asset_url) {
+        return prompt.preview_asset_url;
+      }
+
+      if (prompt?.parameters?.media_files && Array.isArray(prompt.parameters.media_files) && prompt.parameters.media_files.length > 0) {
+        return prompt.parameters.media_files[0].url;
+      }
+
+      return null;
+    };
+
+    const getFallbackMediaUrl = () => {
+      if (prompt?.category_type === 'video') {
+        return 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4';
+      }
+      return null;
+    };
+
+    const primaryUrl = getPrimaryMediaUrl();
+    // Use queueMicrotask to avoid synchronous setState in effect
+    queueMicrotask(() => {
+      setCurrentVideoUrl(primaryUrl || getFallbackMediaUrl());
+      setHasTriedFallback(!primaryUrl);
+    });
+  }, [isVisible, prompt?.category_type]);
+
   // 如果没有必要的数据，不渲染
   if (!prompt || !prompt.id) {
     return null;
@@ -175,17 +210,6 @@ const UserMediaPromptCard: React.FC<UserMediaPromptCardProps> = React.memo(({ pr
     // 对于图片，使用原始逻辑
     return getOriginalMediaUrl();
   };
-
-  // 初始化视频URL - 只有在组件可见时才初始化
-  React.useEffect(() => {
-    if (!isVisible || prompt.category_type !== 'video') {
-      return;
-    }
-
-    const primaryUrl = getPrimaryMediaUrl();
-    setCurrentVideoUrl(primaryUrl || getFallbackMediaUrl());
-    setHasTriedFallback(!primaryUrl);
-  }, [isVisible, prompt.category_type]);
 
   // 重置媒体状态
   const resetMediaState = () => {
@@ -325,11 +349,12 @@ const UserMediaPromptCard: React.FC<UserMediaPromptCardProps> = React.memo(({ pr
                         playsInline
                       />
                     ) : (
-                      <img 
+                      <Image 
                         src={getCurrentMediaUrl()!}
                         alt={prompt.name || '媒体预览'}
+                        fill
                         className={clsx(
-                          'w-full h-full object-cover transition-all duration-500',
+                          'object-cover transition-all duration-500',
                           mediaLoaded ? 'opacity-100' : 'opacity-0',
                           'group-hover:scale-110',
                         )}
@@ -340,6 +365,7 @@ const UserMediaPromptCard: React.FC<UserMediaPromptCardProps> = React.memo(({ pr
                           }
                         }}
                         onError={() => setMediaError(true)}
+                        unoptimized
                       />
                     )
                   ) : null}

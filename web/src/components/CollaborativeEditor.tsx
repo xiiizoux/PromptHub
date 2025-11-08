@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   // PencilSquareIcon,
@@ -67,57 +67,84 @@ export const CollaborativeEditor: React.FC<CollaborativeEditorProps> = ({
   const [showCollaborators, setShowCollaborators] = useState(true);
   const [operationQueue, setOperationQueue] = useState<Operation[]>([]);
   const [lastSyncTime, setLastSyncTime] = useState<Date>(new Date());
+  const [currentTime, setCurrentTime] = useState<number>(() => Date.now());
 
-  // 协作者颜色映射
-  const collaboratorColors = [
+  // 协作者颜色映射 - 使用 useMemo 避免每次渲染都创建新数组
+  const collaboratorColors = useMemo(() => [
     'bg-neon-cyan', 'bg-neon-purple', 'bg-neon-pink', 'bg-neon-yellow',
     'bg-blue-400', 'bg-green-400', 'bg-orange-400', 'bg-red-400',
-  ];
+  ], []);
 
-  const initializeCollaboration = useCallback(async () => {
-    try {
-      // 加入协作会话
-      const sessionData = await joinCollaborativeSession(promptId, user!.id);
-      setSession(sessionData);
-      setIsConnected(true);
+  const generateOperationId = () => {
+    return `op_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  };
 
-      // 订阅操作更新
-      const unsubscribe = subscribeToOperations(promptId, handleRemoteOperation);
-
-      // 获取当前协作者状态
-      await refreshCollaborators();
-
-      // 设置定期同步
-      const syncInterval = setInterval(syncWithServer, 5000);
-
-      return () => {
-        unsubscribe();
-        clearInterval(syncInterval);
-      };
-    } catch (error: unknown) {
-      console.error('初始化协作失败:', error);
-      toast.error('连接协作服务失败: ' + (error instanceof Error ? error.message : '未知错误'));
+  const applyOperation = (currentContent: string, operation: Operation): string => {
+    // 简化的操作应用逻辑
+    // 实际实现应该使用更复杂的OT算法
+    switch (operation.type) {
+      case 'insert':
+        return operation.content;
+      case 'delete':
+        // 处理删除操作
+        return currentContent;
+      case 'replace':
+        // 处理替换操作
+        return operation.content;
+      default:
+        return currentContent;
     }
-  }, [promptId, user]);
+  };
 
-  const cleanup = useCallback(async () => {
-    if (session && user) {
-      await leaveCollaborativeSession(promptId, user.id);
-      setIsConnected(false);
-    }
-  }, [session, user, promptId]);
-
-  useEffect(() => {
-    if (!user || !promptId) {return;}
-
-    initializeCollaboration();
-    
-    return () => {
-      cleanup();
+  const handleConflict = (operation: Operation) => {
+    const conflict: ConflictResolution = {
+      id: generateOperationId(),
+      operations: [operation],
+      resolvedBy: null,
+      resolution: 'pending',
+      timestamp: new Date(),
     };
-  }, [user, promptId, initializeCollaboration, cleanup]);
+    
+    setConflicts(prev => [...prev, conflict]);
+    toast.error('检测到编辑冲突，请手动解决');
+  };
 
-  const handleRemoteOperation = (operation: Operation) => {
+  const updateCollaboratorCursor = (userId: string, cursor?: CursorPosition) => {
+    setCollaborators(prev => 
+      prev.map(collab => 
+        collab.id === userId 
+          ? { ...collab, cursor, lastSeen: new Date() }
+          : collab,
+      ),
+    );
+  };
+
+  const refreshCollaborators = useCallback(async () => {
+    try {
+      const status = await getCollaborativeStatus(promptId);
+      const now = Date.now();
+      const collaboratorList = status.collaborators.map((collab: { id: string; name: string; email: string; lastSeen: Date; cursor?: CursorPosition }, index: number) => ({
+        ...collab,
+        color: collaboratorColors[index % collaboratorColors.length],
+        isActive: (now - collab.lastSeen.getTime()) < 30000, // 30秒内活跃
+      }));
+      setCollaborators(collaboratorList);
+      setCurrentTime(now);
+    } catch (error: unknown) {
+      console.error('获取协作者失败:', error);
+    }
+  }, [promptId, collaboratorColors]);
+
+  const syncWithServer = useCallback(async () => {
+    try {
+      await refreshCollaborators();
+      setLastSyncTime(new Date());
+    } catch (error) {
+      console.error('同步失败:', error);
+    }
+  }, [refreshCollaborators]);
+
+  const handleRemoteOperation = useCallback((operation: Operation) => {
     if (operation.userId === user?.id) {return;} // 忽略自己的操作
 
     try {
@@ -139,7 +166,66 @@ export const CollaborativeEditor: React.FC<CollaborativeEditorProps> = ({
       // 处理冲突
       handleConflict(operation);
     }
-  };
+  }, [user, content, onContentChange, handleConflict]);
+
+  const initializeCollaboration = useCallback(async () => {
+    try {
+      // 加入协作会话
+      const sessionData = await joinCollaborativeSession(promptId, user!.id);
+      // Use queueMicrotask to avoid synchronous setState in effect
+      queueMicrotask(() => {
+        setSession(sessionData);
+        setIsConnected(true);
+      });
+
+      // 订阅操作更新
+      const unsubscribe = subscribeToOperations(promptId, handleRemoteOperation);
+
+      // 获取当前协作者状态
+      await refreshCollaborators();
+
+      // 设置定期同步
+      const syncInterval = setInterval(syncWithServer, 5000);
+
+      return () => {
+        unsubscribe();
+        clearInterval(syncInterval);
+      };
+    } catch (error: unknown) {
+      console.error('初始化协作失败:', error);
+      toast.error('连接协作服务失败: ' + (error instanceof Error ? error.message : '未知错误'));
+    }
+  }, [promptId, user, handleRemoteOperation, refreshCollaborators, syncWithServer]);
+
+  const cleanup = useCallback(async () => {
+    if (session && user) {
+      await leaveCollaborativeSession(promptId, user.id);
+      setIsConnected(false);
+    }
+  }, [session, user, promptId]);
+
+  useEffect(() => {
+    if (!user || !promptId) {return;}
+
+    // Use queueMicrotask to avoid synchronous setState in effect
+    queueMicrotask(() => {
+      initializeCollaboration();
+    });
+    
+    return () => {
+      cleanup();
+    };
+  }, [user, promptId, initializeCollaboration, cleanup]);
+
+  // Update current time periodically for time display
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentTime(Date.now());
+    }, 1000); // Update every second
+
+    return () => clearInterval(interval);
+  }, []);
+
 
   const handleLocalChange = useCallback(async (newContent: string) => {
     if (!session || !user) {return;}
@@ -182,36 +268,6 @@ export const CollaborativeEditor: React.FC<CollaborativeEditorProps> = ({
     }
   }, [session, user, promptId, onContentChange]);
 
-  const applyOperation = (currentContent: string, operation: Operation): string => {
-    // 简化的操作应用逻辑
-    // 实际实现应该使用更复杂的OT算法
-    switch (operation.type) {
-      case 'insert':
-        return operation.content;
-      case 'delete':
-        // 处理删除操作
-        return currentContent;
-      case 'replace':
-        // 处理替换操作
-        return operation.content;
-      default:
-        return currentContent;
-    }
-  };
-
-  const handleConflict = (operation: Operation) => {
-    const conflict: ConflictResolution = {
-      id: generateOperationId(),
-      operations: [operation],
-      resolvedBy: null,
-      resolution: 'pending',
-      timestamp: new Date(),
-    };
-    
-    setConflicts(prev => [...prev, conflict]);
-    toast.error('检测到编辑冲突，请手动解决');
-  };
-
   const resolveConflict = async (conflictId: string, _resolution: 'accept' | 'reject') => {
     try {
       setConflicts(prev => prev.filter(c => c.id !== conflictId));
@@ -252,42 +308,6 @@ export const CollaborativeEditor: React.FC<CollaborativeEditorProps> = ({
     }
   };
 
-  const refreshCollaborators = async () => {
-    try {
-      const status = await getCollaborativeStatus(promptId);
-      const collaboratorList = status.collaborators.map((collab: { id: string; name: string; email: string; lastSeen: Date; cursor?: CursorPosition }, index: number) => ({
-        ...collab,
-        color: collaboratorColors[index % collaboratorColors.length],
-        isActive: (Date.now() - collab.lastSeen.getTime()) < 30000, // 30秒内活跃
-      }));
-      setCollaborators(collaboratorList);
-    } catch (error: unknown) {
-      console.error('获取协作者失败:', error);
-    }
-  };
-
-  const updateCollaboratorCursor = (userId: string, cursor?: CursorPosition) => {
-    setCollaborators(prev => 
-      prev.map(collab => 
-        collab.id === userId 
-          ? { ...collab, cursor, lastSeen: new Date() }
-          : collab,
-      ),
-    );
-  };
-
-  const syncWithServer = async () => {
-    try {
-      await refreshCollaborators();
-      setLastSyncTime(new Date());
-    } catch (error) {
-      console.error('同步失败:', error);
-    }
-  };
-
-  const generateOperationId = () => {
-    return `op_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-  };
 
   return (
     <div className={`space-y-4 ${className}`}>
@@ -371,7 +391,7 @@ export const CollaborativeEditor: React.FC<CollaborativeEditorProps> = ({
                       {collaborator.name}
                     </div>
                     <div className="text-gray-400 text-xs truncate">
-                      {collaborator.isActive ? '正在编辑' : `${Math.round((Date.now() - collaborator.lastSeen.getTime()) / 1000)}秒前`}
+                      {collaborator.isActive ? '正在编辑' : `${Math.round((currentTime - collaborator.lastSeen.getTime()) / 1000)}秒前`}
                     </div>
                   </div>
                   

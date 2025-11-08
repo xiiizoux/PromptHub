@@ -176,13 +176,13 @@ export default function PromptEditForm({
 
   // 处理图像参数变化
   const handleImageParametersChange = (parameters: ImageParameters) => {
-    setValue('image_parameters', parameters);
+    setValue('image_parameters', parameters as Record<string, unknown>);
     onUnsavedChanges?.(true);
   };
 
   // 处理视频参数变化
   const handleVideoParametersChange = (parameters: VideoParameters) => {
-    setValue('video_parameters', parameters);
+    setValue('video_parameters', parameters as Record<string, unknown>);
     onUnsavedChanges?.(true);
   };
 

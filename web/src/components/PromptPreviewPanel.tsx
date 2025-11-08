@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   EyeIcon, 
@@ -59,16 +59,6 @@ export const PromptPreviewPanel: React.FC<PromptPreviewPanelProps> = ({
     }
   }, [content, testVariables]);
 
-  // 自动预览
-  useEffect(() => {
-    if (autoPreview && content.length > 50) {
-      const timer = setTimeout(() => {
-        generatePreview();
-      }, 2000);
-      return () => clearTimeout(timer);
-    }
-  }, [content, testVariables, autoPreview]); // 移除generatePreview依赖
-
   const processPromptWithVariables = (prompt: string, vars: Record<string, string>): string => {
     let processedPrompt = prompt;
     Object.entries(vars).forEach(([key, value]) => {
@@ -78,7 +68,7 @@ export const PromptPreviewPanel: React.FC<PromptPreviewPanelProps> = ({
     return processedPrompt;
   };
 
-  const generatePreview = async () => {
+  const generatePreview = useCallback(async () => {
     if (!content.trim()) {
       toast.error('请输入提示词内容');
       return;
@@ -114,7 +104,17 @@ export const PromptPreviewPanel: React.FC<PromptPreviewPanelProps> = ({
     } finally {
       setIsGenerating(false);
     }
-  };
+  }, [content, testVariables]);
+
+  // 自动预览
+  useEffect(() => {
+    if (autoPreview && content.length > 50) {
+      const timer = setTimeout(() => {
+        generatePreview();
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [content, testVariables, autoPreview, generatePreview]);
 
   // 模拟AI响应（可以替换为真实的API调用）
   const simulateAIResponse = async (prompt: string): Promise<{text: string, tokens: number, cost: number}> => {

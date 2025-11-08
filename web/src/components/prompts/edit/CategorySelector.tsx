@@ -32,7 +32,10 @@ export default function CategorySelector({
 
   // 当类型改变时重置状态
   useEffect(() => {
-    setIsOpen(false);
+    // Use queueMicrotask to avoid synchronous setState in effect
+    queueMicrotask(() => {
+      setIsOpen(false);
+    });
   }, [promptType]);
 
   const handleCategorySelect = (category: string) => {

@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import { PromptInfo } from '@/types';
 import { formatVersionDisplay } from '@/lib/version-utils';
@@ -162,11 +163,12 @@ const ImagePromptCard: React.FC<ImagePromptCardProps> = React.memo(({ prompt }) 
             {isVisible ? (
               <>
                 {getCurrentImageUrl() ? (
-                  <img 
+                  <Image 
                     src={getCurrentImageUrl()!}
                     alt={prompt.name || t('prompts.image')}
+                    fill
                     className={clsx(
-                      'w-full h-full object-cover transition-all duration-500',
+                      'object-cover transition-all duration-500',
                       imageLoaded ? 'opacity-100' : 'opacity-0',
                       'group-hover:scale-110',
                     )}
@@ -180,6 +182,7 @@ const ImagePromptCard: React.FC<ImagePromptCardProps> = React.memo(({ prompt }) 
                       }
                     }}
                     onError={() => setImageError(true)}
+                    unoptimized
                   />
                 ) : null}
                 

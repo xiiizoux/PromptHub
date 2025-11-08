@@ -22,7 +22,7 @@ export default async function handler(
 
     // 根据action执行不同的分析功能
     switch (action) {
-      case 'full_analyze':
+      case 'full_analyze': {
         // 完整分析 - 传递已有标签和版本信息，支持增量分析
         const { 
           currentVersion: fullAnalysisCurrentVersion, 
@@ -54,22 +54,26 @@ export default async function handler(
         );
         
         return res.status(200).json({ success: true, data: fullResult });
+      }
 
-      case 'quick_classify':
+      case 'quick_classify': {
         // 快速分类
         const category = await aiAnalyzer.quickClassify(content);
         return res.status(200).json({ success: true, data: { category } });
+      }
 
-      case 'extract_tags':
+      case 'extract_tags': {
         // 提取标签 - 传递已有标签进行智能合并
         const tags = await aiAnalyzer.extractTags(content, existingTags);
         return res.status(200).json({ success: true, data: { tags } });
+      }
 
-      case 'suggest_version':
+      case 'suggest_version': {
         // 建议版本号
         const { existingVersions = [], currentVersion, isNewPrompt = false } = req.body;
         const version = aiAnalyzer.suggestVersion(content, existingVersions, currentVersion, isNewPrompt);
         return res.status(200).json({ success: true, data: { version } });
+      }
 
       case 'analyze_quality': {
         const apiKey = process.env.NEXT_PUBLIC_OPENAI_API_KEY;
@@ -244,27 +248,31 @@ ${content}
         });
       }
 
-      case 'extract_variables':
+      case 'extract_variables': {
         // 提取变量（无需API调用的本地操作）
         const matches = content.match(/\{\{([^}]+)\}\}/g);
         const uniqueVars = new Set(matches ? 
           matches.map((match: string) => match.replace(/^\{\{|\}\}$/g, '').trim()) : []);
         const variables = Array.from(uniqueVars).filter((variable: string) => variable.length > 0);
         return res.status(200).json({ success: true, data: { variables } });
+      }
 
-      case 'health_check':
+      case 'health_check': {
         // API健康检查
         const healthStatus = await aiAnalyzer.checkHealth();
         return res.status(200).json({ success: true, data: healthStatus });
+      }
 
-      case 'get_config':
+      case 'get_config': {
         // 获取配置信息
         const configInfo = aiAnalyzer.getConfig();
         return res.status(200).json({ success: true, data: configInfo });
+      }
 
-      case 'get_existing_tags':
+      case 'get_existing_tags': {
         // 获取系统中已有的标签
         return res.status(200).json({ success: true, data: { tags: existingTags } });
+      }
 
       default:
         return res.status(400).json({ error: '不支持的分析操作类型' });

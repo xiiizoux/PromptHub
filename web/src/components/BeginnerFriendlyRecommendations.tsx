@@ -210,12 +210,11 @@ export const BeginnerFriendlyRecommendations: React.FC<BeginnerFriendlyRecommend
   maxRecommendations = 9,
   className = '',
   userLevel = 'beginner',
-  showLearningPath = true,
-  _showLearningPath = true,
+  showLearningPath: _showLearningPath = true,
 }) => {
   const { user } = useAuth();
   const { levelData, isLoading: _userLevelLoading } = useUserLevel();
-  const [recommendations, setRecommendations] = useState<RecommendationResult[]>([]);
+  const [_recommendations, setRecommendations] = useState<RecommendationResult[]>([]);
   const [learningPaths, setLearningPaths] = useState<LearningPath[]>([]);
   const [personalizedRecs, setPersonalizedRecs] = useState<PersonalizedRecommendation[]>([]);
   const [activeTab, setActiveTab] = useState<'paths' | 'recommendations' | 'achievements'>('paths');
@@ -288,10 +287,10 @@ export const BeginnerFriendlyRecommendations: React.FC<BeginnerFriendlyRecommend
     return [];
   };
 
-  const getSimilarPrompts = async (_promptId: string, _limit: number): Promise<RecommendationResult[]> => {
-    // Mock 实现
-    return [];
-  };
+  // const getSimilarPrompts = async (_promptId: string, _limit: number): Promise<RecommendationResult[]> => {
+  //   // Mock 实现
+  //   return [];
+  // };
 
   const fetchRecommendations = useCallback(async () => {
     try {

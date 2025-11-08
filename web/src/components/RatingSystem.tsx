@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { StarIcon } from '@heroicons/react/24/outline';
 import { StarIcon as StarSolidIcon } from '@heroicons/react/24/solid';
@@ -42,16 +42,7 @@ export const RatingSystem: React.FC<RatingSystemProps> = ({
   // 根据语言选择 date-fns locale
   const dateLocale = language === 'zh' ? zhCN : enUS;
 
-  useEffect(() => {
-    if (promptId) {
-      fetchRatings();
-      if (user) {
-        fetchUserRating();
-      }
-    }
-  }, [promptId, user, currentPage]);
-
-  const fetchRatings = async () => {
+  const fetchRatings = useCallback(async () => {
     try {
       setIsLoading(true);
       const response = await getPromptRatings(promptId, {
@@ -69,9 +60,9 @@ export const RatingSystem: React.FC<RatingSystemProps> = ({
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [promptId, currentPage, t]);
 
-  const fetchUserRating = async () => {
+  const fetchUserRating = useCallback(async () => {
     try {
       const rating = await getUserRating(promptId);
       setUserRating(rating);
@@ -82,7 +73,16 @@ export const RatingSystem: React.FC<RatingSystemProps> = ({
     } catch (error) {
       console.error(t('rating.get_user_rating_failed'), error);
     }
-  };
+  }, [promptId, t]);
+
+  useEffect(() => {
+    if (promptId) {
+      fetchRatings();
+      if (user) {
+        fetchUserRating();
+      }
+    }
+  }, [promptId, user, currentPage, fetchRatings, fetchUserRating]);
 
   const handleSubmitRating = async () => {
     if (!user) {
@@ -98,17 +98,17 @@ export const RatingSystem: React.FC<RatingSystemProps> = ({
     try {
       setIsLoading(true);
       
-      console.log('提交评分:', { promptId, rating: newRating, comment: newComment, user: user.id });
+      // Submit rating
       
       if (userRating) {
-        console.log('更新现有评分...');
+        // Update existing rating
         await updateRating(promptId, {
           rating: newRating,
           comment: newComment,
         });
         toast.success(t('rating.rating_updated'));
       } else {
-        console.log('提交新评分...');
+        // Submit new rating
         await submitRating(promptId, {
           rating: newRating,
           comment: newComment,
@@ -199,7 +199,7 @@ export const RatingSystem: React.FC<RatingSystemProps> = ({
   };
 
   const renderRatingDistribution = () => {
-    const maxCount = Math.max(...Object.values(ratingDistribution));
+    // const maxCount = Math.max(...Object.values(ratingDistribution));
     
     return (
       <div className="space-y-2">
