@@ -78,7 +78,7 @@ function getAllowedOrigins(): string[] {
 /**
  * 设置安全头部（兼容性优化）
  */
-function setSecurityHeaders(res: NextApiResponse | NextResponse, config: SecurityConfig): void {
+function setSecurityHeaders(res: NextApiResponse | NextResponse, _config: SecurityConfig): void {
   // 获取浏览器兼容的安全头部配置
   const compatibleHeaders = browserCompatibility.getCompatibleSecurityHeaders();
 

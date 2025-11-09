@@ -8,13 +8,10 @@ import {
   UserCircleIcon,
   SparklesIcon,
   DocumentTextIcon,
-  ChartBarIcon,
   HomeIcon,
   PlusCircleIcon,
   ArrowRightOnRectangleIcon,
   UserIcon,
-  KeyIcon,
-  RectangleStackIcon,
   ChatBubbleLeftRightIcon,
   PhotoIcon,
   FilmIcon,
@@ -123,7 +120,6 @@ const Navbar: React.FC = () => {
         window.location.href = '/';
       }
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : t('user.logout_failed');
       console.error('Logout failed:', error);
       toast.error(t('user.logout_failed'));
     } finally {

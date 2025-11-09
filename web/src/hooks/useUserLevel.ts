@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 
 export type UserLevel = 'beginner' | 'intermediate' | 'advanced';
@@ -137,7 +137,7 @@ export const useUserLevel = (): UserLevelHookReturn => {
   const [isLoading, setIsLoading] = useState(true);
   const [manualLevel, setManualLevel] = useState<UserLevel | null>(null);
 
-  const updateUserLevel = async () => {
+  const updateUserLevel = useCallback(async () => {
     if (!user) {
       setIsLoading(false);
       return;
@@ -203,7 +203,7 @@ export const useUserLevel = (): UserLevelHookReturn => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [user, manualLevel]);
 
   const handleSetManualLevel = (level: UserLevel) => {
     setManualLevel(level);
@@ -241,7 +241,7 @@ export const useUserLevel = (): UserLevelHookReturn => {
       setLevelData(null);
       setIsLoading(false);
     }
-  }, [user, manualLevel]);
+  }, [user, manualLevel, updateUserLevel]);
 
   return {
     userLevel,

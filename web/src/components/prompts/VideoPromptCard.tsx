@@ -44,8 +44,8 @@ const VideoPromptCard: React.FC<VideoPromptCardProps> = React.memo(({ prompt }) 
   const [thumbnailError, setThumbnailError] = useState(false);
   const [showVideo, setShowVideo] = useState(false); // 控制是否显示视频（vs缩略图）
   const videoRef = useRef<HTMLVideoElement>(null);
-  const hoverTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
-  const loadingTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
+  const hoverTimeoutRef = useRef<number | undefined>(undefined);
+  const loadingTimeoutRef = useRef<number | undefined>(undefined);
 
   // 使用优化的分类显示Hook，无延迟加载
   const categoryInfo = useOptimizedCategoryDisplay(prompt?.category || '故事叙述', 'video');

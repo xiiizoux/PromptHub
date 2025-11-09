@@ -96,7 +96,7 @@ export const CollaborativeEditor: React.FC<CollaborativeEditorProps> = ({
     }
   };
 
-  const handleConflict = (operation: Operation) => {
+  const handleConflict = useCallback((operation: Operation) => {
     const conflict: ConflictResolution = {
       id: generateOperationId(),
       operations: [operation],
@@ -107,7 +107,7 @@ export const CollaborativeEditor: React.FC<CollaborativeEditorProps> = ({
     
     setConflicts(prev => [...prev, conflict]);
     toast.error('检测到编辑冲突，请手动解决');
-  };
+  }, []);
 
   const updateCollaboratorCursor = (userId: string, cursor?: CursorPosition) => {
     setCollaborators(prev => 

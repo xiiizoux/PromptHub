@@ -82,7 +82,7 @@ export function useCategoryService(options: UseCategoryServiceOptions = {}): Use
   const getCategoryDisplayInfo = useCallback((name: string): CategoryDisplayInfo => {
     // 查找对应的分类数据（支持按中文或英文名称查找）
     const categoryData = categories.find(
-      cat => cat.name === name || cat.name_en === name
+      cat => cat.name === name || cat.name_en === name,
     );
     const displayInfo = categoryService.getCategoryDisplayInfo(name, categoryData, language);
 

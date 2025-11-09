@@ -799,7 +799,7 @@ export default function PromptFormContainer({
                                 const items = t('promptForm.fileUpload.mediaWarning.items', { returnObjects: true, fallback: [
                                   '媒体文件不会保存到版本历史中',
                                   '版本回滚时将保持媒体内容的当前状态',
-                                  '请谨慎删改媒体文件，删除后无法通过版本回滚恢复'
+                                  '请谨慎删改媒体文件，删除后无法通过版本回滚恢复',
                                 ] });
                                 const itemsArray = Array.isArray(items) ? items : [items as string];
                                 return itemsArray.map((item: string, idx: number) => (

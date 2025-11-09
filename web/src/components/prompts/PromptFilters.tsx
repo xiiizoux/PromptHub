@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { PromptFilters as PromptFiltersType } from '@/types';
-import { FunnelIcon, MagnifyingGlassIcon, XMarkIcon, AdjustmentsHorizontalIcon, ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/outline';
+import { MagnifyingGlassIcon, XMarkIcon, AdjustmentsHorizontalIcon, ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/outline';
 import { getTagsWithStats } from '@/lib/api';
 import { useLanguage } from '@/contexts/LanguageContext';
 
@@ -24,7 +24,7 @@ const PromptFilters: React.FC<PromptFiltersProps> = ({
   onFilterChange,
   categories,
   tags,
-  hideTypeFilter = false,
+  hideTypeFilter: _hideTypeFilter = false,
 }) => {
   const { t } = useLanguage();
   const [showMobileFilters, setShowMobileFilters] = useState(false);
@@ -110,21 +110,17 @@ const PromptFilters: React.FC<PromptFiltersProps> = ({
   }, [tags, filters.tags, popularTags, showAllTags, tagSearchQuery]);
 
   // 优化版本：减少不必要的重新计算
-  const { visibleTags, hiddenTags } = useMemo(() => {
-    const allTags = [...tags];
-    const selectedTags = filters.tags || [];
-    
+  const { visibleTags } = useMemo(() => {
     // 快速计算可见和隐藏的标签
     if (showAllTags || tagSearchQuery.trim()) {
-      return { visibleTags: displayTags, hiddenTags: [] };
+      return { visibleTags: displayTags };
     }
     
     const maxDisplayTags = 25;
     const visible = displayTags.slice(0, maxDisplayTags);
-    const hidden = allTags.slice(maxDisplayTags);
     
-    return { visibleTags: visible, hiddenTags: hidden };
-  }, [displayTags, showAllTags, tagSearchQuery, tags, filters.tags]);
+    return { visibleTags: visible };
+  }, [displayTags, showAllTags, tagSearchQuery]);
 
   // 计算未显示的标签数量 - 优化版本
   const hiddenTagsCount = useMemo(() => {

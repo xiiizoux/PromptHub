@@ -109,7 +109,7 @@ export const RecommendationEngine: React.FC<RecommendationEngineProps> = ({
     } finally {
       setIsLoading(false);
     }
-  }, [selectedType, currentPromptId, userId, maxRecommendations, user]);
+  }, [selectedType, currentPromptId, maxRecommendations, user]);
 
   useEffect(() => {
     fetchRecommendations();

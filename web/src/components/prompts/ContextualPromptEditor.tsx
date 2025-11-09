@@ -8,7 +8,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  CodeBracketIcon,
   CogIcon,
   DocumentTextIcon,
   TagIcon,
@@ -17,15 +16,10 @@ import {
   ArrowPathIcon,
   EyeIcon,
   PencilSquareIcon,
-  ClipboardDocumentIcon,
-  BoltIcon,
   WrenchScrewdriverIcon,
   AcademicCapIcon,
-  LightBulbIcon,
-  PlayIcon,
   CheckCircleIcon,
   ExclamationTriangleIcon,
-  InformationCircleIcon,
 } from '@heroicons/react/24/outline';
 import { PromptDetails, PromptContentJsonb } from '@/types';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -85,7 +79,7 @@ export default function ContextualPromptEditor({
     }
     
     setVariables(prompt.input_variables || extractVariables(staticContent));
-  }, [content, prompt]);
+  }, [content, prompt, staticContent, prompt?.parameters?.media_files, prompt?.preview_asset_url]);
 
   // 切换Context Engineering模式
   const handleToggleCe = useCallback((enabled: boolean) => {

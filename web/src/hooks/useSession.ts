@@ -41,6 +41,38 @@ export function useSession(options: UseSessionOptions = {}): UseSessionReturn {
   const sessionIdRef = useRef<string | null>(null);
   const warningShownRef = useRef(false);
 
+  // 设置会话回调
+  const setupSessionCallbacks = useCallback((sessionId: string) => {
+    // 设置续期回调
+    sessionManager.setRenewalCallback(sessionId, async () => {
+      try {
+        const { data: { session: supabaseSession } } = await supabase.auth.getSession();
+        if (supabaseSession) {
+          // 刷新Supabase会话
+          await supabase.auth.refreshSession();
+          onSessionRenewed?.();
+        }
+      } catch (error) {
+        console.error('Failed to renew session:', error);
+      }
+    });
+
+    // 设置警告回调
+    if (showWarnings) {
+      sessionManager.setWarningCallback(sessionId, (timeLeft: number) => {
+        if (!warningShownRef.current) {
+          warningShownRef.current = true;
+          onSessionWarning?.(timeLeft);
+          
+          // 重置警告标志，允许再次显示
+          setTimeout(() => {
+            warningShownRef.current = false;
+          }, 60000); // 1分钟后可以再次显示警告
+        }
+      });
+    }
+  }, [showWarnings, onSessionWarning, onSessionRenewed]);
+
   // 初始化会话
   const initializeSession = useCallback(async () => {
     try {
@@ -75,39 +107,7 @@ export function useSession(options: UseSessionOptions = {}): UseSessionReturn {
     } finally {
       setIsLoading(false);
     }
-  }, []);
-
-  // 设置会话回调
-  const setupSessionCallbacks = useCallback((sessionId: string) => {
-    // 设置续期回调
-    sessionManager.setRenewalCallback(sessionId, async () => {
-      try {
-        const { data: { session: supabaseSession } } = await supabase.auth.getSession();
-        if (supabaseSession) {
-          // 刷新Supabase会话
-          await supabase.auth.refreshSession();
-          onSessionRenewed?.();
-        }
-      } catch (error) {
-        console.error('Failed to renew session:', error);
-      }
-    });
-
-    // 设置警告回调
-    if (showWarnings) {
-      sessionManager.setWarningCallback(sessionId, (timeLeft: number) => {
-        if (!warningShownRef.current) {
-          warningShownRef.current = true;
-          onSessionWarning?.(timeLeft);
-          
-          // 重置警告标志，允许再次显示
-          setTimeout(() => {
-            warningShownRef.current = false;
-          }, 60000); // 1分钟后可以再次显示警告
-        }
-      });
-    }
-  }, [showWarnings, onSessionWarning, onSessionRenewed]);
+  }, [setupSessionCallbacks]);
 
   // 续期会话
   const renewSession = useCallback(async (): Promise<boolean> => {

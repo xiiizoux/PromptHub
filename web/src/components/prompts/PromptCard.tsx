@@ -49,7 +49,7 @@ const PromptCard: React.FC<PromptCardProps> = React.memo(({ prompt }) => {
       visible: prompt.tags.slice(0, 3),
       remaining: Math.max(0, prompt.tags.length - 3),
     };
-  }, [prompt?.tags]);
+  }, [prompt]);
 
   // 如果没有必要的数据，不渲染
   if (!prompt || !prompt.id) {

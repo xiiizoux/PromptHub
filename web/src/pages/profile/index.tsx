@@ -2012,7 +2012,7 @@ const ProfilePage = () => {
                         </div>
                         {rating.review && (
                           <p className="text-gray-300 bg-dark-bg-secondary/30 rounded-lg p-3">
-                            "{rating.review}"
+                            &quot;{rating.review}&quot;
                           </p>
                         )}
                       </motion.div>
@@ -2138,7 +2138,7 @@ const ProfilePage = () => {
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-sm text-gray-300">
                     <div>
                       <h4 className="text-neon-green font-medium mb-2">1. 导出数据</h4>
-                      <p>点击"导出数据"按钮，系统会将您的所有数据打包成JSON文件下载。</p>
+                      <p>点击&quot;导出数据&quot;按钮，系统会将您的所有数据打包成JSON文件下载。</p>
                     </div>
                     <div>
                       <h4 className="text-neon-blue font-medium mb-2">2. 下载模板</h4>

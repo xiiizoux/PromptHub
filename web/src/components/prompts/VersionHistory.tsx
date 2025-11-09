@@ -44,13 +44,7 @@ const VersionHistory: React.FC<VersionHistoryProps> = ({
   const [selectedForComparison, setSelectedForComparison] = useState<PromptVersion[]>([]);
   const [showComparison, setShowComparison] = useState(false);
 
-  useEffect(() => {
-    if ((isOpen || inline) && promptId) {
-      fetchVersions();
-    }
-  }, [isOpen, inline, promptId]);
-
-  const fetchVersions = async () => {
+  const fetchVersions = React.useCallback(async () => {
     setLoading(true);
     setError(null);
 
@@ -88,7 +82,13 @@ const VersionHistory: React.FC<VersionHistoryProps> = ({
     } finally {
       setLoading(false);
     }
-  };
+  }, [promptId, t]);
+
+  useEffect(() => {
+    if ((isOpen || inline) && promptId) {
+      fetchVersions();
+    }
+  }, [isOpen, inline, promptId, fetchVersions]);
 
   const handleRevert = async (versionId: string) => {
     if (!onVersionRevert) {return;}

@@ -8,16 +8,13 @@ import { useIntersectionObserver } from '@/hooks/useIntersectionObserver';
 import { useOptimizedCategoryDisplay } from '@/contexts/CategoryContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import {
-  StarIcon,
   DocumentTextIcon,
   PhotoIcon,
   ClockIcon,
   UserIcon,
   FireIcon,
   EyeIcon,
-  CogIcon,
 } from '@heroicons/react/24/outline';
-import { StarIcon as StarSolidIcon } from '@heroicons/react/24/solid';
 import { InteractionButtons } from '@/components/BookmarkButton';
 import clsx from 'clsx';
 
@@ -66,7 +63,7 @@ const ImagePromptCard: React.FC<ImagePromptCardProps> = React.memo(({ prompt }) 
     const ratingValue = prompt.average_rating !== undefined ? prompt.average_rating : (prompt.rating || 0);
     const percentage = (ratingValue / 5) * 100;
     return { value: ratingValue, percentage };
-  }, [prompt?.average_rating, prompt?.rating]);
+  }, [prompt]);
 
   const tagsToShow = useMemo(() => {
     if (!prompt?.tags || prompt.tags.length === 0) {return null;}
@@ -74,7 +71,7 @@ const ImagePromptCard: React.FC<ImagePromptCardProps> = React.memo(({ prompt }) 
       visible: prompt.tags.slice(0, 2), // 图像卡片显示较少标签，留更多空间给预览
       remaining: Math.max(0, prompt.tags.length - 2),
     };
-  }, [prompt?.tags]);
+  }, [prompt]);
 
   // 如果没有必要的数据，不渲染 - 移到hooks之后
   if (!prompt || !prompt.id) {

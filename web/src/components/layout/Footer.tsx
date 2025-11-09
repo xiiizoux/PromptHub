@@ -6,14 +6,11 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import {
   SparklesIcon,
   DocumentTextIcon,
-  ChartBarIcon,
-  CodeBracketIcon,
   BeakerIcon,
   CubeIcon,
   InformationCircleIcon,
   EnvelopeIcon,
   AcademicCapIcon,
-  LinkIcon,
   RectangleStackIcon,
   PlusCircleIcon,
 } from '@heroicons/react/24/outline';

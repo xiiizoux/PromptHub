@@ -7,23 +7,16 @@ import { formatVersionDisplay } from '@/lib/version-utils';
 import { useIntersectionObserver } from '@/hooks/useIntersectionObserver';
 import { useOptimizedCategoryDisplay } from '@/contexts/CategoryContext';
 import { 
-  StarIcon, 
   DocumentTextIcon, 
   PhotoIcon,
   FilmIcon,
   PlayIcon,
   PauseIcon,
-  TagIcon,
   ClockIcon,
   UserIcon,
   FireIcon,
   EyeIcon,
-  CogIcon,
-  UserCircleIcon,
-  MegaphoneIcon,
-  ChatBubbleLeftRightIcon,
 } from '@heroicons/react/24/outline';
-import { StarIcon as StarSolidIcon } from '@heroicons/react/24/solid';
 import { InteractionButtons } from '@/components/BookmarkButton';
 import clsx from 'clsx';
 
@@ -80,7 +73,7 @@ const UserMediaPromptCard: React.FC<UserMediaPromptCardProps> = React.memo(({ pr
     const ratingValue = prompt.average_rating !== undefined ? prompt.average_rating : (prompt.rating || 0);
     const percentage = (ratingValue / 5) * 100;
     return { value: ratingValue, percentage };
-  }, [prompt?.average_rating, prompt?.rating]);
+  }, [prompt]);
 
   const tagsToShow = useMemo(() => {
     if (!prompt?.tags || prompt.tags.length === 0) {return null;}
@@ -88,7 +81,7 @@ const UserMediaPromptCard: React.FC<UserMediaPromptCardProps> = React.memo(({ pr
       visible: prompt.tags.slice(0, 2),
       remaining: Math.max(0, prompt.tags.length - 2),
     };
-  }, [prompt?.tags]);
+  }, [prompt]);
 
   // 初始化视频URL - 只有在组件可见时才初始化
   // Note: This must be before any early returns to follow React Hooks rules

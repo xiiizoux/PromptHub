@@ -479,15 +479,7 @@ const QuickTemplates: React.FC<{
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
   
-  useEffect(() => {
-    fetchTemplates();
-  }, [category]);
-
-  useEffect(() => {
-    handleSearch();
-  }, [searchQuery, allTemplates]);
-
-  const fetchTemplates = async () => {
+  const fetchTemplates = useCallback(async () => {
     try {
       setLoading(true);
       // 获取更多模板用于搜索
@@ -577,9 +569,13 @@ const QuickTemplates: React.FC<{
     } finally {
       setLoading(false);
     }
-  };
+  }, [searchQuery]);
 
-  const handleSearch = async () => {
+  useEffect(() => {
+    fetchTemplates();
+  }, [category, fetchTemplates]);
+
+  const handleSearch = useCallback(async () => {
     if (!searchQuery.trim()) {
       // 如果搜索词为空，显示默认的精选模板
       setTemplates(allTemplates.slice(0, 4));
@@ -638,7 +634,7 @@ const QuickTemplates: React.FC<{
     } finally {
       setIsSearching(false);
     }
-  };
+  }, [searchQuery, allTemplates]);
 
   const clearSearch = () => {
     setSearchQuery('');

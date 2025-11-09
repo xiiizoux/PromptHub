@@ -21,7 +21,7 @@ function extractNotificationData<T>(response: any, fallback: T): T {
 }
 
 // 安全的可选数据提取
-function extractOptionalNotificationData<T>(response: any, fallback: T | null = null): T | null {
+function _extractOptionalNotificationData<T>(response: any, fallback: T | null = null): T | null {
   try {
     return extractNotificationData(response, fallback);
   } catch {

@@ -81,7 +81,11 @@ const setCachedCategories = (categories: Record<CategoryType, CategoryInfo[]>) =
 };
 
 // 分类提供者组件
-export const CategoryProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const CategoryProvider: React.FC<{
+  children: React.ReactNode,
+}> = ({
+  children,
+}) => {
   // 获取当前语言
   const { language } = useLanguage();
   
@@ -107,13 +111,13 @@ export const CategoryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     if (type) {
       // 先按名称查找（可能传入的是中文或英文名称）
       categoryData = categories[type]?.find(
-        cat => cat.name === categoryName || cat.name_en === categoryName
+        cat => cat.name === categoryName || cat.name_en === categoryName,
       );
     } else {
       // 在所有类型中查找
       for (const categoryType of Object.keys(categories) as CategoryType[]) {
         categoryData = categories[categoryType]?.find(
-          cat => cat.name === categoryName || cat.name_en === categoryName
+          cat => cat.name === categoryName || cat.name_en === categoryName,
         );
         if (categoryData) {break;}
       }
@@ -205,7 +209,6 @@ export const CategoryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     getCategoryDisplayInfo,
     getCategoryIcon,
     refreshCategories,
-    language, // 添加语言依赖，确保语言切换时更新
   ]);
 
   return (

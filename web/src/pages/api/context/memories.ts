@@ -110,12 +110,24 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         updated_at: new Date().toISOString(),
       };
 
-      if (title !== undefined) updateData.title = title;
-      if (content !== undefined) updateData.content = content;
-      if (importanceScore !== undefined) updateData.importance_score = importanceScore;
-      if (relevanceTags !== undefined) updateData.relevance_tags = relevanceTags;
-      if (expiresAt !== undefined) updateData.expires_at = expiresAt;
-      if (metadata !== undefined) updateData.metadata = metadata;
+      if (title !== undefined) {
+        updateData.title = title;
+      }
+      if (content !== undefined) {
+        updateData.content = content;
+      }
+      if (importanceScore !== undefined) {
+        updateData.importance_score = importanceScore;
+      }
+      if (relevanceTags !== undefined) {
+        updateData.relevance_tags = relevanceTags;
+      }
+      if (expiresAt !== undefined) {
+        updateData.expires_at = expiresAt;
+      }
+      if (metadata !== undefined) {
+        updateData.metadata = metadata;
+      }
 
       const { data, error } = await supabase
         .from('context_memories')

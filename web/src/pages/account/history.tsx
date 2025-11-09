@@ -11,22 +11,13 @@ import {
   ClockIcon,
   ChatBubbleLeftRightIcon,
   ChartBarIcon,
-  FunnelIcon,
   MagnifyingGlassIcon,
-  CalendarIcon,
   ArrowTrendingUpIcon,
   ArrowTrendingDownIcon,
   SparklesIcon,
-  EyeIcon,
-  DocumentTextIcon,
-  TagIcon,
   UserIcon,
-  BoltIcon,
   HeartIcon,
   StarIcon,
-  ExclamationTriangleIcon,
-  CheckCircleIcon,
-  XCircleIcon,
   ArrowTopRightOnSquareIcon,
   FaceSmileIcon,
   FaceFrownIcon,
@@ -139,17 +130,7 @@ export default function HistoryPage() {
   // UI状态
   const [viewMode, setViewMode] = useState<'timeline' | 'sessions' | 'analytics'>('timeline');
 
-  // 加载历史数据
-  useEffect(() => {
-    if (!user) {
-      router.push('/auth/login');
-      return;
-    }
-    
-    loadHistoryData();
-  }, [user, timeFilter, satisfactionFilter]);
-
-  const loadHistoryData = async () => {
+  const loadHistoryData = React.useCallback(async () => {
     try {
       setLoading(true);
       
@@ -185,7 +166,7 @@ export default function HistoryPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [timeFilter, satisfactionFilter, searchQuery]);
 
   // 搜索处理
   const handleSearch = (query: string) => {

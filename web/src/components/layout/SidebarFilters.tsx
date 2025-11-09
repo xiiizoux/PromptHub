@@ -5,7 +5,6 @@ import {
   FunnelIcon, 
   MagnifyingGlassIcon, 
   XMarkIcon, 
-  AdjustmentsHorizontalIcon, 
   ChevronDownIcon, 
   ChevronUpIcon,
   Bars3Icon,
@@ -66,7 +65,7 @@ const SidebarFilters: React.FC<SidebarFiltersProps> = ({
   onFilterChange,
   categories,
   tags,
-  hideTypeFilter = false,
+  hideTypeFilter: _hideTypeFilter = false,
   children,
 }) => {
   const { getCategoryDisplayInfo } = useCategoryContext();

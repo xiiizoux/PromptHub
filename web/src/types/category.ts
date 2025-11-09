@@ -3,6 +3,8 @@
  * 统一管理所有分类相关的TypeScript类型
  */
 
+import React from 'react';
+
 // 分类类型枚举
 export type CategoryType = 'chat' | 'image' | 'video';
 

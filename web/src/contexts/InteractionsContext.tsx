@@ -25,23 +25,32 @@ export const InteractionsProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
   // 批量加载互动数据 - 使用本地默认数据，不再依赖 MCP 服务
   const loadInteractions = useCallback(async (promptIds: string[]) => {
-    // 过滤掉空值、无效值和已经加载的提示词
-    const newPromptIds = promptIds.filter(id => 
-      id && 
-      typeof id === 'string' && 
-      id.trim() !== '' && 
-      !interactions[id] && 
-      !loadingPrompts.has(id),
-    );
+    // 使用函数式更新来避免依赖 interactions 和 loadingPrompts
+    let shouldLoad = false;
+    let newPromptIds: string[] = [];
     
-    if (newPromptIds.length === 0) {return;}
-
-    // 标记正在加载的提示词
     setLoadingPrompts(prev => {
+      // 过滤掉空值、无效值和已经加载的提示词
+      newPromptIds = promptIds.filter(id => 
+        id && 
+        typeof id === 'string' && 
+        id.trim() !== '' && 
+        !prev.has(id),
+      );
+      
+      if (newPromptIds.length === 0) {
+        shouldLoad = false;
+        return prev;
+      }
+
+      shouldLoad = true;
+      // 标记正在加载的提示词
       const newSet = new Set(prev);
       newPromptIds.forEach(id => newSet.add(id));
       return newSet;
     });
+    
+    if (!shouldLoad) {return;}
 
     setLoading(true);
 
@@ -62,21 +71,27 @@ export const InteractionsProvider: React.FC<{ children: React.ReactNode }> = ({ 
         };
       });
 
-      // 更新状态
-      setInteractions(prev => ({
-        ...prev,
-        ...defaultInteractions,
-      }));
+      // 更新状态 - 使用函数式更新避免依赖 interactions
+      setInteractions(prev => {
+        // 检查是否已经加载过
+        const alreadyLoaded = newPromptIds.some(id => prev[id]);
+        if (alreadyLoaded) {return prev;}
+        
+        return {
+          ...prev,
+          ...defaultInteractions,
+        };
+      });
     } finally {
       setLoading(false);
       // 清除加载标记
-      setLoadingPrompts(prev => {
-        const newSet = new Set(prev);
-        newPromptIds.forEach(id => newSet.delete(id));
-        return newSet;
+      setLoadingPrompts(current => {
+        const updatedSet = new Set(current);
+        newPromptIds.forEach(id => updatedSet.delete(id));
+        return updatedSet;
       });
     }
-  }, [interactions, loadingPrompts]);
+  }, []);
 
   // 更新单个提示词的互动数据
   const updateInteraction = useCallback((promptId: string, data: Partial<PromptInteractions>) => {

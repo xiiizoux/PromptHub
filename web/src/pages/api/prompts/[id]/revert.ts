@@ -82,6 +82,20 @@ export default async function handler(
       return res.status(500).json({ error: '无法获取当前提示词状态' });
     }
 
+    // 获取当前最新的版本号
+    const { data: latestVersion, error: latestVersionError } = await supabase
+      .from('prompt_versions')
+      .select('version')
+      .eq('prompt_id', id)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    // 计算当前版本号（如果存在则递增，否则从1开始）
+    const currentVersion = latestVersion?.version 
+      ? (parseFloat(latestVersion.version) + 0.1).toFixed(1)
+      : '1.0';
+
     // 创建回滚前的版本记录（不包含媒体相关信息，媒体文件不支持版本管理）
     const { error: backupError } = await supabase
       .from('prompt_versions')
@@ -151,6 +165,9 @@ export default async function handler(
       }
     }
 
+    // 计算新版本号（基于目标版本号递增）
+    const newVersion = (parseFloat(targetVersion.version) + 0.1).toFixed(1);
+
     // 更新主提示词记录为目标版本的内容（但保持当前的媒体文件）
     const { data: updatedPrompt, error: updateError } = await supabase
       .from('prompts')
@@ -162,7 +179,6 @@ export default async function handler(
         category_id: categoryId,
         parameters: updatedParameters, // 使用处理后的参数，保留媒体文件
         // 注意：不更新 preview_asset_url，保持当前的媒体状态
-        version: newVersion,
         updated_at: new Date().toISOString(),
       })
       .eq('id', id)

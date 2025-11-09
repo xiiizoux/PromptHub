@@ -5,7 +5,7 @@ import { useState } from 'react';
 const Privacy = () => {
   const [activeSection, setActiveSection] = useState<string>('');
 
-  const handleSectionClick = (sectionId: string) => {
+  const _handleSectionClick = (sectionId: string) => {
     setActiveSection(activeSection === sectionId ? '' : sectionId);
   };
 
@@ -55,7 +55,7 @@ const Privacy = () => {
                 <h2 className="text-2xl font-semibold mb-4 text-gray-800">1. 概述</h2>
                 <div className="prose prose-lg text-gray-600">
                   <p>
-                    PromptHub（"我们"、"我们的"或"平台"）致力于保护您的隐私和个人信息。本隐私政策解释了我们如何在您使用我们的AI提示管理和分享平台时收集、使用、披露和保护您的信息。
+                    PromptHub（&quot;我们&quot;、&quot;我们的&quot;或&quot;平台&quot;）致力于保护您的隐私和个人信息。本隐私政策解释了我们如何在您使用我们的AI提示管理和分享平台时收集、使用、披露和保护您的信息。
                   </p>
                   <p>
                     通过使用我们的服务，您同意本隐私政策中描述的信息收集和使用做法。如果您不同意本政策，请不要使用我们的服务。
@@ -234,7 +234,7 @@ const Privacy = () => {
                   <p>您可以更新或更正不准确或不完整的个人信息。</p>
 
                   <h3 className="text-lg font-medium">7.3 删除权</h3>
-                  <p>在特定情况下，您可以要求删除您的个人信息（"被遗忘权"）。</p>
+                  <p>在特定情况下，您可以要求删除您的个人信息（&quot;被遗忘权&quot;）。</p>
 
                   <h3 className="text-lg font-medium">7.4 限制处理权</h3>
                   <p>在某些情况下，您可以要求限制我们对您个人信息的处理。</p>

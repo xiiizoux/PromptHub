@@ -148,7 +148,7 @@ export default function PromptDetailsPage() {
     };
 
     fetchPrompt();
-  }, [id]);
+  }, [id, user, getToken, t]);
 
   // 提取变量的函数 - 必须在使用之前定义
   const extractVariablesFromText = (text: string): string[] => {

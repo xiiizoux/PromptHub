@@ -5,7 +5,7 @@ import { useState } from 'react';
 const Terms = () => {
   const [activeSection, setActiveSection] = useState<string>('');
 
-  const handleSectionClick = (sectionId: string) => {
+  const _handleSectionClick = (sectionId: string) => {
     setActiveSection(activeSection === sectionId ? '' : sectionId);
   };
 
@@ -49,10 +49,10 @@ const Terms = () => {
                 <h2 className="text-2xl font-semibold mb-4 text-gray-800">1. 接受条款</h2>
                 <div className="prose prose-lg text-gray-600">
                   <p>
-                    欢迎使用 PromptHub！通过访问或使用我们的网站和服务，您同意受本服务条款（"条款"）的约束。如果您不同意这些条款，请不要使用我们的服务。
+                    欢迎使用 PromptHub！通过访问或使用我们的网站和服务，您同意受本服务条款（&quot;条款&quot;）的约束。如果您不同意这些条款，请不要使用我们的服务。
                   </p>
                   <p>
-                    本条款构成您与 PromptHub（"我们"、"我们的"或"平台"）之间的法律协议。使用我们的服务表示您已阅读、理解并同意受这些条款的约束。
+                    本条款构成您与 PromptHub（&quot;我们&quot;、&quot;我们的&quot;或&quot;平台&quot;）之间的法律协议。使用我们的服务表示您已阅读、理解并同意受这些条款的约束。
                   </p>
                 </div>
               </section>
@@ -194,7 +194,7 @@ const Terms = () => {
                 <div className="prose prose-lg text-gray-600">
                   <h3 className="text-lg font-medium">8.1 服务保证</h3>
                   <p>
-                    我们的服务按"现状"提供，不提供任何明示或暗示的保证。我们不保证服务将不间断、无错误或完全安全。
+                    我们的服务按&quot;现状&quot;提供，不提供任何明示或暗示的保证。我们不保证服务将不间断、无错误或完全安全。
                   </p>
                   
                   <h3 className="text-lg font-medium">8.2 损害赔偿</h3>

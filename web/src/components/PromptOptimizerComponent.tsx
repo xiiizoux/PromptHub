@@ -798,7 +798,7 @@ export const PromptOptimizerComponent: React.FC<PromptOptimizerProps> = ({
                 
                 <AIAnalysisResultDisplay
                   result={aiAnalysisResult}
-                  onApplyResults={(data) => {
+                  onApplyResults={(_data) => {
                     // 在优化器中，应用全部建议时跳转到创建提示词页面
                     // Apply AI analysis results and navigate to create prompt page
                     

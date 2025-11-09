@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/router';
 import {
   BellIcon,
@@ -47,7 +47,7 @@ export default function NotificationList({
   const [isGrouped] = useState(grouped);
 
   // 加载通知
-  const loadNotifications = async (pageNum = 1) => {
+  const loadNotifications = useCallback(async (pageNum = 1) => {
     try {
       setLoading(true);
       const response = await notificationApi.getNotifications(
@@ -88,7 +88,7 @@ export default function NotificationList({
     } finally {
       setLoading(false);
     }
-  };
+  }, [maxItems, unreadOnly, isGrouped]);
 
   // 标记单个通知已读
   const markAsRead = async (notificationId: string) => {
@@ -132,7 +132,7 @@ export default function NotificationList({
   // 首次加载
   useEffect(() => {
     loadNotifications();
-  }, []);
+  }, [loadNotifications]);
 
   // 获取通知图标
   const getNotificationIcon = (type: NotificationType) => {
